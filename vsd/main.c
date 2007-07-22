@@ -20,7 +20,7 @@
  #include "main2.c"
 #else
  #include "rom_entry.h"
- #define MINIMIZE	// Å¬ FIRMWARE
+ #define MINIMIZE	// ºÇ¾® FIRMWARE
 #endif
 
 #ifndef MINIMIZE
@@ -66,7 +66,7 @@ int main( void ){
 	TouchPanel_t	TP;
 	
 	set_imask_ccr( 1 );
-	if( IO.PDR5.BIT.B4 ) IR_Flasher();
+	if( !IO.PDR5.BIT.B4 ) IR_Flasher();
 	_INITSCT();
 	InitMain();
 	set_imask_ccr( 0 );			/* CPU permit interrupts */
@@ -80,11 +80,11 @@ int main( void ){
 	
 	for(;;){
 		
-		/*** ƒXƒe[ƒg•Ï‰»‘Ò‚¿ ***/
+		/*** ¥¹¥Æ¡¼¥ÈÊÑ²½ÂÔ¤Á ***/
 		
 		while( uTWovf == VOLATILE( UINT, g_TimerWovf.w.l )){
 			//DispVal.uGx += G_SENSOR_X;
-			DispVal.uGx += G_SENSOR_Z;	// ‘OŒã G ‚ÌŒŸo²•ÏX
+			DispVal.uGx += G_SENSOR_Z;	// Á°¸å G ¤Î¸¡½Ğ¼´ÊÑ¹¹
 			DispVal.uGy += G_SENSOR_Y;
 			++DispVal.uCnt;
 		}
@@ -92,36 +92,36 @@ int main( void ){
 		++uTWovf;
 		
 		if( !( uTWovf & ( CALC_DIVCNT - 1 ))){
-			// –ñ30Hz
+			// Ìó30Hz
 			
 			ComputeMeter( uTWovf );
 			
 			DispVal.uTacho += g_Tacho.uVal;
 			DispVal.uSpeed += g_Speed.uVal;
 			
-			/*** ƒMƒAŒvZ ***/
+			/*** ¥®¥¢·×»» ***/
 			ComputeGear2();
 			
-			/*** LED •\¦ ***/
+			/*** LED É½¼¨ ***/
 			DispLED_Carib( &DispVal, uTWovf );
 			
-			/*** GƒZƒ“ƒT[‚É‚æ‚éƒXƒ^[ƒgŒŸo ***/
-			/*** –¢ŒŸØC‚¤‚Ü‚­‚¢‚©‚È‚©‚Á‚½‚çí‚é ***/
+			/*** G¥»¥ó¥µ¡¼¤Ë¤è¤ë¥¹¥¿¡¼¥È¸¡½Ğ ***/
+			/*** Ì¤¸¡¾Ú¡¤¤¦¤Ş¤¯¤¤¤«¤Ê¤«¤Ã¤¿¤éºï¤ë ***/
 			CheckStartByGSensor( &DispVal );
 			
-			/*** ƒVƒŠƒAƒ‹o—Íˆ— ***/
+			/*** ¥·¥ê¥¢¥ë½ĞÎÏ½èÍı ***/
 			
 			if(
 				( CALC_DIVCNT == SERIAL_DIVCNT ) ||
 				!( uTWovf & ( SERIAL_DIVCNT - 1 ))
 			){
-				// key “ü—Í
+				// key ÆşÎÏ
 				UCHAR c;
 				while( sci_read( &c, 1 )) DoInputSerial( c );
 				
 				OutputSerialSmooth( &DispVal );
 				
-				// sw “ü—Í
+				// sw ÆşÎÏ
 				ProcessPushSW( &TP );
 			}
 		}
@@ -134,6 +134,6 @@ int main( void ){
 
 #else
 __entry( vect = 0 ) int main( void ){
-	SoftReset(); // RAM ‚Æ ROM ‚ª‰½‚à•Ï‚í‚ç‚È‚¯‚ê‚Î‚±‚±
+	SoftReset(); // RAM ¤È ROM ¤¬²¿¤âÊÑ¤ï¤é¤Ê¤±¤ì¤Ğ¤³¤³
 }
 #endif

@@ -10,6 +10,9 @@
 *****************************************************************************/
 
 /*** macros *****************************************************************/
+
+//#define USE_IRQ0
+
 /*** const ******************************************************************/
 /*** new type ***************************************************************/
 /*** prototype **************************************************************/
@@ -66,7 +69,7 @@ const char g_szMsgMileage[]		= "MILE";
 const char g_szMsgCalibrate[]	= "CALIbrAtE";
 const char g_szMsgOpening[]		=
 	EOL
-	"VSD system v1.06q" EOL
+	"VSD system v1.07" EOL
 	"Copyright(C) by DDS" EOL;
 
 PushSW_t	g_PushSW;
@@ -205,6 +208,22 @@ INLINE void PrintLED( UINT uNum ){
 		g_Flags.bNewLap = TRUE;
 	}
 	IRR1.BIT.IRRI0 = 0;	// IRRI0 クリア
+}
+
+// wkp 版
+
+#pragma interrupt( int_wkp )
+/*__interrupt( vect = 18 )*/ void int_wkp( void ){
+	
+	if( IWPR.BYTE & ( 1 << 4 )){
+		// 直前の NewLap から 3秒以上あいている
+		if( g_TimerWovf.dw - g_IR.Time.dw >= NEWLAP_MIN_INTERVAL ){
+			g_IR.Time.dw = g_TimerWovf.dw;
+			g_Flags.bNewLap = TRUE;
+		}
+		++g_IR.uVal;
+	}
+	IWPR.BYTE = 0;	// クリア
 }
 
 /*** IRQ ********************************************************************/
@@ -853,7 +872,7 @@ INLINE void DoInputSerial( char c ){
 
 INLINE UCHAR ScanPushSW( TouchPanel_t *pTP ){
 	
-	UCHAR	cSW = IO.PDR5.BYTE >> 4;
+	UCHAR	cSW = (( IO.PDR5.BYTE >> 4 ) & 0xE ) | IO.PDR2.BIT.B0;
 	
 	g_PushSW.uTrig |= ~g_PushSW.uPrev & cSW;
 	g_PushSW.uPrev = cSW;
@@ -963,7 +982,7 @@ INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
 /*** HW セットアップ ********************************************************/
 
 INLINE void SetupHW( void ){
-	IO.PMR5.BYTE	= 0;			// Port5 を汎用IOに設定
+	IO.PMR5.BYTE	= ( 1 << 4 );	// WKP4 を割り込み端子に設定
 	IO.PCR5			= 0x0F;			// Port5[3:0] を出力に設定
 	IO.PDR5.BYTE	= 0;
 	
@@ -1003,14 +1022,19 @@ INLINE void SetupHW( void ){
 		0;
 	#endif
 	
-		//TMA = 0x04;
+	//TMA = 0x04;
 	
 	IENR1.BYTE =
 		( 1 << 6 ) |				// Enable timer-A interrupt
+		( 1 << 5 ) |				// wakeup 割り込み
 		( 1 << 3 ) |				// IRQ0 3-0 enable
 		( 1 << 2 ) |
 		( 1 << 1 ) |
+  #ifdef USE_IRQ0
 		( 1 << 0 );
+  #else
+		0;
+  #endif
 	
   #ifdef RISE_EDGE_CAR_SIGNAL
 	IEGR1.BYTE =
@@ -1054,10 +1078,13 @@ INLINE void InitMain( void ){
 	
 	/*** ベクタ設定 *********************************************************/
 	
+#ifdef USE_IRQ0
 	SetVector( 14, int_irq0 );
+#endif
 	SetVector( 15, int_irq1 );
 	SetVector( 16, int_irq2 );
 	SetVector( 17, int_irq3 );
+	SetVector( 18, int_wkp );
 	SetVector( 19, int_timer_a );
 	SetVector( 21, int_timer_w );
 //	SetVector( 22, int_timer_v_IR );
@@ -1073,6 +1100,13 @@ INLINE void InitMain( void ){
 	
 	//sci_init( cRxBuf, sizeof( cRxBuf ), cTxBuf, sizeof( cTxBuf ));
 	sci_init( 0 );
+	
+	/*** SCK3 を TouchPanel 入力に設定 ***/
+	/*
+	IO.PCR2.BIT.0	= 0;		// SCK3 を入力に
+	IO.SCR3.BIT.1	=
+	IO.SCR3.BIT.0	= 0;		// シリアルクロックを使用しない
+	*/
 }
 
 /*** bzero ******************************************************************/
