@@ -1,0 +1,53 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  SIZEA			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	ERR03			; Invalid Start Address Module
+		.IMPORT	ERR04			; Invalid End Address Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	SIZEA			; Size Analize Module
+;************************************************************************
+;*	Size Analize Module						*
+;*		Input	R1  <-- Address of Analize Buffer		*
+;*			R4  <-- Start Address				*
+;*			R5  <-- End   Address				*
+;*		Output	R2  --> Byte -> 0 , Word -> 4 , Long Word -> 8	*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+SIZEA:		SUB.W	R2,R2			; Clear Return Code
+		MOV.W	@ER1+,R6		; Analize Buffer --> R6
+		MOV.B	@ER6,R3L		; Size Parameter is Exist ?
+		BEQ	$+64			; Byte Size Operation
+		CMP.B	#";",R3L		; Parameter is ";" ?
+		BNE	ERR02:16		; Invalid Parameter
+		MOV.W	@ER1,R6			; Next Analize Buffer --> R6
+		MOV.B	@(10,ER6),R3L		; Last Parameter Check
+		BNE	ERR02:16		; Invalid Parameter
+		MOV.W	@ER6,R3			; Parameter --> R3
+		CMP.W	#H'4200,R3		; Parameter is "B" ?
+		BEQ	$+40			; Byte Size Operation
+		INC.W	#2,R2			; Increment Return Code
+		CMP.W	#H'5700,R3		; Parameter is "W" ?
+		BEQ	$+12			; Word Size Operation
+		INC.W	#2,R2			; Increment Return Code
+		CMP.W	#H'4C00,R3		; Parameter is "L" ?
+		BNE	ERR02:16		; Invalid Parameter
+		BTST	#0,R4L			; Start Address is Even ?
+		BNE	ERR03:16		; Invalid Start Address
+		BLD	#1,R4L			; Start and End Address Check
+		BXOR	#1,R5L			; 
+		BOR	#1,R2L			; Adjust Size Parameter
+		BAND	#0,R5L			; End Address Check
+		BCC	ERR04:16		; Invalid End Address
+		SHLL.W	R2			; Make Return Code
+		RTS				; Byte Size Operation
+		.END				;

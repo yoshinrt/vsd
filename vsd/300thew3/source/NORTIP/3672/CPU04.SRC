@@ -1,0 +1,113 @@
+;************************************************************************
+;*	H8/3672 Series Monitor Program (Normal Mode)	Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  H8_3672_VECTOR	; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  VECTOR,DATA,ALIGN=2	; Monitor Vector Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	SYSTEM_HDL		; System Handler
+		.IMPORT	LARGE_AREA		; Large Vector Area
+		.IMPORT	INT01			; Trace Handler
+		.IMPORT	INT02			; Break Handler
+		.IMPORT	INT07			; Abort Handler
+		.IMPORT	INT000			; Monitor Interrupt Handler
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	LARGE_VECTOR		; Large Vector Table
+		.EXPORT	VECTOR_TBL		; Vector Table
+		.EXPORT	MEM_CHK			; @@aa:8    Check Table
+		.EXPORT	INT_CHK			; Interrupt Check Table
+		.EXPORT	INT_MSG			; Interrupt Message
+		.EXPORT	INT001			; Vector #001 Handler
+;************************************************************************
+;*	User Vector Table						*
+;************************************************************************
+LARGE_VECTOR:	.DATA.W	INT000,INT001		; Large Vector Table
+		.DATA.W	INT002,INT003		;
+		.DATA.W	INT004,INT005		;
+		.DATA.W	INT006,INT007		;
+		.DATA.W	INT008,INT009		;
+		.DATA.W	INT010,INT011		;
+		.DATA.W	INT012,INT013		;
+		.DATA.W	INT014,INT015		;
+		.DATA.W	INT016,INT017		;
+		.DATA.W	INT018,INT019		;
+		.DATA.W	INT020,INT021		;
+		.DATA.W	INT022,INT023		;
+		.DATA.W	INT024,INT025		;
+		.DATA.W	INT026,INT027		;
+		.DATA.W	INT028,INT029		;
+		.DATA.W	INT030,INT031		;
+;************************************************************************
+;*	Vector Table							*
+;************************************************************************
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+VECTOR_TBL:	.DATA.W	LARGE_AREA		; User Vector Save Address
+INT001:		BSR	INT01:16		; Goto Trace Handler
+INT002:		BSR	INT02:16		; Goto Break Handler
+INT003:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT004:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT005:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT006:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT007:		BSR	INT07:16		; Goto Abort Handler
+INT008:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT009:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT010:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT011:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT012:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT013:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT014:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT015:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT016:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT017:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT018:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT019:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT020:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT021:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT022:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT023:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT024:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT025:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT026:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT027:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT028:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT029:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT030:		BSR	SYSTEM_HDL:16		; Goto System Handler
+INT031:		BSR	SYSTEM_HDL:16		; Goto System Handler
+;************************************************************************
+;*	Interrupt Message						*
+;************************************************************************
+MEM_CHK:	.DATA.B	H'7F,H'80,H'19,H'FD	; @@aa:8    Check Table
+INT_CHK:	.DATA.B	H'80,H'70,H'E6,H'02	; Interrupt Check Table
+INT_MSG:	.SDATAC	" Occur !!"<H'07><0>	; Interrupt Message
+		.DATA.B	0			; 000
+		.DATA.B	0			; 001
+		.DATA.B	0			; 002
+		.DATA.B	0			; 003
+		.DATA.B	0			; 004
+		.DATA.B	0			; 005
+		.DATA.B	0			; 006
+		.SDATAC	"NMI"<0>		; 007 NMI
+		.SDATAC	"TRAPA #0"<0>		; 008 TRAPA #0
+		.SDATAC	"TRAPA #1"<0>		; 009 TRAPA #1
+		.SDATAC	"TRAPA #2"<0>		; 010 TRAPA #2
+		.SDATAC	"TRAPA #3"<0>		; 011 TRAPA #3
+		.SDATAC	"Address Break"<0>	; 012 Address Break
+		.SDATAC	"SLEEP"<0>		; 013 SLEEP
+		.SDATAC	"IRQ0"<0>		; 014 IRQ0
+		.DATA.B	0			; 015
+		.DATA.B	0			; 016
+		.SDATAC	"IRQ3"<0>		; 017 IRQ3
+		.SDATAC	"WKP"<0>		; 018 WKP
+		.DATA.B	0			; 019
+		.DATA.B	0			; 020
+		.SDATAC	"TW Interrupt"<0>	; 021 TW
+		.SDATAC	"TV Interrupt"<0>	; 022 TV
+		.SDATAC	"SCI3 Interrupt"<0>	; 023 SCI3
+		.DATA.B	0			; 024
+		.SDATAC	"A/D Interrupt"<0>	; 025 A/D
+		.END				;

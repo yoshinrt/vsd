@@ -1,0 +1,73 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  F_COM			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+		.IMPORT	OUT_STRING		; Output String Module
+		.IMPORT	BIN_ASC_4		; 4 Binary to ASCII Module
+		.IMPORT	BIN_ASC_2		; 2 Binary to ASCII Module
+		.IMPORT	ASC_BIN_2		; 2 ASCII to Binary Module
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	ADDRA			; Address Analize Module
+		.IMPORT	MAIN			; Main Module
+		.IMPORT	BACK_COM_SUB		; Back Command Sub Module
+		.IMPORT	F_BUF			; Fill Command Buffer
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	F_COM			; Fill Command Module
+;************************************************************************
+;*	Fill Command Module						*
+;*		Input	R1  <-- Address of 2nd Analize Buffer		*
+;*		Output	R2L --> Fill Data				*
+;*			R4  --> Fill Start Address			*
+;*			R5  --> Fill End   Address			*
+;*		Used Stack Area --> 0(6) Byte				*
+;************************************************************************
+F_COM:		MOV.W	@(4,ER1),R6		; 4th Analize Buffer --> R6
+		MOV.B	@(10,ER6),R0L		; 5th Parameter is Null ?
+		BNE	ERR02:16		; Invalid Parameter
+		BSR	ASC_BIN_2:16		; Change Byte Fill Data
+		MOV.B	R4L,R2L			; Fill Data --> R2L
+		BSR	ADDRA:16		; Start and End Address Analize
+		MOV.W	#F_BUF,R6		; Fill Buffer Address --> R6
+		BSR	BACK_COM_SUB:16		; Back Command Sub Module
+;************************************************************************
+;*	Fill Command Sub Module						*
+;*		Input	R2L <-- Fill Data				*
+;*			R4  <-- Fill Start Address			*
+;*			R5  <-- Fill End   Address			*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(6) Byte				*
+;************************************************************************
+F_COM_SUB:	MOV.B	R2L,@ER4		; Write Fill Data
+		MOV.B	@ER4,R2H		; Read Memory
+		CMP.B	R2L,R2H			; Verify Check
+		BNE	$+14			; Verify Error Check
+		ADDS	#1,ER4			; Increment Fill Address
+		CMP.W	R4,R5			; Start Address > End Address ?
+		MOV.W	R4,R4			; Start Address = End Address ?
+		BCC	$-14			; Next Fill
+		BRA	MAIN:16			; Goto Main Module
+		MOV.W	#F_MSG,R1		; Fill Message Address --> R1
+		BSR	OUT_STRING:16		; Output " Failed at "
+		MOV.W	R4,R0			; Failed Address --> R0
+		BSR	BIN_ASC_4:16		; Output Failes Address
+		BSR	OUT_STRING:16		; Output " ,  Write = "
+		MOV.B	R2L,R0L			; Write Data --> R0L
+		BSR	BIN_ASC_2:16		; Output Write Data
+		BSR	OUT_STRING:16		; Output " ,  Read = "
+		MOV.B	R2H,R0L			; Read Data --> R0L
+		BSR	BIN_ASC_2:16		; Output Read Data
+		BSR	OUT_CRLF:16		; Output CR,LF
+		BRA	MAIN:16			; Goto Main Module
+F_MSG:		.SDATAZ	<H'07>"  Failed at "	; Fill Message
+		.SDATAZ	" , Write = "		;
+		.SDATAZ	" , Read = "		;
+		.END				;

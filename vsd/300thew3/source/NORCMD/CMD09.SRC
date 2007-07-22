@@ -1,0 +1,24 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  B_HELP_MSG		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	B_HELP_MSG		; Breakpoint Help Message
+;************************************************************************
+;*	Breakpoint Command Help Message					*
+;************************************************************************
+B_HELP_MSG:	.DATA.B	7			; String Count is 7
+		.SDATAC	" B  : Sets or displays or clear breakpoint(s)."<0>
+		.SDATAZ	" 1. Sets breakpoint at specified address."
+		.SDATAZ	"      B <address> [RET]"
+		.SDATAZ	" 2. Displays breakpoint(s)."
+		.SDATAZ	"      B [RET]"
+		.SDATAZ	" 3. Clear breakpoint(s)."
+		.SDATAZ	"      B - [<address>] [RET]"
+		.SDATAZ	"   <address> : address of breakpoint"
+		.END				;

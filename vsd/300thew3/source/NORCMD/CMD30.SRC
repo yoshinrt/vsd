@@ -1,0 +1,101 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  R_COM			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	$STACK			; User Stack Pointer
+		.IMPORT	OUT_CHAR		; Output Character Module
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+		.IMPORT	OUT_VALUE		; Output = Module
+		.IMPORT	BIN_ASC_8		; 8 Binary to ASCII Module
+		.IMPORT	BIN_ASC_4		; 4 Binary to ASCII Module
+		.IMPORT	BIN_ASC_2		; 2 Binary to ASCII Module
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	REG_NAME		; Register Name Table
+		.IMPORT	MAIN			; Main Module
+		.IMPORT	STACK			; Stack Area
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	R_COM			; Register Command Module
+		.EXPORT	R_SUB_COM		; Register Sub Command Module
+		.EXPORT	R_COM_INIT		; Register Command Initialize
+;************************************************************************
+;*	H8/300H Register Status Command Module				*
+;*		Input	R6  <-- 1st Analize Buffer Address		*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(8) Byte				*
+;************************************************************************
+R_COM:		MOV.B	@(10,ER6),R0L		; 2nd Parameter is Null ?
+		BNE	ERR02:16		; Invalid Parameter
+		BSR	R_SUB_COM		; Register Sub Command Module
+		BRA	MAIN:16			; Goto Main Module
+;************************************************************************
+;*	H8/300H Register Status Sub Command Module			*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(8) Byte				*
+;************************************************************************
+R_SUB_COM:	MOV.W	#STACK,R2		; Save Area Address --> R2
+		MOV.W	#REG_NAME+68,R1		; PC Name Address --> R1
+		BSR	OUT_VALUE:16		; Output "  PC="
+		MOV.W	@ER2+,R0		; PC Value --> R0
+		BSR	BIN_ASC_4:16		; Output PC Value
+		MOV.W	#REG_NAME,R1		; CCR Name Address --> R1
+		BSR	OUT_VALUE:16		; Output "  CCR="
+		MOV.W	@ER2,R0			; CCR Value --> R0
+		BSR	BIN_ASC_2:16		; Output CCR Value
+		MOV.B	#":",R0L		; ":" ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output ":"
+		MOV.W	@ER2+,R5		; CCR Value --> R5L
+		MOV.B	#7,R5H			; CCR Length --> R5H
+		MOV.W	#CCR_MSG,R1		; CCR Message Address --> R1
+		MOV.B	@ER1+,R0L		; CCR Character --> R0L
+		BTST	R5H,R5L			; CCR Value Check
+		BNE	$+4			;
+		MOV.B	#".",R0L		; "." ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output CCR Character
+		DEC.B	R5H			; Decrement CCR Length
+		BPL	$-14			; CCR Length Check
+		MOV.W	#REG_NAME+168,R1	; SP Name Address --> R1
+		BSR	OUT_VALUE:16		; Output "  SP="
+		MOV.W	@(30,ER2),R0		; SP Value --> R0
+		BSR	BIN_ASC_4:16		; Output SP Value
+		BSR	OUT_CRLF:16		; Output CR,LF
+		MOV.W	#REG_NAME+36,R1		; ER0 Name Address --> R1
+		MOV.B	#2,R5H			; Large Loop Count --> R5H
+		MOV.B	#4,R5L			; Small Loop Count --> R5L
+		BSR	OUT_VALUE:16		; Output "  Rn=" Message
+		MOV.L	@ER2+,ER0		; Register Value --> ER0
+		BSR	BIN_ASC_8:16		; Output Register Value
+		DEC.B	R5L			; Decrement Small Loop Count
+		BNE	$-14			; Check Small Loop Count
+		BSR	OUT_CRLF:16		; Output CR,LF
+		DEC.B	R5H			; Decrement Large Loop Count
+		BNE	$-24			; Check Large Loop Count
+		RTS				;
+CCR_MSG:	.SDATA	"IUHUNZVC"		; CCR Message
+;************************************************************************
+;*	H8/300H Register Status Command Initialize Module		*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+R_COM_INIT:	MOV.W	#STACK+36,R6		; Save Area End Address --> R6
+		MOV.W	#STACK+4,E6		; Save Area Top Address --> E6
+		SUB.W	E0,E0			; Clear E0
+		MOV.W	#$STACK,R0		; User Stack Pointer --> R0
+		MOV.L	ER0,@-ER6		; Set E7,SP Initialize
+		SUB.W	R0,R0			; Clear R0
+		MOV.L	ER0,@-ER6		; Clear Save Area
+		CMP.W	E6,R6			; Check Save Area Address
+		BNE	$-6			;
+		MOV.B	#H'80,R0L		; CCR Initialize Value --> R0L
+		MOV.L	ER0,@-ER6		; Set PC,CCR Initialize
+		RTS				;
+		.END				;

@@ -1,0 +1,27 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  OUT_ADDR		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_2SP			; Output SP,SP Module
+		.IMPORT	BIN_ASC_4		; 4 Binary to ASCII Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	OUT_ADDR		; Output Addeess Module
+;************************************************************************
+;*	Output Address Module						*
+;*		Input	R4  <-- Address Data				*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(6) Byte				*
+;************************************************************************
+OUT_ADDR:	BSR	OUT_2SP:16		; Output SP,SP
+		MOV.W	R4,R0			; Address Data --> R0
+		BSR	BIN_ASC_4:16		; Output Address
+		BRA	OUT_2SP:16		; Output SP,SP
+		.END				;

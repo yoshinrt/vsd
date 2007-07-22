@@ -1,0 +1,34 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  TBL_CHK		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	TBL_CHK			; Table Check Module
+;************************************************************************
+;*	Table Check Module						*
+;*		Input	R0L <-- Check Character				*
+;*			R3  <-- Check Table Address			*
+;*		Output	C of CCR --> Check Status			*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+TBL_CHK:	MOV.W	R0,E7			; Save R0 Register
+		EXTU.W	R0			; Clear Higher Byte
+		MOV.W	R0,E3			; Copy Check Character
+		SHLR.B	R0L			; Make Table Displacement
+		SHLR.B	R0L			;
+		SHLR.B	R0L			;
+		ADD.W	R3,R0			; Increment Table Address
+		MOV.B	@ER0,R0H		; Check Value --> R0H
+		SUB.B	R0L,R0L			; Clear R0L
+		OR.W	E3,R0			; Check Character --> R0L
+		BTST	R0L,R0H			; Table Check
+		STC.B	CCR,R0L			; CCR Code --> R0L
+		BILD	#2,R0L			; Return Code --> C of CCR
+		MOV.W	E7,R0			; Recovery R0 Register
+		RTS				;
+		.END				;

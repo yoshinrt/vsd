@@ -1,0 +1,42 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  ADDRA			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	ASC_BIN_4		; 4 ASCII to Binary Module
+		.IMPORT	ERR04			; Invalid End Address Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	ADDRA			; Address Analize Module
+;************************************************************************
+;*	Start and End Address Analize Module				*
+;*		Input	R1  <-- Address of 2nd Analize Buffer		*
+;*		Output	R1  --> Next Address of Analize Buffer		*
+;*			R4  --> Start Address				*
+;*			R5  --> End   Address				*
+;*			Z of CCR  Only Start --> 1  ,  Exist End --> 0	*
+;*		Used Stack Area --> 2(6) Byte				*
+;************************************************************************
+ADDRA:		MOV.W	@ER1+,R6		; 2nd Analize Buffer --> R6
+		BSR	ASC_BIN_4:16		; Change Start Address
+		MOV.W	@ER1,R6			; 3rd Analize Buffer --> R6
+		MOV.B	@ER6,R0L		; 3rd Parameter --> R0L
+		BEQ	$+26			; 3rd Parameter is Nothing ?
+		CMP.B	#";",R0L		; 3rd Parameter is ";" ?
+		BEQ	$+22			;
+		MOV.W	R4,R5			; Start Address --> R5
+		BSR	ASC_BIN_4:16		; Change End Address
+		CMP.W	R5,R4			; Start and End Address Check
+		BCS	ERR04:16		; Invalid End Address
+		MOV.W	R4,R3			; End   Address --> R3
+		MOV.W	R5,R4			; Start Address --> R4
+		MOV.W	R3,R5			; End   Address --> R5
+		INC.W	#2,R1			; Address of 4th Analize -> R1
+		RTS				;
+		.END				;

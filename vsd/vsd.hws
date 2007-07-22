@@ -1,0 +1,39 @@
+[HIMDBVersion]
+2.0
+[DATABASE_VERSION]
+"6.0" 
+[WORKSPACE_DETAILS]
+"vsd" "G:\DDS\vsd\vsd" "G:\DDS\vsd\vsd\vsd.hws" "H8S,H8/300" "Hitachi H8S,H8/300 Standard" 
+[SHARED_WORKSPACE_CONTROL_STATUS]
+"" "" "" 
+"" "" "" 
+[PROJECTS]
+"monitor" "G:\DDS\vsd\vsd\300thew3\monitor" "G:\DDS\vsd\vsd\300thew3\monitor\monitor.hwp" 0 
+"vsd" "G:\DDS\vsd\vsd\vsd" "G:\DDS\vsd\vsd\vsd\vsd.hwp" 0 
+[INFORMATION]
+"ワークスペース情報がありません" 
+[SCRAP]
+[PROJECT_DEPENDENCY]
+[WORKSPACE_PROPERTIES]
+[VCS]
+"" "" "" 0 
+[VCS_PROJECT]
+[HELP_FILES]
+"c:\program files\renesas\hew\tools\renesas\h8\6_1_0\hew\Stdlib.hlp" "C/C++ Standard Library Help" 1 
+[GENERAL_DATA_PROJECT]
+[SYSMENUTOOLS]
+"Hitachi Mapview" "1.0" 
+"Hitachi Call Walker" "1.1" 
+"Hitachi H Series Librarian Interface" "1.1" 
+[USERMENUTOOLS]
+[CUSTOMPLACEHOLDERS]
+[MAKEFILE_BUILD_INFO]
+"$(WORKSPDIR)\make\$(PROJECTNAME).mak" "" 0 0 
+[VD_CONFIGURATION_OPTIONS]
+"ACTIVE_DESKTOP" "0" 
+[VD_CONFIGURATIONS]
+"3" "Default4" "0" 
+"2" "Default3" "0" 
+"1" "Default2" "0" 
+"0" "Default1" "0" 
+[END]

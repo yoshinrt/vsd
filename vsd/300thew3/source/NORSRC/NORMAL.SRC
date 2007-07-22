@@ -1,0 +1,139 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;*					Programming by Yuji Katori	*
+;************************************************************************
+		.PROGRAM  NORMAL		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	_INITIALIZE		; User Initialize Module
+		.IMPORT	INIT			; Initialize Module
+		.IMPORT	VECTOR_TBL		; Monitor Vector Table
+		.IMPORT	OPEN_MSG		; Opening Message
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+	 	.IMPORT	OUT_STRING		; Output String Module
+	 	.IMPORT	IN_STRING		; Input String Module
+		.IMPORT	ERR01			; Invalid Command Module
+		.IMPORT	TBL_ANA			; Table Analize Module
+		.IMPORT	COM_SPLIT		; Command Split Module
+		.IMPORT	RET_COM			; Return Command Module
+		.IMPORT	RET_TBL			; Return Command Table
+		.IMPORT	HELP_COM		; Help Command Module
+		.IMPORT	HELP_COM_SUB		; Help Command Sub Module
+		.IMPORT	BACK_COM		; Back Command Module
+		.IMPORT	BACK_COM_INIT		; Back Command Initialize
+		.IMPORT	REG_COM			; .Register Command Module
+		.IMPORT	A_COM			; Assemble Command Module
+		.IMPORT	B_COM			; Breakpoint Command Module
+		.IMPORT	B_COM_INIT		; Breakpoint Command Initialize
+		.IMPORT	D_COM			; Dump Command Module
+		.IMPORT	DA_COM			; DisAssemble Command Module
+		.IMPORT	F_COM			; Fill Command Module
+		.IMPORT	G_COM			; Go Command Module
+		.IMPORT	H8_COM			; H8 status Command Module
+		.IMPORT	L_COM			; Load Command Module
+		.IMPORT	M_COM			; Memory Command Module
+		.IMPORT	R_COM			; Register Command Module
+		.IMPORT	R_COM_INIT		; Register Command Initialize
+		.IMPORT	S_COM			; Step Command Module
+		.IMPORT	VECTOR_INIT		; User Vector Initialize Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	INT000			; Reset Routine
+		.EXPORT	MAIN			; Main Module
+		.EXPORT	COM_NAME		; Command Name Table
+		.EXPORT	STACK			; Stack Area
+;************************************************************************
+;*	Reset Routine							*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(10) Byte				*
+;************************************************************************
+INT000:		MOV.W	#STACK,R7		; Set SP
+		LDC.B	#H'C0,CCR		; Disable Interrupt
+		MOV.W	#$+8,R5			; Return Address --> R5
+		BRA	_INITIALIZE:16		; Goto User Initialize Moudle
+		BSR	INIT:16			; CPU  Initialize Module
+		BSR	VECTOR_INIT:16		; User Vector Initialize
+		BSR	BACK_COM_INIT:16	; Back Command Initialize
+		BSR	B_COM_INIT:16		; Breakpoint Command Initialize
+		BSR	R_COM_INIT:16		; Register Command Initialize
+		BSR	OUT_CRLF:16		; Output CR,LF
+		MOV.W	#OPEN_MSG,R1		; Opening Message --> R1
+		BSR	OUT_CRLF:16		; Output CR,LF
+		MOV.B	#2,R3L			; Loop Count --> R3L
+		BSR	OUT_STRING:16		; Output Openinng Message
+		BSR	OUT_CRLF:16		; Output CR,LF
+		DEC.B	R3L			; Decrement Loop Count
+		BNE	$-10			; Check Loop Count
+		BSR	OUT_CRLF:16		; Output CR,LF
+		MOV.B	#"M",R0H		; Monitor Running Mark --> R0H
+		MOV.B	R0H,@RET_TBL		; Set Monitor Running Mark
+;************************************************************************
+;*	MAIN Module							*
+;*		Input	Nothing						*
+;*		Output	R1  --> Address of 2nd Analize Buffer		*
+;*			R6  --> 1st Analize Buffer Address		*
+;*		Used Stack Area --> 0(10) Byte				*
+;************************************************************************
+MAIN:		MOV.W	#STACK,R7		; Recovery Monitor Stack
+		MOV.W	#WAIT_MSG,R1		; Wait Message --> R1
+		BSR	OUT_STRING:16		; Output Message
+		BSR	IN_STRING:16		; Input String
+		BSR	COM_SPLIT:16		; Command Split
+		MOV.B	@ER6,R0L		; 1st Parameter is CR ?
+		BEQ	RET_COM:16		; Call Return Command
+		MOV.B	@(10,ER6),R0L		; 2nd Parameter --> R0L
+		CMP.B	#".",R0L		; 2nd Parameter is "." ?
+		BEQ	BACK_COM:16		; Call Back Command
+		CMP.B	#"?",R0L		; 2nd Parameter is "?" ?
+		BEQ	HELP_COM_SUB:16		; Call Help Command
+		MOV.B	#"M",R0H		; Monitor Running Mark --> R0H
+		MOV.B	R0H,@RET_TBL		; Set Monitor Running Mark
+		MOV.W	#ERR01,R0		; Invalid Command --> R0
+		MOV.W	#COM_NAME,E2		; Command Name First --> E2
+		MOV.W	#COM_NAME+30,E5		; Command Name Last  --> E5
+		BSR	TBL_ANA:16		; Analize Command Number
+		MOV.W	@(COM_TBL:16,ER0),R0	; Command Module --> R0
+		JMP	@ER0			; Call Module
+WAIT_MSG:	.SDATAZ	": "			; Wait Message
+		.ALIGN	2			; Address Even
+COM_NAME:	.SDATAZ	"."			; .  Command Name
+		.SDATAZ	"?"			; ?  Command Name
+		.SDATAZ	"A"			; A  Command Name
+		.SDATAZ	"B"			; B  Command Name
+		.SDATAZ	"D"			; D  Command Name
+		.SDATAZ	"DA"<0>			; DA Command Name
+		.SDATAZ	"F"			; F  Command Name
+		.SDATAZ	"G"			; G  Command Name
+		.SDATAZ	"H8"<0>			; H8 Command Name
+		.SDATAZ	"L"			; L  Command Name
+		.SDATAZ	"M"			; M  Command Name
+		.SDATAZ	"R"			; R  Command Name
+		.SDATAZ	"S"			; S  Command Name
+COM_TBL:	.DATA.W	REG_COM			; .  Command Module Address
+		.DATA.W	HELP_COM		; ?  Command Module Address
+		.DATA.W	A_COM			; A  Command Module Address
+		.DATA.W	B_COM			; B  Command Module Address
+		.DATA.W	D_COM			; D  Command Module Address
+		.DATA.W	DA_COM			; DA Command Module Address
+		.DATA.W	0			;
+		.DATA.W	F_COM			; F  Command Module Address
+		.DATA.W	G_COM			; G  Command Module Address
+		.DATA.W	H8_COM			; H8 Command Module Address
+		.DATA.W	0			;
+		.DATA.W	L_COM			; L  Command Module Address
+		.DATA.W	M_COM			; M  Command Module Address
+		.DATA.W	R_COM			; R  Command Module Address
+		.DATA.W	S_COM			; S  Command Module Address
+;************************************************************************
+;*	Monitor RAM Define						*
+;************************************************************************
+		.SECTION  RAM,DATA,ALIGN=2	; RAM Area Section
+		.RES.W	5			; Monitor Stack Area
+STACK:		.RES.L	9			; Register Save Ares
+		.END	INT000			;

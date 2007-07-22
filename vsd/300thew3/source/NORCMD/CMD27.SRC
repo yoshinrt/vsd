@@ -1,0 +1,139 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0B	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  M_COM			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	INTERNAL		; Internal Address
+		.IMPORT	INTERNAL_BGN		; Internal Begin Address
+		.IMPORT	INTERNAL_END		; Internal End   Address
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+		.IMPORT	OUT_STRING		; Output String Module
+		.IMPORT	OUT_QUES		; Output ? Module
+		.IMPORT	OUT_ADDR		; Output Address Module
+		.IMPORT	BIN_ASC_8		; 8 Binary to ASCII Module
+		.IMPORT	BIN_ASC_4		; 4 Binary to ASCII Module
+		.IMPORT	BIN_ASC_2		; 2 Binary to ASCII Module
+		.IMPORT	ASC_BIN_8		; 8 ASCII to Binary Module
+		.IMPORT	ASC_BIN_4		; 4 ASCII to Binary Module
+		.IMPORT	ASC_BIN_2		; 2 ASCII to Binary Module
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	ADDRA			; Address Analize Module
+		.IMPORT	SIZEA			; Size Analize Module
+		.IMPORT	PARAA			; Parameter Analize Module
+		.IMPORT	BACK_COM_SUB		; Back Command Sub Module
+		.IMPORT	M_BUF			; Memory Command Buffer
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	M_COM			; Memory Command Module
+;************************************************************************
+;*	Memory Command Module						*
+;*		Input	R1  <-- Address of 2nd Analize Buffer		*
+;*		Output	R2  --> Memory Table Address			*
+;*			R4  --> Memory Address				*
+;*		Used Stack Area --> 0(10) Byte				*
+;************************************************************************
+M_COM:		BSR	ADDRA:16		; Start Address Analize
+		BNE	ERR02:16		; Invalid Parameter
+		MOV.W	R4,R5			; Copy Memory Address
+		DEC.B	R5L			; Make Dummy End Address
+		BSR	SIZEA:16		; Size Parameter Analize
+		SHLL.W	R2			; Make Table Displacement
+		ADD.W	#M_TBL,R2		; Memory Table Address --> R2
+		MOV.W	#M_BUF,R6		; Memory Buffer Address --> R6
+		BSR	BACK_COM_SUB:16		; Back Command Sub Module
+;************************************************************************
+;*	Memory Command Sub Module					*
+;*		Input	R2  <-- Memory Table Address			*
+;*			R4  <-- Memory Address				*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(10) Byte				*
+;************************************************************************
+M_COM_SUB:	BSR	OUT_ADDR:16		; Output Address
+		MOV.W	@ER2,R0			; Memory Read Module --> R0
+		JSR	@ER0			; Call Memory Read Module
+		BSR	OUT_QUES:16		; Output "  ?  "
+		BSR	PARAA:16		; Input Parameter
+		ADD.W	R2,R0			; Addition Table Address
+		MOV.W	@(2,ER0),R0		; Parameter Module --> R0
+		JSR	@ER0			; Call Parameter Module
+		BRA	M_COM_SUB		;
+;************************************************************************
+;*	Memory Command Parameter Module					*
+;*		Input	R2  <-- Memory Table Address			*
+;*			R4  <-- Memory Address				*
+;*		Output	R4  --> Next Memory Address			*
+;*		Used Stack Area --> 2(6) Byte				*
+;************************************************************************
+M_BYTE_READ:	MOV.B	@ER4,R0L		; Memory Byte Read
+		BRA	BIN_ASC_2:16		; Change Binary to ASCII
+M_WORD_READ:	MOV.W	@ER4,R0			; Memory Word Read
+		BRA	BIN_ASC_4:16		; Change Binary to ASCII
+M_LONG_READ:	MOV.L	@ER4,ER0		; Memory Long Read
+		BRA	BIN_ASC_8:16		; Change Binary to ASCII
+M_LONG_CR:	ADDS	#2,ER4			; Increment Memory Address
+M_WORD_CR:	ADDS	#1,ER4			; Increment Memory Address
+M_BYTE_CR:	ADDS	#1,ER4			; Increment Memory Address
+		RTS				;
+M_LONG_BACK:	SUBS	#2,ER4			; Decrement Memory Address
+M_WORD_BACK:	SUBS	#1,ER4			; Decrement Memory Address
+M_BYTE_BACK:	SUBS	#1,ER4			; Decrement Memory Address
+		RTS				;
+M_BYTE_ASCII:	MOV.W	R4,R5			; Memory Address --> R5
+		BSR	ASC_BIN_2:16		; Change ASCII to Binary
+		MOV.B	R4L,R3L			; Write Value --> R3L
+		MOV.W	R5,R4			; Memory Address --> R4
+		MOV.B	R3L,@ER4		; Momory Byte Write
+		MOV.B	@ER4,R0L		; Memory Byte Read
+		CMP.B	R3L,R0L			; Verify Check
+		BRA	$+40			;
+M_WORD_ASCII:	MOV.W	R4,R5			; Memory Address --> R5
+		BSR	ASC_BIN_4:16		; Change ASCII to Binary
+		MOV.W	R4,R3			; Write Value --> R3
+		MOV.W	R5,R4			; Memory Address --> R4
+		MOV.W	R3,@ER4			; Momory Word Write
+		MOV.W	@ER4,R0			; Memory Word Read
+		CMP.W	R3,R0			; Verify Check
+		BRA	$+22			;
+M_LONG_ASCII:	MOV.W	R4,R5			; Memory Address --> R5
+		BSR	ASC_BIN_8:16		; Change ASCII to Binary
+		MOV.L	ER4,ER3			; Write Value --> ER3
+		MOV.W	R5,R4			; Memory Address --> R4
+		MOV.L	ER3,@ER4		; Momory Long Write
+		MOV.L	@ER4,ER0		; Memory Long Read
+		CMP.L	ER3,ER0			; Verify Check
+		BEQ	$+40			;
+		MOV.W	#INTERNAL,R0		; Internal Area Address --> R0
+		CMP.W	R0,R4			; Internal Address Check
+		BCC	$+32			;
+		MOV.W	#INTERNAL_BGN,R0	; Internal Begin Address --> R0
+		BEQ	$+14			;
+		CMP.W	R0,R4			; Internal Begin Address Check
+		BCS	$+10			;
+		MOV.W	#INTERNAL_END,R0	; Internal End Address --> R0
+		CMP.W	R0,R4			; Internal End Address Check
+		BLS	$+14			;
+		MOV.W	#M_MSG,R1		; Verify Error Message --> R1
+		BSR	OUT_STRING:16		; Output Verify Error
+		BRA	OUT_CRLF:16		; Output CR,LF
+		MOV.W	@(2,ER2),R0		; CR Module Address --> R0
+		JMP	@ER0			; Call CR Module
+M_TBL:		.DATA.W	M_BYTE_READ		; Byte Read  Module
+		.DATA.W	M_BYTE_CR		; Byte CR    Module
+		.DATA.W	M_BYTE_BACK		; Byte "^"   Module
+		.DATA.W	M_BYTE_ASCII		; Byte Write Module
+		.DATA.W	M_WORD_READ		; Word Read  Module
+		.DATA.W	M_WORD_CR		; Word CR    Module
+		.DATA.W	M_WORD_BACK		; Word "^"   Module
+		.DATA.W	M_WORD_ASCII		; Word Write Module
+		.DATA.W	M_LONG_READ		; Long Read  Module
+		.DATA.W	M_LONG_CR		; Long CR    Module
+		.DATA.W	M_LONG_BACK		; Long "^"   Module
+		.DATA.W	M_LONG_ASCII		; Long Write Module
+M_MSG:		.SDATAZ	<H'07>"  **** Verify Error ****"
+		.END				;

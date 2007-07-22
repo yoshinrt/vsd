@@ -1,0 +1,42 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  IN_SCHAR		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	IN_CHAR			; Input Character Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	IN_SCHAR		; Input S Type Character Module
+;************************************************************************
+;*	Input S Type Character Module					*
+;*		Input	R6H <-- Check Sum Code				*
+;*			R6L <-- Byte Count				*
+;*		Output	R0H --> S Type Binary Code			*
+;*			R6H --> Check Sum Code				*
+;*			R6L --> Byte Count				*
+;*			Z of CCR --> Byte Count Status			*
+;*		Used Stack Area --> 2(6) Byte				*
+;************************************************************************
+IN_SCHAR:	MOV.B	#H'01,R0H		; Initialize Binary Code
+		BSR	IN_CHAR:16		; Input Character
+		BEQ	$-4			;
+		CMP.B	#"A",R0L		; ASCII Code is "A"-"F" ?
+		BCS	$+4			;
+		ADD.B	#(0-7),R0L		; Make "A"-"F"
+		ADD.B	#(0-"0"),R0L		; Make "0"-"9" and "A"-"F"
+		SHLL.B	R0H			; 4Bit Shift Left
+		SHLL.B	R0H			;
+		SHLL.B	R0H			;
+		SHLL.B	R0H			;
+		OR.B	R0L,R0H			; Set Binary Code
+		BCC	$-24			;
+		ADD.B	R0H,R6H			; Analize Check Sum Code
+		DEC.B	R6L			; Decrement Byte Count
+		RTS				;
+		.END				;

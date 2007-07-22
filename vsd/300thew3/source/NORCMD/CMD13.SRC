@@ -1,0 +1,241 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  DA_COM		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CHAR		; Output Character Module
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+		.IMPORT	OUT_SP			; Output SP Module
+		.IMPORT	OUT_2SP			; Output SP,SP Module
+		.IMPORT	OUT_STRING		; Output String Module
+		.IMPORT	OUT_ADDR		; Output Address Module
+		.IMPORT	BIN_ASC_8		; 8 Binary to ASCII Module
+		.IMPORT	BIN_ASC_4		; 4 Binary to ASCII Module
+		.IMPORT	BIN_ASC_2		; 2 Binary to ASCII Module
+		.IMPORT	ANA_BUF			; Analize Buffer
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	ERR03			; Invalid Start Address Module
+		.IMPORT	TBL_CHK			; Table Check Module
+		.IMPORT	ADDRA			; Address Analize Module
+		.IMPORT	INSA			; Instruction Analize Module
+		.IMPORT	INS_NAME		; Instruction Name Table
+		.IMPORT	MAIN			; Main Module
+		.IMPORT	RET_COM_SUB		; Return Command Sub Module
+		.IMPORT	BACK_COM_SUB		; Back Command Sub Module
+		.IMPORT	DA_BUF			; Disassemble Command Buffer
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	DA_COM			; Disassemble Command Module
+		.EXPORT	DA_COM_SUB		; Disassemble Sub Module
+		.EXPORT	DA_SUB_COM		; Disassemble Sub Module
+;************************************************************************
+;*	Disassemble Command Module					*
+;*		Input	R1  <-- Address of 2nd Analize Buffer		*
+;*			R6  <-- 1st Analize Buffer Address		*
+;*		Output	R2L --> End Address Status			*
+;*			R4  --> Disassemble Start Address		*
+;*			R5  --> Disassemble End   Address		*
+;*		Used Stack Area --> 0(8) Byte				*
+;************************************************************************
+DA_COM:		MOV.B	@(30,ER6),R0L		; 4th Parameter is Null ?
+		BNE	ERR02:16		; Invalid Parameter
+		BSR	ADDRA:16		; Start And End Address Analize
+		STC.B	CCR,R2L			; End Address Status --> R2L
+		BTST	#0,R4L			; Start Address Even ?
+		BNE	ERR03:16		; Invalid Start Address
+		MOV.W	#DA_BUF,R6		; Disassemble Buffer --> R6
+		BSR	BACK_COM_SUB:16		; Back Command Sub Module
+		MOV.W	#DA_MSG,R1		; Disassemble Message --> R1
+		BSR	OUT_STRING:16		; Output Disassemble Message
+		BSR	OUT_CRLF:16		; Output CR,LF
+;************************************************************************
+;*	Disassemble Command Sub Module					*
+;*		Input	R2L <-- End Address Status			*
+;*			R4  <-- Disassemble Start Address		*
+;*			R5  <-- Disassemble End   Address		*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(10) Byte				*
+;************************************************************************
+DA_COM_SUB:	BTST.B	#2,R2L			; Check End Address Status
+		BEQ	$+12			;
+		MOV.B	#16,R5L			; Disassemble Loop Count --> R5L
+		BSR	DA_SUB_COM		; Execute Disassemble
+		DEC.B	R5L			; Decrement Loop Count
+		BNE	$-4			; Check Disassemble Loop Count
+		BRA	$+10			;
+		BSR	DA_SUB_COM		; Execute Disassemble
+		CMP.W	R4,R5			; Start Address > End Address ?
+		MOV.W	R4,R4			; Start Address = H'0000 ?
+		BHI	$-6			;
+		MOV.B	#"A",R0H		; Disassemble Name --> R0H
+		MOV.B	#H'FF,R2L		; End Address Status --> R2L
+		BSR	RET_COM_SUB:16		; Retrun Command Sub Module
+		BRA	MAIN:16			; Goto MAIN Module
+;************************************************************************
+;*	Disassemble Sub Command Module					*
+;*		Input	R4  <-- Disassemble Start Address		*
+;*		Output	R4  --> Next Disassemble Start Address		*
+;*		Used Stack Area --> 4(10) Byte				*
+;************************************************************************
+DA_SUB_COM:	PUSH.W	R5			; Save R5 Register
+		BSR	OUT_ADDR:16		; Output Disassemble Address
+		BSR	INSA:16			; Instruction Analize
+		MOV.W	E2,E1			; Instruction Length --> E1
+		MOV.W	#H'000B,E0		; Max SP Loop Count --> E0
+		SUB.W	E2,E0			; Analize Real SP Loop Count
+		MOV.W	@ER4+,R0		; Instruction Code --> R0
+		BSR	BIN_ASC_4:16		; 4 Binary to ASCII
+		DEC.W	#2,E2			; Decrement Loop Count
+		BNE	$-8			;
+		BSR	OUT_2SP:16		; Output SP,SP
+		DEC.W	#1,E0			; Decrement SP Loop Count
+		BNE	$-6			;
+		MOV.B	#11,R6L			; SP Loop Count --> R6L
+		MOV.B	R2L,R1L			; Mnemonic Number --> R1L
+		EXTU.W	R1			; Extend Mnemonic Number
+		SHLL.W	R1			; Make Table Displacement
+		ADD.W	#INS_NAME,R1		; Message Address --> R1
+		MOV.B	@ER1+,R0L		; Mnemonic Character --> R0L
+		BEQ	$+10			;
+		BSR	OUT_CHAR:16		; Output Mnemonic Character
+		ADD.B	#-1,R6L			; Decrement SP Loop Count
+		BRA	$-10			;
+		SHLR.B	R2L			; Shift Mnemonic Number
+		MOV.B	R2L,R0L			; Mnemonic Number --> R0L
+		MOV.W	#SIZE_CHK,R3		; Size Check Table --> R3
+		BSR	TBL_CHK:16		; Size Check
+		BCC	$+16			;
+		MOV.B	#".",R0L		; "." ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output "."
+		MOV.B	R2H,R0L			; Size ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output Size
+		ADD.B	#-2,R6L			; Increment SP Loop Count
+		BSR	OUT_SP:16		; Output SP
+		DEC.B	R6L			; Increment SP Loop Count
+		BNE	$-6			;
+		MOV.B	R2L,R0L			; Mnemonic Number --> R0L
+		MOV.W	#EA_TBL,R2		; <EA> Table Address --> R2
+		MOV.W	#EA_CHK,R3		; <EA> Check Table --> R3
+		BSR	TBL_CHK:16		; <EA> Swap Check
+		BCC	$+4			;
+		ADDS	#2,ER2			; Swap <EAs> <--> <EAd>
+		MOV.W	@ER2+,R3		; <EA> Table Address --> R3
+		MOV.B	@(5,ER3),R0L		; <EA> Module Offset --> R0L
+		EXTU.W	R0			; Extend Module Offset
+		MOV.L	@(EA_TBL+8:16,ER0),ER5	; Message Status --> ER5
+		MOV.W	#EA_MSG,R1		; <EA> Message Address --> R1
+		MOV.B	@ER1+,R0H		; Message Loop Count --> R0H
+		MOV.B	@ER1+,R0L		; <EA> Message Character --> R0L
+		SHLR.L	ER5			; Output Check
+		BCC	$+6			;
+		BSR	OUT_CHAR:16		; Output Message Character
+		DEC.B	R0H			; Decrement Loop Count
+		BNE	$-12			;
+		MOV.L	ER5,ER5			; <EA> Output End ?
+		BEQ	$+24			;
+		MOV.B	@(5,ER3),R0L		; <EA> Module Offset --> R0L
+		EXTU.W	R0			; Extend Module Offset
+		SHLR.L	ER5			; Adjust Code --> C of CCR
+		ADDX	#0,R0L			; Make Table Displacement
+		MOV.B	@(EA_TBL+12:16,ER0),R0L	; <EA> Module Offset --> R0L
+		ADD.W	#EA_MOD,R0		; Make <EA> Module Address
+		JSR	@ER0			; Goto <EA> Output Module
+		BRA	$-40			;
+		MOV.B	#H'FF,R0L		; Clear Code --> R0L
+		MOV.B	R0L,@(5,ER3)		; Clear <EA> Module Offset
+		MOV.W	@ER2+,R3		; Next <EA> Table --> R3
+		MOV.B	@(5,ER3),R0L		; <EA> Module Offset --> R0L
+		CMP.B	#H'FF,R0L		; Next <EA> is Exist ?
+		BEQ	$+10			;
+		MOV.B	#",",R0L		; "," ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output ","
+		BRA	$-80			;
+		BSR	OUT_CRLF:16		; Output CR,LF
+		CMP.W	E1,R4			; Analize Disassemble Address
+		SUBX	R0L,R0L			; C of CCR --> R0L
+		NOT.B	R0L			; Not R0L
+		EXTS.W	R0			; Extend Adjust Code
+		AND.W	R0,R4			; Adjust Disassemble Address
+		POP.W	R5			; Recovery R5 Register
+		RTS				;
+;************************************************************************
+;*	Output <EA> Module						*
+;*		Input	R3  <-- <EA> Table Address			*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(4) Byte				*
+;************************************************************************
+EA_MOD:		MOV.B	@(4,ER3),R0L		; #1 or #2 or #4 --> R0L
+		BLD	#3,R0L			; #1 --> C of CCR
+		BIST	#2,R5L			; Set #1 Parameter
+		BLD	#0,R0L			; #4 --> C of CCR
+		BXOR	#2,R0L			;
+		BST	#6,R5L			; Set #4 Parameter
+		BXOR	#3,R0L			; #2 --> C of CCR
+		BST	#5,R5L			; Set #2 Parameter
+		RTS				;
+		MOV.B	@(4,ER3),R0L		; #xx:2 or #xx:3 --> R0L
+		AND.B	#H'07,R0L		; Rn.B or Rn.W or ERn --> R0L
+		ADD.B	#"0",R0L		; Binary to ASCII
+		BRA	OUT_CHAR:16		; Output #xx:2 or #xx:3 or Register
+		MOV.B	@(3,ER3),R0L		; #xx:8 or @@aa:8 --> R0L
+		BRA	BIN_ASC_2:16		; 2 Binary to ASCII
+		MOV.W	@(2,ER3),R0		; .DATA.W or #xx:16 or Others --> R0
+		BRA	BIN_ASC_4:16		; 4 Binary to ASCII
+		MOV.L	@ER3,ER0		; #xx:32 --> ER0
+		BRA	BIN_ASC_8:16		; 8 Binary to ASCII
+		MOV.B	@(4,ER3),R0L		; Register Number --> R0L
+		BLD	#3,R0L			; RnH or RnL --> C of CCR
+		BIST	#5,R5H			; Set "H"
+		BST	#6,R5H			; Set "L"
+		RTS				;
+		MOV.B	@(4,ER3),R0L		; Register Number --> R0L
+		BLD	#3,R0L			; En or Rn --> C of CCR
+		BST	#2,R5H			; Set "E"
+		BIST	#3,R5H			; Set "R"
+		RTS				;
+EA_TBL:		.DATA.W	ANA_BUF+6		; <EAs> Table Address
+		.DATA.W	ANA_BUF			; <EAd> Table Address
+		.DATA.W	ANA_BUF+6		; <EAs> Table Address
+		.DATA.W	ANA_BUF			; <EAd> Table Address
+		.DATA.W	B'0000000000000000,B'0000000011100000,H'0028	; .DATA.W
+		.DATA.W	B'0000000000011000,B'0000000000000000,H'3814	; Rn.B
+		.DATA.W	B'0000000000010000,B'0000000000000000,H'4414	; Rn.W
+		.DATA.W	B'0000000000011100,B'0000000000000000,H'1214	; ERn
+		.DATA.W	B'0000000000001011,B'0000000000000000,H'1200	; CCR
+		.DATA.W	B'0000000000011100,B'0000000000000010,H'1214	; @ERn
+		.DATA.W	B'0000000100011100,B'1000110101100110,H'2814	; @(d:16,ERn)
+		.DATA.W	B'0000000100011100,B'1110000101100110,H'2814	; @(d:24,ERn)
+		.DATA.W	B'0000000010011100,B'0000000000000010,H'1214	; @ERn+
+		.DATA.W	B'0000000000011100,B'0000000000010010,H'1214	; @-ERn
+		.DATA.W	B'0000000000000000,B'0000001101100010,H'2800	; @aa:8
+		.DATA.W	B'0000000000000000,B'0000110101100010,H'2800	; @aa:16
+		.DATA.W	B'0000000000000000,B'0110000101100010,H'2800	; @aa:24
+		.DATA.W	B'0000000000000000,B'0110010000001000,H'0000	; #1 or #2 or #4
+		.DATA.W	B'0000000000000000,B'0010000100001000,H'1400	; #xx:2
+		.DATA.W	B'0000000000000000,B'0001000100001000,H'1400	; #xx:3
+		.DATA.W	B'0000000000000000,B'0000001101101000,H'2000	; #xx:8
+		.DATA.W	B'0000000000000000,B'0000110101101000,H'2800	; #xx:16
+		.DATA.W	B'0000000000000000,B'0011000101101000,H'3000	; #xx:32
+		.DATA.W	B'0000000000000000,B'0000001100000000,H'2800	; d:8
+		.DATA.W	B'0000000000000000,B'0000110100000000,H'2800	; d:16
+		.DATA.W	B'0000000000000000,B'0000001101100011,H'2000	; @@aa:8
+		.DATA.W	B'0000000000000000,B'0000000000000000,H'1200	; Nothing
+SIZE_CHK:	.DATA.B	H'23,H'00,H'00,H'00	; Size Check Table
+		.DATA.B	H'00,H'00,H'D9,H'9A	;
+		.DATA.B	H'87,H'B6,H'6D,H'6C	;
+		.DATA.B	H'0E,H'02		;
+EA_CHK:		.DATA.B	H'00,H'00,H'00,H'00	; <EA> Check
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.DATA.B	H'0D,H'00,H'00,H'00	;
+		.DATA.B	H'04,H'00		;
+DA_MSG:		.SDATA	" <ADDR> <CODE>      "	; Disassemble Message
+		.SDATA	"          <MNEMONIC>"	;
+		.SDATAZ	" <OPERAND>"		;
+EA_MSG:		.SDATAC	"@@(#-H'",":816324,CCER","HL+)"
+		.END				;

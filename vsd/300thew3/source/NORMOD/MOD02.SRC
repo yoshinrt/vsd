@@ -1,0 +1,28 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  OUT_CRLF		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CHAR		; Output Character Module
+		.IMPORT	IN_CHAR			; Input Character Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	OUT_CRLF		; Output CR,LF Module
+;************************************************************************
+;*	Output CR,LF Module						*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(6) Byte				*
+;************************************************************************
+OUT_CRLF:	BSR	IN_CHAR:16		; Check CTRL+S
+		MOV.B	#H'0D,R0L		; CR ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output CR
+		MOV.B	#H'0A,R0L		; LF ASCII Code --> R0L
+		BRA	OUT_CHAR:16		; Output LF
+		.END				;

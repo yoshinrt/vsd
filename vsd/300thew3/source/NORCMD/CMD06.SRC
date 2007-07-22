@@ -1,0 +1,883 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  A_COM			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CHAR		; Output Character Module
+		.IMPORT	OUT_2SP			; Output SP,SP Module
+		.IMPORT	OUT_ADDR		; Output Address Module
+		.IMPORT	IN_STRING		; Input String Module
+		.IMPORT	ASC_BIN_8		; 8 ASCII to Binary Module
+		.IMPORT	ASC_BIN_4		; 4 ASCII to Binary Module
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	ERR03			; Invalid Start Address Module
+		.IMPORT	TBL_CHK			; Table Check Module
+		.IMPORT	TBL_ANA			; Table Analize Module
+		.IMPORT	INS_SPLIT		; Instruction Split Module
+		.IMPORT	REG_NAME		; Register Name Table
+		.IMPORT	INS_NAME		; Instruction Name Table
+		.IMPORT	ADDR_NAME		; Addressing Mode Name Table
+		.IMPORT	STACK			; Stack Area
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	A_COM			; Assemble Command Module
+;************************************************************************
+;*	Assemble Command Module						*
+;*		Input	R1  <-- Address of 2nd Analize Buffer		*
+;*		Output	R4  --> Assemble Address			*
+;*		Used Stack Area --> 0(10) Byte				*
+;************************************************************************
+A_COM:		MOV.W	@ER1+,R6		; 2nd Analize Buffer --> R6
+		MOV.B	@(10,ER6),R0L		; 3rd Parameter is Null ?
+		BNE	ERR02:16		; Invalid Parameter
+		BSR	ASC_BIN_4:16		; Assemble Address --> R4
+		BTST	#0,R4L			; Assemble Address is Even ?
+		BNE	ERR03:16		; Invalid Start Address
+;************************************************************************
+;*	Assemble Command Sub Module					*
+;*		Input	R4  <-- Assemble Address			*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(10) Byte				*
+;************************************************************************
+A_COM_SUB:	BSR	OUT_ADDR:16		; Output Address
+		MOV.B	#">",R0L		; ">" ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output ">"
+		BSR	OUT_2SP:16		; Output SP,SP
+		BSR	IN_STRING:16		; Input String
+		BSR	INS_SPLIT:16		; Instruction Split
+		BEQ	A_COM_SUB		; Next Assemble
+		MOV.W	#ERR02,R0		; Invalid Parameter --> R0
+		MOV.W	#INS_NAME+6,E2		; Instruction Name First --> E2
+		MOV.W	#INS_NAME+430,E5	; Instruction Name Last --> E5
+		BSR	TBL_ANA:16		; Analize Instruction Number
+		MOV.B	@(MNE_TBL:16,ER0),R2L	; Instruction Parameter --> R2L
+		MOV.W	@ER1+,R6		; 2nd Analize Buffer --> R6
+		MOV.W	@ER6,E2			; 2nd Parameter --> E2
+		BNE	$+8			;
+		MOV.B	R2L,R2H			; Instruction Parameter --> R2H
+		AND.B	#H'07,R2H		; Clear Higher 5Bit
+		BRA	$+28			;
+		MOV.B	#H'07,R2H		; Instruction Size is Byte
+		CMP.W	#".L",E2		; Size is Long Word ?
+		BEQ	$+20			;
+		CMP.W	#".W",E2		; Size is Word ?
+		BEQ	$+12			;
+		CMP.W	#".B",E2		; Size is Byte ?
+		BNE	ERR02:16		; Invalid Parameter
+		DEC.B	R2H			; Size Long Word
+		DEC.B	R2H			; Size Word
+		BTST	R2H,R2L			; Size Parameter Check
+		BEQ	ERR02:16		; Invalid Parameter
+		ADD.B	#(0-5),R2H		; Size Adjust Value --> R2H
+		SUBX	#(0-2),R2H		; Make Size Parameter
+		ADD.B	R2H,R0L			; Make Table Offset
+		ADDX	#0,R0H			;
+		MOV.B	@(MNE_TBL:16,ER0),R2L	; Instruction Number --> R2L
+		MOV.W	R2,@(-8,ER6)		; Save Size,Instruction Number
+		MOV.W	@ER1+,R6		; 3rd Analize Buffer --> R6
+		MOV.W	#ERR02,R0		; Invalid Parameter --> R0
+		MOV.W	#ADDR_NAME,E2		; Addressing Name First --> E2
+		MOV.W	#ADDR_NAME+258,E5	; Addressing Name Last --> E5
+		BSR	TBL_ANA:16		; Analize Addressing Number
+		CMP.B	#H'52,R0L		; Addressing is * ?
+		BNE	$+4			;
+		SUBS	#2,ER0			; Adjust Addressing Number
+		MOV.L	@(OPE_TBL:16,ER0),ER2	; Addressing Parameter --> ER2
+		MOV.W	@ER1+,R6		; Analize Buffer --> R6
+		BEQ	$+26			;
+		MOV.B	R2H,R0L			; Analize Module Offset --> R0L
+		EXTU.W	R0			; Extend Module Offset
+		ADD.W	#OPE_MOD,R0		; Analize Module --> R0
+		JSR	@ER0			; Call Analize Module
+		MOV.L	ER0,@ER6		; Save Analize Parameter
+		MOV.W	E2,R0			; 3rd and 2nd Parameter --> R0
+		MOV.B	R0L,R2H			; 2nd --> 1st Parameter
+		MOV.B	R0H,R0L			; 3rd --> 2nd Parameter
+		MOV.W	R0,E2			; 2nd Parameter --> E2
+		BRA	$-26			;
+		SUB.W	#8,R1			; Adjust Analize Buffer Address
+		MOV.W	@(-6,ER1),R6		; 1st Analize Buffer --> R6
+		MOV.W	@ER6,R0			; Size,Instruction --> R0
+		EXTU.W	R2			; Extend Addressing Number
+		MOV.L	@(ADR_TBL:16,ER2),ER2	; Addressing Parameter --> ER2
+		MOV.W	@ER1+,R6		; Analize Buffer --> R6
+		BEQ	$+28			;
+		MOV.L	@ER6,ER5		; Instruction Parameter --> ER5
+		MOV.B	R2H,R3L			; Analize Module Offset --> R3L
+		EXTU.W	R3			; Extend Module Offset
+		SUB.B	R2H,R2H			; Clear R2H
+		ADD.W	#ADR_MOD,R3		; Analize Module --> R3
+		JSR	@ER3			; Call Analize Module
+		MOV.W	E2,R3			; 3rd and 2nd Parameter --> R3
+		MOV.B	R3L,R2H			; 2nd --> 1st Parameter
+		MOV.B	R3H,R3L			; 3rd --> 2nd Parameter
+		MOV.W	R3,E2			; 3rd Parameter --> E2
+		BRA	$-30			;
+		SUB.W	#8,R1			; Adjust Analize Buffer Address
+		EXTU.W	R0			; Extend Instruction Number
+		SHLL.W	R0			; Make Table Displacement
+		MOV.W	@(INS_TBL:16,ER0),R0	; Table Offset --> R0
+		ADD.W	#COD_TBL,R0		; Code Table Address --> R0
+		MOV.W	@ER0+,R6		; Addressing Number --> R6
+		SUB.B	R2L,R6H			; Addressing Mode Compare
+		BEQ	$+12			;
+		EXTS.W	R6			; Extend Offset Address
+		BMI	ERR02:16		; Invalid Parameter
+		ADD.W	R6,R0			; Next Table Address --> R0
+		BRA	$-14			;
+		BCLR	#7,R6L			; Adjust Instruction Length
+		SUBS	#4,ER6			; Decrement Parameter Length
+		MOV.L	@ER0+,ER2		; Instruction Parameter --> ER2
+		MOV.W	@ER0+,E5		; Instruction Code --> E5
+		MOV.W	E5,@ER4			; E5 --> Assemble Memory
+		ADDS	#2,ER4			; Increment Assemble Address
+		DEC.W	#2,R6			; Decrement Instruction Length
+		BNE	$-8			;
+		MOV.B	R2L,R6L			; Rest Instruction Length --> R6L
+		ADD.W	R6,R4			; Adjust Assemble Address
+		EXTU.L	ER4			; Clear Higher Word
+		MOV.W	@ER1+,R6		; Analize Buffer --> R6
+		BEQ	A_COM_SUB		;
+		MOV.L	@ER6,ER6		; Instruction Parameter --> ER6
+		MOV.B	R2H,R5L			; Analize Module Offset --> R5L
+		EXTU.W	R5			; Extend Module Offset
+		ADD.W	#COD_MOD,R5		; Analize Module --> R5
+		JSR	@ER5			; Call Analize Module
+		MOV.W	E2,R5			; 3rd and 2nd Parameter --> R5
+		MOV.B	R5L,R2H			; 2nd --> 1st Parameter
+		MOV.B	R5H,R5L			; 3rd --> 2nd Parameter
+		MOV.W	R5,E2			;
+		BRA	$-28			;
+;************************************************************************
+;*		Operand Analize Module					*
+;************************************************************************
+OPE_MOD:					;* Nothing
+		SUB.L	ER0,ER0			; Clear Parameter
+		RTS				;
+						;* Addressing Mode Analize
+		MOV.B	@(1,ER6),R0L		; 2nd Character --> R0L
+		CMP.B	#"P",R0L		; Addressing is @ERn ?
+		BCC	$+40			;
+		ADD.B	#4,R2L			; Change Addressing Number
+						;* Immediate Analize
+		PUSH.L	ER4			; Save ER4 Register
+		MOV.W	R6,R5			; Save Analize Buffer --> R5
+		BSR	ASC_BIN_8:16		; Analize Immediate
+		MOV.L	ER4,ER0			; Save Immediate
+		MOV.W	R5,R6			; Recovery Analize Buffer
+		POP.L	ER4			; Recovery ER4 Register
+		RTS				;
+						;* Instruction Analize
+		MOV.B	@(-21,ER6),R0L		; Instruction Number --> R0L
+		MOV.W	#BCC_CHK,R3		; Instruction Check --> R3
+		BSR	TBL_CHK:16		; Instruction Check
+		BCS	$-32			;
+		ADD.B	#(0-16),R2L		; Change Addressing Number
+						;* Register Analize
+		PUSH.L	ER2			; Save ER2 Register
+		MOV.W	#ERR02,R0		; Invalid Parameter --> R0
+		MOV.W	#REG_NAME,E2		; Register Name First --> E2
+		MOV.W	#REG_NAME+172,E5	; Register Name Last --> E5
+		BSR	TBL_ANA:16		; Analize Register Offset
+		SHLR.W	R0			; Make Register Offset
+		SHLR.W	R0			;
+		MOV.B	@(REG_CHG:16,ER0),R0L	; Set Register Number
+		BMI	ERR02:16		; Invalid Parameter
+		POP.L	ER2			; Recovery ER2 Register
+		RTS				;
+REG_CHG:	.DATA.B	H'00,H'19,H'1A,H'1B	; CCR  E0   E1   E2
+		.DATA.B	H'1C,H'1D,H'1E,H'1F	; E3   E4   E5   E6
+		.DATA.B	H'20,H'21,H'22,H'23	; E7   ER0  ER1  ER2
+		.DATA.B	H'24,H'25,H'26,H'27	; ER3  ER4  ER5  ER6
+		.DATA.B	H'28,H'FF,H'11,H'01	; ER7  PC   R0   R0H
+		.DATA.B	H'09,H'12,H'02,H'0A	; R0L  R1   R1H  R1L
+		.DATA.B	H'13,H'03,H'0B,H'14	; R2   R2H  R2L  R3
+		.DATA.B	H'04,H'0C,H'15,H'05	; R3H  R3L  R4   R4H
+		.DATA.B	H'0D,H'16,H'06,H'0E	; R4L  R5   R5H  R5L
+		.DATA.B	H'17,H'07,H'0F,H'18	; R6   R6H  R6L  R7
+		.DATA.B	H'08,H'10,H'18,H'00	; R7H  R7L  SP
+;************************************************************************
+;*		Addressing Analize Module				*
+;************************************************************************
+ADR_MOD:					;* Register Analize (+4)
+		ADD.B	#H'03,R2H		; Adjust Value --> R2H
+						;* Register Analize (+1)
+		ADD.B	#H'01,R2H		; Adjust Value --> R2H
+		AND.B	R5L,R5L			; Register Number --> Z of CCR
+		BEQ	$+26			; Register is CCR ?
+		ADD.B	R2H,R2L			; Adjust Addressing Number
+		ADD.B	#(0-H'01),R5L		; Adjust Register Number
+		CMP.B	#H'10,R5L		; Byte Size Register ?
+		BCS	$+14			; R0H - R7H or R0L - R7L
+		ADD.B	R2H,R2L			; Adjust Addressing Number
+		ADD.B	#(0-H'10),R5L		; Adjust Register Number
+		CMP.B	#H'10,R5L		; Word Size Register ?
+		BCS	$+6			; R0 - R7 or E0 - E7
+		ADD.B	R2H,R2L			; Adjust Addressing Number
+		ADD.B	#(0-H'10),R5L		; Adjust Register Number
+		MOV.B	R5L,@(3,ER6)		; Set Register Number
+		RTS				;
+						;* ERn Analize
+		ADD.B	#(0-H'21),R5L		; Adjust Register Number
+		BCC	ERR02:16		; Invalid Parameter
+		MOV.B	R5L,@(3,ER6)		; Set Register Number
+		RTS				;
+						;* d:? Analize
+		DEC.W	#2,R5			; Make d:8 Code --> ER5
+		SUB.L	ER4,ER5			; Displacement --> ER5
+		MOV.B	R5L,R3L			; Displacement(Byte) --> R3L
+		EXTS.W	R3			; Extend Displacement(Word)
+		EXTS.L	ER3			; Extend Displacement(Long)
+		CMP.L	ER3,ER5			; d:8 Code Check
+		BEQ	$+24			; Goto d:8
+		ADD.B	#H'01,R2L		; Addressing is d:16
+		DEC.W	#2,R5			; Make d:16 Code --> ER5
+		BRA	$+28			; Goto d:16
+						;* d:8 Analize
+		DEC.W	#2,R5			; Make d:8 Code --> ER5
+		SUB.L	ER4,ER5			; Displacement --> ER5
+		MOV.B	R5L,R3L			; Displacement(Byte) --> R3L
+		EXTS.W	R3			; Extend Displacement(Word)
+		EXTS.L	ER3			; Extend Displacement(Long)
+		CMP.L	ER3,ER5			; d:8 Code Check
+		BNE	ERR02:16		; Invalid Parameter
+		MOV.W	R5,@(2,ER6)		; Set d:8 Code
+		RTS				;
+						;* d:16 Analize
+		SUBS	#4,ER5			; Make d:16 Code --> ER5
+		SUB.L	ER4,ER5			; Displacement --> ER5
+		MOV.W	R5,@(2,ER6)		; Set d:16 Code
+		RTS				;
+						;* @aa:? Analize
+		MOV.W	#ABS_CHK,R3		; Absolute Table --> R3
+		BSR	TBL_CHK:16		; Absolute Check
+		BCS	$+16			; Goto @(d:?,ERn)
+		MOV.B	R5L,R3L			; @aa:? Lower Code --> R3L
+		MOV.B	#H'FF,R3H		; @aa:8 Check Code --> R3H
+		SUB.W	E3,E3			; Clear Higher Word
+		CMP.L	ER3,ER5			; @aa:? is @aa:8 ?
+		BNE	$+6			; Goto @(d:?,ERn)
+		ADD.B	#(0-H'08),R2L		; Addressing is @aa:8
+		RTS				;
+						;* @aa:16 or @(d:16,ERn) Analize
+						;* @aa:24 or @(d:24,ERn) Analize
+		MOV.W	E5,E5			; @aa:16 Code Check
+		BNE	ERR02:16		; Invalid Parameter
+		RTS				;
+						;* @aa:8 Analize
+		MOV.B	R5L,R3L			; @aa:8 Lower Code --> R5L
+		MOV.B	#H'FF,R3H		; @aa:8 Check Code --> R3H
+		SUB.W	E3,E3			; Clear Higher Word
+		CMP.L	ER3,ER5			; @aa:8 Code Check
+		BNE	ERR02:16		; Invalid Parameter
+		RTS				;
+						;* #xx:? Analize
+		CMP.B	#H'7F,R0L		; Instruction is TRAPA ?
+		BEQ	$+60			; Goto #xx:2
+		MOV.W	#BIT_CHK,R3		; Bit Table --> R3
+		BSR	TBL_CHK:16		; Bit Instruction Check
+		BCS	$+52			; Goto #xx:3
+		MOV.W	#ART_CHK,R3		; Arithmetic Table --> R3
+		BSR	TBL_CHK:16		; Arithmetic Instruction Check
+		BCC	$+24			;
+		ADD.B	#(0-H'0C),R2L		; Decrement Addressing Number
+		DEC.L	#1,ER5			; 
+		BEQ	$+16			; Addressing is #1
+		ADD.B	#H'04,R2L		; Increment Addressing Number
+		DEC.L	#1,ER5			; 
+		BEQ	$+10			; Addressing is #2
+		ADD.B	#H'04,R2L		; Increment Addressing Number
+		DEC.L	#2,ER5			; Addressing is #4
+		BNE	ERR02:16		; Invalid Parameter
+		RTS				;
+		ADD.B	#H'04,R2L		; Increment Addressing Number
+		DEC.B	R0H			; Size is Byte ?
+		BEQ	$+16			; Goto #xx:8
+		ADD.B	#H'04,R2L		; Increment Addressing Number
+		DEC.B	R0H			; Size is Word ?
+		BEQ	$+12			; Goto #xx:16
+		ADD.B	#H'04,R2L		; Increment Addressing Number
+		RTS				; Addressing is #xx:32
+						;* #xx:2 Analize
+		ADD.B	#H'04,R2H		; #xx:2 Check Code --> R2H
+						;* #xx:3 Analize
+		ADD.B	#H'F8,R2H		; #xx:3 Check Code --> R2H
+						;* #xx:8 or @@aa:8 Analize
+		ORC	#H'01,CCR		; #xx:8 Check Code --> C of CCR
+						;* #xx:16 Analize
+		MOV.W	#H'FFFF,E3		; #xx:16 Check Code --> E3
+		SUBX	R3H,R3H			; Immediate Check Code --> R3H
+		MOV.B	R2H,R3L			; Immediate Check Code --> R3L
+		AND.L	ER3,ER5			; Immediate Code Check
+		BNE	ERR02:16		; Invalid Parameter
+						;* #xx:32 or Nothing Analize
+		RTS				;
+;************************************************************************
+;*		Code Analize Module					*
+;************************************************************************
+COD_MOD:					;* Rn Into Higher of 1st Byte
+		SHLL.B	R6L			; Register Number 4Bit Shift
+		SHLL.B	R6L			;
+		SHLL.B	R6L			;
+		SHLL.B	R6L			;
+						;* Rn Into Lower of 1st Byte
+		MOV.B	@(-1,ER4),R2L		; 1st Byte --> R2L
+		OR.B	R6L,R2L			; Set Register Number
+		MOV.B	R2L,@(-1,ER4)		; Recovery 1st Byte
+		RTS				;
+						;* Rn Into Lower of 2nd Byte
+		MOV.B	@(-2,ER4),R2L		; 2nd Byte --> R2L
+		OR.B	R6L,R2L			; Set Register Number
+		MOV.B	R2L,@(-2,ER4)		; Recovery 2nd Byte
+		RTS				;
+						;* Rn Into Higher of 3rd Byte
+		SHLL.B	R6L			; Register Number 4Bit Shift
+		SHLL.B	R6L			;
+		SHLL.B	R6L			;
+		SHLL.B	R6L			;
+						;* Rn Into Lower of 3rd Byte
+		MOV.B	@(-3,ER4),R2L		; 3rd Byte --> R2L
+		OR.B	R6L,R2L			; Set Register Number
+		MOV.B	R2L,@(-3,ER4)		; Recovery 3rd Byte
+		RTS				;
+						;* Rn Into Lower of 5th Byte
+		MOV.B	@(-5,ER4),R2L		; 5th Byte --> R2L
+		OR.B	R6L,R2L			; Set Register Number
+		MOV.B	R2L,@(-5,ER4)		; Recovery 5th Byte
+		RTS				;
+						;* Rn Into Higher of 7th Byte
+		SHLL.B	R6L			; Register Number 4Bit Shift
+		SHLL.B	R6L			;
+		SHLL.B	R6L			;
+		SHLL.B	R6L			;
+		MOV.B	@(-7,ER4),R2L		; 7th Byte --> R2L
+		OR.B	R6L,R2L			; Set Register Number
+		MOV.B	R2L,@(-7,ER4)		; Recovery 7th Byte
+		RTS				;
+						;* @aa:24 or #xx:32 Into 1st-4th Byte
+		MOV.L	ER6,@(-4,ER4)		; Set 1st,2nd,3rd,4th Byte
+		RTS				;
+						;* @aa:24 Into Higher of 1st-3rd Byte
+		MOV.W	E6,R0			; Higher Parameter --> R0
+		MOV.B	R0L,@(-3,ER4)		; Set 3rd Byte
+						;* @aa:16 or #xx:16 Into 1st,2nd Byte
+		MOV.W	R6,@(-2,ER4)		; Set 1st,2nd Byte
+		RTS				;
+						;* @aa:8 or #xx:8 Into 1st Byte
+		MOV.B	R6L,@(-1,ER4)		; Set 1st Byte
+		RTS				;
+						;* @aa:8 Into 3rd Byte
+		MOV.B	R6L,@(-3,ER4)		; Set 3rd Byte
+						;* Nothing
+		RTS				;
+BCC_CHK:	.DATA.B	H'00,H'F4,H'07,H'7E	; Branch Instruction Table
+		.DATA.B	H'AE,H'06,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.DATA.B	H'00			;
+ABS_CHK:	.DATA.B	H'00,H'00,H'00,H'00	; Absolute Instruction Table
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.DATA.B	H'D0,H'03,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'02	;
+		.DATA.B	H'00			;
+BIT_CHK:	.DATA.B	H'00,H'0A,H'F8,H'81	; Bit Instruction Table
+		.DATA.B	H'51,H'09,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.DATA.B	H'00			;
+ART_CHK:	.DATA.B	H'08,H'00,H'00,H'00	; Arithmetic Instruction Table
+		.DATA.B	H'00,H'00,H'0E,H'C0	;
+		.DATA.B	H'01,H'00,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'20	;
+		.DATA.B	H'00			;
+;************************************************************************
+;*		Mnemonic Table						*
+;************************************************************************
+MNE_TBL	.DATA.B	B'11100101,H'00,H'01,H'02		; ADD
+	.DATA.B	B'10000111,H'00,H'00,H'03,	0,0	; ADDS
+	.DATA.B	B'00100101,H'04,H'00,H'00,	0,0	; ADDX
+	.DATA.B	B'11100101,H'05,H'06,H'07		; AND
+	.DATA.B	B'00100101,H'08,H'00,H'00,	0,0	; ANDC
+	.DATA.B	B'00100101,H'09,H'00,H'00,	0,0	; BAND
+	.DATA.B	B'00010100,H'0A,H'00,H'00		; BCC
+	.DATA.B	B'00100101,H'0B,H'00,H'00,	0,0	; BCLR
+	.DATA.B	B'00010100,H'0C,H'00,H'00		; BCS
+	.DATA.B	B'00010100,H'0D,H'00,H'00		; BEQ
+	.DATA.B	B'00010100,H'0E,H'00,H'00		; BF
+	.DATA.B	B'00010100,H'0F,H'00,H'00		; BGE
+	.DATA.B	B'00010100,H'10,H'00,H'00		; BGT
+	.DATA.B	B'00010100,H'11,H'00,H'00		; BHI
+	.DATA.B	B'00010100,H'12,H'00,H'00		; BHS
+	.DATA.B	B'00100101,H'13,H'00,H'00,	0,0	; BIAND
+	.DATA.B	B'00100101,H'14,H'00,H'00,	0,0	; BILD
+	.DATA.B	B'00100101,H'15,H'00,H'00,	0,0	; BIOR
+	.DATA.B	B'00100101,H'16,H'00,H'00,	0,0	; BIST
+	.DATA.B	B'00100101,H'17,H'00,H'00,	0,0	; BIXOR
+	.DATA.B	B'00100101,H'18,H'00,H'00		; BLD
+	.DATA.B	B'00010100,H'19,H'00,H'00		; BLE
+	.DATA.B	B'00010100,H'1A,H'00,H'00		; BLO
+	.DATA.B	B'00010100,H'1B,H'00,H'00		; BLS
+	.DATA.B	B'00010100,H'1C,H'00,H'00		; BLT
+	.DATA.B	B'00010100,H'1D,H'00,H'00		; BMI
+	.DATA.B	B'00010100,H'1E,H'00,H'00		; BNE
+	.DATA.B	B'00100101,H'1F,H'00,H'00,	0,0	; BNOT
+	.DATA.B	B'00100101,H'20,H'00,H'00		; BOR
+	.DATA.B	B'00010100,H'21,H'00,H'00		; BPL
+	.DATA.B	B'00010100,H'22,H'00,H'00		; BRA
+	.DATA.B	B'00010100,H'23,H'00,H'00		; BRN
+	.DATA.B	B'00100101,H'24,H'00,H'00,	0,0	; BSET
+	.DATA.B	B'00010100,H'25,H'00,H'00		; BSR
+	.DATA.B	B'00100101,H'26,H'00,H'00		; BST
+	.DATA.B	B'00010100,H'27,H'00,H'00		; BT
+	.DATA.B	B'00100101,H'28,H'00,H'00,	0,0	; BTST
+	.DATA.B	B'00010100,H'29,H'00,H'00		; BVC
+	.DATA.B	B'00010100,H'2A,H'00,H'00		; BVS
+	.DATA.B	B'00100101,H'2B,H'00,H'00,	0,0	; BXOR
+	.DATA.B	B'11100101,H'2C,H'2D,H'2E		; CMP
+	.DATA.B	B'00100101,H'2F,H'00,H'00		; DAA
+	.DATA.B	B'00100101,H'30,H'00,H'00		; DAS
+	.DATA.B	B'11100101,H'31,H'32,H'33		; DEC
+	.DATA.B	B'01100101,H'34,H'35,H'00,	0,0	; DIVXS
+	.DATA.B	B'01100101,H'36,H'37,H'00,	0,0	; DIVXU
+	.DATA.B	B'01100101,H'38,H'39,H'00,	0,0,0,0	; EEPMOV
+	.DATA.B	B'11000110,H'00,H'3A,H'3B,	0,0	; EXTS
+	.DATA.B	B'11000110,H'00,H'3C,H'3D,	0,0	; EXTU
+	.DATA.B	B'11100101,H'3E,H'3F,H'40		; INC
+	.DATA.B	B'00010100,H'41,H'00,H'00		; JMP
+	.DATA.B	B'00010100,H'42,H'00,H'00		; JSR
+	.DATA.B	B'01100101,H'43,H'44,H'00		; LDC (Normal)
+	.DATA.B	B'01100101,H'43,H'44,H'00		; LDC (Swap)
+	.DATA.B	B'11100101,H'45,H'46,H'47		; MOV (Normal)
+	.DATA.B	B'11100101,H'45,H'46,H'47		; MOV (Swap)
+	.DATA.B	B'00100101,H'48,H'00,H'00,	0,0,0,0	; MOVFPE
+	.DATA.B	B'00100101,H'49,H'00,H'00,	0,0,0,0	; MOVTPE
+	.DATA.B	B'01100101,H'4A,H'4B,H'00,	0,0	; MULXS
+	.DATA.B	B'01100101,H'4C,H'4D,H'00,	0,0	; MULXU
+	.DATA.B	B'11100101,H'4E,H'4F,H'50		; NEG
+	.DATA.B	B'00010100,H'51,H'00,H'00		; NOP
+	.DATA.B	B'11100101,H'52,H'53,H'54		; NOT
+	.DATA.B	B'11100101,H'55,H'56,H'57		; OR
+	.DATA.B	B'00100101,H'58,H'00,H'00		; ORC
+	.DATA.B	B'11000110,H'00,H'59,H'5A		; POP
+	.DATA.B	B'11000110,H'00,H'5B,H'5C,	0,0	; PUSH
+	.DATA.B	B'11100101,H'5D,H'5E,H'5F,	0,0	; ROTL
+	.DATA.B	B'11100101,H'60,H'61,H'62,	0,0	; ROTR
+	.DATA.B	B'11100101,H'63,H'64,H'65,	0,0	; ROTXL
+	.DATA.B	B'11100101,H'66,H'67,H'68,	0,0	; ROTXR
+	.DATA.B	B'00010100,H'69,H'00,H'00		; RTE
+	.DATA.B	B'00010100,H'6A,H'00,H'00		; RTS
+	.DATA.B	B'11100101,H'6B,H'6C,H'6D,	0,0	; SHAL
+	.DATA.B	B'11100101,H'6E,H'6F,H'70,	0,0	; SHAR
+	.DATA.B	B'11100101,H'71,H'72,H'73,	0,0	; SHLL
+	.DATA.B	B'11100101,H'74,H'75,H'76,	0,0	; SHLR
+	.DATA.B	B'00010100,H'77,H'00,H'00,	0,0	; SLEEP
+	.DATA.B	B'01100101,H'78,H'79,H'00		; STC (Normal)
+	.DATA.B	B'01100101,H'78,H'79,H'00		; STC (Swap)
+	.DATA.B	B'11100101,H'7A,H'7B,H'7C		; SUB
+	.DATA.B	B'10000111,H'00,H'00,H'7D,	0,0	; SUBS
+	.DATA.B	B'00100101,H'7E,H'00,H'00,	0,0	; SUBX
+	.DATA.B	B'00010100,H'7F,H'00,H'00,	0,0	; TRAPA
+	.DATA.B	B'11100101,H'80,H'81,H'82		; XOR
+	.DATA.B	B'00100101,H'83,H'00,H'00		; XORC
+;************************************************************************
+;*		Operand Table						*
+;************************************************************************
+OPE_TBL	.DATA.B	H'00,H'00;H'00,H'00			; Nothing
+	.DATA.B	H'00,H'00,H'0E,H'10			; #*
+	.DATA.B	H'00,H'32,H'0E,H'70,	0,0		; #*,*
+	.DATA.B	H'00,H'04,H'0E,H'84,	0,0		; #*,@*
+	.DATA.B	H'00,H'0E,H'0E,H'88,	0,0,0,0		; #*,@*:8
+	.DATA.B	H'00,H'32,H'0E,H'7C,	0,0,0,0		; #*:16,*
+	.DATA.B	H'00,H'00,H'0E,H'10,	0,0		; #*:2
+	.DATA.B	H'00,H'32,H'0E,H'74,	0,0,0,0		; #*:3,*
+	.DATA.B	H'00,H'04,H'0E,H'84,	0,0,0,0		; #*:3,@*
+	.DATA.B	H'00,H'0E,H'0E,H'88,	0,0,0,0,0,0	; #*:3,@*:8
+	.DATA.B	H'00,H'32,H'0E,H'80,	0,0,0,0		; #*:32,*
+	.DATA.B	H'00,H'32,H'0E,H'78,	0,0;0,0		; #*:8,*
+	.DATA.B	H'00,H'00,H'22,H'14			; *
+	.DATA.B	H'00,H'32,H'32,H'24			; *,*
+	.DATA.B	H'32,H'0E,H'32,H'40,	0,0,0,0,0,0	; *,@(*,*)
+	.DATA.B	H'32,H'0E,H'32,H'44,	0,0,0,0,0,0,0,0	; *,@(*:16,*)
+	.DATA.B	H'32,H'0E,H'32,H'48,	0,0,0,0,0,0,0,0	; *,@(*:24,*)
+	.DATA.B	H'00,H'04,H'32,H'28,	0,0		; *,@*
+	.DATA.B	H'00,H'0E,H'32,H'34,	0,0,0,0		; *,@*:16
+	.DATA.B	H'00,H'0E,H'32,H'38,	0,0,0,0		; *,@*:24
+	.DATA.B	H'00,H'0E,H'32,H'30,	0,0,0,0		; *,@*:8
+	.DATA.B	H'00,H'32,H'32,H'3C,	0,0		; *,@-*
+	.DATA.B	H'00,H'00,H'0E,H'1C,	0,0		; *:16
+	.DATA.B	H'00,H'00,H'0E,H'18			; *:8
+	.DATA.B	H'32,H'32,H'0E,H'64,	0,0,0,0,0,0	; @(*,*),*
+	.DATA.B	H'32,H'32,H'0E,H'68,	0,0,0,0,0,0,0,0	; @(*:16,*),*
+	.DATA.B	H'32,H'32,H'0E,H'6C,	0,0,0,0,0,0,0,0	; @(*:24,*),*
+	.DATA.B	H'00,H'00,H'04,H'08			; @*
+	.DATA.B	H'00,H'32,H'32,H'60,	0,0		; @*+,*
+	.DATA.B	H'00,H'32,H'04,H'4C,	0,0		; @*,*
+	.DATA.B	H'00,H'32,H'0E,H'58,	0,0,0,0		; @*:16,*
+	.DATA.B	H'00,H'00,H'0E,H'0C,	0,0		; @*:24
+	.DATA.B	H'00,H'32,H'0E,H'5C,	0,0,0,0		; @*:24,*
+	.DATA.B	H'00,H'32,H'0E,H'54,	0,0,0,0		; @*:8,*
+	.DATA.B	H'00,H'00,H'0E,H'20			; @@*
+	.DATA.B	H'00,H'00,H'0E,H'20			; @@*:8
+;************************************************************************
+;*		Addressing Table					*
+;************************************************************************
+ADR_TBL	.DATA.B	H'E4,H'E4,H'E4,H'00			; 00 00 Nothing
+	.DATA.B	H'E4,H'E4,H'02,H'01			; 04 01 reg
+	.DATA.B	H'E4,H'E4,H'22,H'05			; 08 05 @ERn
+	.DATA.B	H'E4,H'E4,H'7A,H'06			; 0C 06 @aa:24
+	.DATA.B	H'E4,H'E4,H'CE,H'07			; 10 07 #xx:2
+	.DATA.B	H'E4,H'E4,H'2E,H'08			; 14    d:?
+	.DATA.B	H'E4,H'E4,H'42,H'08			; 18 08 d:8
+	.DATA.B	H'E4,H'E4,H'58,H'09			; 1C 09 d:16
+	.DATA.B	H'E4,H'E4,H'D2,H'0A			; 20 0A @@aa:8
+	.DATA.B	H'E4,H'02,H'00,H'0B			; 24 0B reg,reg
+	.DATA.B	H'E4,H'22,H'02,H'1B			; 28 1B reg,@ERn
+	.DATA.B	H'E4,H'62,H'02,H'27			; 2C    Rn,@aa:?
+	.DATA.B	H'E4,H'82,H'02,H'1F			; 30 1F reg,@aa:8
+	.DATA.B	H'E4,H'7A,H'02,H'23			; 34 23 reg,@aa:16
+	.DATA.B	H'E4,H'7A,H'02,H'27			; 38 27 reg,@aa:24
+	.DATA.B	H'E4,H'22,H'02,H'2B			; 3C 2B reg,@-ERn
+	.DATA.B	H'22,H'62,H'02,H'33			; 40    Rn,@(d:?,ERn)
+	.DATA.B	H'22,H'7A,H'02,H'2F			; 44 2F reg,@(d:16,ERn)
+	.DATA.B	H'22,H'7A,H'02,H'33			; 48 33 reg,@(d:24,ERn)
+	.DATA.B	H'E4,H'02,H'22,H'37			; 4C 37 @ERn,reg
+	.DATA.B	H'E4,H'02,H'62,H'43			; 50    @aa:?,Rn
+	.DATA.B	H'E4,H'02,H'82,H'3B			; 54 3B @aa:8,reg
+	.DATA.B	H'E4,H'02,H'7A,H'3F			; 58 3F @aa:16,reg
+	.DATA.B	H'E4,H'02,H'7A,H'43			; 5C 43 @aa:24,reg
+	.DATA.B	H'E4,H'02,H'22,H'47			; 60 47 @ERn+,reg
+	.DATA.B	H'02,H'22,H'62,H'4F			; 64    @(d:?,ERn),Rn
+	.DATA.B	H'02,H'22,H'7A,H'4B			; 68 4B @(d:16,ERn),reg
+	.DATA.B	H'02,H'22,H'7A,H'4F			; 6C 4F @(d:24,ERn),reg
+	.DATA.B	H'E4,H'02,H'90,H'5F			; 70    #xx:?,Rn
+							;    53 #1,reg
+							;    57 #2,reg
+							;    5B #4,reg
+	.DATA.B	H'E4,H'02,H'D0,H'5F			; 74 5F #xx:3,reg
+	.DATA.B	H'E4,H'02,H'D2,H'63			; 78 63 #xx:8,reg
+	.DATA.B	H'E4,H'02,H'D4,H'67			; 7C 67 #xx:16,reg
+	.DATA.B	H'E4,H'02,H'E4,H'6B			; 80 6B #xx:32,reg
+	.DATA.B	H'E4,H'22,H'D0,H'6F			; 84 6F #xx:3,@ERn
+	.DATA.B	H'E4,H'82,H'D0,H'70			; 88 70 #xx:3,@aa:8
+;************************************************************************
+;*		Instruction Table					*
+;************************************************************************
+INS_TBL	.DATA.W	H'0000,H'0010,H'0020,H'0030		; ADD.B    ADD.W    ADD.L    ADDS
+	.DATA.W	H'0048,H'0058,H'0068,H'0078		; ADDX     AND.B    AND.W    AND.L
+	.DATA.W	H'008A,H'0092,H'00AE,H'00BE		; ANDC     BAND     BCC      BCLR
+	.DATA.W	H'00F6,H'0106,H'0116,H'0126		; BCS      BEQ      BF       BGE
+	.DATA.W	H'0136,H'0146,H'0156,H'0166		; BGT      BHI      BHS      BIAND
+	.DATA.W	H'0182,H'019E,H'01BA,H'01D6		; BILD     BIOR     BIST     BIXOR
+	.DATA.W	H'01F2,H'020E,H'021E,H'022E		; BLD      BLE      BLO      BLS
+	.DATA.W	H'023E,H'024E,H'025E,H'026E		; BLT      BMI      BNE      BNOT
+	.DATA.W	H'02A6,H'02C2,H'02D2,H'02E2		; BOR      BPL      BRA      BRN
+	.DATA.W	H'02F2,H'032A,H'033A,H'0356		; BSET     BSR      BST      BT
+	.DATA.W	H'0366,H'039E,H'03AE,H'03BE		; BTST     BVC      BVS      BXOR
+	.DATA.W	H'03DA,H'03EA,H'03FA,H'040A		; CMP.B    CMP.W    CMP.L    DAA
+	.DATA.W	H'0412,H'041A,H'0422,H'0432		; DAS      DEC.B    DEC.W    DEC.L
+	.DATA.W	H'0442,H'044C,H'0456,H'045E		; DIVXS.B  DIVXS.W  DIVXU.B  DIVXU.W
+	.DATA.W	H'0466,H'0470,H'047A,H'0482		; EEPMOV.B EEPMOV.W EXTS.W   EXTS.L
+	.DATA.W	H'048A,H'0492,H'049A,H'04A2		; EXTU.W   EXTU.L   INC.B    INC.W
+	.DATA.W	H'04B2,H'04C2,H'04DA,H'04F2		; INC.L    JMP      JSR      LDC.B
+	.DATA.W	H'0502,H'0540,H'05C4,H'0638		; LDC.W    MOV.B    MOV.W    MOV.L
+	.DATA.W	H'06C4,H'06CC,H'06D4,H'06DE		; MOVFPE   MOVTPE   MULXS.B  MULXS.W
+	.DATA.W	H'06E8,H'06F0,H'06F8,H'0700		; MULXU.B  MULXU.W  NEG.B    NEG.W
+	.DATA.W	H'0708,H'0710,H'0718,H'0720		; NEG.L    NOP      NOT.B    NOT.W
+	.DATA.W	H'0728,H'0730,H'0740,H'0750		; NOT.L    OR.B     OR.W     OR.L
+	.DATA.W	H'0762,H'076A,H'0772,H'077C		; ORC      POP.W    POP.L    PUSH.W
+	.DATA.W	H'0784,H'078E,H'0796,H'079E		; PUSH.L   ROTL.B   ROTL.W   ROTL.L
+	.DATA.W	H'07A6,H'07AE,H'07B6,H'07BE		; ROTR.B   ROTR.W   ROTR.L   ROTXL.B
+	.DATA.W	H'07C6,H'07CE,H'07D6,H'07DE		; ROTXL.W  ROTXL.L  ROTXR.B  ROTXR.W
+	.DATA.W	H'07E6,H'07EE,H'07F6,H'07FE		; ROTXR.L  RTE      RTS      SHAL.B
+	.DATA.W	H'0806,H'080E,H'0816,H'081E		; SHAL.W   SHAL.L   SHAR.B   SHAR.W
+	.DATA.W	H'0826,H'082E,H'0836,H'083E		; SHAR.L   SHLL.B   SHLL.W   SHLL.L
+	.DATA.W	H'0846,H'084E,H'0856,H'085E		; SHLR.B   SHLR.W   SHLR.L   SLEEP
+	.DATA.W	H'0866,H'086E,H'08AC,H'08B4		; STC.B    STC.W    SUB.B    SUB.W
+	.DATA.W	H'08C4,H'08D4,H'08EC,H'08FC		; SUB.L    SUBS     SUBX     TRAPA
+	.DATA.W	H'0904,H'0914,H'0924,H'0936		; XOR.B    XOR.W    XOR.L    XORC
+;************************************************************************
+;*		Code Table						*
+;************************************************************************
+COD_TBL	.DATA.W	H'1006,H'7208,H'0000,H'0800		; 0000 ADD.B    Rs,Rd
+	.DATA.W	H'6486,H'7214,H'6800,H'8000		;      ADD.B    #xx:8,Rd
+	.DATA.W	H'1506,H'7208,H'0000,H'0900		; 0010 ADD.W    Rs,Rd
+	.DATA.W	H'6986,H'7228,H'6202,H'7910		;      ADD.W    #xx:16,Rd
+	.DATA.W	H'1A06,H'7208,H'0000,H'0A80		; 0020 ADD.L    ERs,ERd
+	.DATA.W	H'6E86,H'7234,H'5404,H'7A10		;      ADD.L    #xx:32,Rd
+	.DATA.W	H'5606,H'7208,H'7200,H'0B00		; 0030 ADDS     #1,ERd
+	.DATA.W	H'5A06,H'7208,H'7200,H'0B80		;      ADDS     #2,ERd
+	.DATA.W	H'5E86,H'7208,H'7200,H'0B90		;      ADDS     #4,ERd
+	.DATA.W	H'1006,H'7208,H'0000,H'0E00		; 0048 ADDX     Rs,Rd
+	.DATA.W	H'6486,H'7214,H'6800,H'9000		;      ADDX     #xx:8,Rd
+	.DATA.W	H'1006,H'7208,H'0000,H'1600		; 0058 AND.B    Rs,Rd
+	.DATA.W	H'6486,H'7214,H'6800,H'E000		;      AND.B    #xx:8,Rd
+	.DATA.W	H'1506,H'7208,H'0000,H'6600		; 0068 AND.W    Rs,Rd
+	.DATA.W	H'6986,H'7228,H'6202,H'7960		;      AND.W    #xx:16,Rd
+	.DATA.W	H'1A08,H'7208,H'0000,H'01F0,H'6600	; 0078 AND.L    ERs,ERd
+	.DATA.W	H'6E86,H'7234,H'5404,H'7A60		;      AND.L    #xx:32,Rd
+	.DATA.W	H'6386,H'7272,H'6800,H'0600		; 008A ANDC     #xx:8,CCR
+	.DATA.W	H'6006,H'7208,H'0000,H'7600		; 0092 BAND     #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7C00,H'7600	;      BAND     #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7E00,H'7600	;      BAND     #xx:3,@aa:8
+	.DATA.W	H'0806,H'7272,H'6800,H'4400		; 00AE BCC      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5840		;      BCC      d:16
+	.DATA.W	H'1006,H'7208,H'0000,H'6200		; 00BE BCLR     Rn,Rd
+	.DATA.W	H'1C08,H'7220,H'0000,H'7D00,H'6200	;      BCLR     Rn,@ERd
+	.DATA.W	H'2008,H'726E,H'0000,H'7F00,H'6200	;      BCLR     Rn,@aa:8
+	.DATA.W	H'6006,H'7208,H'0000,H'7200		;      BCLR     #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7D00,H'7200	;      BCLR     #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7F00,H'7200	;      BCLR     #xx:3,@aa:8
+	.DATA.W	H'0806,H'7272,H'6800,H'4500		; 00F6 BCS      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5850		;      BCS      d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4700		; 0106 BEQ      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5870		;      BEQ      d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4100		; 0116 BF       d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5810		;      BF       d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4C00		; 0126 BGE      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'58C0		;      BGE      d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4E00		; 0136 BGT      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'58E0		;      BGT      d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4200		; 0146 BHI      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5820		;      BHI      d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4400		; 0156 BHS      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5840		;      BHS      d:16
+	.DATA.W	H'6006,H'7208,H'0000,H'7680		; 0166 BIAND    #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7C00,H'7680	;      BIAND    #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7E00,H'7680	;      BIAND    #xx:3,@aa:8
+	.DATA.W	H'6006,H'7208,H'0000,H'7780		; 0182 BILD     #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7C00,H'7780	;      BILD     #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7E00,H'7780	;      BILD     #xx:3,@aa:8
+	.DATA.W	H'6006,H'7208,H'0000,H'7480		; 019E BIOR     #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7C00,H'7480	;      BIOR     #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7E00,H'7480	;      BIOR     #xx:3,@aa:8
+	.DATA.W	H'6006,H'7208,H'0000,H'6780		; 01BA BIST     #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7D00,H'6780	;      BIST     #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7F00,H'6780	;      BIST     #xx:3,@aa:8
+	.DATA.W	H'6006,H'7208,H'0000,H'7580		; 01D6 BIXOR    #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7C00,H'7580	;      BIXOR    #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7E00,H'7580	;      BIXOR    #xx:3,@aa:8
+	.DATA.W	H'6006,H'7208,H'0000,H'7700		; 01F2 BLD      #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7C00,H'7700	;      BLD      #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7E00,H'7700	;      BLD      #xx:3,@aa:8
+	.DATA.W	H'0806,H'7272,H'6800,H'4F00		; 020E BLE      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'58F0		;      BLE      d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4500		; 021E BLO      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5850		;      BLO      d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4300		; 022E BLS      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5830		;      BLS      d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4D00		; 023E BLT      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'58D0		;      BLT      d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4B00		; 024E BMI      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'58B0		;      BMI      d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4600		; 025E BNE      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5860		;      BNE      d:16
+	.DATA.W	H'1006,H'7208,H'0000,H'6100		; 026E BNOT     Rn,Rd
+	.DATA.W	H'1C08,H'7220,H'0000,H'7D00,H'6100	;      BNOT     Rn,@ERd
+	.DATA.W	H'2008,H'726E,H'0000,H'7F00,H'6100	;      BNOT     Rn,@aa:8
+	.DATA.W	H'6006,H'7208,H'0000,H'7100		;      BNOT     #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7D00,H'7100	;      BNOT     #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7F00,H'7100	;      BNOT     #xx:3,@aa:8
+	.DATA.W	H'6006,H'7208,H'0000,H'7400		; 02A6 BOR      #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7C00,H'7400	;      BOR      #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7E00,H'7400	;      BOR      #xx:3,@aa:8
+	.DATA.W	H'0806,H'7272,H'6800,H'4A00		; 02C2 BPL      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'58A0		;      BPL      d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4000		; 02D2 BRA      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5800		;      BRA      d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4100		; 02E2 BRN      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5810		;      BRN      d:16
+	.DATA.W	H'1006,H'7208,H'0000,H'6000		; 02F2 BSET     Rn,Rd
+	.DATA.W	H'1C08,H'7220,H'0000,H'7D00,H'6000	;      BSET     Rn,@ERd
+	.DATA.W	H'2008,H'726E,H'0000,H'7F00,H'6000	;      BSET     Rn,@aa:8
+	.DATA.W	H'6006,H'7208,H'0000,H'7000		;      BSET     #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7D00,H'7000	;      BSET     #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7F00,H'7000	;      BSET     #xx:3,@aa:8
+	.DATA.W	H'0806,H'7272,H'6800,H'5500		; 032A BSR      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5C00		;      BSR      d:16
+	.DATA.W	H'6006,H'7208,H'0000,H'6700		; 033A BST      #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7D00,H'6700	;      BST      #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7F00,H'6700	;      BST      #xx:3,@aa:8
+	.DATA.W	H'0806,H'7272,H'6800,H'4000		; 0356 BT       d:8
+	.DATA.W	H'0988,H'7272,H'6200,H'5800		;      BT       d:16
+	.DATA.W	H'1006,H'7208,H'0000,H'6300		; 0366 BTST     Rn,Rd
+	.DATA.W	H'1C08,H'7220,H'0000,H'7C00,H'6300	;      BTST     Rn,@ERd
+	.DATA.W	H'2008,H'726E,H'0000,H'7E00,H'6300	;      BTST     Rn,@aa:8
+	.DATA.W	H'6006,H'7208,H'0000,H'7300		;      BTST     #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7C00,H'7300	;      BTST     #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7E00,H'7300	;      BTST     #xx:3,@aa:8
+	.DATA.W	H'0806,H'7272,H'6800,H'4800		; 039E BVC      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5880		;      BVC      d:16
+	.DATA.W	H'0806,H'7272,H'6800,H'4900		; 03AE BVS      d:8
+	.DATA.W	H'0986,H'7272,H'6202,H'5890		;      BVS      d:16
+	.DATA.W	H'6006,H'7208,H'0000,H'7500		; 03BE BXOR     #xx:3,Rd
+	.DATA.W	H'6F08,H'7220,H'0000,H'7C00,H'7500	;      BXOR     #xx:3,@ERd
+	.DATA.W	H'7088,H'726E,H'0000,H'7E00,H'7500	;      BXOR     #xx:3,@aa:8
+	.DATA.W	H'1006,H'7208,H'0000,H'1C00		; 03DA CMP.B    Rs,Rd
+	.DATA.W	H'6486,H'7214,H'6800,H'A000		;      CMP.B    #xx:8,Rd
+	.DATA.W	H'1506,H'7208,H'0000,H'1D00		; 03EA CMP.W    Rs,Rd
+	.DATA.W	H'6986,H'7228,H'6202,H'7920		;      CMP.W    #xx:16,Rd
+	.DATA.W	H'1A06,H'7208,H'0000,H'1F80		; 03FA CMP.L    ERs,ERd
+	.DATA.W	H'6E86,H'7234,H'5404,H'7A20		;      CMP.L    #xx:32,Rd
+	.DATA.W	H'0286,H'7272,H'0800,H'0F00		; 040A DAA      Rd
+	.DATA.W	H'0286,H'7272,H'0800,H'1F00		; 0412 DAS      Rd
+	.DATA.W	H'0286,H'7272,H'0800,H'1A00		; 041A DEC.B    Rd
+	.DATA.W	H'5506,H'7208,H'7200,H'1B50		; 0422 DEC.W    #1,Rd
+	.DATA.W	H'5986,H'7208,H'7200,H'1BD0		;      DEC.W    #2,Rd
+	.DATA.W	H'5606,H'7208,H'7200,H'1B70		; 0432 DEC.L    #1,ERd
+	.DATA.W	H'5A86,H'7208,H'7200,H'1BF0		;      DEC.L    #2,ERd
+	.DATA.W	H'1188,H'7208,H'0000,H'01D0,H'5100	; 0442 DIVXS.B  Rs,Rd
+	.DATA.W	H'1688,H'7208,H'0000,H'01D0,H'5300	; 044C DIVXS.W  Rs,ERd
+	.DATA.W	H'1186,H'7208,H'0000,H'5100		; 0456 DIVXU.B  Rs,Rd
+	.DATA.W	H'1686,H'7208,H'0000,H'5300		; 045E DIVXU.W  Rs,ERd
+	.DATA.W	H'0088,H'7272,H'7200,H'7B5C,H'598F	; 0466 EEPMOV.B
+	.DATA.W	H'0088,H'7272,H'7200,H'7BD4,H'598F	; 0470 EEPMOV.W
+	.DATA.W	H'0386,H'7272,H'0800,H'17D0		; 047A EXTS.W   Rd
+	.DATA.W	H'0486,H'7272,H'0800,H'17F0		; 0482 EXTS.L   ERd
+	.DATA.W	H'0386,H'7272,H'0800,H'1750		; 048A EXTU.W   Rd
+	.DATA.W	H'0486,H'7272,H'0800,H'1770		; 0492 EXTU.L   ERd
+	.DATA.W	H'0286,H'7272,H'0800,H'0A00		; 049A INC.B    Rd
+	.DATA.W	H'5506,H'7208,H'7200,H'0B50		; 04A2 INC.W    #1,Rd
+	.DATA.W	H'5986,H'7208,H'7200,H'0BD0		;      INC.W    #2,Rd
+	.DATA.W	H'5606,H'7208,H'7200,H'0B70		; 04B2 INC.L    #1,ERd
+	.DATA.W	H'5A86,H'7208,H'7200,H'0BF0		;      INC.L    #2,ERd
+	.DATA.W	H'0506,H'7272,H'0000,H'5900		; 04C2 JMP      @ERn
+	.DATA.W	H'0606,H'7272,H'5C02,H'5A00		;      JMP      @aa:24
+	.DATA.W	H'0A86,H'7272,H'6800,H'5B00		;      JMP      @@aa:8
+	.DATA.W	H'0506,H'7272,H'0000,H'5D00		; 04DA JSR      @ERn
+	.DATA.W	H'0606,H'7272,H'5C02,H'5E00		;      JSR      @aa:24
+	.DATA.W	H'0A86,H'7272,H'6800,H'5F00		;      JSR      @@aa:8
+	.DATA.W	H'0F06,H'7272,H'0800,H'0300		; 04F2 LDC.B    Rs,CCR
+	.DATA.W	H'6386,H'7272,H'6800,H'0700		;      LDC.B    #xx:8,CCR
+	.DATA.W	H'3708,H'7272,H'0000,H'0140,H'6900	; 0502 LDC.W    @ERs,CCR
+	.DATA.W	H'3F08,H'7272,H'6202,H'0140,H'6B00	;      LDC.W    @aa:16,CCR
+	.DATA.W	H'4308,H'7272,H'5404,H'0140,H'6B20	;      LDC.W    @aa:24,CCR
+	.DATA.W	H'4708,H'7272,H'0000,H'0140,H'6D00	;      LDC.W    @ERs+,CCR
+	.DATA.W	H'4B08,H'7220,H'6202,H'0140,H'6F00	;      LDC.W    @(d:16,ERs),CCR
+	.DATA.W	H'4F8A,H'7240,H'5404,H'0140,H'7800,H'6B20;     LDC.W    @(d:24,ERs),CCR
+	.DATA.W	H'1006,H'7208,H'0000,H'0C00		; 0540 MOV.B    Rs,Rd
+	.DATA.W	H'1C06,H'7200,H'0800,H'6880		;      MOV.B    Rs,@ERd
+	.DATA.W	H'2006,H'7268,H'1400,H'3000		;      MOV.B    Rs,@aa:8
+	.DATA.W	H'2406,H'7262,H'2802,H'6A80		;      MOV.B    Rs,@aa:16
+	.DATA.W	H'2806,H'7254,H'3404,H'6AA0		;      MOV.B    Rs,@aa:24
+	.DATA.W	H'2C06,H'7200,H'0800,H'6C80		;      MOV.B    Rs,@-ERd
+	.DATA.W	H'3006,H'2062,H'2802,H'6E80		;      MOV.B    Rs,@(d:16,ERd)
+	.DATA.W	H'3408,H'4054,H'3404,H'7800,H'6AA0	;      MOV.B    Rs,@(d:24,ERd)
+	.DATA.W	H'3806,H'7208,H'0000,H'6800		;      MOV.B    @ERs,Rd
+	.DATA.W	H'3C06,H'7214,H'6800,H'2000		;      MOV.B    @aa:8,Rd
+	.DATA.W	H'4006,H'7228,H'6202,H'6A00		;      MOV.B    @aa:16,Rd
+	.DATA.W	H'4406,H'7234,H'5404,H'6A20		;      MOV.B    @aa:24,Rd
+	.DATA.W	H'4806,H'7208,H'0000,H'6C00		;      MOV.B    @ERs+,Rd
+	.DATA.W	H'4C06,H'2820,H'6202,H'6E00		;      MOV.B    @(d:16,ERs),Rd
+	.DATA.W	H'5008,H'3440,H'5404,H'7800,H'6A20	;      MOV.B    @(d:24,ERs),Rd
+	.DATA.W	H'6486,H'7214,H'6800,H'F000		;      MOV.B    #xx:8,Rd
+	.DATA.W	H'1506,H'7208,H'0000,H'0D00		; 05C4 MOV.W    Rs,Rd
+	.DATA.W	H'1D06,H'7200,H'0800,H'6980		;      MOV.W    Rs,@ERd
+	.DATA.W	H'2506,H'7262,H'2802,H'6B80		;      MOV.W    Rs,@aa:16
+	.DATA.W	H'2906,H'7254,H'3404,H'6BA0		;      MOV.W    Rs,@aa:24
+	.DATA.W	H'2D06,H'7200,H'0800,H'6D80		;      MOV.W    Rs,@-ERd
+	.DATA.W	H'3106,H'2062,H'2802,H'6F80		;      MOV.W    Rs,@(d:16,ERd)
+	.DATA.W	H'3508,H'4054,H'3404,H'7800,H'6BA0	;      MOV.W    Rs,@(d:24,ERd)
+	.DATA.W	H'3906,H'7208,H'0000,H'6900		;      MOV.W    @ERs,Rd
+	.DATA.W	H'4106,H'7228,H'6202,H'6B00		;      MOV.W    @aa:16,Rd
+	.DATA.W	H'4506,H'7234,H'5404,H'6B20		;      MOV.W    @aa:24,Rd
+	.DATA.W	H'4906,H'7208,H'0000,H'6D00		;      MOV.W    @ERs+,Rd
+	.DATA.W	H'4D06,H'2820,H'6202,H'6F00		;      MOV.W    @(d:16,ERs),Rd
+	.DATA.W	H'5108,H'3440,H'5404,H'7800,H'6B20	;      MOV.W    @(d:24,ERs),Rd
+	.DATA.W	H'6986,H'7228,H'6202,H'7900		;      MOV.W    #xx:16,Rd
+	.DATA.W	H'1A06,H'7208,H'0000,H'0F80		; 0638 MOV.L    ERs,ERd
+	.DATA.W	H'1E08,H'7200,H'0800,H'0100,H'6980	;      MOV.L    ERs,@ERd
+	.DATA.W	H'2608,H'7262,H'2802,H'0100,H'6B80	;      MOV.L    ERs,@aa:16
+	.DATA.W	H'2A08,H'7254,H'3404,H'0100,H'6BA0	;      MOV.L    ERs,@aa:24
+	.DATA.W	H'2E08,H'7200,H'0800,H'0100,H'6D80	;      MOV.L    ERs,@-ERd
+	.DATA.W	H'3208,H'2062,H'2802,H'0100,H'6F80	;      MOV.L    ERs,@(d:16,ERd)
+	.DATA.W	H'360A,H'4054,H'3404,H'0100,H'7880,H'6BA0;     MOV.L    ERs,@(d:24,ERd)
+	.DATA.W	H'3A08,H'7208,H'0000,H'0100,H'6900	;      MOV.L    @ERs,ERd
+	.DATA.W	H'4208,H'7228,H'6202,H'0100,H'6B00	;      MOV.L    @aa:16,ERd
+	.DATA.W	H'4608,H'7234,H'5404,H'0100,H'6B20	;      MOV.L    @aa:24,ERd
+	.DATA.W	H'4A08,H'7208,H'0000,H'0100,H'6D00	;      MOV.L    @ERs+,ERd
+	.DATA.W	H'4E08,H'2820,H'6202,H'0100,H'6F00	;      MOV.L    @(d:16,ERs),ERd
+	.DATA.W	H'520A,H'3440,H'5404,H'0100,H'7800,H'6B20;     MOV.L    @(d:24,ERs),ERd
+	.DATA.W	H'6E86,H'7234,H'5404,H'7A00		;      MOV.L    #xx:32,Rd
+	.DATA.W	H'4086,H'7228,H'6202,H'6A40		; 06C4 MOVFPE   @aa:16,Rd
+	.DATA.W	H'2486,H'7262,H'2802,H'6AC0		; 06CC MOVTPE   Rs,@aa:16
+	.DATA.W	H'1188,H'7208,H'0000,H'01C0,H'5000	; 06D4 MULXS.B  Rs,Rd
+	.DATA.W	H'1688,H'7208,H'0000,H'01C0,H'5200	; 06DE MULXS.W  Rs,ERd
+	.DATA.W	H'1186,H'7208,H'0000,H'5000		; 06E8 MULXU.B  Rs,Rd
+	.DATA.W	H'1686,H'7208,H'0000,H'5200		; 06F0 MULXU.W  Rs,ERd
+	.DATA.W	H'0286,H'7272,H'0800,H'1780		; 06F8 NEG.B    Rd
+	.DATA.W	H'0386,H'7272,H'0800,H'1790		; 0700 NEG.W    Rd
+	.DATA.W	H'0486,H'7272,H'0800,H'17B0		; 0708 NEG.L    Rd
+	.DATA.W	H'0086,H'7272,H'7200,H'0000		; 0710 NOP
+	.DATA.W	H'0286,H'7272,H'0800,H'1700		; 0718 NOT.B    Rd
+	.DATA.W	H'0386,H'7272,H'0800,H'1710		; 0720 NOT.W    Rd
+	.DATA.W	H'0486,H'7272,H'0800,H'1730		; 0728 NOT.L    Rd
+	.DATA.W	H'1006,H'7208,H'0000,H'1400		; 0730 OR.B     Rs,Rd
+	.DATA.W	H'6486,H'7214,H'6800,H'C000		;      OR.B     #xx:8,Rd
+	.DATA.W	H'1506,H'7208,H'0000,H'6400		; 0740 OR.W     Rs,Rd
+	.DATA.W	H'6986,H'7228,H'6202,H'7940		;      OR.W     #xx:16,Rd
+	.DATA.W	H'1A08,H'7208,H'0000,H'01F0,H'6400	; 0750 OR.L     ERs,ERd
+	.DATA.W	H'6E86,H'7234,H'5404,H'7A40		;      OR.L     #xx:32,Rd
+	.DATA.W	H'6386,H'7272,H'6800,H'0400		; 0762 ORC      #xx:8,CCR
+	.DATA.W	H'0386,H'7272,H'0800,H'6D70		; 076A POP.W    Rn
+	.DATA.W	H'0488,H'7272,H'0800,H'0100,H'6D70	; 0772 POP.L    ERn
+	.DATA.W	H'0386,H'7272,H'0800,H'6DF0		; 077C PUSH.W   Rn
+	.DATA.W	H'0488,H'7272,H'0800,H'0100,H'6DF0	; 0784 PUSH.L   ERn
+	.DATA.W	H'0286,H'7272,H'0800,H'1280		; 078E ROTL.B   Rd
+	.DATA.W	H'0386,H'7272,H'0800,H'1290		; 0796 ROTL.W   Rd
+	.DATA.W	H'0486,H'7272,H'0800,H'12B0		; 079E ROTL.L   ERd
+	.DATA.W	H'0286,H'7272,H'0800,H'1380		; 07A6 ROTR.B   Rd
+	.DATA.W	H'0386,H'7272,H'0800,H'1390		; 07AE ROTR.W   Rd
+	.DATA.W	H'0486,H'7272,H'0800,H'13B0		; 07B6 ROTR.L   ERd
+	.DATA.W	H'0286,H'7272,H'0800,H'1200		; 07BE ROTXL.B  Rd
+	.DATA.W	H'0386,H'7272,H'0800,H'1210		; 07C6 ROTXL.W  Rd
+	.DATA.W	H'0486,H'7272,H'0800,H'1230		; 07CE ROTXL.L  ERd
+	.DATA.W	H'0286,H'7272,H'0800,H'1300		; 07D6 ROTXR.B  Rd
+	.DATA.W	H'0386,H'7272,H'0800,H'1310		; 07DE ROTXR.W  Rd
+	.DATA.W	H'0486,H'7272,H'0800,H'1330		; 07E6 ROTXR.L  ERd
+	.DATA.W	H'0086,H'7272,H'7200,H'5670		; 07EE RTE
+	.DATA.W	H'0086,H'7272,H'7200,H'5470		; 07F6 RTS
+	.DATA.W	H'0286,H'7272,H'0800,H'1080		; 07FE SHAL.B   Rd
+	.DATA.W	H'0386,H'7272,H'0800,H'1090		; 0806 SHAL.W   Rd
+	.DATA.W	H'0486,H'7272,H'0800,H'10B0		; 080E SHAL.L   ERd
+	.DATA.W	H'0286,H'7272,H'0800,H'1180		; 0816 SHAR.B   Rd
+	.DATA.W	H'0386,H'7272,H'0800,H'1190		; 081E SHAR.W   Rd
+	.DATA.W	H'0486,H'7272,H'0800,H'11B0		; 0826 SHAR.L   ERd
+	.DATA.W	H'0286,H'7272,H'0800,H'1000		; 082E SHLL.B   Rd
+	.DATA.W	H'0386,H'7272,H'0800,H'1010		; 0836 SHLL.W   Rd
+	.DATA.W	H'0486,H'7272,H'0800,H'1030		; 083E SHLL.L   ERd
+	.DATA.W	H'0286,H'7272,H'0800,H'1100		; 0846 SHLR.B   Rd
+	.DATA.W	H'0386,H'7272,H'0800,H'1110		; 084E SHLR.W   Rd
+	.DATA.W	H'0486,H'7272,H'0800,H'1130		; 0856 SHLR.L   ERd
+	.DATA.W	H'0086,H'7272,H'7200,H'0180		; 085E SLEEP
+	.DATA.W	H'0C86,H'7208,H'7200,H'0200		; 0866 STC.B    CCR,Rd
+	.DATA.W	H'1B08,H'7200,H'7200,H'0140,H'6980	; 086E STC.W    CCR,@ERd
+	.DATA.W	H'2308,H'7262,H'7202,H'0140,H'6B80	;      STC.W    CCR,@aa:16
+	.DATA.W	H'2708,H'7254,H'7204,H'0140,H'6BA0	;      STC.W    CCR,@aa:24
+	.DATA.W	H'2B08,H'7200,H'7200,H'0140,H'6D80	;      STC.W    CCR,@-ERd
+	.DATA.W	H'2F08,H'2062,H'7202,H'0140,H'6F80	;      STC.W    CCR,@(d:16,ERd)
+	.DATA.W	H'338A,H'4054,H'7204,H'0140,H'7800,H'6BA0;     STC.W    CCR,@(d:24,ERd)
+	.DATA.W	H'1086,H'7208,H'0000,H'1800		; 08AC SUB.B    Rs,Rd
+	.DATA.W	H'1506,H'7208,H'0000,H'1900		; 08B4 SUB.W    Rs,Rd
+	.DATA.W	H'6986,H'7228,H'6202,H'7930		;      SUB.W    #xx:16,Rd
+	.DATA.W	H'1A06,H'7208,H'0000,H'1A80		; 08C4 SUB.L    ERs,ERd
+	.DATA.W	H'6E86,H'7234,H'5404,H'7A30		;      SUB.L    #xx:32,Rd
+	.DATA.W	H'5606,H'7208,H'7200,H'1B00		; 08D4 SUBS     #1,ERd
+	.DATA.W	H'5A06,H'7208,H'7200,H'1B80		;      SUBS     #2,ERd
+	.DATA.W	H'5E86,H'7208,H'7200,H'1B90		;      SUBS     #4,ERd
+	.DATA.W	H'1006,H'7208,H'0000,H'1E00		; 08EC SUBX     Rs,Rd
+	.DATA.W	H'6486,H'7214,H'6800,H'B000		;      SUBX     #xx:8,Rd
+	.DATA.W	H'0786,H'7272,H'0000,H'5700		; 08FC TRAPA    #xx:2
+	.DATA.W	H'1006,H'7208,H'0000,H'1500		; 0904 XOR.B    Rs,Rd
+	.DATA.W	H'6486,H'7214,H'6800,H'D000		;      XOR.B    #xx:8,Rd
+	.DATA.W	H'1506,H'7208,H'0000,H'6500		; 0914 XOR.W    Rs,Rd
+	.DATA.W	H'6986,H'7228,H'6202,H'7950		;      XOR.W    #xx:16,Rd
+	.DATA.W	H'1A08,H'7208,H'0000,H'01F0,H'6500	; 0924 XOR.L    ERs,ERd
+	.DATA.W	H'6E86,H'7234,H'5404,H'7A50		;      XOR.L    #xx:32,Rd
+	.DATA.W	H'6386,H'7272,H'6800,H'0500		; 0936 XORC     #xx:8,CCR
+	.END						;

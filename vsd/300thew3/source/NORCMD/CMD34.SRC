@@ -1,0 +1,59 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  BREAK			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+	 	.IMPORT	OUT_VALUE		; Output Value Module
+		.IMPORT	BIN_ASC_4		; 4 Binary to ASCII Module
+		.IMPORT	UNDEF_MOD		; Undefine Interrupt Module
+		.IMPORT	UNDEF_ROU		; Undefine Interrupt Routine
+		.IMPORT	STACK			; Stack Area
+		.IMPORT	BREAK_CHK		; Breakpoint Check Module
+		.IMPORT	B_SUB_COM		; Break Sub Command Module
+		.IMPORT	S_SUB_COM		; Step  Sub Command Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	BREAK			; Breakpoint Handler
+		.EXPORT	INT02			; Illegal Instruction Handler
+;************************************************************************
+;*	Illegal Instruction Handler					*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(6) Byte				*
+;************************************************************************
+INT02:		STC.W	CCR,@ER7		; Save CCR to Stack
+		LDC.B	#H'C0,CCR		; Disable Interrupt
+		MOV.L	ER7,@STACK+32		; Move User ER7
+		MOV.W	#STACK+32,R7		; Set R7 Save Area Address
+		PUSH.L	ER6			; Save User ER6
+		PUSH.L	ER5			; Save User ER5
+		PUSH.L	ER4			; Save User ER4
+		PUSH.L	ER3			; Save User ER3
+		PUSH.L	ER2			; Save User ER2
+		PUSH.L	ER1			; Save User ER1
+		PUSH.L	ER0			; Save User ER0
+		MOV.L	@(28,ER7),ER0		; User ER7 --> ER0
+		MOV.W	@ER0+,R1		; Move User CCR
+		MOV.B	R1H,R1L			; User CCR --> R1L
+		MOV.W	@ER0+,E1		; Move User PC
+		DEC.W	#2,E1			; Decrement User PC
+		PUSH.L	ER1			; Save User CCR,PC
+		MOV.L	ER0,@(32,ER7)		; Save User ER7
+		BSR	BREAK_CHK:16		; Check Breakpoint
+		MOV.B	#2,R0L			; Set Break Vector Number
+		BCS	UNDEF_MOD:16		; Goto Undefine Module
+BREAK:		MOV.W	#BREAK_MSG,R1		; Break Message --> R1
+		BSR	OUT_VALUE:16		; Output Value
+		MOV.W	@ER7,R0			; User PC --> R0
+		BSR	BIN_ASC_4:16		; Output User PC
+		BSR	OUT_CRLF:16		; Output CR,LF
+		BRA	UNDEF_ROU:16		; Goto Undefine Routine
+BREAK_MSG:	.SDATAZ	"Break at PC"		; Break Message
+		.END				;

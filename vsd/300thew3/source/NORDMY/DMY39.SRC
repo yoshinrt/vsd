@@ -1,0 +1,41 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  SWAPV			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  VECTOR,DATA,ALIGN=2	; Monitor Vector Area Section
+		.SECTION  USER,DATA,ALIGN=2	; User Vector Area Section
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	VECTOR_INIT		; Vector Initialize Module
+		.EXPORT	VECTOR_SET		; Vector Set Module
+		.EXPORT	VECTOR_CLR		; Vector Clear Module
+;************************************************************************
+;*	Vector Initialize Module					*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+VECTOR_INIT:	MOV.W	#(STARTOF USER)+(SIZEOF VECTOR),R5
+		SUB.L	ER4,ER4			; Clear ER4
+		MOV.L	ER4,@-ER5		; Clear User Vector
+		CMP.W	#(STARTOF USER),R5	; Compare Start Address ?
+		BNE	$-8			; Check Vector Length
+;************************************************************************
+;*	Dummy of Vector Set Module					*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+VECTOR_SET:	.EQU	$			;
+;************************************************************************
+;*	Dummy of Vector Clear Module					*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+VECTOR_CLR:	RTS				;
+		.END				;

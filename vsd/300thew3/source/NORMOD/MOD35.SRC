@@ -1,0 +1,20 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  LOWER		  	; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	_BUF			; Scanf Buffer
+		.EXPORT	__iob			; FILE Pointer
+		.EXPORT	_sml_buf		; Small Buffer
+;************************************************************************
+;*	Dummy of Buffer Address						*
+;************************************************************************
+_BUF:		.EQU	0			;
+__iob:		.EQU	0			;
+_sml_buf:	.EQU	0			;
+		.END				;

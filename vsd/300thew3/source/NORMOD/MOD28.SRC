@@ -1,0 +1,40 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  PARAA			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+	 	.IMPORT	IN_STRING		; Input String Module
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	COM_SPLIT		; Command Split Module
+		.IMPORT	MAIN			; Main Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	PARAA			; Parameter Analize Module
+;************************************************************************
+;*	Parameter Analize Module					*
+;*		Input	Nothing						*
+;*		Output	R0  --> CR --> 0  ,  "^" --> 2  ,  ASCII --> 4	*
+;*			R6  --> 1st Analize Buffer Address		*
+;*		Used Stack Area --> 2(10) Byte				*
+;************************************************************************
+PARAA:		BSR	IN_STRING:16		; Input String
+		BSR	COM_SPLIT:16		; Command Split
+		MOV.B	@(10,ER6),R0L		; 2nd Parameter is Exist ?
+		BNE	ERR02:16		; Invalid Parameter
+		SUB.W	R0,R0			; Clear Return Code
+		MOV.B	@ER6,R3L		; Patameter --> R3L
+		BEQ	$+16			; Return Code --> H'0000
+		CMP.B	#"^",R3L		; Parameter is "^" ?
+		BEQ	$+10			; Return Code --> H'0002
+		CMP.B	#".",R3L		; Parameter is "." ?
+		BEQ	MAIN:16			; Goto Main Module
+		INC.W	#2,R0			; Increment Return Code
+		INC.W	#2,R0			; Increment Return Code
+		RTS				;
+		.END				;

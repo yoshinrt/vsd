@@ -1,0 +1,42 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  BIN_ASC		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CHAR		; Output Character Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	BIN_ASC			; Binary to ASCII Module
+;************************************************************************
+;*	Binary to ASCII Output Module					*
+;*		Input	ER0 <-- Binary Code				*
+;*			R6L <-- Max Change Length			*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(4) Byte				*
+;************************************************************************
+BIN_ASC:	MOV.B	#8,R6H			; Max Rotate Length --> R6H
+		SUB.B	R6L,R6H			; Rotate Length --> R6H
+		ROTL.L	ER0			; 4Bit Rotate Left
+		ROTL.L	ER0			;
+		ROTL.L	ER0			;
+		ROTL.L	ER0			;
+		DEC.B	R6H			; Rotate Length Check
+		BPL	$-10			;
+		MOV.W	R0,E6			; Save R0 --> E6
+		AND.B	#H'0F,R0L		; Clear Higher 4Bit
+		ADD.B	#H'90,R0L		; Change Binary to ASCII
+		DAA	R0L			;
+		ADDX	#H'40,R0L		;
+		DAA	R0L			;
+		BSR	OUT_CHAR:16		; Output ASCII Code
+		MOV.W	E6,R0			; Recovery R0 <-- E6
+		DEC.B	R6L			; Decrement Change Length
+		BNE	$-32			;
+		RTS				;
+		.END				;

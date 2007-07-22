@@ -1,0 +1,62 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  TBL_ANA		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	ERR			; Error Message Output Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	TBL_ANA			; Table Analize Module
+;************************************************************************
+;*	Table Analize Module						*
+;*		Input	R0  <-- Error Module Address			*
+;*			E2  <-- Table First Address			*
+;*			E5  <-- Table Last  Address			*
+;*			R6  <-- Analize Buffer Address			*
+;*		Output	R0  --> Analize Address				*
+;*		Used Stack Area --> 4(4) Byte				*
+;************************************************************************
+TBL_ANA:	PUSH.W	R0			; Save Error Module Address
+		MOV.W	E2,E0			; Table First Address --> E0
+		MOV.W	R6,R2			; Analize Buffer Address --> R2
+		MOV.W	E5,R0			; Table Last Address --> R0
+		SUB.W	E2,R0			; Table Length --> R0
+		SHLR.W	R0			; Table Length / 2 --> R0
+		BCLR	#0,R0L			;
+		ADD.W	E2,R0			; Table Half Address --> R0
+		CMP.W	R0,E2			; Half Address = First Address
+		BEQ	$+12			;
+		MOV.B	@(-1,ER0),R3L		; Backward Character is Null ?
+		BEQ	$+6			;
+		SUBS	#2,ER0			; Decrement Half Address
+		BRA	$-12			;
+		MOV.W	R0,R5			; Table Half Address --> R5
+		MOV.W	@ER5+,R3		; Search Character --> R3
+		MOV.W	@ER2+,E3		; Search Character --> E3
+		CMP.W	E3,R3			; Compare Character
+		BEQ	$+32			;
+		BCS	$+12			;
+		CMP.W	E2,R0			; Exist Search Character ?
+		BEQ	ERR:16			; Invalid Command
+		MOV.W	R0,E5			; Half Address -> Last Address
+		BRA	$-46			;
+		CMP.B	#0,R3L			; Compare String End ?
+		BEQ	$+6			;
+		MOV.W	@ER5+,R3		; Search Character --> R3
+		BRA	$-6			;
+		CMP.W	E5,R5			; Exist Search Character ?
+		BEQ	ERR:16			; Invalid Command
+		MOV.W	R5,E2			; Half Address -> First Address
+		BRA	$-64			;
+		CMP.B	#0,R3L			; Compare Completed ?
+		BNE	$-40			;
+		ADDS	#2,ER7			; Delete Error Module Address
+		SUB.W	E0,R0			; Set Return Code --> R0
+		RTS				;
+		.END				;

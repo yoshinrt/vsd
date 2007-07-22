@@ -1,0 +1,68 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  G_COM			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	ASC_BIN_4		; 4 ASCII to Binary Module
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	TRACE_SET		; Trace Set Module
+		.IMPORT	RET_TBL			; Return Command Table
+		.IMPORT	BREAK_CHK		; Breakpoint Check Module
+		.IMPORT	BREAK_SET		; Breakpoint Set Module
+		.IMPORT	VECTOR_SET		; Vector Set Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	G_COM			; Go Command Module
+		.EXPORT	G_COM_SUB		; Go Command Sub Module
+;************************************************************************
+;*	Go Command Module						*
+;*		Input	R1  <-- Address of 2nd Analize Buffer		*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(8) Byte				*
+;************************************************************************
+G_COM:		MOV.W	@ER1,R6			; 2nd Analize Buffer --> R6
+		MOV.B	@(10,ER6),R0L		; 3rd Parameter is Null ?
+		BNE	ERR02:16		; Invalid Parameter
+		MOV.B	@ER6,R0L		; 2nd Parameter is Exist ?
+		BEQ	$+8			;
+		BSR	ASC_BIN_4:16		; Start Address --> ER4
+		MOV.W	R4,@ER7			; Save User PC
+		MOV.B	#"B",R0H		; PreCommand is Break
+		MOV.B	R0H,@RET_TBL		; Set PreCommand Name
+		BSR	BREAK_CHK:16		; First Instruction is Break ?
+		SUBX	R0L,R0L			; Yes --> H'FFFF
+		EXTS.W	R0			; No  --> H'0000
+		SHLL.W	R0			; Make Table Displacement
+		MOV.W	@(SET_MOD:16,ER0),R0	; Break or Trace Set --> R0
+		JSR	@ER0			; Set Break , Trace Parameter
+		BSR	VECTOR_SET:16		; Set Monitor Vector
+;************************************************************************
+;*	Go Command Sub Module						*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(0) Byte				*
+;************************************************************************
+G_COM_SUB:	MOV.L	@(32,ER7),ER6		; User ER7(Dummy) --> ER6
+		POP.L	ER5			; User PC,CCR --> E5,R5L
+		MOV.B	R5L,R5H			; User CCR --> R5H
+		MOV.W	E5,@-ER6		; Recovery User PC
+		MOV.W	R5,@-ER6		; Recovery User CCR
+		MOV.L	ER6,@(28,ER7)		; Save User ER7(Real)
+		POP.L	ER0			; Recovery User ER0
+		POP.L	ER1			; Recovery User ER1
+		POP.L	ER2			; Recovery User ER2
+		POP.L	ER3			; Recovery User ER3
+		POP.L	ER4			; Recovery User ER4
+		POP.L	ER5			; Recovery User ER5
+		POP.L	ER6			; Recovery User ER6
+		POP.L	ER7			; Recovery User ER7
+		RTE				;
+		.DATA.W	BREAK_SET		; Breakpoint Set Module
+SET_MOD:	.DATA.W	TRACE_SET		; Trace Set Module
+		.END				;

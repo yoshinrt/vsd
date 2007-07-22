@@ -1,0 +1,204 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  B_COM			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+	 	.IMPORT	OUT_STRING		; Output String Module
+		.IMPORT	OUT_ADDR		; Output Address Module
+		.IMPORT	ASC_BIN_4		; 4 ASCII to Binary Module
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	ERR05			; Duplicate Breakpoint Module
+		.IMPORT	ERR06			; Full Breakpoint Module
+		.IMPORT	ERR07			; Not Find Breakpoint Module
+		.IMPORT	TRACE_CLR		; Trace Clear Module
+		.IMPORT	MAIN			; Main Module
+		.IMPORT	STACK			; Stack Area
+		.IMPORT	RET_TBL			; Return Command Table
+		.IMPORT	G_COM_SUB		; Go Command Sub Module
+		.IMPORT	BREAK			; Breakpoint Handler
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	B_COM			; Breakpoint Command Module
+		.EXPORT	B_COM_INIT		; Breakpoint Command Initialize
+		.EXPORT	B_SUB_COM		; Breakpoint Sub Command Module
+		.EXPORT	BREAK_CHK		; Breakpoint Check Module
+		.EXPORT	BREAK_SET		; Breakpoint Set Module
+		.EXPORT	BREAK_CLR		; Breakpoint Clear Module
+;************************************************************************
+;*	Breakpoint Command Module					*
+;*		Input	R1  <-- Address of 2nd Analize Buffer		*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(8) Byte				*
+;************************************************************************
+B_COM:		SUB.W	R2,R2			; Clear Break Module Parameter
+		MOV.W	@ER1+,R6		; Analize Buffer Address --> R6
+		MOV.W	@ER6,R0			; Parameter is Exist ?
+		BEQ	$+40			;
+		CMP.W	#H'2D00,R0		; Parameter is [-] ?
+		BEQ	$+18			;
+		BSR	ASC_BIN_4:16		; Change Breakpoint Address
+		BTST	#0,R4L			; Break Address is Even ?
+		BNE	ERR02:16		; Invalid Parameter
+		BTST	#1,R2L			; [Address] Parameter is Exist ?
+		BSET	#1,R2L			; [Address] Parameter is Exist
+		BRA	$+12			;
+		BTST	#1,R2L			; [Address] Parameter is Exist ?
+		BNE	ERR02:16		; Invalid Parameter
+		BTST	#2,R2L			; [-] Parameter is Exist ?
+		BSET	#2,R2L			; [-] Parameter is Exist
+		BNE	ERR02:16		; Invalid Parameter
+		BRA	$-42			;
+		MOV.W	@(B_MOD:16,ER2),R0	; Break Module Address --> R0
+		JSR	@ER0			; Call Break Module
+		BRA	MAIN:16			; Goto MAIN Module
+;************************************************************************
+;*	Breakpoint Command Display Module				*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(8) Byte				*
+;************************************************************************
+B_COM_DISP:	MOV.W	#B_MSG,R1		; Breakpoint Message --> R1
+		BSR	OUT_STRING:16		; Output Breakpoint Message
+		MOV.W	#B_TBL,R5		; Set Breakpoint Table --> R5
+		BRA	$+10			;
+		MOV.W	@(2,ER5),R4		; Breakpoint Address --> R4
+		BSR	OUT_ADDR:16		; Output Breakpoint
+		BSR	OUT_CRLF:16		; Output CR,LF
+		MOV.W	@ER5,R5			; Next Table Offset --> R5
+		BNE	$-14			;
+		RTS				;
+;************************************************************************
+;*	Breakpoint Command Initialize Module				*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+B_COM_INIT:	SUB.W	E0,E0			; Clear E0
+		MOV.W	#B_TBL+4,R0		; Break Table Address --> R0
+		MOV.L	ER0,@(-4,ER0)		; Set Chain Address
+		ADD.W	#6,R0			; Next Breakpoint Table --> R0
+		MOV.W	R0,@(-6,ER0)		; Set Chain Address
+		CMP.W	#B_TBL+46,R0		; Last Breakpoint Table ?
+		BNE	$-12			;
+		MOV.W	E0,@ER0			; Set Last Chain Address
+		RTS				;
+;************************************************************************
+;*	Breakpoint Command Set Module					*
+;*		Input	R4  <-- Set Breakpoint Address			*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+B_COM_SET:	MOV.W	#B_TBL,R6		; Set Breakpoint Table --> R6
+		MOV.W	@R6,R5			; Next Table Address --> R5
+		BEQ	$+16			;
+		MOV.W	R5,R6			; Table Address --> R6
+		MOV.W	@(2,ER6),R5		; Breakpoint Address --> R5
+		CMP.W	R5,R4			; Breakpoint Address Compare
+		BNE	$-12			;
+		BRA	ERR05:16		; Duplicate Breakpoint
+		MOV.W	#B_TBL+2,R3		; Free Breakpoint Table --> R3
+		MOV.W	@R3,R2			; Next Table Address --> R2
+		BEQ	ERR06:16		; Full Breakpoint
+		MOV.W	@R2,R0			; Chain Address --> R0
+		MOV.W	R0,@R3			; Set Chain Address
+		MOV.W	R5,@R2			; Clear Chain Address
+		MOV.W	R4,@(2,ER2)		; Set Breakpoint Address
+		MOV.W	R2,@R6			; Set Chain Address
+		RTS				;
+;************************************************************************
+;*	Breakpoint Command Clear Module					*
+;*		Input	R4  <-- Clear Breakpoint Address		*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+B_COM_CLR:	MOV.W	#B_TBL,R6		; Set Breakpoint Table --> R6
+		MOV.W	R6,R5			; Table Address --> R5
+		MOV.W	@R6,R6			; Next Table Address --> R6
+		BEQ	ERR07:16		; Not Find Breakpoint
+		MOV.W	@(2,ER6),R0		; Breakpoint Address --> R0
+		CMP.W	R0,R4			; Breakpoint Address Compare
+		BNE	$-14			;
+		MOV.W	@R6,R0			; Chain Address --> R0
+		MOV.W	R0,@R5			; Set Chain Address
+		MOV.W	#B_TBL+2,R5		; Free Breakpoint Table --> R5
+		MOV.W	@R5,R0			; Chain Address --> R0
+		MOV.W	R0,@R6			; Set Chain Address
+		MOV.W	R6,@R5			; Set Free Chain Address
+		RTS				;
+;************************************************************************
+;*	Breakpoint Sub Command Module					*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+B_SUB_COM:	BSR	BREAK_CHK		; Check Breakpoint
+		BCC	BREAK:16		; Goto Breakpoint Handler
+		BSR	TRACE_CLR:16		; Clear Trace Parameter
+		BSR	BREAK_SET		; Set Breakpoint
+		BRA	G_COM_SUB:16		; Goto Go Command Sub Module
+;************************************************************************
+;*	Breakpoint Check Module						*
+;*		Input	Nothing						*
+;*		Output	C of CCR  Exist --> 0 , Not Exist --> 1		*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+BREAK_CHK:	MOV.W	@STACK,R4		; User PC --> R4
+		MOV.W	#B_TBL,R6		; Set Breakpoint Table --> R6
+		ORC	#H'01,CCR		; Set C of CCR
+		MOV.W	@R6,R6			; Next Table Address --> R6
+		BEQ	$+10			; Check Chain Address
+		MOV.W	@(2,ER6),R5		; Breakpoint address --> R5
+		CMP.W	R5,R4			; Breakpoint Address Compare
+		BNE	$-12			;
+		RTS				;
+;************************************************************************
+;*	Breakpoint Set Module						*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+BREAK_SET:	MOV.W	#H'5F04,R2		; Breakpoint Code --> R2
+		MOV.W	#B_TBL,R6		; Set Breakpoint Table --> R6
+		BRA	$+14			;
+		MOV.W	@(2,ER6),R5		; Breakpoint Address --> R5
+		MOV.W	@R5,R4			; Instruction Code --> R4
+		MOV.W	R4,@(4,ER6)		; Save Instruction Code
+		MOV.W	R2,@R5			; Set Breakpoint Code
+		MOV.W	@R6,R6			; Next Table Address --> R6
+		BNE	$-14			; Check Chain Address
+		MOV.B	R6L,@RET_TBL		; Clear PreCommand Name
+		RTS				;
+;************************************************************************
+;*	Breakpoint Clear Module						*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+BREAK_CLR:	MOV.W	#B_TBL,R6		; Set Breakpoint Table --> R6
+		BRA	$+12			;
+		MOV.W	@(2,ER6),R5		; Breakpoint Address --> R5
+		MOV.W	@(4,ER6),R4		; Instruction Code --> R4
+		MOV.W	R4,@R5			; Recovery Instruction Code
+		MOV.W	@R6,R6			; Next Table Address --> R6
+		BNE	$-12			; Check Chain Address
+		RTS				;
+B_MOD:		.DATA.W	B_COM_DISP		; Breakpoint Disp Module
+		.DATA.W	B_COM_SET		; Breakpoint Set Module
+		.DATA.W	B_COM_INIT		; Breakpoint Initialize Module
+		.DATA.W	B_COM_CLR		; Breakpoint Clear Module
+B_MSG:		.SDATAZ	" <ADDR>"		; Breakpoint Message
+;************************************************************************
+;*	Monitor RAM Define						*
+;************************************************************************
+		.SECTION  RAM,DATA,ALIGN=2	; RAM Area Section
+B_TBL:		.RES.B	2			; Set  Breakpoint Table
+		.RES.B	2			; Free Breakpoint Table
+		.RES.B	48			; Breakpoint Table Area
+		.END				;

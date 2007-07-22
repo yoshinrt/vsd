@@ -1,0 +1,23 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  M_HELP_MSG		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	M_HELP_MSG		; Memory Help Message
+;************************************************************************
+;*	Memory Command Help Message					*
+;************************************************************************
+M_HELP_MSG:	.DATA.B	6			; String Count is 6
+		.SDATAC	" M  :"			;
+		.SDATAZ	" Changes memory contents."
+		.SDATAZ	"      M <address> [;<size>] [RET]"
+		.SDATAZ	"   <address> : memory address"
+		.SDATAZ	"   <size>    : B -- byte"
+		.SDATAZ	"               W -- word"
+		.SDATAZ	"               L -- long word"
+		.END				;

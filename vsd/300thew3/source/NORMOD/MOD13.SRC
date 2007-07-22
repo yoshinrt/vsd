@@ -1,0 +1,46 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  IN_CHAR		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	SSR			; Serial Status Register
+		.IMPORT	RDR			; Receive  Data Register
+		.IMPORT	OUT_CHAR		; Output Character Module
+		.IMPORT	MAIN			; Main Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	IN_CHAR			; Input Character Module
+;************************************************************************
+;*	Input Character Module						*
+;*		Input	Nothing						*
+;*		Output	R0L --> Input Character				*
+;*			Z of CCR  No Receive --> 1  ,  Receive --> 0	*
+;*		Used Stack Area --> 2(4) Byte				*
+;************************************************************************
+IN_CHAR:	MOV.B	@SSR,R0L		; Read SSR
+		BTST	#6,R0L			; Normal Receive ?
+		BEQ	$+38			;
+		MOV.B	@RDR,R0L		; Receive Character --> R0L
+		CMP.B	#H'03,R0L		; Receive Character is CTRL+C ?
+		BNE	$+18			;
+		MOV.B	#H'0D,R0L		; CR ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output CR
+		MOV.B	#H'0A,R0L		; LF ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output LF
+		BRA	MAIN:16			; Goto Main Module
+		CMP.B	#H'13,R0L		; Receive Character is CTRL+S ?
+		BNE	$+18			;
+		MOV.B	@SSR,R0L		; Read Receive Status
+		AND.B	#H'78,R0L		; Receive Data is Exist ?
+		BEQ	$-6			;
+		MOV.B	#H'80,R0L		; Set Clear Data --> R0L
+		MOV.B	R0L,@SSR		; Clear ORER,FER,PER
+		SUB.B	R0L,R0L			; Clear R0L (No Receive)
+		RTS				;
+		.END				;

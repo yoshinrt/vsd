@@ -1,0 +1,96 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  ERR			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CHAR		; Output Character Module
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+		.IMPORT	OUT_STRING		; Output String Module
+		.IMPORT	IN_CHAR			; Input Character Module
+		.IMPORT	MAIN			; Main Module
+		.IMPORT	STACK			; Stack Area
+		.IMPORT	RET_TBL			; Return Command Table
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	ERR			; Error Message Output Module
+		.EXPORT	ERR00			; Buffer Overflow Module
+		.EXPORT	ERR01			; Invalid Command Module
+		.EXPORT	ERR02			; Invalid Parameter Module
+		.EXPORT	ERR03			; Invalid Start Address Module
+		.EXPORT	ERR04			; Invalid End Address Module
+		.EXPORT	ERR05			; Duplicate Breakpoint Module
+		.EXPORT	ERR06			; Full Breakpoint Module
+		.EXPORT	ERR07			; Not Find Breakpoint Module
+		.EXPORT	ERR08			; Invalid Instruction Module
+		.EXPORT	ERR09			; Can't Open Load File Module
+		.EXPORT	ERR10			; S Tpye Format Error Module
+		.EXPORT	ERR11			; Check Sum Error Module
+;************************************************************************
+;*	Error Message Output Module					*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(0) Byte				*
+;************************************************************************
+ERR:		RTS				; Goto Error Module
+ERR00:		MOV.B	#ERR00_MSG-ERR00_MSG,R2L; #00 Message Offset --> R2L
+		BRA	$+44			;
+ERR01:		MOV.B	#ERR01_MSG-ERR00_MSG,R2L; #01 Message Offset --> R2L
+		BRA	$+40			;
+ERR02:		MOV.B	#ERR02_MSG-ERR00_MSG,R2L; #02 Message Offset --> R2L
+		BRA	$+36			;
+ERR03:		MOV.B	#ERR03_MSG-ERR00_MSG,R2L; #03 Message Offset --> R2L
+		BRA	$+32			;
+ERR04:		MOV.B	#ERR04_MSG-ERR00_MSG,R2L; #04 Message Offset --> R2L
+		BRA	$+28			;
+ERR05:		MOV.B	#ERR05_MSG-ERR00_MSG,R2L; #05 Message Offset --> R2L
+		BRA	$+24			;
+ERR06:		MOV.B	#ERR06_MSG-ERR00_MSG,R2L; #06 Message Offset --> R2L
+		BRA	$+20			;
+ERR07:		MOV.B	#ERR07_MSG-ERR00_MSG,R2L; #07 Message Offset --> R2L
+		BRA	$+16			;
+ERR08:		MOV.B	#ERR08_MSG-ERR00_MSG,R2L; #08 Message Offset --> R2L
+		BRA	$+12			;
+ERR09:		MOV.B	#ERR09_MSG-ERR00_MSG,R2L; #09 Message Offset --> R2L
+		BRA	$+8			;
+ERR10:		MOV.B	#ERR10_MSG-ERR00_MSG,R2L; #10 Message Offset --> R2L
+		BRA	$+4			;
+ERR11:		MOV.B	#ERR11_MSG-ERR00_MSG,R2L; #11 Message Offset --> R2L
+		MOV.W	#STACK,R7		; Recovery Stack Pointer
+		MOV.B	#"M",R0L		; Monitor Running Mark --> R0L
+		MOV.B	R0L,@RET_TBL		; Set Monitor Running Mark
+		MOV.B	#H'07,R0L		; BEL ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output BEL
+		MOV.W	#ERR_MSG,R1		; Error Sub Message --> R1
+		BSR	OUT_STRING:16		; Output Error Sub Message
+		EXTU.W	R2			; Extend Message Offset
+		ADD.W	R2,R1			; Real Error Message --> R1
+		BSR	OUT_STRING:16		; Output Real Error Message
+		MOV.W	#ERR_MSG,R1		; Error Sub Message --> R1
+		BSR	OUT_STRING:16		; Output Error Sub Message
+		BSR	OUT_CRLF:16		; Output CR,LF
+		MOV.W	#H'1800,R1		; Wait Loop Counter --> R1
+		BSR	IN_CHAR:16		; Dummy Input Character
+		BNE	$-8			; Counter Reset ?
+		DEC.W	#1,R1			; Decrement Loop Counter
+		BNE	$-8			; Check Wait Loop Counter
+		BRA	MAIN:16			; Goto Main Module
+ERR_MSG:	.SDATAZ	"  ********  "		; Error Message
+ERR00_MSG:	.SDATAZ	"Buffer Overflow"	; Buffer Overflow Message
+ERR01_MSG:	.SDATAZ	"Invalid Command"	; Invalid Command Message
+ERR02_MSG:	.SDATAZ	"Invalid Parameter"	; Invalid Parameter Message
+ERR03_MSG:	.SDATAZ	"Invalid Start Address"	; Invalid Start Address Message
+ERR04_MSG:	.SDATAZ	"Invalid End Address"	; Invalid End Address Message
+ERR05_MSG:	.SDATAZ	"Duplicate Breakpoint"	; Duplicate Breakpoint Message
+ERR06_MSG:	.SDATAZ	"Full Breakpoint"	; Full Breakpoint Message
+ERR07_MSG:	.SDATAZ	"Not Find Breakpoint"	; Not Find Breakpoint Message
+ERR08_MSG:	.SDATAZ	"Invalid Instruction"	; Invalid Instruction Message
+ERR09_MSG:	.SDATAZ	"Can't Open Load File"	; Can't Open Load File Message
+ERR10_MSG:	.SDATAZ	"S Type Format Error"	; S Tpye Format Error Message
+ERR11_MSG:	.SDATAZ	"Check Sum Error"	; Check Sum Error Message
+		.END				;

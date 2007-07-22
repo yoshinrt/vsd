@@ -1,0 +1,119 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  HELP_COM		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  VECTOR,DATA,ALIGN=2	; Monitor Vector Area Section
+		.SECTION  RAM,DATA,ALIGN=2	; RAM Area Section
+		.SECTION  USER,DATA,ALIGN=2	; User Vector Area Section
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CHAR		; Output Character Module
+		.IMPORT	OUT_SP			; Output SP Module
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+		.IMPORT	OUT_STRING		; Output String Module
+		.IMPORT	BIN_ASC_4		; 4 Binary to ASCII Module
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	TBL_ANA			; Table Analize Module
+		.IMPORT	REG_HELP_MSG		; .  Help Message Address
+		.IMPORT	A_HELP_MSG		; A  Help Message Address
+		.IMPORT	B_HELP_MSG		; B  Help Message Address
+		.IMPORT	D_HELP_MSG		; D  Help Message Address
+		.IMPORT	DA_HELP_MSG		; DA Help Message Address
+		.IMPORT	F_HELP_MSG		; F  Help Message Address
+		.IMPORT	G_HELP_MSG		; G  Help Message Address
+		.IMPORT	H8_HELP_MSG		; H8 Help Message Address
+		.IMPORT	L_HELP_MSG		; L  Help Message Address
+		.IMPORT	M_HELP_MSG		; M  Help Message Address
+		.IMPORT	R_HELP_MSG		; R  Help Message Address
+		.IMPORT	S_HELP_MSG		; S  Help Message Address
+		.IMPORT	MAIN			; Main Module
+		.IMPORT	COM_NAME		; Command Name Table
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	HELP_COM		; Help Command Module
+		.EXPORT	HELP_COM_SUB		; Help Command Sub Module
+;************************************************************************
+;*	Help Command Module						*
+;*		Input	R6  <-- 1st Analize Buffer Address		*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(6) Byte				*
+;************************************************************************
+HELP_COM:	MOV.B	@(10,ER6),R0L		; 2nd Parameter is Null ?
+		BNE	ERR02:16		; Invalid Parameter
+		MOV.W	#ADR_TBL,R2		; Address Table --> R2
+		MOV.W	#HELP_MSG,R1		; Help Message --> R1
+		BSR	OUT_STRING:16		; Output Message
+		MOV.W	@ER2+,R0		; Start Address --> R0
+		BSR	BIN_ASC_4:16		; Output Address
+		BSR	OUT_STRING:16		; Output Message
+		MOV.W	@ER2+,R0		; End Address --> R0
+		BSR	BIN_ASC_4:16		; Output Address
+		BSR	OUT_CRLF:16		; Output CR,LF
+		CMP.W	#HELP_TBL,R2		; Table Address Check
+		BNE	$-28			;
+		BSR	OUT_CRLF:16		; Output CR,LF
+		MOV.B	#15,R0H			; Loop Count --> R0H
+		MOV.W	@ER2+,R1		; Message Address --> R1
+		BEQ	$+12			; Exist Help Message ?
+		ADDS	#2,ER1			; Increment Message Address
+		BSR	OUT_STRING:16		; Output Message
+		BSR	OUT_CRLF:16		; Output CR,LF
+		DEC.B	R0H			; Decrement Loop Count
+		BNE	$-16			; Check Loop Count
+		BRA	MAIN:16			; Goto Main Module
+;************************************************************************
+;*	Help Command Sub Module						*
+;*		Input	R6  <-- 1st Analize Buffer Address		*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(6) Byte				*
+;************************************************************************
+HELP_COM_SUB:	MOV.B	@(20,ER6),R0L		; 3rd Parameter is Null ?
+		BNE	ERR02:16		; Invalid Parameter
+		MOV.W	#ERR02,R0		; Invalid Parameter --> R0
+		MOV.W	#COM_NAME,E2		; Command Name First --> E2
+		MOV.W	#COM_NAME+30,E5		; Command Name Last  --> E5
+		BSR	TBL_ANA:16		; Analize Command Number
+		MOV.W	@(HELP_TBL:16,ER0),R1	; Message Start Address --> R1
+		BEQ	ERR02:16		; Invalid Parameter
+		MOV.B	@ER1+,R2L		; Set Loop Count
+		MOV.B	@ER1+,R0L		; Increment Length --> R0L
+		EXTU.W	R0			; Extend Length
+		ADD.W	R0,R1			; Increment Message Address
+		BSR	OUT_STRING:16		; Output Message
+		BSR	OUT_CRLF:16		; Output CR,LF
+		DEC.B	R2L			; Decrement Loop Count
+		BNE	$-10			; Check Loop Count
+		BRA	MAIN:16			; Goto Main Module
+ADR_TBL:	.DATA.W	(STARTOF VECTOR)	; Monitor Vector Start Address
+		.DATA.W	(STARTOF VECTOR)+(SIZEOF  VECTOR)-1
+		.DATA.W	(STARTOF ROM)		; Monitor ROM Start Address
+		.DATA.W	(STARTOF ROM)+(SIZEOF  ROM)-1
+		.DATA.W	(STARTOF RAM)		; Monitor RAM Start Address
+		.DATA.W	(STARTOF RAM)+(SIZEOF  RAM)-1
+		.DATA.W	(STARTOF USER)		; User Vector Start Address
+		.DATA.W	(STARTOF USER)+(SIZEOF  VECTOR)-1
+HELP_TBL:	.DATA.W	REG_HELP_MSG		; .  Help Message Address
+		.DATA.W	0			;
+		.DATA.W	A_HELP_MSG		; A  Help Message Address
+		.DATA.W	B_HELP_MSG		; B  Help Message Address
+		.DATA.W	D_HELP_MSG		; D  Help Message Address
+		.DATA.W	DA_HELP_MSG		; DA Help Message Address
+		.DATA.W	0			;
+		.DATA.W	F_HELP_MSG		; F  Help Message Address
+		.DATA.W	G_HELP_MSG		; G  Help Message Address
+		.DATA.W	H8_HELP_MSG		; H8 Help Message Address
+		.DATA.W	0			;
+		.DATA.W	L_HELP_MSG		; L  Help Message Address
+		.DATA.W	M_HELP_MSG		; M  Help Message Address
+		.DATA.W	R_HELP_MSG		; R  Help Message Address
+		.DATA.W	S_HELP_MSG		; S  Help Message Address
+HELP_MSG:	.SDATAZ	" Monitor Vector "," - ";
+		.SDATAZ	" Monitor ROM    "," - ";
+		.SDATAZ	" Monitor RAM    "," - ";
+		.SDATAZ	" User    Vector "," - ";
+		.END				;

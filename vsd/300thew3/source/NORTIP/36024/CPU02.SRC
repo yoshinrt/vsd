@@ -1,0 +1,30 @@
+;************************************************************************
+;*	H8/36024 Series Monitor Program (Normal Mode)	Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  H8_36024_MSG		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	H8_HELP_MSG		; H8 Help Message
+;************************************************************************
+;*	H8 Peripheral Status Command Help Message			*
+;************************************************************************
+H8_HELP_MSG:	.DATA.B	13			; String Count is 13
+		.SDATAC	" H8 :"			;
+		.SDATAZ	" Displays contents of H8/36024 peripheral registers."
+		.SDATAZ	"      H8 <name> [RET]"
+		.SDATAZ	"   <name> : SCI3_3 - Serial Communication Interface 3 3"
+		.SDATAZ	"            LVD    - Low Voltage Detect"
+		.SDATAZ	"            SCI3_2 - Serial Communication Interface 3 2"
+		.SDATAZ	"            TW     - Timer W"
+		.SDATAZ	"            TV     - Timer V"
+		.SDATAZ	"            SCI3   - Serial Communication Interface 3"
+		.SDATAZ	"            A/D    - A/D converter"
+		.SDATAZ	"            WDT    - Watch Dog Timer"
+		.SDATAZ	"            ABRK   - Address BReaK"
+		.SDATAZ	"            I/O    - I/O port"
+		.SDATAZ	"            INT    - INTerrupt,etc"
+		.END				;

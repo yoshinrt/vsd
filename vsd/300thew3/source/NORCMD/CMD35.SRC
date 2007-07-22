@@ -1,0 +1,51 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  TRACE			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	UNDEF_MOD		; Undefine Interrupt Module
+		.IMPORT	STACK			; Stack Area
+		.IMPORT	RET_TBL			; Return Command Table
+		.IMPORT	B_SUB_COM		; Break Sub Command Module
+		.IMPORT	S_SUB_COM		; Step Sub Command Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	INT01			; Trace Handler
+;************************************************************************
+;*	Trace Handler							*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(0) Byte				*
+;************************************************************************
+INT01:		STC.W	CCR,@ER7		; Save CCR to Stack
+		LDC.B	#H'C0,CCR		; Disable Interrupt
+		MOV.L	ER7,@STACK+32		; Move User ER7
+		MOV.W	#STACK+32,R7		; Set R7 Save Area Address
+		PUSH.L	ER6			; Save User ER6
+		PUSH.L	ER5			; Save User ER5
+		PUSH.L	ER4			; Save User ER4
+		PUSH.L	ER3			; Save User ER3
+		PUSH.L	ER2			; Save User ER2
+		PUSH.L	ER1			; Save User ER1
+		PUSH.L	ER0			; Save User ER0
+		MOV.L	@(28,ER7),ER0		; User ER7 --> ER0
+		MOV.W	@ER0+,R1		; Move User CCR
+		MOV.B	R1H,R1L			; User CCR --> R1L
+		MOV.W	@ER0+,E1		; Move User PC
+		DEC.W	#2,E1			; Decrement User PC
+		PUSH.L	ER1			; Save User CCR,PC
+		MOV.L	ER0,@(32,ER7)		; Save User ER7
+		MOV.B	@RET_TBL,R0H		; PreCommand Name --> R0H
+		CMP.B	#"S",R0H		; PreCommand is Step ?
+		BEQ	S_SUB_COM:16		; Goto Step Sub Command
+		CMP.B	#"B",R0H		; PreCommand is Break ?
+		BEQ	B_SUB_COM:16		; Goto Break Sub Command
+		MOV.B	#1,R0L			; Set Trace Vector Number
+		BRA	UNDEF_MOD:16		; Goto Undefine Module
+		.END				;

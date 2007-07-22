@@ -1,0 +1,16 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  LARGE_AREA		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  USER,DATA,ALIGN=2	; User Vector Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	LARGE_AREA		; Large Vector Work Area
+;************************************************************************
+;*	Dummy of User Vector Work Area					*
+;************************************************************************
+LARGE_AREA:	.EQU	$			; Nothing
+		.END				;

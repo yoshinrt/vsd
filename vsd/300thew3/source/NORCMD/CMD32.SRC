@@ -1,0 +1,113 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  S_COM			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+		.IMPORT	ASC_BCD_2		; 2 ASCII to BCD Module
+		.IMPORT	ANA_BUF			; Analize Buffer
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	TBL_CHK			; Table Check Module
+		.IMPORT	TRACE_SET		; Trace Set Module
+		.IMPORT	TRACE_CLR		; Trace Clear Module
+		.IMPORT	OUT_INT			; Interrupt Message Module
+		.IMPORT	INT_CHK			; Interrupt Check Table
+		.IMPORT	MAIN			; Main Module
+		.IMPORT	STACK			; Stack Area
+		.IMPORT	RET_COM_SUB		; Return Command Sub Module
+		.IMPORT	RET_TBL			; Return Command Table
+		.IMPORT	DA_SUB_COM		; Disassemble Sub Module
+		.IMPORT	R_SUB_COM		; Register Sub Command Module
+		.IMPORT	VECTOR_SET		; Vector Set Module
+		.IMPORT	VECTOR_CLR		; Vector Clear Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	S_COM			; Step Command Module
+		.EXPORT	S_COM_SUB		; Step Command Sub Module
+		.EXPORT	S_SUB_COM		; Step Sub Command Module
+;************************************************************************
+;*	Step Command Module						*
+;*		Input	R1  <-- Address of 2nd Analize Buffer		*
+;*		Output	R4L --> Rest Step Count				*
+;*			R6  --> Return Command Table Address		*
+;*		Used Stack Area --> 0(4) Byte				*
+;************************************************************************
+S_COM:		MOV.W	@ER1,R6			; 2nd Analize Buffer --> R6
+		MOV.B	@(10,ER6),R0L		; 3rd Parameter is Null ?
+		BNE	ERR02:16		; Invalid Parameter
+		MOV.B	#H'01,R4L		; Step Count --> R4L
+		MOV.B	@ER6,R0L		; 2nd Parameter is Null ?
+		BEQ	$+6			;
+		BSR	ASC_BCD_2:16		; Change Step Count --> R4L
+		MOV.B	#"S",R0H		; Step Command Name --> R0H
+		BSR	RET_COM_SUB:16		; Retrun Command Sub Module
+;************************************************************************
+;*	Step Command Sub Module						*
+;*		Input	R4L <-- Rest Step Count				*
+;*			R6  <-- Return Command Table Address		*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(8) Byte				*
+;************************************************************************
+S_COM_SUB:	MOV.B	R4L,@(1,ER6)		; Save Rest Step Count
+		BSR	TRACE_SET:16		; Set Trace Parameter
+		BSR	VECTOR_SET:16		; Set Monitor Vector
+		MOV.L	@(32,ER7),ER6		; User ER7(Dummy) --> ER6
+		POP.L	ER5			; User PC,CCR --> E5,R5L
+		MOV.B	R5L,R5H			; User CCR --> R5H
+		MOV.W	E5,@-ER6		; Recovery User PC
+		MOV.W	R5,@-ER6		; Recovery User CCR
+		MOV.L	ER6,@(28,ER7)		; Save User ER7(Real)
+		POP.L	ER0			; Recovery User ER0
+		POP.L	ER1			; Recovery User ER1
+		POP.L	ER2			; Recovery User ER2
+		POP.L	ER3			; Recovery User ER3
+		POP.L	ER4			; Recovery User ER4
+		POP.L	ER5			; Recovery User ER5
+		POP.L	ER6			; Recovery User ER6
+		POP.L	ER7			; Recovery User ER7
+		RTE				;
+;************************************************************************
+;*	Step Sub Command Module						*
+;*		Input	Noting						*
+;*		Output	R4L --> Rest Step Count				*
+;*			R6  --> Return Command Table Address		*
+;*		Used Stack Area --> 0(10) Byte				*
+;************************************************************************
+S_SUB_COM:	BSR	VECTOR_CLR:16		; Clear Monitor Vector
+		BSR	TRACE_CLR:16		; Clear Trace Parameter
+		BSR	R_SUB_COM:16		; Output Register Status
+		MOV.B	@ANA_BUF+26,R5H		; Vector Offset --> R5H
+		SHLR.B	R5H			; Vector Number --> R5H
+		MOV.W	#INT_CHK,R3		; Interrupt Check Table --> R3
+		MOV.B	R5H,R0L			; Vector Number --> R0L
+		BSR	TBL_CHK:16		; Interrupt Origin Check
+		BCC	$+16			;
+		BST	#0,R5L			; Interrupt Status --> R5L
+		MOV.W	@STACK+34,R0		; User R7 --> R0
+		MOV.W	@(2,ER0),R0		; Execute Address --> R0
+		CMP.W	R0,R4			; Execute Instruction ?
+		BLD	#0,R5L			; Interrupt Status --> C of CCR
+		XORC	#H'05,CCR		; ~Z and ~C of CCR
+		STC	CCR,R5L			; Output Status --> R5L
+		BHI	$+8			;
+		BCLR	#0,R4L			; Adjust Instruction Address
+		BSR	DA_SUB_COM:16		; Output Instruction Status
+		LDC	R5L,CCR			; Output Status --> CCR
+		BCS	$+8			;
+		MOV.B	R5H,R0L			; Vector Number --> R0L
+		BSR	OUT_INT:16		; Output Interrupt Message
+		MOV.W	#RET_TBL,R6		; Return Command Table --> R6
+		MOV.B	@(1,ER6),R4L		; Rest Step Count --> R4L
+		MOV.B	#H'01,R0L		; Decrement Count --> R0L
+		SUB.B	R0L,R4L			; Analize Rest Step Count
+		DAS	R4L			; Adjust Decimal
+		BEQ	MAIN:16			; Goto Main Module
+		BSR	OUT_CRLF:16		; Output CR,LF
+		BRA	S_COM_SUB:16		; Step Command Sub Module
+		.END				;

@@ -1,0 +1,172 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  H8_COM		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	H8_NAME			; H8 Name Table
+		.IMPORT	H8_TBL			; H8 Table
+		.IMPORT	OUT_CHAR		; Output Character Module
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+		.IMPORT	OUT_SP			; Output SP Module
+	 	.IMPORT	OUT_STRING		; Output String Module
+		.IMPORT	BIN_ASC_8		; 8 Binary to ASCII Module
+		.IMPORT	BIN_ASC_4		; 4 Binary to ASCII Module
+		.IMPORT	BIN_ASC_2		; 2 Binary to ASCII Module
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	TBL_ANA			; Table Analize Module
+		.IMPORT	MAIN			; Main Module
+		.IMPORT	BACK_COM_SUB		; Back Command Sub Module
+		.IMPORT	H8_BUF			; H8 Status Command Buffer
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	H8_COM			; H8 Status Command Module
+;************************************************************************
+;*	H8 Peripheral Status Command Module				*
+;*		Input	R1  <-- Address of 2nd Analize Buffer		*
+;*		Output	R2  --> H8 Table Address			*
+;*		Used Stack Area --> 0(6) Byte				*
+;************************************************************************
+H8_COM:		MOV.W	@ER1+,R6		; 2nd Analize Buffer --> R6
+		MOV.B	@(10,ER6),R0L		; 3rd Parameter is Null ?
+		BNE	ERR02:16		; Invalid Parameter
+		MOV.W	#ERR02,R0		; Invalid Parameter --> R0
+		MOV.W	#H8_NAME,E2		; H8 Name First --> E2
+		MOV.W	#H8_TBL,E5		; H8 Name Last  --> E5
+		BSR	TBL_ANA:16		; Analize Command Number
+		SHLR.W	R0			; Make Table Displacement
+		BCLR	#0,R0L			;
+		MOV.W	@(H8_TBL:16,ER0),R2	; H8 Table Address --> R2
+		MOV.W	#H8_BUF,R6		; H8 Buffer Address --> R6
+		BSR	BACK_COM_SUB:16		; Back Command Sub Module
+;************************************************************************
+;*	H8 Peripheral Status Command Sub Module				*
+;*		Input	R2  --> H8 Table Address			*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(6) Byte				*
+;************************************************************************
+H8_COM_SUB:	MOV.W	#H8_MSG,R1		; H8 Message Address --> R1
+		BSR	OUT_STRING:16		; Output H8 Message
+		BSR	OUT_CRLF:16		; Output CR,LF
+		MOV.W	@ER2+,R1		; Message Address --> R1
+		MOV.W	@ER2+,R4		; Register Parameter --> R4
+		BEQ	MAIN:16			; Goto Main Module
+		MOV.W	#H'00FE,R0		; Module Parameter --> R0
+		AND.B	R4H,R0L			; Module Offset --> R0L
+		OR.B	#H'FE,R4H		; Adjust Register Address
+		ADD.W	#H8_MOD,R0		; Module Address --> R0
+		JSR	@ER0			; Goto Output Module
+		BRA	$-20			; Next Register
+;************************************************************************
+;*	H8 Peripheral Status Command Parameter Module			*
+;*		Input	R1  <-- H8 Peripheral Message Address		*
+;*			R4  <-- Register Address			*
+;*		Output	R1  --> Next H8 Peripheral Message Address	*
+;*		Used Stack Area --> 2(6) Byte				*
+;************************************************************************
+H8_NEXT:	SUB.W	R5,R5			; Clear R5
+		BLD	#2,R6H			; Z of CCR --> C of CCR
+		BST	#1,R5L			; C of CCR --> Bit1 of R5L
+		SUBX	R6H,R6H			; H'FF or H'00 --> R6H
+		AND.B	R6H,R6L			; Adjust Code --> R6L
+		ADD.W	R5,R2			; Adjust Table Address
+		MOV.B	R6L,R5L			; Adjust Code --> R5L
+		ADD.W	R5,R1			; Adjust Message Address
+		RTS				;
+H8_ADDR:	MOV.B	#9,R0H			; SP Loop Count --> R0H
+		MOV.B	#" ",R0L		; SP ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output Character
+		DEC.B	R0H			; Decrement SP Loop Count
+		MOV.B	@ER1+,R0L		; Message Character --> R0L
+		BNE	$-8			; Null Code Check
+		BSR	OUT_SP:16		; Output SP
+		DEC.B	R0H			; Decrement SP Loop Count
+		BNE	$-6			; SP Loop Count Check
+		MOV.W	R4,R0			; Register Address --> R0
+		BSR	BIN_ASC_4:16		; Output Register Address
+		BRA	OUT_SP:16		; Output SP
+H8_MOD:		ADD.B	#-H'02,R4H		;*Output Long Module (H'F6,H'F7)
+		ADD.B	#-H'02,R4H		;*Output Long Module (H'F8,H'F9)
+		ADD.B	#-H'02,R4H		;*Output Long Module (H'FA,H'FB)
+		ADD.B	#-H'02,R4H		;*Output Long Module (H'FC,H'FC)
+		BSR	H8_ADDR			;*Output Long Module (H'FE,H'FF)
+		MOV.L	@ER4,ER0		; Register Value (Long) --> ER0
+		BSR	BIN_ASC_8:16		; Output Register Value
+		BRA	OUT_CRLF:16		; Output CR,LF
+		ADD.B	#-H'02,R4H		;*Output Word Module (H'F6,H'F7)
+		ADD.B	#-H'02,R4H		;*Output Word Module (H'F8,H'F9)
+		ADD.B	#-H'02,R4H		;*Output Word Module (H'FA,H'FB)
+		ADD.B	#-H'02,R4H		;*Output Word Module (H'FC,H'FD)
+		BSR	H8_ADDR			;*Output Word Module (H'FE,H'FF)
+		MOV.W	@ER4,R0			; Register Value (Word) --> R0
+		BSR	BIN_ASC_4:16		; Output Register Value
+		BRA	OUT_CRLF:16		; Output CR,LF
+		ADD.B	#-H'02,R4H		;*Output Byte Module (H'F6,H'F7)
+		ADD.B	#-H'02,R4H		;*Output Byte Module (H'F8,H'F9)
+		ADD.B	#-H'02,R4H		;*Output Byte Module (H'FA,H'FB)
+		ADD.B	#-H'02,R4H		;*Output Byte Module (H'FC,H'FD)
+		BSR	H8_ADDR			;*Output Byte Module (H'FE,H'FF)
+		MOV.B	@ER4,R0L		; Register Value (Byte) --> R0L
+		BSR	BIN_ASC_2:16		; Output Register Value
+		BRA	OUT_CRLF:16		; Output CR,LF
+		ADD.B	#-H'02,R4H		;*Output Bit Module (H'F6,H'F7)
+		ADD.B	#-H'02,R4H		;*Output Bit Module (H'F8,H'F9)
+		ADD.B	#-H'02,R4H		;*Output Bit Module (H'FA,H'FB)
+		ADD.B	#-H'02,R4H		;*Output Bit Module (H'FC,H'FD)
+		BSR	H8_ADDR			;*Output Bit Module (H'FE,H'FF)
+		MOV.W	R1,R0			; Copy Message Address --> ER0
+		MOV.B	@ER1+,R3H		; Bit Status --> R3H
+		MOV.B	R3H,R3L			; Bit Status --> R3L
+		MOV.B	@ER4,R5L		; Register Status --> R5L
+		AND.B	R5L,R3L			; Register Status --> R3L
+		MOV.B	#8,R4L			; Bit Count --> R4L
+		ROTL.B	R3H			; Output Status --> C of CCR
+		SUBX	R0L,R0L			; O or -1 --> R0L
+		SHAL.B	R0L			; 0 or -2 --> R0L
+		NEG.B	R0L			; O or +2 --> R0L
+		ADD.B	#".",R0L		; "." or "0" --> R0L
+		SHLL.B	R3L			; Register Status --> C of CCR
+		ADDX	#0,R0L			; "." or "0" or "1" --> R0L
+		BSR	OUT_CHAR:16		; Output Bit Status
+		DEC.B	R4L			; Decrement Bit Count
+		BNE	$-20			; Check Bit Count
+		ADD.B	#-22,R4L		; Decrement SP Loop Count
+						;*Output Bit Name Module
+		ADD.B	#23,R4L			; Increment SP Loop Count
+		BSR	OUT_SP:16		; Output SP
+		DEC.B	R4L			; Decrement SP Loop Count
+		BNE	$-6			; Check SP Loop Count
+		MOV.B	#7,R4H			; Bit Count --> R4H
+		MOV.B	@ER1+,R5L		; Name Length --> R5L
+		MOV.B	#6,R5H			; SP Loop Count --> R5H
+		SUB.B	R5L,R5H			;
+		SHLR.B	R5H			;
+		BSR	OUT_SP:16		; Output SP
+		DEC.B	R5H			; Decrement SP Loop Count
+		BPL	$-6			; Check SP Loop Count
+		ADD.B	R5L,R5H			; Name Length --> R5H
+		BCC	$+12			;
+		MOV.B	@ER1+,R0L		; Name Character --> R0L
+		BSR	OUT_CHAR:16		; Output Name Character
+		DEC.B	R5H			; Decrement Name Length
+		BPL	$-8			; Check Name Character Length
+		MOV.B	#5,R5H			; SP Loop Count --> R5H
+		SUB.B	R5L,R5H			;
+		BMI	$+12			;
+		SHLR.B	R5H			;
+		BSR	OUT_SP:16		; Output SP
+		DEC.B	R5H			; Decrement SP Loop Count
+		BPL	$-6			; Check SP Loop Count
+		DEC.B	R4H			; Decrement Bit Count
+		BPL	$-48			; Check Bit Count
+		BRA	OUT_CRLF:16		; Output CR,LF
+H8_MSG:		.SDATA	" <REG>  <ADDR> <CODE>"	; H8 Message
+		.SDATA	"   < 7      6      5 "	;
+		.SDATA	"     4      3      2 "	;
+		.SDATAZ	"     1      0 >"	;
+		.END				;

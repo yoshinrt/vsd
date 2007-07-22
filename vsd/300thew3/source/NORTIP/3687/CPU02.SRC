@@ -1,0 +1,35 @@
+;************************************************************************
+;*	H8/3687 Series Monitor Program (Normal Mode)	Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  H8_3687_MSG		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	H8_HELP_MSG		; H8 Help Message
+;************************************************************************
+;*	H8 Peripheral Status Command Help Message			*
+;************************************************************************
+H8_HELP_MSG:	.DATA.B	18			; String Count is 18
+		.SDATAC	" H8 :"			;
+		.SDATAZ	" Displays contents of H8/3687 peripheral registers."
+		.SDATAZ	"      H8 <name> [RET]"
+		.SDATAZ	"   <name> : TZ0    - Timer Z 0"
+		.SDATAZ	"            TZ1    - Timer Z 1"
+		.SDATAZ	"            TZ     - Timer Z"
+		.SDATAZ	"            RTC    - Real Time Clock"
+		.SDATAZ	"            LVD    - Low Voltage Detect"
+		.SDATAZ	"            SCI3_2 - Serial Communication Interface 3 2"
+		.SDATAZ	"            IIC2   - IIC bus interface 2"
+		.SDATAZ	"            TB1    - Timer B1"
+		.SDATAZ	"            TV     - Timer V"
+		.SDATAZ	"            SCI3   - Serial Communication Interface 3"
+		.SDATAZ	"            A/D    - A/D converter"
+		.SDATAZ	"            PWM    - 14bit Pulse Width Modulation timer"
+		.SDATAZ	"            WDT    - Watch Dog Timer"
+		.SDATAZ	"            ABRK   - Address BReaK"
+		.SDATAZ	"            I/O    - I/O port"
+		.SDATAZ	"            INT    - INTerrupt,etc"
+		.END				;

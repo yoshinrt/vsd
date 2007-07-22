@@ -1,0 +1,20 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  A_HELP_MSG		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	A_HELP_MSG		; Assemble Help Message
+;************************************************************************
+;*	Assemble Command Help Message					*
+;************************************************************************
+A_HELP_MSG:	.DATA.B	3			; String Count is 3
+		.SDATAC	" A  :"			;
+		.SDATAZ	" Assembles source sentences from the keyboard."
+		.SDATAZ	"      A <address> [RET]"
+		.SDATAZ	"   <address> : starting address machine codes to be set"
+		.END				;

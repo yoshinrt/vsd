@@ -1,0 +1,182 @@
+[HIMDBVersion]
+2.0
+[DATABASE_VERSION]
+"2.6" 
+[PROJECT_DETAILS]
+"monitor" "G:\DDS\vsd\vsd\300thew3\monitor" "G:\DDS\vsd\vsd\300thew3\monitor\monitor.hwp" "H8S,H8/300" "Hitachi H8S,H8/300 Standard" "Empty Application" 
+[INFORMATION]
+"No project information available" 
+[TOOL_CHAIN]
+"Hitachi H8S,H8/300 Standard Toolchain" "6.1.0.0" 
+[CONFIGURATIONS]
+"Release" "G:\DDS\vsd\vsd\300thew3\monitor\release" 
+[BUILD_PHASES]
+"Hitachi OptLinker" 1 
+"Hitachi H8S,H8/300 C/C++ Compiler" 1 
+"Hitachi H8S,H8/300 C/C++ Library Generator" 1 
+"Hitachi H8S,H8/300 Assembler" 1 
+[DEFINITION_PARSERS]
+[TOOL_ENVIRONMENT]
+[EXTENSIONS]
+"CPU information file" "CPU" 
+"Absolute file" "ABS" 
+"Stack information file" "SNI" 
+"Profile file" "PRO" 
+"C++ list file" "LPP" 
+"Linkage map file" "MAP" 
+"C++ header file" "HPP" 
+"C++ source file" "CPP" 
+"C header file" "H" 
+"C source file" "C" 
+"Hex file" "HEX" 
+"S-Record file" "MOT" 
+"Object file" "OBJ" 
+"Object file" "SUB" 
+"Optimize map file" "bls" 
+"Relocatable file" "REL" 
+"Assembly source file" "MAR" 
+"Assembly source file" "SRC" 
+"Expanded assembly source file" "EXP" 
+"Preprocessed C source file" "P" 
+"C list file" "LST" 
+"Linkage symbol file" "FSY" 
+"Binary file" "BIN" 
+"Library file" "LIB" 
+"Assembly include file" "INC" 
+"Library information file" "LBP" 
+"Assembly list file" "LIS" 
+"Preprocessed C++ source file" "PP" 
+[FILE_GROUPS]
+"CPU information file" "BIN" "NONE" "" 
+"Absolute file" "BIN" "NONE" "" 
+"Stack information file" "BIN" "NONE" "" 
+"Profile file" "BIN" "NONE" "" 
+"C++ list file" "TEXT" "EDITOR" "" 
+"Linkage map file" "TEXT" "EDITOR" "" 
+"C++ header file" "TEXT" "EDITOR" "" 
+"C++ source file" "TEXT" "EDITOR" "" 
+"C header file" "TEXT" "EDITOR" "" 
+"C source file" "TEXT" "EDITOR" "" 
+"Hex file" "TEXT" "EDITOR" "" 
+"S-Record file" "TEXT" "EDITOR" "" 
+"Object file" "TEXT" "EDITOR" "" 
+"Optimize map file" "BIN" "NONE" "" 
+"Relocatable file" "BIN" "NONE" "" 
+"Assembly source file" "TEXT" "EDITOR" "" 
+"Expanded assembly source file" "TEXT" "EDITOR" "" 
+"Preprocessed C source file" "TEXT" "EDITOR" "" 
+"C list file" "TEXT" "EDITOR" "" 
+"Linkage symbol file" "TEXT" "EDITOR" "" 
+"Binary file" "BIN" "NONE" "" 
+"Library file" "BIN" "NONE" "" 
+"Assembly include file" "TEXT" "EDITOR" "" 
+"Library information file" "TEXT" "EDITOR" "" 
+"Assembly list file" "TEXT" "EDITOR" "" 
+"Preprocessed C++ source file" "TEXT" "EDITOR" "" 
+[ASSOCIATED_APPLICATIONS]
+[TOOLCHAIN_PHASE]
+"Hitachi OptLinker" 
+"Hitachi H8S,H8/300 C/C++ Compiler" 
+"Hitachi H8S,H8/300 C/C++ Library Generator" 
+"Hitachi H8S,H8/300 Assembler" 
+[UTILITY_PHASE]
+[CUSTOM_PHASES]
+[CUSTOM_PHASE_INPUT_GROUP]
+[BUILD_ORDER]
+"Hitachi H8S,H8/300 C/C++ Library Generator" 1 
+"Hitachi H8S,H8/300 C/C++ Compiler" 1 
+"Hitachi H8S,H8/300 Assembler" 1 
+"Hitachi OptLinker" 1 
+[BUILD_PHASE_DETAILS]
+"Hitachi OptLinker" "Object file|Library file|Relocatable file" 0 
+"Hitachi H8S,H8/300 C/C++ Compiler" "C source file|C++ source file" 1 
+"Hitachi H8S,H8/300 C/C++ Library Generator" "" 0 
+"Hitachi H8S,H8/300 Assembler" "Assembly source file|Linkage symbol file" 1 
+[BUILD_FILE_ORDER_C++ source file]
+"Hitachi H8S,H8/300 C/C++ Compiler" 1 
+[BUILD_FILE_ORDER_C source file]
+"Hitachi H8S,H8/300 C/C++ Compiler" 1 
+[BUILD_FILE_ORDER_Assembly source file]
+"Hitachi H8S,H8/300 Assembler" 1 
+[BUILD_FILE_ORDER_Linkage symbol file]
+"Hitachi H8S,H8/300 Assembler" 1 
+[SCRAP]
+"Project Generator Setup File" "$(PROJDIR)\monitor.pgs" 
+[MAPPINGS]
+"Object file" "Hitachi OptLinker" "Hitachi H8S,H8/300 C/C++ Compiler" 
+"Assembly source file" "Hitachi H8S,H8/300 Assembler" "Hitachi H8S,H8/300 C/C++ Compiler" 
+"Library file" "Hitachi OptLinker" "Hitachi H8S,H8/300 C/C++ Library Generator" 
+"Object file" "Hitachi OptLinker" "Hitachi H8S,H8/300 Assembler" 
+[PROJECT_FILES]
+"G:\DDS\vsd\vsd\300thew3\monitor\monitor.c" "User" "C source file" 0 
+"G:\DDS\vsd\vsd\300thew3\monitor\monitor.sub" "User" "Object file" 0 
+"G:\DDS\vsd\vsd\dds.h" "User" "C header file" 2 
+"G:\DDS\vsd\vsd\sci.c" "User" "C source file" 2 
+"G:\DDS\vsd\vsd\sci.h" "User" "C header file" 2 
+"G:\DDS\vsd\vsd\padding.c" "User" "C source file" 2 
+"G:\DDS\vsd\vsd\main.c" "User" "C source file" 2 
+[FOLDER]
+"C header file" "C header file" 
+"C source file" "C source file" 
+"Object file" "Object file" 
+[GENERAL_DATA_PROJECT]
+[ON_DEMAND_COMPONENTS_LOADED]
+[SYNC_SESSION_NAMES]
+[SESSIONS]
+"DefaultSession" "G:\DDS\vsd\vsd\300thew3\monitor\defaultsession.hsf" 0 
+[GENERAL_DATA_SESSION_DefaultSession]
+[OPTIONS_Release_Hitachi OptLinker]
+"Single Shot" "01e47a5df4856c10" 4 
+[OPTIONS_Release_Hitachi H8S,H8/300 C/C++ Compiler]
+"G:\DDS\vsd\vsd\main.c" "0d166ff4e0396c10" 2 
+"C++ source file" "0d166ff4e0396c10" 2 
+"G:\DDS\vsd\vsd\sci.c" "0d166ff4e0396c10" 2 
+"G:\DDS\vsd\vsd\300thew3\monitor\monitor.c" "0d166ff4e0396c10" 2 
+"C source file" "0d166ff4e0396c10" 2 
+"G:\DDS\vsd\vsd\padding.c" "0d166ff4e0396c10" 2 
+[OPTIONS_Release_Hitachi H8S,H8/300 C/C++ Library Generator]
+"Single Shot" "0c8249ece3c75c10" 1 
+[OPTIONS_Release_Hitachi H8S,H8/300 Assembler]
+"Assembly source file" "0c8249ece3c75c10" 3 
+"Linkage symbol file" "0c8249ece3c75c10" 3 
+[OPTIONS_Release]
+"" 0 
+"[V|VERSION|6] [S|MODE|BUILD/CHANGED] [S|EXISTOUTPUTPATH|^"$(CONFIGDIR)\$(PROJECTNAME).lib^"] [B|RUNTIME|1] [B|NEW|1] [B|STDIO|1] [S|OUTPUTPATH|^"$(CONFIGDIR)\$(PROJECTNAME).lib^"] [S|SECTION|P=ROM|B=RAM] [B|CPUEXPAND|1] [S|BIT_ORDER|LEFT] [I|ALIGN|] [B|SPEED|1] [S|SPEED|REGISTER|SHIFT|EXPRESSION|INLINE=105] [S|INLINE|NONE] [S|OPT_RANGE|ALL] [I|MAX_UNROLL|1] [S|LIBRARY|FUNCTION] [S|CPU|300HN] [I|SBR|0]
+" 1 
+"[V|VERSION|6] [S|DEFINE|MONITOR_ROM] [S|OUTPUTPATH|^"$(CONFIGDIR)\$(FILELEAF).obj^"] [S|SECTION|P=ROM] [S|CPUEXPAND|] [S|ASSEMBLY|^"[V|VERSION|1]] [B|DEBUG|0]] [S|OUTPUTPATH|^"^"$(CONFIGDIR)\$(FILELEAF).obj^"^"]] [B|ERRORPATH|1]] [B|CHGINCPATH|1]] [S|CPU|300HN]] [I|SBR|0]]^"] [I|ALIGN|] [B|LIST|0] [B|SPEED|1] [S|SPEED|REGISTER|SHIFT|EXPRESSION|INLINE=110] [S|INLINE|NONE] [B|GOPTIMIZE|1] [S|OPT_RANGE|ALL] [I|MAX_UNROLL|1] [S|LIBRARY|FUNCTION] [S|MISRA_INSPECTION|ALL] [S|CPU|300HN] [I|SBR|0] [S|BIT_ORDER|LEFT] [B|CHGINCPATH|1]
+" 2 
+"[V|VERSION|1] [B|DEBUG|0] [S|OUTPUTPATH|^"$(CONFIGDIR)\$(FILELEAF).obj^"] [B|LIST|0] [B|CHGINCPATH|1] [B|ERRORPATH|1] [S|CPU|300HN]" 3 
+"[V|VERSION|6] [B|SUBCOMMAND|1] [S|SUBCOMMAND|^"$(PROJDIR)\monitor.sub^"] [S|CPULNK|300HN [I|SBR|0] [S|FORM|STYPE] [B|DEBUG|0] [B|LIST|1] [S|LIST|^"$(CONFIGDIR)\$(PROJECTNAME).map^"] [S|OUTPUT|^"$(CONFIGDIR)\$(PROJECTNAME).mot^"] [I|SPACE|^"FF^"] [B|OPTIMIZE|0] [I|CACHESIZE|000000008] [I|CACHELINE|000000020]
+" 4 
+[SESSION_DATA_CONFIGURATION_SESSION_Release_DefaultSession]
+"MEMORY_MAPPING_OPTIONS" "[V|VERSION|] [] [S|MAP|^"0x00000000,0x0000FD1F,EXT,16,202 0x0000FD20,0x0000FF1F,RAM,16,202 0x0000FF20,0x0000FFFF,I/O,16,202^"] [S|RESOURCE|^"0x0000F780,0x0000FFFF,R/W^"] [] [B|SIMIOF|0] [I|SIMIOADR|0x00000000]
+" 
+[EXT_DEBUGGER_INFO]
+0 "" "" "" "" 
+[BUILD_FILE_ORDER_Assembly list file]
+[BUILD_FILE_ORDER_C header file]
+[BUILD_FILE_ORDER_Binary file]
+[BUILD_FILE_ORDER_S-Record file]
+[BUILD_FILE_ORDER_Hex file]
+[GENERAL_DATA_CONFIGURATION_Release]
+[BUILD_FILE_ORDER_Expanded assembly source file]
+[BUILD_FILE_ORDER_CPU information file]
+[BUILD_FILE_ORDER_Preprocessed C++ source file]
+[BUILD_FILE_ORDER_Library file]
+[BUILD_FILE_ORDER_Object file]
+[BUILD_FILE_ORDER_Stack information file]
+[BUILD_FILE_ORDER_Absolute file]
+[BUILD_FILE_ORDER_C++ list file]
+[BUILD_FILE_ORDER_Profile file]
+[BUILD_FILE_ORDER_Optimize map file]
+[BUILD_FILE_ORDER_Relocatable file]
+[GENERAL_DATA_CONFIGURATION_SESSION_Release_DefaultSession]
+[BUILD_FILE_ORDER_Preprocessed C source file]
+[EXCLUDED_FILES_Release]
+[BUILD_FILE_ORDER_Assembly include file]
+[BUILD_FILE_ORDER_C++ header file]
+[BUILD_FILE_ORDER_Linkage map file]
+[BUILD_FILE_ORDER_Library information file]
+[BUILD_FILE_ORDER_C list file]
+[LINKAGE_ORDER_Release]
+[END]

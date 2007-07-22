@@ -1,0 +1,102 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  INS_NAME		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	INS_NAME		; Instruction Name
+;************************************************************************
+;*	Instruction Name Message					*
+;************************************************************************
+INS_NAME:	.SDATAZ	".DATA"			; 00 00 .DATA
+		.SDATAZ	"ADD"			; 03 01 ADD
+		.SDATAZ	"ADDS"<0>		; 05 02 ADDS
+		.SDATAZ	"ADDX"<0>		; 08 04 ADDX
+		.SDATAZ	"AND"			; 0B 05 AND
+		.SDATAZ	"ANDC"<0>		; 0D 06 ANDC
+		.SDATAZ	"BAND"<0>		; 10 08 BAND
+		.SDATAZ	"BCC"			; 13 09 BCC
+		.SDATAZ	"BCLR"<0>		; 15 0A BCLR
+		.SDATAZ	"BCS"			; 18 0C BCS
+		.SDATAZ	"BEQ"			; 1A 0D BEQ
+		.SDATAZ	"BF"<0>			; 1C 0E BF
+		.SDATAZ	"BGE"			; 1E 0F BGE
+		.SDATAZ	"BGT"			; 20 10 BGT
+		.SDATAZ	"BHI"			; 22 11 BHI
+		.SDATAZ	"BHS"			; 24 12 BHS
+		.SDATAZ	"BIAND"			; 26 13 BIAND
+		.SDATAZ	"BILD"<0>		; 29 14 BILD
+		.SDATAZ	"BIOR"<0>		; 2C 16 BIOR
+		.SDATAZ	"BIST"<0>		; 2F 17 BIST
+		.SDATAZ	"BIXOR"			; 32 19 BIXOR
+		.SDATAZ	"BLD"			; 35 1A BLD
+		.SDATAZ	"BLE"			; 37 1B BLE
+		.SDATAZ	"BLO"			; 39 1C BLO
+		.SDATAZ	"BLS"			; 3B 1D BLS
+		.SDATAZ	"BLT"			; 3D 1E BLT
+		.SDATAZ	"BMI"			; 3F 1F BMI
+		.SDATAZ	"BNE"			; 41 20 BNE
+		.SDATAZ	"BNOT"<0>		; 43 21 BNOT
+		.SDATAZ	"BOR"			; 46 23 BOR
+		.SDATAZ	"BPL"			; 48 24 BPL
+		.SDATAZ	"BRA"			; 4A 25 BRA
+		.SDATAZ	"BRN"			; 4C 26 BRN
+		.SDATAZ	"BSET"<0>		; 4E 27 BSET
+		.SDATAZ	"BSR"			; 51 28 BSR
+		.SDATAZ	"BST"			; 53 29 BST
+		.SDATAZ	"BT"<0>			; 55 2A BT
+		.SDATAZ	"BTST"<0>		; 57 2B BTST
+		.SDATAZ	"BVC"			; 5A 2D BVC
+		.SDATAZ	"BVS"			; 5C 2E BVS
+		.SDATAZ	"BXOR"<0>		; 5E 2F BXOR
+		.SDATAZ	"CMP"			; 61 30 CMP
+		.SDATAZ	"DAA"			; 63 31 DAA
+		.SDATAZ	"DAS"			; 65 32 DAS
+		.SDATAZ	"DEC"			; 67 33 DEC
+		.SDATAZ	"DIVXS"			; 69 34 DIVXS
+		.SDATAZ	"DIVXU"			; 6C 36 DIVXU
+		.SDATAZ	"EEPMOV"<0>		; 6F 37 EEPMOV
+		.SDATAZ	"EXTS"<0>		; 73 39 EXTS
+		.SDATAZ	"EXTU"<0>		; 76 3B EXTU
+		.SDATAZ	"INC"			; 79 3C INC
+		.SDATAZ	"JMP"			; 7B 3D JMP
+		.SDATAZ	"JSR"			; 7D 3E JSR
+		.SDATAZ	"LDC"			; 7F 3F LDC (Normal)
+		.SDATAZ	"LDC"			; 81 40 LDC (Swap)
+		.SDATAZ	"MOV"			; 83 41 MOV (Normal)
+		.SDATAZ	"MOV"			; 85 42 MOV (Swap)
+		.SDATAZ	"MOVFPE"<0>		; 87 43 MOVFPE
+		.SDATAZ	"MOVTPE"<0>		; 8B 45 MOVTPE
+		.SDATAZ	"MULXS"			; 8F 47 MULXS
+		.SDATAZ	"MULXU"			; 92 49 MULXU
+		.SDATAZ	"NEG"			; 95 4A NEG
+		.SDATAZ	"NOP"			; 97 4B NOP
+		.SDATAZ	"NOT"			; 99 4C NOT
+		.SDATAZ	"OR"<0>			; 9B 4D OR
+		.SDATAZ	"ORC"			; 9D 4E ORC
+		.SDATAZ	"POP"			; 9F 4F POP
+		.SDATAZ	"PUSH"<0>		; A1 50 PUSH
+		.SDATAZ	"ROTL"<0>		; A4 52 ROTL
+		.SDATAZ	"ROTR"<0>		; A7 53 ROTR
+		.SDATAZ	"ROTXL"			; AA 55 ROTXL
+		.SDATAZ	"ROTXR"			; AD 56 ROTXR
+		.SDATAZ	"RTE"			; B0 58 RTE
+		.SDATAZ	"RTS"			; B2 59 RTS
+		.SDATAZ	"SHAL"<0>		; B4 5A SHAL
+		.SDATAZ	"SHAR"<0>		; B7 5B SHAR
+		.SDATAZ	"SHLL"<0>		; BA 5D SHLL
+		.SDATAZ	"SHLR"<0>		; BD 5E SHLR
+		.SDATAZ	"SLEEP"			; C0 60 SLEEP
+		.SDATAZ	"STC"			; C3 61 STC (Normal)
+		.SDATAZ	"STC"			; C5 62 STC (Swap)
+		.SDATAZ	"SUB"			; C7 63 SUB
+		.SDATAZ	"SUBS"<0>		; C9 64 SUBS
+		.SDATAZ	"SUBX"<0>		; CC 66 SUBX
+		.SDATAZ	"TRAPA"			; CF 67 TRAPA
+		.SDATAZ	"XOR"			; D2 69 XOR
+		.SDATAZ	"XORC"<0>		; D4 6A XORC
+		.END				;

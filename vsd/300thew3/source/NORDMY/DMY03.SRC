@@ -1,0 +1,39 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  BACK_COM		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	ERR01			; Invalid Command Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	BACK_COM		; Back Command Module
+		.EXPORT	BACK_COM_INIT		; Back Command Initialize
+		.EXPORT	BACK_COM_SUB		; Back Command Sub Module
+;************************************************************************
+;*	Dummy of Back Command Module					*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(0) Byte				*
+;************************************************************************
+BACK_COM:	BRA	ERR01:16		; Invalid Command
+;************************************************************************
+;*	Dummy of Back Command Initialize Module				*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+BACK_COM_INIT:	.EQU	$			;
+;************************************************************************
+;*	Dummy of Back Command Sub Module				*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+BACK_COM_SUB:	RTS				;
+		.END				;

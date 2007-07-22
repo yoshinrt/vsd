@@ -1,0 +1,30 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  ASC_BCD_2		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	ASC_BIN			; ASCII to Binary Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	ASC_BCD_2		; 2 ASCII to BCD Module
+		.EXPORT	BCD_CHK			; BCD Check Table
+;************************************************************************
+;*	2 ASCII to BCD Change Module					*
+;*		Input	R6  <-- Analize Buffer Address			*
+;*		Output	R4  --> Binary Code				*
+;*		Used Stack Area --> 0(4) Byte				*
+;************************************************************************
+ASC_BCD_2:	MOV.B	#3,R0H			; Set Max Change Length
+		MOV.W	#BCD_CHK,R3		; BCD Check Table --> R3
+		BRA	ASC_BIN:16		; Change ASCII to BCD
+BCD_CHK:	.DATA.B	H'00,H'00,H'00,H'00	; BCD Code Check Table
+		.DATA.B	H'00,H'00,H'FF,H'03	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.END				;

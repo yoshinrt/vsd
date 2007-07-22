@@ -1,0 +1,157 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  REG_COM		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_QUES		; Output ? Module
+		.IMPORT	OUT_VALUE		; Output = Module
+		.IMPORT	BIN_ASC_8		; 8 Binary to ASCII Module
+		.IMPORT	BIN_ASC_4		; 4 Binary to ASCII Module
+		.IMPORT	BIN_ASC_2		; 2 Binary to ASCII Module
+		.IMPORT	ASC_BIN_8		; 8 ASCII to Binary Module
+		.IMPORT	ASC_BIN_4		; 4 ASCII to Binary Module
+		.IMPORT	ASC_BIN_2		; 2 ASCII to Binary Module
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	TBL_ANA			; Table Analize Module
+		.IMPORT	PARAA			; Parameter Analize Module
+		.IMPORT	REG_NAME		; Register Name Table
+		.IMPORT	MAIN			; Main Module
+		.IMPORT	STACK			; Stack Area
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	REG_COM			; Register Command Module
+;************************************************************************
+;*	H8/300H Register Change Command Module				*
+;*		Input	R1  <-- Address of 2nd Analize Buffer		*
+;*		Output	R2  --> Register Table Address			*
+;*		Used Stack Area --> 0(10) Byte				*
+;************************************************************************
+REG_COM:	MOV.W	@ER1+,R6		; 2nd Analize Buffer --> R6
+		MOV.B	@(20,ER6),R0L		; 4th Parameter is Null ?
+		BNE	ERR02:16		; Invalid Parameter
+		MOV.W	#ERR02,R0		; Invalid Parameter --> R0
+		MOV.W	#REG_NAME,E2		; Register Name First --> E2
+		MOV.W	#REG_NAME+172,E5	; Register Name Last  --> E5
+		BSR	TBL_ANA:16		; Analize Command Number
+		MOV.W	#REG_TBL+18,R2		; Register Table Address --> R2
+		ADD.W	R0,R2			; Adjust Table Address
+		MOV.W	@ER1,R6			; 3rd Analize Buffer --> R6
+		MOV.B	@ER6,R0L		; 3rd Parameter is Null ?
+		BEQ	REG_COM_SUB		; Goto Sub Module
+		BSR	REG_WRITE		; Goto Write Register
+		BRA	MAIN:16			; Goto Main Module
+;************************************************************************
+;*	H8/300H Register Change Command Sub Module			*
+;*		Input	R2  <-- Register Table Address			*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(10) Byte				*
+;************************************************************************
+REG_COM_SUB:	MOV.W	R2,R1			; Regsiter Table Address --> R1
+		ADD.W	#REG_NAME-REG_TBL-18,R1	; Message Address --> R1
+		BSR	OUT_VALUE:16		; Output "  Rn="
+		BSR	REG_READ		; Goto Read Register
+		BSR	OUT_QUES:16		; Output "  ?  "
+		BSR	PARAA:16		; Input Parameter
+		MOV.W	@(REG_TBL:16,ER0),R0	; Parameter Module --> R0
+		JSR	@ER0			; Call Parameter Module
+		BEQ	MAIN:16			; Goto Main Module
+		EXTS.W	R0			; Extend Register Table Offset
+		SHAL.W	R0			;
+		ADD.W	R0,R2			; Next Register Table --> R2
+		BRA	REG_COM_SUB		;
+;************************************************************************
+;*	H8/300H Register Change Command Parameter Module		*
+;*		Input	R2  <-- Register Table Address			*
+;*		Output	R0L --> Register Table Offset Address		*
+;*		Used Stack Area --> 4(10) Byte				*
+;************************************************************************
+REG_READ:	MOV.B	@ER2,R5L		; Register Save Address --> R5L
+		EXTU.W	R5			; Extend Register Save Address
+		MOV.B	@(1,ER2),R0L		; Adjust Address --> R0L
+		EXTU.W	R0			; Extend Adjust Address
+		MOV.W	@(REG_TBL+6:16,R0),R0	; Read Module Address --> R0
+		JMP	@ER0			; Call Read Module
+REG_WRITE:	MOV.B	@ER2,R5L		; Register Save Address --> R5L
+		EXTU.W	R5			; Extend Register Save Address
+		MOV.B	@(1,ER2),R0L		; Adjust Address --> R0L
+		EXTU.W	R0			; Extend Adjust Address
+		MOV.W	@(REG_TBL+12:16,ER0),R0	; Write Module Address --> R0
+		JSR	@ER0			; Call Read or Write Module
+REG_CR:		MOV.B	@(2,ER2),R0L		; Next Table Address --> R0L
+		RTS				;
+REG_BACK:	MOV.B	@(3,ER2),R0L		; Pre  Table Address --> R0L
+		RTS				;
+REG_BYTE_READ:	MOV.B	@(STACK:16,ER5),R0L	; Register Value --> R0L
+		BRA	BIN_ASC_2:16		; Change Binary to ASCII
+REG_WORD_READ:	MOV.W	@(STACK:16,ER5),R0	; Register Value --> R0
+		BRA	BIN_ASC_4:16		; Change Binary to ASCII
+REG_LONG_READ:	MOV.L	@(STACK:16,ER5),ER0	; Register Value --> ER0
+		BRA	BIN_ASC_8:16		; Change Binary to ASCII
+REG_BYTE_WRITE:	BSR	ASC_BIN_2:16		; Change ASCII to Binary
+		MOV.B	R4L,@(STACK:16,ER5)	; Set Register New Value
+		RTS				;
+REG_WORD_WRITE:	BSR	ASC_BIN_4:16		; Change ASCII to Binary
+		MOV.W	R4,@(STACK:16,ER5)	; Set Register New Value
+		RTS				;
+REG_LONG_WRITE:	BSR	ASC_BIN_8:16		; Change ASCII to Binary
+		MOV.L	ER4,@(STACK:16,ER5)	; Set Register New Value
+		RTS				;
+REG_TBL:	.DATA.W	REG_CR			; CR  Module
+		.DATA.W	REG_BACK		; "^" Module
+		.DATA.W	REG_WRITE		; Regsiter Write Module
+		.DATA.W	REG_BYTE_READ		; Byte Register Read  Module
+		.DATA.W	REG_WORD_READ		; Word Register Read  Module
+		.DATA.W	REG_LONG_READ		; Long Register Read  Module
+		.DATA.W	REG_BYTE_WRITE		; Byte Register Write Module
+		.DATA.W	REG_WORD_WRITE		; Word Register Write Module
+		.DATA.W	REG_LONG_WRITE		; Long Register Write Module
+		.DATA.B	H'03,H'00,H'54,H'22	; CCR Parameter Table
+		.DATA.B	H'04,H'02,H'02,H'00	; E0  Parameter Table
+		.DATA.B	H'08,H'02,H'02,H'FE	; E1  Parameter Table
+		.DATA.B	H'0C,H'02,H'02,H'FE	; E2  Parameter Table
+		.DATA.B	H'10,H'02,H'02,H'FE	; E3  Parameter Table
+		.DATA.B	H'14,H'02,H'02,H'FE	; E4  Parameter Table
+		.DATA.B	H'18,H'02,H'02,H'FE	; E5  Parameter Table
+		.DATA.B	H'1C,H'02,H'02,H'FE	; E6  Parameter Table
+		.DATA.B	H'20,H'02,H'00,H'FE	; E7  Parameter Table
+		.DATA.B	H'04,H'04,H'02,H'00	; ER0 Parameter Table
+		.DATA.B	H'08,H'04,H'02,H'FE	; ER1 Parameter Table
+		.DATA.B	H'0C,H'04,H'02,H'FE	; ER2 Parameter Table
+		.DATA.B	H'10,H'04,H'02,H'FE	; ER3 Parameter Table
+		.DATA.B	H'14,H'04,H'02,H'FE	; ER4 Parameter Table
+		.DATA.B	H'18,H'04,H'02,H'FE	; ER5 Parameter Table
+		.DATA.B	H'1C,H'04,H'02,H'FE	; ER6 Parameter Table
+		.DATA.B	H'20,H'04,H'02,H'FE	; ER7 Parameter Table
+		.DATA.B	H'00,H'02,H'DE,H'FE	; PC  Parameter Table
+		.DATA.B	H'06,H'02,H'06,H'00	; R0  Parameter Table
+		.DATA.B	H'06,H'00,H'06,H'00	; R0H Parameter Table
+		.DATA.B	H'07,H'00,H'06,H'00	; R0L Parameter Table
+		.DATA.B	H'0A,H'02,H'06,H'FA	; R1  Parameter Table
+		.DATA.B	H'0A,H'00,H'06,H'FA	; R1H Parameter Table
+		.DATA.B	H'0B,H'00,H'06,H'FA	; R1L Parameter Table
+		.DATA.B	H'0E,H'02,H'06,H'FA	; R2  Parameter Table
+		.DATA.B	H'0E,H'00,H'06,H'FA	; R2H Parameter Table
+		.DATA.B	H'0F,H'00,H'06,H'FA	; R2L Parameter Table
+		.DATA.B	H'12,H'02,H'06,H'FA	; R3  Parameter Table
+		.DATA.B	H'12,H'00,H'06,H'FA	; R3H Parameter Table
+		.DATA.B	H'13,H'00,H'06,H'FA	; R3L Parameter Table
+		.DATA.B	H'16,H'02,H'06,H'FA	; R4  Parameter Table
+		.DATA.B	H'16,H'00,H'06,H'FA	; R4H Parameter Table
+		.DATA.B	H'17,H'00,H'06,H'FA	; R4L Parameter Table
+		.DATA.B	H'1A,H'02,H'06,H'FA	; R5  Parameter Table
+		.DATA.B	H'1A,H'00,H'06,H'FA	; R5H Parameter Table
+		.DATA.B	H'1B,H'00,H'06,H'FA	; R5L Parameter Table
+		.DATA.B	H'1E,H'02,H'06,H'FA	; R6  Parameter Table
+		.DATA.B	H'1E,H'00,H'06,H'FA	; R6H Parameter Table
+		.DATA.B	H'1F,H'00,H'06,H'FA	; R6L Parameter Table
+		.DATA.B	H'22,H'02,H'00,H'FA	; R7  Parameter Table
+		.DATA.B	H'22,H'00,H'00,H'FA	; R7H Parameter Table
+		.DATA.B	H'23,H'00,H'00,H'FA	; R7L Parameter Table
+		.DATA.B	H'22,H'02,H'00,H'AC	; SP  Parameter Table
+		.END				;

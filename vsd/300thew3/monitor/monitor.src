@@ -1,0 +1,19 @@
+;************************************************************************
+;*      H8/300H Monitor Program (Normal Mode)           Ver. 2.0B       *
+;*              Copyright (C) 2003 Renesas Technology Corp.             *
+;************************************************************************
+                .PROGRAM  INITIALIZE            ; Program Name
+                .CPU      300HN                 ; CPU is H8/300H Normal
+                .SECTION  ROM,CODE,ALIGN=2      ; ROM Area Section
+;************************************************************************
+;*      Export Define                                                   *
+;************************************************************************
+                .EXPORT _INITIALIZE             ; User Initialize Module
+;************************************************************************
+;*      User Initialize Module                                          *
+;*              Input   R5  <-- Return Address                          *
+;*              Output  Nothing                                         *
+;*              Used Stack Area --> 0(0) Byte                           *
+;************************************************************************
+_INITIALIZE:    JMP     @ER5                    ; Goto Monitor Program
+                .END                            ;

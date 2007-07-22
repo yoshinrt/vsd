@@ -1,0 +1,146 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  UNDEF_HDL		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+		.IMPORT	OUT_2SP			; Output SP,SP Module
+	 	.IMPORT	OUT_STRING		; Output String Module
+		.IMPORT	BIN_ASC_2		; 2 Binary to ASCII Module
+		.IMPORT	ANA_BUF			; Analize Buffer
+		.IMPORT	TBL_CHK			; Table Check Module
+		.IMPORT	TRACE_CLR		; Trace Clear Module
+		.IMPORT	MEM_CHK			; Indirect Check Table
+		.IMPORT	INT_MSG			; Interrupt Message
+		.IMPORT	MAIN			; Main Module
+		.IMPORT	STACK			; Stack Area
+		.IMPORT	RET_TBL			; Return Command Table
+		.IMPORT	BREAK_CLR		; Breakpoint Clear Module
+		.IMPORT	R_SUB_COM		; Register Sub Command Module
+		.IMPORT	INT001			; Vector #001 Handler
+		.IMPORT	VECTOR_CLR		; Vector Clear Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	UNDEF_HDL		; Undefine Interrupt Handler
+		.EXPORT	UNDEF_MOD		; Undefine Interrupt Module
+		.EXPORT	UNDEF_ROU		; Undefine Interrupt Routine
+		.EXPORT	OUT_INT			; Interrupt Message Module
+;************************************************************************
+;*	Undefine Interrupt Handler					*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(0) Byte				*
+;************************************************************************
+UNDEF_HDL:	POP.W	R1			; Recovery User R1
+		POP.W	R0			; Recovery User R0
+		ADDS	#2,ER7			; Increment Stack Pointer
+		MOV.L	ER7,@STACK+32		; Move User ER7
+		MOV.L	#STACK+32,ER7		; Set ER7 Save Area Address
+		PUSH.L	ER6			; Save User ER6
+		PUSH.L	ER5			; Save User ER5
+		PUSH.L	ER4			; Save User ER4
+		PUSH.L	ER3			; Save User ER3
+		PUSH.L	ER2			; Save User ER2
+		PUSH.L	ER1			; Save User ER1
+		PUSH.L	ER0			; Save User ER0
+		MOV.L	@(28,ER7),ER0		; User ER7 --> ER0
+		MOV.W	@ER0+,R1		; User CCR --> R1H
+		MOV.B	R1H,R1L			; Move User CCR --> R1L
+		PUSH.W	R1			; Save User CCR
+		SUBS	#2,ER7			; Decrement Save Address
+		ADDS	#2,ER0			; Increment User ER7
+		MOV.W	@ER0+,E1		; Interrupt CCR --> E1
+		MOV.B	@RET_TBL,R1L		; PreCommand is Break or Step ?
+		BEQ	$+20			;
+		MOV.W	@ER0,R1			; Instruction Address --> R1
+		CMP.W	#INT001,R1		; Instruction is Trace Handler ?
+		BNE	$+12			;
+		MOV.W	E1,@ER0			; Set Interrupt CCR
+		ADDS	#2,ER0			; Increment User ER7
+		MOV.W	@ER0,R1			; Interrupt Address --> R1
+		SUBS	#2,ER1			; Decrement Interrupt Address
+		MOV.W	R1,@ER0			; Set Interrupt Address
+		MOV.L	ER0,@(32,ER7)		; Save User ER7
+		MOV.B	@ANA_BUF+26,R0L		; Vector Offset --> R0L
+		SHLR.B	R0L			; Vector Number --> R0L
+;************************************************************************
+;*	Undefine Interrupt Module					*
+;*		Input	R0L <-- Vector Number				*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(6) Byte				*
+;************************************************************************
+UNDEF_MOD:	MOV.L	@(32,ER7),ER1		; Load User ER7
+		SUBS	#2,ER1			; Decrement User ER7
+		MOV.L	ER1,@(32,ER7)		; Save User ER7
+		SUB.W	R1,R1			; Dummy User PC --> R1
+		MOV.W	R1,@ER7			; Save User PC
+		MOV.W	#MEM_CHK,R3		; Indirect Check Table --> R3
+		BSR	TBL_CHK:16		; Interrupt Origin Check
+		SUBX	R1L,R1L			; Yes --> H'FF No --> H'00
+		EXTS.W	R1			; Make Table Displacement
+		SHLL.W	R1			;
+		MOV.W	@(OUT_MOD:16,ER1),R1	; Interrupt or Indirect --> R1
+		JSR	@ER1			; Goto Output Message Module
+;************************************************************************
+;*	Undefine Interrupt Routine					*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(6) Byte				*
+;************************************************************************
+UNDEF_ROU:	BSR	VECTOR_CLR:16		; Clear Monitor Vector
+		MOV.W	#RET_TBL,R6		; Return Command Table --> R6
+		MOV.B	@ER6,R0L		; PreCommand Name --> R0L
+		MOV.B	#"M",R0H		; Monitor Running Mark --> R0H
+		MOV.B	R0H,@ER6		; Set Monitor Running Mark
+		NEG.B	R0L			; PreCommand is Break or Step ?
+		SUBX	R0L,R0L			; Yes --> H'FF No --> H'00
+		EXTS.W	R0			; Make Table Displacement
+		SHLL.W	R0			;
+		MOV.W	@(CLR_MOD:16,ER0),R0	; Break or Trace Clear --> R0
+		JSR	@ER0			; Clear Break , Trace Parameter
+		BSR	R_SUB_COM:16		; Output Register Status
+		BRA	MAIN:16			; Goto Main Module
+;************************************************************************
+;*	Output Memory Indirect Message Module				*
+;*		Input	R0L <-- Vector Number				*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(6) Byte				*
+;************************************************************************
+OUT_MEM:	MOV.B	R0L,R0H			; Save Vector Number
+		MOV.W	#MEM_MSG,R1		; Indirect Message --> R1
+		BSR	OUT_STRING:16		; Output Indirect Message
+		MOV.B	R0H,R0L			; Recovery Vector Number
+		SHLL.B	R0L			; Make Vector Offset
+		BSR	BIN_ASC_2:16		; Output Vector Offset
+		BSR	OUT_STRING:16		; Output Indirect Message
+		BRA	OUT_CRLF:16		; Output CR,LF
+;************************************************************************
+;*	Output Interrupt Message Module					*
+;*		Input	R0L <-- Vector Number				*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(6) Byte				*
+;************************************************************************
+OUT_INT:	SUB.B	R2H,R2H			; Clear R2H
+		MOV.W	#INT_MSG,R1		; Interrupt Message --> R1
+		MOV.B	@ER1+,R2L		; Offset Code --> R2L
+		ADD.W	R2,R1			; Adjust Message Address
+		DEC.B	R0L			; Decrement Vector Number
+		BPL	$-6			;
+		INC.W	#1,R1			; Increment Message Address
+		BSR	OUT_2SP:16		; Output SP,SP
+		BSR	OUT_STRING:16		; Output Interrupt Message
+		MOV.W	#INT_MSG+1,R1		; Interrupt Message --> R1
+		BSR	OUT_STRING:16		; Output Interrupt Message
+		BRA	OUT_CRLF:16		; Output CR,LF
+		.DATA.W	TRACE_CLR		; Trace Clear Module
+CLR_MOD:	.DATA.W	BREAK_CLR		; Breakpoint Clear Module
+		.DATA.W	OUT_MEM			; Output Indirect Module
+OUT_MOD:	.DATA.W	OUT_INT			; Output Interrupt Module
+MEM_MSG:	.SDATAZ	"  @@H'",":8 Addressing !!"<H'07>
+		.END

@@ -1,0 +1,40 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  RET_COM		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	MAIN			; Main Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	RET_COM			; Return Command Module
+		.EXPORT	RET_COM_SUB		; Return Command Sub Module
+		.EXPORT	RET_TBL			; Return Command Table
+;************************************************************************
+;*	Dummy of Return Command Module					*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(0) Byte				*
+;************************************************************************
+RET_COM:	BRA	MAIN:16			; Goto Main Module
+;************************************************************************
+;*	Dummy of Return Command Sub Module				*
+;*		Input	R0H <-- PreCommand Name				*
+;*		Output	R6  --> Return Command Table Address		*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+RET_COM_SUB:	MOV.W	#RET_TBL,R6		; Return Command Table --> ER6
+		MOV.B	R0H,@ER6		; Save PreCommand Name
+		RTS				;
+;************************************************************************
+;*	Monitor RAM Define						*
+;************************************************************************
+		.SECTION  RAM,DATA,ALIGN=2	; RAM Area Section
+RET_TBL:	.RES.B	1			; PreCommand Name Save Area
+		.RES.B	1			; Step Count Save Area
+		.END				;

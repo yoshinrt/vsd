@@ -1,0 +1,30 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  OUT_CHAR		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	TDR			; Transmit Data Register
+		.IMPORT	SSR			; Serial Status Register
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	OUT_CHAR		; Output Character Module
+;************************************************************************
+;*	Output Character Module						*
+;*		Input	R0L <-- Output Character			*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+OUT_CHAR:	MOV.W	R1,E7			; Save R1
+		MOV.W	#SSR,R1			; SSR Address --> r1
+		BTST	#7,@R1			; Check TDRE of SSR
+		BEQ	$-4			;
+		MOV.B	R0L,@TDR		; Send ASCII Code --> TDR
+		MOV.W	E7,R1			; Recovery R1
+		RTS				;
+		.END				;

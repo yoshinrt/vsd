@@ -1,0 +1,24 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  D_HELP_MSG		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	D_HELP_MSG		; Dump Help Message
+;************************************************************************
+;*	Dump Command Help Message Module				*
+;************************************************************************
+D_HELP_MSG:	.DATA.B	7			; String Count is 7
+		.SDATAC	" D  :"			;
+		.SDATAZ	" Displays memory contents."
+		.SDATAZ	"      D <address1> [<address2>] [;<size>] [RET]"
+		.SDATAZ	"   <address1> : dump area start address"
+		.SDATAZ	"   <address2> : dump area end   address"
+		.SDATAZ	"   <size>     : B -- byte"
+		.SDATAZ	"                W -- word"
+		.SDATAZ	"                L -- long word"
+		.END				;

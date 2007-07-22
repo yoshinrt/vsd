@@ -1,0 +1,50 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  ASC_BIN		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	TBL_CHK			; Table Check Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	ASC_BIN			; ASCII to Binary Module
+		.EXPORT	ASC_CHK			; ASCII Code Check Table
+;************************************************************************
+;*	ASCII to Binary Module						*
+;*		Input	R0H <-- Max Change Length			*
+;*			R3  <-- Check Table Address			*
+;*			R6  <-- Analize Buffer Address			*
+;*		Output	ER4 --> Binary Code				*
+;*		Used Stack Area --> 2(4) Byte				*
+;************************************************************************
+ASC_BIN:	MOV.B	@ER6,R0L		; Parameter is Exist ?
+		BEQ	ERR02:16		; Invalid Parameter
+		SUB.L	ER4,ER4			; Clear Return Code
+		MOV.B	@ER6+,R0L		; Change Character --> R0L
+		BEQ	$+36			;
+		BSR	TBL_CHK:16		; ASCII Code Check
+		BCC	ERR02:16		; Invalid Parameter
+		CMP.B	#"A",R0L		; ASCII Code is "A"-"F" ?
+		BCS	$+4			;
+		ADD.B	#(0-7),R0L		; Make "A"-"F"
+		ADD.B	#(0-"0"),R0L		; Make "0"-"9" and "A"-"F"
+		SHLL.L	ER4			; 4Bit Shift Left
+		SHLL.L	ER4			;
+		SHLL.L	ER4			;
+		SHLL.L	ER4			;
+		OR.B	R0L,R4L			; Set Binary Code
+		DEC.B	R0H			; Decrement Change Length
+		BNE	$-32			; Change Length Check
+		BRA	ERR02:16		; Invalid Parameter
+		RTS				;
+ASC_CHK:	.DATA.B	H'00,H'00,H'00,H'00	; ASCII Code Check Table
+		.DATA.B	H'00,H'00,H'FF,H'03	;
+		.DATA.B	H'7E,H'00,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.END				;

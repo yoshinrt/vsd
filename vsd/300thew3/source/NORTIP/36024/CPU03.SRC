@@ -1,0 +1,330 @@
+;************************************************************************
+;*	H8/36024 Series Monitor Program (Normal Mode)	Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  H8_TBL		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	H8_NAME			; H8 Name Table
+		.EXPORT	H8_TBL			; H8 Table
+;************************************************************************
+;*	Monitor Table Area						*
+;************************************************************************
+H8_NAME:	.SDATAZ	"A/D"			; A/D    Command Name
+		.SDATAZ	"ABRK"<0>		; ABRK   Command Name
+		.SDATAZ	"I/O"			; I/O    Command Name
+		.SDATAZ	"INT"			; INT    Command Name
+		.SDATAZ	"LVD"			; LVD    Command Name
+		.SDATAZ	"SCI3"<0>		; SCI3   Command Name
+		.SDATAZ	"SCI3_2"<0>		; SCI3_2 Command Name
+		.SDATAZ	"SCI3_3"<0>		; SCI3_3 Command Name
+		.SDATAZ	"TV"<0>			; TV     Command Name
+		.SDATAZ	"TW"<0>			; TW     Command Name
+		.SDATAZ	"WDT"			; WDT    Command Name
+H8_TBL:		.DATA.W	H8_AD_TBL		; A/D    Table Address
+		.DATA.W H8_ABRK_TBL		; ABRK   Table Address
+		.DATA.W	H8_IO_TBL		; I/O    Table Address
+		.DATA.W	H8_INT_TBL		; INT    Table Address
+		.DATA.W	H8_LVD_TBL		; LVD    Table Address
+		.DATA.W	H8_SCI3_TBL		; SCI3   Table Address
+		.DATA.W	0			;
+		.DATA.W	H8_SCI32_TBL		; SCI3_2 Table Address
+		.DATA.W	0			;
+		.DATA.W	H8_SCI33_TBL		; SCI3_3 Table Address
+		.DATA.W	0			;
+		.DATA.W	H8_TV_TBL		; TV     Table Address
+		.DATA.W	H8_TW_TBL		; TW     Table Address
+		.DATA.W	H8_WDT_TBL		; WDT    Table Address
+H8_AD_TBL:	.DATA.W	AD_MSG			; A/D Message Address
+		.DATA.W	H'FFB0-H'FE00+H'1E00	; A/D ADDRA
+		.DATA.W	H'FFB2-H'FE00+H'1E00	; A/D ADDRB
+		.DATA.W	H'FFB4-H'FE00+H'1E00	; A/D ADDRC
+		.DATA.W	H'FFB6-H'FE00+H'1E00	; A/D ADDRD
+		.DATA.W	H'FFB8-H'FE00+H'4600	; A/D ADCSR
+		.DATA.W	H'FFB9-H'FE00+H'4600	; A/D ADCR
+		.DATA.W	0			;
+H8_ABRK_TBL:	.DATA.W	ABRK_MSG		; ABRK Message Address
+		.DATA.W	H'FFC8-H'FE00+H'4600	; ABRKCR
+		.DATA.W	H'FFC9-H'FE00+H'4600	; ABRKSR
+		.DATA.W	H'FFCA-H'FE00+H'1E00	; BAR
+		.DATA.W	H'FFCC-H'FE00+H'1E00	; BDR
+		.DATA.W	0			;
+H8_IO_TBL:	.DATA.W	IO_MSG			; I/O Message Address
+		.DATA.W	H'FFE0-H'FE00+H'4600	; PMR1
+		.DATA.W	H'FFE1-H'FE00+H'4600	; PMR5
+		.DATA.W	H'FFE4-H'FE00+H'3200	; PCR1
+		.DATA.W	H'FFD4-H'FE00+H'4600	; PDR1
+		.DATA.W	H'FF00-H'FE00+H'6C00	; PDR1 (Next)
+		.DATA.W	H'FFD0-H'FE00+H'4600	; PUCR1
+		.DATA.W	H'FFE5-H'FE00+H'3200	; PCR2
+		.DATA.W	H'FFD5-H'FE00+H'4600	; PDR2
+		.DATA.W	H'FFE8-H'FE00+H'3200	; PCR5
+		.DATA.W	H'FFD8-H'FE00+H'4600	; PDR5
+		.DATA.W	H'FF00-H'FE00+H'6C00	; PDR5 (Next)
+		.DATA.W	H'FFD1-H'FE00+H'4600	; PUCR5
+		.DATA.W	H'FFEA-H'FE00+H'3200	; PCR7
+		.DATA.W	H'FFDA-H'FE00+H'4600	; PDR7
+		.DATA.W	H'FFEB-H'FE00+H'3200	; PCR8
+		.DATA.W	H'FFDB-H'FE00+H'4600	; PDR8
+		.DATA.W	H'FFDD-H'FE00+H'4600	; PDRB
+		.DATA.W	0			;
+H8_INT_TBL:	.DATA.W	INT_MSG			; INT Message Address
+		.DATA.W	H'FFF0-H'FE00+H'4600	; SYSCR1
+		.DATA.W	H'FFF1-H'FE00+H'4600	; SYSCR2
+		.DATA.W	H'FFF2-H'FE00+H'4600	; IEGR1
+		.DATA.W	H'FFF3-H'FE00+H'4600	; IEGR2
+		.DATA.W	H'FFF4-H'FE00+H'4600	; IENR1
+		.DATA.W	H'FFF6-H'FE00+H'4600	; IRR1
+		.DATA.W	H'FFF8-H'FE00+H'4600	; IWPR
+		.DATA.W	H'FFF9-H'FE00+H'4600	; MSTCR1
+		.DATA.W	H'FFFA-H'FE00+H'4600	; MSTCR2
+		.DATA.W	0			;
+H8_LVD_TBL:	.DATA.W	LVD_MSG			; LVD Message Address
+		.DATA.W	H'FF30-H'FE00+H'3E00	; LVDCR
+		.DATA.W	H'FF31-H'FE00+H'3E00	; LVDSR
+		.DATA.W	0			;
+H8_SCI3_TBL:	.DATA.W	SCI3_MSG		; SCI3 Message Address
+		.DATA.W	H'FFA8-H'FE00+H'4600	; SCI3 SMR
+		.DATA.W	H'FFA9-H'FE00+H'3200	; SCI3 BRR
+		.DATA.W	H'FFAA-H'FE00+H'4600	; SCI3 SCR3
+		.DATA.W	H'FFAB-H'FE00+H'3200	; SCI3 TDR
+		.DATA.W	H'FFAC-H'FE00+H'4600	; SCI3 SSR
+		.DATA.W	H'FFAD-H'FE00+H'3200	; SCI3 RDR
+		.DATA.W	0			;
+H8_SCI32_TBL:	.DATA.W	SCI3_MSG		; SCI3 Message Address
+		.DATA.W	H'FF40-H'FE00+H'3E00	; SCI3_2 SMR
+		.DATA.W	H'FF41-H'FE00+H'2A00	; SCI3_2 BRR
+		.DATA.W	H'FF42-H'FE00+H'3E00	; SCI3_2 SCR3
+		.DATA.W	H'FF43-H'FE00+H'2A00	; SCI3_2 TDR
+		.DATA.W	H'FF44-H'FE00+H'3E00	; SCI3_2 SSR
+		.DATA.W	H'FF45-H'FE00+H'2A00	; SCI3_2 RDR
+		.DATA.W	0			;
+H8_SCI33_TBL:	.DATA.W	SCI3_MSG		; SCI3_3 Message Address
+		.DATA.W	H'FE60-H'FE00+H'3E00	; SCI3_3 SMR
+		.DATA.W	H'FE61-H'FE00+H'2A00	; SCI3_3 BRR
+		.DATA.W	H'FE62-H'FE00+H'3E00	; SCI3_3 SCR3
+		.DATA.W	H'FE63-H'FE00+H'2A00	; SCI3_3 TDR
+		.DATA.W	H'FE64-H'FE00+H'3E00	; SCI3_3 SSR
+		.DATA.W	H'FE65-H'FE00+H'2A00	; SCI3_3 RDR
+		.DATA.W	H'FE68-H'FE00+H'3E00	; SCI3_3 SMCR
+		.DATA.W	0			;
+H8_TV_TBL:	.DATA.W	TV_MSG			; TV Message Address
+		.DATA.W	H'FFA0-H'FE00+H'4600	; TV TCRV0
+		.DATA.W	H'FFA1-H'FE00+H'4600	; TV TCSRV
+		.DATA.W	H'FFA2-H'FE00+H'3200	; TV TCORA
+		.DATA.W	H'FFA3-H'FE00+H'3200	; TV TCORB
+		.DATA.W	H'FFA4-H'FE00+H'3200	; TV TCNTV
+		.DATA.W	H'FFA5-H'FE00+H'4600	; TV TCRV1
+		.DATA.W	0			;
+H8_TW_TBL:	.DATA.W	TW_MSG			; TW Message Address
+		.DATA.W	H'FF80-H'FE00+H'4600	; TW TMRW
+		.DATA.W	H'FF81-H'FE00+H'4600	; TW TCRW
+		.DATA.W	H'FF82-H'FE00+H'4600	; TW TIERW
+		.DATA.W	H'FF83-H'FE00+H'4600	; TW TSRW
+		.DATA.W	H'FF84-H'FE00+H'4600	; TW TIOR0
+		.DATA.W	H'FF85-H'FE00+H'4600	; TW TIOR1
+		.DATA.W	H'FF86-H'FE00+H'1E00	; TW TCNT
+		.DATA.W	H'FF88-H'FE00+H'1E00	; TW GRA
+		.DATA.W	H'FF8A-H'FE00+H'1E00	; TW GRB
+		.DATA.W	H'FF8C-H'FE00+H'1E00	; TW GRC
+		.DATA.W	H'FF8E-H'FE00+H'1E00	; TW GRD
+		.DATA.W	0			;
+H8_WDT_TBL:	.DATA.W	WDT_MSG			; WDT Message Address
+		.DATA.W	H'FFC0-H'FE00+H'4600	; WDT TCSRWD
+		.DATA.W	H'FFC1-H'FE00+H'3200	; WDT TCWD
+		.DATA.W	H'FFC2-H'FE00+H'4600	; WDT TMWD
+		.DATA.W	0			;
+;************************************************************************
+;*	Monitor Message Area						*
+;************************************************************************
+AD_MSG:		.SDATAZ	"ADDRA"
+		.SDATAZ	"ADDRB"
+		.SDATAZ	"ADDRC"
+		.SDATAZ	"ADDRD"
+		.SDATAZ	"ADCSR"
+		.DATA.B	B'11111111
+		.SDATAC	"ADF"   ,"ADIE"  ,"ADST"  ,"SCAN"
+		.SDATAC	"CKS"   ,"CH2"   ,"CH1"   ,"CH0"
+		.SDATAZ	"ADCR"
+		.DATA.B	B'10000000
+		.SDATAC	"TRGE"  ,""      ,""      ,""
+		.SDATAC	""      ,""      ,""      ,""
+ABRK_MSG:	.SDATAZ	"ABRKCR"
+		.DATA.B	B'11111111
+		.SDATAC	"RTINTE","CSEL1" ,"CSEL0" ,"ACMP2"
+		.SDATAC	"ACMP1" ,"ACMP0" ,"DCMP1" ,"DCMP0"
+		.SDATAZ	"ABRKSR"
+		.DATA.B	B'11000000
+		.SDATAC	"ABIE"  ,"ABIF"  ,""      ,""
+		.SDATAC	""      ,""      ,""      ,""
+		.SDATAZ	"BAR"
+		.SDATAZ	"BDR"
+IO_MSG:		.SDATAZ	"PMR1"
+		.DATA.B	B'10011010
+		.SDATAC	"IRQ3"  ,""      ,""      ,"IRQ0"
+		.SDATAC	"TXD2"  ,""      ,"TXD"   ,""
+		.SDATAZ	"PMR5"
+		.DATA.B	B'11111111
+		.SDATAC	"POF7"  ,"POF6"  ,"WKP5"  ,"WKP4"
+		.SDATAC	"WKP3"  ,"WKP2"  ,"WKP1"  ,"WKP0"
+		.SDATAZ	"PCR1"
+		.SDATAZ	"PDR1"
+		.DATA.B	B'11110111
+		.SDATAC	"IRQ3"  ,""      ,""      ,"IRQ0"
+		.SDATAC	""      ,"SCK3_3",""      ,""
+		.SDATAC	"TRGV"  ,""      ,""      ,""
+		.SDATAC	""      ,""      ,""      ,""
+		.SDATAZ	"PUCR1"
+		.DATA.B	B'11110111
+		.SDATAC	""      ,""      ,""      ,""
+		.SDATAC	""      ,""      ,""      ,""
+		.SDATAZ	"PCR2"
+		.SDATAZ	"PDR2"
+		.DATA.B	B'00000111
+		.SDATAC	""      ,""      ,""      ,""
+		.SDATAC	""      ,"TXD"   ,"RXD"   ,"SCK3"
+		.SDATAZ	"PCR5"
+		.SDATAZ	"PDR5"
+		.DATA.B	B'11111111
+		.SDATAC	"TXD_3" ,"RXD_3" ,"WKP5"  ,"WKP4"
+		.SDATAC	"WKP3"  ,"WKP2"  ,"WKP1"  ,"WKP0"
+		.SDATAC	""      ,""      ,"ADTRG" ,""
+		.SDATAC	""      ,""      ,""      ,""
+		.SDATAZ	"PUCR5"
+		.DATA.B	B'11111111
+		.SDATAC	""      ,""      ,""      ,""
+		.SDATAC	""      ,""      ,""      ,""
+		.SDATAZ	"PCR7"
+		.SDATAZ	"PDR7"
+		.DATA.B	B'01111111
+		.SDATAC	""      ,"TMOV"  ,"TMCIV" ,"TMRIV"
+		.SDATAC	""      ,"TXD_2" ,"RXD_2" ,"SCK3_2"
+		.SDATAZ	"PCR8"
+		.SDATAZ	"PDR8"
+		.DATA.B	B'00011111
+		.SDATAC	""      ,""      ,""      ,"FTIOD"
+		.SDATAC	"FTIOC" ,"FTIOB" ,"FTIOA" ,"FTCI"
+		.SDATAZ	"PDRB"
+		.DATA.B	B'00001111
+		.SDATAC	""      ,""      ,""      ,""
+		.SDATAC	"AN3"   ,"AN2"   ,"AN1"   ,"AN0"
+INT_MSG:	.SDATAZ	"SYSCR1"
+		.DATA.B	B'11111000
+		.SDATAC	"SSBY"  ,"STS2"  ,"STS1"  ,"STS0"
+		.SDATAC	"NESEL" ,""      ,""      ,""
+		.SDATAZ	"SYSCR2"
+		.DATA.B	B'10111100
+		.SDATAC	"SMSEL" ,""      ,"DTON"  ,"MA2"
+		.SDATAC	"MA1"   ,"MA0"   ,""      ,""
+		.SDATAZ	"IEGR1"
+		.DATA.B	B'00001001
+		.SDATAC	""      ,""      ,""      ,""
+		.SDATAC	"IEG3"  ,""      ,""      ,"IEG0"
+		.SDATAZ	"IEGR2"
+		.DATA.B	B'00111111
+		.SDATAC	""      ,""      ,"WPEG5" ,"WPEG4"
+		.SDATAC	"WPEG3" ,"WPEG2" ,"WPEG1" ,"WPEG0"
+		.SDATAZ	"IENR1"
+		.DATA.B	B'10101001
+		.SDATAC	"IENDT" ,""      ,"IENWP" ,""
+		.SDATAC	"IEN3"  ,""      ,""      ,"IEN0"
+		.SDATAZ	"IRR1"
+		.DATA.B	B'10001001
+		.SDATAC	"IRRDT" ,""      ,""      ,""
+		.SDATAC	"IRRI3" ,""      ,""      ,"IRRI0"
+		.SDATAZ	"IWPR"
+		.DATA.B	B'00111111
+		.SDATAC	""      ,""      ,"IWPF5" ,"IWPE4"
+		.SDATAC	"IWPF3" ,"IWPF2" ,"IWPF1" ,"IWPF0"
+		.SDATAZ	"MSTCR1"
+		.DATA.B	B'00111110
+		.SDATAC	""      ,""      ,"MSTS3" ,"MSTAD"
+		.SDATAC	"MSTWD" ,"MSTTW" ,"MSTTV" ,""
+		.SDATAZ	"MSTCR2"
+		.DATA.B	B'10000000
+		.SDATAC	"MSTS32",""      ,""      ,""
+		.SDATAC	""      ,""      ,""      ,""
+LVD_MSG:	.SDATAZ	"LVDCR"
+		.DATA.B	B'10001111
+		.SDATAC	"LVDE"  ,""      ,""      ,""
+		.SDATAC	"LVDSEL","LVDRE" ,"LVDDE" ,"LVDUE"
+		.SDATAZ	"LVDSR"
+		.DATA.B	B'00000011
+		.SDATAC	""      ,""      ,""      ,""
+		.SDATAC	""      ,""      ,"LVDDF" ,"LVDUF"
+SCI3_MSG:	.SDATAZ	"SMR"
+		.DATA.B	B'11111111
+		.SDATAC	"COM"   ,"CHR"   ,"PE"    ,"PM"
+		.SDATAC	"STOP"  ,"MP"    ,"CKS1"  ,"CKS0"
+		.SDATAZ	"BRR"
+		.SDATAZ	"SCR3"
+		.DATA.B	B'11111111
+		.SDATAC	"TIE"   ,"RIE"   ,"TE"    ,"RE"
+		.SDATAC	"MPIE"  ,"TEIE"  ,"CKE1"  ,"CKE0"
+		.SDATAZ	"TDR"
+		.SDATAZ	"SSR"
+		.DATA.B	B'11111111
+		.SDATAC	"TDRE"  ,"RDRF"  ,"OER"   ,"FER"
+		.SDATAC	"PER"   ,"TEND"  ,"MPBR"  ,"MPBT"
+		.SDATAZ	"RDR"
+		.SDATAZ	"SMCR"
+		.DATA.B	B'00000011
+		.SDATAC	""      ,""      ,""      ,""
+		.SDATAC	""      ,""      ,"TXD_3" ,"MSTS33"
+TV_MSG:		.SDATAZ	"TCRV0"
+		.DATA.B	B'11111111
+		.SDATAC	"CMIEB" ,"CMIEA" ,"OVIE"  ,"CCLR1"
+		.SDATAC	"CCLR0" ,"CKS2"  ,"CKS1"  ,"CKS0"
+		.SDATAZ	"TCSRV"
+		.DATA.B	B'11101111
+		.SDATAC	"CMFB"  ,"CMFA"  ,"OVF"   ,""
+		.SDATAC	"OS3"   ,"OS2"   ,"OS1"   ,"OS0"
+		.SDATAZ	"TCORA"
+		.SDATAZ	"TCORB"
+		.SDATAZ	"TCNTV"
+		.SDATAZ	"TCRV1"
+		.DATA.B	B'00011101
+		.SDATAC	""      ,""      ,""      ,"TVEG1"
+		.SDATAC	"TVEG0" ,"TRGE"  ,""      ,"ICKS0"
+TW_MSG:		.SDATAZ	"TMRW"
+		.DATA.B	B'10110111
+		.SDATAC	"CTS"   ,""      ,"BUFEB" ,"BUFEA"
+		.SDATAC	""      ,"PWMD"  ,"PWMC"  ,"PWMB"
+		.SDATAZ	"TCRW"
+		.DATA.B	B'11111111
+		.SDATAC	"CCLR"  ,"CKS2"  ,"CKS1"  ,"CKS0"
+		.SDATAC	"TOD"   ,"TOC"   ,"TOB"   ,"TOA"
+		.SDATAZ	"TIERW"
+		.DATA.B	B'10001111
+		.SDATAC	"OVIE"  ,""      ,""      ,""
+		.SDATAC	"IMIED" ,"IMIEC" ,"IMIEB" ,"IMIEA"
+		.SDATAZ	"TSRW"
+		.DATA.B	B'10001111
+		.SDATAC	"OVF"   ,""      ,""      ,""
+		.SDATAC	"IMFD"  ,"IMFC"  ,"IMFB"  ,"IMFA"
+		.SDATAZ	"TIOR0"
+		.DATA.B	B'01110111
+		.SDATAC	""      ,"IOB2"  ,"IOB1"  ,"IOB0"
+		.SDATAC	""      ,"IOA2"  ,"IOA1"  ,"IOA0"
+		.SDATAZ	"TIOR1"
+		.DATA.B	B'01110111
+		.SDATAC	""      ,"IOD2"  ,"IOD1"  ,"IOD0"
+		.SDATAC	""      ,"IOC2"  ,"IOC1"  ,"IOC0"
+		.SDATAZ	"TCNT"
+		.SDATAZ	"GRA"
+		.SDATAZ	"GRB"
+		.SDATAZ	"GRC"
+		.SDATAZ	"GRD"
+WDT_MSG:	.SDATAZ	"TCSRWD"
+		.DATA.B	B'11111111
+		.SDATAC	"B6WI"  ,"TCWE"  ,"B4WI"  ,"TCSRWE"
+		.SDATAC	"B2WI"  ,"WDON"  ,"B0WI"  ,"WRST"
+		.SDATAZ	"TCWD"
+		.SDATAZ	"TMWD"
+		.DATA.B	B'00001111
+		.SDATAC	""      ,""      ,""      ,""
+		.SDATAC	"CKS3"  ,"CKS2"  ,"CKS1"  ,"CKS0"
+		.END

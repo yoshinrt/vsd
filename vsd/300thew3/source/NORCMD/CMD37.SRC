@@ -1,0 +1,96 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  TRACEA		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	ANA_BUF			; Analize Buffer
+		.IMPORT	ERR08			; Invalid Instruction Module
+		.IMPORT	TBL_CHK			; Table Check Module
+		.IMPORT	INSA			; Instruction Analize Module
+		.IMPORT	STACK			; Stack Area
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	TRACE_SET		; Trace Set Module
+		.EXPORT	TRACE_CLR		; Trace Clear Module
+;************************************************************************
+;*	Trace Set Module						*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(8) Byte				*
+;************************************************************************
+TRACE_SET:	MOV.W	@STACK,R4		; Instruction Address --> R4
+		BCLR	#0,R4L			; Adjust Instruction Address
+		BSR	INSA:16			; Instruction Analize
+		MOV.B	R2L,R0L			; Instruction Name --> R0L
+		BEQ	ERR08:16		; Invalid Instruction
+		MOV.L	#H'5F0200FF,ER1		; Trace Parameter --> ER1
+		MOV.W	#ANA_BUF+26,R6		; Trace Table Address --> R6
+		MOV.B	R1L,@(-6,ER6)		; Clear 1st Trace Parameter
+		MOV.B	R1L,@(-12,ER6)		; Clear 2nd Trace Parameter
+		MOV.W	R4,@-ER6		; Save Instruction Address
+		CMP.B	#H'CF,R0L		; Instruction is TRAPA ?
+		BEQ	$+90			;
+		ADD.W	E2,R4			; 1st Trace Address --> R4
+		MOV.W	#JMP_CHK,R3		; Jump Check Table --> R3
+		SHLR.B	R0L			; Instruction Name --> R0L
+		BSR	TBL_CHK:16		; Jump Instruction Check
+		BCC	$+58			;
+		MOV.W	@STACK+34,R2		; User SP Value --> R2
+		CMP.B	#H'58,R0L		; Instruction is RTE or RTS ?
+		BCS	$+10			;
+		BNE	$+4			;
+		INC.W	#2,R2			; Increment User SP
+		MOV.W	@ER2,R4			; 1st Trace Address --> R4
+		BRA	$+42			;
+		MOV.W	@(-14,ER6),R3		; <EAs> Parameter --> R3
+		MOV.W	@(-16,ER6),R5		; 2nd Trace Address --> R5
+		CMP.B	#H'3D,R0L		; Instruction is JMP or JSR ?
+		BCS	$+28			;
+		CMP.B	#H'7E,R3L		; <EAs> is @@aa:8 ?
+		BEQ	$+44			;
+		MOV.W	R5,R4			; 1st Trace Address --> R4
+		CMP.B	#H'48,R3L		; <EAs> is @aa:24 ?
+		BEQ	$+20			;
+		MOV.B	R3H,R4L			; Register Number --> R4L
+		EXTU.W	R4			; Extend Register Number
+		AND.B	#H'07,R4L		; Adjust Register Number
+		SHLL.W	R4			;
+		SHLL.W	R4			;
+		MOV.W	@(STACK+6:16,ER4),R4	; 1st Trace Address --> R4
+		NOT.B	R1L			; Adjust 2nd Parameter
+		NOT.B	R1L			; Adjust 2nd Parameter
+		MOV.L	ER4,@-ER6		; Save Instruction Address
+		MOV.B	R1H,@ER6		; Set Trace Mark
+		MOV.W	@ER4,R0			; Instruction Value --> R0
+		MOV.W	R0,@-ER6		; Save Instruction Value
+		MOV.W	E1,@ER4			; Set Trace Handler Address
+		MOV.W	R5,R4			; 2nd Trace Address --> R4
+		MOV.B	R1L,R1H			; 2nd Trace Parameter --> R1H
+		BEQ	$-18			;
+		RTS				;
+;************************************************************************
+;*	Trace Clear Module						*
+;*		Input	Nothing						*
+;*		Output	R4  --> Execute Instruction Address		*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+TRACE_CLR:	MOV.W	#ANA_BUF+12,R6		; Trace Table Address --> R6
+		MOV.W	@ER6+,E0		; Instrcution Value --> E0
+		MOV.L	@ER6+,ER4		; Trace Address --> ER4
+		BMI	$+4			;
+		MOV.W	E0,@ER4			; Recovery Instruction
+		CMP.W	#ANA_BUF+24,R6		; Recovery End Check
+		BNE	$-14			;
+		MOV.W	@ER6,R4			; Execute Address --> R4
+		RTS				;
+JMP_CHK:	.DATA.B	H'00,H'B2,H'03,H'E8	; Jump Instruction Check Table
+		.DATA.B	H'31,H'61,H'00,H'60	;
+		.DATA.B	H'00,H'00,H'00,H'03	;
+		.DATA.B	H'00,H'00		;
+		.END				;

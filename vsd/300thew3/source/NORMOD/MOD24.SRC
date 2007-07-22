@@ -1,0 +1,98 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  COM_SPLIT		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	COM_BUF			; Command Buffer
+		.IMPORT	ANA_BUF			; Analize Buffer
+		.IMPORT	ERR00			; Buffer Overflow Module
+		.IMPORT	TBL_CHK			; Table Check Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	COM_SPLIT		; Command Split Module
+		.EXPORT	SPTB_CHK		; SP,TB Check Table
+		.EXPORT	LOW_CHK			; Lower Code Check Table
+;************************************************************************
+;*	Command Split Module						*
+;*		Input	Nothing						*
+;*		Output	R1  --> Address of 2nd Analize Buffer		*
+;*			R6  --> 1st Analize Buffer Address		*
+;*		Used Stack Area --> 2(4) Byte				*
+;************************************************************************
+COM_SPLIT:	MOV.W	#COM_BUF,R5		; Command Buffer Address --> R5
+		MOV.W	#ANA_BUF_ADR,R1		; Analize Buffer Table --> R1
+		MOV.W	#6,E0			; Analize Buffer Count --> E0
+		MOV.W	@ER1+,R6		; Analize Buffer Address --> R6
+		MOV.B	#10,R0H			; Analize Buffer Length --> R0H
+		MOV.W	#SPTB_CHK,R3		; SP,TB Check Table --> R3
+		MOV.B	@ER5+,R0L		; Input Character --> R0L
+		BSR	TBL_CHK:16		; SP,TB Check
+		BCS	$-6			;
+		MOV.W	#SPL_CHK,R3		; Split Check Table --> R3
+		BSR	TBL_CHK:16		; Split Check
+		BCS	$+36			;
+		MOV.W	#LOW_CHK,R3		; Lower Check Table --> R3
+		BSR	TBL_CHK:16		; Lower Check
+		BCC	$+4			;
+		ADD.B	#(0-" "),R0L		; Lower --> Upper
+		MOV.B	R0L,@ER6		; Character --> Analize Buffer
+		ADDS	#1,ER6			; Increment Analize Buffer
+		MOV.B	@ER5+,R0L		; Next Character --> R0L
+		DEC.B	R0H			; Decrement Analize Length
+		BNE	$-30			; Analize Buffer Length Check
+		MOV.W	@ER1+,R6		; Next Analize Buffer --> R6
+		MOV.B	#10,R0H			; Analize Buffer Length --> R0H
+		DEC.W	#1,E0			; Decrement Analize Count
+		BNE	$-38			; Check Analize Buffer Count
+		BRA	ERR00:16		; Buffer Overflow
+		CMP.B	#H'0D,R0L		; Character is CR ?
+		BEQ	$+58			;
+		MOV.W	#SPTB_CHK,R3		; SP,TB Check Table --> R3
+		BSR	TBL_CHK:16		; SP,TB Check
+		BCS	$+40			;
+		MOV.W	E0,R3			; Analize Count --> R3L
+		MOV.B	R3L,R3H			; Analize Count --> R3H
+		MOV.B	R0H,R3L			; Analize Buffer Length --> R3L
+		CMP.W	#H'050A,R3		; Split Area ?
+		BCC	$+12			;
+		MOV.W	@ANA_BUF,E3		; 1st Parameter --> E3
+		CMP.W	#H'4C00,E3		; 1st Parameter is "L" ?
+		BEQ	$-56			;
+		CMP.B	#H'0A,R3L		; 1st Character ?
+		BEQ	$+12			;
+		MOV.W	@ER1+,R6		; Next Analize Buffer --> R6
+		DEC.W	#1,E0			; Decrement Analize Count
+		BNE	$+6			; Check Analize Buffer Count
+		BRA	ERR00:16		; Buffer Overflow
+		MOV.B	R0L,@ER6		; Character --> Analize Buffer
+		DEC.W	#1,E0			; Decrement Analize Count
+		BNE	$-114			; Check Analize Buffer Count
+		BRA	ERR00:16		; Buffer Overflow
+		MOV.W	#ANA_BUF_ADR,R1		; Analize Buffer Table --> R1
+		MOV.W	@ER1+,R6		; Analize Buffer Address --> R6
+		RTS				;
+SPTB_CHK:	.DATA.B	H'FF,H'DF,H'FF,H'FF	; SP,TB Check Table
+		.DATA.B	H'01,H'00,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+SPL_CHK:	.DATA.B	H'FF,H'FF,H'FF,H'FF	; Split Check Table
+		.DATA.B	H'05,H'7C,H'00,H'F8	;
+		.DATA.B	H'00,H'00,H'00,H'78	;
+		.DATA.B	H'01,H'00,H'00,H'F8	;
+LOW_CHK:	.DATA.B	H'00,H'00,H'00,H'00	; Lower Check Table
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.DATA.B	H'FE,H'FF,H'FF,H'07	;
+ANA_BUF_ADR:	.DATA.W	ANA_BUF			; 1st Analize Buffer Address
+		.DATA.W	ANA_BUF+10		; 2nd Analize Buffer Address
+		.DATA.W	ANA_BUF+20		; 3rd Analize Buffer Address
+		.DATA.W	ANA_BUF+30		; 4th Analize Buffer Address
+		.DATA.W	ANA_BUF+40		; 5th Analize Buffer Address
+		.DATA.W	ANA_BUF+50		; 6th Analize Buffer Address
+		.END				;

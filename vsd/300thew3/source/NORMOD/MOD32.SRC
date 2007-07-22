@@ -1,0 +1,58 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  REG_NAME		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	REG_NAME		; Register Name
+;************************************************************************
+;*	Register Name Message						*
+;************************************************************************
+REG_NAME:	.SDATAZ	"CCR"			; 00 CCR Register Name
+		.SDATAZ	"E0"<0>			; 02 E0  Register Name
+		.SDATAZ	"E1"<0>			; 04 E1  Register Name
+		.SDATAZ	"E2"<0>			; 06 E2  Register Name
+		.SDATAZ	"E3"<0>			; 08 E3  Register Name
+		.SDATAZ	"E4"<0>			; 0A E4  Register Name
+		.SDATAZ	"E5"<0>			; 0C E5  Register Name
+		.SDATAZ	"E6"<0>			; 0E E6  Register Name
+		.SDATAZ	"E7"<0>			; 10 E7  Register Name
+		.SDATAZ	"ER0"			; 12 ER0 Register Name
+		.SDATAZ	"ER1"			; 14 ER1 Register Name
+		.SDATAZ	"ER2"			; 16 ER2 Register Name
+		.SDATAZ	"ER3"			; 18 ER3 Register Name
+		.SDATAZ	"ER4"			; 1A ER4 Register Name
+		.SDATAZ	"ER5"			; 1C ER5 Register Name
+		.SDATAZ	"ER6"			; 1E ER6 Register Name
+		.SDATAZ	"ER7"			; 20 ER7 Register Name
+		.SDATAZ	"PC"<0>			; 22 PC  Register Name
+		.SDATAZ	"R0"<0>			; 24 R0  Register Name
+		.SDATAZ	"R0H"			; 26 R0H Register Name
+		.SDATAZ	"R0L"			; 28 R0L Register Name
+		.SDATAZ	"R1"<0>			; 2A R1  Register Name
+		.SDATAZ	"R1H"			; 2C R1H Register Name
+		.SDATAZ	"R1L"			; 2E R1L Register Name
+		.SDATAZ	"R2"<0>			; 30 R2  Register Name
+		.SDATAZ	"R2H"			; 32 R2H Register Name
+		.SDATAZ	"R2L"			; 34 R2L Register Name
+		.SDATAZ	"R3"<0>			; 36 R3  Register Name
+		.SDATAZ	"R3H"			; 38 R3H Register Name
+		.SDATAZ	"R3L"			; 3A R3L Register Name
+		.SDATAZ	"R4"<0>			; 3C R4  Register Name
+		.SDATAZ	"R4H"			; 3E R4H Register Name
+		.SDATAZ	"R4L"			; 40 R4L Register Name
+		.SDATAZ	"R5"<0>			; 42 R5  Register Name
+		.SDATAZ	"R5H"			; 44 R5H Register Name
+		.SDATAZ	"R5L"			; 46 R5L Register Name
+		.SDATAZ	"R6"<0>			; 48 R6  Register Name
+		.SDATAZ	"R6H"			; 4A R6H Register Name
+		.SDATAZ	"R6L"			; 4C R6L Register Name
+		.SDATAZ	"R7"<0>			; 4E R7  Register Name
+		.SDATAZ	"R7H"			; 50 R7H Register Name
+		.SDATAZ	"R7L"			; 52 R7L Register Name
+		.SDATAZ	"SP"<0>			; 54 SP  Register Name
+		.END				;

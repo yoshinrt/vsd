@@ -1,0 +1,79 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  IN_STRING		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CHAR		; Output Character Module
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+		.IMPORT	OUT_STRING		; Output String Module
+		.IMPORT	IN_CHAR			; Input Character Module
+		.IMPORT	ERR00			; Buffer Overflow Module
+		.IMPORT	RET_TBL			; Return Command Table
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+	 	.EXPORT	IN_STRING		; Input String Module
+		.EXPORT	COM_BUF			; Command Buffer
+		.EXPORT	ANA_BUF			; Analize Buffer
+;************************************************************************
+;*	Input String Module						*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(8) Byte				*
+;************************************************************************
+IN_STRING:	MOV.W	#COM_BUF,R5		; Command Buffer Address --> R5
+		MOV.B	#32,R3L			; Command Buffer Length --> R3L
+		MOV.B	@RET_TBL,R0H		; PreCommand Name --> R0H
+		CMP.B	#".",R0H		; PreCommand is "." ?
+		BNE	$+24			;
+		MOV.B	@ER5,R0L		; PreCommand Character --> R0L
+		CMP.B	#H'0D,R0L		; PreCommand Character is CR ?
+		BEQ	$+12			;
+		ADDS	#1,ER5			; Increment Buffer Address
+		BSR	OUT_CHAR:16		; Output PreCommand Character
+		DEC.B	R3L			; Decrement Buffer Length
+		BRA	$-14			;
+		MOV.B	#"M",R0H		; PreCommand Name is "M"
+		MOV.B	R0H,@RET_TBL		; Set New PreCommand Name
+		BSR	IN_CHAR:16		; Input Character
+		BEQ	$-4			;
+		CMP.B	#H'08,R0L		; Input Character is BS ?
+		BEQ	$+26			;
+		MOV.B	R0L,@ER5		; Character --> Command Buffer
+		ADDS	#1,ER5			; Increment Buffer Address
+		CMP.B	#H'0D,R0L		; Input Character is CR ?
+		BEQ	$+38			;
+		BSR	OUT_CHAR:16		; Echo Back
+		DEC.B	R3L			; Decrement Buffer Length
+		BNE	$-24			; Check Command Buffer Length
+		BSR	OUT_CRLF:16		; Output CR,LF
+		BRA	ERR00:16		; Buffer Overflow
+		CMP.B	#32,R3L			; BS is First Character ?
+		BEQ	$-36			;
+		SUB.B	R3H,R3H			; Clear R3H
+		MOV.B	R3H,@-ER5		; Clear and Decrement Address
+		INC.B	R3L			; Increment Buffer Length
+		MOV.W	#BS_MSG,R1		; BS,SP,BS Message --> R1
+		BSR	OUT_STRING:16		; Output BS,SP,BS
+		BRA	$-52			;
+		BSR	OUT_CRLF:16		; Output CR,LF
+		MOV.W	#ANA_BUF+60,R5		; Analize Buffer Address --> R5
+		MOV.B	#15,R3L			; Analize Buffer Length --> R3L
+		SUB.L	ER0,ER0			; Clear ER0
+		MOV.L	ER0,@-ER5		; Clear Analize Buffer
+		DEC.B	R3L			; Decrement Buffer Length
+		BNE	$-6			; Check Analize Buffer Length
+		RTS				;
+BS_MSG:		.SDATAZ	<H'08>" "<H'08>		; BS,SP,BS Message
+;************************************************************************
+;*	Monitor RAM Define						*
+;************************************************************************
+		.SECTION  RAM,DATA,ALIGN=2	; RAM Area Section
+COM_BUF:	.RES.B	32			; Command Buffer Area
+ANA_BUF:	.RES.B	10*6			; Analize Buffer Area
+		.END				;

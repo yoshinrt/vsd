@@ -1,0 +1,26 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  ASC_BIN_2		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	ASC_BIN			; ASCII to Binary Module
+		.IMPORT	ASC_CHK			; ASCII Code Check Table
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	ASC_BIN_2		; 2 ASCII to Binary Module
+;************************************************************************
+;*	2 ASCII to Binary Change Module					*
+;*		Input	R6  <-- Analize Buffer Address			*
+;*		Output	ER4 --> Binary Code				*
+;*		Used Stack Area --> 0(4) Byte				*
+;************************************************************************
+ASC_BIN_2:	MOV.B	#3,R0H			; Set Max Change Length
+		MOV.W	#ASC_CHK,R3		; ASCII Check Table --> R3
+		BRA	ASC_BIN:16		; Change ASCII to Binary
+		.END				;

@@ -1,0 +1,21 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  DA_HELP_MSG		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	DA_HELP_MSG		; Disassemble Help Message
+;************************************************************************
+;*	Disassemble Command Help Message				*
+;************************************************************************
+DA_HELP_MSG:	.DATA.B	4			; String Count is 4
+		.SDATAC	" DA :"			;
+		.SDATAZ	" Disassembles memory contents."
+		.SDATAZ	"      DA <address1> [<address2>] [RET]"
+		.SDATAZ	"   <address1> : disassemble area start address"
+		.SDATAZ	"   <address2> : disassemble area end   address"
+		.END				;

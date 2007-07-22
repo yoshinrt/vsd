@@ -1,0 +1,179 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A(HEW3)	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  L_COM			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CHAR		; Output Character Module
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+		.IMPORT	OUT_VALUE		; Output = Module
+	 	.IMPORT	OUT_STRING		; Output String Module
+		.IMPORT	BIN_ASC_4		; 4 Binary to ASCII Module
+		.IMPORT	IN_CHAR			; Input Character Module
+		.IMPORT	IN_SCHAR		; Input S Type Character Module
+		.IMPORT	ANA_BUF			; Analize Buffer
+		.IMPORT	BCD_CHK			; BCD Check Table
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	ERR09			; Can't Open Load File Module
+		.IMPORT	ERR10			; S Tpye Format Error Module
+		.IMPORT	ERR11			; Check Sum Error Module
+		.IMPORT	TBL_CHK			; Table Check Module
+		.IMPORT	MAIN			; Main Module
+		.IMPORT	STACK			; Stack Area
+		.IMPORT	BACK_COM_SUB		; Back Command Sub Module
+		.IMPORT	L_BUF			; Load Command Buffer
+		.IMPORT	B_COM_INIT		; Breakpoint Initialize Module
+		.IMPORT	R_COM_INIT		; Register Command Initialize
+		.IMPORT	VECTOR_INIT		; Vector Initialize Module
+		.IMPORT	_BUF			; Scanf Buffer
+		.IMPORT	__iob			; FILE Pointer
+		.IMPORT	_sml_buf		; Small Buffer
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	L_COM			; Load Command Module
+;************************************************************************
+;*	Load Command Module						*
+;*		Input	R1  <-- Address of 2nd Analize Buffer		*
+;*			R6  <-- 1st Analize Buffer Address		*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(8) Byte				*
+;************************************************************************
+L_COM:		MOV.B	@(10,ER6),R0L		; 2nd Parameter is Exist ?
+		BEQ	L_COM_SUB		; Goto Load Sub Command
+		MOV.W	R1,R5			; 2nd Analize Buffer --> R5
+		MOV.W	@ER5+,R6		; Next Analize Buffer --> R6
+		MOV.B	@(10,ER6),R0L		; First Character --> R0L
+		NEG.B	R0L			; First Status --> C of CCR
+		MOV.B	@(9,ER6),R0L		; Last  Status --> Z of CCR
+		XORC	#H'05,CCR		;
+		BHI	ERR02:16		; Invalid Parameter
+		BCC	$-18			; Next Check
+		MOV.B	#H'05,R0L		; ENQ ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output ENQ
+		BSR	IN_CHAR:16		; Input Character
+		BEQ	$-4			;
+		CMP.B	#H'06,R0L		; ACK ASCII Code ?
+		BNE	$-8			;
+		MOV.W	@ER1,R1			; 2nd Analize Buffer --> R1
+		BSR	OUT_STRING:16		; Output Load File Name
+		MOV.B	#H'0D,R0L		; CR ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output CR
+		BSR	IN_CHAR:16		; Input Character
+		BEQ	$-4			;
+		CMP.B	#H'06,R0L		; ACK ASCII Code ?
+		BEQ	ERR09:16		; Can't Open Load File
+		MOV.W	#L_BUF,R6		; Load Buffer Address --> R6
+		BSR	BACK_COM_SUB:16		; Back Command Sub Module
+;************************************************************************
+;*	Load Command Sub Module						*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(8) Byte				*
+;************************************************************************
+L_COM_SUB:	BSR	VECTOR_INIT:16		; Clear User Vector Area
+		BSR	R_COM_INIT:16		; Register Command Initialize
+		MOV.W	#ANA_BUF,R5		; Set Loading Save Area
+		BSR	IN_CHAR:16		; Input Type Character
+		BEQ	$-4			;
+		CMP.B	#"S",R0L		; Load-Module is S Type
+		BNE	ERR10:16		; S Type Format Error
+		BSR	IN_CHAR:16		; Input Record Character
+		BEQ	$-4			;
+		MOV.W	#BCD_CHK,R3		; BCD Check Table --> R3
+		BSR	TBL_CHK:16		; S Record Check
+		BCC	ERR10:16		; S Type Format Error
+		ADD.B	#(0-"0"),R0L		; Record --> Binary Code
+		EXTU.W	R0			; Make Table Displacement
+		SHLL.W	R0			;
+		MOV.W	@(L_MOD:16,ER0),R2	; Record Module Address --> R2
+		SUB.B	R6H,R6H			; Clear Check Sum
+		BSR	IN_SCHAR:16		; Input Byte Count
+		MOV.B	R0H,R6L			; Byte Count --> R6L
+		SUB.L	ER4,ER4			; Clear Loading Address
+		JSR	@ER2			; Goto Record Module
+		NOT.B	R6H			; Test Check Sum
+		BNE	ERR11:16		; Check Sum Error
+		BSR	IN_CHAR:16		; Input LF
+		BEQ	$-4			;
+		CMP.W	#S9,R2			; End Record Received ?
+		BNE	$-68			; Next Record Loading
+		MOV.W	#L_MSG,R1		; Load Message Address --> R1
+		MOV.B	#2,R2L			; Loop Count --> R2L
+		BSR	OUT_VALUE:16		; Output "  Address="
+		MOV.W	@ER5+,R0		; Lodaing Address --> R0
+		BSR	BIN_ASC_4:16		; Output Address
+		BSR	OUT_CRLF:16		; Output CR,LF
+		DEC.B	R2L			; Decrement Loop Count
+		BNE	$-16			; Check Loop Count
+		MOV.W	R4,@STACK		; Set New Value of User PC
+		BSR	B_COM_INIT:16		; Clear All Breakpoint
+		MOV.W	#__iob,R6		; FILE Pointer --> R6
+		BEQ	$+16			;
+		MOV.W	#L_IOB,R5		; Initialize Data --> R5
+		MOV.W	#32,R4			; Clear Counter --> R4
+		EEPMOV.B			; FILE Pointer Initialize
+		MOV.W	R4,@_BUF		; Clear Read,Write Pointer
+		BRA	MAIN:16			; Goto Main Module
+;************************************************************************
+;*	Load Command Parameter Module					*
+;*		Input	R5  <-- Address of Loading Save Area		*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 2(8) Byte				*
+;************************************************************************
+S0:		BSR	IN_SCHAR:16		; Input S Type Character
+		BNE	$-4			;
+		MOV.L	#H'FFFF0000,ER3		; Set H'FFFF0000 --> ER3
+		MOV.L	ER3,@ER5		; Set Loading Address
+		RTS				;
+S1:		BSR	IN_SCHAR:16		; Read Loading Higher Address
+		MOV.B	R0H,R4H			; Loading Address --> R4H
+		BSR	IN_SCHAR:16		; Read Loading Lower Address
+		MOV.B	R0H,R4L			; Loading Address --> R4L
+		MOV.W	@ER5,R3			; Loading Top Address --> R3
+		CMP.W	R3,R4			; Compare Loading Top Address
+		BCC	$+4			;
+		MOV.W	R4,@ER5			; Save Loading Top Address
+		BSR	IN_SCHAR:16		; Input S Type Character
+		BEQ	$+8			;
+		MOV.B	R0H,@ER4		; Write User Program
+		ADDS	#1,ER4			; Increment Loading Address
+		BRA	$-10			;
+		SUBS	#1,ER4			; Decrement Loading Address
+		MOV.W	@(2,ER5),R3		; Loading End Address --> R3
+		CMP.W	R3,R4			; Compare Loading End Address
+		BCS	$+6			;
+		MOV.W	R4,@(2,ER5)		; Save Loading End Address
+		RTS				;
+S9:		BSR	IN_SCHAR:16		; Read Loading Higher Address
+		MOV.B	R0H,R4H			; Loading Address --> R4H
+		BSR	IN_SCHAR:16		; Read Loading Lower Address
+		MOV.B	R0H,R4L			; Loading Address --> R4L
+		BRA	IN_SCHAR:16		; Read Check Sum Code
+L_MOD:		.DATA.W	S0			; S0 Record
+		.DATA.W	S1			; S1 Record
+		.DATA.W	ERR10			; S2 Record
+		.DATA.W	ERR10			; S3 Record
+		.DATA.W	ERR10			; S4 Record
+		.DATA.W	ERR10			; S5 Record
+		.DATA.W	ERR10			; S6 Record
+		.DATA.W	ERR10			; S7 Record
+		.DATA.W	ERR10			; S8 Record
+		.DATA.W	S9			; S9 Record
+L_IOB:		.DATA.W	_sml_buf		; &sml_buf[0]
+		.DATA.L	0			; 0
+		.DATA.W	_sml_buf		; &sml_buf[0]
+		.DATA.L	3			; 3
+		.DATA.L	H'01000000		; _IOREAD,0,0
+		.DATA.W	_sml_buf+3		; &sml_buf[3]
+		.DATA.L	1			; 1
+		.DATA.W	_sml_buf+3		; &sml_buf[3]
+		.DATA.L	1			; 1
+		.DATA.L	H'0A000100		; _IOWRITE|IOUNBUF,0,1
+L_MSG:		.SDATAZ	"Top Address"		; Load Message
+		.SDATAZ	"End Address"		;
+		.END				;

@@ -1,0 +1,145 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  INS_SPLIT		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	COM_BUF			; Command Buffer
+		.IMPORT	ANA_BUF			; Analize Buffer
+		.IMPORT	SPTB_CHK		; SP,TB Check Table
+		.IMPORT	LOW_CHK			; Lower Code Check Table
+		.IMPORT	ERR02			; Invalid Parameter Module
+		.IMPORT	TBL_CHK			; Table Check Module
+		.IMPORT	MAIN			; Main Module
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	INS_SPLIT		; Instruction Split Module
+;************************************************************************
+;*	Instruction Split Module					*
+;*		Input	R4  <-- Assemble Address			*
+;*		Output	R1  --> Address of 1st Analize Buffer		*
+;*			R6  --> 1st Analize Buffer Address		*
+;*		Used Stack Area --> 2(4) Byte				*
+;************************************************************************
+INS_SPLIT:	MOV.W	#COM_BUF,R5		; Command Buffer Address --> R5
+		MOV.W	#ANA_BUF_ADR,R1		; Analize Buffer Table --> R1
+		MOV.W	@ER1+,R6		; 1st Analize Buffer --> R6
+		MOV.W	@ER1+,R2		; 2nd Analize Buffer --> R2
+		MOV.B	#7,R0H			; 1st Parameter Length --> R0H
+		MOV.W	#SPTB_CHK,R3		; SP,TB Check Table --> R3
+		MOV.B	@ER5+,R0L		; Input Character --> R0L
+		BSR	TBL_CHK:16		; SP,TB Check
+		BCS	$-6			;
+		MOV.W	#SPL_CHK,R3		; Split Check Table --> R3
+		BSR	TBL_CHK:16		; Split Check
+		BCC	$+34			;
+		CMP.B	#H'0D,R0L		; Character is CR ?
+		BEQ	$+206			;
+		MOV.W	#SPTB_CHK,R3		; SP,TB Check Table --> R3
+		BSR	TBL_CHK:16		; SP,TB Check
+		BCS	$+44			;
+		CMP.B	#7,R0H			; 1st Analize , 1st Character ?
+		BEQ	$+26			;
+		CMP.W	R2,R6			; Analize 1st Parameter ?
+		BCC	ERR02:16		; Invalid Parameter
+		MOV.W	R2,R6			; 2nd Analize Buffer --> R6
+		MOV.B	#3,R0H			; 2nd Parameter Length --> R0H
+		BRA	$+14			;
+		MOV.W	#LOW_CHK,R3		; Lower Check Table --> R3
+		BSR	TBL_CHK:16		; Lower Check
+		BCC	$+4			;
+		ADD.B	#(0-" "),R0L		; Lower --> Upper
+		MOV.B	R0L,@ER6		; Character --> Analize Buffer
+		ADDS	#1,ER6			; Increment Analize Buffer
+		DEC.B	R0H			; Decrement Analize Length
+		BEQ	ERR02:16		; Invalid Parameter
+		MOV.B	@ER5+,R0L		; Input Character --> R0L
+		BRA	$-66			;
+		MOV.B	@ER5+,R0L		; Next Character --> R0L
+		BSR	TBL_CHK:16		; SP,TB Check
+		BCS	$-6			;
+		MOV.W	@ER1+,R6		; 3rd Analize Buffer --> R6
+		MOV.W	#12,E0			; 3rd Parameter Length --> E0
+		MOV.W	#SPL_CHK,R3		; Split Check Table --> R3
+		BSR	TBL_CHK:16		; Split Check
+		BCC	$+58			;
+		CMP.B	#H'0D,R0L		; Character is CR ?
+		BEQ	$+124			;
+		MOV.W	#SPTB_CHK,R3		; SP,TB Check Table --> R3
+		BSR	TBL_CHK:16		; SP,TB Check
+		BCS	$+100			;
+		MOV.B	R0L,@ER6		; Character --> Analize Buffer
+		ADDS	#1,ER6			; Increment Analize Buffer
+		DEC.W	#1,E0			; Decrement Analize Length
+		BEQ	ERR02:16		; Invalid Parameter
+		CMP.B	#":",R0L		; Character is ":" ?
+		BEQ	$+6			;
+		MOV.B	@ER5+,R0L		; Next Character --> R0L
+		BRA	$-40			;
+		MOV.W	#SPL_CHK,R3		; Split Check Table --> R3
+		MOV.B	@ER5+,R0L		; Next Character --> R0L
+		BSR	TBL_CHK:16		; Split Check
+		BCS	$-42			;
+		MOV.B	R0L,@ER6		; Character --> Analize Buffer
+		ADDS	#1,ER6			; Increment Analize Buffer
+		DEC.W	#1,E0			; 3rd Parameter Length -1
+		BEQ	ERR02:16		; Invalid Parameter
+		BRA	$-18			;
+		MOV.B	#"*",R0H		; Dummy Mark --> R0H
+		MOV.B	R0H,@ER6		; Dummt Mark --> Analize Buffer
+		ADDS	#1,ER6			; Increment Analize Buffer
+		DEC.W	#1,E0			; 3rd Parameter Length -1
+		BEQ	ERR02:16		; Invalid Parameter
+		MOV.W	@ER1+,R2		; Next Analize Buffer --> R2
+		BEQ	ERR02:16		; Invalid Parameter
+		MOV.B	#9,R0H			; Next Parameter Length --> R0H
+		MOV.W	#LOW_CHK,R3		; Lower Check Table --> R3
+		BSR	TBL_CHK:16		; Lower Check
+		BCC	$+4			;
+		ADD.B	#(0-" "),R0L		; Lower --> Upper
+		MOV.B	R0L,@ER2		; Character --> Analize Buffer
+		ADDS	#1,ER2			; Increment Analize Buffer
+		DEC.B	R0H			; Decrement Analize Length
+		BEQ	ERR02:16		; Invalid Parameter
+		MOV.B	@ER5+,R0L		; Next Character --> R0L
+		MOV.W	#SPL_CHK,R3		; Split Check Table --> R3
+		BSR	TBL_CHK:16		; Split Check
+		BCC	$-32			;
+		BRA	$-110			;
+		MOV.B	@ER5+,R0L		; Next Character --> R0L
+		BSR	TBL_CHK:16		; SP,TB Check
+		BCS	$-6			;
+		CMP.B	#H'0D,R0L		; Character is CR ?
+		BNE	ERR02:16		;
+		MOV.W	#ANA_BUF_ADR,R1		; Analize Buffer Table --> R1
+		MOV.W	@ER1+,R6		; 1st Analize Buffer --> R6
+		MOV.B	@(8,ER6),R0H		; 2nd Parameter --> R0H
+		MOV.B	@(10,ER6),R0L		; 3rd Parameter --> R0L
+		AND.W	R0,R0			; 2nd and 3rd Parameter Exist ?
+		BNE	$+24			;
+		MOV.W	@ER6,E0			; 1st,2nd Character --> E0
+		BEQ	$+18			;
+		CMP.W	#H'2E00,E0		; Parameter is "." ?
+		BEQ	MAIN:16			; Goto Main Module
+		CMP.W	#H'5E00,E0		; Parameter is "^" ?
+		BNE	$+6			;
+		SUBS	#4,ER4			; Decrement Assemble Address
+		ADDS	#2,ER4			; Increment Assemble Address
+		RTS				;
+SPL_CHK:	.DATA.B	H'FF,H'FF,H'FF,H'FF	; Split Check Table
+		.DATA.B	H'FF,H'FF,H'00,H'FC	;
+		.DATA.B	H'01,H'00,H'00,H'F8	;
+		.DATA.B	H'00,H'00,H'00,H'F8	;
+ANA_BUF_ADR:	.DATA.W	ANA_BUF			; 1st Analize Buffer Address
+		.DATA.W	ANA_BUF+8		; 2nd Analize Buffer Address
+		.DATA.W	ANA_BUF+10		; 3rd Analize Buffer Address
+		.DATA.W	ANA_BUF+22		; 4th Analize Buffer Address
+		.DATA.W	ANA_BUF+32		; 5th Analize Buffer Address
+		.DATA.W	ANA_BUF+42		; 6th Analize Buffer Address
+		.DATA.W	0			; 7th Analize Buffer Address
+		.END				;

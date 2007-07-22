@@ -1,0 +1,16 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  H8_BUF		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  RAM,DATA,ALIGN=2	; RAM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	H8_BUF			; H8 Status Command Buffer
+;************************************************************************
+;*	Dummy of H8 Peripheral Status Command Buffer			*
+;************************************************************************
+H8_BUF:		.EQU	0			; Nothing
+		.END				;

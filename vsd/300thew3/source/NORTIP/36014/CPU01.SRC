@@ -1,0 +1,64 @@
+;************************************************************************
+;*	H8/36014 Series Monitor Program (Normal Mode)	Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  INIT			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	$BRR			; Bitrate Value
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	INIT			; Initialize Module Address
+		.EXPORT	TDR			; Transmit Data  Register
+		.EXPORT	SSR			; Serial Status  Register
+		.EXPORT	RDR			; Receive  Data  Register
+		.EXPORT	INTERNAL		; Internal Area Address
+		.EXPORT	INTERNAL_BGN		; Internal Area Begin Address
+		.EXPORT	INTERNAL_END		; Internal Area End   Address
+		.EXPORT	OPEN_MSG		; Opening Message
+;************************************************************************
+;*	Area Address Define						*
+;************************************************************************
+INTERNAL:	.EQU	H'FF80			; Internal Area Address
+INTERNAL_BGN:	.EQU	H'F600			; Internal Area Begin Address
+INTERNAL_END:	.EQU	H'F74F			; Internal Area End   Address
+PMR1:		.EQU	H'FFE0			; PMR1 Address
+;************************************************************************
+;*	Initialize Module						*
+;*		Input	Nothing						*
+;*		Output	Nothing						*
+;************************************************************************
+INIT:		MOV.B	#HIGH SMR,R0L		; SMR Address --> R0L
+		BLD	#3,R0L			; Channel Status --> C of CCR
+		BST	#1,@PMR1		; TxD  Enable or Disable
+		BIST	#3,@PMR1		; TxD2 Enable or Disable
+		MOV.B	#H'00,R0L		; Set SMR "00000000"
+		MOV.B	R0L,@SMR:8		;
+		MOV.B	#$BRR,R0L		; Set BRR
+		MOV.B	R0L,@BRR:8		;
+		MOV.B	#H'30,R0L		; Set SCR "00110000"
+		MOV.B	R0L,@SCR:8		;
+		MOV.B	@SSR:8,R0L		; Dummy Read
+		MOV.B	#H'80,R0L		; Set SSR "10000000"
+		MOV.B	R0L,@SSR:8		;
+		RTS				;
+;************************************************************************
+;*	Monitor Message Area						*
+;************************************************************************
+OPEN_MSG:	.SDATAZ	" H8/36014 Series Normal Mode Monitor Ver. 2.0B"
+		.SDATAZ	" Copyright (C) 2003 Renesas Technology Corp."
+;************************************************************************
+;*	SCI Register Define						*
+;************************************************************************
+		.SECTION SCI,DATA,ALIGN=2	; SCI Area Section
+SMR:		.RES.B	1			; Serial Mode	 Register
+BRR:		.RES.B	1			; BitRate	 Register
+SCR:		.RES.B	1			; Serial Control Register
+TDR:		.RES.B	1			; Transmit Data  Register
+SSR:		.RES.B	1			; Serial Status  Register
+RDR:		.RES.B	1			; Receive  Data  Register
+		.END				;

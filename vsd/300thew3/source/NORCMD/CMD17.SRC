@@ -1,0 +1,22 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  F_HELP_MSG		; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	F_HELP_MSG		; Fill Help Message
+;************************************************************************
+;*	Fill Command Help Message					*
+;************************************************************************
+F_HELP_MSG:	.DATA.B	5			; String Count is 5
+		.SDATAC	" F  :"			;
+		.SDATAZ	" Fills specified memory range with data."
+		.SDATAZ	"      F <address1> <address2> <data> [RET]"
+		.SDATAZ	"   <address1> : filling area start address"
+		.SDATAZ	"   <address2> : filling area end   address"
+		.SDATAZ	"   <data>     : filling byte data"
+		.END				;

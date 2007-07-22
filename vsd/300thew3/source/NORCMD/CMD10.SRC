@@ -1,0 +1,198 @@
+;************************************************************************
+;*	H8/300H Monitor Program (Normal Mode)		Ver. 2.0A	*
+;*		Copyright (C) 2003 Renesas Technology Corp.		*
+;************************************************************************
+		.PROGRAM  D_COM			; Program Name
+		.CPU      300HN			; CPU is H8/300H Normal
+		.SECTION  ROM,CODE,ALIGN=2	; ROM Area Section
+;************************************************************************
+;*	Import Define							*
+;************************************************************************
+		.IMPORT	OUT_CHAR		; Output Character Module
+		.IMPORT	OUT_CRLF		; Output CR,LF Module
+		.IMPORT	OUT_SP			; Output SP Module
+		.IMPORT	OUT_2SP			; Output SP,SP Module
+		.IMPORT	OUT_STRING		; Output String Module
+		.IMPORT	OUT_ADDR		; Output Address Module
+		.IMPORT	BIN_ASC_8		; 8 Binary to ASCII Module
+		.IMPORT	BIN_ASC_4		; 4 Binary to ASCII Module
+		.IMPORT	BIN_ASC_2		; 2 Binary to ASCII Module
+		.IMPORT	TBL_CHK			; Table Check Module
+		.IMPORT	ADDRA			; Address Analize Module
+		.IMPORT	SIZEA			; Size Analize Module
+		.IMPORT	MAIN			; Main Module
+		.IMPORT	RET_COM_SUB		; Return Command Sub Module
+		.IMPORT	BACK_COM_SUB		; Back Command Sub Module
+		.IMPORT	D_BUF			; Dump Command Buffer
+;************************************************************************
+;*	Export Define							*
+;************************************************************************
+		.EXPORT	D_COM			; Dump Command Module
+		.EXPORT	D_COM_SUB		; Dump Command Sub Module
+		.EXPORT	D_ANA_SUB		; Dump End Analize Module
+;************************************************************************
+;*	Dump Command Module						*
+;*		Input	R1  <-- Address of 2nd Analize Buffer		*
+;*		Output	R2  --> Dump Table Offset Address		*
+;*			R4  --> Dump Start Address			*
+;*			R5  --> Dump End   Address			*
+;*		Used Stack Area --> 0(6) Byte				*
+;************************************************************************
+D_COM:		BSR	ADDRA:16		; Start And End Address Analize
+		BNE	$+6			; Exist End Address ?
+		BSR	D_ANA_SUB:16		; Analize End Address
+		BSR	SIZEA:16		; Dump Size Analize
+		ADD.W	#D_TBL,R2		; Dump Table Address --> R2
+		MOV.W	#D_BUF,R6		; Dump Buffer Address --> R6
+		BSR	BACK_COM_SUB:16		; Back Command Sub Module
+		MOV.W	#D_MSG,R1		; Dump Message Address --> R1
+		BSR	OUT_STRING:16		; Output Dump Message
+		BSR	OUT_CRLF:16		; Output CR,LF
+;************************************************************************
+;*	Dump Command Sub Module						*
+;*		Input	R2  <-- Dump Table Address			*
+;*			R4  <-- Dump Start Address			*
+;*			R5  <-- Dump End   Address			*
+;*		Output	Nothing						*
+;*		Used Stack Area --> 0(6) Byte				*
+;************************************************************************
+D_COM_SUB:	MOV.W	R4,E5			; Save R4 Register
+		BSR	OUT_ADDR:16		; Output Address
+		MOV.W	R5,R1			; Dump End Address --> R1
+		SUB.W	R4,R1			; Analize Dump Length
+		MOV.W	#15,R6			; Max Dump Length --> R6
+		CMP.W	R1,R6			; Dump Length Over 16 Byte
+		BCC	$+4			;
+		MOV.W	R6,R1			; Dump Length is 16 Byte
+		SHLL.W	R1			; Make Table Displacement
+		SHLL.W	R1			;
+		ADD.W	#D_TBL+12,R1		; Dump Parameter Table --> R1
+		MOV.B	@ER1+,R3L		; Large Loop Count --> R3L
+		MOV.B	@ER1+,R3H		; Small Loop Count --> R3H
+		MOV.W	@ER2,R0			; Binary Module Address --> R0
+		JSR	@ER0			; Output Dump Binary Value
+		DEC.B	R3H			; Decrement Small Loop Count
+		BNE	$-6			; Check Small Loop Count
+		BSR	OUT_SP:16		; Output SP
+		DEC.B	R3L			; Decrement Large Loop Count
+		BNE	$-16			; Check Large Loop Count
+		MOV.B	@ER1+,R6L		; Space Loop Count --> R6L
+		BSR	OUT_SP:16		; Output SP
+		DEC.B	R6L			; Decrement Space Loop Count
+		BNE	$-6			; Check Space Loop Count
+		MOV.W	R4,R6			; Dump End Address --> R6
+		MOV.W	E5,R4			; Recovery R4 Register
+		SUB.W	R4,R6			; Dump Length --> R6L
+		MOV.W	@(2,ER2),R1		; ASCII Module Address --> R1
+		MOV.B	#"""",R0L		; " ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output "
+		JSR	@ER1			; Read Dump ASCII Value
+		MOV.W	#DISP_CHK,R3		; Display Check Table --> R3
+		BSR	TBL_CHK:16		; Display Check
+		BCS	$+4			;
+		MOV.B	#".",R0L		; "." ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output ASCII Code
+		DEC.B	R6L			; Decrement ASCII Loop Count
+		BNE	$-20			; Check ASCII Loop Count
+		MOV.B	#"""",R0L		; " ASCII Code --> R0L
+		BSR	OUT_CHAR:16		; Output "
+		BSR	OUT_CRLF:16		; Output CR,LF
+		CMP.W	R4,R5			; Start Address > End Address ?
+		MOV.W	R4,R4			; Start Address = End Address ?
+		BHI	D_COM_SUB		; Next Dump
+		MOV.B	#"D",R0H		; Dump Command Name --> R0H
+		BSR	RET_COM_SUB:16		; Retrun Command Sub Module
+		BRA	MAIN:16			; Goto Main Module
+;************************************************************************
+;*	Dump End Address Analize Module					*
+;*		Input	R4  <-- Dump Start Address			*
+;*		Output	R5  --> Dump End   Address			*
+;*		Used Stack Area --> 2(2) Byte				*
+;************************************************************************
+D_ANA_SUB:	MOV.W	#255,R5			; Max Dump Length --> R5
+		ADD.W	R4,R5			; Make Dump End Address
+		SUBX	R6L,R6L			; Address Adjust Code --> R6
+		EXTS.W	R6			;
+		OR.W	R6,R5			; Real End Address --> R5
+		RTS				;
+;************************************************************************
+;*	Dump Command Parameter Module					*
+;*		Input	R3H <-- Small Loop Count			*
+;*			R4  <-- Dump Address				*
+;*			R5  <-- Dump End Address			*
+;*		Output	ER0 --> Memory Value				*
+;*			R3H --> Small Loop Count			*
+;*			R4  --> Next Dump Address			*
+;*		Used Stack Area --> 2(6) Byte				*
+;************************************************************************
+D_LONG_BIN:	ADD.B	#-3,R3H			; Decrement Small Loop Count
+		MOV.L	@ER4+,ER0		; Memory Value (Long) --> ER0
+		BSR	BIN_ASC_8:16		; Change Binary to ASCII
+		BSR	OUT_2SP:16		; Output SP,SP
+		BRA	OUT_2SP:16		; Output SP,SP
+D_WORD_BIN:	ADD.B	#-1,R3H			; Decrement Small Loop Count
+		MOV.W	@ER4+,R0		; Memory Value (Word) --> R0
+		BSR	BIN_ASC_4:16		; Change Binary to ASCII
+		BRA	OUT_2SP:16		; Output SP,SP
+D_BYTE_BIN:	MOV.B	@ER4+,R0L		; Memory Value (Byte) --> R0L
+		BSR	BIN_ASC_2:16		; Change Binary to ASCII
+		BRA	OUT_SP:16		; Output SP
+D_LONG_ASC:	BLD	#1,R4L			; Start Address --> C of CCR
+		BXOR	#1,R5L			; End   Address --> C of CCR
+		BIAND	#0,R4L			; Dump Address is Even ?
+		BCC	$+6			;
+		MOV.L	@ER4,ER0		; Memory Value (Long) --> ER0
+		MOV.W	E0,R3			; Rotate Memory Value
+		MOV.B	R0H,R6H			;
+		MOV.B	R0L,R0H			;
+		MOV.B	R3H,R0L			;
+		MOV.B	R3L,R3H			;
+		MOV.B	R6H,R3L			;
+		MOV.W	R3,E0			;
+		ADDS	#1,ER4			; Increment Dump Address
+		RTS				;
+D_WORD_ASC:	BTST	#0,R4L			; Dump Address is Even ?
+		BNE	$+4			;
+		MOV.W	@ER4,R0			; Memory Value (Word) --> R0
+		MOV.B	R0H,R3L			; Rotate Memory Value
+		MOV.B	R0L,R0H			;
+		MOV.B	R3L,R0L			;
+		ADDS	#1,ER4			; Increment Dump Address
+		RTS				;
+D_BYTE_ASC:	MOV.B	@ER4+,R0L		; Memory Value (Byte) --> R0L
+		RTS				;
+DISP_CHK:	.DATA.B	H'00,H'00,H'00,H'00	; Display Check Table
+		.DATA.B	H'FF,H'FF,H'FF,H'FF	;
+		.DATA.B	H'FF,H'FF,H'FF,H'FF	;
+		.DATA.B	H'FF,H'FF,H'FF,H'7F	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+		.DATA.B	H'00,H'00,H'00,H'00	;
+D_TBL:		.DATA.W	D_BYTE_BIN		; Byte Binary Module Address
+		.DATA.W	D_BYTE_ASC		; Byte ASCII  Module Address
+		.DATA.W	D_WORD_BIN		; Word Binary Module Address
+		.DATA.W	D_WORD_ASC		; Word ASCII  Module Address
+		.DATA.W	D_LONG_BIN		; Long Binary Module Address
+		.DATA.W	D_LONG_ASC		; Long ASCII  Module Address
+		.DATA.B	H'01,H'01,H'2F,H'00	;  1 Byte Dump Data
+		.DATA.B	H'01,H'02,H'2C,H'00	;  2 Byte Dump Data
+		.DATA.B	H'01,H'03,H'29,H'00	;  3 Byte Dump Data
+		.DATA.B	H'01,H'04,H'26,H'00	;  4 Byte Dump Data
+		.DATA.B	H'01,H'05,H'23,H'00	;  5 Byte Dump Data
+		.DATA.B	H'01,H'06,H'20,H'00	;  6 Byte Dump Data
+		.DATA.B	H'01,H'07,H'1D,H'00	;  7 Byte Dump Data
+		.DATA.B	H'01,H'08,H'1A,H'00	;  8 Byte Dump Data
+		.DATA.B	H'02,H'08,H'01,H'16	;  9 Byte Dump Data
+		.DATA.B	H'02,H'08,H'02,H'13	; 10 Byte Dump Data
+		.DATA.B	H'02,H'08,H'03,H'10	; 11 Byte Dump Data
+		.DATA.B	H'02,H'08,H'04,H'0D	; 12 Byte Dump Data
+		.DATA.B	H'02,H'08,H'05,H'0A	; 13 Byte Dump Data
+		.DATA.B	H'02,H'08,H'06,H'07	; 14 Byte Dump Data
+		.DATA.B	H'02,H'08,H'07,H'04	; 15 Byte Dump Data
+		.DATA.B	H'02,H'08,H'08,H'01	; 16 Byte Dump Data
+D_MSG:		.SDATA	" <ADDR>              "	; Dump Message
+		.SDATA	"   <  D  A  T  A  >  "	;
+		.SDATA	"                   < "	;
+		.SDATAZ	"ASCII CODE >"		;
+		.END				;
