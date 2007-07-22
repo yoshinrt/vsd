@@ -68,7 +68,7 @@ LED_PAT( 0x93, X )		// X
 LED_PAT( 0x89, Y )		// Y
 LED_PAT( 0x6D, Z )		// Z
 LED_PATS( 0x63 )		// [
-LED_PATS( 0xDD )		// Åè
+LED_PATS( 0xDD )		// °Ô
 LED_PATS( 0x0F )		// ]
 LED_PATS( 0x7F )		// ^
 LED_PATS( 0xEF )		// _
