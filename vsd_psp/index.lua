@@ -1,7 +1,8 @@
+-- $Id$
 -- .tab=4
 
 -- シリアルポートなし (debug)
-NoSio = "vsd20070421_142959.log"
+-- NoSio = "vsd20070421_142959.log"
 -- NoSio = true
 
 -- バイナリログ
@@ -51,6 +52,7 @@ TachoBar2 = { 0, 5900, 6100, 6300, 6500, 6500 }
 FirmWare			= "vsd.mot"	-- ファームウェア
 GymkhanaStartMargin	= 0.5 * ( PULSE_PAR_1KM / 1000 )	-- スタートまでの移動距離
 StartGThrethold		= 500	-- 車がスタートしたとみなすGセンサの数値
+SectorCntMax		= 2		-- マグネット数
 
 --- gloval vars --------------------------------------------------------------
 
@@ -614,6 +616,7 @@ function DrawMeters()
 	--	Console:print( os.date( "%y/%m/%d" ))
 	--	Console:print( os.date( "%H:%M:%S" ))
 		Console:print( string.format( "%8.3fkm", Mileage / PULSE_PAR_1KM ))
+		Console:print( string.format( "%d", SectorCnt ))
 	--	Console:print( AutoSaveTimer:time())
 	--	Console:print( DebugRefresh )
 	end
@@ -721,43 +724,48 @@ function ProcessSio()
 			end
 		elseif Cmd == "I" then IRSensor	= Num
 		elseif Cmd == "L" then
-			-- チェックポイントを通過済みならば，周回タイムを求める
-			local bBestLap = false
-			LapTimeLaw = Num
-			
-			if( LapTimePrev ~= nil ) then
-				local LapTimeDiff = (( Num - LapTimePrev ) / ( H8HZ / 65536 ));
-				LapTimeTable[ #LapTimeTable + 1 ] = LapTimeDiff;
-				LapTimeStr = "\tLAP" .. #LapTimeTable .. " " .. FormatLapTime( LapTimeDiff, ':' );
-				-- ベストラップか?
-				if( BestLap ) then BestLapDiff = LapTimeDiff - BestLap end
-				if( BestLap == nil or LapTimeDiff < BestLap ) then
-					if( BestLap ) then
-						bBestLap = true
+			SectorCnt = SectorCnt + 1
+			if SectorCnt >= SectorCntMax then
+				SectorCnt = 0
+				
+				-- チェックポイントを通過済みならば，周回タイムを求める
+				local bBestLap = false
+				LapTimeLaw = Num
+				
+				if( LapTimePrev ~= nil ) then
+					local LapTimeDiff = (( Num - LapTimePrev ) / ( H8HZ / 65536 ));
+					LapTimeTable[ #LapTimeTable + 1 ] = LapTimeDiff;
+					LapTimeStr = "\tLAP" .. #LapTimeTable .. " " .. FormatLapTime( LapTimeDiff, ':' );
+					-- ベストラップか?
+					if( BestLap ) then BestLapDiff = LapTimeDiff - BestLap end
+					if( BestLap == nil or LapTimeDiff < BestLap ) then
+						if( BestLap ) then
+							bBestLap = true
+						end
+						BestLap = LapTimeDiff
 					end
-					BestLap = LapTimeDiff
 				end
-			end
-			
-			-- LapTimeMode または，計測スタートなら，clk をリセットする
-		--	if( VSDMode == MODE_LAPTIME or LapTimePrev == nil ) then
-				LapTimePrev = Num;
-				if( VSDMode ~= MODE_LAPTIME or #LapTimeTable == 0 ) then
-					LapTimeStr = "\tLAP" .. ( #LapTimeTable + 1 ) .. " start"
+				
+				-- LapTimeMode または，計測スタートなら，clk をリセットする
+			--	if( VSDMode == MODE_LAPTIME or LapTimePrev == nil ) then
+					LapTimePrev = Num;
+					if( VSDMode ~= MODE_LAPTIME or #LapTimeTable == 0 ) then
+						LapTimeStr = "\tLAP" .. ( #LapTimeTable + 1 ) .. " start"
+					end
+			--	else
+			--		LapTimePrev = nil;
+			--	end
+				
+				if( bBestLap ) then
+					-- ベストラップサウンド
+					SndBestLap:play()
+				else
+					-- ラップサウンド
+					SndNewLap:play()
 				end
-		--	else
-		--		LapTimePrev = nil;
-		--	end
-			
-			if( bBestLap ) then
-				-- ベストラップサウンド
-				SndBestLap:play()
-			else
-				-- ラップサウンド
-				SndNewLap:play()
+				
+				RedrawLap = 2
 			end
-			
-			RedrawLap = 2
 		end
 		
 		-- ログに改行が付いたので，可視化ログに出力
@@ -810,6 +818,7 @@ function SetVSDMode( mode )
 	
 	LapTimePrev = nil
 	RedrawLap = 2
+	SectorCnt = 0
 	
 	return mode
 end
@@ -839,6 +848,8 @@ PrevMin = 99
 
 AutoSaveTimer = Timer.new()
 AutoSaveTimer:start()
+
+SectorCnt = 0;
 
 while true do
 	
