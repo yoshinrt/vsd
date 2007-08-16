@@ -598,7 +598,7 @@ function DrawMeters()
 	
 	if( GSensorCaribCnt == 0 ) then
 		GxTmp, GyTmp = 
-			GMeterCx +  ( GSensorY - GSensorCy ) / ACC_1G_Y * GMeterR - GMeterIndicatorSize / 2,
+			GMeterCx + -( GSensorY - GSensorCy ) / ACC_1G_Y * GMeterR - GMeterIndicatorSize / 2,
 			GMeterCy + -( GSensorX - GSensorCx ) / ACC_1G_X * GMeterR - GMeterIndicatorSize / 2
 		
 		ImageG:fillRect(
