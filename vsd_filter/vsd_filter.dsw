@@ -3,6 +3,18 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
+Project: "dds_lib"=.\DDS_LIB\dds_lib.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "vsd_filter"=.\vsd_filter.dsp - Package Owner=<4>
 
 Package=<5>
@@ -11,6 +23,9 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name dds_lib
+    End Project Dependency
 }}}
 
 ###############################################################################

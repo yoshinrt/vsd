@@ -6,10 +6,12 @@
 #include <windows.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 #include "dds.h"
 #include "filter.h"
 #include "../vsd/main.h"
+#include "dds_lib/dds_lib.h"
 
 #define	FILE_TXT		"LogFile (*.log)\0*.log\0AllFile (*.*)\0*.*\0"
 
@@ -119,6 +121,7 @@ int			g_iVideoDiff;
 int			g_iLogDiff;
 
 double		g_fGcx, g_fGcy;
+BOOL		g_bReverseGy;
 
 /****************************************************************************/
 //---------------------------------------------------------------------
@@ -511,6 +514,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		if( filter->exfunc->dlg_get_load_name(szBuf,FILE_TXT,NULL) != TRUE ) break;
 		if(( fp = fopen( szBuf, "r" )) == NULL ) return FALSE;
 		
+		// 20070814 以降のログは，横 G が反転している
+		g_bReverseGy	= ( strcmp( StrTokFile( NULL, szBuf, STF_NAME ), "vsd20070814" ) >= 0 );
+		
 		g_iVsdLogNum	= 0;
 		g_iLapNum		= 0;
 		g_fBestTime		= -1;
@@ -549,14 +555,17 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				&VsdLog2[ g_iVsdLogNum ].fGx,
 				&VsdLog2[ g_iVsdLogNum ].fGy
 			)) >= 2 ){
-				// Gデータがないときは，speedから求める
 				if( uCnt < 4 && g_iVsdLogNum ){
+					// Gデータがないときは，speedから求める
 					VsdLog2[ g_iVsdLogNum ].fGy = 0;
 					VsdLog2[ g_iVsdLogNum ].fGx =
 						( float )(( VsdLog2[ g_iVsdLogNum ].fSpeed - VsdLog2[ g_iVsdLogNum - 1 ].fSpeed ) * 1000 / 3600 / 9.8 * LOG_FREQ * ACC_1G_X );
 				}else if( VsdLog2[ g_iVsdLogNum ].fGx < 1024 ){
+					// G データが 0～1023 の範囲の時代のログ???
 					VsdLog2[ g_iVsdLogNum ].fGx *= 64;
 					VsdLog2[ g_iVsdLogNum ].fGy *= 64;
+				}else if( g_bReverseGy ){
+					VsdLog2[ g_iVsdLogNum ].fGy = 0xFFFF - 	VsdLog2[ g_iVsdLogNum ].fGy;
 				}
 				++g_iVsdLogNum;
 			}
