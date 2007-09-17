@@ -1,11 +1,11 @@
 -- $Id$
 -- .tab=4
 
--- ƒVƒŠƒAƒ‹ƒ|[ƒg‚È‚µ (debug)
--- NoSio = "vsd20070421_142959.log"
+-- ¥·¥ê¥¢¥ë¥İ¡¼¥È¤Ê¤· (debug)
+NoSio = "vsd20070421_142959.log"
 -- NoSio = true
 
--- ƒoƒCƒiƒŠƒƒO
+-- ¥Ğ¥¤¥Ê¥ê¥í¥°
 -- bBinLog = true
 
 --- def, enum
@@ -15,44 +15,42 @@ MODE_ZERO_FOUR	= 2
 MODE_ZERO_ONE	= 3
 MODE_NUM		= 4
 
-MAIN_MODE_NORMAL	= 0
-MAIN_MODE_MSGWINDOW	= 1
-MAIN_MODE_DEL		= 2
-
 H8HZ			= 16030000
-SERIAL_DIVCNT	= 16		-- ƒVƒŠƒAƒ‹o—Í‚ğs‚¤üŠú
+SERIAL_DIVCNT	= 16		-- ¥·¥ê¥¢¥ë½ĞÎÏ¤ò¹Ô¤¦¼ş´ü
 LOG_FREQ		= ( H8HZ / 65536 / SERIAL_DIVCNT )
 
--- ƒXƒs[ƒh * 100/Taco ”ä
+-- ¥¹¥Ô¡¼¥É * 100/Taco Èæ
 -- ELISE
--- ƒMƒA”ä * ƒ}[ƒWƒ“‚¶‚á‚È‚­‚ÄCave( ƒMƒAn, ƒMƒAn+1 ) ‚É•ÏX
+-- ¥®¥¢Èæ * ¥Ş¡¼¥¸¥ó¤¸¤ã¤Ê¤¯¤Æ¡¤ave( ¥®¥¢n, ¥®¥¢n+1 ) ¤ËÊÑ¹¹
 GEAR_RATIO1 = 1.2381712993947
 GEAR_RATIO2 = 1.82350889069989
 GEAR_RATIO3 = 2.37581451065366
 GEAR_RATIO4 = 2.95059529470571
 
--- ‚½‚Ô‚ñCƒzƒCƒ‹ˆêü‚ª30ƒpƒ‹ƒX
+-- ¤¿¤Ö¤ó¡¤¥Û¥¤¥ë°ì¼ş¤¬30¥Ñ¥ë¥¹
 --PULSE_PAR_1KM	= ( 172155 / 11.410 )	-- ELISE
-PULSE_PAR_1KM	= ( 68774.48913 / 4.597593609 )	-- ELISE(•â³Œã)
+PULSE_PAR_1KM	= ( 68774.48913 / 4.597593609 )	-- ELISE(ÊäÀµ¸å)
 
 ITOA_RADIX_BIT	= 7
 ITOA_DIGIT_NUM	= (( 32 + ITOA_RADIX_BIT - 1 ) / ITOA_RADIX_BIT )
 
---ACC_1G_X	= 6762.594337	-- X²
-ACC_1G_X	= 6659.691379	-- Z²
+--ACC_1G_X	= 6762.594337	-- X¼´
+ACC_1G_X	= 6659.691379	-- Z¼´
 ACC_1G_Y	= 6591.556755
 
--- ƒVƒtƒgƒCƒ“ƒWƒP[ƒ^‚Ì•\¦
+-- ¥·¥Õ¥È¥¤¥ó¥¸¥±¡¼¥¿¤ÎÉ½¼¨
 TachoBar1 = { 0, 5100, 5500, 5900, 6300, 6300 }
 TachoBar2 = { 0, 5900, 6100, 6300, 6500, 6500 }
 -- TachoBar1 = { 0, 1500, 2000, 2500, 3000, 3500 }
 -- TachoBar2 = TachoBar1;
 
 -- config
-FirmWare			= "vsd.mot"	-- ƒtƒ@[ƒ€ƒEƒFƒA
-GymkhanaStartMargin	= 0.5 * ( PULSE_PAR_1KM / 1000 )	-- ƒXƒ^[ƒg‚Ü‚Å‚ÌˆÚ“®‹——£
-StartGThrethold		= 500	-- Ô‚ªƒXƒ^[ƒg‚µ‚½‚Æ‚İ‚È‚·GƒZƒ“ƒT‚Ì”’l
-SectorCntMax		= 2		-- ƒ}ƒOƒlƒbƒg”
+FirmWare			= "vsd_rom.mot"	-- ¥Õ¥¡¡¼¥à¥¦¥§¥¢
+StartGThrethold		= 500	-- ¼Ö¤¬¥¹¥¿¡¼¥È¤·¤¿¤È¤ß¤Ê¤¹G¥»¥ó¥µ¤Î¿ôÃÍ
+GymkhanaStartMargin	= 0.5 * ( PULSE_PAR_1KM / 1000 )	-- ¥¹¥¿¡¼¥È¤Ş¤Ç¤Î°ÜÆ°µ÷Î¥
+SectorCntMax		= 1		-- ¥Ş¥°¥Í¥Ã¥È¿ô
+
+dofile( "config.lua" )
 
 --- gloval vars --------------------------------------------------------------
 
@@ -69,12 +67,11 @@ IRSensor	= 0
 
 fpLog	= nil;
 
--- ‰æ–Êƒ‚[ƒhE“®ìƒ‚[ƒh
+-- ²èÌÌ¥â¡¼¥É¡¦Æ°ºî¥â¡¼¥É
 VSDMode	= MODE_LAPTIME
-MainMode = MAIN_MODE_NORMAL
 RedrawLap = 2
 
--- ƒ‰ƒbƒvƒ^ƒCƒ€‹L˜^
+-- ¥é¥Ã¥×¥¿¥¤¥àµ­Ï¿
 LapTimeTable = {}
 BestLap		= nil
 BestLapDiff	= nil
@@ -83,7 +80,7 @@ LapTimeRaw	= 0
 
 OS = os.getenv( "OS" )
 
---- Image Šg’£ ---------------------------------------------------------------
+--- Image ³ÈÄ¥ ---------------------------------------------------------------
 
 Image.drawRect = function( this, x, y, w, h, Color )
 	this:drawLine( x,		y,		x + w,	y,		Color )
@@ -94,7 +91,7 @@ end
 
 screen.drawRect = Image.drawRect
 
---- file Šg’£ ----------------------------------------------------------------
+--- file ³ÈÄ¥ ----------------------------------------------------------------
 
 Write16 = function( fp, Num )
 	Num = math.floor( math.fmod( Num, 0x10000 ))
@@ -104,7 +101,7 @@ Write16 = function( fp, Num )
 	)
 end
 
---- ƒRƒ“ƒ\[ƒ‹•—o—Í ---------------------------------------------------------
+--- ¥³¥ó¥½¡¼¥ëÉ÷½ĞÎÏ ---------------------------------------------------------
 
 Console = {
 	Color = nil,
@@ -143,23 +140,26 @@ end
 
 function LoadFirmware()
 	
-	System.sioWrite( "z\r" )
-	screen.waitVblankStart( 6 )
-	System.sioWrite( "l\r" )
-	
 	local fpFirm = io.open( FirmWare, "rb" )
-	System.sioWrite( string.gsub( fpFirm:read( "*a" ), "\r\n", "\r" ))
-	fpFirm:close()
 	
-	screen.waitVblankStart( 6 )
-	System.sioWrite( "g\r" )
+	if( fpFirm ~= nil ) then
+		System.sioWrite( "z\r" )
+		screen.waitVblankStart( 6 )
+		System.sioWrite( "l\r" )
+		
+		System.sioWrite( string.gsub( fpFirm:read( "*a" ), "\r\n", "\r" ))
+		fpFirm:close()
+		
+		screen.waitVblankStart( 6 )
+		System.sioWrite( "g\r" )
+	end
 	
-	-- ƒoƒbƒtƒ@ƒNƒŠƒA
+	-- ¥Ğ¥Ã¥Õ¥¡¥¯¥ê¥¢
 	local pos
 	System.sioRead()
 	RxBuf = ""
 	
-	-- ƒI[ƒvƒjƒ“ƒOƒƒbƒZ[ƒWƒXƒLƒbƒv
+	-- ¥ª¡¼¥×¥Ë¥ó¥°¥á¥Ã¥»¡¼¥¸¥¹¥­¥Ã¥×
 	TimeoutCnt = 1000
 	repeat
 		RxBuf = RxBuf .. System.sioRead()
@@ -170,17 +170,17 @@ function LoadFirmware()
 	
 	RxBuf = RxBuf:sub( pos + 2 )
 	
-	-- ƒƒOƒtƒ@ƒCƒ‹ ƒŠƒI[ƒvƒ“
+	-- ¥í¥°¥Õ¥¡¥¤¥ë ¥ê¥ª¡¼¥×¥ó
 	if fpLog then fpLog:close() end
 	LogFile = os.date( "vsd%Y%m%d_%H%M%S.log" )
 	fpLog = io.open( LogFile, "ab" )
 	fpLog:setvbuf( "full", 1024 )
 	
-	-- VSD ƒ‚[ƒhİ’è
+	-- VSD ¥â¡¼¥ÉÀßÄê
 	System.sioWrite( "3Gs" )
 end
 
---- ƒ_ƒ~[ƒVƒŠƒAƒ‹“ü—Í -------------------------------------------------------
+--- ¥À¥ß¡¼¥·¥ê¥¢¥ëÆşÎÏ -------------------------------------------------------
 
 if( NoSio ) then
 	DummySioTimer = Timer.new()
@@ -204,7 +204,7 @@ if( NoSio ) then
 		fpIn = io.open( NoSio, "r" )
 		assert( fpIn, "Can't open file:" .. NoSio )
 		
-		-- ƒƒOÄ¶
+		-- ¥í¥°ºÆÀ¸
 		System.sioRead = function ()
 			local Ret = ""
 			local Line = nil
@@ -215,12 +215,12 @@ if( NoSio ) then
 				DummySioTimer:reset()
 				DummySioTimer:start()
 				
-				-- s“ª‚ª”’l‚Å‚È‚¯‚ê‚ÎC—LŒø‚Ès‚Å‚Í‚È‚¢
+				-- ¹ÔÆ¬¤¬¿ôÃÍ¤Ç¤Ê¤±¤ì¤Ğ¡¤Í­¸ú¤Ê¹Ô¤Ç¤Ï¤Ê¤¤
 				repeat
 					Line = fpIn:read()
 				until( 0x30 <= Line:byte() and Line:byte() <= 0x39 )
 				
-				-- ƒ‰ƒbƒvƒ^ƒCƒ€‚ ‚è?
+				-- ¥é¥Ã¥×¥¿¥¤¥à¤¢¤ê?
 				local result, tmp, min, sec = Line:find( "LAP.*(%d+):([%d%.]+)" )
 				if( result ) then
 					LapTimePrev = 0
@@ -248,7 +248,7 @@ if( NoSio ) then
 		end
 	else
 		
-		-- ©“®ƒƒO¶¬
+		-- ¼«Æ°¥í¥°À¸À®
 		System.sioRead = function ()
 			local Ret = ""
 			if( DummySioTimer:time() > ( 1000 / 15 )) then
@@ -280,7 +280,7 @@ if( NoSio ) then
 	end
 end -- NoSio
 
---- ƒƒOƒf[ƒ^æ“¾ -----------------------------------------------------------
+--- ¥í¥°¥Ç¡¼¥¿¼èÆÀ -----------------------------------------------------------
 
 function GetLogData()
 	RxBuf = RxBuf .. System.sioRead()
@@ -293,7 +293,7 @@ function GetLogData()
 	
 	idx = nil
 	
-	-- ƒzƒƒCƒgƒXƒy[ƒX‚ğƒXƒLƒbƒv
+	-- ¥Û¥ï¥¤¥È¥¹¥Ú¡¼¥¹¤ò¥¹¥­¥Ã¥×
 	Ret = nil
 	NextIdx = nil
 	
@@ -314,7 +314,7 @@ function GetLogData()
 	
 	if( Ret ) then return nil, nil, true end
 	
-	-- ƒzƒƒCƒgƒXƒy[ƒX‚ğŒŸõ
+	-- ¥Û¥ï¥¤¥È¥¹¥Ú¡¼¥¹¤ò¸¡º÷
 	for i = 1, Len do
 		if( RxBuf:byte( i ) <= 0x20 ) then
 			idx = i
@@ -322,10 +322,10 @@ function GetLogData()
 		end
 	end
 	
-	-- ƒpƒ‰ƒ[ƒ^‚ª1ŒÂ‚È‚©‚Á‚½
+	-- ¥Ñ¥é¥á¡¼¥¿¤¬1¸Ä¤Ê¤«¤Ã¤¿
 	if( idx == nil ) then return end
 	
-	-- ƒpƒ‰ƒ[ƒ^”­Œ©
+	-- ¥Ñ¥é¥á¡¼¥¿È¯¸«
 	Cmd = RxBuf:sub( 1, 1 )
 	Num = 0;
 	
@@ -333,7 +333,7 @@ function GetLogData()
 		Num = Num * 128 + RxBuf:byte( i ) - 0x40
 	end
 	
-	-- ƒzƒƒCƒgƒXƒy[ƒX‚ğƒXƒLƒbƒv
+	-- ¥Û¥ï¥¤¥È¥¹¥Ú¡¼¥¹¤ò¥¹¥­¥Ã¥×
 	Ret = nil
 	NextIdx = nil
 	
@@ -371,9 +371,9 @@ end
 Console:SetPos( 0, 0 )
 -- Console:print( "loading firmware" ); screen.flip()
 
--- sio ‰Šú‰»Eƒtƒ@[ƒ€ƒ[ƒh
+-- sio ½é´ü²½¡¦¥Õ¥¡¡¼¥à¥í¡¼¥É
 if( NoSio ) then
-	-- ƒƒOƒtƒ@ƒCƒ‹ ƒŠƒI[ƒvƒ“
+	-- ¥í¥°¥Õ¥¡¥¤¥ë ¥ê¥ª¡¼¥×¥ó
 	LogFile = "vsd.log"
 	fpLog = io.open( os.date( LogFile ), "wb" )
 else
@@ -383,7 +383,7 @@ end
 
 -- Console:print( "loading font" ); screen.flip()
 
--- ƒtƒHƒ“ƒg‰Šú‰»
+-- ¥Õ¥©¥ó¥È½é´ü²½
 FontSpeed = Font.createMonoSpaced()
 FontSpeed:setPixelSizes( 0, 100 )
 ColorSpeed = Color.new( 102, 255, 255 )
@@ -398,7 +398,9 @@ FontLap:setPixelSizes( 0, 45 )
 ColorLap = ColorSpeed
 ColorLapBad = Color.new( 255, 80, 0 );
 
--- ”wŒiƒ[ƒh
+ColorMenuCursor = ColorLapBad
+
+-- ÇØ·Ê¥í¡¼¥É
 -- Console:print( "loading tacho image" ); screen.flip()
 
 fpImg = io.open( "vsd_tacho.png", "rb" ); ImgData = fpImg:read( "*a" ); fpImg:close()
@@ -418,7 +420,7 @@ ImageG = Image.loadFromMemory( ImgData )
 
 -- Console:print( "init completed." ); screen.flip()
 
--- ‰æ–Êƒpƒ‰ƒ[ƒ^
+-- ²èÌÌ¥Ñ¥é¥á¡¼¥¿
 TachoCx			= 60
 TachoCy			= 60
 TachoMeterR		= 48
@@ -455,7 +457,7 @@ ColorInfo = Color.new( 0, 160, 160 );
 LapChartW	= 58
 LapChartH	= 32
 
--- GƒZƒ“ƒTƒLƒƒƒŠƒuƒŒ[ƒVƒ‡ƒ“
+-- G¥»¥ó¥µ¥­¥ã¥ê¥Ö¥ì¡¼¥·¥ç¥ó
 
 GSensorCaribCntMax = 15
 GSensorCaribCnt = GSensorCaribCntMax
@@ -464,18 +466,18 @@ GSensorCy	= 0
 
 Console.Color = ColorInfo
 
--- ƒTƒEƒ“ƒhƒ[ƒh
+-- ¥µ¥¦¥ó¥É¥í¡¼¥É
 
 SndBestLap = Sound.load( "best_lap.wav" )
 SndNewLap  = Sound.load( "new_lap.wav" )
 
---- ƒ‰ƒbƒvƒ^ƒCƒ€ƒEƒBƒ“ƒhƒE•`‰æ -----------------------------------------------
+--- ¥é¥Ã¥×¥¿¥¤¥à¥¦¥£¥ó¥É¥¦ÉÁ²è -----------------------------------------------
 
 function DrawLap()
 	local str
 	local Color
 	
-	-- ƒ‰ƒbƒvƒ^ƒCƒ€—š—ğ
+	-- ¥é¥Ã¥×¥¿¥¤¥àÍúÎò
 	screen:clear()
 	screen:fillRect( HistX, HistY, HistW, HistH, ColorLapBG )
 	screen:fillRect( LapX, LapY, LapW, LapH, ColorLapBG )
@@ -501,7 +503,7 @@ function DrawLap()
 		)
 	end
 	
-	-- ƒ‰ƒbƒvƒ^ƒCƒ€
+	-- ¥é¥Ã¥×¥¿¥¤¥à
 	if( #LapTimeTable > 0 ) then
 		str = FormatLapTime( LapTimeTable[ #LapTimeTable ] )
 	else
@@ -521,7 +523,7 @@ function DrawLap()
 	end
 	screen:fontPrint( FontHist, LapDiffX, LapY + LapH / 3 * 2, str, Color )
 	
-	-- ‚»‚Ì‘¼ info •`‰æ
+	-- ¤½¤ÎÂ¾ info ÉÁ²è
 	if    ( VSDMode == MODE_LAPTIME		) then str = "LAP"
 	elseif( VSDMode == MODE_GYMKHANA	) then str = "GYMKA"
 	elseif( VSDMode == MODE_ZERO_FOUR	) then str = "0-400 "
@@ -534,7 +536,7 @@ function DrawLap()
 	screen:fontPrint( FontHist, LapClockX, LapY + LapH, os.date( "%k:%M" ), ColorInfo )
 end
 
---- ƒ[ƒ^[—Ş•`‰æ -----------------------------------------------------------
+--- ¥á¡¼¥¿¡¼ÎàÉÁ²è -----------------------------------------------------------
 
 Blink = nil
 
@@ -542,13 +544,13 @@ function DrawMeters()
 	local TachoBar
 	local BarLv
 	
-	-- ƒXƒs[ƒhƒ[ƒ^[
+	-- ¥¹¥Ô¡¼¥É¥á¡¼¥¿¡¼
 	if(( Speed >= 30000 ) and ( Tacho == 0 )) then
-		-- ƒLƒƒƒŠƒuƒŒ[ƒVƒ‡ƒ“•\¦
+		-- ¥­¥ã¥ê¥Ö¥ì¡¼¥·¥ç¥óÉ½¼¨
 		BarLv = 5
 		Blink = nil
 	else
-		-- LED ‚Ì•\¦ LV ‚ğ‹‚ß‚é
+		-- LED ¤ÎÉ½¼¨ LV ¤òµá¤á¤ë
 		if( Speed >= 7000 ) then
 			TachoBar = TachoBar2
 		else
@@ -574,7 +576,7 @@ function DrawMeters()
 	screen:blit( ImageTacho:width(), 0, ImageSpeed[ BarLv ] )
 	screen:fontPrint( FontSpeed, SpeedX, SpeedY, string.format( "%3d", Speed / 100 ), ColorSpeed )
 	
-	-- ƒ^ƒRƒ[ƒ^‚Ì•`‰æ
+	-- ¥¿¥³¥á¡¼¥¿¤ÎÉÁ²è
 	screen:blit( 0, 0, ImageTacho )
 	TachoRad = Tacho / TachoMeterMaxRev * 2 * math.pi + TachoMeterStart
 	screen:drawLine(
@@ -585,7 +587,7 @@ function DrawMeters()
 	)
 	screen:print( TachoCx + 20, TachoCy + 10, string.format( "%4d", Tacho ), ColorMeter )
 	
-	-- GƒZƒ“ƒT•`‰æ
+	-- G¥»¥ó¥µÉÁ²è
 	
 	if( GxTmp ) then
 		ImageG:fillRect(
@@ -610,7 +612,7 @@ function DrawMeters()
 	end
 	screen:blit( 480 - ImageG:width(), 0, ImageG )
 	
-	-- ‚»‚Ì‘¼‚Ìî•ñ
+	-- ¤½¤ÎÂ¾¤Î¾ğÊó
 	if( bDispInfo ) then
 		Console:Open( 10, 4, 47, 15 )
 	--	Console:print( os.date( "%y/%m/%d" ))
@@ -622,71 +624,7 @@ function DrawMeters()
 	end
 end
 
---- ƒ‰ƒbƒvƒ`ƒƒ[ƒg•\¦ -------------------------------------------------------
-
-function DrawLapChart()
-	local Color
-	
-	Console:Open( LapChartW, LapChartH )
-	Console:print( "Lap  Time" )
-	Console:print( "---------------" )
-	local y = Console.y
-	
-	if( #LapTimeTable > 0 ) then
-		for i = 1, #LapTimeTable do
-			
-			if( BestLap and LapTimeTable[ i ] == BestLap ) then
-				Color = ColorLapBad
-			else
-				Color = ColorInfo
-			end
-			
-			Console:print(
-				string.format( "%3d %s", i, FormatLapTime( LapTimeTable[ i ] )), Color
-			)
-			if( math.fmod( i, LapChartH - 2 ) == 0 ) then
-				Console:SetPos( Console.x + 15 * 8, y )
-			end
-		end
-	else
-		Console:print( "No results." )
-	end
-	screen.flip()
-end
-
---- HELP •\¦ ----------------------------------------------------------------
-
-function DrawHelp()
-	Console:Open( 26, 13 )
-	Console:print( "Usage:" )
-	Console:print( "-------" )
-	Console:print( "UP:      delete best lap" )
-	Console:print( "DOWN:    lap chart" )
-	Console:print( "LEFT:    change mode" )
-	Console:print( "RIGHT:   change mode" )
---	Console:print( "LTRIG:" )
-	Console:print( "RTRIG:   restart" )
-	Console:print( "TRIANGLE:calibration" )
-	Console:print( "START:   exit" )
-	Console:print( "SELECT:  this help" )
-	Console:print( "-------" )
-	Console:print( "OS:" .. ( OS or "PSP" ))
-	Console:print( "memory:" .. math.floor( collectgarbage( "count" )) .. "KB used" )
-	
-	screen.flip()
-end
-
---- Delete bestlap •\¦ ------------------------------------------------------
-
-function DrawDeleteLap()
-	Console:Open( 16, 3 )
-	Console:print( "Delete best lap?" )
-	Console:print( FormatLapTime( BestLap ))
-	Console:print( "   O:ok X:cancel" )
-	screen.flip()
-end
-
---- ƒVƒŠƒAƒ‹ƒf[ƒ^ˆ— -------------------------------------------------------
+--- ¥·¥ê¥¢¥ë¥Ç¡¼¥¿½èÍı -------------------------------------------------------
 
 function ProcessSio()
 	local Cmd = nil
@@ -696,7 +634,7 @@ function ProcessSio()
 		LapTimeStr = ""
 		Cmd, Num, Ret = GetLogData()
 		
-		-- ƒƒO‚ÌƒRƒ}ƒ“ƒh•Êˆ—
+		-- ¥í¥°¤Î¥³¥Ş¥ó¥ÉÊÌ½èÍı
 		
 		if	   Cmd == "T" then Tacho	= Num
 		elseif Cmd == "S" then Speed	= Num
@@ -728,7 +666,7 @@ function ProcessSio()
 			if SectorCnt >= SectorCntMax then
 				SectorCnt = 0
 				
-				-- ƒ`ƒFƒbƒNƒ|ƒCƒ“ƒg‚ğ’Ê‰ßÏ‚İ‚È‚ç‚ÎCü‰ñƒ^ƒCƒ€‚ğ‹‚ß‚é
+				-- ¥Á¥§¥Ã¥¯¥İ¥¤¥ó¥È¤òÄÌ²áºÑ¤ß¤Ê¤é¤Ğ¡¤¼ş²ó¥¿¥¤¥à¤òµá¤á¤ë
 				local bBestLap = false
 				LapTimeLaw = Num
 				
@@ -736,7 +674,7 @@ function ProcessSio()
 					local LapTimeDiff = (( Num - LapTimePrev ) / ( H8HZ / 65536 ));
 					LapTimeTable[ #LapTimeTable + 1 ] = LapTimeDiff;
 					LapTimeStr = "\tLAP" .. #LapTimeTable .. " " .. FormatLapTime( LapTimeDiff, ':' );
-					-- ƒxƒXƒgƒ‰ƒbƒv‚©?
+					-- ¥Ù¥¹¥È¥é¥Ã¥×¤«?
 					if( BestLap ) then BestLapDiff = LapTimeDiff - BestLap end
 					if( BestLap == nil or LapTimeDiff < BestLap ) then
 						if( BestLap ) then
@@ -746,7 +684,7 @@ function ProcessSio()
 					end
 				end
 				
-				-- LapTimeMode ‚Ü‚½‚ÍCŒv‘ªƒXƒ^[ƒg‚È‚çCclk ‚ğƒŠƒZƒbƒg‚·‚é
+				-- LapTimeMode ¤Ş¤¿¤Ï¡¤·×Â¬¥¹¥¿¡¼¥È¤Ê¤é¡¤clk ¤ò¥ê¥»¥Ã¥È¤¹¤ë
 			--	if( VSDMode == MODE_LAPTIME or LapTimePrev == nil ) then
 					LapTimePrev = Num;
 					if( VSDMode ~= MODE_LAPTIME or #LapTimeTable == 0 ) then
@@ -757,10 +695,10 @@ function ProcessSio()
 			--	end
 				
 				if( bBestLap ) then
-					-- ƒxƒXƒgƒ‰ƒbƒvƒTƒEƒ“ƒh
+					-- ¥Ù¥¹¥È¥é¥Ã¥×¥µ¥¦¥ó¥É
 					SndBestLap:play()
 				else
-					-- ƒ‰ƒbƒvƒTƒEƒ“ƒh
+					-- ¥é¥Ã¥×¥µ¥¦¥ó¥É
 					SndNewLap:play()
 				end
 				
@@ -768,22 +706,22 @@ function ProcessSio()
 			end
 		end
 		
-		-- ƒƒO‚É‰üs‚ª•t‚¢‚½‚Ì‚ÅC‰Â‹‰»ƒƒO‚Éo—Í
+		-- ¥í¥°¤Ë²ş¹Ô¤¬ÉÕ¤¤¤¿¤Î¤Ç¡¤²Ä»ë²½¥í¥°¤Ë½ĞÎÏ
 		
 		if( Ret ) then
 		--	if( type( NoSio ) ~= "string" ) then
 				if( bBinLog ) then
-					-- ƒoƒCƒiƒŠƒƒO
+					-- ¥Ğ¥¤¥Ê¥ê¥í¥°
 					Write16( fpLog, Tacho )
 					Write16( fpLog, Speed )
 					Write16( fpLog, Mileage )
-					Write16( fpLog, GSensorX )	-- ‘OŒãG
-					Write16( fpLog, GSensorY )	-- ¶‰EG
+					Write16( fpLog, GSensorX )	-- Á°¸åG
+					Write16( fpLog, GSensorY )	-- º¸±¦G
 					Write16( fpLog, IRSensor )
 					Write16( fpLog, LapTimeRaw )
 					Write16( fpLog, LapTimeRaw / 0x10000 )
 				else
-					-- ƒeƒLƒXƒgƒƒO
+					-- ¥Æ¥­¥¹¥È¥í¥°
 					fpLog:write( string.format(
 						"%u\t%.2f\t%.2f\t%u\t%u\t%u",
 						Tacho, Speed / 100, Mileage / PULSE_PAR_1KM * 1000,
@@ -800,7 +738,7 @@ function ProcessSio()
 	until Cmd == nil
 end
 
---- VSD ƒ‚[ƒhİ’è -----------------------------------------------------------
+--- VSD ¥â¡¼¥ÉÀßÄê -----------------------------------------------------------
 
 function SetVSDMode( mode )
 	mode = math.fmod( mode + MODE_NUM, MODE_NUM )
@@ -809,7 +747,7 @@ function SetVSDMode( mode )
 	if( mode == MODE_LAPTIME ) then
 		System.sioWrite( "l" )
 	elseif( mode == MODE_GYMKHANA	) then
-		System.sioWrite( string.format( "%Xg", GymkhanaStartMargin ))
+		System.sioWrite( string.format( "%Xg", GymkhanaStartMargin + 0.5 ))
 	elseif( mode == MODE_ZERO_FOUR	) then
 		System.sioWrite( string.format( "%Xf", StartGThrethold ))
 	elseif( mode == MODE_ZERO_ONE	) then
@@ -823,7 +761,7 @@ function SetVSDMode( mode )
 	return mode
 end
 
---- ƒL[ƒpƒbƒh ---------------------------------------------------------------
+--- ¥­¡¼¥Ñ¥Ã¥É ---------------------------------------------------------------
 
 Ctrl = {}
 
@@ -840,7 +778,24 @@ Ctrl.Pushed	= function( this, key )
 	return ( not this.Prev[ key ]( this.Prev )) and this.Now[ key ]( this.Now )
 end
 
---- ƒƒCƒ“ƒ‹[ƒv -------------------------------------------------------------
+--- ¥Õ¥¡¥¤¥ë¥ê¥¹¥È¥¢¥Ã¥× -----------------------------------------------------
+
+function ListupFiles( Ext )
+	local RetFiles = {}
+	local files = System.listDirectory()
+	
+	for i = 1, #files do
+		if( files[ i ].name:sub( -#Ext ):lower() == Ext ) then
+			RetFiles[ #RetFiles + 1 ] = files[ i ].name
+		end
+	end
+	
+	return RetFiles
+end
+
+------------------------------------------------------------------------------
+--- ¥á¥¤¥ó¥ë¡¼¥× -------------------------------------------------------------
+------------------------------------------------------------------------------
 
 DebugRefresh = 0
 CtrlPrev = Controls.read()
@@ -851,97 +806,321 @@ AutoSaveTimer:start()
 
 SectorCnt = 0;
 
-while true do
+-- °ìÄê»ş´Ö¤´¤È¤Ë½èÍı¤¹¤ë¥ë¡¼¥Á¥ó --------------------------------------------
+
+function DoIntervalProc()
+	if( OS ) then screen.waitVblankStart() end
 	
-	-- ƒVƒŠƒAƒ‹ƒf[ƒ^ˆ—
+	-- ¥·¥ê¥¢¥ë¥Ç¡¼¥¿½èÍı
 	ProcessSio()
-	
-	-- ƒL[“ü—Íˆ—
-	Ctrl:Read()
-	
-	-- ŠÔXV
-	if( PrevMin ~= os.date( "*t" ).min ) then
-		 PrevMin = os.date( "*t" ).min
-		 RedrawLap = 2
-	end
 	
 	-- autosave
 	if( AutoSaveTimer:time() >= 60 * 1000 ) then
 		AutoSaveTimer:reset()
 		AutoSaveTimer:start()
 		
-		-- ƒƒOƒtƒ@ƒCƒ‹ ƒŠƒI[ƒvƒ“
+		-- ¥í¥°¥Õ¥¡¥¤¥ë ¥ê¥ª¡¼¥×¥ó
 		if fpLog then fpLog:close() end
 		fpLog = io.open( LogFile, "ab" )
 		fpLog:setvbuf( "full", 1024 )
 	end
 	
-	--
-	if( MainMode == MAIN_MODE_NORMAL ) then
-		if Ctrl:Pushed( "r" ) then
-			-- ƒŠƒXƒ^[ƒg
-			SetVSDMode( VSDMode )
-		elseif Ctrl:Pushed( "right" ) then
-			VSDMode = SetVSDMode( VSDMode + 1 )
-		elseif Ctrl:Pushed( "left" ) then
-			VSDMode = SetVSDMode( VSDMode - 1 )
-		elseif Ctrl:Pushed( "down" ) then
-			-- ƒ‰ƒbƒvƒ`ƒƒ[ƒg
-			DrawLapChart()
-			MainMode = MAIN_MODE_MSGWINDOW
-		elseif Ctrl:Pushed( "up" ) and BestLap ~= nil then
-			-- Å‘¬ƒ‰ƒbƒvíœ
-			DrawDeleteLap()
-			MainMode = MAIN_MODE_DEL
-		elseif Ctrl:Pushed( "select" ) then
-			-- help
-			DrawHelp()
-			bDispInfo = not bDispInfo
-			MainMode = MAIN_MODE_MSGWINDOW
-		elseif Ctrl:Pushed( "triangle" ) then
-			-- calibration
-			System.sioWrite( "c" )
-		elseif( RefreshFlag ~= nil or RedrawLap > 0 ) then
-			-- ’Êí‚Ì‰æ–Êˆ—
-			RefreshFlag = nil
-			DebugRefresh = DebugRefresh - 1
+	-- ¥­¡¼ÆşÎÏ½èÍı
+	Ctrl:Read()
+end
+
+--- ¥é¥Ã¥×¥Á¥ã¡¼¥ÈÉ½¼¨ -------------------------------------------------------
+
+function DrawLapChart()
+	local Color
+	
+	Console:Open( LapChartW, LapChartH )
+	Console:print( "Lap  Time" )
+	Console:print( "---------------" )
+	local y = Console.y
+	
+	if( #LapTimeTable > 0 ) then
+		for i = 1, #LapTimeTable do
 			
-			if( RedrawLap > 0 ) then
-				DrawLap()
-				RedrawLap = RedrawLap - 1
+			if( BestLap and LapTimeTable[ i ] == BestLap ) then
+				Color = ColorLapBad
+			else
+				Color = ColorInfo
 			end
-			DrawMeters()
-			screen:flip()
-		end
-	elseif( MainMode == MAIN_MODE_MSGWINDOW ) then
-		-- ƒƒbƒZ[ƒWƒEƒBƒ“ƒhƒE•\¦’†
-		if Ctrl:Pushed( "cross" ) then
-			MainMode = MAIN_MODE_NORMAL
-			RedrawLap = 2
-		end
-	elseif( MainMode == MAIN_MODE_DEL ) then
-		-- Å‘¬ƒ‰ƒbƒvíœ
-		local NewBestLap = nil
-		
-		if Ctrl:Pushed( "circle" ) then
-			for i = 1, #LapTimeTable do
-				if( LapTimeTable[ i ] == BestLap ) then
-					LapTimeTable[ i ] = 599.999
-				elseif( NewBestLap == nil or ( LapTimeTable[ i ] < NewBestLap and LapTimeTable[ i ] < 599 )) then
-					NewBestLap = LapTimeTable[ i ]
-				end
+			
+			Console:print(
+				string.format( "%3d %s", i, FormatLapTime( LapTimeTable[ i ] )), Color
+			)
+			if( math.fmod( i, LapChartH - 2 ) == 0 ) then
+				Console:SetPos( Console.x + 15 * 8, y )
 			end
-			BestLap = NewBestLap
-			MainMode = MAIN_MODE_NORMAL
-			RedrawLap = 2
-		elseif Ctrl:Pushed( "cross" ) then
-			MainMode = MAIN_MODE_NORMAL
-			RedrawLap = 2
 		end
+	else
+		Console:print( "No results." )
 	end
 	
-	if Ctrl:Pushed( "start" ) then break end
-	if( OS ) then screen.waitVblankStart() end
+	screen.flip()
+	while( not Ctrl:Pushed( "cross" )) do
+		DoIntervalProc()
+	end
+	RedrawLap = 2
+end
+
+--- Delete bestlap É½¼¨ ------------------------------------------------------
+
+function DeleteLap()
+	if( BestLap == nil ) then return end
+	
+	-- ºÇÂ®¥é¥Ã¥×ºï½ü
+	local NewBestLap = nil
+	
+	for i = 1, #LapTimeTable do
+		if( LapTimeTable[ i ] == BestLap ) then
+			LapTimeTable[ i ] = 599.999
+		elseif( NewBestLap == nil or ( LapTimeTable[ i ] < NewBestLap and LapTimeTable[ i ] < 599 )) then
+			NewBestLap = LapTimeTable[ i ]
+		end
+	end
+	BestLap = NewBestLap
+end
+
+--- toggle info window -------------------------------------------------------
+
+function ToggleInfo()
+	bDispInfo = not bDispInfo
+end
+
+--- config ÀßÄê --------------------------------------------------------------
+
+function SaveConfig()
+	fpCfg = io.open( "config.lua", "wb" )
+	fpCfg:write(
+		"GymkhanaStartMargin=" .. GymkhanaStartMargin .. "\n" ..
+		"SectorCntMax=" .. SectorCntMax .. "\n" ..
+		'FirmWare="' .. FirmWare .. '"\n'
+	)
+	fpCfg:close()
+end
+
+function SetupMagnet( Cnt )
+	SectorCntMax = Cnt
+	SaveConfig()
+end
+
+function SetupStartDist( Dist )
+	GymkhanaStartMargin = Dist * ( PULSE_PAR_1KM / 1000 )
+	SaveConfig()
+end
+
+function SetupFirmware( Name )
+	FirmWare = Name
+	SaveConfig()
+	LoadFirmware()
+end
+
+--- ¥á¥Ë¥å¡¼ -----------------------------------------------------------------
+
+function DoMenu( Item, x, y )
+	local MenuID = 1
+	local Color
+	local BreakMenu
+	local left
+	local top
+	
+	BreakMenu = false
+	if ( y ~= nil ) and ( 32 - #Item < y ) then
+		y = 32 - #Item
+	end
+	
+	left = x
+	top  = y
+	
+	while( not BreakMenu ) do
+		screen.flip()
+		Console:Open( Item.width, #Item, x, y )
+		if( left == nil ) then
+			left = Console.x / 8
+			top  = Console.y / 8
+		end
+		
+		-- ¥¿¥¤¥È¥ë
+		--if( type( Item.title ) == "string" ) then
+		--	Console.y = Console.y - 8
+		--	Console:print( Item.title )
+		--end
+		
+		-- ¥¢¥¤¥Æ¥à
+		
+		for i = 1, #Item do
+			Color = nil
+			if( i == MenuID ) then Color = ColorMenuCursor end
+			
+			if( type( Item[ i ] ) == "table" ) then
+				Console:print( Item[ i ].title, Color )
+			else
+				Console:print( Item[ i ], Color )
+			end
+		end
+		
+		screen.flip()
+		while( 1 ) do
+			DoIntervalProc()
+			
+			if( Ctrl:Pushed( "up" )) then
+				MenuID = MenuID - 1
+				if( MenuID <= 0 ) then MenuID = #Item end
+				break
+			elseif( Ctrl:Pushed( "down" )) then
+				MenuID = MenuID + 1
+				if( MenuID > #Item ) then MenuID = 1 end
+				break
+			elseif( Ctrl:Pushed( "circle" )) then
+				if( type( Item[ MenuID ] ) == "table" ) then
+					if( type( Item[ MenuID ][ 1 ] ) == "function" ) then
+						-- ½ªÃ¼ function ¸Æ¤Ó½Ğ¤·
+						Item[ MenuID ][ 1 ]()
+					elseif( not DoMenu( Item[ MenuID ], left + 1, top + MenuID )) then
+						-- ¥µ¥Ö¥á¥Ë¥å¡¼Å¸³«
+						break	-- ¥µ¥Ö¤¬¡ß¤Ê¤Î¤Ç¡¤¤³¤Î¥á¥Ë¥å¡¼¤òºÆ³«
+					end
+				elseif( type( Item.proc ) == "function" ) then
+					-- ¶¦ÄÌ proc ¸Æ¤Ó½Ğ¤·
+					Item.proc( Item[ MenuID ] )
+				end
+				do return true end
+			elseif( Ctrl:Pushed( "cross" )) then
+				do return false end
+			end
+		end
+	end
+end
+
+-- firm ¥ê¥¹¥È¥¢¥Ã¥×
+
+FirmList = ListupFiles( ".mot" );
+FirmList.title	= "Firmware";
+FirmList.width	= 15;
+FirmList.proc	= SetupFirmware;
+
+MainMenu = {
+	title = "Main menu";
+	width = 20;
+	{
+		title = "Magnet setting";
+		width = 5;
+		proc = SetupMagnet;
+		1,
+		2,
+		3,
+		4,
+		5
+	},
+	{
+		title = "Start distance";
+		width = 5;
+		proc = SetupStartDist;
+		0.1,
+		0.2,
+		0.3,
+		0.4,
+		0.5,
+		0.6,
+		0.7,
+		0.8,
+		0.9,
+		1.0,
+		1.1,
+		1.2,
+		1.3,
+		1.4,
+		1.5,
+		1.6,
+		1.7,
+		1.8,
+		1.9,
+		2.0,
+		2.1,
+		2.2,
+		2.3,
+		2.4,
+		2.5,
+		2.6,
+		2.7,
+		2.8,
+		2.9,
+		3.0
+	},
+	
+	FirmList,
+	
+	{
+		title = "Delete fastest lap";
+		width = 13;
+		{
+			title = "O:ok X:cancel";
+			DeleteLap
+		}
+	},
+	{ title = "Toggle info window";	ToggleInfo },
+	{
+		title = "Help";
+		width = 20;
+	--	"UP:      delete best lap",
+		"DOWN:    lap chart",
+		"LEFT:    change mode",
+		"RIGHT:   change mode",
+	--	"LTRIG:",
+		"RTRIG:   restart",
+		"CIRCLE:  main menu",
+		"TRIANGLE:calibration",
+		"START:   exit",
+	--	"SELECT:  this help",
+	--	"-------",
+	--	"OS:" .. ( OS or "PSP" ),
+	}
+}
+
+-- ¥á¥¤¥ó½èÍı ----------------------------------------------------------------
+
+while true do
+	DoIntervalProc()
+	
+	if Ctrl:Pushed( "r" ) then
+		-- ¥ê¥¹¥¿¡¼¥È
+		SetVSDMode( VSDMode )
+	elseif Ctrl:Pushed( "right" ) then
+		VSDMode = SetVSDMode( VSDMode + 1 )
+	elseif Ctrl:Pushed( "left" ) then
+		VSDMode = SetVSDMode( VSDMode - 1 )
+	elseif Ctrl:Pushed( "down" ) then
+		-- ¥é¥Ã¥×¥Á¥ã¡¼¥È
+		DrawLapChart()
+	elseif Ctrl:Pushed( "circle" ) then
+		DoMenu( MainMenu )
+		RedrawLap = 2
+	elseif Ctrl:Pushed( "triangle" ) then
+		-- calibration
+		System.sioWrite( "c" )
+	elseif Ctrl:Pushed( "start" ) then
+		break
+	elseif( RefreshFlag ~= nil or RedrawLap > 0 ) then
+		-- ÄÌ¾ï¤Î²èÌÌ½èÍı
+		if( PrevMin ~= os.date( "*t" ).min ) then
+			-- »ş´Ö¹¹¿·
+			PrevMin = os.date( "*t" ).min
+			RedrawLap = 2
+		end
+		
+		RefreshFlag = nil
+		DebugRefresh = DebugRefresh - 1
+		
+		if( RedrawLap > 0 ) then
+			DrawLap()
+			RedrawLap = RedrawLap - 1
+		end
+		DrawMeters()
+		screen:flip()
+	end
 end
 
 fpLog:close()
