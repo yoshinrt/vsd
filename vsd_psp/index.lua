@@ -1,4 +1,7 @@
--- $Id$
+------------------------------------------------------------------------------
+--		VSD -- car data logger system  Copyright(C) by DDS
+--		$Id$
+------------------------------------------------------------------------------
 -- .tab=4
 
 -- シリアルポートなし (debug)
@@ -42,7 +45,7 @@ ACC_1G_Y	= 6591.556755
 TachoBar1 = { 0, 5100, 5500, 5900, 6300, 6300 }
 TachoBar2 = { 0, 5900, 6100, 6300, 6500, 6500 }
 -- TachoBar1 = { 0, 1500, 2000, 2500, 3000, 3500 }
--- TachoBar2 = TachoBar1;
+-- TachoBar2 = TachoBar1
 
 -- config
 FirmWare			= "vsd_rom.mot"	-- ファームウェア
@@ -72,7 +75,7 @@ BestLap		= nil
 BestLapDiff	= nil
 LapTimePrev	= nil
 LapTimeRaw	= 0
-SectorCnt	= 0;
+SectorCnt	= 0
 
 OS = os.getenv( "OS" )
 
@@ -142,7 +145,7 @@ ColorHist = ColorSpeed
 FontLap = Font.createMonoSpaced()
 FontLap:setPixelSizes( 0, 45 )
 ColorLap = ColorSpeed
-ColorLapBad = Color.new( 255, 80, 0 );
+ColorLapBad = Color.new( 255, 80, 0 )
 
 ColorMenuCursor = ColorLapBad
 
@@ -193,17 +196,16 @@ LapX	= 219
 LapY	= HistY
 LapW	= 242
 LapH	= HistH
+
 LapDiffX	= LapX + ( LapW - FontHist:getTextSize( '-01"28.555' ).width ) / 2
 LapClockX	= LapX + ( LapW - FontHist:getTextSize( '12:34' ).width )
-ColorLapBG = Color.new( 51, 51, 51 );
+ColorLapBG	= Color.new( 51, 51, 51 )
 RefreshFlag = nil
 
-ColorInfo = Color.new( 0, 160, 160 );
+ColorInfo	= Color.new( 0, 160, 160 )
 
 LapChartW	= 58
 LapChartH	= 32
-
-Console.Color = ColorInfo
 
 --- Image 拡張 ---------------------------------------------------------------
 
@@ -250,6 +252,8 @@ Console.Open = function( this, w, h, x, y, Color )
 	
 	this:SetPos( x + 8, y + 8 )
 end
+
+Console.Color = ColorInfo
 
 --- ラップタイムウィンドウ描画 -----------------------------------------------
 
@@ -651,7 +655,7 @@ function GetLogData()
 	
 	-- パラメータ発見
 	Cmd = RxBuf:sub( 1, 1 )
-	Num = 0;
+	Num = 0
 	
 	for i = 2, idx - 1 do
 		Num = Num * 128 + RxBuf:byte( i ) - 0x40
@@ -702,8 +706,11 @@ function ProcessSio()
 		
 		-- ログのコマンド別処理
 		
-		if	   Cmd == "T" then Tacho	= Num
-		elseif Cmd == "S" then Speed	= Num
+		if Cmd == "T" then
+			Tacho	= Num
+		elseif Cmd == "S" then
+			Speed	= Num
+			RefreshFlag = true	-- Speed を受け取ったら画面更新
 		elseif Cmd == "M" then
 			if( Num < MileagePrev ) then
 				Mileage	= Mileage + Num - MileagePrev + 0x10000
@@ -737,9 +744,9 @@ function ProcessSio()
 				LapTimeLaw = Num
 				
 				if( LapTimePrev ~= nil ) then
-					local LapTimeDiff = (( Num - LapTimePrev ) / ( H8HZ / 65536 ));
-					LapTimeTable[ #LapTimeTable + 1 ] = LapTimeDiff;
-					LapTimeStr = "\tLAP" .. #LapTimeTable .. " " .. FormatLapTime( LapTimeDiff, ':' );
+					local LapTimeDiff = (( Num - LapTimePrev ) / ( H8HZ / 65536 ))
+					LapTimeTable[ #LapTimeTable + 1 ] = LapTimeDiff
+					LapTimeStr = "\tLAP" .. #LapTimeTable .. " " .. FormatLapTime( LapTimeDiff, ':' )
 					-- ベストラップか?
 					if( BestLap ) then BestLapDiff = LapTimeDiff - BestLap end
 					if( BestLap == nil or LapTimeDiff < BestLap ) then
@@ -748,17 +755,12 @@ function ProcessSio()
 						end
 						BestLap = LapTimeDiff
 					end
+				else
+					-- スタートラインを始めて通過したので，マーカー出力
+					LapTimeStr = "\tLAP" .. ( #LapTimeTable + 1 ) .. " start"
 				end
 				
-				-- LapTimeMode または，計測スタートなら，clk をリセットする
-			--	if( VSDMode == MODE_LAPTIME or LapTimePrev == nil ) then
-					LapTimePrev = Num;
-					if( VSDMode ~= MODE_LAPTIME or #LapTimeTable == 0 ) then
-						LapTimeStr = "\tLAP" .. ( #LapTimeTable + 1 ) .. " start"
-					end
-			--	else
-			--		LapTimePrev = nil;
-			--	end
+				LapTimePrev = Num
 				
 				if( bBestLap ) then
 					-- ベストラップサウンド
@@ -798,8 +800,7 @@ function ProcessSio()
 				end
 		--	end
 			
-			RefreshFlag = true
-			DebugRefresh = DebugRefresh + 1
+		--	DebugRefresh = DebugRefresh + 1
 		end
 	until Cmd == nil
 end
@@ -962,10 +963,10 @@ end
 
 -- firm リストアップ
 
-FirmList = ListupFiles( ".mot" );
-FirmList.title	= "Firmware";
-FirmList.width	= 15;
-FirmList.proc	= SetupFirmware;
+FirmList = ListupFiles( ".mot" )
+FirmList.title	= "Firmware"
+FirmList.width	= 15
+FirmList.proc	= SetupFirmware
 
 MainMenu = {
 	title = "Main menu";
@@ -1030,7 +1031,7 @@ else
 	LoadFirmware()
 end
 
-DebugRefresh = 0
+-- DebugRefresh = 0
 CtrlPrev = Controls.read()
 PrevMin = 99
 
@@ -1045,19 +1046,21 @@ function DoIntervalProc()
 	-- シリアルデータ処理
 	ProcessSio()
 	
-	-- autosave
-	if( AutoSaveTimer:time() >= 60 * 1000 ) then
-		AutoSaveTimer:reset()
-		AutoSaveTimer:start()
+	if( RefreshFlag == nil ) then
+		-- autosave
+		if( AutoSaveTimer:time() >= 60 * 1000 ) then
+			AutoSaveTimer:reset()
+			AutoSaveTimer:start()
+			
+			-- ログファイル リオープン
+			if fpLog then fpLog:close() end
+			fpLog = io.open( LogFile, "ab" )
+			fpLog:setvbuf( "full", 1024 )
+		end
 		
-		-- ログファイル リオープン
-		if fpLog then fpLog:close() end
-		fpLog = io.open( LogFile, "ab" )
-		fpLog:setvbuf( "full", 1024 )
+		-- キー入力処理
+		Ctrl:Read()
 	end
-	
-	-- キー入力処理
-	Ctrl:Read()
 end
 
 -- メイン処理 ----------------------------------------------------------------
@@ -1065,7 +1068,24 @@ end
 while true do
 	DoIntervalProc()
 	
-	if Ctrl:Pushed( "r" ) then
+	if( RefreshFlag ~= nil or RedrawLap > 0 ) then
+		-- 通常の画面処理
+		if( PrevMin ~= os.date( "*t" ).min ) then
+			-- 時間更新
+			PrevMin = os.date( "*t" ).min
+			RedrawLap = 2
+		end
+		
+		RefreshFlag = nil
+		-- DebugRefresh = DebugRefresh - 1
+		
+		if( RedrawLap > 0 ) then
+			DrawLap()
+			RedrawLap = RedrawLap - 1
+		end
+		DrawMeters()
+		screen:flip()
+	elseif Ctrl:Pushed( "r" ) then
 		-- リスタート
 		SetVSDMode( VSDMode )
 	elseif Ctrl:Pushed( "right" ) then
@@ -1083,23 +1103,6 @@ while true do
 		System.sioWrite( "c" )
 	elseif Ctrl:Pushed( "start" ) then
 		break
-	elseif( RefreshFlag ~= nil or RedrawLap > 0 ) then
-		-- 通常の画面処理
-		if( PrevMin ~= os.date( "*t" ).min ) then
-			-- 時間更新
-			PrevMin = os.date( "*t" ).min
-			RedrawLap = 2
-		end
-		
-		RefreshFlag = nil
-		DebugRefresh = DebugRefresh - 1
-		
-		if( RedrawLap > 0 ) then
-			DrawLap()
-			RedrawLap = RedrawLap - 1
-		end
-		DrawMeters()
-		screen:flip()
 	end
 end
 
