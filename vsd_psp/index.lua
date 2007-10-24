@@ -54,9 +54,6 @@ dofile( "config.lua" )
 
 --- gloval vars --------------------------------------------------------------
 
--- ---
-RxBuf = ""
-
 Tacho		= 0
 Speed		= 0
 Mileage		= 0
@@ -64,8 +61,6 @@ MileagePrev	= 0
 GSensorX	= 0
 GSensorY	= 0
 IRSensor	= 0
-
-fpLog	= nil;
 
 -- 画面モード・動作モード
 VSDMode	= MODE_LAPTIME
@@ -77,8 +72,138 @@ BestLap		= nil
 BestLapDiff	= nil
 LapTimePrev	= nil
 LapTimeRaw	= 0
+SectorCnt	= 0;
 
 OS = os.getenv( "OS" )
+
+------------------------------------------------------------------------------
+-- Utility -------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+--- file 拡張 ----------------------------------------------------------------
+
+Write16 = function( fp, Num )
+	Num = math.floor( math.fmod( Num, 0x10000 ))
+	fp:write(
+		string.char( math.fmod( Num, 0x100 )) ..
+		string.char( math.floor( Num / 0x100 ))
+	)
+end
+
+--- ファイルリストアップ -----------------------------------------------------
+
+function ListupFiles( Ext )
+	local RetFiles = {}
+	local files = System.listDirectory()
+	
+	for i = 1, #files do
+		if( files[ i ].name:sub( -#Ext ):lower() == Ext ) then
+			RetFiles[ #RetFiles + 1 ] = files[ i ].name
+		end
+	end
+	
+	return RetFiles
+end
+
+--- キーパッド ---------------------------------------------------------------
+
+Ctrl = {}
+
+Ctrl.Prev = Controls.read()
+Ctrl.Now  = Controls.read()
+
+Ctrl.Read = function( this )
+	this.Prev = this.Now
+	this.Now = Controls.read()
+	return this.Now:buttons() ~= this.Prev:buttons()
+end
+
+Ctrl.Pushed	= function( this, key )
+	return ( not this.Prev[ key ]( this.Prev )) and this.Now[ key ]( this.Now )
+end
+
+------------------------------------------------------------------------------
+-- Display Driver ------------------------------------------------------------
+------------------------------------------------------------------------------
+
+-- Console:SetPos( 0, 0 )
+-- Console:print( "loading font" ); screen.flip()
+
+-- フォント初期化
+FontSpeed = Font.createMonoSpaced()
+FontSpeed:setPixelSizes( 0, 100 )
+ColorSpeed = Color.new( 102, 255, 255 )
+ColorMeter = ColorSpeed
+
+FontHist = Font.createMonoSpaced()
+FontHist:setPixelSizes( 22, 25 )
+ColorHist = ColorSpeed
+
+FontLap = Font.createMonoSpaced()
+FontLap:setPixelSizes( 0, 45 )
+ColorLap = ColorSpeed
+ColorLapBad = Color.new( 255, 80, 0 );
+
+ColorMenuCursor = ColorLapBad
+
+-- 背景ロード
+-- Console:print( "loading tacho image" ); screen.flip()
+
+fpImg = io.open( "vsd_tacho.png", "rb" ); ImgData = fpImg:read( "*a" ); fpImg:close()
+ImageTacho = Image.loadFromMemory( ImgData )
+
+ImageSpeed = {}
+
+for i = 1, 5 do
+	-- Console:print( "loading speed image" .. i ); screen.flip()
+	fpImg = io.open( "vsd_speed" .. i .. ".png", "rb" ); ImgData = fpImg:read( "*a" ); fpImg:close()
+	ImageSpeed[ i ] = Image.loadFromMemory( ImgData )
+end
+
+-- Console:print( "loading G image" ); screen.flip()
+fpImg = io.open( "vsd_g.png", "rb" ); ImgData = fpImg:read( "*a" ); fpImg:close()
+ImageG = Image.loadFromMemory( ImgData )
+
+-- Console:print( "init completed." ); screen.flip()
+
+-- 画面パラメータ
+TachoCx			= 60
+TachoCy			= 60
+TachoMeterR		= 48
+TachoMeterStart	= math.pi / 4
+TachoMeterMaxRev= 8000
+
+GMeterCx	= 366 + 106 / 2 - ( 480 - ImageG:width())
+GMeterCy	= TachoCy
+GMeterIndicatorSize	= 2
+GMeterR		= 106 / 4
+
+SpeedY		= 38
+SpeedH		= 113
+FontSize	= FontSpeed:getTextSize( "888" )
+SpeedX		= 240 - FontSize.width / 2
+SpeedY		= SpeedH / 2 + SpeedY + FontSize.height / 2
+
+HistX	= 22
+HistY	= 181
+HistW	= 174
+HistH	= 84
+
+LapX	= 219
+LapY	= HistY
+LapW	= 242
+LapH	= HistH
+LapDiffX	= LapX + ( LapW - FontHist:getTextSize( '-01"28.555' ).width ) / 2
+LapClockX	= LapX + ( LapW - FontHist:getTextSize( '12:34' ).width )
+ColorLapBG = Color.new( 51, 51, 51 );
+RefreshFlag = nil
+
+ColorInfo = Color.new( 0, 160, 160 );
+
+LapChartW	= 58
+LapChartH	= 32
+
+Console.Color = ColorInfo
 
 --- Image 拡張 ---------------------------------------------------------------
 
@@ -90,16 +215,6 @@ Image.drawRect = function( this, x, y, w, h, Color )
 end
 
 screen.drawRect = Image.drawRect
-
---- file 拡張 ----------------------------------------------------------------
-
-Write16 = function( fp, Num )
-	Num = math.floor( math.fmod( Num, 0x10000 ))
-	fp:write(
-		string.char( math.fmod( Num, 0x100 )) ..
-		string.char( math.floor( Num / 0x100 ))
-	)
-end
 
 --- コンソール風出力 ---------------------------------------------------------
 
@@ -135,6 +250,215 @@ Console.Open = function( this, w, h, x, y, Color )
 	
 	this:SetPos( x + 8, y + 8 )
 end
+
+--- ラップタイムウィンドウ描画 -----------------------------------------------
+
+function DrawLap()
+	local str
+	local Color
+	
+	-- ラップタイム履歴
+	screen:clear()
+	screen:fillRect( HistX, HistY, HistW, HistH, ColorLapBG )
+	screen:fillRect( LapX, LapY, LapW, LapH, ColorLapBG )
+	
+	if( BestLap ~= nil ) then
+		str = 'Fst ' .. FormatLapTime( BestLap )
+	else
+		str = 'Fst --"--.---', ColorHist
+	end
+	screen:fontPrint( FontHist, HistX, HistY + HistH / 3 * 1, str, ColorHist )
+	
+	if( #LapTimeTable >= 2 ) then
+		screen:fontPrint(
+			FontHist, HistX, HistY + HistH / 3 * 2,
+			string.format( "%3d ", #LapTimeTable - 1 ) .. FormatLapTime( LapTimeTable[ #LapTimeTable - 1 ] ), ColorHist
+		)
+	end
+	
+	if( #LapTimeTable >= 3 ) then
+		screen:fontPrint(
+			FontHist, HistX, HistY + HistH / 3 * 3,
+			string.format( "%3d ", #LapTimeTable - 2 ) .. FormatLapTime( LapTimeTable[ #LapTimeTable - 2 ] ), ColorHist
+		)
+	end
+	
+	-- ラップタイム
+	if( #LapTimeTable > 0 ) then
+		str = FormatLapTime( LapTimeTable[ #LapTimeTable ] )
+	else
+		str = '--"--.---'
+	end
+	screen:fontPrint( FontLap, LapX, LapY + LapH / 3 * 1.2, str, ColorLap )
+	
+	if( BestLapDiff == nil ) then
+		str = '  -"--.---'
+		Color = ColorLap
+	elseif( BestLapDiff < 0 ) then
+		str = "-" .. FormatLapTime( -BestLapDiff )
+		Color = ColorLap
+	else
+		str = "+" .. FormatLapTime( BestLapDiff )
+		Color = ColorLapBad
+	end
+	screen:fontPrint( FontHist, LapDiffX, LapY + LapH / 3 * 2, str, Color )
+	
+	-- その他 info 描画
+	if    ( VSDMode == MODE_LAPTIME		) then str = "LAP"
+	elseif( VSDMode == MODE_GYMKHANA	) then str = "GYMKA"
+	elseif( VSDMode == MODE_ZERO_FOUR	) then str = "0-400 "
+	elseif( VSDMode == MODE_ZERO_ONE	) then str = "0-100 "
+	end
+	str = str .. #LapTimeTable
+	if( LapTimePrev == nil ) then str = str .. " RDY" end
+	
+	screen:fontPrint( FontHist, LapX, LapY + LapH, str, ColorInfo )
+	screen:fontPrint( FontHist, LapClockX, LapY + LapH, os.date( "%k:%M" ), ColorInfo )
+end
+
+--- メーター類描画 -----------------------------------------------------------
+
+Blink = nil
+
+function DrawMeters()
+	local TachoBar
+	local BarLv
+	
+	-- スピードメーター
+	if(( Speed >= 30000 ) and ( Tacho == 0 )) then
+		-- キャリブレーション表示
+		BarLv = 5
+		Blink = nil
+	else
+		-- LED の表示 LV を求める
+		if( Speed >= 7000 ) then
+			TachoBar = TachoBar2
+		else
+			TachoBar = TachoBar1
+		end
+		
+		for i = 6, 1, -1 do
+			if( Tacho >= TachoBar[ i ] ) then
+				BarLv = i
+				break
+			end
+		end
+		
+		if( BarLv == 6 ) then
+			BarLv = 5
+			if( Blink ) then BarLv = 1; end
+			Blink = not Blink
+		else
+			Blink = nil
+		end
+	end
+	
+	screen:blit( ImageTacho:width(), 0, ImageSpeed[ BarLv ] )
+	screen:fontPrint( FontSpeed, SpeedX, SpeedY, string.format( "%3d", Speed / 100 ), ColorSpeed )
+	
+	-- タコメータの描画
+	screen:blit( 0, 0, ImageTacho )
+	TachoRad = Tacho / TachoMeterMaxRev * 2 * math.pi + TachoMeterStart
+	screen:drawLine(
+		TachoCx, TachoCy,
+		TachoCx + TachoMeterR * math.cos( TachoRad ),
+		TachoCy + TachoMeterR * math.sin( TachoRad ),
+		ColorMeter
+	)
+	screen:print( TachoCx + 20, TachoCy + 10, string.format( "%4d", Tacho ), ColorMeter )
+	
+	-- Gセンサ描画
+	
+	if( GxTmp ) then
+		ImageG:fillRect(
+			GxTmp, GyTmp,
+			GMeterIndicatorSize,
+			GMeterIndicatorSize,
+			ColorLapBG
+		)
+	end
+	
+	if( GSensorCaribCnt == 0 ) then
+		GxTmp, GyTmp = 
+			GMeterCx + -( GSensorY - GSensorCy ) / ACC_1G_Y * GMeterR - GMeterIndicatorSize / 2,
+			GMeterCy + -( GSensorX - GSensorCx ) / ACC_1G_X * GMeterR - GMeterIndicatorSize / 2
+		
+		ImageG:fillRect(
+			GxTmp, GyTmp,
+			GMeterIndicatorSize,
+			GMeterIndicatorSize,
+			ColorMeter
+		)
+	end
+	screen:blit( 480 - ImageG:width(), 0, ImageG )
+	
+	-- その他の情報
+	if( bDispInfo ) then
+		Console:Open( 10, 4, 47, 15 )
+	--	Console:print( os.date( "%y/%m/%d" ))
+	--	Console:print( os.date( "%H:%M:%S" ))
+		Console:print( string.format( "%8.3fkm", Mileage / PULSE_PAR_1KM ))
+		Console:print( string.format( "%d", SectorCnt ))
+	--	Console:print( AutoSaveTimer:time())
+	--	Console:print( DebugRefresh )
+	end
+end
+
+--- ラップチャート表示 -------------------------------------------------------
+
+function DrawLapChart()
+	local Color
+	
+	Console:Open( LapChartW, LapChartH )
+	Console:print( "Lap  Time" )
+	Console:print( "---------------" )
+	local y = Console.y
+	
+	if( #LapTimeTable > 0 ) then
+		for i = 1, #LapTimeTable do
+			
+			if( BestLap and LapTimeTable[ i ] == BestLap ) then
+				Color = ColorLapBad
+			else
+				Color = ColorInfo
+			end
+			
+			Console:print(
+				string.format( "%3d %s", i, FormatLapTime( LapTimeTable[ i ] )), Color
+			)
+			if( math.fmod( i, LapChartH - 2 ) == 0 ) then
+				Console:SetPos( Console.x + 15 * 8, y )
+			end
+		end
+	else
+		Console:print( "No results." )
+	end
+	
+	screen.flip()
+	while( not Ctrl:Pushed( "cross" )) do
+		DoIntervalProc()
+	end
+	RedrawLap = 2
+end
+
+------------------------------------------------------------------------------
+-- VSD HW Driver -------------------------------------------------------------
+------------------------------------------------------------------------------
+
+RxBuf	= ""
+fpLog	= nil
+
+-- Gセンサキャリブレーション
+
+GSensorCaribCntMax = 15
+GSensorCaribCnt = GSensorCaribCntMax
+GSensorCx	= 0
+GSensorCy	= 0
+
+-- サウンドロード
+
+SndBestLap = Sound.load( "best_lap.wav" )
+SndNewLap  = Sound.load( "new_lap.wav" )
 
 --- load firmware ------------------------------------------------------------
 
@@ -366,264 +690,6 @@ function FormatLapTime( Time, Ch )
 	)
 end
 
---- main ---------------------------------------------------------------------
-
-Console:SetPos( 0, 0 )
--- Console:print( "loading firmware" ); screen.flip()
-
--- sio 初期化・ファームロード
-if( NoSio ) then
-	-- ログファイル リオープン
-	LogFile = "vsd.log"
-	fpLog = io.open( os.date( LogFile ), "wb" )
-else
-	System.sioInit( 38400 )
-	LoadFirmware()
-end
-
--- Console:print( "loading font" ); screen.flip()
-
--- フォント初期化
-FontSpeed = Font.createMonoSpaced()
-FontSpeed:setPixelSizes( 0, 100 )
-ColorSpeed = Color.new( 102, 255, 255 )
-ColorMeter = ColorSpeed
-
-FontHist = Font.createMonoSpaced()
-FontHist:setPixelSizes( 22, 25 )
-ColorHist = ColorSpeed
-
-FontLap = Font.createMonoSpaced()
-FontLap:setPixelSizes( 0, 45 )
-ColorLap = ColorSpeed
-ColorLapBad = Color.new( 255, 80, 0 );
-
-ColorMenuCursor = ColorLapBad
-
--- 背景ロード
--- Console:print( "loading tacho image" ); screen.flip()
-
-fpImg = io.open( "vsd_tacho.png", "rb" ); ImgData = fpImg:read( "*a" ); fpImg:close()
-ImageTacho = Image.loadFromMemory( ImgData )
-
-ImageSpeed = {}
-
-for i = 1, 5 do
-	-- Console:print( "loading speed image" .. i ); screen.flip()
-	fpImg = io.open( "vsd_speed" .. i .. ".png", "rb" ); ImgData = fpImg:read( "*a" ); fpImg:close()
-	ImageSpeed[ i ] = Image.loadFromMemory( ImgData )
-end
-
--- Console:print( "loading G image" ); screen.flip()
-fpImg = io.open( "vsd_g.png", "rb" ); ImgData = fpImg:read( "*a" ); fpImg:close()
-ImageG = Image.loadFromMemory( ImgData )
-
--- Console:print( "init completed." ); screen.flip()
-
--- 画面パラメータ
-TachoCx			= 60
-TachoCy			= 60
-TachoMeterR		= 48
-TachoMeterStart	= math.pi / 4
-TachoMeterMaxRev= 8000
-
-GMeterCx	= 366 + 106 / 2 - ( 480 - ImageG:width())
-GMeterCy	= TachoCy
-GMeterIndicatorSize	= 2
-GMeterR		= 106 / 4
-
-SpeedY		= 38
-SpeedH		= 113
-FontSize	= FontSpeed:getTextSize( "888" )
-SpeedX		= 240 - FontSize.width / 2
-SpeedY		= SpeedH / 2 + SpeedY + FontSize.height / 2
-
-HistX	= 22
-HistY	= 181
-HistW	= 174
-HistH	= 84
-
-LapX	= 219
-LapY	= HistY
-LapW	= 242
-LapH	= HistH
-LapDiffX	= LapX + ( LapW - FontHist:getTextSize( '-01"28.555' ).width ) / 2
-LapClockX	= LapX + ( LapW - FontHist:getTextSize( '12:34' ).width )
-ColorLapBG = Color.new( 51, 51, 51 );
-RefreshFlag = nil
-
-ColorInfo = Color.new( 0, 160, 160 );
-
-LapChartW	= 58
-LapChartH	= 32
-
--- Gセンサキャリブレーション
-
-GSensorCaribCntMax = 15
-GSensorCaribCnt = GSensorCaribCntMax
-GSensorCx	= 0
-GSensorCy	= 0
-
-Console.Color = ColorInfo
-
--- サウンドロード
-
-SndBestLap = Sound.load( "best_lap.wav" )
-SndNewLap  = Sound.load( "new_lap.wav" )
-
---- ラップタイムウィンドウ描画 -----------------------------------------------
-
-function DrawLap()
-	local str
-	local Color
-	
-	-- ラップタイム履歴
-	screen:clear()
-	screen:fillRect( HistX, HistY, HistW, HistH, ColorLapBG )
-	screen:fillRect( LapX, LapY, LapW, LapH, ColorLapBG )
-	
-	if( BestLap ~= nil ) then
-		str = 'Fst ' .. FormatLapTime( BestLap )
-	else
-		str = 'Fst --"--.---', ColorHist
-	end
-	screen:fontPrint( FontHist, HistX, HistY + HistH / 3 * 1, str, ColorHist )
-	
-	if( #LapTimeTable >= 2 ) then
-		screen:fontPrint(
-			FontHist, HistX, HistY + HistH / 3 * 2,
-			string.format( "%3d ", #LapTimeTable - 1 ) .. FormatLapTime( LapTimeTable[ #LapTimeTable - 1 ] ), ColorHist
-		)
-	end
-	
-	if( #LapTimeTable >= 3 ) then
-		screen:fontPrint(
-			FontHist, HistX, HistY + HistH / 3 * 3,
-			string.format( "%3d ", #LapTimeTable - 2 ) .. FormatLapTime( LapTimeTable[ #LapTimeTable - 2 ] ), ColorHist
-		)
-	end
-	
-	-- ラップタイム
-	if( #LapTimeTable > 0 ) then
-		str = FormatLapTime( LapTimeTable[ #LapTimeTable ] )
-	else
-		str = '--"--.---'
-	end
-	screen:fontPrint( FontLap, LapX, LapY + LapH / 3 * 1.2, str, ColorLap )
-	
-	if( BestLapDiff == nil ) then
-		str = '  -"--.---'
-		Color = ColorLap
-	elseif( BestLapDiff < 0 ) then
-		str = "-" .. FormatLapTime( -BestLapDiff )
-		Color = ColorLap
-	else
-		str = "+" .. FormatLapTime( BestLapDiff )
-		Color = ColorLapBad
-	end
-	screen:fontPrint( FontHist, LapDiffX, LapY + LapH / 3 * 2, str, Color )
-	
-	-- その他 info 描画
-	if    ( VSDMode == MODE_LAPTIME		) then str = "LAP"
-	elseif( VSDMode == MODE_GYMKHANA	) then str = "GYMKA"
-	elseif( VSDMode == MODE_ZERO_FOUR	) then str = "0-400 "
-	elseif( VSDMode == MODE_ZERO_ONE	) then str = "0-100 "
-	end
-	str = str .. #LapTimeTable
-	if( LapTimePrev == nil ) then str = str .. " RDY" end
-	
-	screen:fontPrint( FontHist, LapX, LapY + LapH, str, ColorInfo )
-	screen:fontPrint( FontHist, LapClockX, LapY + LapH, os.date( "%k:%M" ), ColorInfo )
-end
-
---- メーター類描画 -----------------------------------------------------------
-
-Blink = nil
-
-function DrawMeters()
-	local TachoBar
-	local BarLv
-	
-	-- スピードメーター
-	if(( Speed >= 30000 ) and ( Tacho == 0 )) then
-		-- キャリブレーション表示
-		BarLv = 5
-		Blink = nil
-	else
-		-- LED の表示 LV を求める
-		if( Speed >= 7000 ) then
-			TachoBar = TachoBar2
-		else
-			TachoBar = TachoBar1
-		end
-		
-		for i = 6, 1, -1 do
-			if( Tacho >= TachoBar[ i ] ) then
-				BarLv = i
-				break
-			end
-		end
-		
-		if( BarLv == 6 ) then
-			BarLv = 5
-			if( Blink ) then BarLv = 1; end
-			Blink = not Blink
-		else
-			Blink = nil
-		end
-	end
-	
-	screen:blit( ImageTacho:width(), 0, ImageSpeed[ BarLv ] )
-	screen:fontPrint( FontSpeed, SpeedX, SpeedY, string.format( "%3d", Speed / 100 ), ColorSpeed )
-	
-	-- タコメータの描画
-	screen:blit( 0, 0, ImageTacho )
-	TachoRad = Tacho / TachoMeterMaxRev * 2 * math.pi + TachoMeterStart
-	screen:drawLine(
-		TachoCx, TachoCy,
-		TachoCx + TachoMeterR * math.cos( TachoRad ),
-		TachoCy + TachoMeterR * math.sin( TachoRad ),
-		ColorMeter
-	)
-	screen:print( TachoCx + 20, TachoCy + 10, string.format( "%4d", Tacho ), ColorMeter )
-	
-	-- Gセンサ描画
-	
-	if( GxTmp ) then
-		ImageG:fillRect(
-			GxTmp, GyTmp,
-			GMeterIndicatorSize,
-			GMeterIndicatorSize,
-			ColorLapBG
-		)
-	end
-	
-	if( GSensorCaribCnt == 0 ) then
-		GxTmp, GyTmp = 
-			GMeterCx + -( GSensorY - GSensorCy ) / ACC_1G_Y * GMeterR - GMeterIndicatorSize / 2,
-			GMeterCy + -( GSensorX - GSensorCx ) / ACC_1G_X * GMeterR - GMeterIndicatorSize / 2
-		
-		ImageG:fillRect(
-			GxTmp, GyTmp,
-			GMeterIndicatorSize,
-			GMeterIndicatorSize,
-			ColorMeter
-		)
-	end
-	screen:blit( 480 - ImageG:width(), 0, ImageG )
-	
-	-- その他の情報
-	if( bDispInfo ) then
-		Console:Open( 10, 4, 47, 15 )
-	--	Console:print( os.date( "%y/%m/%d" ))
-	--	Console:print( os.date( "%H:%M:%S" ))
-		Console:print( string.format( "%8.3fkm", Mileage / PULSE_PAR_1KM ))
-		Console:print( string.format( "%d", SectorCnt ))
-	--	Console:print( AutoSaveTimer:time())
-	--	Console:print( DebugRefresh )
-	end
-end
-
 --- シリアルデータ処理 -------------------------------------------------------
 
 function ProcessSio()
@@ -761,110 +827,9 @@ function SetVSDMode( mode )
 	return mode
 end
 
---- キーパッド ---------------------------------------------------------------
-
-Ctrl = {}
-
-Ctrl.Prev = Controls.read()
-Ctrl.Now  = Controls.read()
-
-Ctrl.Read = function( this )
-	this.Prev = this.Now
-	this.Now = Controls.read()
-	return this.Now:buttons() ~= this.Prev:buttons()
-end
-
-Ctrl.Pushed	= function( this, key )
-	return ( not this.Prev[ key ]( this.Prev )) and this.Now[ key ]( this.Now )
-end
-
---- ファイルリストアップ -----------------------------------------------------
-
-function ListupFiles( Ext )
-	local RetFiles = {}
-	local files = System.listDirectory()
-	
-	for i = 1, #files do
-		if( files[ i ].name:sub( -#Ext ):lower() == Ext ) then
-			RetFiles[ #RetFiles + 1 ] = files[ i ].name
-		end
-	end
-	
-	return RetFiles
-end
-
 ------------------------------------------------------------------------------
---- メインループ -------------------------------------------------------------
+--- メニュー処理 -------------------------------------------------------------
 ------------------------------------------------------------------------------
-
-DebugRefresh = 0
-CtrlPrev = Controls.read()
-PrevMin = 99
-
-AutoSaveTimer = Timer.new()
-AutoSaveTimer:start()
-
-SectorCnt = 0;
-
--- 一定時間ごとに処理するルーチン --------------------------------------------
-
-function DoIntervalProc()
-	if( OS ) then screen.waitVblankStart() end
-	
-	-- シリアルデータ処理
-	ProcessSio()
-	
-	-- autosave
-	if( AutoSaveTimer:time() >= 60 * 1000 ) then
-		AutoSaveTimer:reset()
-		AutoSaveTimer:start()
-		
-		-- ログファイル リオープン
-		if fpLog then fpLog:close() end
-		fpLog = io.open( LogFile, "ab" )
-		fpLog:setvbuf( "full", 1024 )
-	end
-	
-	-- キー入力処理
-	Ctrl:Read()
-end
-
---- ラップチャート表示 -------------------------------------------------------
-
-function DrawLapChart()
-	local Color
-	
-	Console:Open( LapChartW, LapChartH )
-	Console:print( "Lap  Time" )
-	Console:print( "---------------" )
-	local y = Console.y
-	
-	if( #LapTimeTable > 0 ) then
-		for i = 1, #LapTimeTable do
-			
-			if( BestLap and LapTimeTable[ i ] == BestLap ) then
-				Color = ColorLapBad
-			else
-				Color = ColorInfo
-			end
-			
-			Console:print(
-				string.format( "%3d %s", i, FormatLapTime( LapTimeTable[ i ] )), Color
-			)
-			if( math.fmod( i, LapChartH - 2 ) == 0 ) then
-				Console:SetPos( Console.x + 15 * 8, y )
-			end
-		end
-	else
-		Console:print( "No results." )
-	end
-	
-	screen.flip()
-	while( not Ctrl:Pushed( "cross" )) do
-		DoIntervalProc()
-	end
-	RedrawLap = 2
-end
 
 --- Delete bestlap 表示 ------------------------------------------------------
 
@@ -1009,45 +974,15 @@ MainMenu = {
 		title = "Magnet setting";
 		width = 5;
 		proc = SetupMagnet;
-		1,
-		2,
-		3,
-		4,
-		5
+		1, 2, 3, 4, 5
 	},
 	{
 		title = "Start distance";
 		width = 5;
 		proc = SetupStartDist;
-		0.1,
-		0.2,
-		0.3,
-		0.4,
-		0.5,
-		0.6,
-		0.7,
-		0.8,
-		0.9,
-		1.0,
-		1.1,
-		1.2,
-		1.3,
-		1.4,
-		1.5,
-		1.6,
-		1.7,
-		1.8,
-		1.9,
-		2.0,
-		2.1,
-		2.2,
-		2.3,
-		2.4,
-		2.5,
-		2.6,
-		2.7,
-		2.8,
-		2.9,
+		     0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
+		1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9,
+		2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9,
 		3.0
 	},
 	
@@ -1079,6 +1014,51 @@ MainMenu = {
 	--	"OS:" .. ( OS or "PSP" ),
 	}
 }
+
+------------------------------------------------------------------------------
+--- メインループ -------------------------------------------------------------
+------------------------------------------------------------------------------
+
+-- Console:print( "loading firmware" ); screen.flip()
+-- sio 初期化・ファームロード
+if( NoSio ) then
+	-- ログファイル リオープン
+	LogFile = "vsd.log"
+	fpLog = io.open( os.date( LogFile ), "wb" )
+else
+	System.sioInit( 38400 )
+	LoadFirmware()
+end
+
+DebugRefresh = 0
+CtrlPrev = Controls.read()
+PrevMin = 99
+
+AutoSaveTimer = Timer.new()
+AutoSaveTimer:start()
+
+-- 一定時間ごとに処理するルーチン --------------------------------------------
+
+function DoIntervalProc()
+	if( OS ) then screen.waitVblankStart() end
+	
+	-- シリアルデータ処理
+	ProcessSio()
+	
+	-- autosave
+	if( AutoSaveTimer:time() >= 60 * 1000 ) then
+		AutoSaveTimer:reset()
+		AutoSaveTimer:start()
+		
+		-- ログファイル リオープン
+		if fpLog then fpLog:close() end
+		fpLog = io.open( LogFile, "ab" )
+		fpLog:setvbuf( "full", 1024 )
+	end
+	
+	-- キー入力処理
+	Ctrl:Read()
+end
 
 -- メイン処理 ----------------------------------------------------------------
 
