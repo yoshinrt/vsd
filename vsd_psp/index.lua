@@ -5,7 +5,7 @@
 -- .tab=4
 
 -- シリアルポートなし (debug)
-NoSio = "vsd20070421_142959.log"
+-- NoSio = "vsd20070421_142959.log"
 -- NoSio = true
 
 -- バイナリログ
@@ -67,15 +67,15 @@ IRSensor	= 0
 
 -- 画面モード・動作モード
 VSDMode	= MODE_LAPTIME
-RedrawLap = 2
+RedrawLap	= 2
 
 -- ラップタイム記録
-LapTimeTable = {}
-BestLap		= nil
-BestLapDiff	= nil
-LapTimePrev	= nil
-LapTimeRaw	= 0
-SectorCnt	= 0
+LapTimeTable	= {}
+BestLap			= nil
+BestLapDiff		= nil
+LapTimePrev		= nil
+LapTimeRaw		= 0
+SectorCnt		= 0
 
 OS = os.getenv( "OS" )
 
@@ -118,7 +118,7 @@ Ctrl.Now  = Controls.read()
 Ctrl.Read = function( this )
 	this.Prev = this.Now
 	this.Now = Controls.read()
-	return this.Now:buttons() ~= this.Prev:buttons()
+	-- return this.Now:buttons() ~= this.Prev:buttons()
 end
 
 Ctrl.Pushed	= function( this, key )
@@ -399,12 +399,8 @@ function DrawMeters()
 	-- その他の情報
 	if( bDispInfo ) then
 		Console:Open( 10, 4, 47, 15 )
-	--	Console:print( os.date( "%y/%m/%d" ))
-	--	Console:print( os.date( "%H:%M:%S" ))
 		Console:print( string.format( "%8.3fkm", Mileage / PULSE_PAR_1KM ))
-		Console:print( string.format( "%d", SectorCnt ))
-	--	Console:print( AutoSaveTimer:time())
-	--	Console:print( DebugRefresh )
+		Console:print( string.format( "Sector:%d", SectorCnt ))
 	end
 end
 
@@ -711,6 +707,7 @@ function ProcessSio()
 		elseif Cmd == "S" then
 			Speed	= Num
 			RefreshFlag = true	-- Speed を受け取ったら画面更新
+			break
 		elseif Cmd == "M" then
 			if( Num < MileagePrev ) then
 				Mileage	= Mileage + Num - MileagePrev + 0x10000
@@ -963,7 +960,7 @@ end
 
 -- firm リストアップ
 
-FirmList = ListupFiles( ".mot" )
+FirmList		= ListupFiles( ".mot" )
 FirmList.title	= "Firmware"
 FirmList.width	= 15
 FirmList.proc	= SetupFirmware
@@ -1057,10 +1054,10 @@ function DoIntervalProc()
 			fpLog = io.open( LogFile, "ab" )
 			fpLog:setvbuf( "full", 1024 )
 		end
-		
-		-- キー入力処理
-		Ctrl:Read()
 	end
+	
+	-- キー入力処理
+	Ctrl:Read()
 end
 
 -- メイン処理 ----------------------------------------------------------------
