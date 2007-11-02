@@ -5,7 +5,7 @@
 -- .tab=4
 
 -- シリアルポートなし (debug)
-NoSio = "vsd20070421_142959.log"
+-- NoSio = "vsd20070421_142959.log"
 -- NoSio = true
 
 -- バイナリログ
