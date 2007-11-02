@@ -5,7 +5,7 @@
 -- .tab=4
 
 -- シリアルポートなし (debug)
--- NoSio = "vsd20070421_142959.log"
+NoSio = "vsd20070421_142959.log"
 -- NoSio = true
 
 -- バイナリログ
@@ -266,7 +266,7 @@ function DrawLap()
 	screen:fillRect( HistX, HistY, HistW, HistH, ColorLapBG )
 	screen:fillRect( LapX, LapY, LapW, LapH, ColorLapBG )
 	
-	if( BestLap ~= nil ) then
+	if( BestLap ) then
 		str = 'Fst ' .. FormatLapTime( BestLap )
 	else
 		str = 'Fst --"--.---', ColorHist
@@ -401,6 +401,7 @@ function DrawMeters()
 		Console:Open( 10, 4, 47, 15 )
 		Console:print( string.format( "%8.3fkm", Mileage / PULSE_PAR_1KM ))
 		Console:print( string.format( "Sector:%d", SectorCnt ))
+		Console:print( string.format( "GPS:%d", GPS_Dimension ))
 	end
 end
 
@@ -464,9 +465,13 @@ SndNewLap  = Sound.load( "new_lap.wav" )
 
 function LoadFirmware()
 	
+	if( not bSIOActive ) then
+		return
+	end
+	
 	local fpFirm = io.open( FirmWare, "rb" )
 	
-	if( fpFirm ~= nil ) then
+	if( fpFirm ) then
 		System.sioWrite( "z\r" )
 		screen.waitVblankStart( 6 )
 		System.sioWrite( "l\r" )
@@ -740,7 +745,7 @@ function ProcessSio()
 				local bBestLap = false
 				LapTimeLaw = Num
 				
-				if( LapTimePrev ~= nil ) then
+				if( LapTimePrev ) then
 					local LapTimeDiff = (( Num - LapTimePrev ) / ( H8HZ / 65536 ))
 					LapTimeTable[ #LapTimeTable + 1 ] = LapTimeDiff
 					LapTimeStr = "\tLAP" .. #LapTimeTable .. " " .. FormatLapTime( LapTimeDiff, ':' )
@@ -793,6 +798,18 @@ function ProcessSio()
 						GSensorX, GSensorY, IRSensor
 					))
 					
+					-- GPS ログ
+					if( GetGPSData()) then
+						fpLog:write( string.format(
+						"\tGPS\t%.10f\t%.10f\t%.10f\t%.10f",
+						GPS_Lati,
+						GPS_Long,
+						GPS_Speed,
+						GPS_Bearing
+					))
+					end
+					
+					-- ラップタイム
 					fpLog:write( LapTimeStr .. "\r\n" )
 				end
 		--	end
@@ -800,6 +817,8 @@ function ProcessSio()
 		--	DebugRefresh = DebugRefresh + 1
 		end
 	until Cmd == nil
+	
+	return
 end
 
 --- VSD モード設定 -----------------------------------------------------------
@@ -823,6 +842,23 @@ function SetVSDMode( mode )
 	SectorCnt = 0
 	
 	return mode
+end
+
+--- シリアルアクティブ確認 ---------------------------------------------------
+
+bSIOActive = false;
+
+function IsSIOActive()
+	if( not bSIOActive ) then
+		
+		System.sioInit( 38400 )
+		
+		RxBuf = RxBuf .. System.sioRead()
+		if( RxBuf:len() > 0 ) then
+			bSIOActive = true
+		end
+	end
+	return bSIOActive
 end
 
 ------------------------------------------------------------------------------
@@ -891,7 +927,7 @@ function DoMenu( Item, x, y )
 	local top
 	
 	BreakMenu = false
-	if ( y ~= nil ) and ( 32 - #Item < y ) then
+	if( y ) and ( 32 - #Item < y ) then
 		y = 32 - #Item
 	end
 	
@@ -1014,6 +1050,55 @@ MainMenu = {
 }
 
 ------------------------------------------------------------------------------
+--- GPS ----------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+if( OS ) then
+	UsbGps = {}
+	
+	UsbGps.open = function()
+		return 0
+	end
+	
+	UsbGps.close = function()
+	end
+	
+	UsbGps.get_data = function()
+		return 0
+	end
+end
+
+GPS_PrevSec = 99;
+GPS_Dimension = 0;
+
+function GetGPSData()
+	
+	local tmp
+	
+	GPS_Dimension,	-- dimension
+	tmp,			-- year
+	tmp,			-- month
+	tmp,			-- date
+	tmp,			-- hour
+	tmp,			-- minute
+	GPS_Second,		-- second
+	GPS_Lati,		-- lati
+	GPS_Long,		-- long
+	tmp,			-- altitude
+	GPS_Speed,		-- speed
+	GPS_Bearing,	-- bearing
+	= UsbGps.get_data()
+	
+	if( GPS_Dimension >= 2 && GPS_PrevSec ~= GPS_Second ) then
+		-- GPS データ更新
+		GPS_PrevSec = GPS_Second
+		return true
+	end
+	
+	return false
+end
+
+------------------------------------------------------------------------------
 --- メインループ -------------------------------------------------------------
 ------------------------------------------------------------------------------
 
@@ -1023,9 +1108,6 @@ if( NoSio ) then
 	-- ログファイル リオープン
 	LogFile = "vsd.log"
 	fpLog = io.open( os.date( LogFile ), "wb" )
-else
-	System.sioInit( 38400 )
-	LoadFirmware()
 end
 
 -- DebugRefresh = 0
@@ -1035,24 +1117,39 @@ PrevMin = 99
 AutoSaveTimer = Timer.new()
 AutoSaveTimer:start()
 
+UsbGps.open()
+
 -- 一定時間ごとに処理するルーチン --------------------------------------------
 
 function DoIntervalProc()
 	if( OS ) then screen.waitVblankStart() end
 	
-	-- シリアルデータ処理
-	ProcessSio()
-	
-	if( RefreshFlag == nil ) then
-		-- autosave
-		if( AutoSaveTimer:time() >= 60 * 1000 ) then
-			AutoSaveTimer:reset()
-			AutoSaveTimer:start()
-			
-			-- ログファイル リオープン
-			if fpLog then fpLog:close() end
-			fpLog = io.open( LogFile, "ab" )
-			fpLog:setvbuf( "full", 1024 )
+	if( bSIOActive ) then
+		-- シリアルデータ処理
+		ProcessSio()
+		
+		if( RefreshFlag == nil ) then
+			-- autosave
+			if( AutoSaveTimer:time() >= 60 * 1000 ) then
+				AutoSaveTimer:reset()
+				AutoSaveTimer:start()
+				
+				-- ログファイル リオープン
+				if fpLog then fpLog:close() end
+				fpLog = io.open( LogFile, "ab" )
+				fpLog:setvbuf( "full", 1024 )
+			end
+		end
+	else
+		if( GetGPSData()) then
+			-- GPS のデータで，スピード表示更新
+			Tacho	= math.floor( GPS_Dimension * 1000 )
+			Speed	= math.floor( GPS_Speed + 0.5 )
+			RefreshFlag = true
+		end
+		
+		if( IsSIOActive()) then
+			LoadFirmware()
 		end
 	end
 	
@@ -1065,7 +1162,7 @@ end
 while true do
 	DoIntervalProc()
 	
-	if( RefreshFlag ~= nil or RedrawLap > 0 ) then
+	if( RefreshFlag or RedrawLap > 0 ) then
 		-- 通常の画面処理
 		if( PrevMin ~= os.date( "*t" ).min ) then
 			-- 時間更新
@@ -1104,3 +1201,4 @@ while true do
 end
 
 fpLog:close()
+UsbGps.close()
