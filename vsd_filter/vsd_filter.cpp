@@ -46,7 +46,10 @@
 #define LogStDef	( fp->track_default[ TRACK_LSt ] * 100 + fp->track_default[ TRACK_LSt2 ] )
 #define LogEdDef	( fp->track_default[ TRACK_LEd ] * 100 + fp->track_default[ TRACK_LEd2 ] )
 
-#define G_CX_CNT	30
+#define G_CX_CNT		30
+
+#define MAX_G_HIST		90
+#define ASYMMETRIC_METER
 
 /*** CAviUtlImage class *****************************************************/
 
@@ -148,13 +151,14 @@ enum {
 #define	TRACK_N	( sizeof( track_default ) / sizeof( int ))									//	トラックバーの数
 
 
-TCHAR	*check_name[] = 	{	"ラップタイム",	"フレーム表示", "スライダ連動"	};			//	チェックボックスの名前
-int		check_default[] = 	{	1,				0,				1				};			//	チェックボックスの初期値 (値は0か1)
+TCHAR	*check_name[] = 	{	"ラップタイム",	"フレーム表示", "スライダ連動", "G軌跡"	};			//	チェックボックスの名前
+int		check_default[] = 	{	1,				0,				1,				0 };			//	チェックボックスの初期値 (値は0か1)
 
 enum {
 	CHECK_LAP,
 	CHECK_FRAME,
 	CHECK_TRACK,
+	CHECK_SNAKE,
 };
 
 #define	CHECK_N	( sizeof( check_default ) / sizeof( int ))				//	チェックボックスの数
@@ -236,11 +240,12 @@ BOOL func_exit( FILTER *fp ){
 //		フィルタ処理関数
 //---------------------------------------------------------------------
 
-const	PIXEL_YC	yc_black	= RGB2YC(    0,    0,    0 );
-const	PIXEL_YC	yc_white	= RGB2YC( 4095, 4095, 4095 );
-const	PIXEL_YC	yc_red		= RGB2YC( 4095,    0,    0 );
-const	PIXEL_YC	yc_green	= RGB2YC(    0, 4095,    0 );
-const	PIXEL_YC	yc_dblue	= RGB2YC(    0,    0, 2048 );
+const	PIXEL_YC	yc_black		= RGB2YC(    0,    0,    0 );
+const	PIXEL_YC	yc_white		= RGB2YC( 4095, 4095, 4095 );
+const	PIXEL_YC	yc_red			= RGB2YC( 4095,    0,    0 );
+const	PIXEL_YC	yc_green		= RGB2YC(    0, 4095,    0 );
+const	PIXEL_YC	yc_dark_green	= RGB2YC(    0, 2048,    0 );
+const	PIXEL_YC	yc_dblue		= RGB2YC(    0,    0, 2048 );
 
 /*
 #define COLOR_PANEL		yc_black
@@ -248,14 +253,14 @@ const	PIXEL_YC	yc_dblue	= RGB2YC(    0,    0, 2048 );
 #define COLOR_SCALE		yc_white
 #define COLOR_STR		yc_white
 #define COLOR_G_SENSOR	yc_green
+#define COLOR_G_HIST	yc_dark_green
 */
 #define COLOR_PANEL		yc_white
 #define COLOR_NEEDLE	yc_red
 #define COLOR_SCALE		yc_black
 #define COLOR_STR		yc_black
 #define COLOR_G_SENSOR	yc_green
-
-#define ASYMMETRIC_METER
+#define COLOR_G_HIST	yc_dark_green
 
 BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 //
@@ -282,6 +287,10 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	
 	char	szBuf[ 20 ];
 	static	int	iLapIdx	= -1;
+	
+	static short	iGxHist[ MAX_G_HIST ];
+	static short	iGyHist[ MAX_G_HIST ];
+	static UINT		uGHistPtr = 0;
 	
 	// クラスに変換
 	CAviUtlImage	&Img = *( CAviUtlImage *)fpip;
@@ -420,12 +429,33 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	float	fGy		= GetVsdLog( fGy );
 	
 	// G インジケータ
+	int	iGx = ( int )( -( fGy - g_fGcy ) / ACC_1G_Y * iMeterR / 2 + .5 );
+	int iGy = ( int )(  ( fGx - g_fGcx ) / ACC_1G_X * iMeterR / 2 + .5 );
+	
 	Img.DrawCircle(
-		iMeterCx - ( int )( -( fGy - g_fGcy ) / ACC_1G_Y * iMeterR / 2 + .5 ),
-		iMeterCy - ( int )(  ( fGx - g_fGcx ) / ACC_1G_X * iMeterR / 2 + .5 ),
-		iMeterR / 10,
+		iMeterCx - iGx,
+		iMeterCy - iGy,
+		iMeterR / 20,
 		COLOR_G_SENSOR, CAviUtlImage::IMG_FILL
 	);
+	
+	// G スネーク
+	if( fp->check[ CHECK_SNAKE ] ){
+		iGxHist[ uGHistPtr ] = iGx;
+		iGyHist[ uGHistPtr ] = iGy;
+		
+		for( UINT u = 0; u < MAX_G_HIST - 1; ++u ){
+			int	iIdxS = ( uGHistPtr - u + MAX_G_HIST     ) % MAX_G_HIST;
+			int	iIdxE = ( uGHistPtr - u + MAX_G_HIST - 1 ) % MAX_G_HIST;
+			
+			Img.DrawLine(
+				iMeterCx - iGxHist[ iIdxS ], iMeterCy - iGyHist[ iIdxS ],
+				iMeterCx - iGxHist[ iIdxE ], iMeterCy - iGyHist[ iIdxE ],
+				COLOR_G_HIST, 0
+			);
+		}
+		uGHistPtr = ( uGHistPtr + 1 ) % MAX_G_HIST;
+	}
 	
 	// Tacho の針
 	double dTachoNeedle =
