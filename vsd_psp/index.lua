@@ -399,6 +399,7 @@ function DrawMeters()
 	-- その他の情報
 	if( bDispInfo ) then
 		Console:Open( 10, 4, 47, 15 )
+	--	Console:print( os.date( "%y/%m/%d" ))
 		Console:print( string.format( "%8.3fkm", Mileage / PULSE_PAR_1KM ))
 		Console:print( string.format( "Sector:%d", SectorCnt ))
 		Console:print( string.format( "GPS:%d", GPS_Dimension ))
@@ -465,7 +466,7 @@ SndNewLap  = Sound.load( "new_lap.wav" )
 
 function LoadFirmware()
 	
-	if( not bSIOActive ) then
+	if( not IsSIOActive()) then
 		return
 	end
 	
@@ -817,8 +818,6 @@ function ProcessSio()
 		--	DebugRefresh = DebugRefresh + 1
 		end
 	until Cmd == nil
-	
-	return
 end
 
 --- VSD モード設定 -----------------------------------------------------------
@@ -846,7 +845,7 @@ end
 
 --- シリアルアクティブ確認 ---------------------------------------------------
 
-bSIOActive = false;
+bSIOActive = false
 
 function IsSIOActive()
 	if( not bSIOActive ) then
@@ -856,6 +855,8 @@ function IsSIOActive()
 		RxBuf = RxBuf .. System.sioRead()
 		if( RxBuf:len() > 0 ) then
 			bSIOActive = true
+		else
+			-- System.sioClose()
 		end
 	end
 	return bSIOActive
@@ -927,7 +928,7 @@ function DoMenu( Item, x, y )
 	local top
 	
 	BreakMenu = false
-	if( y ) and ( 32 - #Item < y ) then
+	if(( y ) and ( 32 - #Item < y )) then
 		y = 32 - #Item
 	end
 	
@@ -1086,10 +1087,10 @@ function GetGPSData()
 	GPS_Long,		-- long
 	tmp,			-- altitude
 	GPS_Speed,		-- speed
-	GPS_Bearing,	-- bearing
+	GPS_Bearing		-- bearing
 	= UsbGps.get_data()
 	
-	if( GPS_Dimension >= 2 && GPS_PrevSec ~= GPS_Second ) then
+	if( GPS_Dimension >= 2 and GPS_PrevSec ~= GPS_Second ) then
 		-- GPS データ更新
 		GPS_PrevSec = GPS_Second
 		return true
@@ -1108,6 +1109,9 @@ if( NoSio ) then
 	-- ログファイル リオープン
 	LogFile = "vsd.log"
 	fpLog = io.open( os.date( LogFile ), "wb" )
+	bSIOActive = true
+elseif not Controls.read():r() then
+	LoadFirmware()
 end
 
 -- DebugRefresh = 0
@@ -1148,9 +1152,10 @@ function DoIntervalProc()
 			RefreshFlag = true
 		end
 		
-		if( IsSIOActive()) then
-			LoadFirmware()
-		end
+		-- 自動接続検出は失敗
+		--if( IsSIOActive()) then
+		--	LoadFirmware()
+		--end
 	end
 	
 	-- キー入力処理
