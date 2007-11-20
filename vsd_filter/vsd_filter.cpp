@@ -428,18 +428,10 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	float	fGx		= GetVsdLog( fGx );
 	float	fGy		= GetVsdLog( fGy );
 	
-	// G インジケータ
-	int	iGx = ( int )( -( fGy - g_fGcy ) / ACC_1G_Y * iMeterR / 2 + .5 );
-	int iGy = ( int )(  ( fGx - g_fGcx ) / ACC_1G_X * iMeterR / 2 + .5 );
-	
-	Img.DrawCircle(
-		iMeterCx - iGx,
-		iMeterCy - iGy,
-		iMeterR / 20,
-		COLOR_G_SENSOR, CAviUtlImage::IMG_FILL
-	);
-	
 	// G スネーク
+	int	iGx = ( int )( -( fGy - g_fGcy ) / ACC_1G_Y * iMeterR / 1.5 + .5 );
+	int iGy = ( int )(  ( fGx - g_fGcx ) / ACC_1G_X * iMeterR / 1.5 + .5 );
+	
 	if( fp->check[ CHECK_SNAKE ] ){
 		iGxHist[ uGHistPtr ] = iGx;
 		iGyHist[ uGHistPtr ] = iGy;
@@ -456,6 +448,14 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		}
 		uGHistPtr = ( uGHistPtr + 1 ) % MAX_G_HIST;
 	}
+	
+	// G インジケータ
+	Img.DrawCircle(
+		iMeterCx - iGx,
+		iMeterCy - iGy,
+		iMeterR / 20,
+		COLOR_G_SENSOR, CAviUtlImage::IMG_FILL
+	);
 	
 	// Tacho の針
 	double dTachoNeedle =
