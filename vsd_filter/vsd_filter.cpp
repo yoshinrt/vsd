@@ -27,24 +27,14 @@
 	( int )( 0.500 * r - 0.419 * g - 0.081 * b + .5 ) \
 }
 
-#define BMP_W			( *( int *)( g_Font9p + 0x12 ))
-#define BMP_H			( *( int *)( g_Font9p + 0x16 ))
-#define BMP_PIX( x, y ) ( g_Font9p[ 0x436 + BMP_W * ( BMP_H - ( y ) - 1 ) + ( x )] )
-#define FONT_W			( BMP_W / 16 )
-#define FONT_H			( BMP_H / 7 )
-
 #define MAX_VSD_LOG		( 15 * 3600 * 2 )
 #define MAX_LAP			( 200 )
 
-#define VideoSt	( fp->track[ TRACK_VSt ] * 100 + fp->track[ TRACK_VSt2 ] )
-#define VideoEd	( fp->track[ TRACK_VEd ] * 100 + fp->track[ TRACK_VEd2 ] )
+#define EncSt	( fp->track[ TRACK_EncSt ] * 100 + fp->track[ TRACK_EncSt2 ] )
+#define VideoSt	( fp->track[ TRACK_VSt ] * 100 + fp->track[ TRACK_VSt2 ] - EncSt )
+#define VideoEd	( fp->track[ TRACK_VEd ] * 100 + fp->track[ TRACK_VEd2 ] - EncSt )
 #define LogSt	( fp->track[ TRACK_LSt ] * 100 + fp->track[ TRACK_LSt2 ] )
 #define LogEd	( fp->track[ TRACK_LEd ] * 100 + fp->track[ TRACK_LEd2 ] )
-
-#define VideoStDef	( fp->track_default[ TRACK_VSt ] * 100 + fp->track_default[ TRACK_VSt2 ] )
-#define VideoEdDef	( fp->track_default[ TRACK_VEd ] * 100 + fp->track_default[ TRACK_VEd2 ] )
-#define LogStDef	( fp->track_default[ TRACK_LSt ] * 100 + fp->track_default[ TRACK_LSt2 ] )
-#define LogEdDef	( fp->track_default[ TRACK_LEd ] * 100 + fp->track_default[ TRACK_LEd2 ] )
 
 #define G_CX_CNT		30
 
@@ -52,6 +42,14 @@
 #define ASYMMETRIC_METER
 
 /*** CAviUtlImage class *****************************************************/
+
+const UCHAR g_Font9p[] = {
+	#include "font_9p.h"
+};
+
+const UCHAR g_Font18p[] = {
+	#include "font_18p.h"
+};
 
 class CAviUtlImage : public FILTER_PROC_INFO {
 	
@@ -81,18 +79,28 @@ class CAviUtlImage : public FILTER_PROC_INFO {
 	);
 	
 	void DrawFont( int x, int y, char c, const PIXEL_YC &yc, UINT uFlag );
+	void DrawFont( int x, int y, char c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag );
 	void DrawString( int x, int y, char *szMsg, const PIXEL_YC &yc, UINT uFlag );
+	void DrawString( int x, int y, char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag );
 	
 	// ポリゴン描写
 	void PolygonClear( void );
 	void PolygonDraw( const PIXEL_YC &yc, UINT uFlag );
+	
+	// フォント
+	const UCHAR *GetFontBase( void ){ return w >= 600 ? g_Font18p : g_Font9p; }
+	int GetFontBMP_W( void ){ return *( int *)( GetFontBase() + 0x12 ); }
+	int GetFontBMP_H( void ){ return *( int *)( GetFontBase() + 0x16 ); }
+	UCHAR GetBMPPix( int x, int y ){ return GetFontBase()[ 0x436 + GetFontBMP_W() * ( GetFontBMP_H() - ( y ) - 1 ) + ( x )]; }
+	int GetFontW( void ){ return GetFontBMP_W() / 16; }
+	int GetFontH( void ){ return GetFontBMP_H() / 7; }
 	
 	enum {
 		IMG_ALFA	= ( 1 << 0 ),
 		IMG_TMP		= ( 1 << 1 ),
 		IMG_FILL	= ( 1 << 2 ),
 		IMG_TMP_DST	= ( 1 << 3 ),
-		IMG_POLIGON	= ( 1 << 4 ),
+		IMG_POLYGON	= ( 1 << 4 ),
 	};
 };
 
@@ -120,7 +128,7 @@ inline void CAviUtlImage::PutPixel( int x, int y, short iY, short iCr, short iCb
 
 inline void CAviUtlImage::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
 	
-	if( uFlag & IMG_POLIGON ){
+	if( uFlag & IMG_POLYGON ){
 		// ポリゴン描画
 		if( x > ycp_temp[ y ].cr ) ycp_temp[ y ].cr = x;
 		if( x < ycp_temp[ y ].cb ) ycp_temp[ y ].cb = x;
@@ -215,7 +223,10 @@ void CAviUtlImage::DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFl
 	PIXEL_YC	yc_void = { -1, 0, 0 };
 	
 	// Polygon クリア
-	if( uFlag & IMG_FILL ) PolygonClear();
+	if( uFlag & IMG_FILL ){
+		PolygonClear();
+		uFlag |= IMG_POLYGON;
+	}
 	
 	// 円を書く
 	for( i = 0, j = r; i < j; ++i ){
@@ -256,12 +267,33 @@ void CAviUtlImage::DrawFont( int x, int y, char c, const PIXEL_YC &yc, UINT uFla
 	
 	c -= ' ';
 	
-	for( j = 0; j < FONT_H; ++j ) for( i = 0; i < FONT_W; ++i ){
-		if( BMP_PIX(
-			( c % 16 ) * FONT_W + i,
-			( c / 16 ) * FONT_H + j
+	for( j = 0; j < GetFontH(); ++j ) for( i = 0; i < GetFontW(); ++i ){
+		if( GetBMPPix(
+			( c % 16 ) * GetFontW() + i,
+			( c / 16 ) * GetFontH() + j
 		) == 0 ) PutPixel( x + i, y + j, yc, uFlag );
 	}
+}
+
+void CAviUtlImage::DrawFont( int x, int y, char c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag ){
+	
+	int	i, j;
+	
+	char cc = c - ' ';
+	
+	for( j = 0; j < GetFontH(); ++j ) for( i = 0; i < GetFontW(); ++i ){
+		if( GetBMPPix(
+			( cc % 16 ) * GetFontW() + i,
+			( cc / 16 ) * GetFontH() + j
+		) == 0 ){
+			PutPixel( x + i - 1, y + j, ycEdge, uFlag );
+			PutPixel( x + i + 1, y + j, ycEdge, uFlag );
+			PutPixel( x + i, y + j - 1, ycEdge, uFlag );
+			PutPixel( x + i, y + j + 1, ycEdge, uFlag );
+		}
+	}
+	
+	DrawFont( x, y, c, yc, uFlag );
 }
 
 /*** DrawString *************************************************************/
@@ -269,7 +301,14 @@ void CAviUtlImage::DrawFont( int x, int y, char c, const PIXEL_YC &yc, UINT uFla
 void CAviUtlImage::DrawString( int x, int y, char *szMsg, const PIXEL_YC &yc, UINT uFlag ){
 	
 	for( int i = 0; szMsg[ i ]; ++i ){
-		DrawFont( x + i * FONT_W, y, szMsg[ i ], yc, uFlag );
+		DrawFont( x + i * GetFontW(), y, szMsg[ i ], yc, uFlag );
+	}
+}
+
+void CAviUtlImage::DrawString( int x, int y, char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag ){
+	
+	for( int i = 0; szMsg[ i ]; ++i ){
+		DrawFont( x + i * GetFontW(), y, szMsg[ i ], yc, ycEdge, uFlag );
 	}
 }
 
@@ -283,8 +322,8 @@ inline void CAviUtlImage::PolygonClear( void ){
 }
 
 inline void CAviUtlImage::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
-	for( y = 0; y < h; ++y ) if( ycp_temp[ y ].cb <= ycp_temp[ y ].cr ){
-		DrawLine( ycp_temp[ y ].cb, y, ycp_temp[ y ].cr, yc, uFlag );
+	for( int y = 0; y < h; ++y ) if( ycp_temp[ y ].cb <= ycp_temp[ y ].cr ){
+		DrawLine( ycp_temp[ y ].cb, y, ycp_temp[ y ].cr, yc, uFlag & ~IMG_POLYGON );
 	}
 }
 
@@ -307,10 +346,6 @@ typedef struct {
 
 HINSTANCE	g_hInst = NULL;
 
-const UCHAR g_Font9p[] = {
-	#include "font_9p.h"
-};
-
 VSD_LOG_t	*g_VsdLog 		= NULL;
 int			g_iVsdLogNum	= 0;
 LAP_t		*g_Lap	 		= NULL;
@@ -328,10 +363,10 @@ BOOL		g_bReverseGy;
 //		フィルタ構造体定義
 //---------------------------------------------------------------------
 
-TCHAR	*track_name[] =		{	"v先頭",	"",		"v最後",	"",		"log先頭",	"",		"log最後",	"",		"fps"	};	//	トラックバーの名前
-int		track_default[] =	{	0,			0,		0,			0,		0,			0,		0,			0,		30		};	//	トラックバーの初期値
-int		track_s[] =			{	0,			-200,	0,			-200,	0,			-200,	0,			-200,	1		};	//	トラックバーの下限値
-int		track_e[] =			{	10000,		+200,	10000,		+200,	10000,		+200,	10000,		+200,	120		};	//	トラックバーの上限値
+TCHAR	*track_name[] =		{	"v先頭",	"",		"v最後",	"",		"log先頭",	"",		"log最後",	"",		"Enc開始v",	""		};	//	トラックバーの名前
+int		track_default[] =	{	0,			0,		0,			0,		0,			0,		0,			0,		0,			0		};	//	トラックバーの初期値
+int		track_s[] =			{	0,			-200,	0,			-200,	0,			-200,	0,			-200,	0,			-200	};	//	トラックバーの下限値
+int		track_e[] =			{	10000,		+200,	10000,		+200,	10000,		+200,	10000,		+200,	10000,		+200	};	//	トラックバーの上限値
 
 enum {
 	TRACK_VSt,
@@ -342,19 +377,19 @@ enum {
 	TRACK_LSt2,
 	TRACK_LEd,
 	TRACK_LEd2,
-	TRACK_FPS,
+	TRACK_EncSt,
+	TRACK_EncSt2,
 };
 
 #define	TRACK_N	( sizeof( track_default ) / sizeof( int ))									//	トラックバーの数
 
 
-TCHAR	*check_name[] = 	{	"ラップタイム",	"フレーム表示", "スライダ連動", "G軌跡"	};			//	チェックボックスの名前
-int		check_default[] = 	{	1,				0,				1,				0 };			//	チェックボックスの初期値 (値は0か1)
+TCHAR	*check_name[] = 	{	"ラップタイム",	"フレーム表示", "G軌跡"	};		//	チェックボックスの名前
+int		check_default[] = 	{	1,				0,				0 };			//	チェックボックスの初期値 (値は0か1)
 
 enum {
 	CHECK_LAP,
 	CHECK_FRAME,
-	CHECK_TRACK,
 	CHECK_SNAKE,
 };
 
@@ -393,7 +428,7 @@ FILTER_DLL filter = {
 	func_proc,					//	フィルタ処理関数へのポインタ (NULLなら呼ばれません)
 	func_init,					//	開始時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 	func_exit,					//	終了時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
-	func_update,				//	設定が変更されたときに呼ばれる関数へのポインタ (NULLなら呼ばれません)
+	NULL /*func_update*/,				//	設定が変更されたときに呼ばれる関数へのポインタ (NULLなら呼ばれません)
 	func_WndProc,				//	設定ウィンドウにウィンドウメッセージが来た時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 	NULL,NULL,					//	システムで使いますので使用しないでください
 	NULL,						//  拡張データ領域へのポインタ (FILTER_FLAG_EX_DATAが立っている時に有効)
@@ -439,23 +474,30 @@ BOOL func_exit( FILTER *fp ){
 
 const	PIXEL_YC	yc_black		= RGB2YC(    0,    0,    0 );
 const	PIXEL_YC	yc_white		= RGB2YC( 4095, 4095, 4095 );
+const	PIXEL_YC	yc_gray			= RGB2YC( 2048, 2048, 2048 );
 const	PIXEL_YC	yc_red			= RGB2YC( 4095,    0,    0 );
 const	PIXEL_YC	yc_green		= RGB2YC(    0, 4095,    0 );
 const	PIXEL_YC	yc_dark_green	= RGB2YC(    0, 2048,    0 );
-const	PIXEL_YC	yc_dblue		= RGB2YC(    0,    0, 2048 );
+const	PIXEL_YC	yc_blue			= RGB2YC(    0,    0, 4095 );
+const	PIXEL_YC	yc_dark_blue	= RGB2YC(    0,    0, 2048 );
+const	PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
 
 /*
-#define COLOR_PANEL		yc_black
-#define COLOR_NEEDLE	yc_red
-#define COLOR_SCALE		yc_white
-#define COLOR_STR		yc_white
-#define COLOR_G_SENSOR	yc_green
-#define COLOR_G_HIST	yc_dark_green
-*/
 #define COLOR_PANEL		yc_white
 #define COLOR_NEEDLE	yc_red
 #define COLOR_SCALE		yc_black
-#define COLOR_STR		yc_black
+#define COLOR_STR		COLOR_SCALE
+#define COLOR_TIME		yc_white
+#define COLOR_TIME_EDGE	yc_black
+#define COLOR_G_SENSOR	yc_blue
+#define COLOR_G_HIST	yc_dark_blue
+*/
+#define COLOR_PANEL		yc_gray
+#define COLOR_NEEDLE	yc_red
+#define COLOR_SCALE		yc_white
+#define COLOR_STR		COLOR_SCALE
+#define COLOR_TIME		yc_white
+#define COLOR_TIME_EDGE	yc_black
 #define COLOR_G_SENSOR	yc_green
 #define COLOR_G_HIST	yc_dark_green
 
@@ -535,8 +577,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		
 		// メーターパネル目盛り数値
 		if( i % 1000 == 0 ) Img.DrawFont(
-			( int )( cos(( double )iDeg / 360 * 2 * PI ) * iMeterR * .8 ) + iMeterCx - FONT_W / 2,
-			( int )( sin(( double )iDeg / 360 * 2 * PI ) * iMeterR * .8 ) + iMeterCy - FONT_H / 2,
+			( int )( cos(( double )iDeg / 360 * 2 * PI ) * iMeterR * .8 ) + iMeterCx - Img.GetFontW() / 2,
+			( int )( sin(( double )iDeg / 360 * 2 * PI ) * iMeterR * .8 ) + iMeterCy - Img.GetFontH() / 2,
 			#ifdef ASYMMETRIC_METER
 				'0' + i / 1000 + ( i >= 1000 ? 1 : 0 ),
 			#else
@@ -549,28 +591,30 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	// フレーム表示
 	if( fp->check[ CHECK_FRAME ] ){
 		Img.DrawRect(
-			0, Img.h - FONT_H * 2, FONT_W * 14 - 1, Img.h - 1,
+			0, Img.h - Img.GetFontH() * 2, Img.GetFontW() * 14 - 1, Img.h - 1,
 			COLOR_PANEL,
 			CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
 		);
 		
 		sprintf( szBuf, "V%6d/%6d", Img.frame, Img.frame_n - 1 );
-		Img.DrawString( 0, Img.h - FONT_H * 2, szBuf, COLOR_STR, 0 );
+		Img.DrawString( 0, Img.h - Img.GetFontH() * 2, szBuf, COLOR_STR, 0 );
 		sprintf( szBuf, "L%6d/%6d", ( int )fFrame, g_iVsdLogNum - 1 );
-		Img.DrawString( 0, Img.h - FONT_H * 1, szBuf, COLOR_STR, 0 );
+		Img.DrawString( 0, Img.h - Img.GetFontH() * 1, szBuf, COLOR_STR, 0 );
 	}
 	
 	/*** Lap タイム描画 ***/
 	
 	if( fp->check[ CHECK_LAP ] && g_iLapNum ){
-		int	iLapX = Img.w - FONT_W * 13;
-		int iLapY = 0;
+		int	iLapX = Img.w - Img.GetFontW() * 13;
+		int iLapY = 1;
 		
+		/*
 		Img.DrawRect(
-			iLapX, iLapY, Img.w - 1, iLapY + FONT_H * 5 - 1,
+			iLapX, iLapY, Img.w - 1, iLapY + Img.GetFontH() * 5 - 1,
 			COLOR_PANEL,
 			CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
 		);
+		*/
 		
 		// カレントポインタがおかしいときは，-1 にリセット
 		if(
@@ -588,25 +632,25 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		){
 			float fTime = ( fFrame - g_Lap[ iLapIdx ].iFrame ) / ( float )(( double )H8HZ / 65536 / 16 );
 			sprintf( szBuf, "%6d'%02d.%03d", ( int )fTime / 60, ( int )fTime % 60, ( int )( fTime * 1000 + .5 ) % 1000 );
-			Img.DrawString( iLapX, iLapY, szBuf, COLOR_STR, 0 );
+			Img.DrawString( iLapX, iLapY, szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
 		}else{
 			// まだ開始していない
-			Img.DrawString( iLapX, iLapY, "    --'--.---", COLOR_STR, 0 );
+			Img.DrawString( iLapX, iLapY, "    --'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0 );
 		}
-		iLapY += FONT_H;
+		iLapY += Img.GetFontH();
 		
 		// Best 表示
 		sprintf( szBuf, "Bst%3d'%02d.%03d", ( int )g_fBestTime / 60, ( int )g_fBestTime % 60, ( int )( g_fBestTime * 1000 + .5 ) % 1000 );
-		Img.DrawString( iLapX, iLapY, szBuf, COLOR_STR, 0 );
-		iLapY += FONT_H;
+		Img.DrawString( iLapX, iLapY, szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
+		iLapY += Img.GetFontH();
 		
 		// Lapタイム表示
 		int	i = 0;
 		for( int iLapIdxTmp = iLapIdx; iLapIdxTmp >= 0; --iLapIdxTmp ){
 			if( g_Lap[ iLapIdxTmp ].fTime != 0 ){
 				sprintf( szBuf, "%3d%3d'%02d.%03d", g_Lap[ iLapIdxTmp ].uLap, ( int )g_Lap[ iLapIdxTmp ].fTime / 60, ( int )g_Lap[ iLapIdxTmp ].fTime % 60, ( int )( g_Lap[ iLapIdxTmp ].fTime * 1000 + .5 ) % 1000 );
-				Img.DrawString( iLapX, iLapY, szBuf, COLOR_STR, 0 );
-				iLapY += FONT_H;
+				Img.DrawString( iLapX, iLapY, szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
+				iLapY += Img.GetFontH();
 				if( ++i >= 3 ) break;
 			}
 		}
@@ -694,20 +738,20 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	/*
 	sprintf( szBuf, "%d\x7F%4d\x80\x81", uGear, ( int )fSpeed );
 	Img.DrawString(
-		iMeterCx - 4 * FONT_W, iMeterCy + iMeterR / 2,
+		iMeterCx - 4 * Img.GetFontW(), iMeterCy + iMeterR / 2,
 		szBuf,
 		COLOR_STR, 0
 	);
 	*/
 	sprintf( szBuf, "%d\x7F", uGear );
 	Img.DrawString(
-		iMeterCx - 1 * FONT_W, iMeterCy + iMeterR / 2 - FONT_H,
+		iMeterCx - 1 * Img.GetFontW(), iMeterCy + iMeterR / 2 - Img.GetFontH(),
 		szBuf,
 		COLOR_STR, 0
 	);
 	sprintf( szBuf, "%3d\x80\x81", ( int )fSpeed );
 	Img.DrawString(
-		iMeterCx - 3 * FONT_W, iMeterCy + iMeterR / 2,
+		iMeterCx - 3 * Img.GetFontW(), iMeterCy + iMeterR / 2,
 		szBuf,
 		COLOR_STR, 0
 	);
@@ -845,9 +889,10 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 		// trackbar 設定
 		track_e[ TRACK_VSt ] =
-		track_e[ TRACK_VEd ] = filter->exfunc->get_frame_n( editp ) / 100;
+		track_e[ TRACK_VEd ] =
+		track_e[ TRACK_EncSt ] = ( filter->exfunc->get_frame_n( editp ) + 99 ) / 100;
 		track_e[ TRACK_LSt ] =
-		track_e[ TRACK_LEd ] = ( g_iVsdLogNum - 1 ) / 100;
+		track_e[ TRACK_LEd ] = ( g_iVsdLogNum + 99 ) / 100;
 		
 		// 設定再描画
 		filter->exfunc->filter_window_update( filter );
@@ -859,6 +904,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 
 /*** スライダバー連動 *******************************************************/
 
+#if 0
 BOOL	func_update( FILTER *fp,int status ){
 	int	i;
 	static	BOOL	bReEnter = FALSE;
@@ -907,6 +953,7 @@ BOOL	func_update( FILTER *fp,int status ){
 	
 	return TRUE;
 }
+#endif
 
 /****************************************************************************/
 
