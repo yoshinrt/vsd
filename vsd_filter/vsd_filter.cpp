@@ -41,6 +41,9 @@
 #define MAX_G_HIST		90
 #define ASYMMETRIC_METER
 
+#define HIREZO_TH		600
+#define LINE_WIDTH		( Img.w / HIREZO_TH + 1 )
+
 /*** CAviUtlImage class *****************************************************/
 
 const UCHAR g_Font9p[] = {
@@ -58,7 +61,8 @@ class CAviUtlImage : public FILTER_PROC_INFO {
 	void PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag );
 	PIXEL_YC &GetPixel( int x, int y, UINT uFlag );
 	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag );
-	void DrawLine( int x1, int y1, int x2,         const PIXEL_YC &yc, UINT uFlag );
+	void DrawLine( int x1, int y1, int x2, int y2, int width, const PIXEL_YC &yc, UINT uFlag );
+	void FillLine( int x1, int y1, int x2,         const PIXEL_YC &yc, UINT uFlag );
 	void DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag );
 	void DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFlag );
 	int GetIndex( int x, int y ){ return max_w * y + x; }
@@ -88,7 +92,7 @@ class CAviUtlImage : public FILTER_PROC_INFO {
 	void PolygonDraw( const PIXEL_YC &yc, UINT uFlag );
 	
 	// フォント
-	const UCHAR *GetFontBase( void ){ return w >= 600 ? g_Font18p : g_Font9p; }
+	const UCHAR *GetFontBase( void ){ return w >= HIREZO_TH ? g_Font18p : g_Font9p; }
 	int GetFontBMP_W( void ){ return *( int *)( GetFontBase() + 0x12 ); }
 	int GetFontBMP_H( void ){ return *( int *)( GetFontBase() + 0x16 ); }
 	UCHAR GetBMPPix( int x, int y ){ return GetFontBase()[ 0x436 + GetFontBMP_W() * ( GetFontBMP_H() - ( y ) - 1 ) + ( x )]; }
@@ -107,8 +111,8 @@ class CAviUtlImage : public FILTER_PROC_INFO {
 /*** PutPixel ***************************************************************/
 
 /* 変換式
-Y = 0.299R+0.587G+0.114B 
-Cr = 0.500R-0.419G-0.081B 
+Y  =  0.299R+0.587G+0.114B
+Cr =  0.500R-0.419G-0.081B
 Cb = -0.169R-0.332G+0.500B
 
 R = Y+1.402Cr 
@@ -194,7 +198,17 @@ void CAviUtlImage::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YC &yc,
 	}
 }
 
-inline void CAviUtlImage::DrawLine( int x1, int y1, int x2, const PIXEL_YC &yc, UINT uFlag ){
+void CAviUtlImage::DrawLine( int x1, int y1, int x2, int y2, int width, const PIXEL_YC &yc, UINT uFlag ){
+	for( int y = 0; y < width; ++y ) for( int x = 0; x < width; ++x ){
+		DrawLine(
+			x1 + x - width / 2, y1 + y - width / 2,
+			x2 + x - width / 2, y2 + y - width / 2,
+			yc, uFlag
+		);
+	}
+}
+
+inline void CAviUtlImage::FillLine( int x1, int y1, int x2, const PIXEL_YC &yc, UINT uFlag ){
 	
 	int	i;
 	
@@ -211,7 +225,7 @@ void CAviUtlImage::DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YC &yc,
 	if( x1 > x2 ) SWAP( x1, x2, y );
 	
 	for( y = y1; y <= y2; ++y ){
-		DrawLine( x1, y, x2, yc, uFlag );
+		FillLine( x1, y, x2, yc, uFlag );
 	}
 }
 
@@ -323,7 +337,7 @@ inline void CAviUtlImage::PolygonClear( void ){
 
 inline void CAviUtlImage::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
 	for( int y = 0; y < h; ++y ) if( ycp_temp[ y ].cb <= ycp_temp[ y ].cr ){
-		DrawLine( ycp_temp[ y ].cb, y, ycp_temp[ y ].cr, yc, uFlag & ~IMG_POLYGON );
+		FillLine( ycp_temp[ y ].cb, y, ycp_temp[ y ].cr, yc, uFlag & ~IMG_POLYGON );
 	}
 }
 
@@ -534,24 +548,24 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	// クラスに変換
 	CAviUtlImage	&Img = *( CAviUtlImage *)fpip;
 	
-	int	iMeterR			= 50 * Img.w / 320;
-	int	iMeterCx		= Img.w - iMeterR - 2;
-	int	iMeterCy		= Img.h - iMeterR - 2;
+	const int	iMeterR			= 50 * Img.w / 320;
+	const int	iMeterCx		= Img.w - iMeterR - 2;
+	const int	iMeterCy		= Img.h - iMeterR - 2;
 	#ifdef ASYMMETRIC_METER
-		int	iMeterMinDeg	= 135;
-		int	iMeterMaxDeg	= 45;
-		int	iMeterMaxVal	= 6000;
+		const int	iMeterMinDeg	= 135;
+		const int	iMeterMaxDeg	= 45;
+		const int	iMeterMaxVal	= 6000;
 	#elif defined ASYMMETRIC_METER2
-		int	iMeterMinDeg	= 45;
-		int	iMeterMaxDeg	= 0;
-		int	iMeterMaxVal	= 7000;
+		const int	iMeterMinDeg	= 45;
+		const int	iMeterMaxDeg	= 0;
+		const int	iMeterMaxVal	= 7000;
 	#else
-		int	iMeterMinDeg	= 150;
-		int	iMeterMaxDeg	= 30;
-		int	iMeterMaxVal	= 8000;
+		const int	iMeterMinDeg	= 150;
+		const int	iMeterMaxDeg	= 30;
+		const int	iMeterMaxVal	= 8000;
 	#endif
-	int	iMeterDegRange	= (( iMeterMaxDeg < iMeterMinDeg ? iMeterMaxDeg + 360 : iMeterMaxDeg ) - iMeterMinDeg );
-	int	iMeterScaleLen	= iMeterR / 8;
+	const int	iMeterDegRange	= (( iMeterMaxDeg < iMeterMinDeg ? iMeterMaxDeg + 360 : iMeterMaxDeg ) - iMeterMinDeg );
+	const int	iMeterScaleLen	= iMeterR / 8;
 	
 	// フレームの計算
 	float	fFrame = ( float )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( Img.frame - VideoSt ) + LogSt;
@@ -590,16 +604,10 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	
 	// フレーム表示
 	if( fp->check[ CHECK_FRAME ] ){
-		Img.DrawRect(
-			0, Img.h - Img.GetFontH() * 2, Img.GetFontW() * 14 - 1, Img.h - 1,
-			COLOR_PANEL,
-			CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
-		);
-		
 		sprintf( szBuf, "V%6d/%6d", Img.frame, Img.frame_n - 1 );
-		Img.DrawString( 0, Img.h - Img.GetFontH() * 2, szBuf, COLOR_STR, 0 );
+		Img.DrawString( 0, Img.h - Img.GetFontH() * 2, szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 		sprintf( szBuf, "L%6d/%6d", ( int )fFrame, g_iVsdLogNum - 1 );
-		Img.DrawString( 0, Img.h - Img.GetFontH() * 1, szBuf, COLOR_STR, 0 );
+		Img.DrawString( 0, Img.h - Img.GetFontH() * 1, szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 	}
 	
 	/*** Lap タイム描画 ***/
@@ -684,7 +692,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			Img.DrawLine(
 				iMeterCx - iGxHist[ iIdxS ], iMeterCy - iGyHist[ iIdxS ],
 				iMeterCx - iGxHist[ iIdxE ], iMeterCy - iGyHist[ iIdxE ],
-				COLOR_G_HIST, 0
+				LINE_WIDTH, COLOR_G_HIST, 0
 			);
 		}
 		uGHistPtr = ( uGHistPtr + 1 ) % MAX_G_HIST;
@@ -714,7 +722,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		iMeterCx, iMeterCy,
 		( int )( cos( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCx,
 		( int )( sin( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
-		COLOR_NEEDLE, 0
+		LINE_WIDTH, COLOR_NEEDLE, 0
 	);
 	
 	Img.DrawCircle( iMeterCx, iMeterCy,  iMeterR / 25, COLOR_NEEDLE, CAviUtlImage::IMG_FILL );
