@@ -346,13 +346,14 @@ inline void CAviUtlImage::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
 typedef struct {
 	float	fSpeed;
 	float	fTacho;
+	float	fMileage;
 	float	fGx;
 	float	fGy;
 } VSD_LOG_t;
 
 typedef struct {
 	USHORT	uLap;
-	int		iFrame;
+	int		iLogNum;
 	float	fTime;
 } LAP_t;
 
@@ -365,6 +366,7 @@ int			g_iVsdLogNum	= 0;
 LAP_t		*g_Lap	 		= NULL;
 int			g_iLapNum		= 0;
 float		g_fBestTime		= -1;
+int			g_iBestLapLogNum= 0;
 
 int			g_iVideoDiff;
 int			g_iLogDiff;
@@ -493,6 +495,7 @@ const	PIXEL_YC	yc_red			= RGB2YC( 4095,    0,    0 );
 const	PIXEL_YC	yc_green		= RGB2YC(    0, 4095,    0 );
 const	PIXEL_YC	yc_dark_green	= RGB2YC(    0, 2048,    0 );
 const	PIXEL_YC	yc_blue			= RGB2YC(    0,    0, 4095 );
+const	PIXEL_YC	yc_cyan			= RGB2YC(    0, 4095, 4095 );
 const	PIXEL_YC	yc_dark_blue	= RGB2YC(    0,    0, 2048 );
 const	PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
 
@@ -514,6 +517,10 @@ const	PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
 #define COLOR_TIME_EDGE	yc_black
 #define COLOR_G_SENSOR	yc_green
 #define COLOR_G_HIST	yc_dark_green
+
+#define COLOR_DIST_PLUS		yc_cyan
+#define COLOR_DIST_MINUS	yc_red
+
 
 BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 //
@@ -545,6 +552,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	static short	iGyHist[ MAX_G_HIST ];
 	static UINT		uGHistPtr = 0;
 	
+	BOOL	bInLap = FALSE;	// ラップタイム計測中
+	
 	// クラスに変換
 	CAviUtlImage	&Img = *( CAviUtlImage *)fpip;
 	
@@ -567,8 +576,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	const int	iMeterDegRange	= (( iMeterMaxDeg < iMeterMinDeg ? iMeterMaxDeg + 360 : iMeterMaxDeg ) - iMeterMinDeg );
 	const int	iMeterScaleLen	= iMeterR / 8;
 	
-	// フレームの計算
-	float	fFrame = ( float )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( Img.frame - VideoSt ) + LogSt;
+	// ログ位置の計算
+	float	fLogNum = ( float )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( Img.frame - VideoSt ) + LogSt;
 	
 	// メーターパネル
 	Img.DrawCircle(
@@ -605,9 +614,9 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	// フレーム表示
 	if( fp->check[ CHECK_FRAME ] ){
 		sprintf( szBuf, "V%6d/%6d", Img.frame, Img.frame_n - 1 );
-		Img.DrawString( 0, Img.h - Img.GetFontH() * 2, szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
-		sprintf( szBuf, "L%6d/%6d", ( int )fFrame, g_iVsdLogNum - 1 );
-		Img.DrawString( 0, Img.h - Img.GetFontH() * 1, szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+		Img.DrawString( Img.w / 2, Img.h / 2, szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+		sprintf( szBuf, "L%6d/%6d", ( int )fLogNum, g_iVsdLogNum - 1 );
+		Img.DrawString( img.w / 2, Img.h / 2 + Img.GetFontH(), szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 	}
 	
 	/*** Lap タイム描画 ***/
@@ -627,20 +636,21 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		// カレントポインタがおかしいときは，-1 にリセット
 		if(
 			iLapIdx >= g_iLapNum ||
-			iLapIdx >= 0 && g_Lap[ iLapIdx ].iFrame > ( int )fFrame
+			iLapIdx >= 0 && g_Lap[ iLapIdx ].iLogNum > ( int )fLogNum
 		) iLapIdx = -1;
 		
-		for( ; g_Lap[ iLapIdx + 1 ].iFrame <= ( int )fFrame; ++iLapIdx );
+		for( ; g_Lap[ iLapIdx + 1 ].iLogNum <= ( int )fLogNum; ++iLapIdx );
 		
 		// 時間表示
 		if(
 			iLapIdx >= 0 &&
-			g_Lap[ iLapIdx + 1 ].iFrame != 0x7FFFFFFF &&
+			g_Lap[ iLapIdx + 1 ].iLogNum != 0x7FFFFFFF &&
 			g_Lap[ iLapIdx + 1 ].fTime  != 0
 		){
-			float fTime = ( fFrame - g_Lap[ iLapIdx ].iFrame ) / ( float )(( double )H8HZ / 65536 / 16 );
+			float fTime = ( fLogNum - g_Lap[ iLapIdx ].iLogNum ) / ( float )(( double )H8HZ / 65536 / 16 );
 			sprintf( szBuf, "%6d'%02d.%03d", ( int )fTime / 60, ( int )fTime % 60, ( int )( fTime * 1000 + .5 ) % 1000 );
 			Img.DrawString( iLapX, iLapY, szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
+			bInLap = TRUE;
 		}else{
 			// まだ開始していない
 			Img.DrawString( iLapX, iLapY, "    --'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0 );
@@ -662,15 +672,32 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 				if( ++i >= 3 ) break;
 			}
 		}
+			
+			// ベストとの車間距離表示
+			if( 1 ){
+				int iBestLogNum;
+				if(
+					bInLap &&
+					// BestLap の対応するログ位置を計算
+				 	( iBestLogNum = ( int )fLogNum - g_Lap[ iLapIdx ].iLogNum + g_iBestLapLogNum ) < g_iVsdLogNum
+				 ){
+					float fDist = g_VsdLog[ ( int )fLogNum ].fMileage - g_VsdLog[ iBestLogNum ].fMileage;
+					sprintf( szBuf, "diff:%6.1fm %7.3fs", fDist, fDist / ( g_VsdLog[ ( int )fLogNum ].fSpeed / 3600 * 1000 ));
+					Img.DrawString( 0, Img.h - Img.GetFontH(), szBuf, fDist >= 0 ? COLOR_DIST_PLUS : COLOR_DIST_NUMUS, COLOR_TIME_EDGE, 0 );
+				 }else{
+				 	// 計測中ではないか，BestLap のログ位置がはみ出した
+					Img.DrawString( 0, Img.h - Img.GetFontH(), "diff: ---", COLOR_TIME, COLOR_TIME_EDGE, 0 );
+				 }
+			}
 	}
 	
 	/*** メーター描画 ***/
 	
-	if( fFrame < 0 || fFrame > g_iVsdLogNum - 1 ) return TRUE;
+	if( fLogNum < 0 || fLogNum > g_iVsdLogNum - 1 ) return TRUE;
 	
 	#define GetVsdLog( p ) ( \
-		g_VsdLog[ ( UINT )fFrame     ].p * ( 1 - ( fFrame - ( UINT )fFrame )) + \
-		g_VsdLog[ ( UINT )fFrame + 1 ].p * (       fFrame - ( UINT )fFrame ))
+		g_VsdLog[ ( UINT )fLogNum     ].p * ( 1 - ( fLogNum - ( UINT )fLogNum )) + \
+		g_VsdLog[ ( UINT )fLogNum + 1 ].p * (       fLogNum - ( UINT )fLogNum ))
 	
 	float	fSpeed	= GetVsdLog( fSpeed );
 	float	fTacho	= GetVsdLog( fTacho );
@@ -734,9 +761,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	if( fTacho ){
 		UINT uGearRatio = ( int )( fSpeed * 100 * ( 1 << 8 ) / fTacho );
 		
-		if( uGearRatio < GEAR_TH( 2 )){
-			if( uGearRatio < GEAR_TH( 1 ))		uGear = 1;
-			else								uGear = 2;
+		if      ( uGearRatio < GEAR_TH( 1 ))	uGear = 1;
+		}else if( uGearRatio < GEAR_TH( 2 ))	uGear = 2;
 		}else if( uGearRatio < GEAR_TH( 3 ))	uGear = 3;
 		else  if( uGearRatio < GEAR_TH( 4 ))	uGear = 4;
 		else									uGear = 5;
@@ -781,6 +807,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	FILE	*fp;
 	VSD_LOG_t	*VsdLog2;
 	
+	BOOL	bNewLap			= FALSE;
+	float	fStartMileage	= 0;
+	
 	//	編集中でなければ何もしない
 	if( filter->exfunc->is_editing(editp) != TRUE ) return FALSE;
 	
@@ -814,7 +843,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				float fTime = uMin * 60 + uSec + ( float )uMSec / 1000;
 				
 				g_Lap[ g_iLapNum ].uLap		= uLap;
-				g_Lap[ g_iLapNum ].iFrame	= g_iVsdLogNum;
+				g_Lap[ g_iLapNum ].iLogNum	= g_iVsdLogNum;
 				g_Lap[ g_iLapNum ].fTime	=
 					( uCnt == 4 ) ? fTime : 0;
 				
@@ -822,19 +851,30 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 					uCnt == 4 &&
 					( g_fBestTime == -1 || g_fBestTime > fTime )
 				){
-					g_fBestTime = fTime;
+					g_fBestTime			= fTime;
+					g_iBestLapLogNum	= g_iVsdLogNum;
 				}
 				++g_iLapNum;
+				bNewLap = TRUE;
 			}
 			
 			// 普通の log
-			if(( uCnt = sscanf( szBuf, "%g%g%*g%g%g",
+			if(( uCnt = sscanf( szBuf, "%g%g%g%g%g",
 				&VsdLog2[ g_iVsdLogNum ].fTacho,
 				&VsdLog2[ g_iVsdLogNum ].fSpeed,
+				&VsdLog2[ g_iVsdLogNum ].fMileage,
 				&VsdLog2[ g_iVsdLogNum ].fGx,
 				&VsdLog2[ g_iVsdLogNum ].fGy
-			)) >= 2 ){
-				if( uCnt < 4 && g_iVsdLogNum ){
+			)) >= 3 ){
+				
+				if( bNewLap ){
+					// NewLap 時は，スタート地点の Mileage をリセットする
+					fStartMileage = VsdLog2[ g_iVsdLogNum ].fMileage;
+					bNewLap = FALSE;
+				}
+				VsdLog2[ g_iVsdLogNum ].fMileage -= fStartMileage;
+				
+				if( uCnt < 5 && g_iVsdLogNum ){
 					// Gデータがないときは，speedから求める
 					VsdLog2[ g_iVsdLogNum ].fGy = 0;
 					VsdLog2[ g_iVsdLogNum ].fGx =
@@ -890,7 +930,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		fclose( fp );
 		delete [] VsdLog2;
 		
-		g_Lap[ g_iLapNum ].iFrame = 0x7FFFFFFF;	// 番犬
+		g_Lap[ g_iLapNum ].iLogNum = 0x7FFFFFFF;	// 番犬
 		
 		g_fGcx /= G_CX_CNT;
 		g_fGcy /= G_CX_CNT;
