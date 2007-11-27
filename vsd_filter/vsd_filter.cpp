@@ -703,11 +703,12 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 				);
 			
 			sprintf(
-				szBuf, "%+d'%06.3f",
-				( int )dDiffTime / 60,
+				szBuf, "%c%d'%06.3f",
+				dDiffTime < 0 ? '-' : '+',
+				( int )( fabs( dDiffTime )) / 60,
 				fmod( fabs( dDiffTime ), 60 )
 			);
-			Img.DrawString( szBuf, dDist < 0 ? COLOR_DIST_PLUS : COLOR_DIST_MINUS, COLOR_TIME_EDGE, 0 );
+			Img.DrawString( szBuf, dDiffTime < 0 ? COLOR_DIST_PLUS : COLOR_DIST_MINUS, COLOR_TIME_EDGE, 0 );
 		}
 	}
 	
@@ -960,59 +961,6 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	
 	return FALSE;
 }
-
-/*** スライダバー連動 *******************************************************/
-
-#if 0
-BOOL	func_update( FILTER *fp,int status ){
-	int	i;
-	static	BOOL	bReEnter = FALSE;
-	
-	if( bReEnter ) return TRUE;
-	
-	bReEnter = TRUE;
-	
-	if( fp->check[ CHECK_TRACK ] ){
-		switch( status ){
-		  case FILTER_UPDATE_STATUS_TRACK + TRACK_VSt:
-		  case FILTER_UPDATE_STATUS_TRACK + TRACK_VSt2:
-			i = VideoSt + g_iVideoDiff;
-			if( i < 0 ) i = 0;
-			fp->track[ TRACK_VEd  ] = i / 100;
-			fp->track[ TRACK_VEd2 ] = i % 100;
-			
-		  Case FILTER_UPDATE_STATUS_TRACK + TRACK_VEd:
-		  case FILTER_UPDATE_STATUS_TRACK + TRACK_VEd2:
-			i = VideoEd - g_iVideoDiff;
-			fp->track[ TRACK_VSt  ] = i / 100;
-			fp->track[ TRACK_VSt2 ] = i % 100;
-			
-		  Case FILTER_UPDATE_STATUS_TRACK + TRACK_LSt:
-		  case FILTER_UPDATE_STATUS_TRACK + TRACK_LSt2:
-			i = LogSt + g_iLogDiff;
-			if( i < 0 ) i = 0;
-			fp->track[ TRACK_LEd  ] = i / 100;
-			fp->track[ TRACK_LEd2 ] = i % 100;
-			
-		  Case FILTER_UPDATE_STATUS_TRACK + TRACK_LEd:
-		  case FILTER_UPDATE_STATUS_TRACK + TRACK_LEd2:
-			i = LogEd - g_iLogDiff;
-			fp->track[ TRACK_LSt  ] = i / 100;
-			fp->track[ TRACK_LSt2 ] = i % 100;
-		}
-		
-		// 設定再描画
-		fp->exfunc->filter_window_update( fp );
-	}
-	
-	bReEnter = FALSE;
-	
-	g_iVideoDiff = VideoEd - VideoSt;
-	g_iLogDiff	 = LogEd   - LogSt;
-	
-	return TRUE;
-}
-#endif
 
 /****************************************************************************/
 
