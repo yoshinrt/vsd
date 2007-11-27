@@ -3,6 +3,8 @@
 //----------------------------------------------------------------------------------
 // $Id$
 
+#define _CRT_SECURE_NO_DEPRECATE 1
+
 #include <windows.h>
 #include <stdio.h>
 #include <math.h>
@@ -247,7 +249,7 @@ void CAviUtlImage::DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFl
 	// 円を書く
 	for( i = 0, j = r; i < j; ++i ){
 		
-		j = ( int )( sqrt( r * r - i * i ) + .5 );
+		j = ( int )( sqrt(( double )( r * r - i * i )) + .5 );
 		
 		PutPixel( x + i, y + j, yc, uFlag ); PutPixel( x + i, y - j, yc, uFlag );
 		PutPixel( x - i, y + j, yc, uFlag ); PutPixel( x - i, y - j, yc, uFlag );
@@ -703,7 +705,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			sprintf(
 				szBuf, "%+d'%06.3f",
 				( int )dDiffTime / 60,
-				floor( fabs( dDiffTime ), 60 )
+				fmod( fabs( dDiffTime ), 60 )
 			);
 			Img.DrawString( szBuf, dDist < 0 ? COLOR_DIST_PLUS : COLOR_DIST_MINUS, COLOR_TIME_EDGE, 0 );
 		}
@@ -859,8 +861,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				
 				g_Lap[ g_iLapNum ].uLap		= uLap;
 				g_Lap[ g_iLapNum ].iLogNum	= g_iVsdLogNum;
-				g_Lap[ g_iLapNum ].dTime	=
-					( uCnt == 4 ) ? dTime : 0;
+				g_Lap[ g_iLapNum ].fTime	=
+					( uCnt == 4 ) ? ( float )dTime : 0;
 				
 				if(
 					uCnt == 4 &&
@@ -883,8 +885,10 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				if( uCnt < 5 && g_iVsdLogNum ){
 					// Gデータがないときは，speedから求める
 					VsdLog2[ g_iVsdLogNum ].fGy = 0;
-					VsdLog2[ g_iVsdLogNum ].fGx =
-						( VsdLog2[ g_iVsdLogNum ].fSpeed - VsdLog2[ g_iVsdLogNum - 1 ].fSpeed ) * (( double )1000 / 3600 / 9.8 * LOG_FREQ * ACC_1G_X );
+					VsdLog2[ g_iVsdLogNum ].fGx = ( float )(
+						( VsdLog2[ g_iVsdLogNum ].fSpeed - VsdLog2[ g_iVsdLogNum - 1 ].fSpeed ) *
+						(( double )1000 / 3600 / 9.8 * LOG_FREQ * ACC_1G_X )
+					);
 				}else if( VsdLog2[ g_iVsdLogNum ].fGx < 1024 ){
 					// G データが 0～1023 の範囲の時代のログ???
 					VsdLog2[ g_iVsdLogNum ].fGx *= 64;
