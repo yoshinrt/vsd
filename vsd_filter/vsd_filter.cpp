@@ -381,13 +381,13 @@ VSD_LOG_t	*g_VsdLog 		= NULL;
 int			g_iVsdLogNum	= 0;
 LAP_t		*g_Lap	 		= NULL;
 int			g_iLapNum		= 0;
-float		g_fBestTime		= -1;
+double		g_dBestTime		= -1;
 int			g_iBestLapLogNum= 0;
 
 int			g_iVideoDiff;
 int			g_iLogDiff;
 
-double		g_fGcx, g_fGcy;
+double		g_dGcx, g_dGcy;
 BOOL		g_bReverseGy;
 
 /****************************************************************************/
@@ -593,7 +593,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	const int	iMeterScaleLen	= iMeterR / 8;
 	
 	// ログ位置の計算
-	float	fLogNum = ( float )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( Img.frame - VideoSt ) + LogSt;
+	double	dLogNum = ( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( Img.frame - VideoSt ) + LogSt;
 	
 	// メーターパネル
 	Img.DrawCircle(
@@ -631,7 +631,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	if( fp->check[ CHECK_FRAME ] ){
 		sprintf( szBuf, "V%6d/%6d", Img.frame, Img.frame_n - 1 );
 		Img.DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, Img.w / 2, Img.h / 2 );
-		sprintf( szBuf, "L%6d/%6d", ( int )fLogNum, g_iVsdLogNum - 1 );
+		sprintf( szBuf, "L%6d/%6d", ( int )dLogNum, g_iVsdLogNum - 1 );
 		Img.DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 	}
 	
@@ -649,13 +649,13 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		// カレントポインタがおかしいときは，-1 にリセット
 		if(
 			iLapIdx >= g_iLapNum ||
-			iLapIdx >= 0 && g_Lap[ iLapIdx ].iLogNum > ( int )fLogNum
+			iLapIdx >= 0 && g_Lap[ iLapIdx ].iLogNum > ( int )dLogNum
 		) iLapIdx = -1;
 		
-		for( ; g_Lap[ iLapIdx + 1 ].iLogNum <= ( int )fLogNum; ++iLapIdx );
+		for( ; g_Lap[ iLapIdx + 1 ].iLogNum <= ( int )dLogNum; ++iLapIdx );
 		
 		// Best 表示
-		sprintf( szBuf, "Bst%3d'%02d.%03d", ( int )g_fBestTime / 60, ( int )g_fBestTime % 60, ( int )( g_fBestTime * 1000 + .5 ) % 1000 );
+		sprintf( szBuf, "Bst%3d'%02d.%03d", ( int )g_dBestTime / 60, ( int )g_dBestTime % 60, ( int )( g_dBestTime * 1000 + .5 ) % 1000 );
 		Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 13, 1 );
 		
 		// Lapタイム表示
@@ -674,8 +674,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			g_Lap[ iLapIdx + 1 ].iLogNum != 0x7FFFFFFF &&
 			g_Lap[ iLapIdx + 1 ].fTime  != 0
 		){
-			float fTime = ( fLogNum - g_Lap[ iLapIdx ].iLogNum ) / ( float )(( double )H8HZ / 65536 / 16 );
-			sprintf( szBuf, "%2d'%02d.%03d", ( int )fTime / 60, ( int )fTime % 60, ( int )( fTime * 1000 + .5 ) % 1000 );
+			double dTime = ( dLogNum - g_Lap[ iLapIdx ].iLogNum ) / (( double )H8HZ / 65536 / 16 );
+			sprintf( szBuf, "%2d'%02d.%03d", ( int )dTime / 60, ( int )dTime % 60, ( int )( dTime * 1000 + .5 ) % 1000 );
 			Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
 			bInLap = TRUE;
 		}else{
@@ -688,38 +688,43 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		if(
 			bInLap &&
 			// BestLap の対応するログ位置を計算
-		 	( iBestLogNum = ( int )fLogNum - g_Lap[ iLapIdx ].iLogNum + g_iBestLapLogNum ) < g_iVsdLogNum
+		 	( iBestLogNum = ( int )dLogNum - g_Lap[ iLapIdx ].iLogNum + g_iBestLapLogNum ) < g_iVsdLogNum
 		){
-			float fDist =
-				( g_VsdLog[ ( int )fLogNum ].fMileage - g_VsdLog[ g_Lap[ iLapIdx ].iLogNum ].fMileage ) -
-				( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage );
-			sprintf(
-				szBuf, "%9.3f",
-				-fDist / (
-					( g_VsdLog[ ( int )fLogNum ].fSpeed + g_VsdLog[ iBestLogNum ].fSpeed ) / 2
+			double dDist =
+				( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage ) -
+				( g_VsdLog[ ( int )dLogNum ].fMileage - g_VsdLog[ g_Lap[ iLapIdx ].iLogNum ].fMileage );
+			
+			double dDiffTime =
+				dDist / (
+					( g_VsdLog[ ( int )dLogNum ].fSpeed + g_VsdLog[ iBestLogNum ].fSpeed ) / 2
 					/ 3600 * 1000
-				)
+				);
+			
+			sprintf(
+				szBuf, "%+d'%06.3f",
+				( int )dDiffTime / 60,
+				floor( fabs( dDiffTime ), 60 )
 			);
-			Img.DrawString( szBuf, fDist >= 0 ? COLOR_DIST_PLUS : COLOR_DIST_MINUS, COLOR_TIME_EDGE, 0 );
+			Img.DrawString( szBuf, dDist < 0 ? COLOR_DIST_PLUS : COLOR_DIST_MINUS, COLOR_TIME_EDGE, 0 );
 		}
 	}
 	
 	/*** メーター描画 ***/
 	
-	if( fLogNum < 0 || fLogNum > g_iVsdLogNum - 1 ) return TRUE;
+	if( dLogNum < 0 || dLogNum > g_iVsdLogNum - 1 ) return TRUE;
 	
 	#define GetVsdLog( p ) ( \
-		g_VsdLog[ ( UINT )fLogNum     ].p * ( 1 - ( fLogNum - ( UINT )fLogNum )) + \
-		g_VsdLog[ ( UINT )fLogNum + 1 ].p * (       fLogNum - ( UINT )fLogNum ))
+		g_VsdLog[ ( UINT )dLogNum     ].p * ( 1 - ( dLogNum - ( UINT )dLogNum )) + \
+		g_VsdLog[ ( UINT )dLogNum + 1 ].p * (       dLogNum - ( UINT )dLogNum ))
 	
-	float	fSpeed	= GetVsdLog( fSpeed );
-	float	fTacho	= GetVsdLog( fTacho );
-	float	fGx		= GetVsdLog( fGx );
-	float	fGy		= GetVsdLog( fGy );
+	double	dSpeed	= GetVsdLog( fSpeed );
+	double	dTacho	= GetVsdLog( fTacho );
+	double	dGx		= GetVsdLog( fGx );
+	double	dGy		= GetVsdLog( fGy );
 	
 	// G スネーク
-	int	iGx = ( int )( -( fGy - g_fGcy ) / ACC_1G_Y * iMeterR / 1.5 + .5 );
-	int iGy = ( int )(  ( fGx - g_fGcx ) / ACC_1G_X * iMeterR / 1.5 + .5 );
+	int	iGx = ( int )( -( dGy - g_dGcy ) / ACC_1G_Y * iMeterR / 1.5 + .5 );
+	int iGy = ( int )(  ( dGx - g_dGcx ) / ACC_1G_X * iMeterR / 1.5 + .5 );
 	
 	if( fp->check[ CHECK_SNAKE ] ){
 		iGxHist[ uGHistPtr ] = iGx;
@@ -750,9 +755,9 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	double dTachoNeedle =
 		iMeterDegRange / ( double )iMeterMaxVal *
 		#ifdef ASYMMETRIC_METER
-			( fTacho <= 2000 ? fTacho / 2 : fTacho - 1000 )
+			( dTacho <= 2000 ? dTacho / 2 : dTacho - 1000 )
 		#else
-			fTacho
+			dTacho
 		#endif
 		+ iMeterMinDeg;
 	if( dTachoNeedle >= 360 ) dTachoNeedle -= 360;
@@ -771,8 +776,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	UINT uGear = 0;
 	UINT uGearRatio = 0;
 	
-	if( fTacho ){
-		UINT uGearRatio = ( int )( fSpeed * 100 * ( 1 << 8 ) / fTacho );
+	if( dTacho ){
+		UINT uGearRatio = ( int )( dSpeed * 100 * ( 1 << 8 ) / dTacho );
 		
 		if     ( uGearRatio < GEAR_TH( 1 ))	uGear = 1;
 		else if( uGearRatio < GEAR_TH( 2 ))	uGear = 2;
@@ -783,7 +788,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	
 	// スピード表示
 	/*
-	sprintf( szBuf, "%d\x7F%4d\x80\x81", uGear, ( int )fSpeed );
+	sprintf( szBuf, "%d\x7F%4d\x80\x81", uGear, ( int )dSpeed );
 	Img.DrawString(
 		iMeterCx - 4 * Img.GetFontW(), iMeterCy + iMeterR / 2,
 		szBuf,
@@ -796,7 +801,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		COLOR_STR, 0,
 		iMeterCx - 1 * Img.GetFontW(), iMeterCy + iMeterR / 2 - Img.GetFontH()
 	);
-	sprintf( szBuf, "%3d\x80\x81", ( int )fSpeed );
+	sprintf( szBuf, "%3d\x80\x81", ( int )dSpeed );
 	Img.DrawString(
 		szBuf,
 		COLOR_STR, 0,
@@ -815,7 +820,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
 	//	TRUEを返すと全体が再描画される
 	
-	TCHAR	szBuf[ BUF_SIZE ];
+	static TCHAR	szBuf[ BUF_SIZE ];
 	TCHAR	*p;
 	FILE	*fp;
 	VSD_LOG_t	*VsdLog2;
@@ -837,7 +842,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 		g_iVsdLogNum	= 0;
 		g_iLapNum		= 0;
-		g_fBestTime		= -1;
+		g_dBestTime		= -1;
 		
 		VsdLog2		= new VSD_LOG_t[ MAX_VSD_LOG ];
 		VsdLog2[ 0 ].fGx = VsdLog2[ 0 ].fGy = 0;
@@ -850,18 +855,18 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			if(( p = strstr( szBuf, "LAP" )) != NULL ){ // ラップタイム記録を見つけた
 				uCnt = sscanf( p, "LAP%d%d:%d.%d", &uLap, &uMin, &uSec, &uMSec );
 				
-				float fTime = uMin * 60 + uSec + ( float )uMSec / 1000;
+				double dTime = uMin * 60 + uSec + ( double )uMSec / 1000;
 				
 				g_Lap[ g_iLapNum ].uLap		= uLap;
 				g_Lap[ g_iLapNum ].iLogNum	= g_iVsdLogNum;
-				g_Lap[ g_iLapNum ].fTime	=
-					( uCnt == 4 ) ? fTime : 0;
+				g_Lap[ g_iLapNum ].dTime	=
+					( uCnt == 4 ) ? dTime : 0;
 				
 				if(
 					uCnt == 4 &&
-					( g_fBestTime == -1 || g_fBestTime > fTime )
+					( g_dBestTime == -1 || g_dBestTime > dTime )
 				){
-					g_fBestTime			= fTime;
+					g_dBestTime			= dTime;
 					g_iBestLapLogNum	= g_Lap[ g_iLapNum - 1 ].iLogNum;
 				}
 				++g_iLapNum;
@@ -879,7 +884,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 					// Gデータがないときは，speedから求める
 					VsdLog2[ g_iVsdLogNum ].fGy = 0;
 					VsdLog2[ g_iVsdLogNum ].fGx =
-						( float )(( VsdLog2[ g_iVsdLogNum ].fSpeed - VsdLog2[ g_iVsdLogNum - 1 ].fSpeed ) * 1000 / 3600 / 9.8 * LOG_FREQ * ACC_1G_X );
+						( VsdLog2[ g_iVsdLogNum ].fSpeed - VsdLog2[ g_iVsdLogNum - 1 ].fSpeed ) * (( double )1000 / 3600 / 9.8 * LOG_FREQ * ACC_1G_X );
 				}else if( VsdLog2[ g_iVsdLogNum ].fGx < 1024 ){
 					// G データが 0～1023 の範囲の時代のログ???
 					VsdLog2[ g_iVsdLogNum ].fGx *= 64;
@@ -893,14 +898,14 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 		// スムージング
 		int	i, j;
-		g_fGcx = g_fGcy = 0;
+		g_dGcx = g_dGcy = 0;
 		
 		for( i = 0; i < ( int )g_iVsdLogNum; ++i ){
 			// Gセンサーのセンター検出
 			
 			if( i < G_CX_CNT ){
-				g_fGcx += VsdLog2[ i ].fGx;
-				g_fGcy += VsdLog2[ i ].fGy;
+				g_dGcx += VsdLog2[ i ].fGx;
+				g_dGcy += VsdLog2[ i ].fGy;
 			}
 			if( i < SMOOTH - 1 || ( g_iVsdLogNum - SMOOTH ) < i ){
 				// タダのコピー
@@ -934,8 +939,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 		g_Lap[ g_iLapNum ].iLogNum = 0x7FFFFFFF;	// 番犬
 		
-		g_fGcx /= G_CX_CNT;
-		g_fGcy /= G_CX_CNT;
+		g_dGcx /= G_CX_CNT;
+		g_dGcy /= G_CX_CNT;
 		
 		// trackbar 設定
 		track_e[ TRACK_VSt ] =
