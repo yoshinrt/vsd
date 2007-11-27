@@ -54,6 +54,8 @@ const UCHAR g_Font18p[] = {
 	#include "font_18p.h"
 };
 
+#define POS_DEFAULT	0x80000000
+
 class CAviUtlImage : public FILTER_PROC_INFO {
 	
   public:
@@ -84,8 +86,8 @@ class CAviUtlImage : public FILTER_PROC_INFO {
 	
 	void DrawFont( int x, int y, char c, const PIXEL_YC &yc, UINT uFlag );
 	void DrawFont( int x, int y, char c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag );
-	void DrawString( int x, int y, char *szMsg, const PIXEL_YC &yc, UINT uFlag );
-	void DrawString( int x, int y, char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag );
+	void DrawString( char *szMsg, const PIXEL_YC &yc, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
+	void DrawString( char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
 	
 	// ポリゴン描写
 	void PolygonClear( void );
@@ -312,18 +314,32 @@ void CAviUtlImage::DrawFont( int x, int y, char c, const PIXEL_YC &yc, const PIX
 
 /*** DrawString *************************************************************/
 
-void CAviUtlImage::DrawString( int x, int y, char *szMsg, const PIXEL_YC &yc, UINT uFlag ){
+void CAviUtlImage::DrawString( char *szMsg, const PIXEL_YC &yc, UINT uFlag, int x, int y ){
+	
+	static int iPosX, iPosY;
+	
+	if( x != POS_DEFAULT ) iPosX = x;
+	if( y != POS_DEFAULT ) iPosY = y;
 	
 	for( int i = 0; szMsg[ i ]; ++i ){
-		DrawFont( x + i * GetFontW(), y, szMsg[ i ], yc, uFlag );
+		DrawFont( iPosX + i * GetFontW(), iPosY, szMsg[ i ], yc, uFlag );
 	}
+	
+	iPosY += GetFontH();
 }
 
-void CAviUtlImage::DrawString( int x, int y, char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag ){
+void CAviUtlImage::DrawString( char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag, int x, int y ){
+	
+	static int iPosX, iPosY;
+	
+	if( x != POS_DEFAULT ) iPosX = x;
+	if( y != POS_DEFAULT ) iPosY = y;
 	
 	for( int i = 0; szMsg[ i ]; ++i ){
-		DrawFont( x + i * GetFontW(), y, szMsg[ i ], yc, ycEdge, uFlag );
+		DrawFont( iPosX + i * GetFontW(), iPosY, szMsg[ i ], yc, ycEdge, uFlag );
 	}
+	
+	iPosY += GetFontH();
 }
 
 /*** ポリゴン描画 ***********************************************************/
@@ -545,7 +561,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 //	fpip->ycp_edit と fpip->ycp_temp を入れ替えます。
 //
 	
-	char	szBuf[ 20 ];
+	static char	szBuf[ 128 ];
 	static	int	iLapIdx	= -1;
 	
 	static short	iGxHist[ MAX_G_HIST ];
@@ -614,17 +630,14 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	// フレーム表示
 	if( fp->check[ CHECK_FRAME ] ){
 		sprintf( szBuf, "V%6d/%6d", Img.frame, Img.frame_n - 1 );
-		Img.DrawString( Img.w / 2, Img.h / 2, szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+		Img.DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, Img.w / 2, Img.h / 2 );
 		sprintf( szBuf, "L%6d/%6d", ( int )fLogNum, g_iVsdLogNum - 1 );
-		Img.DrawString( img.w / 2, Img.h / 2 + Img.GetFontH(), szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+		Img.DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 	}
 	
 	/*** Lap タイム描画 ***/
 	
 	if( fp->check[ CHECK_LAP ] && g_iLapNum ){
-		int	iLapX = Img.w - Img.GetFontW() * 13;
-		int iLapY = 1;
-		
 		/*
 		Img.DrawRect(
 			iLapX, iLapY, Img.w - 1, iLapY + Img.GetFontH() * 5 - 1,
@@ -641,6 +654,20 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		
 		for( ; g_Lap[ iLapIdx + 1 ].iLogNum <= ( int )fLogNum; ++iLapIdx );
 		
+		// Best 表示
+		sprintf( szBuf, "Bst%3d'%02d.%03d", ( int )g_fBestTime / 60, ( int )g_fBestTime % 60, ( int )( g_fBestTime * 1000 + .5 ) % 1000 );
+		Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 13, 1 );
+		
+		// Lapタイム表示
+		int	i = 0;
+		for( int iLapIdxTmp = iLapIdx; iLapIdxTmp >= 0; --iLapIdxTmp ){
+			if( g_Lap[ iLapIdxTmp ].fTime != 0 ){
+				sprintf( szBuf, "%3d%3d'%02d.%03d", g_Lap[ iLapIdxTmp ].uLap, ( int )g_Lap[ iLapIdxTmp ].fTime / 60, ( int )g_Lap[ iLapIdxTmp ].fTime % 60, ( int )( g_Lap[ iLapIdxTmp ].fTime * 1000 + .5 ) % 1000 );
+				Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
+				if( ++i >= 3 ) break;
+			}
+		}
+		
 		// 時間表示
 		if(
 			iLapIdx >= 0 &&
@@ -648,47 +675,33 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			g_Lap[ iLapIdx + 1 ].fTime  != 0
 		){
 			float fTime = ( fLogNum - g_Lap[ iLapIdx ].iLogNum ) / ( float )(( double )H8HZ / 65536 / 16 );
-			sprintf( szBuf, "%6d'%02d.%03d", ( int )fTime / 60, ( int )fTime % 60, ( int )( fTime * 1000 + .5 ) % 1000 );
-			Img.DrawString( iLapX, iLapY, szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
+			sprintf( szBuf, "%2d'%02d.%03d", ( int )fTime / 60, ( int )fTime % 60, ( int )( fTime * 1000 + .5 ) % 1000 );
+			Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
 			bInLap = TRUE;
 		}else{
 			// まだ開始していない
-			Img.DrawString( iLapX, iLapY, "    --'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0 );
+			Img.DrawString( "--'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
 		}
-		iLapY += Img.GetFontH();
 		
-		// Best 表示
-		sprintf( szBuf, "Bst%3d'%02d.%03d", ( int )g_fBestTime / 60, ( int )g_fBestTime % 60, ( int )( g_fBestTime * 1000 + .5 ) % 1000 );
-		Img.DrawString( iLapX, iLapY, szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
-		iLapY += Img.GetFontH();
-		
-		// Lapタイム表示
-		int	i = 0;
-		for( int iLapIdxTmp = iLapIdx; iLapIdxTmp >= 0; --iLapIdxTmp ){
-			if( g_Lap[ iLapIdxTmp ].fTime != 0 ){
-				sprintf( szBuf, "%3d%3d'%02d.%03d", g_Lap[ iLapIdxTmp ].uLap, ( int )g_Lap[ iLapIdxTmp ].fTime / 60, ( int )g_Lap[ iLapIdxTmp ].fTime % 60, ( int )( g_Lap[ iLapIdxTmp ].fTime * 1000 + .5 ) % 1000 );
-				Img.DrawString( iLapX, iLapY, szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
-				iLapY += Img.GetFontH();
-				if( ++i >= 3 ) break;
-			}
+		// ベストとの車間距離表示
+		int iBestLogNum;
+		if(
+			bInLap &&
+			// BestLap の対応するログ位置を計算
+		 	( iBestLogNum = ( int )fLogNum - g_Lap[ iLapIdx ].iLogNum + g_iBestLapLogNum ) < g_iVsdLogNum
+		){
+			float fDist =
+				( g_VsdLog[ ( int )fLogNum ].fMileage - g_VsdLog[ g_Lap[ iLapIdx ].iLogNum ].fMileage ) -
+				( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage );
+			sprintf(
+				szBuf, "%9.3f",
+				-fDist / (
+					( g_VsdLog[ ( int )fLogNum ].fSpeed + g_VsdLog[ iBestLogNum ].fSpeed ) / 2
+					/ 3600 * 1000
+				)
+			);
+			Img.DrawString( szBuf, fDist >= 0 ? COLOR_DIST_PLUS : COLOR_DIST_MINUS, COLOR_TIME_EDGE, 0 );
 		}
-			
-			// ベストとの車間距離表示
-			if( 1 ){
-				int iBestLogNum;
-				if(
-					bInLap &&
-					// BestLap の対応するログ位置を計算
-				 	( iBestLogNum = ( int )fLogNum - g_Lap[ iLapIdx ].iLogNum + g_iBestLapLogNum ) < g_iVsdLogNum
-				 ){
-					float fDist = g_VsdLog[ ( int )fLogNum ].fMileage - g_VsdLog[ iBestLogNum ].fMileage;
-					sprintf( szBuf, "diff:%6.1fm %7.3fs", fDist, fDist / ( g_VsdLog[ ( int )fLogNum ].fSpeed / 3600 * 1000 ));
-					Img.DrawString( 0, Img.h - Img.GetFontH(), szBuf, fDist >= 0 ? COLOR_DIST_PLUS : COLOR_DIST_NUMUS, COLOR_TIME_EDGE, 0 );
-				 }else{
-				 	// 計測中ではないか，BestLap のログ位置がはみ出した
-					Img.DrawString( 0, Img.h - Img.GetFontH(), "diff: ---", COLOR_TIME, COLOR_TIME_EDGE, 0 );
-				 }
-			}
 	}
 	
 	/*** メーター描画 ***/
@@ -761,11 +774,11 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	if( fTacho ){
 		UINT uGearRatio = ( int )( fSpeed * 100 * ( 1 << 8 ) / fTacho );
 		
-		if      ( uGearRatio < GEAR_TH( 1 ))	uGear = 1;
-		}else if( uGearRatio < GEAR_TH( 2 ))	uGear = 2;
-		}else if( uGearRatio < GEAR_TH( 3 ))	uGear = 3;
-		else  if( uGearRatio < GEAR_TH( 4 ))	uGear = 4;
-		else									uGear = 5;
+		if     ( uGearRatio < GEAR_TH( 1 ))	uGear = 1;
+		else if( uGearRatio < GEAR_TH( 2 ))	uGear = 2;
+		else if( uGearRatio < GEAR_TH( 3 ))	uGear = 3;
+		else if( uGearRatio < GEAR_TH( 4 ))	uGear = 4;
+		else								uGear = 5;
 	}
 	
 	// スピード表示
@@ -779,15 +792,15 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	*/
 	sprintf( szBuf, "%d\x7F", uGear );
 	Img.DrawString(
-		iMeterCx - 1 * Img.GetFontW(), iMeterCy + iMeterR / 2 - Img.GetFontH(),
 		szBuf,
-		COLOR_STR, 0
+		COLOR_STR, 0,
+		iMeterCx - 1 * Img.GetFontW(), iMeterCy + iMeterR / 2 - Img.GetFontH()
 	);
 	sprintf( szBuf, "%3d\x80\x81", ( int )fSpeed );
 	Img.DrawString(
-		iMeterCx - 3 * Img.GetFontW(), iMeterCy + iMeterR / 2,
 		szBuf,
-		COLOR_STR, 0
+		COLOR_STR, 0,
+		iMeterCx - 3 * Img.GetFontW(), iMeterCy + iMeterR / 2
 	);
 	
 	return TRUE;
@@ -806,9 +819,6 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	TCHAR	*p;
 	FILE	*fp;
 	VSD_LOG_t	*VsdLog2;
-	
-	BOOL	bNewLap			= FALSE;
-	float	fStartMileage	= 0;
 	
 	//	編集中でなければ何もしない
 	if( filter->exfunc->is_editing(editp) != TRUE ) return FALSE;
@@ -852,10 +862,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 					( g_fBestTime == -1 || g_fBestTime > fTime )
 				){
 					g_fBestTime			= fTime;
-					g_iBestLapLogNum	= g_iVsdLogNum;
+					g_iBestLapLogNum	= g_Lap[ g_iLapNum - 1 ].iLogNum;
 				}
 				++g_iLapNum;
-				bNewLap = TRUE;
 			}
 			
 			// 普通の log
@@ -866,14 +875,6 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				&VsdLog2[ g_iVsdLogNum ].fGx,
 				&VsdLog2[ g_iVsdLogNum ].fGy
 			)) >= 3 ){
-				
-				if( bNewLap ){
-					// NewLap 時は，スタート地点の Mileage をリセットする
-					fStartMileage = VsdLog2[ g_iVsdLogNum ].fMileage;
-					bNewLap = FALSE;
-				}
-				VsdLog2[ g_iVsdLogNum ].fMileage -= fStartMileage;
-				
 				if( uCnt < 5 && g_iVsdLogNum ){
 					// Gデータがないときは，speedから求める
 					VsdLog2[ g_iVsdLogNum ].fGy = 0;
@@ -908,6 +909,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				// スムージング
 				g_VsdLog[ i ].fTacho	= VsdLog2[ i ].fTacho;
 				g_VsdLog[ i ].fSpeed	= VsdLog2[ i ].fSpeed;
+				g_VsdLog[ i ].fMileage	= VsdLog2[ i ].fMileage;
 				//g_VsdLog[ i ].fTacho	= 0;
 				//g_VsdLog[ i ].fSpeed	= 0;
 				g_VsdLog[ i ].fGx		= 0;
