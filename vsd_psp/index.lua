@@ -402,7 +402,7 @@ function DrawMeters()
 	--	Console:print( os.date( "%y/%m/%d" ))
 		Console:print( string.format( "%8.3fkm", Mileage / PULSE_PAR_1KM ))
 		Console:print( string.format( "Sector:%d", SectorCnt ))
-		Console:print( string.format( "GPS:%d", GPS_Dimension ))
+		Console:print( string.format( "GPS:%d", GPS_Valid ))
 	end
 end
 
@@ -1067,16 +1067,19 @@ if( OS ) then
 	UsbGps.get_data = function()
 		return 0
 	end
+	
+	UsbGps.set_init_loc = function()
+	end
 end
 
 GPS_PrevSec = 99;
-GPS_Dimension = 0;
+GPS_Valid = 0;
 
 function GetGPSData()
 	
 	local tmp
 	
-	GPS_Dimension,	-- dimension
+	GPS_Valid,		-- valid
 	tmp,			-- year
 	tmp,			-- month
 	tmp,			-- date
@@ -1090,7 +1093,7 @@ function GetGPSData()
 	GPS_Bearing		-- bearing
 	= UsbGps.get_data()
 	
-	if( GPS_Dimension >= 2 and GPS_PrevSec ~= GPS_Second ) then
+	if( GPS_Valid >= 1 and GPS_PrevSec ~= GPS_Second ) then
 		-- GPS データ更新
 		GPS_PrevSec = GPS_Second
 		return true
@@ -1122,6 +1125,7 @@ AutoSaveTimer = Timer.new()
 AutoSaveTimer:start()
 
 UsbGps.open()
+UsbGps.set_init_loc( 0 )
 
 -- 一定時間ごとに処理するルーチン --------------------------------------------
 
@@ -1147,7 +1151,7 @@ function DoIntervalProc()
 	else
 		if( GetGPSData()) then
 			-- GPS のデータで，スピード表示更新
-			Tacho	= math.floor( GPS_Dimension * 1000 )
+			Tacho	= math.floor( GPS_Valid * 1000 )
 			Speed	= math.floor( GPS_Speed + 0.5 )
 			RefreshFlag = true
 		end
@@ -1205,5 +1209,5 @@ while true do
 	end
 end
 
-fpLog:close()
+if( fplog ) then fpLog:close() end
 UsbGps.close()
