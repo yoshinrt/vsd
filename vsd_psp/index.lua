@@ -1151,8 +1151,8 @@ function DoIntervalProc()
 	else
 		if( GetGPSData()) then
 			-- GPS のデータで，スピード表示更新
-			Tacho	= math.floor( GPS_Valid * 1000 )
-			Speed	= math.floor( GPS_Speed + 0.5 )
+			Tacho	= Tacho + GPS_Valid
+			Speed	= math.floor( GPS_Speed * 100 + 0.5 )
 			RefreshFlag = true
 		end
 		
