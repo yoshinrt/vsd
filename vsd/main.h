@@ -13,7 +13,7 @@
 
 #define H8HZ			16030000
 #define SERIAL_DIVCNT	16		// シリアル出力を行う周期
-#define LOG_FREQ		( H8HZ / 65536 / SERIAL_DIVCNT )
+#define LOG_FREQ		(( double )H8HZ / 65536 / SERIAL_DIVCNT )
 
 // 現在ギアを求めるときのスレッショルド設定値
 // 10%マージンは廃止
