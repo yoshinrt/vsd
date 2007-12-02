@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <float.h>
 
 #include "dds.h"
 #include "filter.h"
@@ -47,6 +48,8 @@
 
 #define MAX_MAP_SIZE	( Img.w / 2.5 )
 #define MAP_HIST		(( int )( LOG_FREQ * 5 * 60 ))
+#define INVALID_POS_I	0x7FFFFFFF
+#define INVALID_POS_D	NaN
 
 #define ASYMMETRIC_METER
 
@@ -771,22 +774,29 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		COLOR_G_SENSOR, CAviUtlImage::IMG_FILL
 	);
 	
-	// MAP スネーク
+	// MAP 表示
 	if( fp->check[ CHECK_MAP ] ){
 		
-		int iGxPrev = 0, iGyPrev;
+		int iGxPrev = INVALID_POS_I, iGyPrev;
 		int iLogNum = ( int )dLogNum;
 		
 		for( i = -MAP_HIST; i <= 1 ; ++i ){
 			if( iLogNum + i >= 0 ){
 				// i == 1 時は最後の中途半端な LogNum
-				iGx = ( int )((( i != 1 ) ? g_VsdLog[ iLogNum + i ].fX : GetVsdLog( fX )) / g_dMaxMapSize * MAX_MAP_SIZE ) + 8;
-				iGy = ( int )((( i != 1 ) ? g_VsdLog[ iLogNum + i ].fY : GetVsdLog( fY )) / g_dMaxMapSize * MAX_MAP_SIZE ) + 8;
+				double dGx = (( i != 1 ) ? g_VsdLog[ iLogNum + i ].fX : GetVsdLog( fX )) / g_dMaxMapSize * MAX_MAP_SIZE + 8;
+				double dGy = (( i != 1 ) ? g_VsdLog[ iLogNum + i ].fY : GetVsdLog( fY )) / g_dMaxMapSize * MAX_MAP_SIZE + 8;
 				
-				if( iGxPrev ) Img.DrawLine(
-					iGx, iGy, iGxPrev, iGyPrev,
-					LINE_WIDTH, COLOR_G_HIST, 0
-				);
+				if( !_isnan( dGx )){
+					iGx = ( int )dGx;
+					iGy = ( int )dGy;
+					
+					if( iGxPrev != INVALID_POS_I ) Img.DrawLine(
+						iGx, iGy, iGxPrev, iGyPrev,
+						LINE_WIDTH, COLOR_G_HIST, 0
+					);
+				}else{
+					iGx = INVALID_POS_I;
+				}
 				
 				iGxPrev = iGx;
 				iGyPrev = iGy;
@@ -794,7 +804,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		}
 		
 		// MAP インジケータ
-		Img.DrawCircle(
+		if( iGx != INVALID_POS_I ) Img.DrawCircle(
 			iGx, iGy, iMeterR / 20,
 			COLOR_G_SENSOR, CAviUtlImage::IMG_FILL
 		);
@@ -876,6 +886,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	GPS_LOG_t	*GPSLog;
 	double		dLatiMin = 1000, dLatiMax = 0;
 	double		dLongMin = 1000, dLongMax = 0;
+	
+	volatile float		NaN = 0;
+	NaN /= NaN;
 	
 	//	編集中でなければ何もしない
 	if( filter->exfunc->is_editing(editp) != TRUE ) return FALSE;
@@ -983,7 +996,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				g_VsdLog[ g_iVsdLogNum ].fGx = ( float )dGx;
 				g_VsdLog[ g_iVsdLogNum ].fGy = ( float )dGy;
 				
-				g_VsdLog[ g_iVsdLogNum ].fX = g_VsdLog[ g_iVsdLogNum ].fY = 0;
+				g_VsdLog[ g_iVsdLogNum ].fX = g_VsdLog[ g_iVsdLogNum ].fY = INVALID_POS_D;
 				++g_iVsdLogNum;
 			}
 		}
