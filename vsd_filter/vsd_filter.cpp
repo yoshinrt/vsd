@@ -864,15 +864,12 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 //		WndProc
 //---------------------------------------------------------------------
 
-#define SMOOTH	1
-
 BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
 	//	TRUEを返すと全体が再描画される
 	
 	static TCHAR	szBuf[ BUF_SIZE ];
 	TCHAR	*p;
 	FILE	*fp;
-	VSD_LOG_t	*VsdLog2;
 	
 	// GPS ログ用
 	UINT		uGPSCnt = 0;
@@ -901,12 +898,12 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		g_iLapNum		= 0;
 		g_dBestTime		= -1;
 		
-		VsdLog2		= new VSD_LOG_t[ MAX_VSD_LOG ];
-		VsdLog2[ 0 ].fGy = VsdLog2[ 0 ].fGx = 0;
-		
 		// ログリード
 		
 		UINT	uCnt, uLap, uMin, uSec, uMSec;
+		double	dGcx = 0;
+		double	dGcy = 0;
+		double	dGx, dGy;
 		
 		while( fgets( szBuf, BUF_SIZE, fp ) != NULL ){
 			if(( p = strstr( szBuf, "LAP" )) != NULL ){ // ラップタイム記録を見つけた
@@ -946,81 +943,49 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			}
 			
 			// 普通の log
-			if(( uCnt = sscanf( szBuf, "%g%g%g%g%g",
-				&VsdLog2[ g_iVsdLogNum ].fTacho,
-				&VsdLog2[ g_iVsdLogNum ].fSpeed,
-				&VsdLog2[ g_iVsdLogNum ].fMileage,
-				&VsdLog2[ g_iVsdLogNum ].fGy,
-				&VsdLog2[ g_iVsdLogNum ].fGx
+			if(( uCnt = sscanf( szBuf, "%g%g%g%lg%lg",
+				&g_VsdLog[ g_iVsdLogNum ].fTacho,
+				&g_VsdLog[ g_iVsdLogNum ].fSpeed,
+				&g_VsdLog[ g_iVsdLogNum ].fMileage,
+				&dGy,
+				&dGx
 			)) >= 3 ){
 				if( uCnt < 5 && g_iVsdLogNum ){
 					// Gデータがないときは，speedから求める
-					VsdLog2[ g_iVsdLogNum ].fGx = 0;
-					VsdLog2[ g_iVsdLogNum ].fGy = ( float )(
-						( VsdLog2[ g_iVsdLogNum ].fSpeed - VsdLog2[ g_iVsdLogNum - 1 ].fSpeed ) *
-						( 1000.0 / 3600 / 9.8 * LOG_FREQ * ACC_1G_X )
-					);
-				}else if( VsdLog2[ g_iVsdLogNum ].fGy < 1024 ){
-					// G データが 0～1023 の範囲の時代のログ???
-					VsdLog2[ g_iVsdLogNum ].fGx *= 64;
-					VsdLog2[ g_iVsdLogNum ].fGy *= 64;
-				}else if( bReverseGy ){
-					VsdLog2[ g_iVsdLogNum ].fGx = 0xFFFF - 	VsdLog2[ g_iVsdLogNum ].fGx;
+					dGx = 0;
+					dGy = ( g_VsdLog[ g_iVsdLogNum ].fSpeed - g_VsdLog[ g_iVsdLogNum - 1 ].fSpeed ) *
+						( 1000.0 / 3600 / 9.8 * LOG_FREQ );
+				}else{
+					if( dGy < 1024 ){
+						// G データが 0～1023 の範囲の時代のログ???
+						dGx *= 64;
+						dGy *= 64;
+					}else if( bReverseGy ){
+						dGx = -dGx;
+					}
+					
+					if( g_iVsdLogNum < G_CX_CNT ){
+						// G センター検出
+						dGcx += dGx;
+						dGcy += dGy;
+						dGx = dGy = 0;
+						
+						if( g_iVsdLogNum == G_CX_CNT - 1 ){
+							dGcx /= G_CX_CNT;
+							dGcy /= G_CX_CNT;
+						}
+					}else{
+						// 単位を G に変換
+						dGx = ( dGx - dGcx ) / ACC_1G_Y;
+						dGy = ( dGy - dGcy ) / ACC_1G_X;
+					}
 				}
+				g_VsdLog[ g_iVsdLogNum ].fGx = ( float )dGx;
+				g_VsdLog[ g_iVsdLogNum ].fGy = ( float )dGy;
+				
+				g_VsdLog[ g_iVsdLogNum ].fX = g_VsdLog[ g_iVsdLogNum ].fY = 0;
 				++g_iVsdLogNum;
 			}
-		}
-		
-		// スムージング
-		int	i, j;
-		double	dGcx = 0;
-		double	dGcy = 0;
-		
-		for( i = 0; i < ( int )g_iVsdLogNum; ++i ){
-			
-			if( i < SMOOTH - 1 || ( g_iVsdLogNum - SMOOTH ) < i ){
-				// タダのコピー
-				g_VsdLog[ i ] = VsdLog2[ i ];
-			}else{
-				// スムージング
-				g_VsdLog[ i ].fTacho	= VsdLog2[ i ].fTacho;
-				g_VsdLog[ i ].fSpeed	= VsdLog2[ i ].fSpeed;
-				g_VsdLog[ i ].fMileage	= VsdLog2[ i ].fMileage;
-				//g_VsdLog[ i ].fTacho	= 0;
-				//g_VsdLog[ i ].fSpeed	= 0;
-				g_VsdLog[ i ].fGx		= 0;
-				g_VsdLog[ i ].fGy		= 0;
-				
-				for( j = -SMOOTH + 1; j < SMOOTH; ++j ){
-					//g_VsdLog[ i ].fTacho	+= VsdLog2[ i + j ].fTacho * ( SMOOTH - ( j < 0 ? -j : j ));
-					//g_VsdLog[ i ].fSpeed	+= VsdLog2[ i + j ].fSpeed * ( SMOOTH - ( j < 0 ? -j : j ));
-					g_VsdLog[ i ].fGx		+= VsdLog2[ i + j ].fGx	   * ( SMOOTH - ( j < 0 ? -j : j ));
-					g_VsdLog[ i ].fGy		+= VsdLog2[ i + j ].fGy	   * ( SMOOTH - ( j < 0 ? -j : j ));
-				}
-				
-				//g_VsdLog[ i ].fTacho	/= ( SMOOTH * SMOOTH );
-				//g_VsdLog[ i ].fSpeed	/= ( SMOOTH * SMOOTH );
-				g_VsdLog[ i ].fGx		/= ( SMOOTH * SMOOTH );
-				g_VsdLog[ i ].fGy		/= ( SMOOTH * SMOOTH );
-			}
-			
-			// Gセンサーのセンター検出
-			if( i < G_CX_CNT ){
-				dGcx += g_VsdLog[ i ].fGx;
-				dGcy += g_VsdLog[ i ].fGy;
-				g_VsdLog[ i ].fGx =
-				g_VsdLog[ i ].fGy = 0;
-				
-				if( i == G_CX_CNT - 1 ){
-					dGcx /= G_CX_CNT;
-					dGcy /= G_CX_CNT;
-				}
-			}else{
-				g_VsdLog[ i ].fGx = ( float )(( g_VsdLog[ i ].fGx - dGcx ) / ACC_1G_Y );
-				g_VsdLog[ i ].fGy = ( float )(( g_VsdLog[ i ].fGy - dGcy ) / ACC_1G_X );
-			}
-			
-			g_VsdLog[ i ].fX = g_VsdLog[ i ].fY = 0;
 		}
 		
 		/*** GPS ログから軌跡を求める ***************************************/
@@ -1076,7 +1041,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				#undef VX1
 				#undef VY1
 				
-				for( i = GPSLog[ u ].iLogNum; i <= GPSLog[ u + 1 ].iLogNum; ++i ){
+				for( int i = GPSLog[ u ].iLogNum; i <= GPSLog[ u + 1 ].iLogNum; ++i ){
 					double t =
 						( double )( i - GPSLog[ u ].iLogNum ) /
 						( GPSLog[ u + 1 ].iLogNum - GPSLog[ u ].iLogNum );
@@ -1105,7 +1070,6 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		/********************************************************************/
 		
 		fclose( fp );
-		delete [] VsdLog2;
 		
 		g_Lap[ g_iLapNum ].iLogNum = 0x7FFFFFFF;	// 番犬
 		
