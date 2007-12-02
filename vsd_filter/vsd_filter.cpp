@@ -33,8 +33,8 @@
 	( int )( 0.500 * r - 0.419 * g - 0.081 * b + .5 ) \
 }
 
-#define MAX_VSD_LOG		( 15 * 3600 * 2 )
-#define MAX_LAP			( 200 )
+#define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 2 ))
+#define MAX_LAP			200
 
 #define EncSt	( fp->track[ TRACK_EncSt ] * 100 + fp->track[ TRACK_EncSt2 ] )
 #define VideoSt	( fp->track[ TRACK_VSt ] * 100 + fp->track[ TRACK_VSt2 ] - EncSt )
@@ -405,9 +405,6 @@ LAP_t		*g_Lap	 		= NULL;
 int			g_iLapNum		= 0;
 double		g_dBestTime		= -1;
 int			g_iBestLapLogNum= 0;
-
-int			g_iVideoDiff;
-int			g_iLogDiff;
 
 double		g_dMaxMapSize = 0;
 
@@ -887,8 +884,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	double		dLatiMin = 1000, dLatiMax = 0;
 	double		dLongMin = 1000, dLongMax = 0;
 	
-	volatile float		NaN = 0;
-	NaN /= NaN;
+	float		NaN = 0;
+	NaN /= *( volatile float *)&NaN;
 	
 	//	編集中でなければ何もしない
 	if( filter->exfunc->is_editing(editp) != TRUE ) return FALSE;
@@ -899,7 +896,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		if( g_VsdLog == NULL )	g_VsdLog 	= new VSD_LOG_t[ MAX_VSD_LOG ];
 		if( g_Lap    == NULL )	g_Lap		= new LAP_t[ MAX_LAP ];
 		
-		GPSLog = new GPS_LOG_t[ MAX_VSD_LOG / 10 ];
+		GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG / LOG_FREQ ) ];
 		
 		if( filter->exfunc->dlg_get_load_name(szBuf,FILE_TXT,NULL) != TRUE ) break;
 		if(( fp = fopen( szBuf, "r" )) == NULL ) return FALSE;
@@ -964,18 +961,12 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				&dGx
 			)) >= 3 ){
 				if( uCnt < 5 && g_iVsdLogNum ){
-					// Gデータがないときは，speedから求める
+					// Gデータがないときは，speedから求める←廃止
 					dGx = 0;
-					dGy = ( g_VsdLog[ g_iVsdLogNum ].fSpeed - g_VsdLog[ g_iVsdLogNum - 1 ].fSpeed ) *
-						( 1000.0 / 3600 / 9.8 * LOG_FREQ );
-				}else{
-					if( dGy < 1024 ){
-						// G データが 0～1023 の範囲の時代のログ???
-						dGx *= 64;
-						dGy *= 64;
-					}else if( bReverseGy ){
-						dGx = -dGx;
-					}
+					dGy = 0;
+					//dGy = ( g_VsdLog[ g_iVsdLogNum ].fSpeed - g_VsdLog[ g_iVsdLogNum - 1 ].fSpeed ) * ( 1000.0 / 3600 / 9.8 * LOG_FREQ );
+				}else if( dGx >= 4 ){	// 4 以下なら，すでに G が計算済み
+					if( bReverseGy ) dGx = -dGx;
 					
 					if( g_iVsdLogNum < G_CX_CNT ){
 						// G センター検出
@@ -990,7 +981,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 					}else{
 						// 単位を G に変換
 						dGx = ( dGx - dGcx ) / ACC_1G_Y;
-						dGy = ( dGy - dGcy ) / ACC_1G_X;
+						dGy = ( dGy - dGcy ) / ( bReverseGy ? ACC_1G_Z : ACC_1G_X );
 					}
 				}
 				g_VsdLog[ g_iVsdLogNum ].fGx = ( float )dGx;
