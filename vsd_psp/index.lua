@@ -5,11 +5,8 @@
 -- .tab=4
 
 -- シリアルポートなし (debug)
--- NoSio = "vsd20070421_142959.log"
+-- NoSio = "vsd20071116_130129.log"
 -- NoSio = true
-
--- バイナリログ
--- bBinLog = true
 
 --- def, enum
 MODE_LAPTIME	= 0
@@ -37,9 +34,9 @@ PULSE_PAR_1KM	= ( 68774.48913 / 4.597593609 )	-- ELISE(補正後)
 ITOA_RADIX_BIT	= 7
 ITOA_DIGIT_NUM	= (( 32 + ITOA_RADIX_BIT - 1 ) / ITOA_RADIX_BIT )
 
---ACC_1G_X	= 6762.594337	-- X軸
-ACC_1G_X	= 6659.691379	-- Z軸
+ACC_1G_X	= 6762.594337
 ACC_1G_Y	= 6591.556755
+ACC_1G_Z	= 6659.691379
 
 -- シフトインジケータの表示
 TachoBar1 = { 0, 5100, 5500, 5900, 6300, 6300 }
@@ -61,8 +58,8 @@ Tacho		= 0
 Speed		= 0
 Mileage		= 0
 MileagePrev	= 0
-GSensorX	= 0
 GSensorY	= 0
+GSensorX	= 0
 IRSensor	= 0
 
 -- 画面モード・動作モード
@@ -383,9 +380,9 @@ function DrawMeters()
 	end
 	
 	if( GSensorCaribCnt == 0 ) then
-		GxTmp, GyTmp = 
-			GMeterCx + -( GSensorY - GSensorCy ) / ACC_1G_Y * GMeterR - GMeterIndicatorSize / 2,
-			GMeterCy + -( GSensorX - GSensorCx ) / ACC_1G_X * GMeterR - GMeterIndicatorSize / 2
+		GxTmp, GyTmp =
+			GMeterCx + GSensorX * GMeterR - GMeterIndicatorSize / 2,
+			GMeterCy - GSensorY * GMeterR - GMeterIndicatorSize / 2
 		
 		ImageG:fillRect(
 			GxTmp, GyTmp,
@@ -723,8 +720,8 @@ function ProcessSio()
 			MileagePrev = Num
 			
 		elseif Cmd == "g" then
-			GSensorX	= math.fmod( Num, 0x10000 )
-			GSensorY	= math.floor( Num / 0x10000 )
+			GSensorX	= math.floor( Num / 0x10000 )
+			GSensorY	= math.fmod( Num, 0x10000 )
 			
 			if( GSensorCaribCnt > 0 ) then
 				GSensorCaribCnt = GSensorCaribCnt - 1
@@ -735,6 +732,12 @@ function ProcessSio()
 					GSensorCx = GSensorCx / GSensorCaribCntMax
 					GSensorCy = GSensorCy / GSensorCaribCntMax
 				end
+				
+				GSensorX	= 0
+				GSensorY	= 0
+			else
+				GSensorX	= -( GSensorX - GSensorCx ) / ACC_1G_Y
+				GSensorY	=  ( GSensorY - GSensorCy ) / ACC_1G_Z
 			end
 		elseif Cmd == "I" then IRSensor	= Num
 		elseif Cmd == "L" then
@@ -781,38 +784,26 @@ function ProcessSio()
 		
 		if( Ret ) then
 		--	if( type( NoSio ) ~= "string" ) then
-				if( bBinLog ) then
-					-- バイナリログ
-					Write16( fpLog, Tacho )
-					Write16( fpLog, Speed )
-					Write16( fpLog, Mileage )
-					Write16( fpLog, GSensorX )	-- 前後G
-					Write16( fpLog, GSensorY )	-- 左右G
-					Write16( fpLog, IRSensor )
-					Write16( fpLog, LapTimeRaw )
-					Write16( fpLog, LapTimeRaw / 0x10000 )
-				else
-					-- テキストログ
+				-- テキストログ
+				fpLog:write( string.format(
+					"%u\t%.2f\t%.2f\t%.5f\t%.5f\t%u",
+					Tacho, Speed / 100, Mileage / PULSE_PAR_1KM * 1000,
+					GSensorY, GSensorX, IRSensor
+				))
+				
+				-- GPS ログ
+				if( GetGPSData()) then
 					fpLog:write( string.format(
-						"%u\t%.2f\t%.2f\t%u\t%u\t%u",
-						Tacho, Speed / 100, Mileage / PULSE_PAR_1KM * 1000,
-						GSensorX, GSensorY, IRSensor
-					))
-					
-					-- GPS ログ
-					if( GetGPSData()) then
-						fpLog:write( string.format(
-						"\tGPS\t%.10f\t%.10f\t%.10f\t%.10f",
-						GPS_Lati,
-						GPS_Long,
-						GPS_Speed,
-						GPS_Bearing
-					))
-					end
-					
-					-- ラップタイム
-					fpLog:write( LapTimeStr .. "\r\n" )
+					"\tGPS\t%.10f\t%.10f\t%.10f\t%.10f",
+					GPS_Lati,
+					GPS_Long,
+					GPS_Speed,
+					GPS_Bearing
+				))
 				end
+				
+				-- ラップタイム
+				fpLog:write( LapTimeStr .. "\r\n" )
 		--	end
 			
 		--	DebugRefresh = DebugRefresh + 1
