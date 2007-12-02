@@ -41,9 +41,9 @@
 #define ITOA_RADIX_BIT	7
 #define ITOA_DIGIT_NUM	(( 32 + ITOA_RADIX_BIT - 1 ) / ITOA_RADIX_BIT )
 
-//#define ACC_1G_X	6762.594337	// XŽ²
-#define ACC_1G_X	6659.691379	// ZŽ²
+#define ACC_1G_X	6762.594337
 #define ACC_1G_Y	6591.556755
+#define ACC_1G_Z	6659.691379
 
 /*** macros *****************************************************************/
 
