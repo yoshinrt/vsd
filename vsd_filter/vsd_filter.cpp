@@ -582,6 +582,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	
 	static char	szBuf[ 128 ];
 	static	int	iLapIdx	= -1;
+	int	i;
 	
 	BOOL	bInLap = FALSE;	// ラップタイム計測中
 	
@@ -616,7 +617,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
 	);
 	
-	for( int i = 0; i <= iMeterMaxVal; i += 500 ){
+	for( i = 0; i <= iMeterMaxVal; i += 500 ){
 		int iDeg = iMeterDegRange * i / iMeterMaxVal + iMeterMinDeg;
 		if( iDeg >= 360 ) iDeg -= 360;
 		
@@ -674,7 +675,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 13, 1 );
 		
 		// Lapタイム表示
-		int	i = 0;
+		i = 0;
 		for( int iLapIdxTmp = iLapIdx; iLapIdxTmp >= 0; --iLapIdxTmp ){
 			if( g_Lap[ iLapIdxTmp ].fTime != 0 ){
 				sprintf( szBuf, "%3d%3d'%02d.%03d", g_Lap[ iLapIdxTmp ].uLap, ( int )g_Lap[ iLapIdxTmp ].fTime / 60, ( int )g_Lap[ iLapIdxTmp ].fTime % 60, ( int )( g_Lap[ iLapIdxTmp ].fTime * 1000 + .5 ) % 1000 );
