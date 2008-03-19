@@ -1200,5 +1200,5 @@ while true do
 	end
 end
 
-if( fplog ) then fpLog:close() end
+if( fpLog ) then fpLog:close() end
 UsbGps.close()
