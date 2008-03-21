@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 open( fpIn, "od -t x1 -v $ARGV[0] |" );
-
+open( fpOut, ">$ARGV[1]" );
 while( <fpIn> ){
 	s/[\x0D\x0A]//g;
 	s/^[^ ]+ *//g;
@@ -9,5 +9,5 @@ while( <fpIn> ){
 	s/ /,0x/g;
 	s/$/,/g;
 	s/^/0x/;
-	print "$_\n";
+	print fpOut "$_\n";
 }

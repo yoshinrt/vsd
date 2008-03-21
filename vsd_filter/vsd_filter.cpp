@@ -56,6 +56,8 @@
 #define HIREZO_TH		600
 #define LINE_WIDTH		( Img.w / HIREZO_TH + 1 )
 
+#define GPS_LOG_OFFS	15
+
 /*** CAviUtlImage class *****************************************************/
 
 const UCHAR g_Font9p[] = {
@@ -737,6 +739,16 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	double	dSpeed	= GetVsdLog( fSpeed );
 	double	dTacho	= GetVsdLog( fTacho );
 	
+#if 0
+	// G の目盛り
+	for( i = 1; i <= 2; ++i ){
+		Img.DrawCircle(
+			iMeterCx, iMeterCy, iMeterR * i / 3, yc_black,
+			0
+		);
+	}
+#endif
+	
 	// G スネーク
 	int	iGx, iGy;
 	
@@ -950,7 +962,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				if( dLatiMin > GPSLog[ uGPSCnt ].fLati ) dLatiMin = GPSLog[ uGPSCnt ].fLati;
 				if( dLatiMax < GPSLog[ uGPSCnt ].fLati ) dLatiMax = GPSLog[ uGPSCnt ].fLati;
 				
-				GPSLog[ uGPSCnt++ ].iLogNum = g_iVsdLogNum;
+				GPSLog[ uGPSCnt++ ].iLogNum =
+					( g_iVsdLogNum - GPS_LOG_OFFS ) >= 0 ?
+						( g_iVsdLogNum - GPS_LOG_OFFS ) : 0;
 			}
 			
 			// 普通の log
