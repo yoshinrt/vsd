@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---		VSD -- car data logger system  Copyright(C) by DDS
+--		VSD -- vehicle data logger system  Copyright(C) by DDS
 --		$Id$
 ------------------------------------------------------------------------------
 -- .tab=4

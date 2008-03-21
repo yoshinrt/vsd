@@ -1,4 +1,4 @@
 @echo off
-g:
-cd G:\DDS\vsd\vsd_psp
+
+cd /d %~dp0\
 luaplayer_win\luaplayer.exe index.lua
