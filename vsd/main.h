@@ -20,13 +20,6 @@
 #define GEAR_TH( g )	(( UINT )( GEAR_RATIO ## g * 256 + 0.5 ))
 
 // スピード * 100/Taco 比
-/* FTO
-#define GEAR_RATIO1	0.726043277
-#define GEAR_RATIO2	1.34676007
-#define GEAR_RATIO3	1.900649599
-#define GEAR_RATIO4	2.544512663
-*/
-// ELISE
 // ギア比 * マージンじゃなくて，ave( ギアn, ギアn+1 ) に変更
 #define KPH_GEAR1 0.981168441
 #define KPH_GEAR2 1.637149627
@@ -39,10 +32,15 @@
 #define GEAR_RATIO3 (( KPH_GEAR3 + KPH_GEAR4 ) / 2 )
 #define GEAR_RATIO4 (( KPH_GEAR4 + KPH_GEAR5 ) / 2 )
 
-//#define PULSE_PAR_1KM	( 637 * 4 )		// FTO
+// シフトダウン警告時，下のギアでもこの回転数を下回ったら警告
+#define SHIFTDOWN_WARN	6500
+
+#define REV_LIMIT		6500
+#define SH_DOWN_TH( g )	(( UINT )( SHIFTDOWN_WARN * KPH_GEAR ## g ))
+
+
 // たぶん，ホイル一周が30パルス
-//#define PULSE_PAR_1KM	(( double )172155 / 11.410 )	// ELISE
-#define PULSE_PAR_1KM	(( double )68774.48913 / 4.597593609 )	// ELISE(補正後)
+#define PULSE_PAR_1KM	(( double )68774.48913 / 4.597593609 )
 
 #define ITOA_RADIX_BIT	7
 #define ITOA_DIGIT_NUM	(( 32 + ITOA_RADIX_BIT - 1 ) / ITOA_RADIX_BIT )
@@ -59,13 +57,6 @@
 
 //#define IR_FLASHER
 //#define TEST1SEC
-
-// シフトダウン警告時，下のギアでもこの回転数を下回ったら警告
-//#define SHIFTDOWN_WARN	8000	// FTO
-#define SHIFTDOWN_WARN	6500	// ELISE
-#define REV_LIMIT		6500	// ELISE
-
-#define SH_DOWN_TH( g )	(( UINT )( SHIFTDOWN_WARN * KPH_GEAR ## g ))
 
 // ベクタセットアップ
 #define SetVector( v, f )	( *( void **)(( v ) * 2 + 0xFF4C ) = ( f ))
@@ -93,7 +84,8 @@
 
 #define BEEP_OFF	0xFFFF
 
-#define BZero( v )	bzero(( UCHAR *)( &v ), sizeof( v ))
+#define BZero( v )			bzero(( UCHAR *)( &v ), sizeof( v ))
+#define VOLATILE( t, v )	( *( volatile t *)&v )
 
 /*** const ******************************************************************/
 
@@ -108,23 +100,6 @@
 // 直前のNewLapからこれだけ空かないとNewLapとして認めない(3秒)
 #define NEWLAP_MIN_INTERVAL	(( ULONG )(( double )H8HZ * 3 / 65536 ))
 
-#define VOLATILE( t, v )	( *( volatile t *)&v )
-
-/* FTO
-#define LED_BAR_STEP_1ST	500
-#define LED_BAR_REDZONE_1ST	( 8000 - LED_BAR_STEP )
-#define LED_BAR_STEP		200
-#define LED_BAR_REDZONE		( 8000 - LED_BAR_STEP )
-*/
-//ELISE
-#define LED_BAR_STEP_1ST	400
-#define LED_BAR_REDZONE_1ST	( 6800 - LED_BAR_STEP )
-#define LED_BAR_STEP		200
-#define LED_BAR_REDZONE		( 6800 - LED_BAR_STEP )
-
-#define BLINK_RATE	( 1 << 4 )	// ブリンクRate
-
-//#define EOL		"\n"
 #define EOL		"\r\n"
 
 // LED 表示関係
