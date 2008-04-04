@@ -28,10 +28,16 @@
 */
 // ELISE
 // ギア比 * マージンじゃなくて，ave( ギアn, ギアn+1 ) に変更
-#define GEAR_RATIO1 1.2381712993947
-#define GEAR_RATIO2 1.82350889069989
-#define GEAR_RATIO3 2.37581451065366
-#define GEAR_RATIO4 2.95059529470571
+#define KPH_GEAR1 0.981168441
+#define KPH_GEAR2 1.637149627
+#define KPH_GEAR3 2.187031944
+#define KPH_GEAR4 2.7815649
+#define KPH_GEAR5 3.370602172
+
+#define GEAR_RATIO1 (( KPH_GEAR1 + KPH_GEAR2 ) / 2 )
+#define GEAR_RATIO2 (( KPH_GEAR2 + KPH_GEAR3 ) / 2 )
+#define GEAR_RATIO3 (( KPH_GEAR3 + KPH_GEAR4 ) / 2 )
+#define GEAR_RATIO4 (( KPH_GEAR4 + KPH_GEAR5 ) / 2 )
 
 //#define PULSE_PAR_1KM	( 637 * 4 )		// FTO
 // たぶん，ホイル一周が30パルス
@@ -59,7 +65,7 @@
 #define SHIFTDOWN_WARN	6500	// ELISE
 #define REV_LIMIT		6500	// ELISE
 
-#define SH_DOWN_TH( g )	(( UINT )( SHIFTDOWN_WARN * GEAR_RATIO ## g ))
+#define SH_DOWN_TH( g )	(( UINT )( SHIFTDOWN_WARN * KPH_GEAR ## g ))
 
 // ベクタセットアップ
 #define SetVector( v, f )	( *( void **)(( v ) * 2 + 0xFF4C ) = ( f ))
