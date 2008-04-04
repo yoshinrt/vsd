@@ -888,7 +888,8 @@ function SaveConfig()
 	fpCfg:write(
 		"GymkhanaStartMargin=" .. GymkhanaStartMargin .. "\n" ..
 		"SectorCntMax=" .. SectorCntMax .. "\n" ..
-		'FirmWare="' .. FirmWare .. '"\n'
+		'FirmWare="' .. FirmWare .. '"\n' ..
+		"NoSio=nil\n"
 	)
 	fpCfg:close()
 end
