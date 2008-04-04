@@ -5,7 +5,7 @@
 -- .tab=4
 
 -- シリアルポートなし (debug)
--- NoSio = "vsd20071116_130129.log"
+NoSio = "vsd20071116_130129.log"
 -- NoSio = true
 
 --- def, enum
@@ -39,10 +39,8 @@ ACC_1G_Y	= 6591.556755
 ACC_1G_Z	= 6659.691379
 
 -- シフトインジケータの表示
-TachoBar1 = { 0, 5100, 5500, 5900, 6300, 6300 }
-TachoBar2 = { 0, 5900, 6100, 6300, 6500, 6500 }
--- TachoBar1 = { 0, 1500, 2000, 2500, 3000, 3500 }
--- TachoBar2 = TachoBar1
+TachoBar = { 334, 200, 150, 118, 97 }
+RevLimit = 6500
 
 -- config
 FirmWare			= "vsd_rom.mot"	-- ファームウェア
@@ -322,8 +320,18 @@ end
 Blink = nil
 
 function DrawMeters()
-	local TachoBar
 	local BarLv
+	local Gear
+	local GearRatio
+	
+	-- ギアを求める
+	GearRatio = Speed / Tacho
+	if    ( GearRatio < GEAR_RATIO1 ) then Gear = 1
+	elseif( GearRatio < GEAR_RATIO2 ) then Gear = 2
+	elseif( GearRatio < GEAR_RATIO3 ) then Gear = 3
+	elseif( GearRatio < GEAR_RATIO4 ) then Gear = 4
+	else								   Gear = 5
+	end
 	
 	-- スピードメーター
 	if(( Speed >= 30000 ) and ( Tacho == 0 )) then
@@ -332,23 +340,15 @@ function DrawMeters()
 		Blink = nil
 	else
 		-- LED の表示 LV を求める
-		if( Speed >= 7000 ) then
-			TachoBar = TachoBar2
-		else
-			TachoBar = TachoBar1
-		end
+		BarLv = math.floor(( Tacho - RevLimit ) / TachoBar[ Gear ] ) + 5
 		
-		for i = 6, 1, -1 do
-			if( Tacho >= TachoBar[ i ] ) then
-				BarLv = i
-				break
-			end
-		end
-		
-		if( BarLv == 6 ) then
+		if( BarLv >= 5 ) then
 			BarLv = 5
 			if( Blink ) then BarLv = 1; end
 			Blink = not Blink
+		elseif( BarLv < 1 ) then
+			BarLv = 1
+			Blink = nil
 		else
 			Blink = nil
 		end
@@ -538,7 +538,7 @@ if( NoSio ) then
 			local Params = {}
 			local LapTimeStr = ""
 			
-			if( DummySioTimer:time() > ( 1000 / 15 )) then
+			if( DummySioTimer:time() > ( 1000 / 20 )) then
 				DummySioTimer:reset()
 				DummySioTimer:start()
 				

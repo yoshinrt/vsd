@@ -581,9 +581,9 @@ INLINE void DispLEDMsgPC( UCHAR cPat ){
 		if( g_Flags.uDispMode >= DISPMODE_SPEED ) g_Flags.uDispModeNext = g_Flags.uDispMode;
 		
 		lDisp = ( MakeDisp( SP, SP, SP, SP ) << 8 ) | cPat;
-		g_cLEDBar			 = 0;
-		g_Flags.bBlinkMain = 0;
-		g_Flags.bBlinkSub	 = 0;
+		g_cLEDBar			= 0;
+		g_Flags.bBlinkMain	= 0;
+		g_Flags.bBlinkSub	= 0;
 		
 	}else{
 		lDisp = ( g_VRAM.lDisp << 8 ) | cPat;
@@ -602,9 +602,9 @@ INLINE void DispLEDAnimePC( ULONG lPat ){
 		
 		if( g_Flags.uDispMode >= DISPMODE_SPEED ) g_Flags.uDispModeNext = g_Flags.uDispMode;
 		
-		g_cLEDBar			 = 0;
-		g_Flags.bBlinkMain = 0;
-		g_Flags.bBlinkSub	 = 0;
+		g_cLEDBar			= 0;
+		g_Flags.bBlinkMain	= 0;
+		g_Flags.bBlinkSub	= 0;
 	}
 	
 	g_Flags.uDispMode = DISPMODE_ANIME_PC;

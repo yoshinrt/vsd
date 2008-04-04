@@ -57,6 +57,7 @@
 // シフトダウン警告時，下のギアでもこの回転数を下回ったら警告
 //#define SHIFTDOWN_WARN	8000	// FTO
 #define SHIFTDOWN_WARN	6500	// ELISE
+#define REV_LIMIT		6500	// ELISE
 
 #define SH_DOWN_TH( g )	(( UINT )( SHIFTDOWN_WARN * GEAR_RATIO ## g ))
 

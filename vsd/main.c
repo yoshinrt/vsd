@@ -20,7 +20,7 @@
  #include "main2.c"
 #else
  #include "rom_entry.h"
- #define MINIMIZE	// 最小 FIRMWARE
+ //#define MINIMIZE	// 最小 FIRMWARE
 #endif
 
 #ifndef MINIMIZE
@@ -50,6 +50,87 @@ INLINE void _INITSCT( void ){
 	uDst	= __sectop( "B" );
 	uDstEnd = __secend( "B" );
 	do{ *uDst++ = 0; }while(( unsigned )uDst < ( unsigned )uDstEnd );
+}
+
+/*** 現在ギアを求める *******************************************************/
+
+const UINT g_uTachoBar[] = {
+	334, 200, 150, 118, 97
+};
+
+#undef ComputeGear
+#undef ComputeGear2
+
+INLINE void ComputeGear( UINT uTachoBar[] ){
+	UINT	uGearRatio;
+	UCHAR	cGear, cBestGear;
+	int		i;
+	
+	uGearRatio = ( UINT )((( ULONG )g_Speed.uVal << 8 ) / g_Tacho.uVal );
+	
+	if     ( uGearRatio < GEAR_TH( 1 ))	cGear = 1;
+	else if( uGearRatio < GEAR_TH( 2 )) cGear = 2;
+	else if( uGearRatio < GEAR_TH( 3 ))	cGear = 3;
+	else if( uGearRatio < GEAR_TH( 4 ))	cGear = 4;
+	else								cGear = 5;
+	
+	/*** LEDバー表示 ********************************************************/
+	
+	// LED バー表示計算
+	
+	if( g_Flags.uGearMode == GM_TOWN ){
+		// 街乗り
+		g_cLEDBar = (( ULONG )g_Tacho.uVal << 4 ) / 1000;
+	}else{
+		i = ( int )( g_Tacho.uVal - REV_LIMIT ) / ( int )uTachoBar[ cGear - 1 ] + 4;
+		g_cLEDBar =	i <  0 ? 0x00 :
+					i >= 4 ? 0x50 :
+							 i << 4;
+	}
+	
+	// シフトアップ警告音
+	g_cLEDBar >= 0x50 ? SetBeep( 30578 >> 3 ) : SetBeep( BEEP_OFF );
+	
+	g_Flags.bBlinkMain = 0;
+	g_Flags.bBlinkSub  = 0;
+	
+	if( g_Flags.uGearMode >= GM_GEAR ){	// シフト警告を使用する?
+		if( g_cLEDBar >= 0x50 ){
+			// シフトアップ警告(ギア)
+			g_Flags.bBlinkSub  = 1;
+			g_Flags.bBlinkMain = ( g_Flags.uGearMode >= GM_BL_MAIN );
+			
+			if( g_Flags.uGearMode >= GM_DESIRED_GEAR ) ++cGear;
+		}else{
+			// 最適なギアを計算する
+			if     ( g_Speed.uVal < SH_DOWN_TH( 1 )) cBestGear = 1;
+			else if( g_Speed.uVal < SH_DOWN_TH( 2 )) cBestGear = 2;
+			else if( g_Speed.uVal < SH_DOWN_TH( 3 )) cBestGear = 3;
+			else if( g_Speed.uVal < SH_DOWN_TH( 4 )) cBestGear = 4;
+			else									 cBestGear = 5;
+			
+			// シフトダウン警告
+			if( cBestGear != cGear ){
+				if( g_Flags.uGearMode >= GM_DESIRED_GEAR ) cGear = cBestGear;
+				g_Flags.bBlinkSub = 1;
+			}
+		}
+	}
+	
+	// LED バー リバース
+	//if( g_Flags.bReverse ) g_cLEDBar = -g_cLEDBar;
+	
+	// LED にギア表示
+	g_VRAM.cDisp[ 3 ] = ( 0/*g_Flags.bReverse*/ ? g_cFontR : g_cFont )[ cGear ];
+}
+
+INLINE void ComputeGear2( void ){
+	if( g_Flags.uDispMode >= DISPMODE_SPEED ){
+		ComputeGear( g_uTachoBar );
+	}else{
+		g_Flags.bBlinkMain	= 0;
+		g_Flags.bBlinkSub	= 0;
+	}
 }
 
 /*** main *******************************************************************/
