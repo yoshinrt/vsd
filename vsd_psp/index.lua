@@ -5,7 +5,7 @@
 -- .tab=4
 
 -- シリアルポートなし (debug)
-NoSio = "vsd20071116_130129.log"
+-- NoSio = "vsd20071116_130129.log"
 -- NoSio = true
 
 --- def, enum
@@ -28,7 +28,6 @@ GEAR_RATIO3 = 2.37581451065366
 GEAR_RATIO4 = 2.95059529470571
 
 -- たぶん，ホイル一周が30パルス
---PULSE_PAR_1KM	= ( 172155 / 11.410 )	-- ELISE
 PULSE_PAR_1KM	= ( 68774.48913 / 4.597593609 )	-- ELISE(補正後)
 
 ITOA_RADIX_BIT	= 7
@@ -118,6 +117,35 @@ end
 
 Ctrl.Pushed	= function( this, key )
 	return ( not this.Prev[ key ]( this.Prev )) and this.Now[ key ]( this.Now )
+end
+
+--- config 設定 --------------------------------------------------------------
+
+function SaveConfig()
+	fpCfg = io.open( "config.lua", "wb" )
+	fpCfg:write(
+		"GymkhanaStartMargin=" .. GymkhanaStartMargin .. "\n" ..
+		"SectorCntMax=" .. SectorCntMax .. "\n" ..
+		'FirmWare="' .. FirmWare .. '"\n' ..
+		"NoSio=nil\n"
+	)
+	fpCfg:close()
+end
+
+function SetupMagnet( Cnt )
+	SectorCntMax = Cnt
+	SaveConfig()
+end
+
+function SetupStartDist( Dist )
+	GymkhanaStartMargin = Dist * ( PULSE_PAR_1KM / 1000 )
+	SaveConfig()
+end
+
+function SetupFirmware( Name )
+	FirmWare = Name
+	SaveConfig()
+	LoadFirmware()
 end
 
 ------------------------------------------------------------------------------
@@ -529,6 +557,7 @@ if( NoSio ) then
 	
 	if( type( NoSio ) == "string" ) then
 		fpIn = io.open( NoSio, "r" )
+		SaveConfig();
 		assert( fpIn, "Can't open file:" .. NoSio )
 		
 		-- ログ再生
@@ -879,35 +908,6 @@ end
 
 function ToggleInfo()
 	bDispInfo = not bDispInfo
-end
-
---- config 設定 --------------------------------------------------------------
-
-function SaveConfig()
-	fpCfg = io.open( "config.lua", "wb" )
-	fpCfg:write(
-		"GymkhanaStartMargin=" .. GymkhanaStartMargin .. "\n" ..
-		"SectorCntMax=" .. SectorCntMax .. "\n" ..
-		'FirmWare="' .. FirmWare .. '"\n' ..
-		"NoSio=nil\n"
-	)
-	fpCfg:close()
-end
-
-function SetupMagnet( Cnt )
-	SectorCntMax = Cnt
-	SaveConfig()
-end
-
-function SetupStartDist( Dist )
-	GymkhanaStartMargin = Dist * ( PULSE_PAR_1KM / 1000 )
-	SaveConfig()
-end
-
-function SetupFirmware( Name )
-	FirmWare = Name
-	SaveConfig()
-	LoadFirmware()
 end
 
 --- メニュー -----------------------------------------------------------------
