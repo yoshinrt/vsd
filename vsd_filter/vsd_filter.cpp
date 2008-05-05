@@ -36,18 +36,17 @@
 #define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 2 ))
 #define MAX_LAP			200
 
-#define EncSt	( fp->track[ TRACK_EncSt ] * 100 + fp->track[ TRACK_EncSt2 ] )
-#define VideoSt	( fp->track[ TRACK_VSt ] * 100 + fp->track[ TRACK_VSt2 ] - EncSt )
-#define VideoEd	( fp->track[ TRACK_VEd ] * 100 + fp->track[ TRACK_VEd2 ] - EncSt )
-#define LogSt	( fp->track[ TRACK_LSt ] * 100 + fp->track[ TRACK_LSt2 ] )
-#define LogEd	( fp->track[ TRACK_LEd ] * 100 + fp->track[ TRACK_LEd2 ] )
+#define VideoSt		( fp->track[ TRACK_VSt ] * 100 + fp->track[ TRACK_VSt2 ] )
+#define VideoEd		( fp->track[ TRACK_VEd ] * 100 + fp->track[ TRACK_VEd2 ] )
+#define LogSt		( fp->track[ TRACK_LSt ] * 100 + fp->track[ TRACK_LSt2 ] )
+#define LogEd		( fp->track[ TRACK_LEd ] * 100 + fp->track[ TRACK_LEd2 ] )
+#define LineTrace	fp->track[ TRACK_LineTrace ]
 
 #define G_CX_CNT		30
 #define G_HIST			(( int )( LOG_FREQ * 3 ))
 #define MAX_G_SCALE		1.5
 
 #define MAX_MAP_SIZE	( Img.w / 2.5 )
-#define MAP_HIST		(( int )( LOG_FREQ * 5 * 60 ))
 #define INVALID_POS_I	0x7FFFFFFF
 #define INVALID_POS_D	NaN
 
@@ -415,10 +414,10 @@ double		g_dMaxMapSize = 0;
 //		フィルタ構造体定義
 //---------------------------------------------------------------------
 
-TCHAR	*track_name[] =		{	"v先頭",	"",		"v最後",	"",		"log先頭",	"",		"log最後",	"",		"Enc開始v",	""		};	//	トラックバーの名前
-int		track_default[] =	{	0,			0,		0,			0,		0,			0,		0,			0,		0,			0		};	//	トラックバーの初期値
-int		track_s[] =			{	0,			-200,	0,			-200,	0,			-200,	0,			-200,	0,			-200	};	//	トラックバーの下限値
-int		track_e[] =			{	10000,		+200,	10000,		+200,	10000,		+200,	10000,		+200,	10000,		+200	};	//	トラックバーの上限値
+TCHAR	*track_name[] =		{	"v先頭",	"",		"v最後",	"",		"log先頭",	"",		"log最後",	"",	 "走行Line",	""	};	//	トラックバーの名前
+int		track_default[] =	{	0,			0,		0,			0,		0,			0,		0,			0,		0,			0	};	//	トラックバーの初期値
+int		track_s[] =			{	0,			-200,	0,			-200,	0,			-200,	0,			-200,	0,			0	};	//	トラックバーの下限値
+int		track_e[] =			{	10000,		+200,	10000,		+200,	10000,		+200,	10000,		+200,	1000,		100	};	//	トラックバーの上限値
 
 enum {
 	TRACK_VSt,
@@ -429,21 +428,20 @@ enum {
 	TRACK_LSt2,
 	TRACK_LEd,
 	TRACK_LEd2,
-	TRACK_EncSt,
-	TRACK_EncSt2,
+	TRACK_LineTrace,
+	TRACK_Resv,
 };
 
 #define	TRACK_N	( sizeof( track_default ) / sizeof( int ))									//	トラックバーの数
 
 
-TCHAR	*check_name[] = 	{	"ラップタイム",	"フレーム表示", "G軌跡",	"コース表示"	};	//	チェックボックスの名前
-int		check_default[] = 	{	1,				0,				0,			0				};	//	チェックボックスの初期値 (値は0か1)
+TCHAR	*check_name[] = 	{	"ラップタイム",	"フレーム表示", "G軌跡"	};	//	チェックボックスの名前
+int		check_default[] = 	{	1,				0,				0,		};	//	チェックボックスの初期値 (値は0か1)
 
 enum {
 	CHECK_LAP,
 	CHECK_FRAME,
 	CHECK_SNAKE,
-	CHECK_MAP,
 };
 
 #define	CHECK_N	( sizeof( check_default ) / sizeof( int ))				//	チェックボックスの数
@@ -785,12 +783,12 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	);
 	
 	// MAP 表示
-	if( fp->check[ CHECK_MAP ] ){
+	if( LineTrace ){
 		
 		int iGxPrev = INVALID_POS_I, iGyPrev;
 		int iLogNum = ( int )dLogNum;
 		
-		for( i = -MAP_HIST; i <= 1 ; ++i ){
+		for( i = -( int )( LineTrace * LOG_FREQ ); i <= 1 ; ++i ){
 			if( iLogNum + i >= 0 ){
 				// i == 1 時は最後の中途半端な LogNum
 				double dGx = (( i != 1 ) ? g_VsdLog[ iLogNum + i ].fX : GetVsdLog( fX )) / g_dMaxMapSize * MAX_MAP_SIZE + 8;
@@ -1094,8 +1092,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 		// trackbar 設定
 		track_e[ TRACK_VSt ] =
-		track_e[ TRACK_VEd ] =
-		track_e[ TRACK_EncSt ] = ( filter->exfunc->get_frame_n( editp ) + 99 ) / 100;
+		track_e[ TRACK_VEd ] = ( filter->exfunc->get_frame_n( editp ) + 99 ) / 100;
 		track_e[ TRACK_LSt ] =
 		track_e[ TRACK_LEd ] = ( g_iVsdLogNum + 99 ) / 100;
 		
