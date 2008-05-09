@@ -134,6 +134,21 @@ function SetupFirmware( Name )
 	LoadFirmware()
 end
 
+--- ログファイル リオープン --------------------------------------------------
+
+function OpenLog( bAppend )
+	if fpLog then fpLog:close() end
+	
+	if(( not bAppend ) or ( not LogFile )) then
+		LogFile = os.date( "vsd%Y%m%d_%H%M%S.log" )
+	end
+	
+	fpLog = io.open( LogFile, "ab" )
+	fpLog:setvbuf( "full", 1024 )
+	
+	LogCnt = 0
+end
+
 ------------------------------------------------------------------------------
 -- Display Driver ------------------------------------------------------------
 ------------------------------------------------------------------------------
@@ -459,7 +474,6 @@ end
 ------------------------------------------------------------------------------
 
 RxBuf	= ""
-fpLog	= nil
 
 -- Gセンサキャリブレーション
 
@@ -477,9 +491,18 @@ SndNewLap  = Sound.load( "new_lap.wav" )
 
 function LoadFirmware()
 	
-	if( not IsSIOActive()) then
-		return
+	-- ログファイル リオープン
+	if not Controls.read():r() then
+		OpenLog()
 	end
+	
+	-- SIO 初期化
+	if( not bSIOActive ) then
+		System.sioInit( 38400 )
+		bSIOActive = true
+	end
+	
+	-- firmware ロード
 	
 	local fpFirm = io.open( FirmWare, "rb" )
 	
@@ -510,12 +533,6 @@ function LoadFirmware()
 	until pos
 	
 	RxBuf = RxBuf:sub( pos + 2 )
-	
-	-- ログファイル リオープン
-	if fpLog then fpLog:close() end
-	LogFile = os.date( "vsd%Y%m%d_%H%M%S.log" )
-	fpLog = io.open( LogFile, "ab" )
-	fpLog:setvbuf( "full", 1024 )
 	
 	-- VSD モード設定
 	System.sioWrite( "3Gs" )
@@ -697,7 +714,8 @@ function ProcessSio()
 		-- ログに改行が付いたので，可視化ログに出力
 		
 		if( Ret ) then
-		--	if( type( NoSio ) ~= "string" ) then
+			--if( type( NoSio ) ~= "string" ) then
+			if( fpLog ) then
 				-- テキストログ
 				fpLog:write( string.format(
 					"%u\t%.2f\t%.2f\t%.5f\t%.5f\t%u",
@@ -708,19 +726,21 @@ function ProcessSio()
 				-- GPS ログ
 				if( GetGPSData()) then
 					fpLog:write( string.format(
-					"\tGPS\t%.10f\t%.10f\t%.10f\t%.10f",
-					GPS_Lati,
-					GPS_Long,
-					GPS_Speed,
-					GPS_Bearing
-				))
+						"\tGPS\t%.10f\t%.10f\t%.10f\t%.10f",
+						GPS_Lati,
+						GPS_Long,
+						GPS_Speed,
+						GPS_Bearing
+					))
 				end
 				
 				-- ラップタイム
 				fpLog:write( LapTimeStr .. "\r\n" )
-		--	end
+				
+				LogCnt = LogCnt + 1
+			end
 			
-		--	DebugRefresh = DebugRefresh + 1
+			--DebugRefresh = DebugRefresh + 1
 		end
 	until Cmd == nil
 end
@@ -751,21 +771,6 @@ end
 --- シリアルアクティブ確認 ---------------------------------------------------
 
 bSIOActive = false
-
-function IsSIOActive()
-	if( not bSIOActive ) then
-		
-		System.sioInit( 38400 )
-		
-		RxBuf = RxBuf .. System.sioRead()
-		if( RxBuf:len() > 0 ) then
-			bSIOActive = true
-		else
-			-- System.sioClose()
-		end
-	end
-	return bSIOActive
-end
 
 ------------------------------------------------------------------------------
 --- メニュー処理 -------------------------------------------------------------
@@ -900,6 +905,7 @@ MainMenu = {
 	
 	FirmList,
 	
+	{ title = "Re-open log";	OpenLog },
 	{
 		title = "Delete fastest lap";
 		width = 13;
@@ -933,20 +939,10 @@ MainMenu = {
 
 if( not UsbGps ) then
 	UsbGps = {}
-	
-	UsbGps.open = function()
-		return 0
-	end
-	
-	UsbGps.close = function()
-	end
-	
-	UsbGps.get_data = function()
-		return 0
-	end
-	
-	UsbGps.set_init_loc = function()
-	end
+	UsbGps.open			= function() return 0 end
+	UsbGps.close		= function() end
+	UsbGps.get_data		= function() return 0 end
+	UsbGps.set_init_loc	= function() end
 end
 
 GPS_PrevSec = 99;
@@ -990,16 +986,13 @@ if( NoSio ) then
 	LogFile = "vsd.log"
 	fpLog = io.open( os.date( LogFile ), "wb" )
 	bSIOActive = true
-elseif not Controls.read():r() then
+elseif not Controls.read():l() then
 	LoadFirmware()
 end
 
 -- DebugRefresh = 0
 CtrlPrev = Controls.read()
 PrevMin = 99
-
-AutoSaveTimer = Timer.new()
-AutoSaveTimer:start()
 
 UsbGps.open()
 UsbGps.set_init_loc( 0 )
@@ -1013,30 +1006,16 @@ function DoIntervalProc()
 		-- シリアルデータ処理
 		ProcessSio()
 		
-		if( RefreshFlag == nil ) then
-			-- autosave
-			if( AutoSaveTimer:time() >= 60 * 1000 ) then
-				AutoSaveTimer:reset()
-				AutoSaveTimer:start()
-				
-				-- ログファイル リオープン
-				if fpLog then fpLog:close() end
-				fpLog = io.open( LogFile, "ab" )
-				fpLog:setvbuf( "full", 1024 )
-			end
+		-- ログサイズが既定を上回ったら，autosave 用ログファイル リオープン
+		-- ただし画面更新時以外
+		if( RefreshFlag == nil and fpLog and LogCnt >= 60 * LOG_FREQ ) then
+			OpenLog( true )
 		end
-	else
-		if( GetGPSData()) then
-			-- GPS のデータで，スピード表示更新
-			Tacho	= Tacho + GPS_Valid
-			Speed	= math.floor( GPS_Speed * 100 + 0.5 )
-			RefreshFlag = true
-		end
-		
-		-- 自動接続検出は失敗
-		--if( IsSIOActive()) then
-		--	LoadFirmware()
-		--end
+	elseif( GetGPSData()) then
+		-- GPS のデータで，スピード表示更新
+		Tacho	= Tacho + GPS_Valid
+		Speed	= math.floor( GPS_Speed * 100 + 0.5 )
+		RefreshFlag = true
 	end
 	
 	-- キー入力処理
