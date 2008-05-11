@@ -556,6 +556,11 @@ const	PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
 #define COLOR_DIST_PLUS		yc_cyan
 #define COLOR_DIST_MINUS	yc_red
 
+// 半端な dLogNum 値からログの中間値を求める
+#define GetVsdLog( p ) ( \
+	g_VsdLog[ ( UINT )dLogNum     ].p * ( 1 - ( dLogNum - ( UINT )dLogNum )) + \
+	g_VsdLog[ ( UINT )dLogNum + 1 ].p * (       dLogNum - ( UINT )dLogNum ))
+
 
 BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 //
@@ -699,22 +704,40 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			Img.DrawString( "--'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
 		}
 		
-		// ベストとの車間距離表示
-		int iBestLogNum;
-		if(
-			bInLap &&
-			// BestLap の対応するログ位置を計算
-		 	( iBestLogNum = ( int )dLogNum - g_Lap[ iLapIdx ].iLogNum + g_iBestLapLogNum ) < g_iVsdLogNum
-		){
-			double dDist =
-				( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage ) -
-				( g_VsdLog[ ( int )dLogNum ].fMileage - g_VsdLog[ g_Lap[ iLapIdx ].iLogNum ].fMileage );
+		/*** ベストとの車間距離表示 ***/
+		
+		if( bInLap ){
+			// この周の走行距離を求める
+			double dMileage = GetVsdLog( fMileage ) - g_VsdLog[ g_Lap[ iLapIdx ].iLogNum ].fMileage;
+			
+			// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
+			// iBestLogNum - 1 <= 最終的に求める結果 < iBestLogNum   となる
+			int iBestLogNum;
+			for(
+				iBestLogNum = g_iBestLapLogNum;
+				(
+					g_VsdLog[ iBestLogNum ].fMileage -
+					g_VsdLog[ g_iBestLapLogNum ].fMileage
+				) <= dMileage &&
+				iBestLogNum < g_iVsdLogNum;
+				++iBestLogNum
+			);
+			
+			// 最速 Lap の，1/15秒以下の値を求める = A / B
+			double dBestLogNum =
+				( double )( iBestLogNum - 1 ) +
+				// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
+				( dMileage - ( g_VsdLog[ iBestLogNum - 1 ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage )) /
+				// B: 最速ラップは，1/15秒の間にこの距離を走った
+				( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ iBestLogNum - 1 ].fMileage );
 			
 			double dDiffTime =
-				dDist / (
-					( g_VsdLog[ ( int )dLogNum ].fSpeed + g_VsdLog[ iBestLogNum ].fSpeed ) / 2
-					/ 3600 * 1000
-				);
+				(
+					( dLogNum - g_Lap[ iLapIdx ].iLogNum ) -
+					( dBestLogNum - g_iBestLapLogNum )
+				) / LOG_FREQ;
+			
+			if( -0.0005 < dDiffTime && dDiffTime < 0 ) dDiffTime = 0;
 			
 			sprintf(
 				szBuf, "%c%d'%06.3f",
@@ -729,10 +752,6 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	/*** メーター描画 ***/
 	
 	if( dLogNum < 0 || dLogNum > g_iVsdLogNum - 1 ) return TRUE;
-	
-	#define GetVsdLog( p ) ( \
-		g_VsdLog[ ( UINT )dLogNum     ].p * ( 1 - ( dLogNum - ( UINT )dLogNum )) + \
-		g_VsdLog[ ( UINT )dLogNum + 1 ].p * (       dLogNum - ( UINT )dLogNum ))
 	
 	double	dSpeed	= GetVsdLog( fSpeed );
 	double	dTacho	= GetVsdLog( fTacho );
