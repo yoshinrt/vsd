@@ -409,6 +409,9 @@ int			g_iBestLapLogNum= 0;
 
 double		g_dMaxMapSize = 0;
 
+int			g_iLogStart;
+int			g_iLogStop;
+
 /****************************************************************************/
 //---------------------------------------------------------------------
 //		フィルタ構造体定義
@@ -490,9 +493,9 @@ FILTER_DLL filter = {
 	check_name,					//	チェックボックスの名前郡へのポインタ
 	check_default,				//	チェックボックスの初期値郡へのポインタ
 	func_proc,					//	フィルタ処理関数へのポインタ (NULLなら呼ばれません)
-	func_init,					//	開始時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
+	NULL /*func_init*/,			//	開始時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 	func_exit,					//	終了時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
-	NULL /*func_update*/,				//	設定が変更されたときに呼ばれる関数へのポインタ (NULLなら呼ばれません)
+	func_update,				//	設定が変更されたときに呼ばれる関数へのポインタ (NULLなら呼ばれません)
 	func_WndProc,				//	設定ウィンドウにウィンドウメッセージが来た時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 	NULL,NULL,					//	システムで使いますので使用しないでください
 	NULL,						//  拡張データ領域へのポインタ (FILTER_FLAG_EX_DATAが立っている時に有効)
@@ -516,10 +519,12 @@ EXTERN_C FILTER_DLL __declspec(dllexport) * __stdcall GetFilterTable( void ){
 //		初期化
 //---------------------------------------------------------------------
 
+/*
 BOOL func_init( FILTER *fp ){
 	
 	return TRUE;
 }
+*/
 
 //---------------------------------------------------------------------
 //		終了
@@ -920,6 +925,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	static TCHAR	szBuf[ BUF_SIZE ];
 	TCHAR	*p;
 	FILE	*fp;
+	BOOL	bCalibrating = FALSE;
 	
 	// GPS ログ用
 	UINT		uGPSCnt = 0;
@@ -957,6 +963,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		double	dGcx = 0;
 		double	dGcy = 0;
 		double	dGx, dGy;
+		
+		g_iLogStart = g_iLogStop = 0;
 		
 		while( fgets( szBuf, BUF_SIZE, fp ) != NULL ){
 			if(( p = strstr( szBuf, "LAP" )) != NULL ){ // ラップタイム記録を見つけた
@@ -1033,6 +1041,17 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				g_VsdLog[ g_iVsdLogNum ].fGy = ( float )dGy;
 				
 				g_VsdLog[ g_iVsdLogNum ].fX = g_VsdLog[ g_iVsdLogNum ].fY = INVALID_POS_D;
+				
+				// ログ開始・終了認識
+				if( g_VsdLog[ g_iVsdLogNum ].fSpeed >= 300 ){
+					if( !bCalibrating ){
+						bCalibrating = TRUE;
+						( g_iLogStart ? g_iLogStop : g_iLogStart ) = g_iVsdLogNum;
+					}
+				}else{
+					bCalibrating = FALSE;
+				}
+				
 				++g_iVsdLogNum;
 			}
 		}
@@ -1134,6 +1153,34 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	}
 	
 	return FALSE;
+}
+
+/*** スライダバー連動 *******************************************************/
+
+BOOL func_update( FILTER *fp, int status ){
+	int	i;
+	static	BOOL	bReEnter = FALSE;
+	
+	if( bReEnter ) return TRUE;
+	
+	bReEnter = TRUE;
+	
+	if(
+		status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_AUTOLOG ) &&
+		fp->check[ CHECK_AUTOLOG ]
+	){
+		fp->track[ TRACK_LEd  ] = g_iLogStart / 100;
+		fp->track[ TRACK_LEd2 ] = g_iLogStart % 100;
+		fp->track[ TRACK_LSt  ] = g_iLogStop  / 100;
+		fp->track[ TRACK_LSt2 ] = g_iLogStop  % 100;
+		
+		// 設定再描画
+		fp->exfunc->filter_window_update( fp );
+	}
+	
+	bReEnter = FALSE;
+	
+	return TRUE;
 }
 
 /****************************************************************************/
