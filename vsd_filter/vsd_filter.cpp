@@ -414,37 +414,50 @@ double		g_dMaxMapSize = 0;
 //		フィルタ構造体定義
 //---------------------------------------------------------------------
 
-TCHAR	*track_name[] =		{	"v先頭",	"",		"v最後",	"",		"log先頭",	"",		"log最後",	"",	 "走行Line",	""	};	//	トラックバーの名前
-int		track_default[] =	{	0,			0,		0,			0,		0,			0,		0,			0,		0,			0	};	//	トラックバーの初期値
-int		track_s[] =			{	0,			-200,	0,			-200,	0,			-200,	0,			-200,	0,			0	};	//	トラックバーの下限値
-int		track_e[] =			{	10000,		+200,	10000,		+200,	10000,		+200,	10000,		+200,	1000,		100	};	//	トラックバーの上限値
+// トラックバーの名前
+TCHAR	*track_name[] = {
+	#define( id, init, min, max, name )	name,
+	#include "def_trackbar.h"
+}
+// トラックバーの初期値
+int		track_default[] = {
+	#define( id, init, min, max, name )	init,
+	#include "def_trackbar.h"
+}
+// トラックバーの下限値
+int		track_s[] = {
+	#define( id, init, min, max, name )	min,
+	#include "def_trackbar.h"
+}
+// トラックバーの上限値
+int		track_e[] = {
+	#define( id, init, min, max, name )	max,
+	#include "def_trackbar.h"
+}
 
 enum {
-	TRACK_VSt,
-	TRACK_VSt2,
-	TRACK_VEd,
-	TRACK_VEd2,
-	TRACK_LSt,
-	TRACK_LSt2,
-	TRACK_LEd,
-	TRACK_LEd2,
-	TRACK_LineTrace,
-	TRACK_Resv,
+	#define( id, init, min, max, name )	id,
+	#include "def_trackbar.h"
+	TRACK_N
 };
 
-#define	TRACK_N	( sizeof( track_default ) / sizeof( int ))									//	トラックバーの数
+// チェックボックスの名前
+TCHAR	*check_name[] = {
+	#define( id, init, name )	name,
+	#include "def_checkbox.h"
+};
 
-
-TCHAR	*check_name[] = 	{	"ラップタイム",	"フレーム表示", "G軌跡"	};	//	チェックボックスの名前
-int		check_default[] = 	{	1,				0,				0,		};	//	チェックボックスの初期値 (値は0か1)
+// チェックボックスの初期値 (値は0か1)
+int		check_default[] = {
+	#define( id, init, name )	init,
+	#include "def_checkbox.h"
+};
 
 enum {
-	CHECK_LAP,
-	CHECK_FRAME,
-	CHECK_SNAKE,
+	#define( id, init, name )	id,
+	#include "def_checkbox.h"
+	CHECK_N
 };
-
-#define	CHECK_N	( sizeof( check_default ) / sizeof( int ))				//	チェックボックスの数
 
 FILTER_DLL filter = {
 	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_IMPORT,	
