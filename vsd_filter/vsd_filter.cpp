@@ -1046,7 +1046,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				if( g_VsdLog[ g_iVsdLogNum ].fSpeed >= 300 ){
 					if( !bCalibrating ){
 						bCalibrating = TRUE;
-						( g_iLogStart ? g_iLogStop : g_iLogStart ) = g_iVsdLogNum;
+						g_iLogStart  = g_iLogStop;
+						g_iLogStop   = g_iVsdLogNum;
 					}
 				}else{
 					bCalibrating = FALSE;
