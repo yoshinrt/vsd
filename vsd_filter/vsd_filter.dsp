@@ -108,6 +108,14 @@ SOURCE=.\dds.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\def_checkbox.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\def_trackbar.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\filter.h
 # End Source File
 # Begin Source File

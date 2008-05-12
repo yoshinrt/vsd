@@ -419,45 +419,45 @@ int			g_iLogStop;
 
 // トラックバーの名前
 TCHAR	*track_name[] = {
-	#define( id, init, min, max, name )	name,
+	#define DEF_TRACKBAR( id, init, min, max, name )	name,
 	#include "def_trackbar.h"
-}
+};
 // トラックバーの初期値
 int		track_default[] = {
-	#define( id, init, min, max, name )	init,
+	#define DEF_TRACKBAR( id, init, min, max, name )	init,
 	#include "def_trackbar.h"
-}
+};
 // トラックバーの下限値
 int		track_s[] = {
-	#define( id, init, min, max, name )	min,
+	#define DEF_TRACKBAR( id, init, min, max, name )	min,
 	#include "def_trackbar.h"
-}
+};
 // トラックバーの上限値
 int		track_e[] = {
-	#define( id, init, min, max, name )	max,
+	#define DEF_TRACKBAR( id, init, min, max, name )	max,
 	#include "def_trackbar.h"
-}
+};
 
 enum {
-	#define( id, init, min, max, name )	id,
+	#define DEF_TRACKBAR( id, init, min, max, name )	id,
 	#include "def_trackbar.h"
 	TRACK_N
 };
 
 // チェックボックスの名前
 TCHAR	*check_name[] = {
-	#define( id, init, name )	name,
+	#define DEF_CHECKBOX( id, init, name )	name,
 	#include "def_checkbox.h"
 };
 
 // チェックボックスの初期値 (値は0か1)
 int		check_default[] = {
-	#define( id, init, name )	init,
+	#define DEF_CHECKBOX( id, init, name )	init,
 	#include "def_checkbox.h"
 };
 
 enum {
-	#define( id, init, name )	id,
+	#define DEF_CHECKBOX( id, init, name )	id,
 	#include "def_checkbox.h"
 	CHECK_N
 };
@@ -1149,6 +1149,10 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 		// 設定再描画
 		filter->exfunc->filter_window_update( filter );
+		
+		// log pos 更新
+		func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
+		
 		return TRUE;
 	}
 	
@@ -1158,7 +1162,6 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 /*** スライダバー連動 *******************************************************/
 
 BOOL func_update( FILTER *fp, int status ){
-	int	i;
 	static	BOOL	bReEnter = FALSE;
 	
 	if( bReEnter ) return TRUE;
@@ -1166,13 +1169,13 @@ BOOL func_update( FILTER *fp, int status ){
 	bReEnter = TRUE;
 	
 	if(
-		status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_AUTOLOG ) &&
-		fp->check[ CHECK_AUTOLOG ]
+		status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS ) &&
+		fp->check[ CHECK_LOGPOS ]
 	){
-		fp->track[ TRACK_LEd  ] = g_iLogStart / 100;
-		fp->track[ TRACK_LEd2 ] = g_iLogStart % 100;
-		fp->track[ TRACK_LSt  ] = g_iLogStop  / 100;
-		fp->track[ TRACK_LSt2 ] = g_iLogStop  % 100;
+		fp->track[ TRACK_LSt  ] = g_iLogStart / 100;
+		fp->track[ TRACK_LSt2 ] = g_iLogStart % 100;
+		fp->track[ TRACK_LEd  ] = g_iLogStop  / 100;
+		fp->track[ TRACK_LEd2 ] = g_iLogStop  % 100;
 		
 		// 設定再描画
 		fp->exfunc->filter_window_update( fp );
