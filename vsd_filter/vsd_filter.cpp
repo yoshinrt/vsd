@@ -50,8 +50,6 @@
 #define INVALID_POS_I	0x7FFFFFFF
 #define INVALID_POS_D	NaN
 
-#define ASYMMETRIC_METER
-
 #define HIREZO_TH		600
 #define LINE_WIDTH		( Img.w / HIREZO_TH + 1 )
 
@@ -604,19 +602,9 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	const int	iMeterR			= 50 * Img.w / 320;
 	const int	iMeterCx		= Img.w - iMeterR - 2;
 	const int	iMeterCy		= Img.h - iMeterR - 2;
-	#ifdef ASYMMETRIC_METER
-		const int	iMeterMinDeg	= 135;
-		const int	iMeterMaxDeg	= 45;
-		const int	iMeterMaxVal	= 6000;
-	#elif defined ASYMMETRIC_METER2
-		const int	iMeterMinDeg	= 45;
-		const int	iMeterMaxDeg	= 0;
-		const int	iMeterMaxVal	= 7000;
-	#else
-		const int	iMeterMinDeg	= 150;
-		const int	iMeterMaxDeg	= 30;
-		const int	iMeterMaxVal	= 8000;
-	#endif
+	const int	iMeterMinDeg	= 135;
+	const int	iMeterMaxDeg	= 45;
+	const int	iMeterMaxVal	= 6000;
 	const int	iMeterDegRange	= (( iMeterMaxDeg < iMeterMinDeg ? iMeterMaxDeg + 360 : iMeterMaxDeg ) - iMeterMinDeg );
 	const int	iMeterScaleLen	= iMeterR / 8;
 	
@@ -646,11 +634,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		if( i % 1000 == 0 ) Img.DrawFont(
 			( int )( cos( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCx - Img.GetFontW() / 2,
 			( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - Img.GetFontH() / 2,
-			#ifdef ASYMMETRIC_METER
-				'0' + i / 1000 + ( i >= 1000 ? 1 : 0 ),
-			#else
-				'0' + i / 1000,
-			#endif
+			'0' + i / 1000 + ( i >= 1000 ? 1 : 0 ),
 			COLOR_STR, 0
 		);
 	}
@@ -763,16 +747,6 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	double	dSpeed	= GetVsdLog( fSpeed );
 	double	dTacho	= GetVsdLog( fTacho );
 	
-#if 0
-	// G の目盛り
-	for( i = 1; i <= 2; ++i ){
-		Img.DrawCircle(
-			iMeterCx, iMeterCy, iMeterR * i / 3, yc_black,
-			0
-		);
-	}
-#endif
-	
 	// G スネーク
 	int	iGx, iGy;
 	
@@ -847,11 +821,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	// Tacho の針
 	double dTachoNeedle =
 		iMeterDegRange / ( double )iMeterMaxVal *
-		#ifdef ASYMMETRIC_METER
-			( dTacho <= 2000 ? dTacho / 2 : dTacho - 1000 )
-		#else
-			dTacho
-		#endif
+		( dTacho <= 2000 ? dTacho / 2 : dTacho - 1000 )
 		+ iMeterMinDeg;
 	if( dTachoNeedle >= 360 ) dTachoNeedle -= 360;
 	dTachoNeedle = dTachoNeedle * ToRAD;
@@ -892,13 +862,21 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	Img.DrawString(
 		szBuf,
 		COLOR_STR, 0,
-		iMeterCx - 1 * Img.GetFontW(), iMeterCy + iMeterR / 2 - Img.GetFontH()
+		iMeterCx - 1 * Img.GetFontW(), iMeterCy - iMeterR / 2
 	);
+	
 	sprintf( szBuf, "%3d\x80\x81", ( int )dSpeed );
 	Img.DrawString(
 		szBuf,
 		COLOR_STR, 0,
 		iMeterCx - 3 * Img.GetFontW(), iMeterCy + iMeterR / 2
+	);
+	
+	sprintf( szBuf, "%2d\x82", ( int )( sqrt( GetVsdLog( fGx ) * GetVsdLog( fGx ) + GetVsdLog( fGy ) * GetVsdLog( fGy )) * 10 ));
+	Img.DrawString(
+		szBuf,
+		COLOR_STR, 0,
+		iMeterCx - 2 * Img.GetFontW(), iMeterCy + iMeterR / 2 - Img.GetFontH()
 	);
 	
 	return TRUE;
