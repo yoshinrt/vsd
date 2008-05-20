@@ -541,38 +541,27 @@ BOOL func_exit( FILTER *fp ){
 //		フィルタ処理関数
 //---------------------------------------------------------------------
 
-const	PIXEL_YC	yc_black		= RGB2YC(    0,    0,    0 );
-const	PIXEL_YC	yc_white		= RGB2YC( 4095, 4095, 4095 );
-const	PIXEL_YC	yc_gray			= RGB2YC( 2048, 2048, 2048 );
-const	PIXEL_YC	yc_red			= RGB2YC( 4095,    0,    0 );
-const	PIXEL_YC	yc_green		= RGB2YC(    0, 4095,    0 );
-const	PIXEL_YC	yc_dark_green	= RGB2YC(    0, 2048,    0 );
-const	PIXEL_YC	yc_blue			= RGB2YC(    0,    0, 4095 );
-const	PIXEL_YC	yc_cyan			= RGB2YC(    0, 4095, 4095 );
-const	PIXEL_YC	yc_dark_blue	= RGB2YC(    0,    0, 2048 );
-const	PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
+const PIXEL_YC	yc_black		= RGB2YC(    0,    0,    0 );
+const PIXEL_YC	yc_white		= RGB2YC( 4095, 4095, 4095 );
+const PIXEL_YC	yc_gray			= RGB2YC( 2048, 2048, 2048 );
+const PIXEL_YC	yc_red			= RGB2YC( 4095,    0,    0 );
+const PIXEL_YC	yc_green		= RGB2YC(    0, 4095,    0 );
+const PIXEL_YC	yc_dark_green	= RGB2YC(    0, 2048,    0 );
+const PIXEL_YC	yc_blue			= RGB2YC(    0,    0, 4095 );
+const PIXEL_YC	yc_cyan			= RGB2YC(    0, 4095, 4095 );
+const PIXEL_YC	yc_dark_blue	= RGB2YC(    0,    0, 2048 );
+const PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
 
-/*
-#define COLOR_PANEL		yc_white
-#define COLOR_NEEDLE	yc_red
-#define COLOR_SCALE		yc_black
-#define COLOR_STR		COLOR_SCALE
-#define COLOR_TIME		yc_white
-#define COLOR_TIME_EDGE	yc_black
-#define COLOR_G_SENSOR	yc_blue
-#define COLOR_G_HIST	yc_dark_blue
-*/
-#define COLOR_PANEL		yc_gray
-#define COLOR_NEEDLE	yc_red
-#define COLOR_SCALE		yc_white
-#define COLOR_STR		COLOR_SCALE
-#define COLOR_TIME		yc_white
-#define COLOR_TIME_EDGE	yc_black
-#define COLOR_G_SENSOR	yc_green
-#define COLOR_G_HIST	yc_dark_green
-
-#define COLOR_DIST_PLUS		yc_cyan
-#define COLOR_DIST_MINUS	yc_red
+#define COLOR_PANEL			yc_gray
+#define COLOR_NEEDLE		yc_red
+#define COLOR_SCALE			yc_white
+#define COLOR_STR			COLOR_SCALE
+#define COLOR_TIME			yc_white
+#define COLOR_TIME_EDGE		yc_black
+#define COLOR_G_SENSOR		yc_green
+#define COLOR_G_HIST		yc_dark_green
+#define COLOR_DIFF_MINUS	yc_cyan
+#define COLOR_DIFF_PLUS		yc_red
 
 // 半端な dLogNum 値からログの中間値を求める
 #define GetVsdLog( p ) ( \
@@ -646,17 +635,17 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		
 		// メーターパネル目盛り
 		Img.DrawLine(
-			( int )( cos(( double )iDeg / 360 * 2 * PI ) * iMeterR ) + iMeterCx,
-			( int )( sin(( double )iDeg / 360 * 2 * PI ) * iMeterR ) + iMeterCy,
-			( int )( cos(( double )iDeg / 360 * 2 * PI ) * ( iMeterR - iMeterScaleLen )) + iMeterCx,
-			( int )( sin(( double )iDeg / 360 * 2 * PI ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
+			( int )( cos( iDeg * ToRAD ) * iMeterR ) + iMeterCx,
+			( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
+			( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCx,
+			( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
 			COLOR_SCALE, 0
 		);
 		
 		// メーターパネル目盛り数値
 		if( i % 1000 == 0 ) Img.DrawFont(
-			( int )( cos(( double )iDeg / 360 * 2 * PI ) * iMeterR * .8 ) + iMeterCx - Img.GetFontW() / 2,
-			( int )( sin(( double )iDeg / 360 * 2 * PI ) * iMeterR * .8 ) + iMeterCy - Img.GetFontH() / 2,
+			( int )( cos( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCx - Img.GetFontW() / 2,
+			( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - Img.GetFontH() / 2,
 			#ifdef ASYMMETRIC_METER
 				'0' + i / 1000 + ( i >= 1000 ? 1 : 0 ),
 			#else
@@ -763,7 +752,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 				( int )( fabs( dDiffTime )) / 60,
 				fmod( fabs( dDiffTime ), 60 )
 			);
-			Img.DrawString( szBuf, dDiffTime < 0 ? COLOR_DIST_PLUS : COLOR_DIST_MINUS, COLOR_TIME_EDGE, 0 );
+			Img.DrawString( szBuf, dDiffTime < 0 ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
 		}
 	}
 	
@@ -865,7 +854,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		#endif
 		+ iMeterMinDeg;
 	if( dTachoNeedle >= 360 ) dTachoNeedle -= 360;
-	dTachoNeedle = dTachoNeedle / 360 * 2 * PI;
+	dTachoNeedle = dTachoNeedle * ToRAD;
 	
 	Img.DrawLine(
 		iMeterCx, iMeterCy,
