@@ -81,11 +81,11 @@ INLINE void ComputeGear( UINT uTachoBar[] ){
 	if( g_Flags.uGearMode == GM_TOWN ){
 		// ³¹¾è¤ê
 		g_cLEDBar = (( ULONG )g_Tacho.uVal << 4 ) / 1000;
+	}else if( g_Tacho.uVal >= REV_LIMIT ){
+		g_cLEDBar = 0x50 :
 	}else{
-		i = ( int )( g_Tacho.uVal - REV_LIMIT ) / ( int )uTachoBar[ cGear - 1 ] + 4;
-		g_cLEDBar =	i <  0 ? 0x00 :
-					i >= 4 ? 0x50 :
-							 i << 4;
+		i = 3 - ( int )( REV_LIMIT - g_Tacho.uVal ) / ( int )uTachoBar[ cGear - 1 ];
+		g_cLEDBar =	i < 0 ? 0x00 : i << 4;
 	}
 	
 	// ¥·¥Õ¥È¥¢¥Ã¥×·Ù¹ð²»
