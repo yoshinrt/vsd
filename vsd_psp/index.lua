@@ -681,7 +681,7 @@ function ProcessSio()
 				LapTimeLaw = Num
 				
 				if( LapTimePrev ) then
-					local LapTimeDiff = (( Num - LapTimePrev ) / ( H8HZ / 65536 ))
+					local LapTimeDiff = (( Num - LapTimePrev ) / 256 )
 					LapTimeTable[ #LapTimeTable + 1 ] = LapTimeDiff
 					LapTimeStr = "\tLAP" .. #LapTimeTable .. " " .. FormatLapTime( LapTimeDiff, ':' )
 					-- ベストラップか?

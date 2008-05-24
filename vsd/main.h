@@ -92,13 +92,14 @@
 #define BLINK_RATE	( 1 << 4 )	// ブリンクRate
 
 #define CALC_DIVCNT		8		// Taco 計算等を行う周期
-#define SPD_DIVCNT		16		// speed 表示を行う周期
+#define DISP_DIVCNT		1		// speed 表示を行う周期
 
 #define SPEED_ADJ		(( ULONG )(( double )H8HZ * 3600 * 100 / PULSE_PAR_1KM ))
 #define TACO_ADJ		(( ULONG )(( double )H8HZ * 60 / 2 ))
 
 // 直前のNewLapからこれだけ空かないとNewLapとして認めない(3秒)
-#define NEWLAP_MIN_INTERVAL	(( ULONG )(( double )H8HZ * 3 / 65536 ))
+#define NEWLAP_MIN_INTERVAL		(( ULONG )(( double )H8HZ * 3 / 65536 ))
+#define NEWLAP_MIN_INTERVAL_SEC	( 3 * 256 )
 
 #define EOL		"\r\n"
 
@@ -156,12 +157,12 @@ typedef struct {
 	union {
 		ULONG	dw;
 		struct	{ UINT	h, l; } w;
-	} Time;					// timre W のカウント
+	} Time;					// timer W のカウント
 	
 	union {
 		ULONG	dw;
 		struct	{ UINT	h, l; } w;
-	} PrevTime;				// 前回の timre W のカウント
+	} PrevTime;				// 前回の timer W のカウント
 	
 	UINT	uPulseCnt;		// パルス入力回数
 	UINT	uVal;			// スピード等の計算値

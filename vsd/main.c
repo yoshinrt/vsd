@@ -52,6 +52,50 @@ INLINE void _INITSCT( void ){
 	do{ *uDst++ = 0; }while(( unsigned )uDst < ( unsigned )uDstEnd );
 }
 
+/*** TIMER A ****************************************************************/
+
+UINT	g_uRTC;
+
+#undef int_timer_a
+#pragma interrupt( int_timer_a )
+void int_timer_a( void ){
+	LED_Driver( g_TimerWovf.w.l );
+	++g_uRTC;
+	IRR1.BIT.IRRTA = 0;	// IRRI2 クリア
+}
+
+INLINE ULONG GetRTC( void ){
+	UINT	uRet;
+	
+	uRet = TA.TCA;
+	if( !( uRet & 0x80 ) && IRR1.BIT.IRRTA ){
+		uRet += 0x100;
+	}
+	
+	return (( ULONG )g_uRTC << 8 ) + ( ULONG ) uRet;
+}
+
+/*** マグネットセンサー *****************************************************/
+
+// wkp 版
+
+#undef int_wkp
+#pragma interrupt( int_wkp )
+/*__interrupt( vect = 18 )*/ void int_wkp( void ){
+	
+	if( IWPR.BYTE & ( 1 << 4 )){
+		ULONG	uNowTime = GetRTC();
+		
+		// 直前の NewLap から 3秒以上あいている
+		if( uNowTime - g_IR.Time.dw >= NEWLAP_MIN_INTERVAL_SEC ){
+			g_IR.Time.dw = uNowTime;
+			g_Flags.bNewLap = TRUE;
+		}
+		++g_IR.uVal;
+	}
+	IWPR.BYTE = 0;	// クリア
+}
+
 /*** 現在ギアを求める *******************************************************/
 
 const UINT g_uTachoBar[] = {
@@ -82,7 +126,7 @@ INLINE void ComputeGear( UINT uTachoBar[] ){
 		// 街乗り
 		g_cLEDBar = (( ULONG )g_Tacho.uVal << 4 ) / 1000;
 	}else if( g_Tacho.uVal >= REV_LIMIT ){
-		g_cLEDBar = 0x50 :
+		g_cLEDBar = 0x50;
 	}else{
 		i = 3 - ( int )( REV_LIMIT - g_Tacho.uVal ) / ( int )uTachoBar[ cGear - 1 ];
 		g_cLEDBar =	i < 0 ? 0x00 : i << 4;
@@ -143,6 +187,7 @@ INLINE void ComputeGear2( void ){
 int main( void ){
 	
 	UINT			uTWovf;
+	UINT			uAutoModeTimer;
 	DispVal_t		DispVal;
 	TouchPanel_t	TP;
 	
@@ -150,6 +195,18 @@ int main( void ){
 	if( !IO.PDR5.BIT.B4 ) IR_Flasher();
 	_INITSCT();
 	InitMain();
+	
+	/*** TimerA の再設定 ***/
+	
+	TA.TMA.BYTE =
+		( 1 << 3 ) |	// φW 選択
+		0;				// 1s 毎に割込み
+	
+	SetVector( 18, int_wkp );
+	SetVector( 19, int_timer_a );
+	
+	/***********************/
+	
 	set_imask_ccr( 0 );			/* CPU permit interrupts */
 	
 	Print( g_szMsgOpening );
@@ -168,6 +225,7 @@ int main( void ){
 			DispVal.uGx += G_SENSOR_Z;	// 前後 G の検出軸変更
 			DispVal.uGy += G_SENSOR_Y;
 			++DispVal.uCnt;
+			if( !( DispVal.uCnt & ( 128 - 1 ))) LED_Driver( g_TimerWovf.w.l );
 		}
 		
 		++uTWovf;
@@ -191,7 +249,6 @@ int main( void ){
 			CheckStartByGSensor( &DispVal );
 			
 			/*** シリアル出力処理 ***/
-			
 			if(
 				( CALC_DIVCNT == SERIAL_DIVCNT ) ||
 				!( uTWovf & ( SERIAL_DIVCNT - 1 ))
@@ -204,6 +261,16 @@ int main( void ){
 				
 				// sw 入力
 				ProcessPushSW( &TP );
+			}
+			
+			/*** Circuit <--> Load オートモード ***/
+			if( g_Tacho.uVal >= 4500 ){
+				// 4500rpm 以上で，Circuit モードに移行
+				g_Flags.uGearMode	= GM_GEAR;
+				uAutoModeTimer		= g_uRTC;
+			}else if( g_uRTC - uAutoModeTimer >= 120 ){
+				// 2分間，4500rpm 以下なら，街乗りモードに移行
+				g_Flags.uGearMode	= GM_TOWN;
 			}
 		}
 		/*** WDT ***/
