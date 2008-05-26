@@ -527,90 +527,15 @@ function LoadFirmware()
 	TimeoutCnt = 1000
 	repeat
 		RxBuf = RxBuf .. System.sioRead()
-		pos = RxBuf:find( "\r\nT", 1, true )
+		pos = RxBuf:find( "*", 1, true )
 		TimeoutCnt = TimeoutCnt - 1
 		assert( TimeoutCnt ~= 0, "VSD initialize failed" )
 	until pos
 	
-	RxBuf = RxBuf:sub( pos + 2 )
+	RxBuf = RxBuf:sub( pos + 1 )
 	
 	-- VSD モード設定
-	System.sioWrite( "3Gs" )
-end
-
---- ログデータ取得 -----------------------------------------------------------
-
-function GetLogData()
-	RxBuf = RxBuf .. System.sioRead()
-	
-	if( RxBuf == "" ) then return end
-	Len = RxBuf:len()
-	
-	--printTerminal( RxBuf )
-	--printTerminal( "\n" )
-	
-	idx = nil
-	
-	-- ホワイトスペースをスキップ
-	Ret = nil
-	NextIdx = nil
-	
-	for i = 1, Len do
-		if( RxBuf:byte( i ) == 0xD ) then Ret = true end
-		if( RxBuf:byte( i ) > 0x20 ) then
-			NextIdx = i
-			break
-		end
-	end
-	
-	if( NextIdx == nil ) then
-		RxBuf = ""
-		return
-	elseif( NextIdx > 1 ) then
-		RxBuf = RxBuf:sub( NextIdx )
-	end
-	
-	if( Ret ) then return nil, nil, true end
-	
-	-- ホワイトスペースを検索
-	for i = 1, Len do
-		if( RxBuf:byte( i ) <= 0x20 ) then
-			idx = i
-			break
-		end
-	end
-	
-	-- パラメータが1個なかった
-	if( idx == nil ) then return end
-	
-	-- パラメータ発見
-	Cmd = RxBuf:sub( 1, 1 )
-	Num = 0
-	
-	for i = 2, idx - 1 do
-		Num = Num * 128 + RxBuf:byte( i ) - 0x40
-	end
-	
-	-- ホワイトスペースをスキップ
-	Ret = nil
-	NextIdx = nil
-	
-	for i = idx, Len do
-		if( RxBuf:byte( i ) == 0xD ) then Ret = true end
-		if( RxBuf:byte( i ) > 0x20 ) then
-			NextIdx = i
-			break
-		end
-	end
-	
-	if( NextIdx ) then
-		RxBuf = RxBuf:sub( NextIdx )
-	else
-		RxBuf = ""
-	end
-	
-	-- printTerminal( string.format( ">>%s %d %d (%d)\n", Cmd, Num, NextIdx, RxBuf:len()))
-	return Cmd, Num, Ret
+	System.sioWrite( "1a3Gs" )
 end
 
 --- FormatLapTime ------------------------------------------------------------
@@ -624,125 +549,145 @@ function FormatLapTime( Time, Ch )
 	)
 end
 
+--- 5文字→16bit x 2 get -----------------------------------------------------
+
+function GetULong( str )
+	return
+		( str:byte( 1 ) - 0x80 ) * 0x1000 +
+		( str:byte( 2 ) - 0x80 ) * 0x20 +
+		math.floor(( str:byte( 3 ) - 0x80 ) / 4 ),
+		math.mod( str:byte( 3 ), 4 ) * 0x4000 +
+		( str:byte( 4 ) - 0x80 ) * 0x80 +
+		( str:byte( 5 ) - 0x80 )
+end
+
 --- シリアルデータ処理 -------------------------------------------------------
 
 function ProcessSio()
-	local Cmd = nil
-	local Ret = nil
 	
-	repeat
-		LapTimeStr = ""
-		Cmd, Num, Ret = GetLogData()
+	local LapTimeStr = ""
+	
+	if( not bSioDataRemained ) then
+		-- 処理残りデータが無いので，Sio からリードする
+		RxBuf = RxBuf .. System.sioRead()
 		
-		-- ログのコマンド別処理
+		-- * を検索，無ければ何もせず return
+		LogPos = RxBuf:find( "*", 1, true )
+		if( not LogPos ) then return end
 		
-		if Cmd == "T" then
-			Tacho	= Num
-		elseif Cmd == "S" then
-			Speed	= Num
-			RefreshFlag = true	-- Speed を受け取ったら画面更新
-			break
-		elseif Cmd == "M" then
-			if( Num < MileagePrev ) then
-				Mileage	= Mileage + Num - MileagePrev + 0x10000
-			else
-				Mileage	= Mileage + Num - MileagePrev
-			end
-			MileagePrev = Num
+		-- * を見つけた
+		Tacho, Speed = GetULong( RxBuf:sub( 1, 5 ))
+		
+		bSioDataRemained	= true
+		RefreshFlag			= true
+		return
+	end
+	
+	-- Speed/Tacho は処理済，残りを処理する
+	bSioDataRemained = false
+	
+	Mileage,  IRSensor 	= GetULong( RxBuf:sub(  6, 10 ))
+	GSensorX, GSensorY 	= GetULong( RxBuf:sub( 11, 15 ))
+	
+	-- G センサー処理 --------------------------------------------------------
+	
+	if( GSensorCaribCnt > 0 ) then
+		GSensorCaribCnt = GSensorCaribCnt - 1
+		GSensorCx = GSensorCx + GSensorX
+		GSensorCy = GSensorCy + GSensorY
+		
+		if( GSensorCaribCnt == 0 ) then
+			GSensorCx = GSensorCx / GSensorCaribCntMax
+			GSensorCy = GSensorCy / GSensorCaribCntMax
+		end
+		
+		GSensorX	= 0
+		GSensorY	= 0
+	else
+		GSensorX	= -( GSensorX - GSensorCx ) / ACC_1G_Y
+		GSensorY	=  ( GSensorY - GSensorCy ) / ACC_1G_Z
+	end
+	
+	-- ラップタイム処理 ------------------------------------------------------
+	
+	if( LogPos == 21 ) then
+		local tmp, LapTime = GetULong( RxBuf:sub( 16, 20 ))
+		LapTime = LapTime + tmp * 0x10000
+		local LapTimeDiff
+		
+		SectorCnt = SectorCnt + 1
+		if SectorCnt >= SectorCntMax then
+			SectorCnt = 0
 			
-		elseif Cmd == "g" then
-			GSensorX	= math.floor( Num / 0x10000 )
-			GSensorY	= math.fmod( Num, 0x10000 )
+			-- チェックポイントを通過済みならば，周回タイムを求める
+			local bBestLap = false
 			
-			if( GSensorCaribCnt > 0 ) then
-				GSensorCaribCnt = GSensorCaribCnt - 1
-				GSensorCx = GSensorCx + GSensorX
-				GSensorCy = GSensorCy + GSensorY
-				
-				if( GSensorCaribCnt == 0 ) then
-					GSensorCx = GSensorCx / GSensorCaribCntMax
-					GSensorCy = GSensorCy / GSensorCaribCntMax
-				end
-				
-				GSensorX	= 0
-				GSensorY	= 0
-			else
-				GSensorX	= -( GSensorX - GSensorCx ) / ACC_1G_Y
-				GSensorY	=  ( GSensorY - GSensorCy ) / ACC_1G_Z
-			end
-		elseif Cmd == "I" then IRSensor	= Num
-		elseif Cmd == "L" then
-			SectorCnt = SectorCnt + 1
-			if SectorCnt >= SectorCntMax then
-				SectorCnt = 0
-				
-				-- チェックポイントを通過済みならば，周回タイムを求める
-				local bBestLap = false
-				LapTimeLaw = Num
-				
-				if( LapTimePrev ) then
-					local LapTimeDiff = (( Num - LapTimePrev ) / 256 )
-					LapTimeTable[ #LapTimeTable + 1 ] = LapTimeDiff
-					LapTimeStr = "\tLAP" .. #LapTimeTable .. " " .. FormatLapTime( LapTimeDiff, ':' )
-					-- ベストラップか?
-					if( BestLap ) then BestLapDiff = LapTimeDiff - BestLap end
-					if( BestLap == nil or LapTimeDiff < BestLap ) then
-						if( BestLap ) then
-							bBestLap = true
-						end
-						BestLap = LapTimeDiff
+			if( LapTimePrev ) then
+				LapTimeDiff = ( LapTime - LapTimePrev ) / 256
+				LapTimeTable[ #LapTimeTable + 1 ] = LapTimeDiff
+				LapTimeStr = "\tLAP" .. #LapTimeTable .. " " .. FormatLapTime( LapTimeDiff, ':' )
+				-- ベストラップか?
+				if( BestLap ) then BestLapDiff = LapTimeDiff - BestLap end
+				if( BestLap == nil or LapTimeDiff < BestLap ) then
+					if( BestLap ) then
+						bBestLap = true
 					end
-				else
-					-- スタートラインを始めて通過したので，マーカー出力
-					LapTimeStr = "\tLAP" .. ( #LapTimeTable + 1 ) .. " start"
+					BestLap = LapTimeDiff
 				end
-				
-				LapTimePrev = Num
-				
-				if( bBestLap ) then
-					-- ベストラップサウンド
-					SndBestLap:play()
-				else
-					-- ラップサウンド
-					SndNewLap:play()
-				end
-				
-				RedrawLap = 2
-			end
-		end
-		
-		-- ログに改行が付いたので，可視化ログに出力
-		
-		if( Ret ) then
-			--if( type( NoSio ) ~= "string" ) then
-			if( fpLog ) then
-				-- テキストログ
-				fpLog:write( string.format(
-					"%u\t%.2f\t%.2f\t%.5f\t%.5f\t%u",
-					Tacho, Speed / 100, Mileage / PULSE_PAR_1KM * 1000,
-					GSensorY, GSensorX, IRSensor
-				))
-				
-				-- GPS ログ
-				if( GetGPSData()) then
-					fpLog:write( string.format(
-						"\tGPS\t%.10f\t%.10f\t%.10f\t%.10f",
-						GPS_Lati,
-						GPS_Long,
-						GPS_Speed,
-						GPS_Bearing
-					))
-				end
-				
-				-- ラップタイム
-				fpLog:write( LapTimeStr .. "\r\n" )
-				
-				LogCnt = LogCnt + 1
+			else
+				-- スタートラインを始めて通過したので，マーカー出力
+				LapTimeStr = "\tLAP" .. ( #LapTimeTable + 1 ) .. " start"
 			end
 			
-			--DebugRefresh = DebugRefresh + 1
+			LapTimePrev = LapTime
+			
+			if( bBestLap ) then
+				-- ベストラップサウンド
+				SndBestLap:play()
+			else
+				-- ラップサウンド
+				SndNewLap:play()
+			end
+			
+			RedrawLap = 2
+		elseif( LapTimePrev ) then
+			-- セクター通過
+			LapTimeDiff = ( LapTime - LapTimePrev ) / 256
+			LapTimeStr = "\tSector" .. SectorCnt .. " " .. FormatLapTime( LapTimeDiff, ':' )
 		end
-	until Cmd == nil
+	end
+	
+	-- ログに改行が付いたので，可視化ログに出力 ------------------------------
+	
+	--if( type( NoSio ) ~= "string" ) then
+	if( fpLog ) then
+		-- テキストログ
+		fpLog:write( string.format(
+			"%u\t%.2f\t%.2f\t%.5f\t%.5f\t%u",
+			Tacho, Speed / 100, Mileage / PULSE_PAR_1KM * 1000,
+			GSensorY, GSensorX, IRSensor
+		))
+		
+		-- GPS ログ
+		if( GetGPSData()) then
+			fpLog:write( string.format(
+				"\tGPS\t%.10f\t%.10f\t%.10f\t%.10f",
+				GPS_Lati,
+				GPS_Long,
+				GPS_Speed,
+				GPS_Bearing
+			))
+		end
+		
+		-- ラップタイム
+		fpLog:write( LapTimeStr .. "\r\n" )
+		
+		LogCnt = LogCnt + 1
+	end
+	
+	--DebugRefresh = DebugRefresh + 1
+	
+	RxBuf = RxBuf:sub( LogPos + 1 )
 end
 
 --- VSD モード設定 -----------------------------------------------------------

@@ -52,131 +52,6 @@ INLINE void _INITSCT( void ){
 	do{ *uDst++ = 0; }while(( unsigned )uDst < ( unsigned )uDstEnd );
 }
 
-/*** TIMER A ****************************************************************/
-
-UINT	g_uRTC;
-
-#undef int_timer_a
-#pragma interrupt( int_timer_a )
-void int_timer_a( void ){
-	LED_Driver( g_TimerWovf.w.l );
-	++g_uRTC;
-	IRR1.BIT.IRRTA = 0;	// IRRI2 クリア
-}
-
-INLINE ULONG GetRTC( void ){
-	UINT	uRet;
-	
-	uRet = TA.TCA;
-	if( !( uRet & 0x80 ) && IRR1.BIT.IRRTA ){
-		uRet += 0x100;
-	}
-	
-	return (( ULONG )g_uRTC << 8 ) + ( ULONG ) uRet;
-}
-
-/*** マグネットセンサー *****************************************************/
-
-// wkp 版
-
-#undef int_wkp
-#pragma interrupt( int_wkp )
-/*__interrupt( vect = 18 )*/ void int_wkp( void ){
-	
-	if( IWPR.BYTE & ( 1 << 4 )){
-		ULONG	uNowTime = GetRTC();
-		
-		// 直前の NewLap から 3秒以上あいている
-		if( uNowTime - g_IR.Time.dw >= NEWLAP_MIN_INTERVAL_SEC ){
-			g_IR.Time.dw = uNowTime;
-			g_Flags.bNewLap = TRUE;
-		}
-		++g_IR.uVal;
-	}
-	IWPR.BYTE = 0;	// クリア
-}
-
-/*** 現在ギアを求める *******************************************************/
-
-const UINT g_uTachoBar[] = {
-	334, 200, 150, 118, 97
-};
-
-#undef ComputeGear
-#undef ComputeGear2
-
-INLINE void ComputeGear( UINT uTachoBar[] ){
-	UINT	uGearRatio;
-	UCHAR	cGear, cBestGear;
-	int		i;
-	
-	uGearRatio = ( UINT )((( ULONG )g_Speed.uVal << 8 ) / g_Tacho.uVal );
-	
-	if     ( uGearRatio < GEAR_TH( 1 ))	cGear = 1;
-	else if( uGearRatio < GEAR_TH( 2 )) cGear = 2;
-	else if( uGearRatio < GEAR_TH( 3 ))	cGear = 3;
-	else if( uGearRatio < GEAR_TH( 4 ))	cGear = 4;
-	else								cGear = 5;
-	
-	/*** LEDバー表示 ********************************************************/
-	
-	// LED バー表示計算
-	
-	if( g_Flags.uGearMode == GM_TOWN ){
-		// 街乗り
-		g_cLEDBar = (( ULONG )g_Tacho.uVal << 4 ) / 1000;
-	}else if( g_Tacho.uVal >= REV_LIMIT ){
-		g_cLEDBar = 0x50;
-	}else{
-		i = 3 - ( int )( REV_LIMIT - g_Tacho.uVal ) / ( int )uTachoBar[ cGear - 1 ];
-		g_cLEDBar =	i < 0 ? 0x00 : i << 4;
-	}
-	
-	// シフトアップ警告音
-	g_cLEDBar >= 0x50 ? SetBeep( 30578 >> 3 ) : SetBeep( BEEP_OFF );
-	
-	g_Flags.bBlinkMain = 0;
-	g_Flags.bBlinkSub  = 0;
-	
-	if( g_Flags.uGearMode >= GM_GEAR ){	// シフト警告を使用する?
-		if( g_cLEDBar >= 0x50 ){
-			// シフトアップ警告(ギア)
-			g_Flags.bBlinkSub  = 1;
-			g_Flags.bBlinkMain = ( g_Flags.uGearMode >= GM_BL_MAIN );
-			
-			if( g_Flags.uGearMode >= GM_DESIRED_GEAR ) ++cGear;
-		}else{
-			// 最適なギアを計算する
-			if     ( g_Speed.uVal < SH_DOWN_TH( 1 )) cBestGear = 1;
-			else if( g_Speed.uVal < SH_DOWN_TH( 2 )) cBestGear = 2;
-			else if( g_Speed.uVal < SH_DOWN_TH( 3 )) cBestGear = 3;
-			else if( g_Speed.uVal < SH_DOWN_TH( 4 )) cBestGear = 4;
-			else									 cBestGear = 5;
-			
-			// シフトダウン警告
-			if( cBestGear != cGear ){
-				if( g_Flags.uGearMode >= GM_DESIRED_GEAR ) cGear = cBestGear;
-				g_Flags.bBlinkSub = 1;
-			}
-		}
-	}
-	
-	// LED バー リバース
-	//if( g_Flags.bReverse ) g_cLEDBar = -g_cLEDBar;
-	
-	// LED にギア表示
-	g_VRAM.cDisp[ 3 ] = ( 0/*g_Flags.bReverse*/ ? g_cFontR : g_cFont )[ cGear ];
-}
-
-INLINE void ComputeGear2( void ){
-	if( g_Flags.uDispMode >= DISPMODE_SPEED ){
-		ComputeGear( g_uTachoBar );
-	}else{
-		g_Flags.bBlinkMain	= 0;
-		g_Flags.bBlinkSub	= 0;
-	}
-}
-
 /*** main *******************************************************************/
 
 #ifdef MONITOR_ROM
@@ -187,7 +62,7 @@ INLINE void ComputeGear2( void ){
 int main( void ){
 	
 	UINT			uTWovf;
-	UINT			uAutoModeTimer;
+	UINT			uAutoModeTimer	= g_uRTC;
 	DispVal_t		DispVal;
 	TouchPanel_t	TP;
 	
@@ -196,20 +71,10 @@ int main( void ){
 	_INITSCT();
 	InitMain();
 	
-	/*** TimerA の再設定 ***/
-	
-	TA.TMA.BYTE =
-		( 1 << 3 ) |	// φW 選択
-		0;				// 1s 毎に割込み
-	
-	SetVector( 18, int_wkp );
-	SetVector( 19, int_timer_a );
-	
-	/***********************/
-	
 	set_imask_ccr( 0 );			/* CPU permit interrupts */
 	
 	Print( g_szMsgOpening );
+	g_Flags.uAutoMode = AM_DISP;
 	
 	BZero( DispVal );
 	BZero( TP );
@@ -263,16 +128,10 @@ int main( void ){
 				ProcessPushSW( &TP );
 			}
 			
-			/*** Circuit <--> Load オートモード ***/
-			if( g_Tacho.uVal >= 4500 ){
-				// 4500rpm 以上で，Circuit モードに移行
-				g_Flags.uGearMode	= GM_GEAR;
-				uAutoModeTimer		= g_uRTC;
-			}else if( g_uRTC - uAutoModeTimer >= 120 ){
-				// 2分間，4500rpm 以下なら，街乗りモードに移行
-				g_Flags.uGearMode	= GM_TOWN;
-			}
+			/*** オートモード ***/
+			uAutoModeTimer = ProcessAutoMode( uAutoModeTimer );
 		}
+		
 		/*** WDT ***/
 		
 		WDT.TCSRWD.BYTE = ( 1 << 6 );	// TCWE

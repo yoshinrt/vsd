@@ -98,8 +98,7 @@
 #define TACO_ADJ		(( ULONG )(( double )H8HZ * 60 / 2 ))
 
 // 直前のNewLapからこれだけ空かないとNewLapとして認めない(3秒)
-#define NEWLAP_MIN_INTERVAL		(( ULONG )(( double )H8HZ * 3 / 65536 ))
-#define NEWLAP_MIN_INTERVAL_SEC	( 3 * 256 )
+#define NEWLAP_MIN_INTERVAL	( 3 * 256 )
 
 #define EOL		"\r\n"
 
@@ -132,11 +131,26 @@ enum {
 	GM_DESIRED_GEAR,	// 4 +最適ギア表示
 };
 
+// タッチパッドのクリック数
+enum {
+	SWCMD_TACHO_SPD		= 1,
+	SWCMD_AUTOMODE,
+	SWCMD_VCARIB,
+};
+
+enum {
+	AM_OFF,		// オートモード無効
+	AM_GEAR,	// ギアモードの自動切換え
+	AM_DISP,	// ↑+Tacho⇔Speed の自動切換え
+	AM_NUM
+};
+
 #define DISP_FINISH		0xFFFF
 #define DBL_CLICK_TIME	8
 
 /*** new type ***************************************************************/
 
+// 上詰めなので下に追記する
 typedef struct {
 	UCHAR	uDispModeNext	:4;
 	UCHAR	uLapMode		:2;
@@ -146,6 +160,7 @@ typedef struct {
 	BOOL	bNewLap			:1;
 	UCHAR	uGearMode		:5;
 	UCHAR	uDispMode		:5;
+	UCHAR	uAutoMode		:2;
 } Flags_t;
 
 typedef struct {

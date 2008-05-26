@@ -1,0 +1,819 @@
+Optimizing Linkage Editor (V.9.00.02.000)         26-May-2008 11:26:12
+
+*** Options ***
+
+-subcommand=G:\DDS\vsd\vsd\300thew3\monitor\monitor.sub
+INPUT	NORMAL,MONITOR,sci,main,padding
+LIST	MONITOR.MAP
+SHOW	SYMBOL
+OUTPUT	MONITOR.MOT
+FORM	STYPE
+NOOPTIMIZE
+LIBRARY	NORMAL,3664
+LIBRARY	MONITOR
+DEFINE	$BRR=C
+DEFINE	$STACK=FEB2
+ROM	D=R
+START	VECTOR/0,ROM,C,D/100,S,BPAD,RAM:B,R/FEAE,USER/FF4C,SCI/FFA8
+
+*** Error information ***
+
+** L1321 (W) Entry symbol "INT000" in "NORMAL.obj" conflicts
+** L1321 (W) Entry symbol "_main" in "main.obj" conflicts
+
+*** Mapping List ***
+
+SECTION                            START      END         SIZE   ALIGN
+
+VECTOR
+                                  00000000  0000003f        40   2
+ROM
+                                  00000100  00003419      331a   2
+C
+                                  0000341a  00003580       167   2
+D
+                                  00003582  00003589         8   2
+S
+                                  0000feae  0000feae         0   2
+BPAD
+                                  0000feae  0000febf        12   2
+RAM
+                                  0000fec0  0000ff4b        8c   2
+B
+                                  0000feae  0000ff41        94   2
+R
+                                  0000ff42  0000ff49         8   2
+USER
+                                  0000ff4c  0000ff4c         0   2
+SCI
+                                  0000ffa8  0000ffad         6   2
+
+*** Symbol List ***
+
+SECTION=
+FILE=                               START        END    SIZE
+  SYMBOL                            ADDR        SIZE    INFO      COUNTS  OPT
+
+SECTION=VECTOR
+FILE=INT_MSG
+                                  00000000  0000003f        40
+  LARGE_VECTOR
+                                  00000000         0   none ,g         * 
+
+SECTION=ROM
+FILE=NORMAL.obj
+                                  00000100  000001cb        cc
+  INT000
+                                  00000100         0   entry,g         * 
+  MAIN
+                                  00000146         0   none ,g         * 
+  WAIT_MSG
+                                  0000018c         0   none ,l         * 
+  COM_NAME
+                                  00000190         0   none ,g         * 
+  COM_TBL
+                                  000001ae         0   none ,l         * 
+FILE=MONITOR.obj
+                                  000001cc  00000205        3a
+  _INITIALIZE
+                                  000001cc        3a   func ,g         * 
+FILE=sci.obj
+                                  00000206  00000451       24c
+  _sci_flush_rx
+                                  00000206         c   func ,g         * 
+  _sci_flush_tx
+                                  00000212         c   func ,g         * 
+  _sci_wait_tx_empty
+                                  0000021e         6   func ,g         * 
+  _sci_wait_rx_full
+                                  00000224        18   func ,g         * 
+  _msecwait
+                                  0000023c        36   func ,g         * 
+  _sci_init
+                                  00000272        52   func ,g         * 
+  _sci_read
+                                  000002c4        66   func ,g         * 
+  _sci_write
+                                  0000032a        82   func ,g         * 
+  _sci_int_handler
+                                  000003ac        a6   func ,g         * 
+FILE=main.obj
+                                  00000452  0000296d      251c
+  _PrintLED4
+                                  00000452        56   func ,g         * 
+  _PrintLED
+                                  000004a8        4a   func ,g         * 
+  _int_timer_a
+                                  000004f2       10a   func ,g         * 
+  _GetRTC
+                                  000005fc        2e   func ,g         * 
+  _int_timer_w
+                                  0000062a        1c   func ,g         * 
+  _int_irq0
+                                  00000646        6e   func ,g         * 
+  _int_wkp
+                                  000006b4        7e   func ,g         * 
+  _int_irq1
+                                  00000732        da   func ,g         * 
+  _int_irq2
+                                  0000080c        38   func ,g         * 
+  _int_irq3
+                                  00000844        c2   func ,g         * 
+  _INT_SCI3
+                                  00000906        18   func ,g         * 
+  _GoMonitor
+                                  0000091e        12   func ,g         * 
+  _SetBeep
+                                  00000930        52   func ,g         * 
+  _ComputeMeter
+                                  00000982       1ec   func ,g         * 
+  _ComputeGear
+                                  00000b6e       16e   func ,g         * 
+  _ComputeGear2
+                                  00000cdc        22   func ,g         * 
+  _DoAnimation
+                                  00000cfe        72   func ,g         * 
+  _DispLEDMsg
+                                  00000d70        90   func ,g         * 
+  _DispLEDMsgPC
+                                  00000e00        90   func ,g         * 
+  _DispLEDAnimePC
+                                  00000e90        6c   func ,g         * 
+  _DispMsgStart
+                                  00000efc        22   func ,g         * 
+  _DispAnimeStart
+                                  00000f1e        20   func ,g         * 
+  _PrintLEDStr
+                                  00000f3e        4e   func ,g         * 
+  _DispLED
+                                  00000f8c       260   func ,g         * 
+  _DispLED_Carib
+                                  000011ec       2fc   func ,g         * 
+  _LED_Driver
+                                  000014e8        f2   func ,g         * 
+  _Print
+                                  000015da        22   func ,g         * 
+  _Print_ud
+                                  000015fc        68   func ,g         * 
+  _Print_ItoA
+                                  00001664        60   func ,g         * 
+  _ItoA128
+                                  000016c4        50   func ,g         * 
+  _OutputSerial
+                                  00001714       132   func ,g         * 
+  _OutputSerialSmooth
+                                  00001846       18e   func ,g         * 
+  _DoInputSerial
+                                  000019d4       2e4   func ,g         * 
+  _ScanPushSW
+                                  00001cb8        7a   func ,g         * 
+  _ProcessPushSW
+                                  00001d32       73e   func ,g         * 
+  _ProcessAutoMode
+                                  00002470        74   func ,g         * 
+  _CheckStartByGSensor
+                                  000024e4        c2   func ,g         * 
+  _SetupHW
+                                  000025a6        a0   func ,g         * 
+  _InitMain
+                                  00002646       104   func ,g         * 
+  _bzero
+                                  0000274a        14   func ,g         * 
+  _int_timer_v_IR
+                                  0000275e        22   func ,g         * 
+  _IR_Flasher
+                                  00002780        70   func ,g         * 
+  __INITSCT
+                                  000027f0        32   func ,g         * 
+  _main
+                                  00002822       14c   func ,g         * 
+FILE=OUT_CRLF
+                                  0000296e  0000297d        10
+  OUT_CRLF
+                                  0000296e         0   none ,g         * 
+FILE=OUT_STRING
+                                  0000297e  00002989         c
+  OUT_STRING
+                                  0000297e         0   none ,g         * 
+FILE=IN_STRING
+                                  0000298a  000029fd        74
+  IN_STRING
+                                  0000298a         0   none ,g         * 
+  BS_MSG
+                                  000029fa         0   none ,l         * 
+FILE=ERR
+                                  000029fe  00002b5a       15d
+  ERR
+                                  000029fe         0   none ,g         * 
+  ERR00
+                                  00002a00         0   none ,g         * 
+  ERR01
+                                  00002a04         0   none ,g         * 
+  ERR02
+                                  00002a08         0   none ,g         * 
+  ERR03
+                                  00002a0c         0   none ,g         * 
+  ERR04
+                                  00002a10         0   none ,g         * 
+  ERR05
+                                  00002a14         0   none ,g         * 
+  ERR06
+                                  00002a18         0   none ,g         * 
+  ERR07
+                                  00002a1c         0   none ,g         * 
+  ERR08
+                                  00002a20         0   none ,g         * 
+  ERR09
+                                  00002a24         0   none ,g         * 
+  ERR10
+                                  00002a28         0   none ,g         * 
+  ERR11
+                                  00002a2c         0   none ,g         * 
+  ERR_MSG
+                                  00002a6c         0   none ,l         * 
+  ERR00_MSG
+                                  00002a79         0   none ,l         * 
+  ERR01_MSG
+                                  00002a89         0   none ,l         * 
+  ERR02_MSG
+                                  00002a99         0   none ,l         * 
+  ERR03_MSG
+                                  00002aab         0   none ,l         * 
+  ERR04_MSG
+                                  00002ac1         0   none ,l         * 
+  ERR05_MSG
+                                  00002ad5         0   none ,l         * 
+  ERR06_MSG
+                                  00002aea         0   none ,l         * 
+  ERR07_MSG
+                                  00002afa         0   none ,l         * 
+  ERR08_MSG
+                                  00002b0e         0   none ,l         * 
+  ERR09_MSG
+                                  00002b22         0   none ,l         * 
+  ERR10_MSG
+                                  00002b37         0   none ,l         * 
+  ERR11_MSG
+                                  00002b4b         0   none ,l         * 
+FILE=TBL_ANA
+                                  00002b5c  00002bab        50
+  TBL_ANA
+                                  00002b5c         0   none ,g         * 
+FILE=COM_SPLIT
+                                  00002bac  00002c73        c8
+  COM_SPLIT
+                                  00002bac         0   none ,g         * 
+  SPTB_CHK
+                                  00002c38         0   none ,g         * 
+  SPL_CHK
+                                  00002c48         0   none ,l         * 
+  LOW_CHK
+                                  00002c58         0   none ,g         * 
+  ANA_BUF_ADR
+                                  00002c68         0   none ,l         * 
+FILE=A_COM
+                                  00002c74  00002c77         4
+  A_COM
+                                  00002c74         0   none ,g         * 
+FILE=B_COM
+                                  00002c78  00002c89        12
+  B_COM
+                                  00002c78         0   none ,g         * 
+  B_COM_INIT
+                                  00002c7c         0   none ,g         * 
+  BREAK_CHK
+                                  00002c7e         0   none ,g         * 
+  B_SUB_COM
+                                  00002c7e         0   none ,g         * 
+  BREAK_SET
+                                  00002c82         0   none ,g         * 
+  BREAK_CLR
+                                  00002c88         0   none ,g         * 
+FILE=D_COM
+                                  00002c8a  00002c8d         4
+  D_COM
+                                  00002c8a         0   none ,g         * 
+  D_ANA_SUB
+                                  00002c8e         0   none ,g         * 
+  D_COM_SUB
+                                  00002c8e         0   none ,g         * 
+FILE=DA_COM
+                                  00002c8e  00002c93         6
+  DA_COM
+                                  00002c8e         0   none ,g         * 
+  DA_SUB_COM
+                                  00002c92         0   none ,g         * 
+  DA_COM_SUB
+                                  00002c92         0   none ,g         * 
+FILE=F_COM
+                                  00002c94  00002c97         4
+  F_COM
+                                  00002c94         0   none ,g         * 
+FILE=G_COM
+                                  00002c98  00002d01        6a
+  G_COM
+                                  00002c98         0   none ,g         * 
+  G_COM_SUB
+                                  00002cc6         0   none ,g         * 
+  SET_MOD
+                                  00002d00         0   none ,l         * 
+FILE=H8_COM
+                                  00002d02  00002d05         4
+  H8_COM
+                                  00002d02         0   none ,g         * 
+FILE=L_COM
+                                  00002d06  00002e7b       176
+  L_COM
+                                  00002d06         0   none ,g         * 
+  L_COM_SUB
+                                  00002d52         0   none ,l         * 
+  S0
+                                  00002dde         0   none ,l         * 
+  S1
+                                  00002df0         0   none ,l         * 
+  S9
+                                  00002e20         0   none ,l         * 
+  L_MOD
+                                  00002e30         0   none ,l         * 
+  L_IOB
+                                  00002e44         0   none ,l         * 
+  L_MSG
+                                  00002e64         0   none ,l         * 
+FILE=M_COM
+                                  00002e7c  00002e7f         4
+  M_COM
+                                  00002e7c         0   none ,g         * 
+FILE=R_COM
+                                  00002e80  00002ea7        28
+  R_COM
+                                  00002e80         0   none ,g         * 
+  R_COM_INIT
+                                  00002e84         0   none ,g         * 
+  R_SUB_COM
+                                  00002ea6         0   none ,g         * 
+FILE=S_COM
+                                  00002ea8  00002eab         4
+  S_COM
+                                  00002ea8         0   none ,g         * 
+  S_SUB_COM
+                                  00002eac         0   none ,g         * 
+  S_COM_SUB
+                                  00002eac         0   none ,g         * 
+FILE=REG_COM
+                                  00002eac  00002eaf         4
+  REG_COM
+                                  00002eac         0   none ,g         * 
+FILE=HELP_COM
+                                  00002eb0  00002eb3         4
+  HELP_COM_SUB
+                                  00002eb0         0   none ,g         * 
+  HELP_COM
+                                  00002eb0         0   none ,g         * 
+FILE=RET_COM
+                                  00002eb4  00002ebf         c
+  RET_COM
+                                  00002eb4         0   none ,g         * 
+  RET_COM_SUB
+                                  00002eb8         0   none ,g         * 
+FILE=BACK_COM
+                                  00002ec0  00002ec5         6
+  BACK_COM
+                                  00002ec0         0   none ,g         * 
+  BACK_COM_INIT
+                                  00002ec4         0   none ,g         * 
+  BACK_COM_SUB
+                                  00002ec4         0   none ,g         * 
+FILE=SWAPV
+                                  00002ec6  00002ed7        12
+  VECTOR_INIT
+                                  00002ec6         0   none ,g         * 
+  VECTOR_SET
+                                  00002ed6         0   none ,g         * 
+  VECTOR_CLR
+                                  00002ed6         0   none ,g         * 
+FILE=INIT
+                                  00002ed8  00002f4a        73
+  INIT
+                                  00002ed8         0   none ,g         * 
+  OPEN_MSG
+                                  00002ef0         0   none ,g         * 
+FILE=INT_MSG
+                                  00002f4c  0000309d       152
+  VECTOR_TBL
+                                  00002f4c         0   none ,g         * 
+  INT001
+                                  00002f4e         0   none ,g         * 
+  INT002
+                                  00002f52         0   none ,l         * 
+  INT003
+                                  00002f56         0   none ,l         * 
+  INT004
+                                  00002f5a         0   none ,l         * 
+  INT005
+                                  00002f5e         0   none ,l         * 
+  INT006
+                                  00002f62         0   none ,l         * 
+  INT007
+                                  00002f66         0   none ,l         * 
+  INT008
+                                  00002f6a         0   none ,l         * 
+  INT009
+                                  00002f6e         0   none ,l         * 
+  INT010
+                                  00002f72         0   none ,l         * 
+  INT011
+                                  00002f76         0   none ,l         * 
+  INT012
+                                  00002f7a         0   none ,l         * 
+  INT013
+                                  00002f7e         0   none ,l         * 
+  INT014
+                                  00002f82         0   none ,l         * 
+  INT015
+                                  00002f86         0   none ,l         * 
+  INT016
+                                  00002f8a         0   none ,l         * 
+  INT017
+                                  00002f8e         0   none ,l         * 
+  INT018
+                                  00002f92         0   none ,l         * 
+  INT019
+                                  00002f96         0   none ,l         * 
+  INT020
+                                  00002f9a         0   none ,l         * 
+  INT021
+                                  00002f9e         0   none ,l         * 
+  INT022
+                                  00002fa2         0   none ,l         * 
+  INT023
+                                  00002fa6         0   none ,l         * 
+  INT024
+                                  00002faa         0   none ,l         * 
+  INT025
+                                  00002fae         0   none ,l         * 
+  INT026
+                                  00002fb2         0   none ,l         * 
+  INT027
+                                  00002fb6         0   none ,l         * 
+  INT028
+                                  00002fba         0   none ,l         * 
+  INT029
+                                  00002fbe         0   none ,l         * 
+  INT030
+                                  00002fc2         0   none ,l         * 
+  INT031
+                                  00002fc6         0   none ,l         * 
+  MEM_CHK
+                                  00002fca         0   none ,g         * 
+  INT_CHK
+                                  00002fce         0   none ,g         * 
+  INT_MSG
+                                  00002fd2         0   none ,g         * 
+FILE=divul3
+                                  0000309e  000030d9        3c
+  $DIVUL$3
+                                  0000309e         0   none ,g         * 
+  
+                                  000030b6         0   none ,l         * 
+  
+                                  000030c0         0   none ,l         * 
+  
+                                  000030ca         0   none ,l         * 
+  
+                                  000030d4         0   none ,l         * 
+FILE=OUT_CHAR
+                                  000030da  000030ed        14
+  OUT_CHAR
+                                  000030da         0   none ,g         * 
+FILE=OUT_VALUE
+                                  000030ee  000030fb         e
+  OUT_VALUE
+                                  000030ee         0   none ,g         * 
+FILE=BIN_ASC_4
+                                  000030fc  00003101         6
+  BIN_ASC_4
+                                  000030fc         0   none ,g         * 
+FILE=IN_CHAR
+                                  00003102  00003137        36
+  IN_CHAR
+                                  00003102         0   none ,g         * 
+FILE=IN_SCHAR
+                                  00003138  00003159        22
+  IN_SCHAR
+                                  00003138         0   none ,g         * 
+FILE=ASC_BCD_2
+                                  0000315a  00003173        1a
+  ASC_BCD_2
+                                  0000315a         0   none ,g         * 
+  BCD_CHK
+                                  00003164         0   none ,g         * 
+FILE=ASC_BIN_4
+                                  00003174  0000317d         a
+  ASC_BIN_4
+                                  00003174         0   none ,g         * 
+FILE=TBL_CHK
+                                  0000317e  0000319b        1e
+  TBL_CHK
+                                  0000317e         0   none ,g         * 
+FILE=SYSTEM_HDL
+                                  0000319c  00003227        8c
+  SYSTEM_HDL
+                                  0000319c         0   none ,g         * 
+FILE=BREAK
+                                  00003228  0000322b         4
+  INT02
+                                  00003228         0   none ,g         * 
+FILE=TRACE
+                                  0000322c  0000322f         4
+  INT01
+                                  0000322c         0   none ,g         * 
+FILE=TRACEA
+                                  00003230  00003231         2
+  TRACE_SET
+                                  00003230         0   none ,g         * 
+  TRACE_CLR
+                                  00003230         0   none ,g         * 
+FILE=ABORT
+                                  00003232  00003293        62
+  INT07
+                                  00003232         0   none ,g         * 
+  ABORT_MSG
+                                  00003288         0   none ,l         * 
+FILE=OUT_2SP
+                                  00003294  0000329d         a
+  OUT_2SP
+                                  00003294         0   none ,g         * 
+FILE=BIN_ASC
+                                  0000329e  000032c5        28
+  BIN_ASC
+                                  0000329e         0   none ,g         * 
+FILE=ASC_BIN
+                                  000032c6  00003305        40
+  ASC_BIN
+                                  000032c6         0   none ,g         * 
+  ASC_CHK
+                                  000032f6         0   none ,g         * 
+FILE=UNDEF_HDL
+                                  00003306  00003412       10d
+  UNDEF_HDL
+                                  00003306         0   none ,g         * 
+  UNDEF_MOD
+                                  0000336a         0   none ,g         * 
+  UNDEF_ROU
+                                  00003390         0   none ,g         * 
+  OUT_MEM
+                                  000033b4         0   none ,l         * 
+  OUT_INT
+                                  000033ce         0   none ,g         * 
+  CLR_MOD
+                                  000033f4         0   none ,l         * 
+  OUT_MOD
+                                  000033f8         0   none ,l         * 
+  MEM_MSG
+                                  000033fa         0   none ,l         * 
+FILE=BIN_ASC_2
+                                  00003414  00003419         6
+  BIN_ASC_2
+                                  00003414         0   none ,g         * 
+
+SECTION=C
+FILE=main.obj
+                                  0000341a  00003580       167
+  _g_uTachoBar
+                                  0000343e         a   data ,g         * 
+  _g_cFont
+                                  00003448         a   data ,g         * 
+  _g_cFontR
+                                  00003452         a   data ,g         * 
+  _g_szMsgReadyToGo
+                                  0000345c         c   data ,g         * 
+  _g_szMsgTacho
+                                  00003468         5   data ,g         * 
+  _g_szMsgSpeed
+                                  0000346d         4   data ,g         * 
+  _g_szMsgWaterTemp
+                                  00003471         6   data ,g         * 
+  _g_szMsgIRCnt
+                                  00003477         3   data ,g         * 
+  _g_szMsgFuel
+                                  0000347a         5   data ,g         * 
+  _g_szMsgMileage
+                                  0000347f         5   data ,g         * 
+  _g_szMsgCalibrate
+                                  00003484         a   data ,g         * 
+  _g_szMsgOpening
+                                  0000348e        2a   data ,g         * 
+  _g_LEDAnimeOpening
+                                  000034b8        3d   data ,g         * 
+  _g_cLEDFont
+                                  000034f5        65   data ,g         * 
+
+SECTION=D
+FILE=main.obj
+                                  00003582  00003589         8
+
+SECTION=BPAD
+FILE=padding.obj
+                                  0000feae  0000febf        12
+  _cPadding
+                                  0000feae        12   data ,g         * 
+
+SECTION=RAM
+FILE=NORMAL.obj
+                                  0000fec0  0000feed        2e
+  STACK
+                                  0000feca         0   none ,g         * 
+FILE=IN_STRING
+                                  0000feee  0000ff49        5c
+  COM_BUF
+                                  0000feee         0   none ,g         * 
+  ANA_BUF
+                                  0000ff0e         0   none ,g         * 
+FILE=RET_COM
+                                  0000ff4a  0000ff4b         2
+  RET_TBL
+                                  0000ff4a         0   none ,g         * 
+
+SECTION=B
+FILE=sci.obj
+                                  0000feae  0000ff03        56
+  _error_handler
+                                  0000feae         2   data ,g         * 
+  __$rx_buffer
+                                  0000feb0        20   data ,l         * 
+  __$tx_buffer
+                                  0000fed0        30   data ,l         * 
+  _rx_idx_head
+                                  0000ff00         1   data ,g         * 
+  _rx_idx_tail
+                                  0000ff01         1   data ,g         * 
+  _tx_idx_head
+                                  0000ff02         1   data ,g         * 
+  _tx_idx_tail
+                                  0000ff03         1   data ,g         * 
+FILE=main.obj
+                                  0000ff04  0000ff41        3e
+  _g_Tacho
+                                  0000ff04         c   data ,g         * 
+  _g_Speed
+                                  0000ff10         c   data ,g         * 
+  _g_IR
+                                  0000ff1c         c   data ,g         * 
+  _g_Padding
+                                  0000ff28         2   data ,g         * 
+  _g_lParam
+                                  0000ff2a         4   data ,g         * 
+  _g_TimerWovf
+                                  0000ff2e         4   data ,g         * 
+  _g_uRemainedMillage
+                                  0000ff32         2   data ,g         * 
+  _g_uStartGTh
+                                  0000ff34         2   data ,g         * 
+  _g_uMileage
+                                  0000ff36         2   data ,g         * 
+  _g_uDispNext
+                                  0000ff38         2   data ,g         * 
+  _g_uRTC
+                                  0000ff3a         2   data ,g         * 
+  _g_Flags
+                                  0000ff3c         3   data ,g         * 
+  _g_cLEDBar
+                                  0000ff3f         1   data ,g         * 
+  _g_PushSW
+                                  0000ff40         1   data ,g         * 
+  _g_uVideoCaribCnt
+                                  0000ff41         1   data ,g         * 
+
+SECTION=R
+FILE=main.obj
+                                  0000ff42  0000ff49         8
+  _g_VRAM
+                                  0000ff42         4   data ,g         * 
+  _g_szLEDMsg
+                                  0000ff46         2   data ,g         * 
+  __$uCntPrev$144
+                                  0000ff48         2   data ,l         * 
+
+SECTION=USER
+FILE=LARGE_AREA
+                                  0000ff4c  0000ff4c         0
+  LARGE_AREA
+                                  0000ff4c         0   none ,g         * 
+
+SECTION=SCI
+FILE=INIT
+                                  0000ffa8  0000ffad         6
+  SMR
+                                  0000ffa8         0   none ,l         * 
+  BRR
+                                  0000ffa9         0   none ,l         * 
+  SCR
+                                  0000ffaa         0   none ,l         * 
+  TDR
+                                  0000ffab         0   none ,g         * 
+  SSR
+                                  0000ffac         0   none ,g         * 
+  RDR
+                                  0000ffad         0   none ,g         * 
+
+Absolute value symbols
+FILE=R_COM
+  $STACK
+                                  0000feb2         0   none ,g         * 
+FILE=INIT
+  PMR1
+                                  0000ffe0         0   none ,l         * 
+  $BRR
+                                  0000000c         0   none ,g         * 
+  INTERNAL_BGN
+                                  00000000         0   none ,g         * 
+  INTERNAL_END
+                                  00000000         0   none ,g         * 
+  INTERNAL
+                                  0000ff80         0   none ,g         * 
+FILE=LOWER
+  _sml_buf
+                                  00000000         0   none ,g         * 
+  __iob
+                                  00000000         0   none ,g         * 
+  _BUF
+                                  00000000         0   none ,g         * 
+FILE=L_BUF
+  L_BUF
+                                  00000000         0   none ,g         * 
+
+*** Delete Symbols ***
+
+SYMBOL                                SIZE    INFO
+
+*** Variable Accessible with Abs8 ***
+
+SYMBOL                                SIZE    COUNTS  OPTIMIZE
+
+_rx_idx_head
+                                         1         * 
+_rx_idx_tail
+                                         1         * 
+_tx_idx_head
+                                         1         * 
+_tx_idx_tail
+                                         1         * 
+_g_Flags
+                                         3         * 
+_g_cLEDBar
+                                         1         * 
+_g_PushSW
+                                         1         * 
+_g_uVideoCaribCnt
+                                         1         * 
+
+*** Variable Accessible with Abs16 ***
+
+SYMBOL                                SIZE    COUNTS  OPTIMIZE
+
+*** Function Call ***
+
+SYMBOL                              COUNTS  OPTIMIZE
+
+_sci_init
+                                         * 
+_sci_read
+                                         * 
+_sci_write
+                                         * 
+_sci_int_handler
+                                         * 
+_SetBeep
+                                         * 
+_ComputeMeter
+                                         * 
+_ComputeGear
+                                         * 
+_ComputeGear2
+                                         * 
+_DispMsgStart
+                                         * 
+_DispLED_Carib
+                                         * 
+_LED_Driver
+                                         * 
+_Print
+                                         * 
+_OutputSerialSmooth
+                                         * 
+_DoInputSerial
+                                         * 
+_ProcessPushSW
+                                         * 
+_ProcessAutoMode
+                                         * 
+_CheckStartByGSensor
+                                         * 
+_InitMain
+                                         * 
+_bzero
+                                         * 
+_IR_Flasher
+                                         * 
+_main
+                                         * 

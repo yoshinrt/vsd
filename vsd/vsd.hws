@@ -32,8 +32,8 @@
 [VD_CONFIGURATION_OPTIONS]
 "ACTIVE_DESKTOP" "0" 
 [VD_CONFIGURATIONS]
-"0" "Default1" "0" 
-"1" "Default2" "0" 
-"2" "Default3" "0" 
 "3" "Default4" "0" 
+"2" "Default3" "0" 
+"1" "Default2" "0" 
+"0" "Default1" "0" 
 [END]
