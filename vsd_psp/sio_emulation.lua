@@ -11,25 +11,21 @@ NoSio = "vsd20080502_102516.log"
 
 DummySioTimer = Timer.new()
 DummySioTimer:start()
+NextSioTime = 0
 
 TSC = Timer.new() TSC:start()
 DebugPrevKey = 0
 
-function ItoA128( Num, Len )
-	local Ret = ""
-	repeat
-		Ret = string.char( math.fmod( Num, 128 ) + 0x80 ) .. Ret
-		Num = math.floor( Num / 128 )
-	until Len <= 0
-	
-	return Ret, Num
-end
-
 function ItoA( Hi, Lo )
-	local Ret
+	local Ret = ""
+	local i
+	Lo = Hi * 0x10000 + Lo
 	
-	Ret, Lo = ItoA128( Lo, 2 )
-	return ItoA128( Hi = Hi * 4 + Lo, 3 ) .. Ret
+	for i = 1, 5 do
+		Ret = string.char( math.fmod( Lo, 0x80 ) + 0x80 ) .. Ret
+		Lo  = math.floor( Lo / 0x80 )
+	end
+	return Ret
 end
 
 if( type( NoSio ) == "string" ) then
@@ -42,9 +38,8 @@ if( type( NoSio ) == "string" ) then
 		local Line = nil
 		local Params = {}
 		
-		if( DummySioTimer:time() > ( 1000 / 20 )) then
-			DummySioTimer:reset()
-			DummySioTimer:start()
+		if( DummySioTimer:time() >= NextSioTime ) then
+			NextSioTime = NextSioTime + 1000 / LOG_FREQ
 			
 			-- 行頭が数値でなければ，有効な行ではない
 			repeat
@@ -63,8 +58,8 @@ if( type( NoSio ) == "string" ) then
 			
 			Ret =
 				ItoA( Params[ 1 ], math.floor( Params[ 2 ] * 100 )) ..
-				ItoA( Params[ 5 ], Params[ 4 ] ) ..
-				ItoA( math.floor( math.fmod( Params[ 3 ] / 1000 * PULSE_PAR_1KM, 0x10000 )), 0 )
+				ItoA( math.floor( math.fmod( Params[ 3 ] / 1000 * PULSE_PAR_1KM, 0x10000 )), 0 ) ..
+				ItoA( Params[ 5 ], Params[ 4 ] )
 			
 			-- ラップタイムあり?
 			local result, tmp, min, sec = Line:find( "LAP.*(%d+):([%d%.]+)" )

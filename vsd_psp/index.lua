@@ -55,6 +55,7 @@ MileagePrev	= 0
 GSensorY	= 0
 GSensorX	= 0
 IRSensor	= 0
+LogCnt		= 0
 
 -- 画面モード・動作モード
 VSDMode	= MODE_LAPTIME
@@ -552,13 +553,14 @@ end
 --- 5文字→16bit x 2 get -----------------------------------------------------
 
 function GetULong( str )
-	return
-		( str:byte( 1 ) - 0x80 ) * 0x1000 +
-		( str:byte( 2 ) - 0x80 ) * 0x20 +
-		math.floor(( str:byte( 3 ) - 0x80 ) / 4 ),
-		math.mod( str:byte( 3 ), 4 ) * 0x4000 +
-		( str:byte( 4 ) - 0x80 ) * 0x80 +
-		( str:byte( 5 ) - 0x80 )
+	local i
+	local Ret = 0
+	
+	for i = 1, 5 do
+		Ret = Ret * 0x80 + str:byte( i ) - 0x80
+	end
+	
+	return math.floor( Ret / 0x10000 ), math.fmod( Ret, 0x10000 )
 end
 
 --- シリアルデータ処理 -------------------------------------------------------
@@ -693,22 +695,24 @@ end
 --- VSD モード設定 -----------------------------------------------------------
 
 function SetVSDMode( mode )
-	mode = math.fmod( mode + MODE_NUM, MODE_NUM )
-	if( NoSio ) then fpLog:write( string.format( "%d-->%d\n", VSDMode, mode )) end
-	
-	if( mode == MODE_LAPTIME ) then
-		System.sioWrite( "l" )
-	elseif( mode == MODE_GYMKHANA	) then
-		System.sioWrite( string.format( "%Xg", GymkhanaStartMargin + 0.5 ))
-	elseif( mode == MODE_ZERO_FOUR	) then
-		System.sioWrite( string.format( "%Xf", StartGThrethold ))
-	elseif( mode == MODE_ZERO_ONE	) then
-		System.sioWrite( string.format( "%Xo", StartGThrethold ))
+	if( bSIOActive ) then
+		mode = math.fmod( mode + MODE_NUM, MODE_NUM )
+		if( NoSio ) then fpLog:write( string.format( "%d-->%d\n", VSDMode, mode )) end
+		
+		if( mode == MODE_LAPTIME ) then
+			System.sioWrite( "l" )
+		elseif( mode == MODE_GYMKHANA	) then
+			System.sioWrite( string.format( "%Xg", GymkhanaStartMargin + 0.5 ))
+		elseif( mode == MODE_ZERO_FOUR	) then
+			System.sioWrite( string.format( "%Xf", StartGThrethold ))
+		elseif( mode == MODE_ZERO_ONE	) then
+			System.sioWrite( string.format( "%Xo", StartGThrethold ))
+		end
+		
+		LapTimePrev = nil
+		RedrawLap = 2
+		SectorCnt = 0
 	end
-	
-	LapTimePrev = nil
-	RedrawLap = 2
-	SectorCnt = 0
 	
 	return mode
 end
@@ -1004,7 +1008,7 @@ while true do
 		RedrawLap = 2
 	elseif Ctrl:Pushed( "triangle" ) then
 		-- calibration
-		System.sioWrite( "c" )
+		if( bSIOActive ) then System.sioWrite( "c" ) end
 	elseif Ctrl:Pushed( "start" ) then
 		break
 	end
