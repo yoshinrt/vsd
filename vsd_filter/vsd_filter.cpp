@@ -55,6 +55,11 @@
 
 #define GPS_LOG_OFFS	15
 
+#define MAP_LINE1		yc_green
+#define MAP_LINE2		yc_yellow
+#define MAP_LINE3		yc_red
+#define MAP_G_MAX		1.2
+
 /*** CAviUtlImage class *****************************************************/
 
 const UCHAR g_Font9p[] = {
@@ -544,6 +549,7 @@ const PIXEL_YC	yc_white		= RGB2YC( 4095, 4095, 4095 );
 const PIXEL_YC	yc_gray			= RGB2YC( 2048, 2048, 2048 );
 const PIXEL_YC	yc_red			= RGB2YC( 4095,    0,    0 );
 const PIXEL_YC	yc_green		= RGB2YC(    0, 4095,    0 );
+const PIXEL_YC	yc_yellow		= RGB2YC( 4095, 4095,    0 );
 const PIXEL_YC	yc_dark_green	= RGB2YC(    0, 2048,    0 );
 const PIXEL_YC	yc_blue			= RGB2YC(    0,    0, 4095 );
 const PIXEL_YC	yc_cyan			= RGB2YC(    0, 4095, 4095 );
@@ -798,10 +804,35 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 					iGx = ( int )dGx;
 					iGy = ( int )dGy;
 					
-					if( iGxPrev != INVALID_POS_I ) Img.DrawLine(
-						iGx, iGy, iGxPrev, iGyPrev,
-						LINE_WIDTH, COLOR_G_HIST, 0
-					);
+					if( iGxPrev != INVALID_POS_I ){
+						// Line の色用に G を求める
+						double dG = sqrt(
+							g_VsdLog[ iLogNum + i ].fGx * g_VsdLog[ iLogNum + i ].fGx +
+							g_VsdLog[ iLogNum + i ].fGy * g_VsdLog[ iLogNum + i ].fGy
+						) / MAP_G_MAX;
+						
+						PIXEL_YC yc_line;
+						
+						if( dG < 0.5 ){
+							dG *= 2;
+							yc_line.y  = ( short )( MAP_LINE2.y  * dG + MAP_LINE1.y  * ( 1 - dG ));
+							yc_line.cb = ( short )( MAP_LINE2.cb * dG + MAP_LINE1.cb * ( 1 - dG ));
+							yc_line.cr = ( short )( MAP_LINE2.cr * dG + MAP_LINE1.cr * ( 1 - dG ));
+						}else if( dG < 1.0 ){
+							dG = ( dG - 0.5 ) * 2;
+							yc_line.y  = ( short )( MAP_LINE3.y  * dG + MAP_LINE2.y  * ( 1 - dG ));
+							yc_line.cb = ( short )( MAP_LINE3.cb * dG + MAP_LINE2.cb * ( 1 - dG ));
+							yc_line.cr = ( short )( MAP_LINE3.cr * dG + MAP_LINE2.cr * ( 1 - dG ));
+						}else{
+							yc_line = MAP_LINE3;
+						}
+						
+						// Line を引く
+						Img.DrawLine(
+							iGx, iGy, iGxPrev, iGyPrev,
+							LINE_WIDTH, yc_line, 0
+						);
+					}
 				}else{
 					iGx = INVALID_POS_I;
 				}
@@ -817,23 +848,6 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			COLOR_G_SENSOR, CAviUtlImage::IMG_FILL
 		);
 	}
-	
-	// Tacho の針
-	double dTachoNeedle =
-		iMeterDegRange / ( double )iMeterMaxVal *
-		( dTacho <= 2000 ? dTacho / 2 : dTacho - 1000 )
-		+ iMeterMinDeg;
-	if( dTachoNeedle >= 360 ) dTachoNeedle -= 360;
-	dTachoNeedle = dTachoNeedle * ToRAD;
-	
-	Img.DrawLine(
-		iMeterCx, iMeterCy,
-		( int )( cos( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCx,
-		( int )( sin( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
-		LINE_WIDTH, COLOR_NEEDLE, 0
-	);
-	
-	Img.DrawCircle( iMeterCx, iMeterCy,  iMeterR / 25, COLOR_NEEDLE, CAviUtlImage::IMG_FILL );
 	
 	// スピード / ギア
 	UINT uGear = 0;
@@ -878,6 +892,23 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		COLOR_STR, 0,
 		iMeterCx - 2 * Img.GetFontW(), iMeterCy + iMeterR / 2 - Img.GetFontH()
 	);
+	
+	// Tacho の針
+	double dTachoNeedle =
+		iMeterDegRange / ( double )iMeterMaxVal *
+		( dTacho <= 2000 ? dTacho / 2 : dTacho - 1000 )
+		+ iMeterMinDeg;
+	if( dTachoNeedle >= 360 ) dTachoNeedle -= 360;
+	dTachoNeedle = dTachoNeedle * ToRAD;
+	
+	Img.DrawLine(
+		iMeterCx, iMeterCy,
+		( int )( cos( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCx,
+		( int )( sin( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
+		LINE_WIDTH, COLOR_NEEDLE, 0
+	);
+	
+	Img.DrawCircle( iMeterCx, iMeterCy,  iMeterR / 25, COLOR_NEEDLE, CAviUtlImage::IMG_FILL );
 	
 	return TRUE;
 }
