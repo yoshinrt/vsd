@@ -1535,6 +1535,12 @@
       <name>$PROJ_DIR$\cortexm3_macro.s</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\diskio.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\ff.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\hw_config.c</name>
     </file>
     <file>
