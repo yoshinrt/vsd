@@ -3,18 +3,18 @@
 <project>
   <fileVersion>1</fileVersion>
   <configuration>
-    <name>Debug</name>
+    <name>Release</name>
     <toolchain>
       <name>ARM</name>
     </toolchain>
-    <debug>1</debug>
+    <debug>0</debug>
     <settings>
       <name>C-SPY</name>
       <archiveVersion>2</archiveVersion>
       <data>
         <version>15</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>CInput</name>
           <state>1</state>
@@ -85,7 +85,7 @@
         </option>
         <option>
           <name>OCDynDriverList</name>
-          <state>JLINK_ID</state>
+          <state>ARMSIM_ID</state>
         </option>
         <option>
           <name>OCLastSavedByProductVersion</name>
@@ -101,7 +101,7 @@
         </option>
         <option>
           <name>UseFlashLoader</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>CLowLevel</name>
@@ -119,7 +119,7 @@
       <data>
         <version>1</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>OCSimDriverInfo</name>
           <state>1</state>
@@ -144,7 +144,7 @@
       <data>
         <version>0</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>CCAngelHeartbeat</name>
           <state>1</state>
@@ -187,7 +187,7 @@
       <data>
         <version>0</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>OCDriverInfo</name>
           <state>1</state>
@@ -224,7 +224,7 @@
       <data>
         <version>0</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>CRomLogFileCheck</name>
           <state>0</state>
@@ -259,7 +259,7 @@
       <data>
         <version>9</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>JLinkSpeed</name>
           <state>32</state>
@@ -378,7 +378,7 @@
       <data>
         <version>1</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>OCDriverInfo</name>
           <state>1</state>
@@ -403,7 +403,7 @@
       <data>
         <version>2</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>jtag</name>
           <version>0</version>
@@ -484,7 +484,7 @@
       <data>
         <version>1</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>CRDIDriverDll</name>
           <state>Browse to your RDI driver</state>
@@ -545,7 +545,7 @@
       <data>
         <version>0</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>CThirdPartyDriverDll</name>
           <state>Browse to your third-party driver</state>
@@ -612,7 +612,7 @@
     </debuggerPlugins>
   </configuration>
   <configuration>
-    <name>Release</name>
+    <name>exec_sram</name>
     <toolchain>
       <name>ARM</name>
     </toolchain>

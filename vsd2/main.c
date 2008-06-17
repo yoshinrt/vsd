@@ -14,9 +14,11 @@
 *******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
+#include <ST\iostm32f10x.h>
 #include "stm32f10x_lib.h"
 #include "usb_lib.h"
 #include "usb_desc.h"
+#include "usb_regs.h"
 #include "hw_config.h"
 #include <string.h>
 #include <stdio.h>
@@ -24,7 +26,7 @@
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
-#define EOL		"\r\n"
+#define EOL		"\n"
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -39,6 +41,7 @@ extern u8 buffer_out[VIRTUAL_COM_PORT_DATA_SIZE];
 /*** USB com port puts ********************************************************/
 
 void USBComPuts( char* buf ){
+	while( GetEPTxStatus( ENDP1 ) == EP_TX_VALID );
 	count_in = strlen( buf );
 	UserToPMABufferCopy(( u8 * )buf, ENDP1_TXADDR, count_in );
 	SetEPTxCount( ENDP1, count_in );
@@ -52,8 +55,7 @@ void USBComPuts( char* buf ){
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void DFU_Button_Config(void)
-{
+void DFU_Button_Config(void){
   GPIO_InitTypeDef GPIO_InitStructure;
   
   /* Enable GPIOB clock */
@@ -72,9 +74,8 @@ void DFU_Button_Config(void)
 * Output         : None.
 * Return         : Status
 *******************************************************************************/
-u8 DFU_Button_Read (void)
-{
-  return GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_9);
+u8 DFU_Button_Read (void){
+	return GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_9);
 }
 
 /*******************************************************************************
@@ -84,19 +85,57 @@ u8 DFU_Button_Read (void)
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
+
+void timer(unsigned long i){
+	while(i--) ;
+}
+
 int main( void ){
 	u32		uCnt;
-	char	szBuf[256];
+	char	szBuf[ 256 ];
+	char	Data_Buffer[ 512 ];
+	int		i;
 	
 #ifdef DEBUG
 	debug();
 #endif
 	
+	USBComPuts( "init system" EOL );
+	MSD_Init();
+	
+#ifdef EXEC_SRAM
+	unsigned long t;
+	
+	RCC_APB2ENR |= 0x10;     // CPIOCを使用できるようにする。
+	GPIOC_CRL = 0x43444444;   // PC6を出力にする。　　
+	
+	for( i = 0; i < 512; ++i ) Data_Buffer[ i ] = 0xAA;
+	
+	MSD_ReadBlock(Data_Buffer, 0, 512);
+	
+	for( i = 0; i < 512; ++i ){
+		if(( i & 0xF ) == 0 ){
+			sprintf( szBuf, EOL "\n%04X:", i );
+			USBComPuts( szBuf );
+		}
+		sprintf( szBuf, "%02X ", Data_Buffer[ i ] );
+		USBComPuts( szBuf );
+	}
+	
+	while(1){
+		for(t=0; t < 0x1000; t++){
+			timer(100);
+		}
+		
+		GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
+	}
+	
+#else
 	Set_System();
 	Set_USBClock();
 	USB_Interrupts_Config();
 	USB_Init();
-	DFU_Button_Config();
+	DFU_Butn_Config();
 	
 	USBComPuts( "VSD2 - Vehicle Status Datalogger 2" EOL );
 	
@@ -118,6 +157,7 @@ int main( void ){
 	sprintf( szBuf, EOL "starting %X..." EOL, *( u32 *)0x20000004 );
 	USBComPuts( szBuf );
 	( **( void ( ** )( void ))0x20000004 )();
+#endif
 }
 
 #ifdef  DEBUG
@@ -130,6 +170,7 @@ int main( void ){
 * Output         : None
 * Return         : None
 *******************************************************************************/
+
 void assert_failed( u8* file, u32 line ){
 	/* User can add his own implementation to report the file name and line number,
 		 ex: printf( "Wrong parameters value: file %s on line %d\r\n", file, line ) */

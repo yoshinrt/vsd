@@ -3,29 +3,29 @@
 <project>
   <fileVersion>1</fileVersion>
   <configuration>
-    <name>Debug</name>
+    <name>Release</name>
     <toolchain>
       <name>ARM</name>
     </toolchain>
-    <debug>1</debug>
+    <debug>0</debug>
     <settings>
       <name>General</name>
       <archiveVersion>3</archiveVersion>
       <data>
         <version>14</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>ExePath</name>
-          <state>Debug\Exe</state>
+          <state>Release\Exe</state>
         </option>
         <option>
           <name>ObjPath</name>
-          <state>Debug\Obj</state>
+          <state>Release\Obj</state>
         </option>
         <option>
           <name>ListPath</name>
-          <state>Debug\List</state>
+          <state>Release\List</state>
         </option>
         <option>
           <name>Variant</name>
@@ -130,11 +130,10 @@
       <data>
         <version>19</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>CCDefines</name>
           <state>VECT_TAB_FLASH</state>
-          <state>DEBUG</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
@@ -154,7 +153,7 @@
         </option>
         <option>
           <name>CCListCMnemonics</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>CCListCMessages</name>
@@ -227,7 +226,7 @@
         </option>
         <option>
           <name>CCRequirePrototypes</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>CCMultibyteSupport</name>
@@ -316,7 +315,7 @@
       <data>
         <version>7</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>AObjPrefix</name>
           <state>1</state>
@@ -482,7 +481,7 @@
       <data>
         <version>1</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>OOCOutputFormat</name>
           <version>1</version>
@@ -533,7 +532,7 @@
       <data>
         <version>5</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>IlinkLibIOConfig</name>
           <state>1</state>
@@ -745,7 +744,7 @@
       <data>
         <version>0</version>
         <wantNonLocal>1</wantNonLocal>
-        <debug>1</debug>
+        <debug>0</debug>
         <option>
           <name>IarchiveInputs</name>
           <state></state>
@@ -767,7 +766,7 @@
     </settings>
   </configuration>
   <configuration>
-    <name>Release</name>
+    <name>exec_sram</name>
     <toolchain>
       <name>ARM</name>
     </toolchain>
@@ -781,15 +780,15 @@
         <debug>0</debug>
         <option>
           <name>ExePath</name>
-          <state>Release\Exe</state>
+          <state>exec_sram\Exe</state>
         </option>
         <option>
           <name>ObjPath</name>
-          <state>Release\Obj</state>
+          <state>exec_sram\Obj</state>
         </option>
         <option>
           <name>ListPath</name>
-          <state>Release\List</state>
+          <state>exec_sram\List</state>
         </option>
         <option>
           <name>Variant</name>
@@ -898,6 +897,7 @@
         <option>
           <name>CCDefines</name>
           <state>VECT_TAB_FLASH</state>
+          <state>EXEC_SRAM</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
@@ -913,7 +913,7 @@
         </option>
         <option>
           <name>CCListCFile</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>CCListCMnemonics</name>
@@ -982,7 +982,7 @@
         </option>
         <option>
           <name>CCLangConformance</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>CCSignedPlainChar</name>
@@ -1287,7 +1287,7 @@
       <archiveVersion>1</archiveVersion>
       <data>
         <prebuild></prebuild>
-        <postbuild></postbuild>
+        <postbuild>s2bin\s2bin exec_sram\Exe\vsd2.s19</postbuild>
       </data>
     </settings>
     <settings>
@@ -1375,7 +1375,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>STM32F10x_FLASH.icf</state>
+          <state>STM32F10x_SRAM.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -1541,6 +1541,9 @@
       <name>$PROJ_DIR$\main.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\msd.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\stm32f10x_it.c</name>
     </file>
     <file>
@@ -1578,6 +1581,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_rcc.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\library\src\stm32f10x_spi.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_usart.c</name>

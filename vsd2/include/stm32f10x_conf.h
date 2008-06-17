@@ -63,7 +63,7 @@
 #define _GPIO
 #define _GPIOA
 #define _GPIOB
-//#define _GPIOC
+#define _GPIOC
 #define _GPIOD
 //#define _GPIOE
 #define _AFIO
@@ -89,8 +89,8 @@
 //#define _RTC
 
 /************************************* SPI ************************************/
-//#define _SPI
-//#define _SPI1
+#define _SPI
+#define _SPI1
 //#define _SPI2
 
 /************************************* SysTick ********************************/
