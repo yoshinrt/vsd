@@ -50,6 +50,13 @@ void USBComPuts( char* buf ){
 	SetEPTxValid( ENDP1 );
 }
 
+int putchar( char c ){
+	while( GetEPTxStatus( ENDP1 ) == EP_TX_VALID );
+	UserToPMABufferCopy( &c, ENDP1_TXADDR, 1 );
+	SetEPTxCount( ENDP1, 1 );
+	SetEPTxValid( ENDP1 );
+}
+
 /*******************************************************************************
 * Function Name  : DFU_Button_Config.
 * Description    : Configures the DFU selector Button to enter DFU Mode.
@@ -115,70 +122,68 @@ int main( void ){
 	
 	res = MSD_GetCSDRegister( &MSD_csd );
 	
-	sprintf( szBuf, "%04X:return code\n", res ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:CSD structure\n", MSD_csd.CSDStruct ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:System specification version\n", MSD_csd.SysSpecVersion ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Reserved\n", MSD_csd.Reserved1 ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Data read access-time 1\n", MSD_csd.TAAC ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Data read access-time 2 in CLK cycles\n", MSD_csd.NSAC ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Max. bus clock frequency\n", MSD_csd.MaxBusClkFrec ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Card command classes\n", MSD_csd.CardComdClasses ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Max. read data block length\n", MSD_csd.RdBlockLen ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Partial blocks for read allowed\n", MSD_csd.PartBlockRead ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Write block misalignment\n", MSD_csd.WrBlockMisalign ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Read block misalignment\n", MSD_csd.RdBlockMisalign ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:DSR implemented\n", MSD_csd.DSRImpl ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Reserved\n", MSD_csd.Reserved2 ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Device Size\n", MSD_csd.DeviceSize ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Max. read current @ VDD min\n", MSD_csd.MaxRdCurrentVDDMin ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Max. read current @ VDD max\n", MSD_csd.MaxRdCurrentVDDMax ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Max. write current @ VDD min\n", MSD_csd.MaxWrCurrentVDDMin ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Max. write current @ VDD max\n", MSD_csd.MaxWrCurrentVDDMax ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Device size multiplier\n", MSD_csd.DeviceSizeMul ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Erase group size\n", MSD_csd.EraseGrSize ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Erase group size multiplier\n", MSD_csd.EraseGrMul ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Write protect group size\n", MSD_csd.WrProtectGrSize ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Write protect group enable\n", MSD_csd.WrProtectGrEnable ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Manufacturer default ECC\n", MSD_csd.ManDeflECC ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Write speed factor\n", MSD_csd.WrSpeedFact ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Max. write data block length\n", MSD_csd.MaxWrBlockLen ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Partial blocks for write allowed\n", MSD_csd.WriteBlockPaPartial ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Reserded\n", MSD_csd.Reserved3 ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Content protection application\n", MSD_csd.ContentProtectAppli ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:File format group\n", MSD_csd.FileFormatGrouop ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Copy flag (OTP)\n", MSD_csd.CopyFlag ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Permanent write protection\n", MSD_csd.PermWrProtect ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:Temporary write protection\n", MSD_csd.TempWrProtect ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:File Format\n", MSD_csd.FileFormat ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:ECC code\n", MSD_csd.ECC ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:CRC\n", MSD_csd.CRC ); USBComPuts( szBuf );
-	sprintf( szBuf, "%04X:always 1\n", MSD_csd.Reserved4 ); USBComPuts( szBuf );
+	printf( "%04X:return code\n", res );
+	printf( "%04X:CSD structure\n", MSD_csd.CSDStruct );
+	printf( "%04X:System specification version\n", MSD_csd.SysSpecVersion );
+	printf( "%04X:Reserved\n", MSD_csd.Reserved1 );
+	printf( "%04X:Data read access-time 1\n", MSD_csd.TAAC );
+	printf( "%04X:Data read access-time 2 in CLK cycles\n", MSD_csd.NSAC );
+	printf( "%04X:Max. bus clock frequency\n", MSD_csd.MaxBusClkFrec );
+	printf( "%04X:Card command classes\n", MSD_csd.CardComdClasses );
+	printf( "%04X:Max. read data block length\n", MSD_csd.RdBlockLen );
+	printf( "%04X:Partial blocks for read allowed\n", MSD_csd.PartBlockRead );
+	printf( "%04X:Write block misalignment\n", MSD_csd.WrBlockMisalign );
+	printf( "%04X:Read block misalignment\n", MSD_csd.RdBlockMisalign );
+	printf( "%04X:DSR implemented\n", MSD_csd.DSRImpl );
+	printf( "%04X:Reserved\n", MSD_csd.Reserved2 );
+	printf( "%04X:Device Size\n", MSD_csd.DeviceSize );
+	printf( "%04X:Max. read current @ VDD min\n", MSD_csd.MaxRdCurrentVDDMin );
+	printf( "%04X:Max. read current @ VDD max\n", MSD_csd.MaxRdCurrentVDDMax );
+	printf( "%04X:Max. write current @ VDD min\n", MSD_csd.MaxWrCurrentVDDMin );
+	printf( "%04X:Max. write current @ VDD max\n", MSD_csd.MaxWrCurrentVDDMax );
+	printf( "%04X:Device size multiplier\n", MSD_csd.DeviceSizeMul );
+	printf( "%04X:Erase group size\n", MSD_csd.EraseGrSize );
+	printf( "%04X:Erase group size multiplier\n", MSD_csd.EraseGrMul );
+	printf( "%04X:Write protect group size\n", MSD_csd.WrProtectGrSize );
+	printf( "%04X:Write protect group enable\n", MSD_csd.WrProtectGrEnable );
+	printf( "%04X:Manufacturer default ECC\n", MSD_csd.ManDeflECC );
+	printf( "%04X:Write speed factor\n", MSD_csd.WrSpeedFact );
+	printf( "%04X:Max. write data block length\n", MSD_csd.MaxWrBlockLen );
+	printf( "%04X:Partial blocks for write allowed\n", MSD_csd.WriteBlockPaPartial );
+	printf( "%04X:Reserded\n", MSD_csd.Reserved3 );
+	printf( "%04X:Content protection application\n", MSD_csd.ContentProtectAppli );
+	printf( "%04X:File format group\n", MSD_csd.FileFormatGrouop );
+	printf( "%04X:Copy flag (OTP)\n", MSD_csd.CopyFlag );
+	printf( "%04X:Permanent write protection\n", MSD_csd.PermWrProtect );
+	printf( "%04X:Temporary write protection\n", MSD_csd.TempWrProtect );
+	printf( "%04X:File Format\n", MSD_csd.FileFormat );
+	printf( "%04X:ECC code\n", MSD_csd.ECC );
+	printf( "%04X:CRC\n", MSD_csd.CRC );
+	printf( "%04X:always 1\n", MSD_csd.Reserved4 );
 	
 #if 1
 	FIL	fp;
 	FATFS fatfs;				/* File system object */
 	
 	res = f_mount( 0, &fatfs );
-	sprintf( szBuf, "f_mount:%d\n", res ); USBComPuts( szBuf );
+	printf( "f_mount:%d\n", res );
 	
 	res = f_open( &fp, "hoge.txt", FA_READ );
-	sprintf( szBuf, "f_open:%d\n", res ); USBComPuts( szBuf );
+	printf( "f_open:%d\n", res );
 	
 	for( i = 0; i < 512; ++i ) buf[ i ] = 0xAA;
 	
 	res = f_read( &fp, buf, 256, &i );
-	sprintf( szBuf, "f_read:%d: read=%d\n", res, i ); USBComPuts( szBuf );
+	printf( "f_read:%d: read=%d\n", res, i );
 	
 	res = f_close( &fp );
-	sprintf( szBuf, "f_close:%d\n", res ); USBComPuts( szBuf );
+	printf( "f_close:%d\n", res );
 	
 	for( i = 0; i < 512; ++i ){
 		if(( i & 0xF ) == 0 ){
-			sprintf( szBuf, EOL "\n%04X:", i );
-			USBComPuts( szBuf );
+			printf( EOL "\n%04X:", i );
 		}
-		sprintf( szBuf, "%02X ", buf[ i ] );
-		USBComPuts( szBuf );
+		printf( "%02X ", buf[ i ] );
 	}
 	
 #endif
@@ -209,13 +214,13 @@ int main( void ){
 			count_out = 0;
 			
 			if( DFU_Button_Read() == 0x00 ){
-				sprintf( szBuf, ":%08X\r" , 0x20000000 + uCnt );
+				printf( ":%08X\r" , 0x20000000 + uCnt );
 				USBComPuts( szBuf );
 			}
 		}
 	}
 	
-	sprintf( szBuf, EOL "starting %X..." EOL, *( u32 *)0x20000004 );
+	printf( EOL "starting %X..." EOL, *( u32 *)0x20000004 );
 	USBComPuts( szBuf );
 	( **( void ( ** )( void ))0x20000004 )();
 #endif
