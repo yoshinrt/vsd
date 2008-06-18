@@ -15,13 +15,15 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <ST\iostm32f10x.h>
+#include <string.h>
+#include <stdio.h>
 #include "stm32f10x_lib.h"
 #include "usb_lib.h"
 #include "usb_desc.h"
 #include "usb_regs.h"
 #include "hw_config.h"
-#include <string.h>
-#include <stdio.h>
+#include "msd.h"
+#include "ff.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -111,7 +113,7 @@ int main( void ){
 	RCC_APB2ENR |= 0x10;     // CPIOCを使用できるようにする。
 	GPIOC_CRL = 0x43444444;   // PC6を出力にする。　　
 	
-	res = MSG_GetCSDRegister( &MSD_csd );
+	res = MSD_GetCSDRegister( &MSD_csd );
 	
 	sprintf( szBuf, "%04X:return code\n", res ); USBComPuts( szBuf );
 	sprintf( szBuf, "%04X:CSD structure\n", MSD_csd.CSDStruct ); USBComPuts( szBuf );
@@ -152,7 +154,7 @@ int main( void ){
 	sprintf( szBuf, "%04X:CRC\n", MSD_csd.CRC ); USBComPuts( szBuf );
 	sprintf( szBuf, "%04X:always 1\n", MSD_csd.Reserved4 ); USBComPuts( szBuf );
 	
-#if 0
+#if 1
 	FIL	fp;
 	FATFS fatfs;				/* File system object */
 	

@@ -52,7 +52,7 @@ typedef volatile unsigned long  const vuc32;  /* Read Only */
 typedef volatile unsigned short const vuc16;  /* Read Only */
 typedef volatile unsigned char  const vuc8;   /* Read Only */
 
-typedef enum {FALSE = 0, TRUE = !FALSE} bool;
+typedef enum {FALSE = 0, TRUE = !FALSE} bool, BOOL;
 
 typedef enum {RESET = 0, SET = !RESET} FlagStatus, ITStatus;
 
@@ -70,6 +70,27 @@ typedef enum {ERROR = 0, SUCCESS = !ERROR} ErrorStatus;
 #define U32_MAX    ((u32)4294967295uL)
 #define S32_MAX    ((s32)2147483647)
 #define S32_MIN    ((s32)2147483648uL)
+
+// used by ff
+
+/* These types must be 16-bit, 32-bit or larger integer */
+typedef int				INT;
+typedef unsigned int	UINT;
+
+/* These types must be 8-bit integer */
+typedef signed char		CHAR;
+typedef unsigned char	UCHAR;
+typedef unsigned char	BYTE;
+
+/* These types must be 16-bit integer */
+typedef short			SHORT;
+typedef unsigned short	USHORT;
+typedef unsigned short	WORD;
+
+/* These types must be 32-bit integer */
+typedef long			LONG;
+typedef unsigned long	ULONG;
+typedef unsigned long	DWORD;
 
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/

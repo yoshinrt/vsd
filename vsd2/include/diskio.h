@@ -7,7 +7,7 @@
 #define _READONLY	0	/* 1: Read-only mode */
 #define _USE_IOCTL	1
 
-#include "ff_typedef.h"
+#include "stm32f10x_type.h"
 
 
 /* Status of Disk Functions */

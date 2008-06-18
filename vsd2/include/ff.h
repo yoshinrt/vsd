@@ -66,7 +66,7 @@
 /  Note that the files are always accessed in case insensitive. */
 
 
-#include "ff_typedef.h"
+#include "stm32f10x_type.h"
 
 
 

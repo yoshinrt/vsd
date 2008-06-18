@@ -109,7 +109,7 @@ DRESULT disk_write (
 	BYTE count			/* Number of sectors to write (1..255) */
 )
 {
-	MSD_WriteBlock( buff, sector, count * 512 );
+	MSD_WriteBlock(( u8 *)buff, sector, count * 512 );
 	return RES_OK;
 }
 #endif /* _READONLY */
@@ -124,7 +124,7 @@ DRESULT disk_ioctl (
 	void *buff		/* Buffer to send/receive control data */
 ){
 	DRESULT res;
-	BYTE csd[16], *ptr = buff;
+	sMSD_CSD MSD_csd;
 	
 	if (drv) return RES_PARERR;
 	//if (Stat & STA_NOINIT) return RES_NOTRDY;
@@ -138,9 +138,8 @@ DRESULT disk_ioctl (
 			break;
 			
 		case GET_SECTOR_COUNT :	/* Get number of sectors on the disk (DWORD) */
-			sMSD_CSD MSD_csd;
 			
-			if( MSG_GetCSDRegister( &MSD_csd ) == MSD_RESPONSE_NO_ERROR ){
+			if( MSD_GetCSDRegister( &MSD_csd ) == MSD_RESPONSE_NO_ERROR ){
 				*( DWORD* )buff =
 					(( DWORD )MSD_csd.DeviceSize + 1 ) <<
 					( MSD_csd.RdBlockLen + MSD_csd.DeviceSizeMul + 2 - 9 );
@@ -158,4 +157,8 @@ DRESULT disk_ioctl (
 	}
 	
 	return res;
+}
+
+DWORD get_fattime( void ){
+	return 0;
 }
