@@ -93,7 +93,7 @@ void timer(unsigned long i){
 int main( void ){
 	u32		uCnt;
 	char	szBuf[ 256 ];
-	char	Data_Buffer[ 512 ];
+	char	buf[ 256 ];
 	int		i;
 	
 #ifdef DEBUG
@@ -105,23 +105,82 @@ int main( void ){
 	
 #ifdef EXEC_SRAM
 	unsigned long t;
+	sMSD_CSD MSD_csd;
+	int	res;
 	
 	RCC_APB2ENR |= 0x10;     // CPIOCを使用できるようにする。
 	GPIOC_CRL = 0x43444444;   // PC6を出力にする。　　
 	
-	for( i = 0; i < 512; ++i ) Data_Buffer[ i ] = 0xAA;
+	res = MSG_GetCSDRegister( &MSD_csd );
 	
-	MSD_ReadBlock(Data_Buffer, 0, 512);
+	sprintf( szBuf, "%04X:return code\n", res ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:CSD structure\n", MSD_csd.CSDStruct ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:System specification version\n", MSD_csd.SysSpecVersion ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Reserved\n", MSD_csd.Reserved1 ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Data read access-time 1\n", MSD_csd.TAAC ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Data read access-time 2 in CLK cycles\n", MSD_csd.NSAC ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Max. bus clock frequency\n", MSD_csd.MaxBusClkFrec ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Card command classes\n", MSD_csd.CardComdClasses ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Max. read data block length\n", MSD_csd.RdBlockLen ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Partial blocks for read allowed\n", MSD_csd.PartBlockRead ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Write block misalignment\n", MSD_csd.WrBlockMisalign ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Read block misalignment\n", MSD_csd.RdBlockMisalign ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:DSR implemented\n", MSD_csd.DSRImpl ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Reserved\n", MSD_csd.Reserved2 ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Device Size\n", MSD_csd.DeviceSize ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Max. read current @ VDD min\n", MSD_csd.MaxRdCurrentVDDMin ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Max. read current @ VDD max\n", MSD_csd.MaxRdCurrentVDDMax ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Max. write current @ VDD min\n", MSD_csd.MaxWrCurrentVDDMin ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Max. write current @ VDD max\n", MSD_csd.MaxWrCurrentVDDMax ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Device size multiplier\n", MSD_csd.DeviceSizeMul ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Erase group size\n", MSD_csd.EraseGrSize ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Erase group size multiplier\n", MSD_csd.EraseGrMul ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Write protect group size\n", MSD_csd.WrProtectGrSize ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Write protect group enable\n", MSD_csd.WrProtectGrEnable ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Manufacturer default ECC\n", MSD_csd.ManDeflECC ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Write speed factor\n", MSD_csd.WrSpeedFact ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Max. write data block length\n", MSD_csd.MaxWrBlockLen ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Partial blocks for write allowed\n", MSD_csd.WriteBlockPaPartial ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Reserded\n", MSD_csd.Reserved3 ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Content protection application\n", MSD_csd.ContentProtectAppli ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:File format group\n", MSD_csd.FileFormatGrouop ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Copy flag (OTP)\n", MSD_csd.CopyFlag ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Permanent write protection\n", MSD_csd.PermWrProtect ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:Temporary write protection\n", MSD_csd.TempWrProtect ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:File Format\n", MSD_csd.FileFormat ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:ECC code\n", MSD_csd.ECC ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:CRC\n", MSD_csd.CRC ); USBComPuts( szBuf );
+	sprintf( szBuf, "%04X:always 1\n", MSD_csd.Reserved4 ); USBComPuts( szBuf );
+	
+#if 0
+	FIL	fp;
+	FATFS fatfs;				/* File system object */
+	
+	res = f_mount( 0, &fatfs );
+	sprintf( szBuf, "f_mount:%d\n", res ); USBComPuts( szBuf );
+	
+	res = f_open( &fp, "hoge.txt", FA_READ );
+	sprintf( szBuf, "f_open:%d\n", res ); USBComPuts( szBuf );
+	
+	for( i = 0; i < 512; ++i ) buf[ i ] = 0xAA;
+	
+	res = f_read( &fp, buf, 256, &i );
+	sprintf( szBuf, "f_read:%d: read=%d\n", res, i ); USBComPuts( szBuf );
+	
+	res = f_close( &fp );
+	sprintf( szBuf, "f_close:%d\n", res ); USBComPuts( szBuf );
 	
 	for( i = 0; i < 512; ++i ){
 		if(( i & 0xF ) == 0 ){
 			sprintf( szBuf, EOL "\n%04X:", i );
 			USBComPuts( szBuf );
 		}
-		sprintf( szBuf, "%02X ", Data_Buffer[ i ] );
+		sprintf( szBuf, "%02X ", buf[ i ] );
 		USBComPuts( szBuf );
 	}
 	
+#endif
+
 	while(1){
 		for(t=0; t < 0x1000; t++){
 			timer(100);

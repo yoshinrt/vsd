@@ -13,12 +13,6 @@
 /* Note that Tiny-FatFs supports only single drive and always            */
 /* accesses drive number 0.                                              */
 
-#define ATA		0
-#define MMC		1
-#define USB		2
-
-
-
 /*-----------------------------------------------------------------------*/
 /* Inidialize a Drive                                                    */
 
@@ -49,7 +43,7 @@ DSTATUS disk_initialize (
 		return stat;
 	}
 */
-	return STA_NOINIT;
+	return 0;
 }
 
 
@@ -84,7 +78,7 @@ DSTATUS disk_status (
 		return stat;
 	}
 */
-	return STA_NOINIT;
+	return 0;
 }
 
 
@@ -99,7 +93,7 @@ DRESULT disk_read (
 	BYTE count		/* Number of sectors to read (1..255) */
 ){
 	MSD_ReadBlock( buff, sector, count * 512 );
-	return RES_PARERR;
+	return RES_OK;
 }
 
 
@@ -115,71 +109,53 @@ DRESULT disk_write (
 	BYTE count			/* Number of sectors to write (1..255) */
 )
 {
-	DRESULT res;
-	int result;
-
-	switch (drv) {
-	case ATA :
-		result = ATA_disk_write(buff, sector, count);
-		// translate the reslut code here
-
-		return res;
-
-	case MMC :
-		result = MMC_disk_write(buff, sector, count);
-		// translate the reslut code here
-
-		return res;
-
-	case USB :
-		result = USB_disk_write(buff, sector, count);
-		// translate the reslut code here
-
-		return res;
-	}
-	return RES_PARERR;
+	MSD_WriteBlock( buff, sector, count * 512 );
+	return RES_OK;
 }
 #endif /* _READONLY */
 
-
-
 /*-----------------------------------------------------------------------*/
 /* Miscellaneous Functions                                               */
+/*-----------------------------------------------------------------------*/
 
 DRESULT disk_ioctl (
-	BYTE drv,		/* Physical drive nmuber (0..) */
+	BYTE drv,		/* Physical drive nmuber (0) */
 	BYTE ctrl,		/* Control code */
 	void *buff		/* Buffer to send/receive control data */
-)
-{
+){
 	DRESULT res;
-	int result;
-
-	switch (drv) {
-	case ATA :
-		// pre-process here
-
-		result = ATA_disk_ioctl(ctrl, buff);
-		// post-process here
-
-		return res;
-
-	case MMC :
-		// pre-process here
-
-		result = MMC_disk_ioctl(ctrl, buff);
-		// post-process here
-
-		return res;
-
-	case USB :
-		// pre-process here
-
-		result = USB_disk_ioctl(ctrl, buff);
-		// post-process here
-
-		return res;
+	BYTE csd[16], *ptr = buff;
+	
+	if (drv) return RES_PARERR;
+	//if (Stat & STA_NOINIT) return RES_NOTRDY;
+	
+	res = RES_ERROR;
+	switch (ctrl) {
+		case CTRL_SYNC :		/* Make sure that no pending write process */
+			//SELECT();
+			//if (wait_ready() == 0xFF)
+				res = RES_OK;
+			break;
+			
+		case GET_SECTOR_COUNT :	/* Get number of sectors on the disk (DWORD) */
+			sMSD_CSD MSD_csd;
+			
+			if( MSG_GetCSDRegister( &MSD_csd ) == MSD_RESPONSE_NO_ERROR ){
+				*( DWORD* )buff =
+					(( DWORD )MSD_csd.DeviceSize + 1 ) <<
+					( MSD_csd.RdBlockLen + MSD_csd.DeviceSizeMul + 2 - 9 );
+				res = RES_OK;
+			}
+			break;
+			
+		case GET_SECTOR_SIZE :	/* Get R/W sector size (WORD) */
+			*( WORD *)buff = 512;
+			res = RES_OK;
+			break;
+			
+		default:
+			res = RES_PARERR;
 	}
-	return RES_PARERR;
+	
+	return res;
 }
-
