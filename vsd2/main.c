@@ -27,12 +27,10 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-
-#define EOL		"\n"
-
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Extern variables ----------------------------------------------------------*/
+
 extern u32 count_out;
 extern u32 count_in;
 extern u8 buffer_out[VIRTUAL_COM_PORT_DATA_SIZE];
@@ -50,9 +48,10 @@ void USBComPuts( char* buf ){
 	SetEPTxValid( ENDP1 );
 }
 
-int putchar( char c ){
+__INTRINSIC putchar( int c ){
+	if( c == '\n' ) putchar( '\r' );
 	while( GetEPTxStatus( ENDP1 ) == EP_TX_VALID );
-	UserToPMABufferCopy( &c, ENDP1_TXADDR, 1 );
+	UserToPMABufferCopy(( UCHAR *)&c, ENDP1_TXADDR, 1 );
 	SetEPTxCount( ENDP1, 1 );
 	SetEPTxValid( ENDP1 );
 }
@@ -99,17 +98,32 @@ void timer(unsigned long i){
 	while(i--) ;
 }
 
-int main( void ){
+void dump( char *p ){
+	int i;
+	
+	for( i = 0; i < 512; ++i ){
+		if(( i & 0xF ) == 0 ){
+			printf( "\n%04X:", i );
+		}
+		printf( "%02X ", p[ i ] );
+	}
+	printf( "\n" );
+}
+
+__noreturn void JumpTo( u32 uJmpAddr, u32 uSP ){
+	asm( "MSR MSP, r1\nBX r0\n" );
+}
+
+__noreturn int main( void ){
 	u32		uCnt;
-	char	szBuf[ 256 ];
-	char	buf[ 256 ];
+	char	buf[ 512 ];
 	int		i;
 	
 #ifdef DEBUG
 	debug();
 #endif
 	
-	USBComPuts( "init system" EOL );
+	printf( "init system\n" );
 	MSD_Init();
 	
 #ifdef EXEC_SRAM
@@ -122,6 +136,7 @@ int main( void ){
 	
 	res = MSD_GetCSDRegister( &MSD_csd );
 	
+#if 0
 	printf( "%04X:return code\n", res );
 	printf( "%04X:CSD structure\n", MSD_csd.CSDStruct );
 	printf( "%04X:System specification version\n", MSD_csd.SysSpecVersion );
@@ -160,7 +175,8 @@ int main( void ){
 	printf( "%04X:ECC code\n", MSD_csd.ECC );
 	printf( "%04X:CRC\n", MSD_csd.CRC );
 	printf( "%04X:always 1\n", MSD_csd.Reserved4 );
-	
+#endif
+
 #if 1
 	FIL	fp;
 	FATFS fatfs;				/* File system object */
@@ -168,26 +184,22 @@ int main( void ){
 	res = f_mount( 0, &fatfs );
 	printf( "f_mount:%d\n", res );
 	
-	res = f_open( &fp, "hoge.txt", FA_READ );
+	res = f_open( &fp, "HOGE.TXT", FA_READ );
 	printf( "f_open:%d\n", res );
 	
 	for( i = 0; i < 512; ++i ) buf[ i ] = 0xAA;
 	
-	res = f_read( &fp, buf, 256, &i );
-	printf( "f_read:%d: read=%d\n", res, i );
+    UINT u;
+	res = f_read( &fp, buf, 512, &u );
+	printf( "f_read:%d: read=%d\n", res, u );
 	
 	res = f_close( &fp );
 	printf( "f_close:%d\n", res );
 	
-	for( i = 0; i < 512; ++i ){
-		if(( i & 0xF ) == 0 ){
-			printf( EOL "\n%04X:", i );
-		}
-		printf( "%02X ", buf[ i ] );
-	}
+	dump( buf );
 	
 #endif
-
+	
 	while(1){
 		for(t=0; t < 0x1000; t++){
 			timer(100);
@@ -203,7 +215,7 @@ int main( void ){
 	USB_Init();
 	DFU_Butn_Config();
 	
-	USBComPuts( "VSD2 - Vehicle Status Datalogger 2" EOL );
+	printf( "VSD2 - Vehicle Status Datalogger 2\n" );
 	
 	/* Test if PB.09 level is low (Key push-button on STM3210B-EVAL Board pressed) */
 	
@@ -214,15 +226,16 @@ int main( void ){
 			count_out = 0;
 			
 			if( DFU_Button_Read() == 0x00 ){
-				printf( ":%08X\r" , 0x20000000 + uCnt );
-				USBComPuts( szBuf );
+				printf( ":%08X\n" , 0x20000000 + uCnt );
+				printf( szBuf );
 			}
 		}
 	}
 	
-	printf( EOL "starting %X..." EOL, *( u32 *)0x20000004 );
-	USBComPuts( szBuf );
-	( **( void ( ** )( void ))0x20000004 )();
+	printf( "\nstarting %X...\n", *( u32 *)0x20000004 );
+	printf( szBuf );
+	
+	JumpTo( *( u32 *)0x20000004, *( u32 *)0x08003000 );
 #endif
 }
 
@@ -239,7 +252,7 @@ int main( void ){
 
 void assert_failed( u8* file, u32 line ){
 	/* User can add his own implementation to report the file name and line number,
-		 ex: printf( "Wrong parameters value: file %s on line %d\r\n", file, line ) */
+		 ex: printf( "Wrong parameters value: file %s on line %d\n\n", file, line ) */
 	
 	/* Infinite loop */
 	while( 1 );
