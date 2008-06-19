@@ -5,102 +5,127 @@
 use strict 'vars';
 use strict 'refs';
 
+my( $ExceptList );
+my( %ExceptList );
+
+## 除外する関数名
+
+$ExceptList = <<'EOF';
+main
+_main
+__main
+__vector_table
+__iar_program_start
+_exit
+EOF
+
+foreach ( split( /\n/, $ExceptList )){
+	$ExceptList{ $_ } = '';
+}
+
 $_ = ();
 
+## 使用する obj 名
+
+my( $ObjList, @ObjList );
+$ObjList = <<'EOF';
+#cortexm3_macro.o
+#hw_config.o
+#main.o
+stm32f10x_flash.o
+stm32f10x_gpio.o
+stm32f10x_it.o
+stm32f10x_nvic.o
+stm32f10x_rcc.o
+stm32f10x_usart.o
+#stm32f10x_vector.o
+usb_core.o
+#usb_desc.o
+#usb_endp.o
+#usb_init.o
+#usb_int.o
+#usb_istr.o
+#usb_mem.o
+#usb_prop.o
+#usb_pwr.o
+#usb_regs.o
+div.o
+exit.o
+#low_level_init.o
+sprintf.o
+xdnorm.o
+xdscale.o
+xprintffull.o
+xsprout.o
+ABImemcpy.o
+DblAdd.o
+DblCmpGe.o
+DblCmpLe.o
+DblDiv.o
+DblMul.o
+DblSub.o
+DblSubNrml.o
+DblToI32.o
+I32DivMod.o
+I32ToDbl.o
+I64DivMod.o
+I64DivZer.o
+IntDivZer.o
+cexit.o
+#cmain.o
+#copy_init.o
+#data_init.o
+memchr.o
+strchr.o
+strlen.o
+#zero_init.o
+exit.o
+EOF
+
+$ObjList =~ s/^#.*\n//gm;
+@ObjList = split( /\n/, $ObjList );
+
 # SYM list parser
-open( fpIn,  "< $ARGV[ 0 ]" );
 
 my( $VarName );
 my( %Vars );
-
-while( <fpIn> ){
+while( <> ){
 	last if( /^Entry/ );
 }
-$_ = <fpIn>; # 読み捨て
+$_ = <>; # 読み捨て
 
-while( <fpIn> ){
+open( fpOut, "> rom_entry.s" );
+
+print fpOut <<'EOF';
+;*****************************************************************************
+;	
+;	VSD2 - vehicle data logger system2
+;	Copyright(C) by DDS
+;	
+;	rom_entry.s -- rom entry point table
+;	$Id$
+;	
+;*****************************************************************************
+
+	RSEG ROM_CODE:CODE(2)
+EOF
+
+my( $tmp );
+
+while( <> ){
 	s/[\x0D\x0A]//g;
 	last if( $_ eq '' );
 	
-	$_ .= <fpIn> if( !/\]$/ );
+	$_ .= <> if( !/\]$/ );
 	
-	if( /^([\w_]+)\s+([\w]+)/ ){
-		$VarName = $1;
-		$Vars{ $VarName } = $2;
-		
-		#printf( "%s=%s\n", $VarName, $Vars{ $VarName } );
-	}
-}
-
-close( fpIn );
-shift;
-
-# .c parser
-while( $ARGV[0] ){
-	#open( fpIn, "cpp -DHOGE $ARGV[0] |" );
-	open( fpIn, "< $ARGV[0]" );
-	$_ .= join( '', <fpIn> );
-	close( fpIn );
-	shift( @ARGV );
-}
-
-# lib から読まれる関数を追加定義
-$_ .= <<'EOF';
-int printf( const char *fmt, ... );
-int sprintf( const char *fmt, ... );
-EOF
-
-s|/\*.*?\*/| |gs; s|//.*||gm;						# コメント削除
-s/#.*$//gm;											# cpp ディレクティブ削除
-1 while( s/{[^{}]*}/#/g );							# { ... } を # に置換
-s/\b(?:typedef|struct|union|enum)\b[^;]*;/ /gs;		# struct 宣言等を削除
-s/=[^;]*;/;/gs;										# 変数宣言の = 以降を削除
-s/[\s\n]+/ /g; s/\s*[;#]\s*/\n/g;					# 改行しなおし
-s/^\s+//g; s/\s+$//g;								# 先頭・最後のスペース削除
-s/\b__inline\s+//g; s/\bINLINE\s+//g;				# インライン関数削除
-
-# ↓ROMENTRY にある関数で削りたいやつ
-s/^.*\b(?:main)\b.*$//gm;
-s/\n+/\n/g;
-s/^\s+//g;
-s/\s+$//g;
-
-my( @Defs ) = split( /\n/, $_ );
-
-#open( fpOut, "> hoge.h" );
-open( fpOut, "> rom_entry.h" );
-
-#my( $Ptr );
-
-while( $_ = shift( @Defs )){
-	s/([_\w\d\$]+)/&Replace($1)/ge;
-	
-	#$Ptr = ( /\(/ ) ? '' : '*';
-	
-	if( ! /\$ALREADY_USED\$/ ){
-		if( s/#(.*)#(.*)#/(*)/g ){
-			print( fpOut "#define $1\t(*($_)$2)\n" );
-		}else{
-			print( fpOut "// warning: not found: $_\n" );
+	foreach $tmp ( @ObjList ){
+		if( /\b\Q$tmp\E\b/ ){
+			if( /^([\w_]+)\s+([\w]+)/ && !defined( $ExceptList{ $1 } )){
+				print fpOut "\tEXPORT $1\n$1 = $2\n"
+			}
+			last;
 		}
 	}
 }
 
-close( fpOut );
-
-sub Replace {
-	local( $_ ) = @_;
-	
-	if( defined( $Vars{ $_ } )){
-		
-		my( $Addr ) = $Vars{ $_ };
-		
-		#undef( $Vars{ $_ } );
-		$Vars{ $_ } = '$ALREADY_USED$';
-		
-		#$_ .= '_ROM' if( $_ eq '_INITSCT' );
-		
-		return( "#$_#$Addr#" );
-	}
-	return( $_ );
-}
+print fpOut "\tEND\n";
