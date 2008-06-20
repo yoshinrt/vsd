@@ -2,9 +2,6 @@
 
 # $Id$
 
-use strict 'vars';
-use strict 'refs';
-
 my( $ExceptList );
 my( %ExceptList );
 
@@ -27,7 +24,7 @@ $_ = ();
 
 ## 使用する obj 名
 
-my( $ObjList, @ObjList );
+my( $ObjList, %ObjList );
 $ObjList = <<'EOF';
 #cortexm3_macro.o
 #hw_config.o
@@ -83,7 +80,10 @@ exit.o
 EOF
 
 $ObjList =~ s/^#.*\n//gm;
-@ObjList = split( /\n/, $ObjList );
+
+foreach ( split( /\n/, $ObjList )){
+	$ObjList{ $_ } = '';
+}
 
 # SYM list parser
 
@@ -96,14 +96,16 @@ $_ = <>; # 読み捨て
 
 open( fpOut, "> rom_entry.s" );
 
-print fpOut <<'EOF';
+$IdString = '$I' . 'd$';
+
+print fpOut <<"EOF";
 ;*****************************************************************************
 ;	
 ;	VSD2 - vehicle data logger system2
 ;	Copyright(C) by DDS
 ;	
 ;	rom_entry.s -- rom entry point table
-;	$Id$
+;	$IdString
 ;	
 ;*****************************************************************************
 
@@ -111,21 +113,40 @@ print fpOut <<'EOF';
 EOF
 
 my( $tmp );
+my( @SymbolList );
 
 while( <> ){
 	s/[\x0D\x0A]//g;
 	last if( $_ eq '' );
 	
-	$_ .= <> if( !/\]$/ );
-	
-	foreach $tmp ( @ObjList ){
-		if( /\b\Q$tmp\E\b/ ){
-			if( /^([\w_]+)\s+([\w]+)/ && !defined( $ExceptList{ $1 } )){
-				print fpOut "\tEXPORT $1\n$1 = $2\n"
-			}
-			last;
-		}
+	# 2行に別れてるやつを結合
+	if( !/[\-\]]$/ ){
+		$tmp = <>;
+		substr( $tmp, 34, 17 ) = ' ';
+		$_ .= $tmp;
+	}else{
+		substr( $_, 34, 17 ) = ' ';
 	}
+	
+	if(
+		/^([\w_]+)\s+([\w]+)\s+(\S+)/ &&
+		defined( $ObjList{ $3 } ) &&
+		!defined( $ExceptList{ $1 } )
+	){
+		push( @SymbolList, "$3\t$1\t$2" );
+	}
+}
+
+$PrevObj = '';
+
+for ( sort @SymbolList ){
+	@_ = split( /\t/, $_ );
+	
+	if( $PrevObj ne $_[ 0 ] ){
+		print fpOut ";*** $_[ 0 ] " . '*' x ( 72 - length( $_[ 0 ] )) . "\n";
+		$PrevObj = $_[ 0 ];
+	}
+	print fpOut "\tEXPORT $_[ 1 ]\n$_[ 1 ] = $_[ 2 ]\n";
 }
 
 print fpOut "\tEND\n";
