@@ -4,19 +4,25 @@
 // $Id$
 
 #define _CRT_SECURE_NO_DEPRECATE 1
+//#define CIRCUIT_TOMO
 
 #include <windows.h>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include <float.h>
+#include <stddef.h>
 
 #include "dds.h"
 #include "filter.h"
 #include "../vsd/main.h"
 #include "dds_lib/dds_lib.h"
 
-#define	FILE_TXT		"LogFile (*.log)\0*.log\0AllFile (*.*)\0*.*\0"
+#ifdef CIRCUIT_TOMO
+	#define	FILE_TXT		"Pulse-Time Data (*.ptd)\0*.ptd\0AllFile (*.*)\0*.*\0"
+#else
+	#define	FILE_TXT		"LogFile (*.log)\0*.log\0AllFile (*.*)\0*.*\0"
+#endif
 
 /****************************************************************************/
 
@@ -38,8 +44,13 @@
 
 #define VideoSt		( fp->track[ TRACK_VSt ] * 100 + fp->track[ TRACK_VSt2 ] )
 #define VideoEd		( fp->track[ TRACK_VEd ] * 100 + fp->track[ TRACK_VEd2 ] )
-#define LogSt		( fp->track[ TRACK_LSt ] * 100 + fp->track[ TRACK_LSt2 ] )
-#define LogEd		( fp->track[ TRACK_LEd ] * 100 + fp->track[ TRACK_LEd2 ] )
+#ifdef CIRCUIT_TOMO
+	#define LogSt		( fp->track[ TRACK_LSt ] * 1000 + fp->track[ TRACK_LSt2 ] )
+	#define LogEd		( fp->track[ TRACK_LEd ] * 1000 + fp->track[ TRACK_LEd2 ] )
+#else
+	#define LogSt		( fp->track[ TRACK_LSt ] * 100 + fp->track[ TRACK_LSt2 ] )
+	#define LogEd		( fp->track[ TRACK_LEd ] * 100 + fp->track[ TRACK_LEd2 ] )
+#endif
 #define LineTrace	fp->track[ TRACK_LineTrace ]
 
 #define G_CX_CNT		30
@@ -59,6 +70,8 @@
 #define MAP_LINE2		yc_yellow
 #define MAP_LINE3		yc_red
 #define MAP_G_MAX		1.2
+
+#define PTD_LOG_FREQ	11025.0
 
 /*** CAviUtlImage class *****************************************************/
 
@@ -605,6 +618,19 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	// クラスに変換
 	CAviUtlImage	&Img = *( CAviUtlImage *)fpip;
 	
+#ifdef CIRCUIT_TOMO
+	const int	iMeterR			= 50 * Img.w / 320;
+	const int	iMeterCx		= iMeterR * 3 + 4;
+	const int	iMeterCy		= Img.h - iMeterR * 0.75 - 2;
+	const int	iMeterMinDeg	= 135;
+	const int	iMeterMaxDeg	= 45;
+	const int	iMeterMaxVal	= fp->track[ TRACK_TACHO ] * 1000;
+	const int	iMeterDegRange	= (( iMeterMaxDeg < iMeterMinDeg ? iMeterMaxDeg + 360 : iMeterMaxDeg ) - iMeterMinDeg );
+	const int	iMeterScaleLen	= iMeterR / 8;
+	
+	const int	iMeterSCx		= iMeterR + 2;
+	const int	iMeterSMaxVal	= fp->track[ TRACK_SPEED ];
+#else
 	const int	iMeterR			= 50 * Img.w / 320;
 	const int	iMeterCx		= Img.w - iMeterR - 2;
 	const int	iMeterCy		= Img.h - iMeterR - 2;
@@ -613,9 +639,27 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	const int	iMeterMaxVal	= 6000;
 	const int	iMeterDegRange	= (( iMeterMaxDeg < iMeterMinDeg ? iMeterMaxDeg + 360 : iMeterMaxDeg ) - iMeterMinDeg );
 	const int	iMeterScaleLen	= iMeterR / 8;
+#endif
 	
 	// ログ位置の計算
 	double	dLogNum = ( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( Img.frame - VideoSt ) + LogSt;
+	
+	// フレーム表示
+	if( fp->check[ CHECK_FRAME ] ){
+		sprintf( szBuf, "V%6d/%6d", Img.frame, Img.frame_n - 1 );
+		Img.DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, Img.w / 2, Img.h / 2 );
+	#ifdef CIRCUIT_TOMO
+		sprintf( szBuf, "L%.3f/%.3f", ( double )dLogNum / 1000, g_iVsdLogNum / LOG_FREQ );
+	#else
+		sprintf( szBuf, "L%6d/%6d", ( int )dLogNum, g_iVsdLogNum - 1 );
+	#endif
+		Img.DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+	}
+	
+	#ifdef CIRCUIT_TOMO
+		// ログ位置補正 ms -> LOG_FREQ
+		dLogNum *= LOG_FREQ / 1000;
+	#endif
 	
 	// メーターパネル
 	Img.DrawCircle(
@@ -623,6 +667,69 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
 	);
 	
+#ifdef CIRCUIT_TOMO
+	for( i = 0; i <= iMeterMaxVal; i += 500 ){
+		int iDeg = iMeterDegRange * i / iMeterMaxVal + iMeterMinDeg;
+		if( iDeg >= 360 ) iDeg -= 360;
+		
+		// メーターパネル目盛り
+		if( iMeterMaxVal <= 12000 || i % 1000 == 0 ){
+			Img.DrawLine(
+				( int )( cos( iDeg * ToRAD ) * iMeterR ) + iMeterCx,
+				( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
+				( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCx,
+				( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
+				COLOR_SCALE, 0
+			);
+			
+			// メーターパネル目盛り数値
+			if( iMeterMaxVal <= 12000 && i % 1000 == 0 || i % 2000 == 0 ){
+				sprintf( szBuf, "%d", i / 1000 );
+				Img.DrawString(
+					szBuf,
+					COLOR_STR, 0,
+					( int )( cos( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCx - Img.GetFontW() / ( i >= 10000 ? 1 : 2 ),
+					( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - Img.GetFontH() / 2
+				);
+			}
+		}
+	}
+	
+	// メーターパネル
+	Img.DrawCircle(
+		iMeterSCx, iMeterCy, iMeterR, COLOR_PANEL,
+		CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
+	);
+	
+	int	iStep = (( iMeterSMaxVal / 20 ) + 4 ) / 5 * 5;
+	
+	for( i = 0; i <= iMeterSMaxVal; i += iStep ){
+		int iDeg = iMeterDegRange * i / iMeterSMaxVal + iMeterMinDeg;
+		if( iDeg >= 360 ) iDeg -= 360;
+		
+		// メーターパネル目盛り
+		if( i % iStep == 0 ){
+			Img.DrawLine(
+				( int )( cos( iDeg * ToRAD ) * iMeterR ) + iMeterSCx,
+				( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
+				( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterSCx,
+				( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
+				COLOR_SCALE, 0
+			);
+			
+			// メーターパネル目盛り数値
+			if( i % ( iStep * 2 ) == 0 ){
+				sprintf( szBuf, "%d", i );
+				Img.DrawString(
+					szBuf,
+					COLOR_STR, 0,
+					( int )( cos( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterSCx - Img.GetFontW() * strlen( szBuf ) / 2,
+					( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - Img.GetFontH() / 2
+				);
+			}
+		}
+	}
+#else // CIRCUIT_TOMO
 	for( i = 0; i <= iMeterMaxVal; i += 500 ){
 		int iDeg = iMeterDegRange * i / iMeterMaxVal + iMeterMinDeg;
 		if( iDeg >= 360 ) iDeg -= 360;
@@ -643,14 +750,6 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			'0' + i / 1000 + ( i >= 1000 ? 1 : 0 ),
 			COLOR_STR, 0
 		);
-	}
-	
-	// フレーム表示
-	if( fp->check[ CHECK_FRAME ] ){
-		sprintf( szBuf, "V%6d/%6d", Img.frame, Img.frame_n - 1 );
-		Img.DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, Img.w / 2, Img.h / 2 );
-		sprintf( szBuf, "L%6d/%6d", ( int )dLogNum, g_iVsdLogNum - 1 );
-		Img.DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 	}
 	
 	/*** Lap タイム描画 ***/
@@ -745,6 +844,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			Img.DrawString( szBuf, dDiffTime < 0 ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
 		}
 	}
+#endif // CIRCUIT_TOMO
 	
 	/*** メーター描画 ***/
 	
@@ -753,6 +853,13 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	double	dSpeed	= GetVsdLog( fSpeed );
 	double	dTacho	= GetVsdLog( fTacho );
 	
+#ifdef CIRCUIT_TOMO
+	// スピード・タコ修正
+	
+	dSpeed *= 3600.0 / fp->track[ TRACK_PULSE_SPEED ];
+	dTacho *= 1000.0 * 60 / fp->track[ TRACK_PULSE_TACHO ];
+	
+#else CIRCUIT_TOMO
 	// G スネーク
 	int	iGx, iGy;
 	
@@ -848,12 +955,25 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			COLOR_G_SENSOR, CAviUtlImage::IMG_FILL
 		);
 	}
+#endif // CIRCUIT_TOMO
 	
 	// スピード / ギア
 	UINT uGear = 0;
-	UINT uGearRatio = 0;
 	
 	if( dTacho ){
+	#ifdef CIRCUIT_TOMO
+		UINT	u;
+		uGear = 6;
+		for( u = 1; u <= 5; ++u ){
+			if(
+				( fp->track[ TRACK_GEAR1 + u - 1 ] + fp->track[ TRACK_GEAR1 + u ] ) / 20000.0 >
+				dSpeed / 3600 * 1000 * 60 / dTacho
+			){
+				uGear = u;
+				break;
+			}
+		}
+	#else
 		UINT uGearRatio = ( int )( dSpeed * 100 * ( 1 << 8 ) / dTacho );
 		
 		if     ( uGearRatio < GEAR_TH( 1 ))	uGear = 1;
@@ -861,6 +981,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		else if( uGearRatio < GEAR_TH( 3 ))	uGear = 3;
 		else if( uGearRatio < GEAR_TH( 4 ))	uGear = 4;
 		else								uGear = 5;
+	#endif
 	}
 	
 	// スピード表示
@@ -886,17 +1007,38 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		iMeterCx - 3 * Img.GetFontW(), iMeterCy + iMeterR / 2
 	);
 	
+#ifndef CIRCUIT_TOMO
 	sprintf( szBuf, "%2d\x82", ( int )( sqrt( GetVsdLog( fGx ) * GetVsdLog( fGx ) + GetVsdLog( fGy ) * GetVsdLog( fGy )) * 10 ));
 	Img.DrawString(
 		szBuf,
 		COLOR_STR, 0,
 		iMeterCx - 2 * Img.GetFontW(), iMeterCy + iMeterR / 2 - Img.GetFontH()
 	);
+#else
+	// Speed の針
+	double dSpeedNeedle =
+		iMeterDegRange / ( double )iMeterSMaxVal * dSpeed + iMeterMinDeg;
+	if( dSpeedNeedle >= 360 ) dSpeedNeedle -= 360;
+	dSpeedNeedle = dSpeedNeedle * ToRAD;
+	
+	Img.DrawLine(
+		iMeterSCx, iMeterCy,
+		( int )( cos( dSpeedNeedle ) * iMeterR * 0.95 + .5 ) + iMeterSCx,
+		( int )( sin( dSpeedNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
+		LINE_WIDTH, COLOR_NEEDLE, 0
+	);
+	
+	Img.DrawCircle( iMeterSCx, iMeterCy,  iMeterR / 25, COLOR_NEEDLE, CAviUtlImage::IMG_FILL );
+#endif
 	
 	// Tacho の針
 	double dTachoNeedle =
 		iMeterDegRange / ( double )iMeterMaxVal *
+	#ifdef CIRCUIT_TOMO
+		dTacho
+	#else
 		( dTacho <= 2000 ? dTacho / 2 : dTacho - 1000 )
+	#endif
 		+ iMeterMinDeg;
 	if( dTachoNeedle >= 360 ) dTachoNeedle -= 360;
 	dTachoNeedle = dTachoNeedle * ToRAD;
@@ -916,6 +1058,35 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 //---------------------------------------------------------------------
 //		WndProc
 //---------------------------------------------------------------------
+
+static UINT ReadPTD( FILE *fp, UINT uOffs ){
+	
+	UINT	uCnt		= 0;
+	UINT	uPulseCnt	= 0;
+	UINT	uOutCnt		= 0;
+	UINT	uPrevTime	= 0;
+	UINT	u;
+	
+	fscanf( fp, "%u", &uCnt );
+	
+	while( uCnt ){
+		do{
+			fscanf( fp, "%u", &u );
+			
+			--uCnt;
+			++uPulseCnt;
+		}while(( double )u / PTD_LOG_FREQ < ( double )uOutCnt / LOG_FREQ && uCnt );
+		
+		while(( double )uOutCnt / LOG_FREQ < ( double )u / PTD_LOG_FREQ ){
+			*( float *)(( char *)( &g_VsdLog[ uOutCnt ] ) + uOffs ) =
+				( float )(( double )uPulseCnt / ( u - uPrevTime ) * PTD_LOG_FREQ );
+			++uOutCnt;
+		}
+		uPrevTime = u;
+		uPulseCnt = 0;
+	}
+	return( uOutCnt );
+}
 
 BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
 	//	TRUEを返すと全体が再描画される
@@ -948,12 +1119,30 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		if( filter->exfunc->dlg_get_load_name(szBuf,FILE_TXT,NULL) != TRUE ) break;
 		if(( fp = fopen( szBuf, "r" )) == NULL ) return FALSE;
 		
-		// 20070814 以降のログは，横 G が反転している
-		BOOL bReverseGy	= ( strcmp( StrTokFile( NULL, szBuf, STF_NAME ), "vsd20070814" ) >= 0 );
-		
 		g_iVsdLogNum	= 0;
 		g_iLapNum		= 0;
 		g_dBestTime		= -1;
+		
+	#ifdef CIRCUIT_TOMO
+		int i;
+		for( i = 0; i < MAX_VSD_LOG; ++i ){
+			g_VsdLog[ i ].fSpeed =
+			g_VsdLog[ i ].fTacho =
+			g_VsdLog[ i ].fMileage =
+			g_VsdLog[ i ].fGx =
+			g_VsdLog[ i ].fGy =
+			g_VsdLog[ i ].fX =
+			g_VsdLog[ i ].fY = 0;
+		}
+		
+		g_iVsdLogNum	= ReadPTD( fp, offsetof( VSD_LOG_t, fTacho ));
+		i				= ReadPTD( fp, offsetof( VSD_LOG_t, fSpeed ));
+		
+		if( i > g_iVsdLogNum ) g_iVsdLogNum = i;
+		
+	#else // CIRCUIT_TOMO
+		// 20070814 以降のログは，横 G が反転している
+		BOOL bReverseGy	= ( strcmp( StrTokFile( NULL, szBuf, STF_NAME ), "vsd20070814" ) >= 0 );
 		
 		// ログリード
 		
@@ -1133,6 +1322,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		}
 		
 		delete [] GPSLog;
+	#endif // CIRCUIT_TOMO
 		
 		/********************************************************************/
 		
@@ -1143,14 +1333,21 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		// trackbar 設定
 		track_e[ TRACK_VSt ] =
 		track_e[ TRACK_VEd ] = ( filter->exfunc->get_frame_n( editp ) + 99 ) / 100;
+	#ifdef CIRCUIT_TOMO
+		track_e[ TRACK_LSt ] =
+		track_e[ TRACK_LEd ] = ( int )( g_iVsdLogNum / LOG_FREQ + 1 );
+	#else
 		track_e[ TRACK_LSt ] =
 		track_e[ TRACK_LEd ] = ( g_iVsdLogNum + 99 ) / 100;
+	#endif
 		
 		// 設定再描画
 		filter->exfunc->filter_window_update( filter );
 		
+	#ifndef CIRCUIT_TOMO
 		// log pos 更新
 		func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
+	#endif
 		
 		return TRUE;
 	}
@@ -1167,6 +1364,7 @@ BOOL func_update( FILTER *fp, int status ){
 	
 	bReEnter = TRUE;
 	
+#ifndef CIRCUIT_TOMO
 	if(
 		status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS ) &&
 		fp->check[ CHECK_LOGPOS ]
@@ -1179,6 +1377,7 @@ BOOL func_update( FILTER *fp, int status ){
 		// 設定再描画
 		fp->exfunc->filter_window_update( fp );
 	}
+#endif
 	
 	bReEnter = FALSE;
 	
