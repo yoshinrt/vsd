@@ -516,8 +516,7 @@ FILTER_DLL filter = {
 	NULL,NULL,					//	システムで使いますので使用しないでください
 	NULL,						//  拡張データ領域へのポインタ (FILTER_FLAG_EX_DATAが立っている時に有効)
 	NULL,						//  拡張データサイズ (FILTER_FLAG_EX_DATAが立っている時に有効)
-	"VSDメーター合成 v0.00 by DDS",
-								//  フィルタ情報へのポインタ (FILTER_FLAG_EX_INFORMATIONが立っている時に有効)
+	NULL,						//  フィルタ情報へのポインタ (FILTER_FLAG_EX_INFORMATIONが立っている時に有効)
 	NULL,						//	セーブが開始される直前に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 	NULL,						//	セーブが終了した直前に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 };
@@ -556,6 +555,51 @@ BOOL func_exit( FILTER *fp ){
 //---------------------------------------------------------------------
 //		フィルタ処理関数
 //---------------------------------------------------------------------
+
+/*** ラップタイム再計算 *****************************************************/
+
+#ifdef CIRCUIT_TOMO
+BOOL	g_bCalcLapTimeReq;
+void CalcLapTime( FILTER *fp, FILTER_PROC_INFO *fpip ){
+	
+	FRAME_STATUS	fsp;
+	int				i;
+	double			dTime, dPrevTime;
+	
+	g_iLapNum	= 0;
+	g_dBestTime	= -1;
+	
+	for( i = 0; i < fpip->frame_n; ++i ){
+		fp->exfunc->get_frame_status( fpip->editp, i, &fsp );
+		
+		if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
+			// ラップ検出
+			dTime = (
+				( double )( LogEd - LogSt ) / ( VideoEd - VideoSt )
+				* ( i - VideoSt ) + LogSt
+			) / 1000;
+			
+			g_Lap[ g_iLapNum ].uLap		= g_iLapNum;
+			g_Lap[ g_iLapNum ].iLogNum	= i;
+			g_Lap[ g_iLapNum ].fTime	= g_iLapNum ? ( float )( dTime - dPrevTime ) : 0;
+			
+			if(
+				g_iLapNum &&
+				( g_dBestTime == -1 || g_dBestTime > g_Lap[ g_iLapNum ].fTime )
+			){
+				g_dBestTime			= g_Lap[ g_iLapNum ].fTime;
+				g_iBestLapLogNum	= g_Lap[ g_iLapNum - 1 ].iLogNum;
+			}
+			
+			dPrevTime = dTime;
+			++g_iLapNum;
+		}
+	}
+	g_Lap[ g_iLapNum ].iLogNum = 0x7FFFFFFF;	// 番犬
+}
+#endif
+
+/****************************************************************************/
 
 const PIXEL_YC	yc_black		= RGB2YC(    0,    0,    0 );
 const PIXEL_YC	yc_white		= RGB2YC( 4095, 4095, 4095 );
@@ -621,7 +665,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 #ifdef CIRCUIT_TOMO
 	const int	iMeterR			= 50 * Img.w / 320;
 	const int	iMeterCx		= iMeterR * 3 + 4;
-	const int	iMeterCy		= Img.h - iMeterR * 0.75 - 2;
+	const int	iMeterCy		= ( int )( Img.h - iMeterR * 0.75 - 2 );
 	const int	iMeterMinDeg	= 135;
 	const int	iMeterMaxDeg	= 45;
 	const int	iMeterMaxVal	= fp->track[ TRACK_TACHO ] * 1000;
@@ -643,6 +687,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	
 	// ログ位置の計算
 	double	dLogNum = ( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( Img.frame - VideoSt ) + LogSt;
+	int		iLogNum = ( int )dLogNum;
 	
 	// フレーム表示
 	if( fp->check[ CHECK_FRAME ] ){
@@ -751,8 +796,16 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			COLOR_STR, 0
 		);
 	}
+#endif // CIRCUIT_TOMO
 	
 	/*** Lap タイム描画 ***/
+	
+#ifdef CIRCUIT_TOMO
+	if( fp->check[ CHECK_LAP ] && g_bCalcLapTimeReq && g_Lap ){
+		g_bCalcLapTimeReq = FALSE;
+		CalcLapTime( fp, fpip );
+	}
+#endif
 	
 	if( fp->check[ CHECK_LAP ] && g_iLapNum ){
 		/*
@@ -763,13 +816,18 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		);
 		*/
 		
+		#ifdef CIRCUIT_TOMO
+			// CIRCUIT_TOMO での g_Lap[].iLogNum はフレーム# なので
+			iLogNum = Img.frame;
+		#endif
+		
 		// カレントポインタがおかしいときは，-1 にリセット
 		if(
 			iLapIdx >= g_iLapNum ||
-			iLapIdx >= 0 && g_Lap[ iLapIdx ].iLogNum > ( int )dLogNum
+			iLapIdx >= 0 && g_Lap[ iLapIdx ].iLogNum > iLogNum
 		) iLapIdx = -1;
 		
-		for( ; g_Lap[ iLapIdx + 1 ].iLogNum <= ( int )dLogNum; ++iLapIdx );
+		for( ; g_Lap[ iLapIdx + 1 ].iLogNum <= iLogNum; ++iLapIdx );
 		
 		// Best 表示
 		sprintf( szBuf, "Bst%3d'%02d.%03d", ( int )g_dBestTime / 60, ( int )g_dBestTime % 60, ( int )( g_dBestTime * 1000 + .5 ) % 1000 );
@@ -791,7 +849,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			g_Lap[ iLapIdx + 1 ].iLogNum != 0x7FFFFFFF &&
 			g_Lap[ iLapIdx + 1 ].fTime  != 0
 		){
-			double dTime = ( dLogNum - g_Lap[ iLapIdx ].iLogNum ) / LOG_FREQ;
+			double dTime = ( double )( Img.frame - g_Lap[ iLapIdx ].iLogNum ) / ( VideoEd - VideoSt ) * ( LogEd - LogSt ) / 1000;
+			
 			sprintf( szBuf, "%2d'%02d.%03d", ( int )dTime / 60, ( int )dTime % 60, ( int )( dTime * 1000 + .5 ) % 1000 );
 			Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
 			bInLap = TRUE;
@@ -802,6 +861,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		
 		/*** ベストとの車間距離表示 ***/
 		
+	#ifndef CIRCUIT_TOMO
 		if( bInLap ){
 			// この周の走行距離を求める
 			double dMileage = GetVsdLog( fMileage ) - g_VsdLog[ g_Lap[ iLapIdx ].iLogNum ].fMileage;
@@ -843,8 +903,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			);
 			Img.DrawString( szBuf, dDiffTime < 0 ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
 		}
+	#endif
 	}
-#endif // CIRCUIT_TOMO
 	
 	/*** メーター描画 ***/
 	
@@ -866,7 +926,6 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	if( fp->check[ CHECK_SNAKE ] ){
 		
 		int iGxPrev = 0, iGyPrev;
-		int iLogNum = ( int )dLogNum;
 		
 		for( i = -G_HIST; i <= 1 ; ++i ){
 			
@@ -899,7 +958,6 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	if( LineTrace ){
 		
 		int iGxPrev = INVALID_POS_I, iGyPrev;
-		int iLogNum = ( int )dLogNum;
 		
 		for( i = -( int )( LineTrace * LOG_FREQ ); i <= 1 ; ++i ){
 			if( iLogNum + i >= 0 ){
@@ -1350,6 +1408,10 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	#endif
 		
 		return TRUE;
+	#ifdef CIRCUIT_TOMO
+	  case WM_FILTER_SAVE_START:
+		g_bCalcLapTimeReq = TRUE;
+	#endif
 	}
 	
 	return FALSE;
@@ -1376,6 +1438,13 @@ BOOL func_update( FILTER *fp, int status ){
 		
 		// 設定再描画
 		fp->exfunc->filter_window_update( fp );
+	}
+#else	
+	if(
+		status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LAP ) &&
+		fp->check[ CHECK_LAP ]
+	){
+		g_bCalcLapTimeReq = TRUE;
 	}
 #endif
 	

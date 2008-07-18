@@ -2,9 +2,7 @@
 //				|			チェックボックスの初期値 (値は0か1)
 //				|			|	チェックボックスの名前
 //				|			|	|
-#ifndef CIRCUIT_TOMO
 DEF_CHECKBOX( CHECK_LAP,	1,	"ラップタイム" )
-#endif
 DEF_CHECKBOX( CHECK_FRAME,	0,	"フレーム表示" )
 #ifndef CIRCUIT_TOMO
 DEF_CHECKBOX( CHECK_SNAKE,	0,	"G軌跡" )
