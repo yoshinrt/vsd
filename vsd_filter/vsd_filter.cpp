@@ -723,8 +723,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 				Img.DrawString(
 					szBuf,
 					COLOR_STR, 0,
-					( int )( cos( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterSCx - Img.GetFontW() * strlen( szBuf ) / 2,
-					( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - Img.GetFontH() / 2
+					( int )( cos( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterSCx - Img.GetFontW() * strlen( szBuf ) / 2,
+					( int )( sin( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCy - Img.GetFontH() / 2
 				);
 			}
 		}
