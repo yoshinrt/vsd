@@ -849,7 +849,11 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			g_Lap[ iLapIdx + 1 ].iLogNum != 0x7FFFFFFF &&
 			g_Lap[ iLapIdx + 1 ].fTime  != 0
 		){
+		#ifdef CIRCUIT_TOMO
 			double dTime = ( double )( Img.frame - g_Lap[ iLapIdx ].iLogNum ) / ( VideoEd - VideoSt ) * ( LogEd - LogSt ) / 1000;
+		#else
+			double dTime = ( dLogNum - g_Lap[ iLapIdx ].iLogNum ) / LOG_FREQ;
+		#endif
 			
 			sprintf( szBuf, "%2d'%02d.%03d", ( int )dTime / 60, ( int )dTime % 60, ( int )( dTime * 1000 + .5 ) % 1000 );
 			Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
@@ -919,7 +923,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	dSpeed *= 3600.0 / fp->track[ TRACK_PULSE_SPEED ];
 	dTacho *= 1000.0 * 60 / fp->track[ TRACK_PULSE_TACHO ];
 	
-#else CIRCUIT_TOMO
+#else // CIRCUIT_TOMO
 	// G スネーク
 	int	iGx, iGy;
 	
@@ -1117,6 +1121,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 //		WndProc
 //---------------------------------------------------------------------
 
+#ifdef CIRCUIT_TOMO
 static UINT ReadPTD( FILE *fp, UINT uOffs ){
 	
 	UINT	uCnt		= 0;
@@ -1145,6 +1150,7 @@ static UINT ReadPTD( FILE *fp, UINT uOffs ){
 	}
 	return( uOutCnt );
 }
+#endif
 
 BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
 	//	TRUEを返すと全体が再描画される
