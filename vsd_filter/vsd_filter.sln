@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dds_lib", "DDS_LIB\dds_lib.vcproj", "{35D23BED-1583-4DE5-AAAF-4FD421CB3023}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsd_filter", "vsd_filter.vcproj", "{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{35D23BED-1583-4DE5-AAAF-4FD421CB3023} = {35D23BED-1583-4DE5-AAAF-4FD421CB3023}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.Debug|Win32.ActiveCfg = Debug|Win32
+		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.Debug|Win32.Build.0 = Debug|Win32
+		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.Release|Win32.ActiveCfg = Release|Win32
+		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.Release|Win32.Build.0 = Release|Win32
+		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.Debug|Win32.Build.0 = Debug|Win32
+		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.Release|Win32.ActiveCfg = Release|Win32
+		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
