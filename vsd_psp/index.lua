@@ -514,10 +514,10 @@ function LoadFirmware()
 		
 		System.sioWrite( string.gsub( fpFirm:read( "*a" ), "\r\n", "\r" ))
 		fpFirm:close()
-		
-		screen.waitVblankStart( 6 )
-		System.sioWrite( "g\r" )
 	end
+	
+	screen.waitVblankStart( 6 )
+	System.sioWrite( "g\r" )
 	
 	-- バッファクリア
 	local pos
@@ -530,13 +530,18 @@ function LoadFirmware()
 		RxBuf = RxBuf .. System.sioRead()
 		pos = RxBuf:find( "*", 1, true )
 		TimeoutCnt = TimeoutCnt - 1
-		assert( TimeoutCnt ~= 0, "VSD initialize failed" )
+		if( TimeoutCnt == 0 ) then
+			DoMenu( ErrorInit )
+			return false
+		end
 	until pos
 	
 	RxBuf = RxBuf:sub( pos + 1 )
 	
 	-- VSD モード設定
 	System.sioWrite( "1a3Gs" )
+	
+	return true
 end
 
 --- FormatLapTime ------------------------------------------------------------
@@ -749,6 +754,16 @@ function ToggleInfo()
 	bDispInfo = not bDispInfo
 end
 
+--- VSD スペシャルコマンド ---------------------------------------------------
+
+function SendCmd_IR()
+	System.sioWrite( "0ai" )
+end
+
+function SendCmd_Mileage()
+	System.sioWrite( "0aM" )
+end
+
 --- メニュー -----------------------------------------------------------------
 
 function DoMenu( Item, x, y )
@@ -865,6 +880,12 @@ MainMenu = {
 	},
 	{ title = "Toggle info window";	ToggleInfo },
 	{
+		title = "Special command";
+		width = 20;
+		{ title = "Disp IR cnt";  SendCmd_IR },
+		{ title = "Disp mileage"; SendCmd_Mileage },
+	},
+	{
 		title = "Help";
 		width = 20;
 	--	"UP:      delete best lap",
@@ -880,6 +901,12 @@ MainMenu = {
 	--	"-------",
 	--	"OS:" .. ( OS or "PSP" ),
 	}
+}
+
+ErrorInit = {
+	width = 35;
+	"Error: VSD Initialization failed",
+	"Press O to Exit"
 }
 
 ------------------------------------------------------------------------------
@@ -928,24 +955,6 @@ end
 --- メインループ -------------------------------------------------------------
 ------------------------------------------------------------------------------
 
--- Console:print( "loading firmware" ); screen.flip()
--- sio 初期化・ファームロード
-if( NoSio ) then
-	-- ログファイル リオープン
-	LogFile = "vsd.log"
-	fpLog = io.open( os.date( LogFile ), "wb" )
-	bSIOActive = true
-elseif not Controls.read():l() then
-	LoadFirmware()
-end
-
--- DebugRefresh = 0
-CtrlPrev = Controls.read()
-PrevMin = 99
-
-UsbGps.open()
-UsbGps.set_init_loc( 0 )
-
 -- 一定時間ごとに処理するルーチン --------------------------------------------
 
 function DoIntervalProc()
@@ -972,6 +981,26 @@ function DoIntervalProc()
 end
 
 -- メイン処理 ----------------------------------------------------------------
+
+-- Console:print( "loading firmware" ); screen.flip()
+-- sio 初期化・ファームロード
+if( NoSio ) then
+	-- ログファイル リオープン
+	LogFile = "vsd.log"
+	fpLog = io.open( os.date( LogFile ), "wb" )
+	bSIOActive = true
+elseif not Controls.read():l() then
+	if( not LoadFirmware()) then
+		return
+	end
+end
+
+-- DebugRefresh = 0
+CtrlPrev = Controls.read()
+PrevMin = 99
+
+UsbGps.open()
+UsbGps.set_init_loc( 0 )
 
 while true do
 	DoIntervalProc()
