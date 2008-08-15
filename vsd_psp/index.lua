@@ -466,6 +466,7 @@ function DrawLapChart()
 	screen.flip()
 	while( not Ctrl:Pushed( "cross" )) do
 		DoIntervalProc()
+		Ctrl:Read()
 	end
 	RedrawLap = 2
 end
@@ -811,6 +812,7 @@ function DoMenu( Item, x, y )
 		screen.flip()
 		while( 1 ) do
 			DoIntervalProc()
+			Ctrl:Read()
 			
 			if( Ctrl:Pushed( "up" )) then
 				MenuID = MenuID - 1
@@ -975,9 +977,6 @@ function DoIntervalProc()
 		Speed	= math.floor( GPS_Speed * 100 + 0.5 )
 		RefreshFlag = true
 	end
-	
-	-- キー入力処理
-	Ctrl:Read()
 end
 
 -- メイン処理 ----------------------------------------------------------------
@@ -1022,24 +1021,27 @@ while true do
 		end
 		DrawMeters()
 		screen:flip()
-	elseif Ctrl:Pushed( "r" ) then
-		-- リスタート
-		SetVSDMode( VSDMode )
-	elseif Ctrl:Pushed( "right" ) then
-		VSDMode = SetVSDMode( VSDMode + 1 )
-	elseif Ctrl:Pushed( "left" ) then
-		VSDMode = SetVSDMode( VSDMode - 1 )
-	elseif Ctrl:Pushed( "down" ) then
-		-- ラップチャート
-		DrawLapChart()
-	elseif Ctrl:Pushed( "circle" ) then
-		DoMenu( MainMenu )
-		RedrawLap = 2
-	elseif Ctrl:Pushed( "triangle" ) then
-		-- calibration
-		if( bSIOActive ) then System.sioWrite( "c" ) end
-	elseif Ctrl:Pushed( "start" ) then
-		break
+	else
+		Ctrl:Read()
+		if Ctrl:Pushed( "r" ) then
+			-- リスタート
+			SetVSDMode( VSDMode )
+		elseif Ctrl:Pushed( "right" ) then
+			VSDMode = SetVSDMode( VSDMode + 1 )
+		elseif Ctrl:Pushed( "left" ) then
+			VSDMode = SetVSDMode( VSDMode - 1 )
+		elseif Ctrl:Pushed( "down" ) then
+			-- ラップチャート
+			DrawLapChart()
+		elseif Ctrl:Pushed( "circle" ) then
+			DoMenu( MainMenu )
+			RedrawLap = 2
+		elseif Ctrl:Pushed( "triangle" ) then
+			-- calibration
+			if( bSIOActive ) then System.sioWrite( "c" ) end
+		elseif Ctrl:Pushed( "start" ) then
+			break
+		end
 	end
 end
 
