@@ -540,7 +540,7 @@ function LoadFirmware()
 	RxBuf = RxBuf:sub( pos + 1 )
 	
 	-- VSD モード設定
-	System.sioWrite( "1a3Gs" )
+	System.sioWrite( "3Gs1a" )
 	
 	return true
 end
