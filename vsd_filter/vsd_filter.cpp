@@ -686,7 +686,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 #endif
 	
 	// ログ位置の計算
-	double	dLogNum = ( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( Img.frame - VideoSt ) + LogSt;
+	double	dLogNum = ( VideoEd == VideoSt ) ? -1 :
+						( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( Img.frame - VideoSt ) + LogSt;
 	int		iLogNum = ( int )dLogNum;
 	
 	// フレーム表示
@@ -713,6 +714,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	);
 	
 #ifdef CIRCUIT_TOMO
+	// タコメータ
 	for( i = 0; i <= iMeterMaxVal; i += 500 ){
 		int iDeg = iMeterDegRange * i / iMeterMaxVal + iMeterMinDeg;
 		if( iDeg >= 360 ) iDeg -= 360;
@@ -724,6 +726,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 				( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
 				( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCx,
 				( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
+				( iMeterMaxVal <= 12000 && i % 1000 == 0 || i % 2000 == 0 ) ? 2 : 1,
 				COLOR_SCALE, 0
 			);
 			
@@ -740,7 +743,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		}
 	}
 	
-	// メーターパネル
+	// スピードメーターパネル
 	Img.DrawCircle(
 		iMeterSCx, iMeterCy, iMeterR, COLOR_PANEL,
 		CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
@@ -759,6 +762,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 				( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
 				( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterSCx,
 				( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
+				( i % ( iStep * 2 ) == 0 ) ? 2 : 1,
 				COLOR_SCALE, 0
 			);
 			
