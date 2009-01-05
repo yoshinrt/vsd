@@ -43,19 +43,21 @@ StartGThrethold		= 500	-- 車がスタートしたとみなすGセンサの数値
 GymkhanaStartMargin	= 0.5 * ( PULSE_PAR_1KM / 1000 )	-- スタートまでの移動距離
 SectorCntMax		= 1		-- マグネット数
 
---dofile( "sio_emulation.lua" )
+dofile( "sio_emulation.lua" )
 dofile( "config.lua" )
 
 --- gloval vars --------------------------------------------------------------
 
-Tacho		= 0
-Speed		= 0
-Mileage		= 0
-MileagePrev	= 0
-GSensorY	= 0
-GSensorX	= 0
-IRSensor	= 0
-LogCnt		= 0
+Tacho			= 0
+Speed			= 0
+Mileage			= 0
+MileageWA		= 0
+MileageWAPrev	= 0
+MileageWACnt	= 0
+GSensorY		= 0
+GSensorX		= 0
+IRSensor		= 0
+LogCnt			= 0
 
 -- 画面モード・動作モード
 VSDMode	= MODE_LAPTIME
@@ -594,8 +596,16 @@ function ProcessSio()
 	-- Speed/Tacho は処理済，残りを処理する
 	bSioDataRemained = false
 	
-	Mileage,  IRSensor 	= GetULong( RxBuf:sub(  6, 10 ))
-	GSensorX, GSensorY 	= GetULong( RxBuf:sub( 11, 15 ))
+	MileageWAPrev = MileageWA
+	
+	MileageWA, IRSensor = GetULong( RxBuf:sub(  6, 10 ))
+	GSensorX,  GSensorY = GetULong( RxBuf:sub( 11, 15 ))
+	
+	if( MileageWAPrev < MileageWA ) then
+		MileageWACnt = MileageWACnt + 1
+	end
+	
+	Mileage = MileageWA + MileageWACnt * 0x10000
 	
 	-- G センサー処理 --------------------------------------------------------
 	
