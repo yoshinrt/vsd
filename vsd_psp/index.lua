@@ -30,8 +30,8 @@ ITOA_RADIX_BIT	= 7
 ITOA_DIGIT_NUM	= (( 32 + ITOA_RADIX_BIT - 1 ) / ITOA_RADIX_BIT )
 
 ACC_1G_X	= 6762.594337
-ACC_1G_Y	= 6591.556755
-ACC_1G_Z	= 6659.691379
+ACC_1G_Y	= 6667.738702
+ACC_1G_Z	= 6842.591839
 
 -- シフトインジケータの表示
 TachoBar = { 334, 200, 150, 118, 97 }
@@ -43,7 +43,7 @@ StartGThrethold		= 500	-- 車がスタートしたとみなすGセンサの数値
 GymkhanaStartMargin	= 0.5 * ( PULSE_PAR_1KM / 1000 )	-- スタートまでの移動距離
 SectorCntMax		= 1		-- マグネット数
 
-dofile( "sio_emulation.lua" )
+--dofile( "sio_emulation.lua" )
 dofile( "config.lua" )
 
 --- gloval vars --------------------------------------------------------------
@@ -601,7 +601,7 @@ function ProcessSio()
 	MileageWA, IRSensor = GetULong( RxBuf:sub(  6, 10 ))
 	GSensorX,  GSensorY = GetULong( RxBuf:sub( 11, 15 ))
 	
-	if( MileageWAPrev < MileageWA ) then
+	if( MileageWAPrev > MileageWA ) then
 		MileageWACnt = MileageWACnt + 1
 	end
 	
@@ -1055,5 +1055,8 @@ while true do
 	end
 end
 
-if( fpLog ) then fpLog:close() end
+if( fpLog ) then
+	fpLog:close()
+	fpLog = nil
+end
 UsbGps.close()
