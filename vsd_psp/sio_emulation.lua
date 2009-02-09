@@ -6,7 +6,7 @@
 --- ダミーシリアル入力 -------------------------------------------------------
 
 -- シリアルポートなし (debug)
-NoSio = "vsd20080502_102516.log"
+NoSio = "vsd20080502_162104.log"
 -- NoSio = true
 
 DummySioTimer = Timer.new()
@@ -65,7 +65,7 @@ if( type( NoSio ) == "string" ) then
 			local result, tmp, min, sec = Line:find( "LAP.*(%d+):([%d%.]+)" )
 			if( result ) then
 				LapTimePrev = 0
-				Ret = Ret .. ItoA( 0, math.floor(( min * 60 + sec ) * H8HZ / 0x10000 + 0.5 ))
+				Ret = Ret .. ItoA( 0, math.floor(( min * 60 + sec ) * 256 + 0.5 ))
 			end
 			
 			return Ret .. "*"
