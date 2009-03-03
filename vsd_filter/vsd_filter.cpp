@@ -428,6 +428,8 @@ double		g_dMaxMapSize = 0;
 int			g_iLogStart;
 int			g_iLogStop;
 
+double		g_dVideoFPS  = 30.0;
+
 /****************************************************************************/
 //---------------------------------------------------------------------
 //		フィルタ構造体定義
@@ -574,10 +576,7 @@ void CalcLapTime( FILTER *fp, FILTER_PROC_INFO *fpip ){
 		
 		if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
 			// ラップ検出
-			dTime = (
-				( double )( LogEd - LogSt ) / ( VideoEd - VideoSt )
-				* ( i - VideoSt ) + LogSt
-			) / 1000;
+			dTime = i / g_dVideoFPS;
 			
 			g_Lap[ g_iLapNum ].uLap		= g_iLapNum;
 			g_Lap[ g_iLapNum ].iLogNum	= i;
@@ -1156,9 +1155,9 @@ static UINT ReadPTD( FILE *fp, UINT uOffs ){
 }
 #endif
 
-BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
-	//	TRUEを返すと全体が再描画される
-	
+/*** ログリード *************************************************************/
+
+BOOL ReadLog( void *editp, FILTER *filter ){
 	static TCHAR	szBuf[ BUF_SIZE ];
 	TCHAR	*p;
 	FILE	*fp;
@@ -1173,255 +1172,271 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	float		NaN = 0;
 	NaN /= *( volatile float *)&NaN;
 	
+	
+	if( g_VsdLog == NULL )	g_VsdLog 	= new VSD_LOG_t[ MAX_VSD_LOG ];
+	if( g_Lap    == NULL )	g_Lap		= new LAP_t[ MAX_LAP ];
+	
+	GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG / LOG_FREQ ) ];
+	
+	if( filter->exfunc->dlg_get_load_name(szBuf,FILE_TXT,NULL) != TRUE ) return FALSE;
+	if(( fp = fopen( szBuf, "r" )) == NULL ) return FALSE;
+	
+	g_iVsdLogNum	= 0;
+	g_iLapNum		= 0;
+	g_dBestTime		= -1;
+	
+#ifdef CIRCUIT_TOMO
+	int i;
+	for( i = 0; i < MAX_VSD_LOG; ++i ){
+		g_VsdLog[ i ].fSpeed =
+		g_VsdLog[ i ].fTacho =
+		g_VsdLog[ i ].fMileage =
+		g_VsdLog[ i ].fGx =
+		g_VsdLog[ i ].fGy =
+		g_VsdLog[ i ].fX =
+		g_VsdLog[ i ].fY = 0;
+	}
+	
+	g_iVsdLogNum	= ReadPTD( fp, offsetof( VSD_LOG_t, fTacho ));
+	i				= ReadPTD( fp, offsetof( VSD_LOG_t, fSpeed ));
+	
+	if( i > g_iVsdLogNum ) g_iVsdLogNum = i;
+	
+#else // CIRCUIT_TOMO
+	// 20070814 以降のログは，横 G が反転している
+	BOOL bReverseGy	= ( strcmp( StrTokFile( NULL, szBuf, STF_NAME ), "vsd20070814" ) >= 0 );
+	
+	// ログリード
+	
+	UINT	uCnt, uLap, uMin, uSec, uMSec;
+	double	dGcx = 0;
+	double	dGcy = 0;
+	double	dGx, dGy;
+	
+	g_iLogStart = g_iLogStop = 0;
+	
+	while( fgets( szBuf, BUF_SIZE, fp ) != NULL ){
+		if(( p = strstr( szBuf, "LAP" )) != NULL ){ // ラップタイム記録を見つけた
+			uCnt = sscanf( p, "LAP%d%d:%d.%d", &uLap, &uMin, &uSec, &uMSec );
+			
+			double dTime = uMin * 60 + uSec + ( double )uMSec / 1000;
+			
+			g_Lap[ g_iLapNum ].uLap		= uLap;
+			g_Lap[ g_iLapNum ].iLogNum	= g_iVsdLogNum;
+			g_Lap[ g_iLapNum ].fTime	=
+				( uCnt == 4 ) ? ( float )dTime : 0;
+			
+			if(
+				uCnt == 4 &&
+				( g_dBestTime == -1 || g_dBestTime > dTime )
+			){
+				g_dBestTime			= dTime;
+				g_iBestLapLogNum	= g_Lap[ g_iLapNum - 1 ].iLogNum;
+			}
+			++g_iLapNum;
+		}
+		
+		if(( p = strstr( szBuf, "GPS" )) != NULL ){ // GPS記録を見つけた
+			sscanf( p, "GPS%g%g%g%g",
+				&GPSLog[ uGPSCnt ].fLati,
+				&GPSLog[ uGPSCnt ].fLong,
+				&GPSLog[ uGPSCnt ].fSpeed,
+				&GPSLog[ uGPSCnt ].fBearing
+			);
+			
+			if( dLongMin > GPSLog[ uGPSCnt ].fLong ) dLongMin = GPSLog[ uGPSCnt ].fLong;
+			if( dLongMax < GPSLog[ uGPSCnt ].fLong ) dLongMax = GPSLog[ uGPSCnt ].fLong;
+			if( dLatiMin > GPSLog[ uGPSCnt ].fLati ) dLatiMin = GPSLog[ uGPSCnt ].fLati;
+			if( dLatiMax < GPSLog[ uGPSCnt ].fLati ) dLatiMax = GPSLog[ uGPSCnt ].fLati;
+			
+			GPSLog[ uGPSCnt++ ].iLogNum =
+				( g_iVsdLogNum - GPS_LOG_OFFS ) >= 0 ?
+					( g_iVsdLogNum - GPS_LOG_OFFS ) : 0;
+		}
+		
+		// 普通の log
+		if(( uCnt = sscanf( szBuf, "%g%g%g%lg%lg",
+			&g_VsdLog[ g_iVsdLogNum ].fTacho,
+			&g_VsdLog[ g_iVsdLogNum ].fSpeed,
+			&g_VsdLog[ g_iVsdLogNum ].fMileage,
+			&dGy,
+			&dGx
+		)) >= 3 ){
+			if( uCnt < 5 && g_iVsdLogNum ){
+				// Gデータがないときは，speedから求める←廃止
+				dGx = 0;
+				dGy = 0;
+				//dGy = ( g_VsdLog[ g_iVsdLogNum ].fSpeed - g_VsdLog[ g_iVsdLogNum - 1 ].fSpeed ) * ( 1000.0 / 3600 / 9.8 * LOG_FREQ );
+			}else if( dGx >= 4 ){	// 4 以下なら，すでに G が計算済み
+				if( bReverseGy ) dGx = -dGx;
+				
+				if( g_iVsdLogNum < G_CX_CNT ){
+					// G センター検出
+					dGcx += dGx;
+					dGcy += dGy;
+					dGx = dGy = 0;
+					
+					if( g_iVsdLogNum == G_CX_CNT - 1 ){
+						dGcx /= G_CX_CNT;
+						dGcy /= G_CX_CNT;
+					}
+				}else{
+					// 単位を G に変換
+					dGx = ( dGx - dGcx ) / ACC_1G_Y;
+					dGy = ( dGy - dGcy ) / ( bReverseGy ? ACC_1G_Z : ACC_1G_X );
+				}
+			}
+			g_VsdLog[ g_iVsdLogNum ].fGx = ( float )dGx;
+			g_VsdLog[ g_iVsdLogNum ].fGy = ( float )dGy;
+			
+			g_VsdLog[ g_iVsdLogNum ].fX = g_VsdLog[ g_iVsdLogNum ].fY = INVALID_POS_D;
+			
+			// ログ開始・終了認識
+			if( g_VsdLog[ g_iVsdLogNum ].fSpeed >= 300 ){
+				if( !bCalibrating ){
+					bCalibrating = TRUE;
+					g_iLogStart  = g_iLogStop;
+					g_iLogStop   = g_iVsdLogNum;
+				}
+			}else{
+				bCalibrating = FALSE;
+			}
+			
+			++g_iVsdLogNum;
+		}
+	}
+	
+	/*** GPS ログから軌跡を求める ***************************************/
+	
+	if( uGPSCnt ){
+		UINT	u;
+		
+		// 単位を補正
+		for( u = 0; u < uGPSCnt; ++u ){
+			// 緯度・経度→メートル
+			GPSLog[ u ].fX = ( float )(( GPSLog[ u ].fLong - dLongMin ) * LAT_M_DEG * cos( GPSLog[ u ].fLati * ToRAD ));
+			GPSLog[ u ].fY = ( float )(( dLatiMax - GPSLog[ u ].fLati ) * LNG_M_DEG );
+			
+			// 速度・向き→ベクトル座標
+			double dBearing	= GPSLog[ u ].fBearing * ToRAD;
+			double dSpeed	= GPSLog[ u ].fSpeed * ( 1000.0 / 3600 );
+			GPSLog[ u ].fVX	= ( float )(  sin( dBearing ) * dSpeed );
+			GPSLog[ u ].fVY	= ( float )( -cos( dBearing ) * dSpeed );
+		}
+		
+		// 補完点を計算
+		for( u = 0; u < uGPSCnt - 1; ++u ){
+			// 2秒以上 GPS ログがあいていれば，補完情報の計算をしない
+			if( GPSLog[ u + 1 ].iLogNum - GPSLog[ u ].iLogNum > ( int )( LOG_FREQ * 2 )) continue;
+			
+			double dX3, dX2, dX1, dX0;
+			double dY3, dY2, dY1, dY0;
+			
+			#define X0	GPSLog[ u ].fX
+			#define Y0	GPSLog[ u ].fY
+			#define VX0	GPSLog[ u ].fVX
+			#define VY0	GPSLog[ u ].fVY
+			#define X1	GPSLog[ u + 1 ].fX
+			#define Y1	GPSLog[ u + 1 ].fY
+			#define VX1	GPSLog[ u + 1 ].fVX
+			#define VY1	GPSLog[ u + 1 ].fVY
+			
+			dX3 = 2 * ( X0 - X1 ) + VX0 + VX1;
+			dX2 = 3 * ( -X0 + X1 ) - 2 * VX0 - VX1;
+			dX1 = VX0;
+			dX0 = X0;
+			dY3 = 2 * ( Y0 - Y1 ) + VY0 + VY1;
+			dY2 = 3 * ( -Y0 + Y1 ) - 2 * VY0 - VY1;
+			dY1 = VY0;
+			dY0 = Y0;
+			
+			#undef X0
+			#undef Y0
+			#undef VX0
+			#undef VY0
+			#undef X1
+			#undef Y1
+			#undef VX1
+			#undef VY1
+			
+			for( int i = GPSLog[ u ].iLogNum; i <= GPSLog[ u + 1 ].iLogNum; ++i ){
+				double t =
+					( double )( i - GPSLog[ u ].iLogNum ) /
+					( GPSLog[ u + 1 ].iLogNum - GPSLog[ u ].iLogNum );
+				
+				g_VsdLog[ i ].fX = ( float )((( dX3 * t + dX2 ) * t + dX1 ) * t + dX0 );
+				g_VsdLog[ i ].fY = ( float )((( dY3 * t + dY2 ) * t + dY1 ) * t + dY0 );
+			}
+		}
+		
+		// マップの倍率を求める
+		double dSizeX = (( dLongMax - dLongMin ) * LAT_M_DEG * cos(( dLatiMax + dLatiMin ) / 2 * ToRAD ));
+		double dSizeY = (( dLatiMax - dLatiMin ) * LNG_M_DEG );
+		
+		g_dMaxMapSize = dSizeX > dSizeY ? dSizeX : dSizeY;
+		
+		/*
+		FILE *fp = fopen( "c:\\dds\\hoge.log", "w" );
+		for( i = 0; i < g_iVsdLogNum; ++i )
+			fprintf( fp, "%g\t%g\n", g_VsdLog[ i ].fX, g_VsdLog[ i ].fY );
+		fclose( fp );
+		*/
+	}
+	
+	delete [] GPSLog;
+#endif // CIRCUIT_TOMO
+	
+	/********************************************************************/
+	
+	fclose( fp );
+	
+	g_Lap[ g_iLapNum ].iLogNum = 0x7FFFFFFF;	// 番犬
+	
+	// trackbar 設定
+	track_e[ TRACK_VSt ] =
+	track_e[ TRACK_VEd ] = ( filter->exfunc->get_frame_n( editp ) + 99 ) / 100;
+#ifdef CIRCUIT_TOMO
+	track_e[ TRACK_LSt ] =
+	track_e[ TRACK_LEd ] = ( int )( g_iVsdLogNum / LOG_FREQ + 1 );
+#else
+	track_e[ TRACK_LSt ] =
+	track_e[ TRACK_LEd ] = ( g_iVsdLogNum + 99 ) / 100;
+#endif
+	
+	// 設定再描画
+	filter->exfunc->filter_window_update( filter );
+	
+#ifndef CIRCUIT_TOMO
+	// log pos 更新
+	func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
+#endif
+	
+	return TRUE;
+}
+
+/****************************************************************************/
+
+BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
+	//	TRUEを返すと全体が再描画される
+	
 	//	編集中でなければ何もしない
 	if( filter->exfunc->is_editing(editp) != TRUE ) return FALSE;
 	
 	switch( message ) {
 	  case WM_FILTER_IMPORT:
+		return ReadLog( editp, filter );
 		
-		if( g_VsdLog == NULL )	g_VsdLog 	= new VSD_LOG_t[ MAX_VSD_LOG ];
-		if( g_Lap    == NULL )	g_Lap		= new LAP_t[ MAX_LAP ];
-		
-		GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG / LOG_FREQ ) ];
-		
-		if( filter->exfunc->dlg_get_load_name(szBuf,FILE_TXT,NULL) != TRUE ) break;
-		if(( fp = fopen( szBuf, "r" )) == NULL ) return FALSE;
-		
-		g_iVsdLogNum	= 0;
-		g_iLapNum		= 0;
-		g_dBestTime		= -1;
-		
-	#ifdef CIRCUIT_TOMO
-		int i;
-		for( i = 0; i < MAX_VSD_LOG; ++i ){
-			g_VsdLog[ i ].fSpeed =
-			g_VsdLog[ i ].fTacho =
-			g_VsdLog[ i ].fMileage =
-			g_VsdLog[ i ].fGx =
-			g_VsdLog[ i ].fGy =
-			g_VsdLog[ i ].fX =
-			g_VsdLog[ i ].fY = 0;
-		}
-		
-		g_iVsdLogNum	= ReadPTD( fp, offsetof( VSD_LOG_t, fTacho ));
-		i				= ReadPTD( fp, offsetof( VSD_LOG_t, fSpeed ));
-		
-		if( i > g_iVsdLogNum ) g_iVsdLogNum = i;
-		
-	#else // CIRCUIT_TOMO
-		// 20070814 以降のログは，横 G が反転している
-		BOOL bReverseGy	= ( strcmp( StrTokFile( NULL, szBuf, STF_NAME ), "vsd20070814" ) >= 0 );
-		
-		// ログリード
-		
-		UINT	uCnt, uLap, uMin, uSec, uMSec;
-		double	dGcx = 0;
-		double	dGcy = 0;
-		double	dGx, dGy;
-		
-		g_iLogStart = g_iLogStop = 0;
-		
-		while( fgets( szBuf, BUF_SIZE, fp ) != NULL ){
-			if(( p = strstr( szBuf, "LAP" )) != NULL ){ // ラップタイム記録を見つけた
-				uCnt = sscanf( p, "LAP%d%d:%d.%d", &uLap, &uMin, &uSec, &uMSec );
-				
-				double dTime = uMin * 60 + uSec + ( double )uMSec / 1000;
-				
-				g_Lap[ g_iLapNum ].uLap		= uLap;
-				g_Lap[ g_iLapNum ].iLogNum	= g_iVsdLogNum;
-				g_Lap[ g_iLapNum ].fTime	=
-					( uCnt == 4 ) ? ( float )dTime : 0;
-				
-				if(
-					uCnt == 4 &&
-					( g_dBestTime == -1 || g_dBestTime > dTime )
-				){
-					g_dBestTime			= dTime;
-					g_iBestLapLogNum	= g_Lap[ g_iLapNum - 1 ].iLogNum;
-				}
-				++g_iLapNum;
-			}
-			
-			if(( p = strstr( szBuf, "GPS" )) != NULL ){ // GPS記録を見つけた
-				sscanf( p, "GPS%g%g%g%g",
-					&GPSLog[ uGPSCnt ].fLati,
-					&GPSLog[ uGPSCnt ].fLong,
-					&GPSLog[ uGPSCnt ].fSpeed,
-					&GPSLog[ uGPSCnt ].fBearing
-				);
-				
-				if( dLongMin > GPSLog[ uGPSCnt ].fLong ) dLongMin = GPSLog[ uGPSCnt ].fLong;
-				if( dLongMax < GPSLog[ uGPSCnt ].fLong ) dLongMax = GPSLog[ uGPSCnt ].fLong;
-				if( dLatiMin > GPSLog[ uGPSCnt ].fLati ) dLatiMin = GPSLog[ uGPSCnt ].fLati;
-				if( dLatiMax < GPSLog[ uGPSCnt ].fLati ) dLatiMax = GPSLog[ uGPSCnt ].fLati;
-				
-				GPSLog[ uGPSCnt++ ].iLogNum =
-					( g_iVsdLogNum - GPS_LOG_OFFS ) >= 0 ?
-						( g_iVsdLogNum - GPS_LOG_OFFS ) : 0;
-			}
-			
-			// 普通の log
-			if(( uCnt = sscanf( szBuf, "%g%g%g%lg%lg",
-				&g_VsdLog[ g_iVsdLogNum ].fTacho,
-				&g_VsdLog[ g_iVsdLogNum ].fSpeed,
-				&g_VsdLog[ g_iVsdLogNum ].fMileage,
-				&dGy,
-				&dGx
-			)) >= 3 ){
-				if( uCnt < 5 && g_iVsdLogNum ){
-					// Gデータがないときは，speedから求める←廃止
-					dGx = 0;
-					dGy = 0;
-					//dGy = ( g_VsdLog[ g_iVsdLogNum ].fSpeed - g_VsdLog[ g_iVsdLogNum - 1 ].fSpeed ) * ( 1000.0 / 3600 / 9.8 * LOG_FREQ );
-				}else if( dGx >= 4 ){	// 4 以下なら，すでに G が計算済み
-					if( bReverseGy ) dGx = -dGx;
-					
-					if( g_iVsdLogNum < G_CX_CNT ){
-						// G センター検出
-						dGcx += dGx;
-						dGcy += dGy;
-						dGx = dGy = 0;
-						
-						if( g_iVsdLogNum == G_CX_CNT - 1 ){
-							dGcx /= G_CX_CNT;
-							dGcy /= G_CX_CNT;
-						}
-					}else{
-						// 単位を G に変換
-						dGx = ( dGx - dGcx ) / ACC_1G_Y;
-						dGy = ( dGy - dGcy ) / ( bReverseGy ? ACC_1G_Z : ACC_1G_X );
-					}
-				}
-				g_VsdLog[ g_iVsdLogNum ].fGx = ( float )dGx;
-				g_VsdLog[ g_iVsdLogNum ].fGy = ( float )dGy;
-				
-				g_VsdLog[ g_iVsdLogNum ].fX = g_VsdLog[ g_iVsdLogNum ].fY = INVALID_POS_D;
-				
-				// ログ開始・終了認識
-				if( g_VsdLog[ g_iVsdLogNum ].fSpeed >= 300 ){
-					if( !bCalibrating ){
-						bCalibrating = TRUE;
-						g_iLogStart  = g_iLogStop;
-						g_iLogStop   = g_iVsdLogNum;
-					}
-				}else{
-					bCalibrating = FALSE;
-				}
-				
-				++g_iVsdLogNum;
-			}
-		}
-		
-		/*** GPS ログから軌跡を求める ***************************************/
-		
-		if( uGPSCnt ){
-			UINT	u;
-			
-			// 単位を補正
-			for( u = 0; u < uGPSCnt; ++u ){
-				// 緯度・経度→メートル
-				GPSLog[ u ].fX = ( float )(( GPSLog[ u ].fLong - dLongMin ) * LAT_M_DEG * cos( GPSLog[ u ].fLati * ToRAD ));
-				GPSLog[ u ].fY = ( float )(( dLatiMax - GPSLog[ u ].fLati ) * LNG_M_DEG );
-				
-				// 速度・向き→ベクトル座標
-				double dBearing	= GPSLog[ u ].fBearing * ToRAD;
-				double dSpeed	= GPSLog[ u ].fSpeed * ( 1000.0 / 3600 );
-				GPSLog[ u ].fVX	= ( float )(  sin( dBearing ) * dSpeed );
-				GPSLog[ u ].fVY	= ( float )( -cos( dBearing ) * dSpeed );
-			}
-			
-			// 補完点を計算
-			for( u = 0; u < uGPSCnt - 1; ++u ){
-				// 2秒以上 GPS ログがあいていれば，補完情報の計算をしない
-				if( GPSLog[ u + 1 ].iLogNum - GPSLog[ u ].iLogNum > ( int )( LOG_FREQ * 2 )) continue;
-				
-				double dX3, dX2, dX1, dX0;
-				double dY3, dY2, dY1, dY0;
-				
-				#define X0	GPSLog[ u ].fX
-				#define Y0	GPSLog[ u ].fY
-				#define VX0	GPSLog[ u ].fVX
-				#define VY0	GPSLog[ u ].fVY
-				#define X1	GPSLog[ u + 1 ].fX
-				#define Y1	GPSLog[ u + 1 ].fY
-				#define VX1	GPSLog[ u + 1 ].fVX
-				#define VY1	GPSLog[ u + 1 ].fVY
-				
-				dX3 = 2 * ( X0 - X1 ) + VX0 + VX1;
-				dX2 = 3 * ( -X0 + X1 ) - 2 * VX0 - VX1;
-				dX1 = VX0;
-				dX0 = X0;
-				dY3 = 2 * ( Y0 - Y1 ) + VY0 + VY1;
-				dY2 = 3 * ( -Y0 + Y1 ) - 2 * VY0 - VY1;
-				dY1 = VY0;
-				dY0 = Y0;
-				
-				#undef X0
-				#undef Y0
-				#undef VX0
-				#undef VY0
-				#undef X1
-				#undef Y1
-				#undef VX1
-				#undef VY1
-				
-				for( int i = GPSLog[ u ].iLogNum; i <= GPSLog[ u + 1 ].iLogNum; ++i ){
-					double t =
-						( double )( i - GPSLog[ u ].iLogNum ) /
-						( GPSLog[ u + 1 ].iLogNum - GPSLog[ u ].iLogNum );
-					
-					g_VsdLog[ i ].fX = ( float )((( dX3 * t + dX2 ) * t + dX1 ) * t + dX0 );
-					g_VsdLog[ i ].fY = ( float )((( dY3 * t + dY2 ) * t + dY1 ) * t + dY0 );
-				}
-			}
-			
-			// マップの倍率を求める
-			double dSizeX = (( dLongMax - dLongMin ) * LAT_M_DEG * cos(( dLatiMax + dLatiMin ) / 2 * ToRAD ));
-			double dSizeY = (( dLatiMax - dLatiMin ) * LNG_M_DEG );
-			
-			g_dMaxMapSize = dSizeX > dSizeY ? dSizeX : dSizeY;
-			
-			/*
-			FILE *fp = fopen( "c:\\dds\\hoge.log", "w" );
-			for( i = 0; i < g_iVsdLogNum; ++i )
-				fprintf( fp, "%g\t%g\n", g_VsdLog[ i ].fX, g_VsdLog[ i ].fY );
-			fclose( fp );
-			*/
-		}
-		
-		delete [] GPSLog;
-	#endif // CIRCUIT_TOMO
-		
-		/********************************************************************/
-		
-		fclose( fp );
-		
-		g_Lap[ g_iLapNum ].iLogNum = 0x7FFFFFFF;	// 番犬
-		
-		// trackbar 設定
-		track_e[ TRACK_VSt ] =
-		track_e[ TRACK_VEd ] = ( filter->exfunc->get_frame_n( editp ) + 99 ) / 100;
-	#ifdef CIRCUIT_TOMO
-		track_e[ TRACK_LSt ] =
-		track_e[ TRACK_LEd ] = ( int )( g_iVsdLogNum / LOG_FREQ + 1 );
-	#else
-		track_e[ TRACK_LSt ] =
-		track_e[ TRACK_LEd ] = ( g_iVsdLogNum + 99 ) / 100;
-	#endif
-		
-		// 設定再描画
-		filter->exfunc->filter_window_update( filter );
-		
-	#ifndef CIRCUIT_TOMO
-		// log pos 更新
-		func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
-	#endif
-		
-		return TRUE;
 	#ifdef CIRCUIT_TOMO
 	  case WM_FILTER_SAVE_START:
 		g_bCalcLapTimeReq = TRUE;
 	#endif
+		
+	  Case WM_FILTER_FILE_OPEN:
+		// fps 取得
+		FILE_INFO fi;
+		filter->exfunc->get_file_info( editp, &fi );
+		
+		g_dVideoFPS  = ( double )fi.video_rate / fi.video_scale;
 	}
 	
 	return FALSE;
