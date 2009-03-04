@@ -45,8 +45,8 @@
 #define VideoSt		( fp->track[ TRACK_VSt ] * 100 + fp->track[ TRACK_VSt2 ] )
 #define VideoEd		( fp->track[ TRACK_VEd ] * 100 + fp->track[ TRACK_VEd2 ] )
 #ifdef CIRCUIT_TOMO
-	#define LogSt		( fp->track[ TRACK_LSt ] * 1000 + fp->track[ TRACK_LSt2 ] )
-	#define LogEd		( fp->track[ TRACK_LEd ] * 1000 + fp->track[ TRACK_LEd2 ] )
+	#define LogSt		(( fp->track[ TRACK_LSt ] * 1000 + fp->track[ TRACK_LSt2 ] ) / 1000 * LOG_FREQ )
+	#define LogEd		(( fp->track[ TRACK_LEd ] * 1000 + fp->track[ TRACK_LEd2 ] ) / 1000 * LOG_FREQ )
 #else
 	#define LogSt		( fp->track[ TRACK_LSt ] * 100 + fp->track[ TRACK_LSt2 ] )
 	#define LogEd		( fp->track[ TRACK_LEd ] * 100 + fp->track[ TRACK_LEd2 ] )
@@ -72,6 +72,13 @@
 #define MAP_G_MAX		1.2
 
 #define PTD_LOG_FREQ	11025.0
+
+// 手動ラップタイム計測モードかどうか
+#ifdef CIRCUIT_TOMO
+	#define IS_HAND_LAPTIME	TRUE
+#else
+	#define IS_HAND_LAPTIME	( g_iVsdLogNum == 0 )
+#endif
 
 /*** CAviUtlImage class *****************************************************/
 
@@ -560,7 +567,6 @@ BOOL func_exit( FILTER *fp ){
 
 /*** ラップタイム再計算 *****************************************************/
 
-#ifdef CIRCUIT_TOMO
 BOOL	g_bCalcLapTimeReq;
 void CalcLapTime( FILTER *fp, FILTER_PROC_INFO *fpip ){
 	
@@ -596,7 +602,6 @@ void CalcLapTime( FILTER *fp, FILTER_PROC_INFO *fpip ){
 	}
 	g_Lap[ g_iLapNum ].iLogNum = 0x7FFFFFFF;	// 番犬
 }
-#endif
 
 /****************************************************************************/
 
@@ -694,19 +699,122 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		sprintf( szBuf, "V%6d/%6d", Img.frame, Img.frame_n - 1 );
 		Img.DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, Img.w / 2, Img.h / 2 );
 	#ifdef CIRCUIT_TOMO
-		sprintf( szBuf, "L%.3f/%.3f", ( double )dLogNum / 1000, g_iVsdLogNum / LOG_FREQ );
+		sprintf( szBuf, "L%.3f/%.3f", ( double )dLogNum / LOG_FREQ, g_iVsdLogNum / LOG_FREQ );
 	#else
 		sprintf( szBuf, "L%6d/%6d", ( int )dLogNum, g_iVsdLogNum - 1 );
 	#endif
 		Img.DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 	}
 	
-	#ifdef CIRCUIT_TOMO
-		// ログ位置補正 ms -> LOG_FREQ
-		dLogNum *= LOG_FREQ / 1000;
-	#endif
+	/*** Lap タイム描画 ***/
 	
-	// メーターパネル
+	if( IS_HAND_LAPTIME && fp->check[ CHECK_LAP ] && g_bCalcLapTimeReq && g_Lap ){
+		g_bCalcLapTimeReq = FALSE;
+		CalcLapTime( fp, fpip );
+	}
+	
+	if( fp->check[ CHECK_LAP ] && g_iLapNum ){
+		/*
+		Img.DrawRect(
+			iLapX, iLapY, Img.w - 1, iLapY + Img.GetFontH() * 5 - 1,
+			COLOR_PANEL,
+			CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
+		);
+		*/
+		
+		if( IS_HAND_LAPTIME ){
+			// CIRCUIT_TOMO での g_Lap[].iLogNum はフレーム# なので
+			iLogNum = Img.frame;
+		}
+		
+		// カレントポインタがおかしいときは，-1 にリセット
+		if(
+			iLapIdx >= g_iLapNum ||
+			iLapIdx >= 0 && g_Lap[ iLapIdx ].iLogNum > iLogNum
+		) iLapIdx = -1;
+		
+		for( ; g_Lap[ iLapIdx + 1 ].iLogNum <= iLogNum; ++iLapIdx );
+		
+		// Best 表示
+		sprintf( szBuf, "Bst%3d'%02d.%03d", ( int )g_dBestTime / 60, ( int )g_dBestTime % 60, ( int )( g_dBestTime * 1000 + .5 ) % 1000 );
+		Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 13, 1 );
+		
+		// Lapタイム表示
+		i = 0;
+		for( int iLapIdxTmp = iLapIdx; iLapIdxTmp >= 0; --iLapIdxTmp ){
+			if( g_Lap[ iLapIdxTmp ].fTime != 0 ){
+				sprintf( szBuf, "%3d%3d'%02d.%03d", g_Lap[ iLapIdxTmp ].uLap, ( int )g_Lap[ iLapIdxTmp ].fTime / 60, ( int )g_Lap[ iLapIdxTmp ].fTime % 60, ( int )( g_Lap[ iLapIdxTmp ].fTime * 1000 + .5 ) % 1000 );
+				Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
+				if( ++i >= 3 ) break;
+			}
+		}
+		
+		// 時間表示
+		if(
+			iLapIdx >= 0 &&
+			g_Lap[ iLapIdx + 1 ].iLogNum != 0x7FFFFFFF &&
+			g_Lap[ iLapIdx + 1 ].fTime  != 0
+		){
+			double dTime = IS_HAND_LAPTIME ?
+				( double )( Img.frame - g_Lap[ iLapIdx ].iLogNum ) / g_dVideoFPS :
+				( dLogNum - g_Lap[ iLapIdx ].iLogNum ) / LOG_FREQ;
+			
+			sprintf( szBuf, "%2d'%02d.%03d", ( int )dTime / 60, ( int )dTime % 60, ( int )( dTime * 1000 + .5 ) % 1000 );
+			Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
+			bInLap = TRUE;
+		}else{
+			// まだ開始していない
+			Img.DrawString( "--'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
+		}
+		
+		/*** ベストとの車間距離表示 ***/
+		
+		if( !IS_HAND_LAPTIME && bInLap ){
+			// この周の走行距離を求める
+			double dMileage = GetVsdLog( fMileage ) - g_VsdLog[ g_Lap[ iLapIdx ].iLogNum ].fMileage;
+			
+			// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
+			// iBestLogNum - 1 <= 最終的に求める結果 < iBestLogNum   となる
+			int iBestLogNum;
+			for(
+				iBestLogNum = g_iBestLapLogNum;
+				(
+					g_VsdLog[ iBestLogNum ].fMileage -
+					g_VsdLog[ g_iBestLapLogNum ].fMileage
+				) <= dMileage &&
+				iBestLogNum < g_iVsdLogNum;
+				++iBestLogNum
+			);
+			
+			// 最速 Lap の，1/15秒以下の値を求める = A / B
+			double dBestLogNum =
+				( double )( iBestLogNum - 1 ) +
+				// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
+				( dMileage - ( g_VsdLog[ iBestLogNum - 1 ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage )) /
+				// B: 最速ラップは，1/15秒の間にこの距離を走った
+				( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ iBestLogNum - 1 ].fMileage );
+			
+			double dDiffTime =
+				(
+					( dLogNum - g_Lap[ iLapIdx ].iLogNum ) -
+					( dBestLogNum - g_iBestLapLogNum )
+				) / LOG_FREQ;
+			
+			if( -0.0005 < dDiffTime && dDiffTime < 0 ) dDiffTime = 0;
+			
+			sprintf(
+				szBuf, "%c%d'%06.3f",
+				dDiffTime < 0 ? '-' : '+',
+				( int )( fabs( dDiffTime )) / 60,
+				fmod( fabs( dDiffTime ), 60 )
+			);
+			Img.DrawString( szBuf, dDiffTime < 0 ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
+		}
+	}
+	
+	if( IS_HAND_LAPTIME ) return TRUE;
+	
+	/*** メーターパネル ***/
 	Img.DrawCircle(
 		iMeterCx, iMeterCy, iMeterR, COLOR_PANEL,
 		CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
@@ -800,118 +908,6 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		);
 	}
 #endif // CIRCUIT_TOMO
-	
-	/*** Lap タイム描画 ***/
-	
-#ifdef CIRCUIT_TOMO
-	if( fp->check[ CHECK_LAP ] && g_bCalcLapTimeReq && g_Lap ){
-		g_bCalcLapTimeReq = FALSE;
-		CalcLapTime( fp, fpip );
-	}
-#endif
-	
-	if( fp->check[ CHECK_LAP ] && g_iLapNum ){
-		/*
-		Img.DrawRect(
-			iLapX, iLapY, Img.w - 1, iLapY + Img.GetFontH() * 5 - 1,
-			COLOR_PANEL,
-			CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
-		);
-		*/
-		
-		#ifdef CIRCUIT_TOMO
-			// CIRCUIT_TOMO での g_Lap[].iLogNum はフレーム# なので
-			iLogNum = Img.frame;
-		#endif
-		
-		// カレントポインタがおかしいときは，-1 にリセット
-		if(
-			iLapIdx >= g_iLapNum ||
-			iLapIdx >= 0 && g_Lap[ iLapIdx ].iLogNum > iLogNum
-		) iLapIdx = -1;
-		
-		for( ; g_Lap[ iLapIdx + 1 ].iLogNum <= iLogNum; ++iLapIdx );
-		
-		// Best 表示
-		sprintf( szBuf, "Bst%3d'%02d.%03d", ( int )g_dBestTime / 60, ( int )g_dBestTime % 60, ( int )( g_dBestTime * 1000 + .5 ) % 1000 );
-		Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 13, 1 );
-		
-		// Lapタイム表示
-		i = 0;
-		for( int iLapIdxTmp = iLapIdx; iLapIdxTmp >= 0; --iLapIdxTmp ){
-			if( g_Lap[ iLapIdxTmp ].fTime != 0 ){
-				sprintf( szBuf, "%3d%3d'%02d.%03d", g_Lap[ iLapIdxTmp ].uLap, ( int )g_Lap[ iLapIdxTmp ].fTime / 60, ( int )g_Lap[ iLapIdxTmp ].fTime % 60, ( int )( g_Lap[ iLapIdxTmp ].fTime * 1000 + .5 ) % 1000 );
-				Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
-				if( ++i >= 3 ) break;
-			}
-		}
-		
-		// 時間表示
-		if(
-			iLapIdx >= 0 &&
-			g_Lap[ iLapIdx + 1 ].iLogNum != 0x7FFFFFFF &&
-			g_Lap[ iLapIdx + 1 ].fTime  != 0
-		){
-		#ifdef CIRCUIT_TOMO
-			double dTime = ( double )( Img.frame - g_Lap[ iLapIdx ].iLogNum ) / ( VideoEd - VideoSt ) * ( LogEd - LogSt ) / 1000;
-		#else
-			double dTime = ( dLogNum - g_Lap[ iLapIdx ].iLogNum ) / LOG_FREQ;
-		#endif
-			
-			sprintf( szBuf, "%2d'%02d.%03d", ( int )dTime / 60, ( int )dTime % 60, ( int )( dTime * 1000 + .5 ) % 1000 );
-			Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
-			bInLap = TRUE;
-		}else{
-			// まだ開始していない
-			Img.DrawString( "--'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
-		}
-		
-		/*** ベストとの車間距離表示 ***/
-		
-	#ifndef CIRCUIT_TOMO
-		if( bInLap ){
-			// この周の走行距離を求める
-			double dMileage = GetVsdLog( fMileage ) - g_VsdLog[ g_Lap[ iLapIdx ].iLogNum ].fMileage;
-			
-			// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
-			// iBestLogNum - 1 <= 最終的に求める結果 < iBestLogNum   となる
-			int iBestLogNum;
-			for(
-				iBestLogNum = g_iBestLapLogNum;
-				(
-					g_VsdLog[ iBestLogNum ].fMileage -
-					g_VsdLog[ g_iBestLapLogNum ].fMileage
-				) <= dMileage &&
-				iBestLogNum < g_iVsdLogNum;
-				++iBestLogNum
-			);
-			
-			// 最速 Lap の，1/15秒以下の値を求める = A / B
-			double dBestLogNum =
-				( double )( iBestLogNum - 1 ) +
-				// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
-				( dMileage - ( g_VsdLog[ iBestLogNum - 1 ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage )) /
-				// B: 最速ラップは，1/15秒の間にこの距離を走った
-				( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ iBestLogNum - 1 ].fMileage );
-			
-			double dDiffTime =
-				(
-					( dLogNum - g_Lap[ iLapIdx ].iLogNum ) -
-					( dBestLogNum - g_iBestLapLogNum )
-				) / LOG_FREQ;
-			
-			if( -0.0005 < dDiffTime && dDiffTime < 0 ) dDiffTime = 0;
-			
-			sprintf(
-				szBuf, "%c%d'%06.3f",
-				dDiffTime < 0 ? '-' : '+',
-				( int )( fabs( dDiffTime )) / 60,
-				fmod( fabs( dDiffTime ), 60 )
-			);
-			Img.DrawString( szBuf, dDiffTime < 0 ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
-		}
-	#endif
-	}
 	
 	/*** メーター描画 ***/
 	
@@ -1201,6 +1197,7 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	i				= ReadPTD( fp, offsetof( VSD_LOG_t, fSpeed ));
 	
 	if( i > g_iVsdLogNum ) g_iVsdLogNum = i;
+	g_bCalcLapTimeReq = TRUE;
 	
 #else // CIRCUIT_TOMO
 	// 20070814 以降のログは，横 G が反転している
@@ -1426,17 +1423,19 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	  case WM_FILTER_IMPORT:
 		return ReadLog( editp, filter );
 		
-	#ifdef CIRCUIT_TOMO
 	  case WM_FILTER_SAVE_START:
 		g_bCalcLapTimeReq = TRUE;
-	#endif
 		
 	  Case WM_FILTER_FILE_OPEN:
 		// fps 取得
 		FILE_INFO fi;
 		filter->exfunc->get_file_info( editp, &fi );
-		
 		g_dVideoFPS  = ( double )fi.video_rate / fi.video_scale;
+		
+		// g_Lap 初期化
+		if( g_Lap == NULL )	g_Lap = new LAP_t[ MAX_LAP ];
+		g_iLapNum = 0;
+		g_Lap[ 0 ].iLogNum = 0x7FFFFFFF;	// 番犬
 	}
 	
 	return FALSE;
@@ -1464,14 +1463,14 @@ BOOL func_update( FILTER *fp, int status ){
 		// 設定再描画
 		fp->exfunc->filter_window_update( fp );
 	}
-#else	
+#endif
+	
 	if(
 		status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LAP ) &&
 		fp->check[ CHECK_LAP ]
 	){
 		g_bCalcLapTimeReq = TRUE;
 	}
-#endif
 	
 	bReEnter = FALSE;
 	
