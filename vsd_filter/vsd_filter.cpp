@@ -519,7 +519,7 @@ FILTER_DLL filter = {
 	check_default,				//	チェックボックスの初期値郡へのポインタ
 	func_proc,					//	フィルタ処理関数へのポインタ (NULLなら呼ばれません)
 	NULL /*func_init*/,			//	開始時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
-	func_exit,					//	終了時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
+	NULL /*func_exit*/,			//	終了時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 	func_update,				//	設定が変更されたときに呼ばれる関数へのポインタ (NULLなら呼ばれません)
 	func_WndProc,				//	設定ウィンドウにウィンドウメッセージが来た時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 	NULL,NULL,					//	システムで使いますので使用しないでください
@@ -554,12 +554,14 @@ BOOL func_init( FILTER *fp ){
 //		終了
 //---------------------------------------------------------------------
 
+/*
 BOOL func_exit( FILTER *fp ){
 	
 	delete [] g_VsdLog;
 	delete [] g_Lap;
 	return TRUE;
 }
+*/
 
 //---------------------------------------------------------------------
 //		フィルタ処理関数
@@ -600,7 +602,8 @@ void CalcLapTime( FILTER *fp, FILTER_PROC_INFO *fpip ){
 			++g_iLapNum;
 		}
 	}
-	g_Lap[ g_iLapNum ].iLogNum = 0x7FFFFFFF;	// 番犬
+	g_Lap[ g_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
+	g_Lap[ g_iLapNum ].fTime	= 0;			// 番犬
 }
 
 /****************************************************************************/
@@ -750,7 +753,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			if( g_Lap[ iLapIdxTmp ].fTime != 0 ){
 				sprintf(
 					szBuf, "%c%3d%3d'%02d.%03d",
-					i == 0 ? '>' : ' ',
+					( i == 0 && g_Lap[ iLapIdx + 1 ].iLogNum != 0x7FFFFFFF ) ? '>' : ' ',
 					g_Lap[ iLapIdxTmp ].uLap,
 					( int )g_Lap[ iLapIdxTmp ].fTime / 60,
 					( int )g_Lap[ iLapIdxTmp ].fTime % 60,
@@ -1450,6 +1453,17 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		g_iLapNum = 0;
 		g_Lap[ 0 ].iLogNum	= 0x7FFFFFFF;	// 番犬
 		g_Lap[ 0 ].fTime	= 0;			// 番犬
+		
+		g_bCalcLapTimeReq = TRUE;
+		
+	  Case WM_FILTER_FILE_CLOSE:
+		delete [] g_VsdLog;
+		g_VsdLog		= NULL;
+		g_iVsdLogNum	= 0;
+		
+		delete [] g_Lap;
+		g_Lap		= NULL;
+		g_iLapNum	= 0;
 	}
 	
 	return FALSE;
