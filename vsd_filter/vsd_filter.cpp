@@ -736,16 +736,28 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		for( ; g_Lap[ iLapIdx + 1 ].iLogNum <= iLogNum; ++iLapIdx );
 		
 		// Best 表示
-		sprintf( szBuf, "Bst%3d'%02d.%03d", ( int )g_dBestTime / 60, ( int )g_dBestTime % 60, ( int )( g_dBestTime * 1000 + .5 ) % 1000 );
-		Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 13, 1 );
+		sprintf(
+			szBuf, "Best%3d'%02d.%03d",
+			( int )g_dBestTime / 60,
+			( int )g_dBestTime % 60,
+			( int )( g_dBestTime * 1000 ) % 1000
+		);
+		Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 14, 1 );
 		
 		// Lapタイム表示
 		i = 0;
-		for( int iLapIdxTmp = iLapIdx; iLapIdxTmp >= 0; --iLapIdxTmp ){
+		for( int iLapIdxTmp = iLapIdx + 1; iLapIdxTmp >= 0 && i < 3; --iLapIdxTmp ){
 			if( g_Lap[ iLapIdxTmp ].fTime != 0 ){
-				sprintf( szBuf, "%3d%3d'%02d.%03d", g_Lap[ iLapIdxTmp ].uLap, ( int )g_Lap[ iLapIdxTmp ].fTime / 60, ( int )g_Lap[ iLapIdxTmp ].fTime % 60, ( int )( g_Lap[ iLapIdxTmp ].fTime * 1000 + .5 ) % 1000 );
+				sprintf(
+					szBuf, "%c%3d%3d'%02d.%03d",
+					i == 0 ? '>' : ' ',
+					g_Lap[ iLapIdxTmp ].uLap,
+					( int )g_Lap[ iLapIdxTmp ].fTime / 60,
+					( int )g_Lap[ iLapIdxTmp ].fTime % 60,
+					( int )( g_Lap[ iLapIdxTmp ].fTime * 1000 ) % 1000
+				);
 				Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
-				if( ++i >= 3 ) break;
+				++i;
 			}
 		}
 		
@@ -759,7 +771,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 				( double )( Img.frame - g_Lap[ iLapIdx ].iLogNum ) / g_dVideoFPS :
 				( dLogNum - g_Lap[ iLapIdx ].iLogNum ) / LOG_FREQ;
 			
-			sprintf( szBuf, "%2d'%02d.%03d", ( int )dTime / 60, ( int )dTime % 60, ( int )( dTime * 1000 + .5 ) % 1000 );
+			sprintf( szBuf, "%2d'%02d.%03d", ( int )dTime / 60, ( int )dTime % 60, ( int )( dTime * 1000 ) % 1000 );
 			Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
 			bInLap = TRUE;
 		}else{
@@ -804,11 +816,11 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			
 			sprintf(
 				szBuf, "%c%d'%06.3f",
-				dDiffTime < 0 ? '-' : '+',
+				dDiffTime <= 0 ? '-' : '+',
 				( int )( fabs( dDiffTime )) / 60,
 				fmod( fabs( dDiffTime ), 60 )
 			);
-			Img.DrawString( szBuf, dDiffTime < 0 ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
+			Img.DrawString( szBuf, dDiffTime <= 0 ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
 		}
 	}
 	
@@ -1387,7 +1399,8 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	
 	fclose( fp );
 	
-	g_Lap[ g_iLapNum ].iLogNum = 0x7FFFFFFF;	// 番犬
+	g_Lap[ g_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
+	g_Lap[ g_iLapNum ].fTime	= 0;			// 番犬
 	
 	// trackbar 設定
 	track_e[ TRACK_VSt ] =
@@ -1435,7 +1448,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		// g_Lap 初期化
 		if( g_Lap == NULL )	g_Lap = new LAP_t[ MAX_LAP ];
 		g_iLapNum = 0;
-		g_Lap[ 0 ].iLogNum = 0x7FFFFFFF;	// 番犬
+		g_Lap[ 0 ].iLogNum	= 0x7FFFFFFF;	// 番犬
+		g_Lap[ 0 ].fTime	= 0;			// 番犬
 	}
 	
 	return FALSE;
