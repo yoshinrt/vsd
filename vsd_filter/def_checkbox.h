@@ -3,10 +3,10 @@
 //				|			|	チェックボックスの名前
 //				|			|	|
 DEF_CHECKBOX( CHECK_LAP,	1,	"ラップタイム" )
-DEF_CHECKBOX( CHECK_FRAME,	0,	"フレーム表示" )
 #ifndef CIRCUIT_TOMO
 DEF_CHECKBOX( CHECK_SNAKE,	0,	"G軌跡" )
 DEF_CHECKBOX( CHECK_LOGPOS,	1,	"log位置自動認識" )
 #endif
+DEF_CHECKBOX( CHECK_FRAME,	0,	"フレーム表示" )
 
 #undef DEF_CHECKBOX

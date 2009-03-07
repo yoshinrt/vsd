@@ -19,10 +19,12 @@
 #include "dds_lib/dds_lib.h"
 
 #ifdef CIRCUIT_TOMO
-	#define	FILE_TXT		"Pulse-Time Data (*.ptd)\0*.ptd\0AllFile (*.*)\0*.*\0"
+	#define	FILE_EXT		"Pulse-Time Data (*.ptd)\0*.ptd\0Config File (*.cfg)\0*.cfg\0AllFile (*.*)\0*.*\0"
 #else
-	#define	FILE_TXT		"LogFile (*.log)\0*.log\0AllFile (*.*)\0*.*\0"
+	#define	FILE_EXT		"LogFile (*.log)\0*.log\0Config File (*.cfg)\0*.cfg\0AllFile (*.*)\0*.*\0"
 #endif
+
+#define	FILE_CFG_EXT		"Config File (*.cfg)\0*.cfg\0AllFile (*.*)\0*.*\0"
 
 /****************************************************************************/
 
@@ -427,7 +429,7 @@ VSD_LOG_t	*g_VsdLog 		= NULL;
 int			g_iVsdLogNum	= 0;
 LAP_t		*g_Lap	 		= NULL;
 int			g_iLapNum		= 0;
-double		g_dBestTime		= -1;
+float		g_fBestTime		= -1;
 int			g_iBestLapLogNum= 0;
 
 double		g_dMaxMapSize = 0;
@@ -436,6 +438,18 @@ int			g_iLogStart;
 int			g_iLogStop;
 
 double		g_dVideoFPS  = 30.0;
+
+/*** tarckbar / checkbox id 名 ***/
+
+const char *g_szTrackbarName[] = {
+	#define DEF_TRACKBAR( id, init, min, max, name ) #id,
+	#include "def_trackbar.h"
+};
+
+const char *g_szCheckboxName[] = {
+	#define DEF_CHECKBOX( id, init, name ) #id,
+	#include "def_checkbox.h"
+};
 
 /****************************************************************************/
 //---------------------------------------------------------------------
@@ -488,7 +502,7 @@ enum {
 };
 
 FILTER_DLL filter = {
-	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_IMPORT,	
+	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_IMPORT | FILTER_FLAG_EXPORT,
 								//	フィルタのフラグ
 								//	FILTER_FLAG_ALWAYS_ACTIVE		: フィルタを常にアクティブにします
 								//	FILTER_FLAG_CONFIG_POPUP		: 設定をポップアップメニューにします
@@ -577,7 +591,7 @@ void CalcLapTime( FILTER *fp, FILTER_PROC_INFO *fpip ){
 	double			dTime, dPrevTime;
 	
 	g_iLapNum	= 0;
-	g_dBestTime	= -1;
+	g_fBestTime	= -1;
 	
 	for( i = 0; i < fpip->frame_n; ++i ){
 		fp->exfunc->get_frame_status( fpip->editp, i, &fsp );
@@ -592,9 +606,9 @@ void CalcLapTime( FILTER *fp, FILTER_PROC_INFO *fpip ){
 			
 			if(
 				g_iLapNum &&
-				( g_dBestTime == -1 || g_dBestTime > g_Lap[ g_iLapNum ].fTime )
+				( g_fBestTime == -1 || g_fBestTime > g_Lap[ g_iLapNum ].fTime )
 			){
-				g_dBestTime			= g_Lap[ g_iLapNum ].fTime;
+				g_fBestTime			= g_Lap[ g_iLapNum ].fTime;
 				g_iBestLapLogNum	= g_Lap[ g_iLapNum - 1 ].iLogNum;
 			}
 			
@@ -741,9 +755,9 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		// Best 表示
 		sprintf(
 			szBuf, "Best%3d'%02d.%03d",
-			( int )g_dBestTime / 60,
-			( int )g_dBestTime % 60,
-			( int )( g_dBestTime * 1000 ) % 1000
+			( int )g_fBestTime / 60,
+			( int )g_fBestTime % 60,
+			( int )( g_fBestTime * 1000 ) % 1000
 		);
 		Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 14, 1 );
 		
@@ -815,7 +829,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 					( dBestLogNum - g_iBestLapLogNum )
 				) / LOG_FREQ;
 			
-			if( -0.0005 < dDiffTime && dDiffTime < 0 ) dDiffTime = 0;
+			if( -0.001 < dDiffTime && dDiffTime < 0.001 ) dDiffTime = 0;
 			
 			sprintf(
 				szBuf, "%c%d'%06.3f",
@@ -1170,7 +1184,7 @@ static UINT ReadPTD( FILE *fp, UINT uOffs ){
 
 BOOL ReadLog( void *editp, FILTER *filter ){
 	static TCHAR	szBuf[ BUF_SIZE ];
-	TCHAR	*p;
+	static TCHAR	szBuf2[ BUF_SIZE ];
 	FILE	*fp;
 	BOOL	bCalibrating = FALSE;
 	
@@ -1189,12 +1203,61 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	
 	GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG / LOG_FREQ ) ];
 	
-	if( filter->exfunc->dlg_get_load_name(szBuf,FILE_TXT,NULL) != TRUE ) return FALSE;
+	if( filter->exfunc->dlg_get_load_name(szBuf,FILE_EXT,NULL) != TRUE ) return FALSE;
+	
+	/*** cfg リード ***/
+	
+	if(( fp = fopen( ChangeExt( szBuf2, szBuf, "cfg" ), "r" )) != NULL ){
+		int i, iLen;
+		BOOL	bMark = FALSE;
+		FRAME_STATUS	fsp;
+		
+		while( fgets( szBuf2, BUF_SIZE, fp )){
+			if( bMark ){
+				// マークセット
+				i = atoi( szBuf2 );
+				filter->exfunc->get_frame_status( editp, i, &fsp );
+				fsp.edit_flag |= EDIT_FRAME_EDIT_FLAG_MARKFRAME;
+				filter->exfunc->set_frame_status( editp, i, &fsp );
+				
+			}else if( strncmp( szBuf2, "MARK:", 5 ) == 0 ){
+				// マークモードに入る
+				g_bCalcLapTimeReq = bMark = TRUE;
+				
+			}else{
+				// Mark 以外のパラメータ
+				for( i = 0; i < TRACK_N; ++i ){
+					if(
+						strncmp( szBuf2, g_szTrackbarName[ i ], iLen = strlen( g_szTrackbarName[ i ] )) == 0 &&
+						szBuf2[ iLen ] == '='
+					){
+						filter->track[ i ] = atoi( szBuf2 + iLen + 1 );
+						goto Next;
+					}
+				}
+				
+				for( i = 0; i < CHECK_N; ++i ){
+					if(
+						strncmp( szBuf2, g_szCheckboxName[ i ], iLen = strlen( g_szCheckboxName[ i ] )) == 0 &&
+						szBuf2[ iLen ] == '='
+					){
+						filter->check[ i ] = atoi( szBuf2 + iLen + 1 );
+						goto Next;
+					}
+				}
+			}
+		  Next: ;
+		}
+		fclose( fp );
+	}
+	
+	/******************/
+	
 	if(( fp = fopen( szBuf, "r" )) == NULL ) return FALSE;
 	
 	g_iVsdLogNum	= 0;
 	g_iLapNum		= 0;
-	g_dBestTime		= -1;
+	g_fBestTime		= -1;
 	
 #ifdef CIRCUIT_TOMO
 	int i;
@@ -1227,6 +1290,8 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	
 	g_iLogStart = g_iLogStop = 0;
 	
+	TCHAR	*p;
+	
 	while( fgets( szBuf, BUF_SIZE, fp ) != NULL ){
 		if(( p = strstr( szBuf, "LAP" )) != NULL ){ // ラップタイム記録を見つけた
 			uCnt = sscanf( p, "LAP%d%d:%d.%d", &uLap, &uMin, &uSec, &uMSec );
@@ -1240,9 +1305,9 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 			
 			if(
 				uCnt == 4 &&
-				( g_dBestTime == -1 || g_dBestTime > dTime )
+				( g_fBestTime == -1 || g_fBestTime > dTime )
 			){
-				g_dBestTime			= dTime;
+				g_fBestTime			= ( float )dTime;
 				g_iBestLapLogNum	= g_Lap[ g_iLapNum - 1 ].iLogNum;
 			}
 			++g_iLapNum;
@@ -1427,6 +1492,44 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	return TRUE;
 }
 
+/*** 設定セーブ *************************************************************/
+
+BOOL SaveConfig( void *editp, FILTER *filter ){
+	static TCHAR	szBuf[ BUF_SIZE ];
+	FILE	*fp;
+	int		i;
+	
+	if( filter->exfunc->dlg_get_save_name( szBuf, FILE_CFG_EXT, NULL ) != TRUE ) return FALSE;
+	if(( fp = fopen( szBuf, "w" )) == NULL ) return FALSE;
+	
+	for( i = 0; i < TRACK_N; ++i ){
+		fprintf( fp, "%s=%u\n", g_szTrackbarName[ i ], filter->track[ i ] );
+	}
+	
+	for( i = 0; i < CHECK_N; ++i ){
+		if(
+			i == CHECK_FRAME
+			#ifndef CIRCUIT_TOMO
+			|| i == CHECK_LOGPOS
+			#endif
+		) continue;
+		
+		fprintf( fp, "%s=%u\n", g_szCheckboxName[ i ], filter->check[ i ] );
+	}
+	
+	// 手動ラップ計測マーク出力
+	if( IS_HAND_LAPTIME && g_iLapNum ){
+		fputs( "MARK:\n", fp );
+		
+		for( i = 0; i < g_iLapNum; ++i ){
+			fprintf( fp, "%u\n", g_Lap[ i ].iLogNum );
+		}
+	}
+	
+	fclose( fp );
+	return 0;
+}
+
 /****************************************************************************/
 
 BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
@@ -1441,6 +1544,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 	  case WM_FILTER_SAVE_START:
 		g_bCalcLapTimeReq = TRUE;
+		
+	  Case WM_FILTER_EXPORT:
+		return SaveConfig( editp, filter );
 		
 	  Case WM_FILTER_FILE_OPEN:
 		// fps 取得

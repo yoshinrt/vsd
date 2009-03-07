@@ -401,43 +401,11 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
-				RelativePath="vsd_filter.cpp"
+				RelativePath=".\vsd_filter.cpp"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="TOMO Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="TOMO Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="vsd_filter.def"
+				RelativePath=".\vsd_filter.def"
 				>
 			</File>
 		</Filter>
@@ -446,27 +414,27 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath="dds.h"
+				RelativePath=".\dds.h"
 				>
 			</File>
 			<File
-				RelativePath="def_checkbox.h"
+				RelativePath=".\def_checkbox.h"
 				>
 			</File>
 			<File
-				RelativePath="def_trackbar.h"
+				RelativePath=".\def_trackbar.h"
 				>
 			</File>
 			<File
-				RelativePath="filter.h"
+				RelativePath=".\filter.h"
 				>
 			</File>
 			<File
-				RelativePath="font_18p.h"
+				RelativePath=".\font_18p.h"
 				>
 			</File>
 			<File
-				RelativePath="font_9p.h"
+				RelativePath=".\font_9p.h"
 				>
 			</File>
 		</Filter>
