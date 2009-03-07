@@ -84,14 +84,6 @@
 
 /*** CAviUtlImage class *****************************************************/
 
-const UCHAR g_Font9p[] = {
-	#include "font_9p.h"
-};
-
-const UCHAR g_Font18p[] = {
-	#include "font_18p.h"
-};
-
 #define POS_DEFAULT	0x80000000
 
 class CAviUtlImage : public FILTER_PROC_INFO {
@@ -132,12 +124,13 @@ class CAviUtlImage : public FILTER_PROC_INFO {
 	void PolygonDraw( const PIXEL_YC &yc, UINT uFlag );
 	
 	// フォント
-	const UCHAR *GetFontBase( void ){ return w >= HIREZO_TH ? g_Font18p : g_Font9p; }
-	int GetFontBMP_W( void ){ return *( int *)( GetFontBase() + 0x12 ); }
-	int GetFontBMP_H( void ){ return *( int *)( GetFontBase() + 0x16 ); }
-	UCHAR GetBMPPix( int x, int y ){ return GetFontBase()[ 0x436 + GetFontBMP_W() * ( GetFontBMP_H() - ( y ) - 1 ) + ( x )]; }
-	int GetFontW( void ){ return GetFontBMP_W() / 16; }
-	int GetFontH( void ){ return GetFontBMP_H() / 7; }
+	UCHAR GetBMPPix( int x, int y ){
+		return m_pFontData[ ( m_iBMP_H - y - 1 ) * m_iBMP_BytesPerLine + ( x >> 3 ) ] & ( 1 << ( 7 - ( x & 0x7 )));
+	}
+	
+	int GetFontW( void ){ return m_iFontW; }
+	int GetFontH( void ){ return m_iFontH; }
+	void InitFont( void );
 	
 	enum {
 		IMG_ALFA	= ( 1 << 0 ),
@@ -146,7 +139,51 @@ class CAviUtlImage : public FILTER_PROC_INFO {
 		IMG_TMP_DST	= ( 1 << 3 ),
 		IMG_POLYGON	= ( 1 << 4 ),
 	};
+	
+  private:
+	static const UCHAR m_Font9p[];
+	static const UCHAR m_Font18p[];
+	
+	static int	m_iFontW, m_iFontH, m_iBMP_H, m_iBMP_BytesPerLine;
+	static const UCHAR *m_pFontData;
 };
+
+const UCHAR CAviUtlImage::m_Font9p[] = {
+	#include "font_9p.h"
+};
+
+const UCHAR CAviUtlImage::m_Font18p[] = {
+	#include "font_18p.h"
+};
+
+int	CAviUtlImage::m_iFontW,
+	CAviUtlImage::m_iFontH,
+	CAviUtlImage::m_iBMP_H,
+	CAviUtlImage::m_iBMP_BytesPerLine;
+const UCHAR *CAviUtlImage::m_pFontData;
+
+/*** フォントデータ初期化 ***************************************************/
+
+void CAviUtlImage::InitFont( void ){
+	static int	iPreW = 0;
+	
+	if( iPreW != w ){
+		iPreW = w;
+		
+		const UCHAR *p = w >= HIREZO_TH ? m_Font18p : m_Font9p;
+		
+		m_iBMP_H = *( int *)( p + 0x16 );
+		m_iFontW = *( int *)( p + 0x12 ) / 16;
+		m_iFontH = m_iBMP_H / 7;
+		
+		m_pFontData = p +
+			0x36 +	// パレットデータ先頭 addr
+			( 1 << *( USHORT *)( p + 0x1A )) *	// color depth
+			4; // 1色あたりのバイト数
+		
+		m_iBMP_BytesPerLine = *( int *)( p + 0x12 ) / 8;
+	}
+}
 
 /*** PutPixel ***************************************************************/
 
@@ -705,6 +742,9 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	const int	iMeterDegRange	= (( iMeterMaxDeg < iMeterMinDeg ? iMeterMaxDeg + 360 : iMeterMaxDeg ) - iMeterMinDeg );
 	const int	iMeterScaleLen	= iMeterR / 8;
 #endif
+	
+	// フォントサイズ初期化
+	Img.InitFont();
 	
 	// ログ位置の計算
 	double	dLogNum = ( VideoEd == VideoSt ) ? -1 :
