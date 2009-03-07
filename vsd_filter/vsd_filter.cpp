@@ -827,7 +827,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		}
 	}
 	
-	if( IS_HAND_LAPTIME ) return TRUE;
+	if( g_iVsdLogNum == 0 ) return TRUE;
 	
 	/*** メーターパネル ***/
 	Img.DrawCircle(
