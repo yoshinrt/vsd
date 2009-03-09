@@ -59,7 +59,7 @@
 #define G_HIST			(( int )( LOG_FREQ * 3 ))
 #define MAX_G_SCALE		1.5
 
-#define MAX_MAP_SIZE	( Img.w / 2.5 )
+#define MAX_MAP_SIZE	( Img.w * fp->track[ TRACK_MapSize ] / 1000.0 )
 #define INVALID_POS_I	0x7FFFFFFF
 #define INVALID_POS_D	NaN
 
