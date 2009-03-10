@@ -845,30 +845,30 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			double dMileage = GetVsdLog( fMileage ) - g_VsdLog[ g_Lap[ iLapIdx ].iLogNum ].fMileage;
 			
 			// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
-			// iBestLogNum - 1 <= 最終的に求める結果 < iBestLogNum   となる
+			// iBestLogNum <= 最終的に求める結果 < iBestLogNum + 1  となる
 			static int iBestLogNum = 0;
 			
 			// iBestLogNum がおかしかったら，リセット
 			if(
-				iBestLogNum <= g_iBestLogNum ||
+				iBestLogNum < g_iBestLapLogNum ||
 				iBestLogNum >= g_iVsdLogNum ||
-				( g_VsdLog[ iBestLogNum - 1 ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage ) > dMileage
+				( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage ) > dMileage
 			) iBestLogNum = g_iBestLapLogNum;
 			
 			for(
 				;
-				( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage ) <= dMileage &&
+				( g_VsdLog[ iBestLogNum + 1 ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage ) <= dMileage &&
 				iBestLogNum < g_iVsdLogNum;
 				++iBestLogNum
 			);
 			
 			// 最速 Lap の，1/15秒以下の値を求める = A / B
 			double dBestLogNum =
-				( double )( iBestLogNum - 1 ) +
+				( double )iBestLogNum +
 				// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
-				( dMileage - ( g_VsdLog[ iBestLogNum - 1 ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage )) /
+				( dMileage - ( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage )) /
 				// B: 最速ラップは，1/15秒の間にこの距離を走った
-				( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ iBestLogNum - 1 ].fMileage );
+				( g_VsdLog[ iBestLogNum + 1 ].fMileage - g_VsdLog[ iBestLogNum ].fMileage );
 			
 			double dDiffTime =
 				(
@@ -1229,7 +1229,7 @@ static UINT ReadPTD( FILE *fp, UINT uOffs ){
 
 /*** MAP 回転処理 ***********************************************************/
 
-void RotateMap( void ){
+void RotateMap( FILTER *fp ){
 	
 	int i;
 	double dMaxX, dMinX, dMaxY, dMinY;
@@ -1237,13 +1237,13 @@ void RotateMap( void ){
 	dMaxX = dMinX = dMaxY = dMinY = 0;
 	
 	for( i = 0; i < g_iVsdLogNum; ++i ){
-		g_VsdLog[ i ].fX =  cos( MAP_ANGLE ) * g_VsdLog[ i ].fX0 + sin( MAP_ANGLE ) * g_VsdLog[ i ].fY0;
-		g_VsdLog[ i ].fY = -sin( MAP_ANGLE ) * g_VsdLog[ i ].fX0 + cos( MAP_ANGLE ) * g_VsdLog[ i ].fY0;
+		g_VsdLog[ i ].fX = ( float )(  cos( MAP_ANGLE ) * g_VsdLog[ i ].fX0 + sin( MAP_ANGLE ) * g_VsdLog[ i ].fY0 );
+		g_VsdLog[ i ].fY = ( float )( -sin( MAP_ANGLE ) * g_VsdLog[ i ].fX0 + cos( MAP_ANGLE ) * g_VsdLog[ i ].fY0 );
 		
-		if     ( dMaxX < g_VsdLog[ i ].fX ) dMaxX = g_VsdLog[ i ].fX
-		else if( dMinX > g_VsdLog[ i ].fX ) dMinX = g_VsdLog[ i ].fX
-		if     ( dMaxY < g_VsdLog[ i ].fY ) dMaxY = g_VsdLog[ i ].fY
-		else if( dMinY > g_VsdLog[ i ].fY ) dMinY = g_VsdLog[ i ].fY
+		if     ( dMaxX < g_VsdLog[ i ].fX ) dMaxX = g_VsdLog[ i ].fX;
+		else if( dMinX > g_VsdLog[ i ].fX ) dMinX = g_VsdLog[ i ].fX;
+		if     ( dMaxY < g_VsdLog[ i ].fY ) dMaxY = g_VsdLog[ i ].fY;
+		else if( dMinY > g_VsdLog[ i ].fY ) dMinY = g_VsdLog[ i ].fY;
 	}
 	
 	dMaxX -= dMinX;
@@ -1519,7 +1519,7 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 		}
 		
 		// Map 回転
-		RotateMap();
+		RotateMap( filter );
 		
 		/*
 		FILE *fp = fopen( "c:\\dds\\hoge.log", "w" );
@@ -1677,7 +1677,7 @@ BOOL func_update( FILTER *fp, int status ){
 	
 	// マップ回転
 	if( status == ( FILTER_UPDATE_STATUS_TRACK + TRACK_MapAngle )){
-		RotateMap();
+		RotateMap( fp );
 	}
 	
 	bReEnter = FALSE;
