@@ -60,6 +60,7 @@
 #define MAX_G_SCALE		1.5
 
 #define MAX_MAP_SIZE	( Img.w * fp->track[ TRACK_MapSize ] / 1000.0 )
+#define MAP_ANGLE		( fp->track[ TRACK_MapAngle ] * ( -ToRAD / 10 ))
 #define INVALID_POS_I	0x7FFFFFFF
 #define INVALID_POS_D	NaN
 
@@ -438,10 +439,9 @@ typedef struct {
 	float	fSpeed;
 	float	fTacho;
 	float	fMileage;
-	float	fGx;
-	float	fGy;
-	float	fX;
-	float	fY;
+	float	fGx, fGy;
+	float	fX, fX0;
+	float	fY, fY0;
 } VSD_LOG_t;
 
 typedef struct {
@@ -451,10 +451,10 @@ typedef struct {
 } LAP_t;
 
 typedef struct {
-	union {	float	fLong;		float	fX;		};
-	union {	float	fLati;		float	fY;		};
-	union {	float	fSpeed;		float	fVX;	};
-	union {	float	fBearing;	float	fVY;	};
+	float	fX;
+	float	fY;
+	float	fVX;
+	float	fVY;
 	int		iLogNum;
 } GPS_LOG_t;
 
@@ -469,7 +469,9 @@ int			g_iLapNum		= 0;
 float		g_fBestTime		= -1;
 int			g_iBestLapLogNum= 0;
 
-double		g_dMaxMapSize = 0;
+double		g_dMapSize		= 0;
+double		g_dMapOffsX		= 0;
+double		g_dMapOffsY		= 0;
 
 int			g_iLogStart;
 int			g_iLogStop;
@@ -844,13 +846,18 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			
 			// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
 			// iBestLogNum - 1 <= 最終的に求める結果 < iBestLogNum   となる
-			int iBestLogNum;
+			static int iBestLogNum = 0;
+			
+			// iBestLogNum がおかしかったら，リセット
+			if(
+				iBestLogNum <= g_iBestLogNum ||
+				iBestLogNum >= g_iVsdLogNum ||
+				( g_VsdLog[ iBestLogNum - 1 ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage ) > dMileage
+			) iBestLogNum = g_iBestLapLogNum;
+			
 			for(
-				iBestLogNum = g_iBestLapLogNum;
-				(
-					g_VsdLog[ iBestLogNum ].fMileage -
-					g_VsdLog[ g_iBestLapLogNum ].fMileage
-				) <= dMileage &&
+				;
+				( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage ) <= dMileage &&
 				iBestLogNum < g_iVsdLogNum;
 				++iBestLogNum
 			);
@@ -1034,8 +1041,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		for( i = -( int )( LineTrace * LOG_FREQ ); i <= 1 ; ++i ){
 			if( iLogNum + i >= 0 ){
 				// i == 1 時は最後の中途半端な LogNum
-				double dGx = (( i != 1 ) ? g_VsdLog[ iLogNum + i ].fX : GetVsdLog( fX )) / g_dMaxMapSize * MAX_MAP_SIZE + 8;
-				double dGy = (( i != 1 ) ? g_VsdLog[ iLogNum + i ].fY : GetVsdLog( fY )) / g_dMaxMapSize * MAX_MAP_SIZE + 8;
+				double dGx = ((( i != 1 ) ? g_VsdLog[ iLogNum + i ].fX : GetVsdLog( fX )) - g_dMapOffsX ) / g_dMapSize * MAX_MAP_SIZE + 8;
+				double dGy = ((( i != 1 ) ? g_VsdLog[ iLogNum + i ].fY : GetVsdLog( fY )) - g_dMapOffsY ) / g_dMapSize * MAX_MAP_SIZE + 8;
 				
 				if( !_isnan( dGx )){
 					iGx = ( int )dGx;
@@ -1220,6 +1227,33 @@ static UINT ReadPTD( FILE *fp, UINT uOffs ){
 }
 #endif
 
+/*** MAP 回転処理 ***********************************************************/
+
+void RotateMap( void ){
+	
+	int i;
+	double dMaxX, dMinX, dMaxY, dMinY;
+	
+	dMaxX = dMinX = dMaxY = dMinY = 0;
+	
+	for( i = 0; i < g_iVsdLogNum; ++i ){
+		g_VsdLog[ i ].fX =  cos( MAP_ANGLE ) * g_VsdLog[ i ].fX0 + sin( MAP_ANGLE ) * g_VsdLog[ i ].fY0;
+		g_VsdLog[ i ].fY = -sin( MAP_ANGLE ) * g_VsdLog[ i ].fX0 + cos( MAP_ANGLE ) * g_VsdLog[ i ].fY0;
+		
+		if     ( dMaxX < g_VsdLog[ i ].fX ) dMaxX = g_VsdLog[ i ].fX
+		else if( dMinX > g_VsdLog[ i ].fX ) dMinX = g_VsdLog[ i ].fX
+		if     ( dMaxY < g_VsdLog[ i ].fY ) dMaxY = g_VsdLog[ i ].fY
+		else if( dMinY > g_VsdLog[ i ].fY ) dMinY = g_VsdLog[ i ].fY
+	}
+	
+	dMaxX -= dMinX;
+	dMaxY -= dMinY;
+	
+	g_dMapSize	= dMaxX > dMaxY ? dMaxX : dMaxY;
+	g_dMapOffsX		= dMinX;
+	g_dMapOffsY		= dMinY;
+}
+
 /*** ログリード *************************************************************/
 
 BOOL ReadLog( void *editp, FILTER *filter ){
@@ -1231,8 +1265,6 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	// GPS ログ用
 	UINT		uGPSCnt = 0;
 	GPS_LOG_t	*GPSLog;
-	double		dLatiMin = 1000, dLatiMax = 0;
-	double		dLongMin = 1000, dLongMax = 0;
 	
 	float		NaN = 0;
 	NaN /= *( volatile float *)&NaN;
@@ -1328,6 +1360,13 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	double	dGcy = 0;
 	double	dGx, dGy;
 	
+	float	fLati;
+	float	fLong;
+	double	dLati0 = 0;
+	double	dLong0 = 0;
+	float	fSpeed;
+	float	fBearing;
+	
 	g_iLogStart = g_iLogStop = 0;
 	
 	TCHAR	*p;
@@ -1354,17 +1393,23 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 		}
 		
 		if(( p = strstr( szBuf, "GPS" )) != NULL ){ // GPS記録を見つけた
-			sscanf( p, "GPS%g%g%g%g",
-				&GPSLog[ uGPSCnt ].fLati,
-				&GPSLog[ uGPSCnt ].fLong,
-				&GPSLog[ uGPSCnt ].fSpeed,
-				&GPSLog[ uGPSCnt ].fBearing
-			);
+			sscanf( p, "GPS%g%g%g%g", &fLati, &fLong, &fSpeed, &fBearing );
 			
-			if( dLongMin > GPSLog[ uGPSCnt ].fLong ) dLongMin = GPSLog[ uGPSCnt ].fLong;
-			if( dLongMax < GPSLog[ uGPSCnt ].fLong ) dLongMax = GPSLog[ uGPSCnt ].fLong;
-			if( dLatiMin > GPSLog[ uGPSCnt ].fLati ) dLatiMin = GPSLog[ uGPSCnt ].fLati;
-			if( dLatiMax < GPSLog[ uGPSCnt ].fLati ) dLatiMax = GPSLog[ uGPSCnt ].fLati;
+			if( dLati0 == 0 ){
+				dLati0 = fLati;
+				dLong0 = fLong;
+			}
+			
+			// 単位を補正
+			// 緯度・経度→メートル
+			GPSLog[ uGPSCnt ].fX = ( float )(( fLong - dLong0 ) * LAT_M_DEG * cos( fLati * ToRAD ));
+			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - fLati ) * LNG_M_DEG );
+			
+			// 速度・向き→ベクトル座標
+			double dBearing	= fBearing * ToRAD;
+			double dSpeed	= fSpeed * ( 1000.0 / 3600 );
+			GPSLog[ uGPSCnt ].fVX	= ( float )(  sin( dBearing ) * dSpeed );
+			GPSLog[ uGPSCnt ].fVY	= ( float )( -cos( dBearing ) * dSpeed );
 			
 			GPSLog[ uGPSCnt++ ].iLogNum =
 				( g_iVsdLogNum - GPS_LOG_OFFS ) >= 0 ?
@@ -1428,23 +1473,10 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	if( uGPSCnt ){
 		UINT	u;
 		
-		// 単位を補正
-		for( u = 0; u < uGPSCnt; ++u ){
-			// 緯度・経度→メートル
-			GPSLog[ u ].fX = ( float )(( GPSLog[ u ].fLong - dLongMin ) * LAT_M_DEG * cos( GPSLog[ u ].fLati * ToRAD ));
-			GPSLog[ u ].fY = ( float )(( dLatiMax - GPSLog[ u ].fLati ) * LNG_M_DEG );
-			
-			// 速度・向き→ベクトル座標
-			double dBearing	= GPSLog[ u ].fBearing * ToRAD;
-			double dSpeed	= GPSLog[ u ].fSpeed * ( 1000.0 / 3600 );
-			GPSLog[ u ].fVX	= ( float )(  sin( dBearing ) * dSpeed );
-			GPSLog[ u ].fVY	= ( float )( -cos( dBearing ) * dSpeed );
-		}
-		
 		// 補完点を計算
 		for( u = 0; u < uGPSCnt - 1; ++u ){
 			// 2秒以上 GPS ログがあいていれば，補完情報の計算をしない
-			if( GPSLog[ u + 1 ].iLogNum - GPSLog[ u ].iLogNum > ( int )( LOG_FREQ * 2 )) continue;
+			if( GPSLog[ u + 1 ].iLogNum - GPSLog[ u ].iLogNum > ( int )( LOG_FREQ * 5 )) continue;
 			
 			double dX3, dX2, dX1, dX0;
 			double dY3, dY2, dY1, dY0;
@@ -1481,16 +1513,13 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 					( double )( i - GPSLog[ u ].iLogNum ) /
 					( GPSLog[ u + 1 ].iLogNum - GPSLog[ u ].iLogNum );
 				
-				g_VsdLog[ i ].fX = ( float )((( dX3 * t + dX2 ) * t + dX1 ) * t + dX0 );
-				g_VsdLog[ i ].fY = ( float )((( dY3 * t + dY2 ) * t + dY1 ) * t + dY0 );
+				g_VsdLog[ i ].fX0 = ( float )((( dX3 * t + dX2 ) * t + dX1 ) * t + dX0 );
+				g_VsdLog[ i ].fY0 = ( float )((( dY3 * t + dY2 ) * t + dY1 ) * t + dY0 );
 			}
 		}
 		
-		// マップの倍率を求める
-		double dSizeX = (( dLongMax - dLongMin ) * LAT_M_DEG * cos(( dLatiMax + dLatiMin ) / 2 * ToRAD ));
-		double dSizeY = (( dLatiMax - dLatiMin ) * LNG_M_DEG );
-		
-		g_dMaxMapSize = dSizeX > dSizeY ? dSizeX : dSizeY;
+		// Map 回転
+		RotateMap();
 		
 		/*
 		FILE *fp = fopen( "c:\\dds\\hoge.log", "w" );
@@ -1644,6 +1673,11 @@ BOOL func_update( FILTER *fp, int status ){
 		fp->check[ CHECK_LAP ]
 	){
 		g_bCalcLapTimeReq = TRUE;
+	}
+	
+	// マップ回転
+	if( status == ( FILTER_UPDATE_STATUS_TRACK + TRACK_MapAngle )){
+		RotateMap();
 	}
 	
 	bReEnter = FALSE;

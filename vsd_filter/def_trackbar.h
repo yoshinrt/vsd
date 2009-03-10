@@ -15,7 +15,7 @@ DEF_TRACKBAR( TRACK_LEd,			0,		0,		10000,	"logç≈å„"	)
 DEF_TRACKBAR( TRACK_LEd2,			0,		-200,	200,	""			)
 DEF_TRACKBAR( TRACK_LineTrace,		0,		0,		1000,	"Mapïb"	)
 DEF_TRACKBAR( TRACK_MapSize,		400,	0,		1000,	"MapÉTÉCÉY"	)
-//DEF_TRACKBAR( TRACK_MapRot,			0,		0,		360,	"MapâÒì]"	)
+DEF_TRACKBAR( TRACK_MapAngle,		0,		0,		3600,	"MapâÒì]"	)
 #else
 DEF_TRACKBAR( TRACK_LSt,			0,		0,		10000,	"logêÊì™"	)
 DEF_TRACKBAR( TRACK_LSt2,			0,		0,		1000,	"   (ms)"	)
