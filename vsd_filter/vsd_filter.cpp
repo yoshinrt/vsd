@@ -683,6 +683,8 @@ const PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
 #define COLOR_G_HIST		yc_dark_green
 #define COLOR_DIFF_MINUS	yc_cyan
 #define COLOR_DIFF_PLUS		yc_red
+#define COLOR_CURRENT_POS	yc_green
+#define COLOR_FASTEST_POS	yc_red
 
 // 半端な dLogNum 値からログの中間値を求める
 #define GetVsdLog( p ) ( \
@@ -1041,8 +1043,9 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		for( i = -( int )( LineTrace * LOG_FREQ ); i <= 1 ; ++i ){
 			if( iLogNum + i >= 0 ){
 				// i == 1 時は最後の中途半端な LogNum
-				double dGx = ((( i != 1 ) ? g_VsdLog[ iLogNum + i ].fX : GetVsdLog( fX )) - g_dMapOffsX ) / g_dMapSize * MAX_MAP_SIZE + 8;
-				double dGy = ((( i != 1 ) ? g_VsdLog[ iLogNum + i ].fY : GetVsdLog( fY )) - g_dMapOffsY ) / g_dMapSize * MAX_MAP_SIZE + 8;
+				#define GetMapPos( p, a ) ( (( p ) - g_dMapOffs ## a ) / g_dMapSize * MAX_MAP_SIZE + 8 )
+				double dGx = GetMapPos(( i != 1 ) ? g_VsdLog[ iLogNum + i ].fX : GetVsdLog( fX ), X );
+				double dGy = GetMapPos(( i != 1 ) ? g_VsdLog[ iLogNum + i ].fY : GetVsdLog( fY ), Y );
 				
 				if( !_isnan( dGx )){
 					iGx = ( int )dGx;
@@ -1086,10 +1089,27 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			}
 		}
 		
-		// MAP インジケータ
+		// MAP インジケータ (敵車)
+		/* いまいち
+		if( iLapIdx >= 0 ){
+			double dFastestLogNum = dLogNum - g_Lap[ iLapIdx ].iLogNum + g_iBestLapLogNum;
+			double dFx = 
+				g_VsdLog[ ( UINT )dFastestLogNum     ].fX * ( 1 - ( dFastestLogNum - ( UINT )dFastestLogNum )) +
+				g_VsdLog[ ( UINT )dFastestLogNum + 1 ].fX * (       dFastestLogNum - ( UINT )dFastestLogNum  );
+			double dFy = 
+				g_VsdLog[ ( UINT )dFastestLogNum     ].fY * ( 1 - ( dFastestLogNum - ( UINT )dFastestLogNum )) +
+				g_VsdLog[ ( UINT )dFastestLogNum + 1 ].fY * (       dFastestLogNum - ( UINT )dFastestLogNum  );
+			
+			if( !_isnan( dFx )) Img.DrawCircle(
+				( int )GetMapPos( dFx, X ), ( int )GetMapPos( dFy, Y ), iMeterR / 20,
+				COLOR_FASTEST_POS, CAviUtlImage::IMG_FILL
+			);
+		}*/
+		
+		// MAP インジケータ (自車)
 		if( iGx != INVALID_POS_I ) Img.DrawCircle(
 			iGx, iGy, iMeterR / 20,
-			COLOR_G_SENSOR, CAviUtlImage::IMG_FILL
+			COLOR_CURRENT_POS, CAviUtlImage::IMG_FILL
 		);
 	}
 #endif // CIRCUIT_TOMO
@@ -1275,7 +1295,7 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	
 	GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG / LOG_FREQ ) ];
 	
-	if( filter->exfunc->dlg_get_load_name(szBuf,FILE_EXT,NULL) != TRUE ) return FALSE;
+	if( filter->exfunc->dlg_get_load_name( szBuf, FILE_EXT, NULL ) != TRUE ) return FALSE;
 	
 	/*** cfg リード ***/
 	
@@ -1451,7 +1471,7 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 			g_VsdLog[ g_iVsdLogNum ].fGx = ( float )dGx;
 			g_VsdLog[ g_iVsdLogNum ].fGy = ( float )dGy;
 			
-			g_VsdLog[ g_iVsdLogNum ].fX = g_VsdLog[ g_iVsdLogNum ].fY = INVALID_POS_D;
+			g_VsdLog[ g_iVsdLogNum ].fX0 = g_VsdLog[ g_iVsdLogNum ].fY0 = INVALID_POS_D;
 			
 			// ログ開始・終了認識
 			if( g_VsdLog[ g_iVsdLogNum ].fSpeed >= 300 ){
