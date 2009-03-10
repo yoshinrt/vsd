@@ -1089,23 +1089,6 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			}
 		}
 		
-		// MAP インジケータ (敵車)
-		/* いまいち
-		if( iLapIdx >= 0 ){
-			double dFastestLogNum = dLogNum - g_Lap[ iLapIdx ].iLogNum + g_iBestLapLogNum;
-			double dFx = 
-				g_VsdLog[ ( UINT )dFastestLogNum     ].fX * ( 1 - ( dFastestLogNum - ( UINT )dFastestLogNum )) +
-				g_VsdLog[ ( UINT )dFastestLogNum + 1 ].fX * (       dFastestLogNum - ( UINT )dFastestLogNum  );
-			double dFy = 
-				g_VsdLog[ ( UINT )dFastestLogNum     ].fY * ( 1 - ( dFastestLogNum - ( UINT )dFastestLogNum )) +
-				g_VsdLog[ ( UINT )dFastestLogNum + 1 ].fY * (       dFastestLogNum - ( UINT )dFastestLogNum  );
-			
-			if( !_isnan( dFx )) Img.DrawCircle(
-				( int )GetMapPos( dFx, X ), ( int )GetMapPos( dFy, Y ), iMeterR / 20,
-				COLOR_FASTEST_POS, CAviUtlImage::IMG_FILL
-			);
-		}*/
-		
 		// MAP インジケータ (自車)
 		if( iGx != INVALID_POS_I ) Img.DrawCircle(
 			iGx, iGy, iMeterR / 20,
