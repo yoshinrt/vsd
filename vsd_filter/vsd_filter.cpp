@@ -679,6 +679,7 @@ const PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
 #define COLOR_STR			COLOR_SCALE
 #define COLOR_TIME			yc_white
 #define COLOR_TIME_EDGE		yc_black
+#define COLOR_BEST_LAP		yc_cyan
 #define COLOR_G_SENSOR		yc_green
 #define COLOR_G_HIST		yc_dark_green
 #define COLOR_DIFF_MINUS	yc_cyan
@@ -796,6 +797,20 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		
 		for( ; g_Lap[ iLapIdx + 1 ].iLogNum <= iLogNum; ++iLapIdx );
 		
+		// 時間表示
+		if( iLapIdx >= 0 && g_Lap[ iLapIdx + 1 ].fTime != 0 ){
+			double dTime = IS_HAND_LAPTIME ?
+				( double )( Img.frame - g_Lap[ iLapIdx ].iLogNum ) / g_dVideoFPS :
+				( dLogNum - g_Lap[ iLapIdx ].iLogNum ) / LOG_FREQ;
+			
+			sprintf( szBuf, "%2d'%02d.%03d", ( int )dTime / 60, ( int )dTime % 60, ( int )( dTime * 1000 ) % 1000 );
+			Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
+			bInLap = TRUE;
+		}else{
+			// まだ開始していない
+			Img.DrawString( "--'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
+		}
+		
 		// Best 表示
 		sprintf(
 			szBuf, "Best%3d'%02d.%03d",
@@ -811,33 +826,17 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			if( g_Lap[ iLapIdxTmp ].fTime != 0 ){
 				sprintf(
 					szBuf, "%c%3d%3d'%02d.%03d",
-					( i == 0 && g_Lap[ iLapIdx + 1 ].iLogNum != 0x7FFFFFFF ) ? '>' : ' ',
+					( i == 0 && bInLap ) ? '>' : ' ',
 					g_Lap[ iLapIdxTmp ].uLap,
 					( int )g_Lap[ iLapIdxTmp ].fTime / 60,
 					( int )g_Lap[ iLapIdxTmp ].fTime % 60,
 					( int )( g_Lap[ iLapIdxTmp ].fTime * 1000 ) % 1000
 				);
-				Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
+				Img.DrawString( szBuf,
+					g_fBestTime == g_Lap[ iLapIdxTmp ].fTime ? COLOR_BEST_LAP : COLOR_TIME,
+					COLOR_TIME_EDGE, 0 );
 				++i;
 			}
-		}
-		
-		// 時間表示
-		if(
-			iLapIdx >= 0 &&
-			g_Lap[ iLapIdx + 1 ].iLogNum != 0x7FFFFFFF &&
-			g_Lap[ iLapIdx + 1 ].fTime  != 0
-		){
-			double dTime = IS_HAND_LAPTIME ?
-				( double )( Img.frame - g_Lap[ iLapIdx ].iLogNum ) / g_dVideoFPS :
-				( dLogNum - g_Lap[ iLapIdx ].iLogNum ) / LOG_FREQ;
-			
-			sprintf( szBuf, "%2d'%02d.%03d", ( int )dTime / 60, ( int )dTime % 60, ( int )( dTime * 1000 ) % 1000 );
-			Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
-			bInLap = TRUE;
-		}else{
-			// まだ開始していない
-			Img.DrawString( "--'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
 		}
 		
 		/*** ベストとの車間距離表示 ***/
@@ -1545,13 +1544,14 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	// trackbar 設定
 	track_e[ TRACK_VSt ] =
 	track_e[ TRACK_VEd ] = ( filter->exfunc->get_frame_n( editp ) + 99 ) / 100;
-#ifdef CIRCUIT_TOMO
+	
 	track_e[ TRACK_LSt ] =
-	track_e[ TRACK_LEd ] = ( int )( g_iVsdLogNum / LOG_FREQ + 1 );
-#else
-	track_e[ TRACK_LSt ] =
-	track_e[ TRACK_LEd ] = ( g_iVsdLogNum + 99 ) / 100;
-#endif
+	track_e[ TRACK_LEd ] =
+		#ifdef CIRCUIT_TOMO
+			( int )( g_iVsdLogNum / LOG_FREQ + 1 );
+		#else
+			( g_iVsdLogNum + 99 ) / 100;
+		#endif
 	
 	// 設定再描画
 	filter->exfunc->filter_window_update( filter );
