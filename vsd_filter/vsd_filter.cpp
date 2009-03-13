@@ -811,34 +811,6 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			Img.DrawString( "--'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
 		}
 		
-		// Best 表示
-		sprintf(
-			szBuf, "Best%3d'%02d.%03d",
-			( int )g_fBestTime / 60,
-			( int )g_fBestTime % 60,
-			( int )( g_fBestTime * 1000 ) % 1000
-		);
-		Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 14, 1 );
-		
-		// Lapタイム表示
-		i = 0;
-		for( int iLapIdxTmp = iLapIdx + 1; iLapIdxTmp >= 0 && i < 3; --iLapIdxTmp ){
-			if( g_Lap[ iLapIdxTmp ].fTime != 0 ){
-				sprintf(
-					szBuf, "%c%3d%3d'%02d.%03d",
-					( i == 0 && bInLap ) ? '>' : ' ',
-					g_Lap[ iLapIdxTmp ].uLap,
-					( int )g_Lap[ iLapIdxTmp ].fTime / 60,
-					( int )g_Lap[ iLapIdxTmp ].fTime % 60,
-					( int )( g_Lap[ iLapIdxTmp ].fTime * 1000 ) % 1000
-				);
-				Img.DrawString( szBuf,
-					g_fBestTime == g_Lap[ iLapIdxTmp ].fTime ? COLOR_BEST_LAP : COLOR_TIME,
-					COLOR_TIME_EDGE, 0 );
-				++i;
-			}
-		}
-		
 		/*** ベストとの車間距離表示 ***/
 		
 		if( !IS_HAND_LAPTIME && bInLap ){
@@ -886,6 +858,34 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 				fmod( fabs( dDiffTime ), 60 )
 			);
 			Img.DrawString( szBuf, dDiffTime <= 0 ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
+		}
+		
+		// Best 表示
+		sprintf(
+			szBuf, "Best%3d'%02d.%03d",
+			( int )g_fBestTime / 60,
+			( int )g_fBestTime % 60,
+			( int )( g_fBestTime * 1000 ) % 1000
+		);
+		Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 14, 1 );
+		
+		// Lapタイム表示
+		i = 0;
+		for( int iLapIdxTmp = iLapIdx + 1; iLapIdxTmp >= 0 && i < 3; --iLapIdxTmp ){
+			if( g_Lap[ iLapIdxTmp ].fTime != 0 ){
+				sprintf(
+					szBuf, "%c%3d%3d'%02d.%03d",
+					( i == 0 && bInLap ) ? '>' : ' ',
+					g_Lap[ iLapIdxTmp ].uLap,
+					( int )g_Lap[ iLapIdxTmp ].fTime / 60,
+					( int )g_Lap[ iLapIdxTmp ].fTime % 60,
+					( int )( g_Lap[ iLapIdxTmp ].fTime * 1000 ) % 1000
+				);
+				Img.DrawString( szBuf,
+					g_fBestTime == g_Lap[ iLapIdxTmp ].fTime ? COLOR_BEST_LAP : COLOR_TIME,
+					COLOR_TIME_EDGE, 0 );
+				++i;
+			}
 		}
 	}
 	
