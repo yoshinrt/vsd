@@ -141,6 +141,8 @@ class CAviUtlImage : public FILTER_PROC_INFO {
 		IMG_POLYGON	= ( 1 << 4 ),
 	};
 	
+	static int m_iPosX, m_iPosY;
+	
   private:
 	static const UCHAR m_Font9p[];
 	static const UCHAR m_Font18p[];
@@ -162,6 +164,8 @@ int	CAviUtlImage::m_iFontW,
 	CAviUtlImage::m_iBMP_H,
 	CAviUtlImage::m_iBMP_BytesPerLine;
 const UCHAR *CAviUtlImage::m_pFontData;
+
+int CAviUtlImage::m_iPosX, CAviUtlImage::m_iPosY;
 
 /*** フォントデータ初期化 ***************************************************/
 
@@ -373,6 +377,8 @@ void CAviUtlImage::DrawFont( int x, int y, char c, const PIXEL_YC &yc, const PIX
 	
 	char cc = c - ' ';
 	
+	if( !c ) return;
+	
 	for( j = 0; j < GetFontH(); ++j ) for( i = 0; i < GetFontW(); ++i ){
 		if( GetBMPPix(
 			( cc % 16 ) * GetFontW() + i,
@@ -392,30 +398,26 @@ void CAviUtlImage::DrawFont( int x, int y, char c, const PIXEL_YC &yc, const PIX
 
 void CAviUtlImage::DrawString( char *szMsg, const PIXEL_YC &yc, UINT uFlag, int x, int y ){
 	
-	static int iPosX, iPosY;
-	
-	if( x != POS_DEFAULT ) iPosX = x;
-	if( y != POS_DEFAULT ) iPosY = y;
+	if( x != POS_DEFAULT ) m_iPosX = x;
+	if( y != POS_DEFAULT ) m_iPosY = y;
 	
 	for( int i = 0; szMsg[ i ]; ++i ){
-		DrawFont( iPosX + i * GetFontW(), iPosY, szMsg[ i ], yc, uFlag );
+		DrawFont( m_iPosX + i * GetFontW(), m_iPosY, szMsg[ i ], yc, uFlag );
 	}
 	
-	iPosY += GetFontH();
+	m_iPosY += GetFontH();
 }
 
 void CAviUtlImage::DrawString( char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag, int x, int y ){
 	
-	static int iPosX, iPosY;
-	
-	if( x != POS_DEFAULT ) iPosX = x;
-	if( y != POS_DEFAULT ) iPosY = y;
+	if( x != POS_DEFAULT ) m_iPosX = x;
+	if( y != POS_DEFAULT ) m_iPosY = y;
 	
 	for( int i = 0; szMsg[ i ]; ++i ){
-		DrawFont( iPosX + i * GetFontW(), iPosY, szMsg[ i ], yc, ycEdge, uFlag );
+		DrawFont( m_iPosX + i * GetFontW(), m_iPosY, szMsg[ i ], yc, ycEdge, uFlag );
 	}
 	
-	iPosY += GetFontH();
+	m_iPosY += GetFontH();
 }
 
 /*** ポリゴン描画 ***********************************************************/
@@ -684,8 +686,8 @@ const PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
 #define COLOR_G_HIST		yc_dark_green
 #define COLOR_DIFF_MINUS	yc_cyan
 #define COLOR_DIFF_PLUS		yc_red
-#define COLOR_CURRENT_POS	yc_green
-#define COLOR_FASTEST_POS	yc_red
+#define COLOR_CURRENT_POS	yc_red
+#define COLOR_FASTEST_POS	yc_green
 
 // 半端な dLogNum 値からログの中間値を求める
 #define GetVsdLog( p ) ( \
@@ -803,80 +805,86 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 				( double )( Img.frame - g_Lap[ iLapIdx ].iLogNum ) / g_dVideoFPS :
 				( dLogNum - g_Lap[ iLapIdx ].iLogNum ) / LOG_FREQ;
 			
-			sprintf( szBuf, "%2d'%02d.%03d", ( int )dTime / 60, ( int )dTime % 60, ( int )( dTime * 1000 ) % 1000 );
-			Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
+			sprintf( szBuf, "Time%2d'%02d.%03d", ( int )dTime / 60, ( int )dTime % 60, ( int )( dTime * 1000 ) % 1000 );
+			Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 13, 1 );
 			bInLap = TRUE;
 		}else{
 			// まだ開始していない
-			Img.DrawString( "--'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, ( Img.w - Img.GetFontW() * 9 ) / 2, 1 );
+			Img.DrawString( "Time -'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 13, 1 );
 		}
 		
 		/*** ベストとの車間距離表示 ***/
 		
-		if( !IS_HAND_LAPTIME && bInLap ){
-			// この周の走行距離を求める
-			double dMileage = GetVsdLog( fMileage ) - g_VsdLog[ g_Lap[ iLapIdx ].iLogNum ].fMileage;
-			
-			// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
-			// iBestLogNum <= 最終的に求める結果 < iBestLogNum + 1  となる
-			static int iBestLogNum = 0;
-			
-			// iBestLogNum がおかしかったら，リセット
-			if(
-				iBestLogNum < g_iBestLapLogNum ||
-				iBestLogNum >= g_iVsdLogNum ||
-				( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage ) > dMileage
-			) iBestLogNum = g_iBestLapLogNum;
-			
-			for(
-				;
-				( g_VsdLog[ iBestLogNum + 1 ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage ) <= dMileage &&
-				iBestLogNum < g_iVsdLogNum;
-				++iBestLogNum
-			);
-			
-			// 最速 Lap の，1/15秒以下の値を求める = A / B
-			double dBestLogNum =
-				( double )iBestLogNum +
-				// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
-				( dMileage - ( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage )) /
-				// B: 最速ラップは，1/15秒の間にこの距離を走った
-				( g_VsdLog[ iBestLogNum + 1 ].fMileage - g_VsdLog[ iBestLogNum ].fMileage );
-			
-			double dDiffTime =
-				(
-					( dLogNum - g_Lap[ iLapIdx ].iLogNum ) -
-					( dBestLogNum - g_iBestLapLogNum )
-				) / LOG_FREQ;
-			
-			if( -0.001 < dDiffTime && dDiffTime < 0.001 ) dDiffTime = 0;
-			
-			sprintf(
-				szBuf, "%c%d'%06.3f",
-				dDiffTime <= 0 ? '-' : '+',
-				( int )( fabs( dDiffTime )) / 60,
-				fmod( fabs( dDiffTime ), 60 )
-			);
-			Img.DrawString( szBuf, dDiffTime <= 0 ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
+		if( !IS_HAND_LAPTIME ){
+			if( bInLap ){
+				// この周の走行距離を求める
+				double dMileage = GetVsdLog( fMileage ) - g_VsdLog[ g_Lap[ iLapIdx ].iLogNum ].fMileage;
+				
+				// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
+				// iBestLogNum <= 最終的に求める結果 < iBestLogNum + 1  となる
+				static int iBestLogNum = 0;
+				
+				// iBestLogNum がおかしかったら，リセット
+				if(
+					iBestLogNum < g_iBestLapLogNum ||
+					iBestLogNum >= g_iVsdLogNum ||
+					( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage ) > dMileage
+				) iBestLogNum = g_iBestLapLogNum;
+				
+				for(
+					;
+					( g_VsdLog[ iBestLogNum + 1 ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage ) <= dMileage &&
+					iBestLogNum < g_iVsdLogNum;
+					++iBestLogNum
+				);
+				
+				// 最速 Lap の，1/15秒以下の値を求める = A / B
+				double dBestLogNum =
+					( double )iBestLogNum +
+					// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
+					( dMileage - ( g_VsdLog[ iBestLogNum ].fMileage - g_VsdLog[ g_iBestLapLogNum ].fMileage )) /
+					// B: 最速ラップは，1/15秒の間にこの距離を走った
+					( g_VsdLog[ iBestLogNum + 1 ].fMileage - g_VsdLog[ iBestLogNum ].fMileage );
+				
+				double dDiffTime =
+					(
+						( dLogNum - g_Lap[ iLapIdx ].iLogNum ) -
+						( dBestLogNum - g_iBestLapLogNum )
+					) / LOG_FREQ;
+				
+				if( -0.001 < dDiffTime && dDiffTime < 0.001 ) dDiffTime = 0;
+				
+				sprintf(
+					szBuf, "    %c%d'%06.3f",
+					dDiffTime <= 0 ? '-' : '+',
+					( int )( fabs( dDiffTime )) / 60,
+					fmod( fabs( dDiffTime ), 60 )
+				);
+				Img.DrawString( szBuf, dDiffTime <= 0 ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
+			}else{
+				Img.m_iPosY += Img.GetFontH();
+			}
 		}
+		
+		Img.m_iPosY += Img.GetFontH() / 4;
 		
 		// Best 表示
 		sprintf(
-			szBuf, "Best%3d'%02d.%03d",
+			szBuf, "Best%2d'%02d.%03d",
 			( int )g_fBestTime / 60,
 			( int )g_fBestTime % 60,
 			( int )( g_fBestTime * 1000 ) % 1000
 		);
-		Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 14, 1 );
+		Img.DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
 		
 		// Lapタイム表示
 		i = 0;
 		for( int iLapIdxTmp = iLapIdx + 1; iLapIdxTmp >= 0 && i < 3; --iLapIdxTmp ){
 			if( g_Lap[ iLapIdxTmp ].fTime != 0 ){
 				sprintf(
-					szBuf, "%c%3d%3d'%02d.%03d",
-					( i == 0 && bInLap ) ? '>' : ' ',
+					szBuf, "%3d%c%2d'%02d.%03d",
 					g_Lap[ iLapIdxTmp ].uLap,
+					( i == 0 && bInLap ) ? '*' : ' ',
 					( int )g_Lap[ iLapIdxTmp ].fTime / 60,
 					( int )g_Lap[ iLapIdxTmp ].fTime % 60,
 					( int )( g_Lap[ iLapIdxTmp ].fTime * 1000 ) % 1000
