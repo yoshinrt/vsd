@@ -543,7 +543,7 @@ enum {
 };
 
 FILTER_DLL filter = {
-	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_IMPORT | FILTER_FLAG_EXPORT,
+	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_IMPORT | FILTER_FLAG_EXPORT | FILTER_FLAG_MAIN_MESSAGE,
 								//	フィルタのフラグ
 								//	FILTER_FLAG_ALWAYS_ACTIVE		: フィルタを常にアクティブにします
 								//	FILTER_FLAG_CONFIG_POPUP		: 設定をポップアップメニューにします
@@ -1239,6 +1239,7 @@ static UINT ReadPTD( FILE *fp, UINT uOffs ){
 
 /*** MAP 回転処理 ***********************************************************/
 
+#ifndef CIRCUIT_TOMO
 void RotateMap( FILTER *fp ){
 	
 	int i;
@@ -1263,6 +1264,7 @@ void RotateMap( FILTER *fp ){
 	g_dMapOffsX		= dMinX;
 	g_dMapOffsY		= dMinY;
 }
+#endif
 
 /*** ログリード *************************************************************/
 
@@ -1294,6 +1296,8 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 		BOOL	bMark = FALSE;
 		FRAME_STATUS	fsp;
 		
+		g_bCalcLapTimeReq = TRUE;
+		
 		while( fgets( szBuf2, BUF_SIZE, fp )){
 			if( bMark ){
 				// マークセット
@@ -1304,7 +1308,7 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 				
 			}else if( strncmp( szBuf2, "MARK:", 5 ) == 0 ){
 				// マークモードに入る
-				g_bCalcLapTimeReq = bMark = TRUE;
+				bMark = TRUE;
 				
 			}else{
 				// Mark 以外のパラメータ
@@ -1357,7 +1361,6 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	i				= ReadPTD( fp, offsetof( VSD_LOG_t, fSpeed ));
 	
 	if( i > g_iVsdLogNum ) g_iVsdLogNum = i;
-	g_bCalcLapTimeReq = TRUE;
 	
 #else // CIRCUIT_TOMO
 	// 20070814 以降のログは，横 G が反転している
@@ -1550,9 +1553,6 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	g_Lap[ g_iLapNum ].fTime	= 0;			// 番犬
 	
 	// trackbar 設定
-	track_e[ TRACK_VSt ] =
-	track_e[ TRACK_VEd ] = ( filter->exfunc->get_frame_n( editp ) + 99 ) / 100;
-	
 	track_e[ TRACK_LSt ] =
 	track_e[ TRACK_LEd ] =
 		#ifdef CIRCUIT_TOMO
@@ -1618,12 +1618,11 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	//	編集中でなければ何もしない
 	if( filter->exfunc->is_editing(editp) != TRUE ) return FALSE;
 	
+	int	iFrame;
+	
 	switch( message ) {
 	  case WM_FILTER_IMPORT:
 		return ReadLog( editp, filter );
-		
-	  case WM_FILTER_SAVE_START:
-		g_bCalcLapTimeReq = TRUE;
 		
 	  Case WM_FILTER_EXPORT:
 		return SaveConfig( editp, filter );
@@ -1642,6 +1641,13 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 		g_bCalcLapTimeReq = TRUE;
 		
+		// trackbar 設定
+		track_e[ TRACK_VSt ] =
+		track_e[ TRACK_VEd ] = ( filter->exfunc->get_frame_n( editp ) + 99 ) / 100;
+		
+		// 設定再描画
+		filter->exfunc->filter_window_update( filter );
+		
 	  Case WM_FILTER_FILE_CLOSE:
 		delete [] g_VsdLog;
 		g_VsdLog		= NULL;
@@ -1650,6 +1656,35 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		delete [] g_Lap;
 		g_Lap		= NULL;
 		g_iLapNum	= 0;
+		
+	  Case WM_FILTER_MAIN_KEY_DOWN:
+		switch( wparam ){
+			
+		  case 'M':
+			// マーク
+			FRAME_STATUS	fsp;
+			iFrame = filter->exfunc->get_frame( editp );
+			
+			filter->exfunc->get_frame_status( editp, iFrame, &fsp );
+			fsp.edit_flag ^= EDIT_FRAME_EDIT_FLAG_MARKFRAME;
+			filter->exfunc->set_frame_status( editp, iFrame, &fsp );
+			
+			g_bCalcLapTimeReq = TRUE;
+			return TRUE;
+			
+		  Case 'S':
+			// フレーム数セット
+			iFrame = filter->exfunc->get_frame( editp );
+			
+			filter->track[ TRACK_VSt ]	= filter->track[ TRACK_VEd ];
+			filter->track[ TRACK_VSt2 ]	= filter->track[ TRACK_VEd2 ];
+			
+			filter->track[ TRACK_VEd ]	= iFrame / 100;
+			filter->track[ TRACK_VEd2 ]	= iFrame % 100;
+			
+			// 設定再描画
+			filter->exfunc->filter_window_update( filter );
+		}
 	}
 	
 	return FALSE;
@@ -1677,19 +1712,12 @@ BOOL func_update( FILTER *fp, int status ){
 		// 設定再描画
 		fp->exfunc->filter_window_update( fp );
 	}
-#endif
-	
-	if(
-		status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LAP ) &&
-		fp->check[ CHECK_LAP ]
-	){
-		g_bCalcLapTimeReq = TRUE;
-	}
 	
 	// マップ回転
 	if( status == ( FILTER_UPDATE_STATUS_TRACK + TRACK_MapAngle )){
 		RotateMap( fp );
 	}
+#endif
 	
 	bReEnter = FALSE;
 	
