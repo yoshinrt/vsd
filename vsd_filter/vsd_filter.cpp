@@ -734,7 +734,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	const int	iMeterMinDeg	= 135;
 	const int	iMeterMaxDeg	= 45;
 	const int	iMeterMaxVal	= fp->track[ TRACK_TACHO ] * 1000;
-	const int	iMeterDegRange	= (( iMeterMaxDeg < iMeterMinDeg ? iMeterMaxDeg + 360 : iMeterMaxDeg ) - iMeterMinDeg );
+	const int	iMeterDegRange	= ( iMeterMaxDeg + 360 - iMeterMinDeg ) % 360;
 	const int	iMeterScaleLen	= iMeterR / 8;
 	
 	const int	iMeterSCx		= iMeterR + 2;
@@ -745,8 +745,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	const int	iMeterCy		= Img.h - iMeterR - 2;
 	const int	iMeterMinDeg	= 135;
 	const int	iMeterMaxDeg	= 45;
-	const int	iMeterMaxVal	= 6000;
-	const int	iMeterDegRange	= (( iMeterMaxDeg < iMeterMinDeg ? iMeterMaxDeg + 360 : iMeterMaxDeg ) - iMeterMinDeg );
+	const int	iMeterMaxVal	= 7000;
+	const int	iMeterDegRange	= ( iMeterMaxDeg + 360 - iMeterMinDeg ) % 360;
 	const int	iMeterScaleLen	= iMeterR / 8;
 #endif
 	
@@ -905,7 +905,6 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
 	);
 	
-#ifdef CIRCUIT_TOMO
 	// タコメータ
 	for( i = 0; i <= iMeterMaxVal; i += 500 ){
 		int iDeg = iMeterDegRange * i / iMeterMaxVal + iMeterMinDeg;
@@ -935,6 +934,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		}
 	}
 	
+#ifdef CIRCUIT_TOMO
 	// スピードメーターパネル
 	Img.DrawCircle(
 		iMeterSCx, iMeterCy, iMeterR, COLOR_PANEL,
@@ -969,28 +969,6 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 				);
 			}
 		}
-	}
-#else // CIRCUIT_TOMO
-	for( i = 0; i <= iMeterMaxVal; i += 500 ){
-		int iDeg = iMeterDegRange * i / iMeterMaxVal + iMeterMinDeg;
-		if( iDeg >= 360 ) iDeg -= 360;
-		
-		// メーターパネル目盛り
-		Img.DrawLine(
-			( int )( cos( iDeg * ToRAD ) * iMeterR ) + iMeterCx,
-			( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
-			( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCx,
-			( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
-			COLOR_SCALE, 0
-		);
-		
-		// メーターパネル目盛り数値
-		if( i % 1000 == 0 ) Img.DrawFont(
-			( int )( cos( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCx - Img.GetFontW() / 2,
-			( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - Img.GetFontH() / 2,
-			'0' + i / 1000 + ( i >= 1000 ? 1 : 0 ),
-			COLOR_STR, 0
-		);
 	}
 #endif // CIRCUIT_TOMO
 	
@@ -1132,14 +1110,6 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	}
 	
 	// スピード表示
-	/*
-	sprintf( szBuf, "%d\x7F%4d\x80\x81", uGear, ( int )dSpeed );
-	Img.DrawString(
-		iMeterCx - 4 * Img.GetFontW(), iMeterCy + iMeterR / 2,
-		szBuf,
-		COLOR_STR, 0
-	);
-	*/
 	sprintf( szBuf, "%d\x7F", uGear );
 	Img.DrawString(
 		szBuf,
@@ -1179,14 +1149,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 #endif
 	
 	// Tacho の針
-	double dTachoNeedle =
-		iMeterDegRange / ( double )iMeterMaxVal *
-	#ifdef CIRCUIT_TOMO
-		dTacho
-	#else
-		( dTacho <= 2000 ? dTacho / 2 : dTacho - 1000 )
-	#endif
-		+ iMeterMinDeg;
+	double dTachoNeedle = iMeterDegRange / ( double )iMeterMaxVal * dTacho + iMeterMinDeg;
 	if( dTachoNeedle >= 360 ) dTachoNeedle -= 360;
 	dTachoNeedle = dTachoNeedle * ToRAD;
 	
