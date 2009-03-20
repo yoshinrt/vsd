@@ -115,8 +115,8 @@ class CAviUtlImage : public FILTER_PROC_INFO {
 		const PIXEL_YC &yc, UINT uFlag
 	);
 	
-	void DrawFont( int x, int y, char c, const PIXEL_YC &yc, UINT uFlag );
-	void DrawFont( int x, int y, char c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag );
+	void DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, UINT uFlag );
+	void DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag );
 	void DrawString( char *szMsg, const PIXEL_YC &yc, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
 	void DrawString( char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
 	
@@ -357,7 +357,7 @@ void CAviUtlImage::CopyRect(
 
 /*** DrawFont ***************************************************************/
 
-void CAviUtlImage::DrawFont( int x, int y, char c, const PIXEL_YC &yc, UINT uFlag ){
+void CAviUtlImage::DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, UINT uFlag ){
 	
 	int	i, j;
 	
@@ -371,23 +371,23 @@ void CAviUtlImage::DrawFont( int x, int y, char c, const PIXEL_YC &yc, UINT uFla
 	}
 }
 
-void CAviUtlImage::DrawFont( int x, int y, char c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag ){
+void CAviUtlImage::DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag ){
 	
 	int	i, j;
 	
-	char cc = c - ' ';
+	UCHAR cc = c - ' ';
 	
-	if( !c ) return;
+	if( !cc ) return;
 	
 	for( j = 0; j < GetFontH(); ++j ) for( i = 0; i < GetFontW(); ++i ){
 		if( GetBMPPix(
 			( cc % 16 ) * GetFontW() + i,
 			( cc / 16 ) * GetFontH() + j
 		) == 0 ){
-			PutPixel( x + i - 1, y + j, ycEdge, uFlag );
-			PutPixel( x + i + 1, y + j, ycEdge, uFlag );
-			PutPixel( x + i, y + j - 1, ycEdge, uFlag );
-			PutPixel( x + i, y + j + 1, ycEdge, uFlag );
+			PutPixel( x + i - 1, y + j,		ycEdge, uFlag );
+			PutPixel( x + i + 1, y + j,		ycEdge, uFlag );
+			PutPixel( x + i,	 y + j - 1, ycEdge, uFlag );
+			PutPixel( x + i,	 y + j + 1, ycEdge, uFlag );
 		}
 	}
 	
