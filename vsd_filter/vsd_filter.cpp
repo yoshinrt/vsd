@@ -1022,61 +1022,70 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	
 	// MAP 表示
 	if( LineTrace ){
+		double dGx, dGy;
 		
 		int iGxPrev = INVALID_POS_I, iGyPrev;
 		
-		for( i = -( int )( LineTrace * LOG_FREQ ); i <= 1 ; ++i ){
-			if( iLogNum + i >= 0 ){
-				// i == 1 時は最後の中途半端な LogNum
-				#define GetMapPos( p, a ) ( (( p ) - g_dMapOffs ## a ) / g_dMapSize * MAX_MAP_SIZE + 8 )
-				double dGx = GetMapPos(( i != 1 ) ? g_VsdLog[ iLogNum + i ].fX : GetVsdLog( fX ), X );
-				double dGy = GetMapPos(( i != 1 ) ? g_VsdLog[ iLogNum + i ].fY : GetVsdLog( fY ), Y );
+		int	iLineSt = iLapIdx >= 0 ? g_Lap[ iLapIdx ].iLogNum : 0;
+		if( iLogNum - iLineSt > ( int )( LineTrace * LOG_FREQ ))
+			iLineSt = iLogNum - ( int )( LineTrace * LOG_FREQ );
+		
+		int iLineEd = iLapIdx != g_iLapNum - 1 ? g_Lap[ iLapIdx + 1 ].iLogNum : g_iVsdLogNum - 1;
+		if( iLineEd - iLogNum > ( int )( LineTrace * LOG_FREQ ))
+			iLineEd = iLogNum + ( int )( LineTrace * LOG_FREQ );
+		
+		for( i = iLineSt; i <= iLineEd ; ++i ){
+			#define GetMapPos( p, a ) ( (( p ) - g_dMapOffs ## a ) / g_dMapSize * MAX_MAP_SIZE + 8 )
+			dGx = GetMapPos( g_VsdLog[ i ].fX, X );
+			dGy = GetMapPos( g_VsdLog[ i ].fY, Y );
+			
+			if( !_isnan( dGx )){
+				iGx = ( int )dGx;
+				iGy = ( int )dGy;
 				
-				if( !_isnan( dGx )){
-					iGx = ( int )dGx;
-					iGy = ( int )dGy;
+				if( iGxPrev != INVALID_POS_I ){
+					// Line の色用に G を求める
+					double dG = sqrt(
+						g_VsdLog[ i ].fGx * g_VsdLog[ i ].fGx +
+						g_VsdLog[ i ].fGy * g_VsdLog[ i ].fGy
+					) / MAP_G_MAX;
 					
-					if( iGxPrev != INVALID_POS_I ){
-						// Line の色用に G を求める
-						double dG = sqrt(
-							g_VsdLog[ iLogNum + i ].fGx * g_VsdLog[ iLogNum + i ].fGx +
-							g_VsdLog[ iLogNum + i ].fGy * g_VsdLog[ iLogNum + i ].fGy
-						) / MAP_G_MAX;
-						
-						PIXEL_YC yc_line;
-						
-						if( dG < 0.5 ){
-							dG *= 2;
-							yc_line.y  = ( short )( MAP_LINE2.y  * dG + MAP_LINE1.y  * ( 1 - dG ));
-							yc_line.cb = ( short )( MAP_LINE2.cb * dG + MAP_LINE1.cb * ( 1 - dG ));
-							yc_line.cr = ( short )( MAP_LINE2.cr * dG + MAP_LINE1.cr * ( 1 - dG ));
-						}else if( dG < 1.0 ){
-							dG = ( dG - 0.5 ) * 2;
-							yc_line.y  = ( short )( MAP_LINE3.y  * dG + MAP_LINE2.y  * ( 1 - dG ));
-							yc_line.cb = ( short )( MAP_LINE3.cb * dG + MAP_LINE2.cb * ( 1 - dG ));
-							yc_line.cr = ( short )( MAP_LINE3.cr * dG + MAP_LINE2.cr * ( 1 - dG ));
-						}else{
-							yc_line = MAP_LINE3;
-						}
-						
-						// Line を引く
-						Img.DrawLine(
-							iGx, iGy, iGxPrev, iGyPrev,
-							LINE_WIDTH, yc_line, 0
-						);
+					PIXEL_YC yc_line;
+					
+					if( dG < 0.5 ){
+						dG *= 2;
+						yc_line.y  = ( short )( MAP_LINE2.y  * dG + MAP_LINE1.y  * ( 1 - dG ));
+						yc_line.cb = ( short )( MAP_LINE2.cb * dG + MAP_LINE1.cb * ( 1 - dG ));
+						yc_line.cr = ( short )( MAP_LINE2.cr * dG + MAP_LINE1.cr * ( 1 - dG ));
+					}else if( dG < 1.0 ){
+						dG = ( dG - 0.5 ) * 2;
+						yc_line.y  = ( short )( MAP_LINE3.y  * dG + MAP_LINE2.y  * ( 1 - dG ));
+						yc_line.cb = ( short )( MAP_LINE3.cb * dG + MAP_LINE2.cb * ( 1 - dG ));
+						yc_line.cr = ( short )( MAP_LINE3.cr * dG + MAP_LINE2.cr * ( 1 - dG ));
+					}else{
+						yc_line = MAP_LINE3;
 					}
-				}else{
-					iGx = INVALID_POS_I;
+					
+					// Line を引く
+					Img.DrawLine(
+						iGx, iGy, iGxPrev, iGyPrev,
+						LINE_WIDTH, yc_line, 0
+					);
 				}
-				
-				iGxPrev = iGx;
-				iGyPrev = iGy;
+			}else{
+				iGx = INVALID_POS_I;
 			}
+			
+			iGxPrev = iGx;
+			iGyPrev = iGy;
 		}
 		
 		// MAP インジケータ (自車)
-		if( iGx != INVALID_POS_I ) Img.DrawCircle(
-			iGx, iGy, iMeterR / 20,
+		dGx = GetMapPos( GetVsdLog( fX ), X );
+		dGy = GetMapPos( GetVsdLog( fY ), Y );
+		
+		if( !_isnan( dGx )) Img.DrawCircle(
+			( int )dGx, ( int )dGy, iMeterR / 20,
 			COLOR_CURRENT_POS, CAviUtlImage::IMG_FILL
 		);
 	}
