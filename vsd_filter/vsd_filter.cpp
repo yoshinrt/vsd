@@ -17,6 +17,7 @@
 #include "filter.h"
 #include "../vsd/main.h"
 #include "dds_lib/dds_lib.h"
+#include "CVsdImg.h"
 
 #ifdef CIRCUIT_TOMO
 	#define	FILE_EXT		"Pulse-Time Data (*.ptd)\0*.ptd\0Config File (*.cfg)\0*.cfg\0AllFile (*.*)\0*.*\0"
@@ -44,8 +45,8 @@
 #define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 2 ))
 #define MAX_LAP			200
 
-#define VideoSt		( fp->track[ TRACK_VSt ] * 100 + fp->track[ TRACK_VSt2 ] )
-#define VideoEd		( fp->track[ TRACK_VEd ] * 100 + fp->track[ TRACK_VEd2 ] )
+#define VideoSt			( fp->track[ TRACK_VSt ] * 100 + fp->track[ TRACK_VSt2 ] )
+#define VideoEd			( fp->track[ TRACK_VEd ] * 100 + fp->track[ TRACK_VEd2 ] )
 #ifdef CIRCUIT_TOMO
 	#define LogSt		(( fp->track[ TRACK_LSt ] * 1000 + fp->track[ TRACK_LSt2 ] ) / 1000 * LOG_FREQ )
 	#define LogEd		(( fp->track[ TRACK_LEd ] * 1000 + fp->track[ TRACK_LEd2 ] ) / 1000 * LOG_FREQ )
@@ -53,7 +54,10 @@
 	#define LogSt		( fp->track[ TRACK_LSt ] * 100 + fp->track[ TRACK_LSt2 ] )
 	#define LogEd		( fp->track[ TRACK_LEd ] * 100 + fp->track[ TRACK_LEd2 ] )
 #endif
-#define LineTrace	fp->track[ TRACK_LineTrace ]
+#define LineTrace		fp->track[ TRACK_LineTrace ]
+
+#define DispLap			fp->check[ CHECK_LAP ]
+#define DispGSnake		fp->check[ CHECK_SNAKE ]
 
 #define G_CX_CNT		30
 #define G_HIST			(( int )( LOG_FREQ * 3 ))
@@ -64,7 +68,6 @@
 #define INVALID_POS_I	0x7FFFFFFF
 #define INVALID_POS_D	NaN
 
-#define HIREZO_TH		600
 #define LINE_WIDTH		( Img.w / HIREZO_TH + 1 )
 
 #define GPS_LOG_OFFS	15
@@ -82,358 +85,6 @@
 #else
 	#define IS_HAND_LAPTIME	( g_iVsdLogNum == 0 )
 #endif
-
-/*** CAviUtlImage class *****************************************************/
-
-#define POS_DEFAULT	0x80000000
-
-class CAviUtlImage : public FILTER_PROC_INFO {
-	
-  public:
-	//void PutPixel( int x, int y, short iY, short iCr, short iCb );
-	void PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag );
-	PIXEL_YC &GetPixel( int x, int y, UINT uFlag );
-	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag );
-	void DrawLine( int x1, int y1, int x2, int y2, int width, const PIXEL_YC &yc, UINT uFlag );
-	void FillLine( int x1, int y1, int x2,         const PIXEL_YC &yc, UINT uFlag );
-	void DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag );
-	void DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFlag );
-	int GetIndex( int x, int y ){ return max_w * y + x; }
-	
-	PIXEL_YC &GetYC( PIXEL_YC &yc, int r, int g, int b ){
-		yc.y  = ( int )( 0.299 * r + 0.587 * g + 0.114 * b + .5 );
-		yc.cr = ( int )( 0.500 * r - 0.419 * g - 0.081 * b + .5 );
-		yc.cb = ( int )(-0.169 * r - 0.332 * g + 0.500 * b + .5 );
-		
-		return yc;
-	}
-	
-	void CAviUtlImage::CopyRect(
-		int	Sx1, int Sy1,
-		int	Sx2, int Sy2,
-		int Dx,  int Dy,
-		const PIXEL_YC &yc, UINT uFlag
-	);
-	
-	void DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, UINT uFlag );
-	void DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag );
-	void DrawString( char *szMsg, const PIXEL_YC &yc, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
-	void DrawString( char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
-	
-	// ポリゴン描写
-	void PolygonClear( void );
-	void PolygonDraw( const PIXEL_YC &yc, UINT uFlag );
-	
-	// フォント
-	UCHAR GetBMPPix( int x, int y ){
-		return m_pFontData[ ( m_iBMP_H - y - 1 ) * m_iBMP_BytesPerLine + ( x >> 3 ) ] & ( 1 << ( 7 - ( x & 0x7 )));
-	}
-	
-	int GetFontW( void ){ return m_iFontW; }
-	int GetFontH( void ){ return m_iFontH; }
-	void InitFont( void );
-	
-	enum {
-		IMG_ALFA	= ( 1 << 0 ),
-		IMG_TMP		= ( 1 << 1 ),
-		IMG_FILL	= ( 1 << 2 ),
-		IMG_TMP_DST	= ( 1 << 3 ),
-		IMG_POLYGON	= ( 1 << 4 ),
-	};
-	
-	static int m_iPosX, m_iPosY;
-	
-  private:
-	static const UCHAR m_Font9p[];
-	static const UCHAR m_Font18p[];
-	
-	static int	m_iFontW, m_iFontH, m_iBMP_H, m_iBMP_BytesPerLine;
-	static const UCHAR *m_pFontData;
-};
-
-const UCHAR CAviUtlImage::m_Font9p[] = {
-	#include "font_9p.h"
-};
-
-const UCHAR CAviUtlImage::m_Font18p[] = {
-	#include "font_18p.h"
-};
-
-int	CAviUtlImage::m_iFontW,
-	CAviUtlImage::m_iFontH,
-	CAviUtlImage::m_iBMP_H,
-	CAviUtlImage::m_iBMP_BytesPerLine;
-const UCHAR *CAviUtlImage::m_pFontData;
-
-int CAviUtlImage::m_iPosX, CAviUtlImage::m_iPosY;
-
-/*** フォントデータ初期化 ***************************************************/
-
-void CAviUtlImage::InitFont( void ){
-	static int	iPreW = 0;
-	
-	if( iPreW != w ){
-		iPreW = w;
-		
-		const UCHAR *p = w >= HIREZO_TH ? m_Font18p : m_Font9p;
-		
-		m_iBMP_H = *( int *)( p + 0x16 );
-		m_iFontW = *( int *)( p + 0x12 ) / 16;
-		m_iFontH = m_iBMP_H / 7;
-		
-		m_pFontData = p +
-			0x36 +	// パレットデータ先頭 addr
-			( 1 << *( USHORT *)( p + 0x1A )) *	// color depth
-			4; // 1色あたりのバイト数
-		
-		m_iBMP_BytesPerLine = *( int *)( p + 0x12 ) / 8;
-	}
-}
-
-/*** PutPixel ***************************************************************/
-
-/* 変換式
-Y  =  0.299R+0.587G+0.114B
-Cr =  0.500R-0.419G-0.081B
-Cb = -0.169R-0.332G+0.500B
-
-R = Y+1.402Cr 
-G = Y-0.714Cr-0.344Cb 
-B = Y+1.772Cb 
-*/
-
-/*
-inline void CAviUtlImage::PutPixel( int x, int y, short iY, short iCr, short iCb ){
-	int	iIndex = GetIndex( x, y );
-	
-	ycp_edit[ iIndex ].y  = iY;
-	ycp_edit[ iIndex ].cr = iCr;
-	ycp_edit[ iIndex ].cb = iCb;
-}
-*/
-
-inline void CAviUtlImage::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
-	
-	if( uFlag & IMG_POLYGON ){
-		// ポリゴン描画
-		if( x > ycp_temp[ y ].cr ) ycp_temp[ y ].cr = x;
-		if( x < ycp_temp[ y ].cb ) ycp_temp[ y ].cb = x;
-	}else{
-		PIXEL_YC	*ycp = ( uFlag & IMG_TMP ) ? ycp_temp : ycp_edit;
-		
-		if( uFlag & IMG_ALFA && yc.y == -1 ) return;
-		
-		if( 0 <= x && x < max_w && 0 <= y && y < max_h ){
-			if( uFlag & IMG_ALFA ){
-				int	iIndex = GetIndex( x, y );
-				
-				ycp[ iIndex ].y  = ( yc.y  + ycp[ iIndex ].y  ) / 2;
-				ycp[ iIndex ].cr = ( yc.cr + ycp[ iIndex ].cr ) / 2;
-				ycp[ iIndex ].cb = ( yc.cb + ycp[ iIndex ].cb ) / 2;
-			}else{
-				ycp[ GetIndex( x, y ) ] = yc;
-			}
-		}
-	}
-}
-
-inline PIXEL_YC &CAviUtlImage::GetPixel( int x, int y, UINT uFlag ){
-	PIXEL_YC	*ycp = ( uFlag & IMG_TMP ) ? ycp_temp : ycp_edit;
-	return	ycp[ GetIndex( x, y ) ];
-}
-
-/*** DrawLine ***************************************************************/
-
-#define ABS( x )			(( x ) < 0 ? -( x ) : ( x ))
-#define SWAP( x, y, tmp )	( tmp = x, x = y, y = tmp )
-
-void CAviUtlImage::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag ){
-	
-	int	i;
-	
-	if( x1 == x2 && y1 == y2 ){
-		PutPixel( x1, y1, yc, uFlag );
-	}else if( ABS( x1 - x2 ) >= ABS( y1 - y2 )){
-		// x 基準で描画
-		if( x1 > x2 ){
-			SWAP( x1, x2, i );
-			SWAP( y1, y2, i );
-		}
-		
-		int iYDiff = y2 - y1 + (( y2 > y1 ) ? 1 : ( y2 < y1 ) ? -1 : 0 );
-		
-		for( i = x1; i <= x2; ++i ){
-			PutPixel( i, ( int )(( double )iYDiff * ( i - x1 + .5 ) / ( x2 - x1 + 1 ) /*+ .5*/ ) + y1, yc, uFlag );
-		}
-	}else{
-		// y 基準で描画
-		if( y1 > y2 ){
-			SWAP( y1, y2, i );
-			SWAP( x1, x2, i );
-		}
-		
-		int iXDiff = x2 - x1 + (( x2 > x1 ) ? 1 : ( x2 < x1 ) ? -1 : 0 );
-		
-		for( i = y1; i <= y2; ++i ){
-			PutPixel(( int )(( double )iXDiff * ( i - y1 + .5 ) / ( y2 - y1 + 1 ) /*+ .5*/ ) + x1, i, yc, uFlag );
-		}
-	}
-}
-
-void CAviUtlImage::DrawLine( int x1, int y1, int x2, int y2, int width, const PIXEL_YC &yc, UINT uFlag ){
-	for( int y = 0; y < width; ++y ) for( int x = 0; x < width; ++x ){
-		DrawLine(
-			x1 + x - width / 2, y1 + y - width / 2,
-			x2 + x - width / 2, y2 + y - width / 2,
-			yc, uFlag
-		);
-	}
-}
-
-inline void CAviUtlImage::FillLine( int x1, int y1, int x2, const PIXEL_YC &yc, UINT uFlag ){
-	
-	int	i;
-	
-	// x 基準で描画
-	for( i = x1; i <= x2; ++i ) PutPixel( i, y1, yc, uFlag );
-}
-
-/*** DrawRect ***************************************************************/
-
-void CAviUtlImage::DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag ){
-	int	y;
-	
-	if( y1 > y2 ) SWAP( y1, y2, y );
-	if( x1 > x2 ) SWAP( x1, x2, y );
-	
-	for( y = y1; y <= y2; ++y ){
-		FillLine( x1, y, x2, yc, uFlag );
-	}
-}
-
-/*** DrawCircle *************************************************************/
-
-void CAviUtlImage::DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFlag ){
-	
-	int			i, j;
-	PIXEL_YC	yc_void = { -1, 0, 0 };
-	
-	// Polygon クリア
-	if( uFlag & IMG_FILL ){
-		PolygonClear();
-		uFlag |= IMG_POLYGON;
-	}
-	
-	// 円を書く
-	for( i = 0, j = r; i < j; ++i ){
-		
-		j = ( int )( sqrt(( double )( r * r - i * i )) + .5 );
-		
-		PutPixel( x + i, y + j, yc, uFlag ); PutPixel( x + i, y - j, yc, uFlag );
-		PutPixel( x - i, y + j, yc, uFlag ); PutPixel( x - i, y - j, yc, uFlag );
-		PutPixel( x + j, y + i, yc, uFlag ); PutPixel( x - j, y + i, yc, uFlag );
-		PutPixel( x + j, y - i, yc, uFlag ); PutPixel( x - j, y - i, yc, uFlag );
-	}
-	
-	// Polygon 合成
-	if( uFlag & IMG_FILL ) PolygonDraw( yc, uFlag );
-}
-
-/*** CopyRect ***************************************************************/
-
-void CAviUtlImage::CopyRect(
-	int	Sx1, int Sy1,
-	int	Sx2, int Sy2,
-	int Dx,  int Dy,
-	const PIXEL_YC &yc, UINT uFlag
-){
-	int	x, y;
-	UINT	uFlagDst = uFlag & ~IMG_TMP | ( uFlag & IMG_TMP_DST ? IMG_TMP : 0 );
-	
-	for( y = Sy1; y <= Sy2; ++y ) for( x = Sx1; x <= Sx2; ++x ){
-		PutPixel( Dx + x - Sx1, Dy + y - Sy1, GetPixel( x, y, uFlag ), uFlagDst );
-	}
-}
-
-/*** DrawFont ***************************************************************/
-
-void CAviUtlImage::DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, UINT uFlag ){
-	
-	int	i, j;
-	
-	c -= ' ';
-	
-	for( j = 0; j < GetFontH(); ++j ) for( i = 0; i < GetFontW(); ++i ){
-		if( GetBMPPix(
-			( c % 16 ) * GetFontW() + i,
-			( c / 16 ) * GetFontH() + j
-		) == 0 ) PutPixel( x + i, y + j, yc, uFlag );
-	}
-}
-
-void CAviUtlImage::DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag ){
-	
-	int	i, j;
-	
-	UCHAR cc = c - ' ';
-	
-	if( !cc ) return;
-	
-	for( j = 0; j < GetFontH(); ++j ) for( i = 0; i < GetFontW(); ++i ){
-		if( GetBMPPix(
-			( cc % 16 ) * GetFontW() + i,
-			( cc / 16 ) * GetFontH() + j
-		) == 0 ){
-			PutPixel( x + i - 1, y + j,		ycEdge, uFlag );
-			PutPixel( x + i + 1, y + j,		ycEdge, uFlag );
-			PutPixel( x + i,	 y + j - 1, ycEdge, uFlag );
-			PutPixel( x + i,	 y + j + 1, ycEdge, uFlag );
-		}
-	}
-	
-	DrawFont( x, y, c, yc, uFlag );
-}
-
-/*** DrawString *************************************************************/
-
-void CAviUtlImage::DrawString( char *szMsg, const PIXEL_YC &yc, UINT uFlag, int x, int y ){
-	
-	if( x != POS_DEFAULT ) m_iPosX = x;
-	if( y != POS_DEFAULT ) m_iPosY = y;
-	
-	for( int i = 0; szMsg[ i ]; ++i ){
-		DrawFont( m_iPosX + i * GetFontW(), m_iPosY, szMsg[ i ], yc, uFlag );
-	}
-	
-	m_iPosY += GetFontH();
-}
-
-void CAviUtlImage::DrawString( char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag, int x, int y ){
-	
-	if( x != POS_DEFAULT ) m_iPosX = x;
-	if( y != POS_DEFAULT ) m_iPosY = y;
-	
-	for( int i = 0; szMsg[ i ]; ++i ){
-		DrawFont( m_iPosX + i * GetFontW(), m_iPosY, szMsg[ i ], yc, ycEdge, uFlag );
-	}
-	
-	m_iPosY += GetFontH();
-}
-
-/*** ポリゴン描画 ***********************************************************/
-
-inline void CAviUtlImage::PolygonClear( void ){
-	for( int y = 0; y < h; ++y ){
-		ycp_temp[ y ].cr = 0;	// right
-		ycp_temp[ y ].cb = w;	// left
-	}
-}
-
-inline void CAviUtlImage::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
-	for( int y = 0; y < h; ++y ) if( ycp_temp[ y ].cb <= ycp_temp[ y ].cr ){
-		FillLine( ycp_temp[ y ].cb, y, ycp_temp[ y ].cr, yc, uFlag & ~IMG_POLYGON );
-	}
-}
 
 /*** new type ***************************************************************/
 
@@ -627,6 +278,12 @@ BOOL func_exit( FILTER *fp ){
 /*** ラップタイム再計算 *****************************************************/
 
 BOOL	g_bCalcLapTimeReq;
+
+#ifdef AVS_PLUGIN
+void CalcLapTime( void ){
+	// ★ under construction ...
+}
+#else
 void CalcLapTime( FILTER *fp, FILTER_PROC_INFO *fpip ){
 	
 	FRAME_STATUS	fsp;
@@ -662,6 +319,7 @@ void CalcLapTime( FILTER *fp, FILTER_PROC_INFO *fpip ){
 	g_Lap[ g_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
 	g_Lap[ g_iLapNum ].fTime	= 0;			// 番犬
 }
+#endif
 
 /****************************************************************************/
 
@@ -727,7 +385,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	BOOL	bInLap = FALSE;	// ラップタイム計測中
 	
 	// クラスに変換
-	CAviUtlImage	&Img = *( CAviUtlImage *)fpip;
+	CVsdImg	&Img = *( CVsdImg *)fpip;
 	
 #ifdef CIRCUIT_TOMO
 	const int	iMeterR			= 50 * Img.w / 320;
@@ -774,17 +432,21 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	
 	/*** Lap タイム描画 ***/
 	
-	if( IS_HAND_LAPTIME && fp->check[ CHECK_LAP ] && g_bCalcLapTimeReq && g_Lap ){
+	if( IS_HAND_LAPTIME && DispLap && g_bCalcLapTimeReq && g_Lap ){
 		g_bCalcLapTimeReq = FALSE;
-		CalcLapTime( fp, fpip );
+		#ifdef AVS_PLUGIN
+			CalcLapTime();
+		#else
+			CalcLapTime( fp, fpip );
+		#endif
 	}
 	
-	if( fp->check[ CHECK_LAP ] && g_iLapNum ){
+	if( DispLap && g_iLapNum ){
 		/*
 		Img.DrawRect(
 			iLapX, iLapY, Img.w - 1, iLapY + Img.GetFontH() * 5 - 1,
 			COLOR_PANEL,
-			CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
+			CVsdImg::IMG_ALFA | CVsdImg::IMG_FILL
 		);
 		*/
 		
@@ -905,7 +567,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	/*** メーターパネル ***/
 	Img.DrawCircle(
 		iMeterCx, iMeterCy, iMeterR, COLOR_PANEL,
-		CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
+		CVsdImg::IMG_ALFA | CVsdImg::IMG_FILL
 	);
 	
 	// タコメータ
@@ -941,7 +603,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	// スピードメーターパネル
 	Img.DrawCircle(
 		iMeterSCx, iMeterCy, iMeterR, COLOR_PANEL,
-		CAviUtlImage::IMG_ALFA | CAviUtlImage::IMG_FILL
+		CVsdImg::IMG_ALFA | CVsdImg::IMG_FILL
 	);
 	
 	int	iStep = (( iMeterSMaxVal / 20 ) + 4 ) / 5 * 5;
@@ -992,7 +654,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	// G スネーク
 	int	iGx, iGy;
 	
-	if( fp->check[ CHECK_SNAKE ] ){
+	if( DispGSnake ){
 		
 		int iGxPrev = 0, iGyPrev;
 		
@@ -1020,7 +682,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	// G インジケータ
 	Img.DrawCircle(
 		iGx, iGy, iMeterR / 20,
-		COLOR_G_SENSOR, CAviUtlImage::IMG_FILL
+		COLOR_G_SENSOR, CVsdImg::IMG_FILL
 	);
 	
 	// MAP 表示
@@ -1089,7 +751,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		
 		if( !_isnan( dGx )) Img.DrawCircle(
 			( int )dGx, ( int )dGy, iMeterR / 20,
-			COLOR_CURRENT_POS, CAviUtlImage::IMG_FILL
+			COLOR_CURRENT_POS, CVsdImg::IMG_FILL
 		);
 	}
 #endif // CIRCUIT_TOMO
@@ -1157,7 +819,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		LINE_WIDTH, COLOR_NEEDLE, 0
 	);
 	
-	Img.DrawCircle( iMeterSCx, iMeterCy,  iMeterR / 25, COLOR_NEEDLE, CAviUtlImage::IMG_FILL );
+	Img.DrawCircle( iMeterSCx, iMeterCy,  iMeterR / 25, COLOR_NEEDLE, CVsdImg::IMG_FILL );
 #endif
 	
 	// Tacho の針
@@ -1172,7 +834,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 		LINE_WIDTH, COLOR_NEEDLE, 0
 	);
 	
-	Img.DrawCircle( iMeterCx, iMeterCy,  iMeterR / 25, COLOR_NEEDLE, CAviUtlImage::IMG_FILL );
+	Img.DrawCircle( iMeterCx, iMeterCy,  iMeterR / 25, COLOR_NEEDLE, CVsdImg::IMG_FILL );
 	
 	return TRUE;
 }
