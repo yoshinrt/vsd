@@ -440,10 +440,12 @@ inline void CAviUtlImage::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
 typedef struct {
 	float	fSpeed;
 	float	fTacho;
+#ifndef CIRCUIT_TOMO
 	float	fMileage;
 	float	fGx, fGy;
 	float	fX, fX0;
 	float	fY, fY0;
+#endif
 } VSD_LOG_t;
 
 typedef struct {
@@ -663,17 +665,17 @@ void CalcLapTime( FILTER *fp, FILTER_PROC_INFO *fpip ){
 
 /****************************************************************************/
 
-const PIXEL_YC	yc_black		= RGB2YC(    0,    0,    0 );
-const PIXEL_YC	yc_white		= RGB2YC( 4095, 4095, 4095 );
-const PIXEL_YC	yc_gray			= RGB2YC( 2048, 2048, 2048 );
-const PIXEL_YC	yc_red			= RGB2YC( 4095,    0,    0 );
-const PIXEL_YC	yc_green		= RGB2YC(    0, 4095,    0 );
-const PIXEL_YC	yc_yellow		= RGB2YC( 4095, 4095,    0 );
-const PIXEL_YC	yc_dark_green	= RGB2YC(    0, 2048,    0 );
-const PIXEL_YC	yc_blue			= RGB2YC(    0,    0, 4095 );
-const PIXEL_YC	yc_cyan			= RGB2YC(    0, 4095, 4095 );
-const PIXEL_YC	yc_dark_blue	= RGB2YC(    0,    0, 2048 );
-const PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
+static const PIXEL_YC	yc_black		= RGB2YC(    0,    0,    0 );
+static const PIXEL_YC	yc_white		= RGB2YC( 4095, 4095, 4095 );
+static const PIXEL_YC	yc_gray			= RGB2YC( 2048, 2048, 2048 );
+static const PIXEL_YC	yc_red			= RGB2YC( 4095,    0,    0 );
+static const PIXEL_YC	yc_green		= RGB2YC(    0, 4095,    0 );
+static const PIXEL_YC	yc_yellow		= RGB2YC( 4095, 4095,    0 );
+static const PIXEL_YC	yc_dark_green	= RGB2YC(    0, 2048,    0 );
+static const PIXEL_YC	yc_blue			= RGB2YC(    0,    0, 4095 );
+static const PIXEL_YC	yc_cyan			= RGB2YC(    0, 4095, 4095 );
+static const PIXEL_YC	yc_dark_blue	= RGB2YC(    0,    0, 2048 );
+static const PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
 
 #define COLOR_PANEL			yc_gray
 #define COLOR_NEEDLE		yc_red
@@ -813,8 +815,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 			Img.DrawString( "Time -'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, Img.w - Img.GetFontW() * 13, 1 );
 		}
 		
+	#ifndef CIRCUIT_TOMO
 		/*** ベストとの車間距離表示 ***/
-		
 		if( !IS_HAND_LAPTIME ){
 			if( bInLap ){
 				// この周の走行距離を求める
@@ -865,6 +867,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 				Img.m_iPosY += Img.GetFontH();
 			}
 		}
+	#endif
 		
 		Img.m_iPosY += Img.GetFontH() / 4;
 		
@@ -1241,23 +1244,13 @@ void RotateMap( FILTER *fp ){
 /*** ログリード *************************************************************/
 
 BOOL ReadLog( void *editp, FILTER *filter ){
-	static TCHAR	szBuf[ BUF_SIZE ];
-	static TCHAR	szBuf2[ BUF_SIZE ];
+	TCHAR	szBuf[ BUF_SIZE ];
+	TCHAR	szBuf2[ BUF_SIZE ];
 	FILE	*fp;
 	BOOL	bCalibrating = FALSE;
 	
-	// GPS ログ用
-	UINT		uGPSCnt = 0;
-	GPS_LOG_t	*GPSLog;
-	
 	float		NaN = 0;
 	NaN /= *( volatile float *)&NaN;
-	
-	
-	if( g_VsdLog == NULL )	g_VsdLog 	= new VSD_LOG_t[ MAX_VSD_LOG ];
-	if( g_Lap    == NULL )	g_Lap		= new LAP_t[ MAX_LAP ];
-	
-	GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG / LOG_FREQ ) ];
 	
 	if( filter->exfunc->dlg_get_load_name( szBuf, FILE_EXT, NULL ) != TRUE ) return FALSE;
 	
@@ -1311,22 +1304,19 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	
 	/******************/
 	
-	if(( fp = fopen( szBuf, "r" )) == NULL ) return FALSE;
+	if( IsExt( szBuf, "cfg" ) || ( fp = fopen( szBuf, "r" )) == NULL ) return FALSE;
 	
 	g_iVsdLogNum	= 0;
 	g_iLapNum		= 0;
 	g_fBestTime		= -1;
 	
+	if( g_VsdLog == NULL )	g_VsdLog 	= new VSD_LOG_t[ MAX_VSD_LOG ];
+	if( g_Lap    == NULL )	g_Lap		= new LAP_t[ MAX_LAP ];
+	
 #ifdef CIRCUIT_TOMO
 	int i;
 	for( i = 0; i < MAX_VSD_LOG; ++i ){
-		g_VsdLog[ i ].fSpeed =
-		g_VsdLog[ i ].fTacho =
-		g_VsdLog[ i ].fMileage =
-		g_VsdLog[ i ].fGx =
-		g_VsdLog[ i ].fGy =
-		g_VsdLog[ i ].fX =
-		g_VsdLog[ i ].fY = 0;
+		g_VsdLog[ i ].fSpeed = g_VsdLog[ i ].fTacho = 0;
 	}
 	
 	g_iVsdLogNum	= ReadPTD( fp, offsetof( VSD_LOG_t, fTacho ));
@@ -1335,6 +1325,11 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	if( i > g_iVsdLogNum ) g_iVsdLogNum = i;
 	
 #else // CIRCUIT_TOMO
+	
+	// GPS ログ用
+	UINT		uGPSCnt = 0;
+	GPS_LOG_t	*GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG / LOG_FREQ ) ];
+	
 	// 20070814 以降のログは，横 G が反転している
 	BOOL bReverseGy	= ( strcmp( StrTokFile( NULL, szBuf, STF_NAME ), "vsd20070814" ) >= 0 );
 	
@@ -1547,7 +1542,7 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 /*** 設定セーブ *************************************************************/
 
 BOOL SaveConfig( void *editp, FILTER *filter ){
-	static TCHAR	szBuf[ BUF_SIZE ];
+	TCHAR	szBuf[ BUF_SIZE ];
 	FILE	*fp;
 	int		i;
 	
