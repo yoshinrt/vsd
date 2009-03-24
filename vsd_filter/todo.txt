@@ -4,3 +4,6 @@ ToDo
 ・強制手動計測
 ・Gセンサー・Mileage から GPS を補正
 ・hidden パラメータ
+・gloval 変数排除
+・aviutl 依存部分離
+・avisynth 対応

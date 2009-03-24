@@ -19,14 +19,6 @@
 #include "dds_lib/dds_lib.h"
 #include "CVsdImg.h"
 
-#ifdef CIRCUIT_TOMO
-	#define	FILE_EXT		"Pulse-Time Data (*.ptd)\0*.ptd\0Config File (*.cfg)\0*.cfg\0AllFile (*.*)\0*.*\0"
-#else
-	#define	FILE_EXT		"LogFile (*.log)\0*.log\0Config File (*.cfg)\0*.cfg\0AllFile (*.*)\0*.*\0"
-#endif
-
-#define	FILE_CFG_EXT		"Config File (*.cfg)\0*.cfg\0AllFile (*.*)\0*.*\0"
-
 /****************************************************************************/
 
 #define BUF_SIZE	1024
@@ -64,7 +56,6 @@
 #define MAX_G_SCALE		1.5
 
 #define MAX_MAP_SIZE	( Img.w * fp->track[ TRACK_MapSize ] / 1000.0 )
-#define MAP_ANGLE		( fp->track[ TRACK_MapAngle ] * ( -ToRAD / 10 ))
 #define INVALID_POS_I	0x7FFFFFFF
 #define INVALID_POS_D	NaN
 
@@ -753,7 +744,7 @@ static UINT ReadPTD( FILE *fp, UINT uOffs ){
 /*** MAP 回転処理 ***********************************************************/
 
 #ifndef CIRCUIT_TOMO
-void RotateMap( FILTER *fp ){
+void RotateMap( double dMapAngle ){
 	
 	int i;
 	double dMaxX, dMinX, dMaxY, dMinY;
@@ -761,8 +752,8 @@ void RotateMap( FILTER *fp ){
 	dMaxX = dMinX = dMaxY = dMinY = 0;
 	
 	for( i = 0; i < g_iVsdLogNum; ++i ){
-		g_VsdLog[ i ].fX = ( float )(  cos( MAP_ANGLE ) * g_VsdLog[ i ].fX0 + sin( MAP_ANGLE ) * g_VsdLog[ i ].fY0 );
-		g_VsdLog[ i ].fY = ( float )( -sin( MAP_ANGLE ) * g_VsdLog[ i ].fX0 + cos( MAP_ANGLE ) * g_VsdLog[ i ].fY0 );
+		g_VsdLog[ i ].fX = ( float )(  cos( dMapAngle ) * g_VsdLog[ i ].fX0 + sin( dMapAngle ) * g_VsdLog[ i ].fY0 );
+		g_VsdLog[ i ].fY = ( float )( -sin( dMapAngle ) * g_VsdLog[ i ].fX0 + cos( dMapAngle ) * g_VsdLog[ i ].fY0 );
 		
 		if     ( dMaxX < g_VsdLog[ i ].fX ) dMaxX = g_VsdLog[ i ].fX;
 		else if( dMinX > g_VsdLog[ i ].fX ) dMinX = g_VsdLog[ i ].fX;
@@ -781,68 +772,20 @@ void RotateMap( FILTER *fp ){
 
 /*** ログリード *************************************************************/
 
-BOOL ReadLog( void *editp, FILTER *filter ){
+BOOL ReadLog( void *editp, FILTER *filter, char *szFileName ){
 	TCHAR	szBuf[ BUF_SIZE ];
-	TCHAR	szBuf2[ BUF_SIZE ];
 	FILE	*fp;
 	BOOL	bCalibrating = FALSE;
 	
 	float		NaN = 0;
 	NaN /= *( volatile float *)&NaN;
 	
-	if( filter->exfunc->dlg_get_load_name( szBuf, FILE_EXT, NULL ) != TRUE ) return FALSE;
-	
-	/*** cfg リード ***/
-	
-	if(( fp = fopen( ChangeExt( szBuf2, szBuf, "cfg" ), "r" )) != NULL ){
-		int i, iLen;
-		BOOL	bMark = FALSE;
-		FRAME_STATUS	fsp;
-		
-		g_bCalcLapTimeReq = TRUE;
-		
-		while( fgets( szBuf2, BUF_SIZE, fp )){
-			if( bMark ){
-				// マークセット
-				i = atoi( szBuf2 );
-				filter->exfunc->get_frame_status( editp, i, &fsp );
-				fsp.edit_flag |= EDIT_FRAME_EDIT_FLAG_MARKFRAME;
-				filter->exfunc->set_frame_status( editp, i, &fsp );
-				
-			}else if( strncmp( szBuf2, "MARK:", 5 ) == 0 ){
-				// マークモードに入る
-				bMark = TRUE;
-				
-			}else{
-				// Mark 以外のパラメータ
-				for( i = 0; i < TRACK_N; ++i ){
-					if(
-						strncmp( szBuf2, g_szTrackbarName[ i ], iLen = strlen( g_szTrackbarName[ i ] )) == 0 &&
-						szBuf2[ iLen ] == '='
-					){
-						filter->track[ i ] = atoi( szBuf2 + iLen + 1 );
-						goto Next;
-					}
-				}
-				
-				for( i = 0; i < CHECK_N; ++i ){
-					if(
-						strncmp( szBuf2, g_szCheckboxName[ i ], iLen = strlen( g_szCheckboxName[ i ] )) == 0 &&
-						szBuf2[ iLen ] == '='
-					){
-						filter->check[ i ] = atoi( szBuf2 + iLen + 1 );
-						goto Next;
-					}
-				}
-			}
-		  Next: ;
-		}
-		fclose( fp );
-	}
+	// config リード
+	g_bCalcLapTimeReq |= ConfigLoad( ChangeExt( szBuf, szFileName, "cfg" ), ... );
 	
 	/******************/
 	
-	if( IsExt( szBuf, "cfg" ) || ( fp = fopen( szBuf, "r" )) == NULL ) return FALSE;
+	if( IsExt( szFileName, "cfg" ) || ( fp = fopen( szFileName, "r" )) == NULL ) return FALSE;
 	
 	g_iVsdLogNum	= 0;
 	g_iLapNum		= 0;
@@ -1037,7 +980,7 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 		}
 		
 		// Map 回転
-		RotateMap( filter );
+		RotateMap( fp->track[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 		
 		/*
 		FILE *fp = fopen( "c:\\dds\\hoge.log", "w" );
@@ -1057,38 +1000,81 @@ BOOL ReadLog( void *editp, FILTER *filter ){
 	g_Lap[ g_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
 	g_Lap[ g_iLapNum ].fTime	= 0;			// 番犬
 	
-	// trackbar 設定
-	track_e[ TRACK_LSt ] =
-	track_e[ TRACK_LEd ] =
-		#ifdef CIRCUIT_TOMO
-			( int )( g_iVsdLogNum / LOG_FREQ + 1 );
-		#else
-			( g_iVsdLogNum + 99 ) / 100;
-		#endif
+	return TRUE;
+}
+
+/*** 設定ロード・セーブ *****************************************************/
+
+typedef struct {
+	int	*track;
+	int	*check;
+} VSDParam;
+
+/*** cfg リード ***/
+
+BOOL ConfigLoad( VSDParam &param, char *szFileName ){
+	TCHAR	szBuf[ BUF_SIZE ];
+	FILE	*fp;
 	
-	// 設定再描画
-	filter->exfunc->filter_window_update( filter );
+	int		i, iLen;
+	BOOL	bMark = FALSE;
 	
-#ifndef CIRCUIT_TOMO
-	// log pos 更新
-	func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
-#endif
+	FRAME_STATUS	fsp;
+	
+	if(( fp = fopen( szFileName, "r" )) == NULL ) return FALSE;
+	
+	while( fgets( szBuf, BUF_SIZE, fp )){
+		if( bMark ){
+			// マークセット
+			g_Lap[ g_iLapNum++ ].iLogNum = atoi( szBuf );
+		//	filter->exfunc->get_frame_status( editp, i, &fsp );
+		//	fsp.edit_flag |= EDIT_FRAME_EDIT_FLAG_MARKFRAME;
+		//	filter->exfunc->set_frame_status( editp, i, &fsp );
+			
+		}else if( strncmp( szBuf, "MARK:", 5 ) == 0 ){
+			// マークモードに入る
+			bMark		= TRUE;
+			g_iLapNum	= 0;
+			
+		}else{
+			// Mark 以外のパラメータ
+			for( i = 0; i < TRACK_N; ++i ){
+				if(
+					strncmp( szBuf, g_szTrackbarName[ i ], iLen = strlen( g_szTrackbarName[ i ] )) == 0 &&
+					szBuf[ iLen ] == '='
+				){
+					filter->track[ i ] = atoi( szBuf + iLen + 1 );
+					goto Next;
+				}
+			}
+			
+			for( i = 0; i < CHECK_N; ++i ){
+				if(
+					strncmp( szBuf, g_szCheckboxName[ i ], iLen = strlen( g_szCheckboxName[ i ] )) == 0 &&
+					szBuf[ iLen ] == '='
+				){
+					filter->check[ i ] = atoi( szBuf + iLen + 1 );
+					goto Next;
+				}
+			}
+		}
+	  Next: ;
+	}
+	fclose( fp );
 	
 	return TRUE;
 }
 
-/*** 設定セーブ *************************************************************/
-
-BOOL SaveConfig( void *editp, FILTER *filter ){
+#ifndef AVS_PLUGIN
+BOOL ConfigSave( VSDParam &param, char *szFileName ){
 	TCHAR	szBuf[ BUF_SIZE ];
 	FILE	*fp;
 	int		i;
 	
-	if( filter->exfunc->dlg_get_save_name( szBuf, FILE_CFG_EXT, NULL ) != TRUE ) return FALSE;
-	if(( fp = fopen( szBuf, "w" )) == NULL ) return FALSE;
+	if(( fp = fopen( szFileName, "w" )) == NULL ) return FALSE;
 	
 	for( i = 0; i < TRACK_N; ++i ){
-		fprintf( fp, "%s=%u\n", g_szTrackbarName[ i ], filter->track[ i ] );
+		fprintf( fp, "%s=%u\n", g_szTrackbarName[ i ], param.track[ i ] );
 	}
 	
 	for( i = 0; i < CHECK_N; ++i ){
@@ -1099,7 +1085,7 @@ BOOL SaveConfig( void *editp, FILTER *filter ){
 			#endif
 		) continue;
 		
-		fprintf( fp, "%s=%u\n", g_szCheckboxName[ i ], filter->check[ i ] );
+		fprintf( fp, "%s=%u\n", g_szCheckboxName[ i ], param.check[ i ] );
 	}
 	
 	// 手動ラップ計測マーク出力
@@ -1112,5 +1098,7 @@ BOOL SaveConfig( void *editp, FILTER *filter ){
 	}
 	
 	fclose( fp );
-	return 0;
+	
+	return TRUE;
 }
+#endif

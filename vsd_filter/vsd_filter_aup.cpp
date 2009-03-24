@@ -8,6 +8,16 @@
 #include "dds_lib/dds_lib.h"
 #include "CVsdImg.h"
 
+/*** macros *****************************************************************/
+
+#ifdef CIRCUIT_TOMO
+	#define	FILE_EXT		"Pulse-Time Data (*.ptd)\0*.ptd\0Config File (*.cfg)\0*.cfg\0AllFile (*.*)\0*.*\0"
+#else
+	#define	FILE_EXT		"LogFile (*.log)\0*.log\0Config File (*.cfg)\0*.cfg\0AllFile (*.*)\0*.*\0"
+#endif
+
+#define	FILE_CFG_EXT		"Config File (*.cfg)\0*.cfg\0AllFile (*.*)\0*.*\0"
+
 /****************************************************************************/
 //---------------------------------------------------------------------
 //		フィルタ構造体定義
@@ -139,6 +149,8 @@ BOOL func_exit( FILTER *fp ){
 BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
 	//	TRUEを返すと全体が再描画される
 	
+	char	*szFileName[ BUF_SIZE ];
+	
 	//	編集中でなければ何もしない
 	if( filter->exfunc->is_editing(editp) != TRUE ) return FALSE;
 	
@@ -146,10 +158,30 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	
 	switch( message ) {
 	  case WM_FILTER_IMPORT:
-		return ReadLog( editp, filter );
+		if( filter->exfunc->dlg_get_load_name( szFileName, FILE_EXT, NULL ) != TRUE ) return FALSE;
+		
+		ReadLog( editp, filter, szFileName );
+		
+		// trackbar 設定
+		track_e[ TRACK_LSt ] =
+		track_e[ TRACK_LEd ] =
+			#ifdef CIRCUIT_TOMO
+				( int )( g_iVsdLogNum / LOG_FREQ + 1 );
+			#else
+				( g_iVsdLogNum + 99 ) / 100;
+			#endif
+		
+		// 設定再描画
+		filter->exfunc->filter_window_update( filter );
+		
+		#ifndef CIRCUIT_TOMO
+			// log pos 更新
+			func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
+		#endif
 		
 	  Case WM_FILTER_EXPORT:
-		return SaveConfig( editp, filter );
+		if( filter->exfunc->dlg_get_save_name( szFileName, FILE_CFG_EXT, NULL ))
+			SaveConfig( filter );
 		
 	  Case WM_FILTER_FILE_OPEN:
 		// fps 取得
