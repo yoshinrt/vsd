@@ -1,6 +1,6 @@
 /*****************************************************************************
 	
-	VSD ** vehicle data logger system  Copyright(C) by DDS
+	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
 	CVsdImg.cpp - CVsdImg class implementation
 	$Id$
