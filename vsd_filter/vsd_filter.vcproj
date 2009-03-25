@@ -401,11 +401,7 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
-				RelativePath=".\CVsdImg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\CVsdLog.cpp"
+				RelativePath=".\CVsdFilter.cpp"
 				>
 			</File>
 			<File
@@ -422,11 +418,7 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath=".\CVsdImg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\CVsdLog.h"
+				RelativePath=".\CVsdFilter.h"
 				>
 			</File>
 			<File
@@ -451,10 +443,6 @@
 			</File>
 			<File
 				RelativePath=".\font_9p.h"
-				>
-			</File>
-			<File
-				RelativePath=".\vsd_filter.h"
 				>
 			</File>
 		</Filter>
