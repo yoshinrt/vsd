@@ -117,13 +117,6 @@ class CVsdFilter {
 		return yc;
 	}
 	
-	void CopyRect(
-		int	Sx1, int Sy1,
-		int	Sx2, int Sy2,
-		int Dx,  int Dy,
-		const PIXEL_YC &yc, UINT uFlag
-	);
-	
 	void DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, UINT uFlag );
 	void DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag );
 	void DrawString( char *szMsg, const PIXEL_YC &yc, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
@@ -146,10 +139,8 @@ class CVsdFilter {
 	
 	enum {
 		IMG_ALFA	= ( 1 << 0 ),
-		IMG_TMP		= ( 1 << 1 ),
-		IMG_FILL	= ( 1 << 2 ),
-		IMG_TMP_DST	= ( 1 << 3 ),
-		IMG_POLYGON	= ( 1 << 4 ),
+		IMG_FILL	= ( 1 << 1 ),
+		IMG_POLYGON	= ( 1 << 2 ),
 	};
 	
 	int m_iPosX, m_iPosY;

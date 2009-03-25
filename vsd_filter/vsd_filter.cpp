@@ -203,7 +203,7 @@ void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
 		if( x > m_Polygon[ y ].iRight ) m_Polygon[ y ].iRight = x;
 		if( x < m_Polygon[ y ].iLeft  ) m_Polygon[ y ].iLeft  = x;
 	}else{
-		PIXEL_YC	*ycp = ( uFlag & IMG_TMP ) ? fpip->ycp_temp : fpip->ycp_edit;
+		PIXEL_YC	*ycp = fpip->ycp_edit;
 		
 		if( uFlag & IMG_ALFA && yc.y == -1 ) return;
 		
@@ -222,7 +222,7 @@ void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
 }
 
 PIXEL_YC &CVsdFilterAvu::GetPixel( int x, int y, UINT uFlag ){
-	PIXEL_YC	*ycp = ( uFlag & IMG_TMP ) ? fpip->ycp_temp : fpip->ycp_edit;
+	PIXEL_YC	*ycp = fpip->ycp_edit;
 	return	ycp[ GetIndex( x, y ) ];
 }
 

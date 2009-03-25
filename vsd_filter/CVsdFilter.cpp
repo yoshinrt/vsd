@@ -213,22 +213,6 @@ void CVsdFilter::DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFlag
 	if( uFlag & IMG_FILL ) PolygonDraw( yc, uFlag );
 }
 
-/*** CopyRect ***************************************************************/
-
-void CVsdFilter::CopyRect(
-	int	Sx1, int Sy1,
-	int	Sx2, int Sy2,
-	int Dx,  int Dy,
-	const PIXEL_YC &yc, UINT uFlag
-){
-	int	x, y;
-	UINT	uFlagDst = uFlag & ~IMG_TMP | ( uFlag & IMG_TMP_DST ? IMG_TMP : 0 );
-	
-	for( y = Sy1; y <= Sy2; ++y ) for( x = Sx1; x <= Sx2; ++x ){
-		PutPixel( Dx + x - Sx1, Dy + y - Sy1, GetPixel( x, y, uFlag ), uFlagDst );
-	}
-}
-
 /*** DrawFont ***************************************************************/
 
 void CVsdFilter::DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, UINT uFlag ){
