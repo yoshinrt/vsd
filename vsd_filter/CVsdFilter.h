@@ -12,24 +12,18 @@
 
 #define BUF_SIZE	1024
 
-#define PI			3.14159265358979323
-#define ToRAD		( PI / 180 )
-
 #define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 2 ))
 #define MAX_LAP			200
 
 #define RGB2YC( r, g, b ) { \
-	( int )( 0.299 * r + 0.587 * g + 0.114 * b + .5 ), \
-	( int )(-0.169 * r - 0.332 * g + 0.500 * b + .5 ), \
-	( int )( 0.500 * r - 0.419 * g - 0.081 * b + .5 ) \
+	( int )( 0.299 * r + 0.587 * g + 0.114 * b ), \
+	( int )(-0.169 * r - 0.331 * g + 0.500 * b ), \
+	( int )( 0.500 * r - 0.419 * g - 0.081 * b ) \
 }
 
 #define G_CX_CNT		30
 #define G_HIST			(( int )( LOG_FREQ * 3 ))
 #define MAX_G_SCALE		1.5
-
-#define INVALID_POS_I	0x7FFFFFFF
-#define INVALID_POS_D	NaN
 
 #define LINE_WIDTH		( GetWidth() / HIREZO_TH + 1 )
 
@@ -40,12 +34,8 @@
 #define MAP_LINE3		yc_red
 #define MAP_G_MAX		1.2
 
-#define PTD_LOG_FREQ	11025.0
-
-#define POS_DEFAULT		0x80000000
 #define HIREZO_TH		600			// ハイレゾモード時の横幅スレッショルド
-
-#define MAX_POLY_HEIGHT		2000		// polygon 用ライン数
+#define POS_DEFAULT		0x80000000
 
 /*** track / check ID *******************************************************/
 
@@ -109,10 +99,22 @@ class CVsdFilter {
 	void DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag );
 	void DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFlag );
 	
+	int ClipY( int y ){
+		return
+			y > 4095 ? 4095 :
+			y < 0    ? 0 : y;
+	}
+	
+	int ClipC( int c ){
+		return
+			c >  2047 ?  2047 :
+			c < -2048 ? -2048 : c;
+	}
+	
 	PIXEL_YC &GetYC( PIXEL_YC &yc, int r, int g, int b ){
-		yc.y  = ( int )( 0.299 * r + 0.587 * g + 0.114 * b + .5 );
-		yc.cr = ( int )( 0.500 * r - 0.419 * g - 0.081 * b + .5 );
-		yc.cb = ( int )(-0.169 * r - 0.332 * g + 0.500 * b + .5 );
+		yc.y  = ClipY(( int )( 0.299 * r + 0.587 * g + 0.114 * b ));
+		yc.cr = ClipC(( int )( 0.500 * r - 0.419 * g - 0.081 * b ));
+		yc.cb = ClipC(( int )(-0.169 * r - 0.331 * g + 0.500 * b ));
 		
 		return yc;
 	}

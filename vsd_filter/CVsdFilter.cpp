@@ -24,8 +24,18 @@
 
 /*** macros *****************************************************************/
 
+#define PI			3.14159265358979323
+#define ToRAD		( PI / 180 )
+
 #define LAT_M_DEG	110863.95	// 緯度1度の距離
 #define LNG_M_DEG	111195.10	// 経度1度の距離 @ 0N
+
+#define INVALID_POS_I	0x7FFFFFFF
+#define INVALID_POS_D	NaN
+
+#define PTD_LOG_FREQ	11025.0
+
+#define MAX_POLY_HEIGHT		2000		// polygon 用ライン数
 
 /*** static member **********************************************************/
 

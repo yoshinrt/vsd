@@ -14,7 +14,6 @@
 
 #include "dds.h"
 #include "filter.h"
-#include "../vsd/main.h"
 #include "dds_lib/dds_lib.h"
 #include "CVsdFilter.h"
 
