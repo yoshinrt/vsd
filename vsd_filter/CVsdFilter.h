@@ -45,6 +45,8 @@
 #define POS_DEFAULT		0x80000000
 #define HIREZO_TH		600			// ハイレゾモード時の横幅スレッショルド
 
+#define MAX_POLY_HEIGHT		2000		// polygon 用ライン数
+
 /*** track / check ID *******************************************************/
 
 enum {
@@ -85,6 +87,10 @@ typedef struct {
 	float	fVY;
 	int		iLogNum;
 } GPS_LOG_t;
+
+typedef struct {
+	short	iLeft, iRight;
+} PolygonData_t;
 
 class CVsdFilter {
 	
@@ -154,8 +160,7 @@ class CVsdFilter {
 	int	m_iLapIdx;
 	int m_iBestLogNum;
 	
-	// 仮
-	PIXEL_YC	*ycp_temp;
+	PolygonData_t	*m_Polygon;
 	
 	// 仮想関数
 	virtual int	GetWidth( void )	= 0;

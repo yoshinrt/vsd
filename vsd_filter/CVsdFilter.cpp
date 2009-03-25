@@ -77,6 +77,9 @@ CVsdFilter::CVsdFilter () {
 	m_iBestLogNum	= 0;
 	
 	m_bCalcLapTimeReq	= FALSE;
+	
+	// DrawPolygon 用バッファ
+	m_Polygon = new PolygonData_t[ MAX_POLY_HEIGHT ];
 }
 
 /*** デストラクタ ***********************************************************/
@@ -293,14 +296,14 @@ void CVsdFilter::DrawString( char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &yc
 
 inline void CVsdFilter::PolygonClear( void ){
 	for( int y = 0; y < GetHeight(); ++y ){
-		ycp_temp[ y ].cr = 0;	// right
-		ycp_temp[ y ].cb = GetWidth();	// left
+		m_Polygon[ y ].iRight	= 0;		// right
+		m_Polygon[ y ].iLeft	= 0x7FFF;	// left
 	}
 }
 
 inline void CVsdFilter::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
-	for( int y = 0; y < GetHeight(); ++y ) if( ycp_temp[ y ].cb <= ycp_temp[ y ].cr ){
-		FillLine( ycp_temp[ y ].cb, y, ycp_temp[ y ].cr, yc, uFlag & ~IMG_POLYGON );
+	for( int y = 0; y < GetHeight(); ++y ) if( m_Polygon[ y ].iLeft <= m_Polygon[ y ].iRight ){
+		FillLine( m_Polygon[ y ].iLeft, y, m_Polygon[ y ].iRight, yc, uFlag & ~IMG_POLYGON );
 	}
 }
 

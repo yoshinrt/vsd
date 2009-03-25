@@ -200,8 +200,8 @@ void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
 	
 	if( uFlag & IMG_POLYGON ){
 		// ƒ|ƒŠƒSƒ“•`‰æ
-		if( x > fpip->ycp_temp[ y ].cr ) fpip->ycp_temp[ y ].cr = x;
-		if( x < fpip->ycp_temp[ y ].cb ) fpip->ycp_temp[ y ].cb = x;
+		if( x > m_Polygon[ y ].iRight ) m_Polygon[ y ].iRight = x;
+		if( x < m_Polygon[ y ].iLeft  ) m_Polygon[ y ].iLeft  = x;
 	}else{
 		PIXEL_YC	*ycp = ( uFlag & IMG_TMP ) ? fpip->ycp_temp : fpip->ycp_edit;
 		
@@ -302,7 +302,6 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 	// ƒNƒ‰ƒX‚É•ÏŠ·
 	g_Vsd->filter	= fp;
 	g_Vsd->fpip		= fpip;
-	g_Vsd->ycp_temp	= fpip->ycp_temp;
 	
 	return g_Vsd->DrawVSD();
 }
