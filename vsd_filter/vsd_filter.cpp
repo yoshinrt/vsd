@@ -20,12 +20,12 @@
 /*** macros *****************************************************************/
 
 #ifdef CIRCUIT_TOMO
-	#define	FILE_EXT		"Pulse-Time Data (*.ptd)\0*.ptd\0Config File (*.cfg)\0*.cfg\0AllFile (*.*)\0*.*\0"
+	#define	FILE_EXT		"Pulse-Time Data (*.ptd)\0*.ptd\0Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 #else
-	#define	FILE_EXT		"LogFile (*.log)\0*.log\0Config File (*.cfg)\0*.cfg\0AllFile (*.*)\0*.*\0"
+	#define	FILE_EXT		"LogFile (*.log)\0*.log\0Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 #endif
 
-#define	FILE_CFG_EXT		"Config File (*.cfg)\0*.cfg\0AllFile (*.*)\0*.*\0"
+#define	FILE_CFG_EXT		"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 
 /*** new type ***************************************************************/
 
@@ -40,34 +40,34 @@ HINSTANCE		g_hInst 	= NULL;
 
 // トラックバーの名前
 TCHAR	*track_name[] = {
-	#define DEF_TRACKBAR( id, init, min, max, name )	name,
+	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	name,
 	#include "def_trackbar.h"
 };
 // トラックバーの初期値
 int		track_default[] = {
-	#define DEF_TRACKBAR( id, init, min, max, name )	init,
+	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	init,
 	#include "def_trackbar.h"
 };
 // トラックバーの下限値
 int		track_s[] = {
-	#define DEF_TRACKBAR( id, init, min, max, name )	min,
+	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	min,
 	#include "def_trackbar.h"
 };
 // トラックバーの上限値
 int		track_e[] = {
-	#define DEF_TRACKBAR( id, init, min, max, name )	max,
+	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	max,
 	#include "def_trackbar.h"
 };
 
 // チェックボックスの名前
 TCHAR	*check_name[] = {
-	#define DEF_CHECKBOX( id, init, name )	name,
+	#define DEF_CHECKBOX( id, init, name, conf_name )	name,
 	#include "def_checkbox.h"
 };
 
 // チェックボックスの初期値 (値は0か1)
 int		check_default[] = {
-	#define DEF_CHECKBOX( id, init, name )	init,
+	#define DEF_CHECKBOX( id, init, name, conf_name )	init,
 	#include "def_checkbox.h"
 };
 
@@ -168,6 +168,8 @@ class CVsdFilterAvu : public CVsdFilter {
 	
 	virtual void SetFrameMark( int iFrame );
 	virtual void CalcLapTime( void );
+	
+	virtual char *GetVideoFileName( char *szFileName );
 };
 
 CVsdFilterAvu	*g_Vsd;
@@ -265,6 +267,14 @@ void CVsdFilterAvu::SetFrameMark( int iFrame ){
 	filter->exfunc->get_frame_status( editp, iFrame, &fsp );
 	fsp.edit_flag |= EDIT_FRAME_EDIT_FLAG_MARKFRAME;
 	filter->exfunc->set_frame_status( editp, iFrame, &fsp );
+}
+
+/*** 編集ビデオファイル名取得 ***********************************************/
+
+char *CVsdFilterAvu::GetVideoFileName( char *szFileName ){
+	FILE_INFO	fi;
+	filter->exfunc->get_file_info( editp, &fi );
+	return strcpy( szFileName, fi.name );
 }
 
 /*** func_proc **************************************************************/

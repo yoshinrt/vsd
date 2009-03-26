@@ -12,6 +12,7 @@
 #include <math.h>
 #include <stddef.h>
 #include <float.h>
+#include <ctype.h>
 
 #include "dds.h"
 #include "../vsd/main.h"
@@ -47,15 +48,15 @@ const UCHAR CVsdFilter::m_Font18p[] = {
 	#include "font_18p.h"
 };
 
-/*** tarckbar / checkbox id 名 ***/
+/*** tarckbar / checkbox conf_name 名 ***/
 
 const char *CVsdFilter::m_szTrackbarName[] = {
-	#define DEF_TRACKBAR( id, init, min, max, name ) #id,
+	#define DEF_TRACKBAR( id, init, min, max, name, conf_name ) conf_name,
 	#include "def_trackbar.h"
 };
 
 const char *CVsdFilter::m_szCheckboxName[] = {
-	#define DEF_CHECKBOX( id, init, name ) #id,
+	#define DEF_CHECKBOX( id, init, name, conf_name ) conf_name,
 	#include "def_checkbox.h"
 };
 
@@ -64,27 +65,27 @@ const char *CVsdFilter::m_szCheckboxName[] = {
 
 CVsdFilter::CVsdFilter () {
 	
-	m_VsdLog 		= new VSD_LOG_t[ MAX_VSD_LOG ];;
-	m_iVsdLogNum	= 0;
+	m_VsdLog 			= new VSD_LOG_t[ MAX_VSD_LOG ];;
+	m_iVsdLogNum		= 0;
 	
 	m_Lap	 			= new LAP_t[ MAX_LAP ];
 	m_iLapNum			= 0;
 	m_Lap[ 0 ].iLogNum	= 0x7FFFFFFF;	// 番犬
 	m_Lap[ 0 ].fTime	= 0;			// 番犬
 	
-	m_fBestTime		= -1;
-	m_iBestLapLogNum= 0;
+	m_fBestTime			= -1;
+	m_iBestLapLogNum	= 0;
 	
-	m_dMapSize		= 0;
-	m_dMapOffsX		= 0;
-	m_dMapOffsY		= 0;
+	m_dMapSize			= 0;
+	m_dMapOffsX			= 0;
+	m_dMapOffsY			= 0;
 	
-	m_dVideoFPS		= 30.0;
+	m_dVideoFPS			= 30.0;
 	
-	m_iPreW			= 0;
+	m_iPreW				= 0;
 	
-	m_iLapIdx		= -1;
-	m_iBestLogNum	= 0;
+	m_iLapIdx			= -1;
+	m_iBestLogNum		= 0;
 	
 	m_bCalcLapTimeReq	= FALSE;
 	
@@ -302,9 +303,26 @@ inline void CVsdFilter::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
 
 /*** 設定ロード・セーブ *****************************************************/
 
+BOOL CVsdFilter::IsConfigParam( const char *szParamName, char *szBuf, int &iVal ){
+	
+	int	iLen;
+	
+	while( isspace( *szBuf )) ++szBuf;
+	
+	if(
+		strncmp( szBuf, szParamName, iLen = strlen( szParamName )) == 0 &&
+		szBuf[ iLen ] == '='
+	){
+		iVal = atoi( szBuf + iLen + 1 );
+		return TRUE;
+	}
+	
+	return FALSE;
+}
+
 BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 	
-	int 	i, iLen;
+	int 	i, iVal;
 	FILE	*fp;
 	char	szBuf[ BUF_SIZE ];
 	BOOL	bMark = FALSE;
@@ -325,20 +343,31 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 				// Mark 以外のパラメータ
 				for( i = 0; i < TRACK_N; ++i ){
 					if(
-						strncmp( szBuf, m_szTrackbarName[ i ], iLen = strlen( m_szTrackbarName[ i ] )) == 0 &&
-						szBuf[ iLen ] == '='
+						m_szTrackbarName[ i ] &&
+						IsConfigParam( m_szTrackbarName[ i ], szBuf, iVal )
 					){
-						m_piParamT[ i ] = atoi( szBuf + iLen + 1 );
+						m_piParamT[ i ] = iVal;
+						
+					#ifdef CIRCUIT_TOMO
+						if( i == TRACK_LSt || i == TRACK_LEd ){
+							m_piParamT[ i + 1 ] = m_piParamT[ i ] % 1000;
+							m_piParamT[ i ] /= 1000;
+						} else
+					#endif
+						if( i <= TRACK_LEd ){
+							m_piParamT[ i + 1 ] = m_piParamT[ i ] % 100;
+							m_piParamT[ i ] /= 100;
+						}
 						goto Next;
 					}
 				}
 				
 				for( i = 0; i < CHECK_N; ++i ){
 					if(
-						strncmp( szBuf, m_szCheckboxName[ i ], iLen = strlen( m_szCheckboxName[ i ] )) == 0 &&
-						szBuf[ iLen ] == '='
+						m_szCheckboxName[ i ] &&
+						IsConfigParam( m_szCheckboxName[ i ], szBuf, iVal )
 					){
-						m_piParamC[ i ] = atoi( szBuf + iLen + 1 );
+						m_piParamC[ i ] = iVal;
 						goto Next;
 					}
 				}
@@ -357,19 +386,37 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	
 	if(( fp = fopen( szFileName, "w" )) == NULL ) return FALSE;
 	
+  #ifdef CIRCUIT_TOMO
+	#define CONF_OUTPUT_FMT	"%s=%u\n"
+  #else
+	#define CONF_OUTPUT_FMT	"\t%s=%u, \\\n"
+	
+	char szBuf[ BUF_SIZE ];
+	
+	fprintf( fp,
+		"DirectShowSource(\"%s\")\n"
+		"ConvertToYUY2()\n"
+		"VSDFilter( \\\n",
+		GetVideoFileName( szBuf )
+	);
+  #endif
+	
 	for( i = 0; i < TRACK_N; ++i ){
-		fprintf( fp, "%s=%u\n", m_szTrackbarName[ i ], m_piParamT[ i ] );
+		if( m_szTrackbarName[ i ] == NULL ) continue;
+		
+		fprintf( fp, CONF_OUTPUT_FMT, m_szTrackbarName[ i ],
+		#ifdef CIRCUIT_TOMO
+			( i == TRACK_LSt || i == TRACK_LEd ) ? m_piParamT[ i ] * 1000 + m_piParamT[ i + 1 ] :
+		#endif
+			( i <= TRACK_LEd ) ? m_piParamT[ i ] * 100 + m_piParamT[ i + 1 ] :
+			m_piParamT[ i ]
+		);
 	}
 	
 	for( i = 0; i < CHECK_N; ++i ){
-		if(
-			i == CHECK_FRAME
-			#ifndef CIRCUIT_TOMO
-			|| i == CHECK_LOGPOS
-			#endif
-		) continue;
+		if( m_szCheckboxName[ i ] == NULL ) continue;
 		
-		fprintf( fp, "%s=%u\n", m_szCheckboxName[ i ], m_piParamC[ i ] );
+		fprintf( fp, CONF_OUTPUT_FMT, m_szCheckboxName[ i ], m_piParamC[ i ] );
 	}
 	
 	// 手動ラップ計測マーク出力
@@ -380,6 +427,10 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 			fprintf( fp, "%u\n", m_Lap[ i ].iLogNum );
 		}
 	}
+	
+  #ifndef CIRCUIT_TOMO
+	fprintf( fp, "\t0 )\n" );
+  #endif
 	
 	fclose( fp );
 	return TRUE;
@@ -428,11 +479,11 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	NaN /= *( volatile float *)&NaN;
 	
 	// config ロード
-	ConfigLoad( ChangeExt( szBuf, ( char *)szFileName, "cfg" ));
+	ConfigLoad( ChangeExt( szBuf, ( char *)szFileName, CONFIG_EXT ));
 	
 	/******************/
 	
-	if( IsExt(( char *)szFileName, "cfg" ) || ( fp = fopen(( char *)szFileName, "r" )) == NULL ) return FALSE;
+	if( IsExt(( char *)szFileName, CONFIG_EXT ) || ( fp = fopen(( char *)szFileName, "r" )) == NULL ) return FALSE;
 	
 #ifdef CIRCUIT_TOMO
 	int i;

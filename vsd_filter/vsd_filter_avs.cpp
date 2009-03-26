@@ -14,11 +14,40 @@
 #include "dds_lib/dds_lib.h"
 #include "CVsdFilter.h"
 
+/****************************************************************************/
+
+enum {
+	ARGID_CLIP,
+	ARGID_CFG_FILE,
+	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	ARGID_ ## id,
+	#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
+	#include "def_trackbar.h"
+	#define DEF_CHECKBOX( id, init, name, conf_name )			ARGID_ ## id,
+	#define DEF_CHECKBOX_N( id, init, name, conf_name )
+	#include "def_checkbox.h"
+	ARGID_NUM
+};
+
+/****************************************************************************/
+
 class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
   public:
+	void Initialize( IScriptEnvironment* env );
+	
 	CVsdFilterAvs::CVsdFilterAvs(
 		PClip _child,
+		IScriptEnvironment* env
+	);
+	
+	CVsdFilterAvs(
+		PClip _child,
 		const char *szParamFile,
+		IScriptEnvironment* env
+	);
+	
+	CVsdFilterAvs(
+		PClip _child,
+		AVSValue args,
 		IScriptEnvironment* env
 	);
 	
@@ -49,27 +78,72 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 
 /*** コンストラクタ・デストラクタ *******************************************/
 
-CVsdFilterAvs::CVsdFilterAvs(
-	PClip _child,
-	const char *szParamFile,
-	IScriptEnvironment* env
-) : GenericVideoFilter( _child ){
-	
+// 共通イニシャライザ
+void CVsdFilterAvs::Initialize( IScriptEnvironment* env ){
 	if( !vi.IsYUY2() ) env->ThrowError( "VSDFilter: requires YUY2 input.");
 	
 	// パラメータ初期化
 	m_piParamT	= new int[ TRACK_N ];
 	m_piParamC	= new int[ CHECK_N ];
 	
-	#define DEF_TRACKBAR( id, init, min, max, name )	m_piParamT[ id ] = init;
+	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	m_piParamT[ id ] = init;
 	#include "def_trackbar.h"
 	
-	#define DEF_CHECKBOX( id, init, name )	m_piParamC[ id ] = init;
+	#define DEF_CHECKBOX( id, init, name, conf_name )	m_piParamC[ id ] = init;
 	#include "def_checkbox.h"
 	
 	m_dVideoFPS = ( double )vi.fps_numerator / vi.fps_denominator;
+}
 
+// 引数なし
+CVsdFilterAvs::CVsdFilterAvs(
+	PClip _child,
+	IScriptEnvironment* env
+) : GenericVideoFilter( _child ){
+	
+	Initialize( env );
+}
+
+// cfg ファイル指定
+CVsdFilterAvs::CVsdFilterAvs(
+	PClip _child,
+	const char *szParamFile,
+	IScriptEnvironment* env
+) : GenericVideoFilter( _child ){
+	
+	Initialize( env );
 	ReadLog( szParamFile );
+}
+
+// param 指定
+CVsdFilterAvs::CVsdFilterAvs(
+	PClip _child,
+	AVSValue args,
+	IScriptEnvironment* env
+) : GenericVideoFilter( _child ){
+	
+	Initialize( env );
+	
+	#define DEF_TRACKBAR( id, init, min, max, name, conf_name ) \
+		m_piParamT[ id ] = args[ ARGID_ ## id ].AsInt( init );
+	#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
+	#include "def_trackbar.h"
+	
+	#define DEF_CHECKBOX( id, init, name, conf_name ) \
+		m_piParamC[ id ] = args[ ARGID_ ## id ].AsInt( init );
+	#define DEF_CHECKBOX_N( id, init, name, conf_name )
+	#include "def_checkbox.h"
+	
+	m_piParamT[ TRACK_VSt2 ] = m_piParamT[ TRACK_VSt ] % 100;
+	m_piParamT[ TRACK_VSt  ] /= 100;
+	m_piParamT[ TRACK_VEd2 ] = m_piParamT[ TRACK_VEd ] % 100;
+	m_piParamT[ TRACK_VEd  ] /= 100;
+	m_piParamT[ TRACK_LSt2 ] = m_piParamT[ TRACK_LSt ] % 100;
+	m_piParamT[ TRACK_LSt  ] /= 100;
+	m_piParamT[ TRACK_LEd2 ] = m_piParamT[ TRACK_LEd ] % 100;
+	m_piParamT[ TRACK_LEd  ] /= 100;
+	
+	ReadLog( args[ ARGID_CFG_FILE ].AsString() );
 }
 
 CVsdFilterAvs::~CVsdFilterAvs(){
@@ -163,15 +237,36 @@ PVideoFrame __stdcall CVsdFilterAvs::GetFrame( int n, IScriptEnvironment* env ){
 	return src;
 }
 
+AVSValue __cdecl Create_VSDFilterCfgFile( AVSValue args, void* user_data, IScriptEnvironment* env ){
+	return new CVsdFilterAvs(
+		args[0].AsClip(),
+		args[1].AsString(),
+		env
+	);
+}
+
 AVSValue __cdecl Create_VSDFilter( AVSValue args, void* user_data, IScriptEnvironment* env ){
-    return new CVsdFilterAvs(
-    	args[0].AsClip(),
-    	args[1].AsString(),
-    	env
-    );
+	return new CVsdFilterAvs(
+		args[0].AsClip(),
+		args,
+		env
+	);
 }
 
 extern "C" __declspec( dllexport ) const char* __stdcall AvisynthPluginInit2( IScriptEnvironment* env ){
-    env->AddFunction( "VSDFilter", "cs", Create_VSDFilter, 0 );
-    return "`VSDFilter' vehicle data logger overlay plugin";
+	env->AddFunction( "VSDFilterCfgFile", "cs", Create_VSDFilterCfgFile, 0 );
+	
+	env->AddFunction( "VSDFilter",
+		"cs"
+		#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	"[" conf_name "]i"
+		#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
+		#include "def_trackbar.h"
+		#define DEF_CHECKBOX( id, init, name, conf_name )			"[" conf_name "]i"
+		#define DEF_CHECKBOX_N( id, init, name, conf_name )
+		#include "def_checkbox.h"
+		"i*",
+		Create_VSDFilter, 0
+	);
+	
+	return "`VSDFilter' vehicle data logger overlay plugin";
 }

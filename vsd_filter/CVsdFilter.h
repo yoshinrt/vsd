@@ -46,16 +46,22 @@
 #define HIREZO_TH		600			// ハイレゾモード時の横幅スレッショルド
 #define POS_DEFAULT		0x80000000
 
+#ifdef CIRCUIT_TOMO
+	#define CONFIG_EXT	"cfg"
+#else
+	#define CONFIG_EXT	"avs"
+#endif
+
 /*** track / check ID *******************************************************/
 
 enum {
-	#define DEF_TRACKBAR( id, init, min, max, name )	id,
+	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	id,
 	#include "def_trackbar.h"
 	TRACK_N
 };
 
 enum {
-	#define DEF_CHECKBOX( id, init, name )	id,
+	#define DEF_CHECKBOX( id, init, name, conf_name )	id,
 	#include "def_checkbox.h"
 	CHECK_N
 };
@@ -178,6 +184,7 @@ class CVsdFilter {
 	/*** ログオペレーション *************************************************/
 	
   public:
+	BOOL IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
 	BOOL ConfigLoad( const char *szFileName );
 #ifndef AVS_PLUGIN
 	BOOL ConfigSave( const char *szFileName );
@@ -226,6 +233,7 @@ class CVsdFilter {
 	virtual void SetFrameMark( int iFrame ) = 0;
 	virtual void CalcLapTime( void ) = 0;
 	
+	virtual char *GetVideoFileName( char *szFileName ){ return ""; }
   private:
 };
 #endif
