@@ -302,7 +302,7 @@ inline void CVsdFilter::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
 
 /*** 設定ロード・セーブ *****************************************************/
 
-BOOL CVsdFilter::ConfigLoad( char *szFileName ){
+BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 	
 	int 	i, iLen;
 	FILE	*fp;
@@ -351,7 +351,7 @@ BOOL CVsdFilter::ConfigLoad( char *szFileName ){
 }
 
 #ifndef AVS_PLUGIN
-BOOL CVsdFilter::ConfigSave( char *szFileName ){
+BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	FILE	*fp;
 	int		i;
 	
@@ -419,7 +419,7 @@ UINT CVsdFilter::ReadPTD( FILE *fp, UINT uOffs ){
 }
 #endif
 
-BOOL CVsdFilter::ReadLog( char *szFileName ){
+BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	TCHAR	szBuf[ BUF_SIZE ];
 	FILE	*fp;
 	BOOL	bCalibrating = FALSE;
@@ -428,11 +428,11 @@ BOOL CVsdFilter::ReadLog( char *szFileName ){
 	NaN /= *( volatile float *)&NaN;
 	
 	// config ロード
-	ConfigLoad( ChangeExt( szBuf, szFileName, "cfg" ));
+	ConfigLoad( ChangeExt( szBuf, ( char *)szFileName, "cfg" ));
 	
 	/******************/
 	
-	if( IsExt( szFileName, "cfg" ) || ( fp = fopen( szFileName, "r" )) == NULL ) return FALSE;
+	if( IsExt(( char *)szFileName, "cfg" ) || ( fp = fopen(( char *)szFileName, "r" )) == NULL ) return FALSE;
 	
 #ifdef CIRCUIT_TOMO
 	int i;

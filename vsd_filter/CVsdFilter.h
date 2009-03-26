@@ -17,10 +17,10 @@
 
 #ifdef AVS_PLUGIN
 	#define RGB2YC( r, g, b ) { \
-		( int )( 0.299 * r + 0.587 * g + 0.114 * b ) >> 4, \
-		( int )(-0.169 * r - 0.331 * g + 0.500 * b ) >> 4 + 0x80, \
-		( int )( 0.299 * r + 0.587 * g + 0.114 * b ) >> 4, \
-		( int )( 0.500 * r - 0.419 * g - 0.081 * b ) >> 4 + 0x80  \
+		(( int )( 0.299 * r + 0.587 * g + 0.114 * b ) >> 4 ), \
+		(( int )(-0.169 * r - 0.331 * g + 0.500 * b ) >> 4 ) + 0x80, \
+		(( int )( 0.299 * r + 0.587 * g + 0.114 * b ) >> 4 ), \
+		(( int )( 0.500 * r - 0.419 * g - 0.081 * b ) >> 4 ) + 0x80 \
 	}
 #else
 	#define RGB2YC( r, g, b ) { \
@@ -178,11 +178,11 @@ class CVsdFilter {
 	/*** ログオペレーション *************************************************/
 	
   public:
-	BOOL ConfigLoad( char *szFileName );
+	BOOL ConfigLoad( const char *szFileName );
 #ifndef AVS_PLUGIN
-	BOOL ConfigSave( char *szFileName );
+	BOOL ConfigSave( const char *szFileName );
 #endif
-	BOOL ReadLog( char *szFileName );
+	BOOL ReadLog( const char *szFileName );
 #ifdef CIRCUIT_TOMO
 	UINT ReadPTD( FILE *fp, UINT uOffs );
 #else

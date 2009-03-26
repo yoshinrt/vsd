@@ -16,15 +16,18 @@
 
 class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
   public:
-	CVsdFilterAvs( PClip _child, IScriptEnvironment* env );
+	CVsdFilterAvs::CVsdFilterAvs(
+		PClip _child,
+		const char *szParamFile,
+		IScriptEnvironment* env
+	);
+	
 	~CVsdFilterAvs();
 	PVideoFrame __stdcall GetFrame( int n, IScriptEnvironment* env );
 	
 	/////////////
 	
 	int GetIndex( int x, int y ){ return m_iBytesPerLine * y + x * 2; }
-	
-	PIXEL_YC hoge;
 	
 	// 仮想関数
 	virtual void PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag );
@@ -34,8 +37,8 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	virtual int	GetFrameMax( void )	{ return vi.num_frames; }
 	virtual int	GetFrameCnt( void )	{ return m_iFrameCnt; }
 	
-	virtual void SetFrameMark( int iFrame ){};
-	virtual void CalcLapTime( void ){};
+	virtual void SetFrameMark( int iFrame );
+	virtual void CalcLapTime( void );
 	
 	// パラメータ
 	int	m_iWidth, m_iHeight, m_iFrameCnt, m_iFrameMax;
@@ -46,7 +49,14 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 
 /*** コンストラクタ・デストラクタ *******************************************/
 
-CVsdFilterAvs::CVsdFilterAvs( PClip _child, IScriptEnvironment* env ) : GenericVideoFilter( _child ){
+CVsdFilterAvs::CVsdFilterAvs(
+	PClip _child,
+	const char *szParamFile,
+	IScriptEnvironment* env
+) : GenericVideoFilter( _child ){
+	
+	if( !vi.IsYUY2() ) env->ThrowError( "VSDFilter: requires YUY2 input.");
+	
 	// パラメータ初期化
 	m_piParamT	= new int[ TRACK_N ];
 	m_piParamC	= new int[ CHECK_N ];
@@ -57,12 +67,9 @@ CVsdFilterAvs::CVsdFilterAvs( PClip _child, IScriptEnvironment* env ) : GenericV
 	#define DEF_CHECKBOX( id, init, name )	m_piParamC[ id ] = init;
 	#include "def_checkbox.h"
 	
-	ReadLog( "D:\\Video\\その他\\車\\ELISE\\20080502_美浜\\vsd20080502_162104-9.log" );
-	DebugMsgD( "init completed\n" );
-	
-	hoge.y = 0;
-	hoge.cr = 128;
-	hoge.cb = 128;
+	m_dVideoFPS = ( double )vi.fps_numerator / vi.fps_denominator;
+
+	ReadLog( szParamFile );
 }
 
 CVsdFilterAvs::~CVsdFilterAvs(){
@@ -102,6 +109,44 @@ void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
 	}
 }
 
+/*** フレームをマーク *******************************************************/
+
+void CVsdFilterAvs::SetFrameMark( int iFrame ){
+	m_Lap[ m_iLapNum++ ].iLogNum = iFrame;
+};
+
+/*** ラップタイム再計算 *****************************************************/
+
+void CVsdFilterAvs::CalcLapTime( void ){
+	
+	int				i;
+	double			dTime, dPrevTime;
+	
+	m_fBestTime	= -1;
+	
+	for( i = 0; i < m_iLapNum; ++i ){
+		// ラップ検出
+		dTime = m_Lap[ i ].iLogNum / m_dVideoFPS;
+		
+		m_Lap[ i ].uLap		= i;
+		m_Lap[ i ].fTime	= i ? ( float )( dTime - dPrevTime ) : 0;
+		
+		if(
+			i &&
+			( m_fBestTime == -1 || m_fBestTime > m_Lap[ i ].fTime )
+		){
+			m_fBestTime			= m_Lap[ i ].fTime;
+			m_iBestLapLogNum	= m_Lap[ i - 1 ].iLogNum;
+		}
+		
+		dPrevTime = dTime;
+	}
+	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
+	m_Lap[ m_iLapNum ].fTime	= 0;			// 番犬
+}
+
+/****************************************************************************/
+
 PVideoFrame __stdcall CVsdFilterAvs::GetFrame( int n, IScriptEnvironment* env ){
 	PVideoFrame src = child->GetFrame( n, env );
 	env->MakeWritable(&src);
@@ -119,10 +164,14 @@ PVideoFrame __stdcall CVsdFilterAvs::GetFrame( int n, IScriptEnvironment* env ){
 }
 
 AVSValue __cdecl Create_VSDFilter( AVSValue args, void* user_data, IScriptEnvironment* env ){
-    return new CVsdFilterAvs( args[0].AsClip(), env );  
+    return new CVsdFilterAvs(
+    	args[0].AsClip(),
+    	args[1].AsString(),
+    	env
+    );
 }
 
 extern "C" __declspec( dllexport ) const char* __stdcall AvisynthPluginInit2( IScriptEnvironment* env ){
-    env->AddFunction( "VSDFilter", "c", Create_VSDFilter, 0 );
+    env->AddFunction( "VSDFilter", "cs", Create_VSDFilter, 0 );
     return "`VSDFilter' vehicle data logger overlay plugin";
 }
