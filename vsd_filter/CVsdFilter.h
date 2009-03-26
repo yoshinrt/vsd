@@ -15,11 +15,20 @@
 #define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 2 ))
 #define MAX_LAP			200
 
-#define RGB2YC( r, g, b ) { \
-	( int )( 0.299 * r + 0.587 * g + 0.114 * b ), \
-	( int )(-0.169 * r - 0.331 * g + 0.500 * b ), \
-	( int )( 0.500 * r - 0.419 * g - 0.081 * b ) \
-}
+#ifdef AVS_PLUGIN
+	#define RGB2YC( r, g, b ) { \
+		( int )( 0.299 * r + 0.587 * g + 0.114 * b ) >> 4, \
+		( int )(-0.169 * r - 0.331 * g + 0.500 * b ) >> 4 + 0x80, \
+		( int )( 0.299 * r + 0.587 * g + 0.114 * b ) >> 4, \
+		( int )( 0.500 * r - 0.419 * g - 0.081 * b ) >> 4 + 0x80  \
+	}
+#else
+	#define RGB2YC( r, g, b ) { \
+		( int )( 0.299 * r + 0.587 * g + 0.114 * b ), \
+		( int )(-0.169 * r - 0.331 * g + 0.500 * b ), \
+		( int )( 0.500 * r - 0.419 * g - 0.081 * b ) \
+	}
+#endif
 
 #define G_CX_CNT		30
 #define G_HIST			(( int )( LOG_FREQ * 3 ))
@@ -82,6 +91,26 @@ typedef struct {
 	short	iLeft, iRight;
 } PolygonData_t;
 
+#ifdef AVS_PLUGIN
+typedef struct {
+	union {
+		// yuv 個別指定
+		struct {
+			UCHAR	y;
+			UCHAR	cb;
+			UCHAR	y1;
+			UCHAR	cr;
+		};
+		
+		// ycb / ycr アクセス
+		struct {
+			USHORT	ycb;
+			USHORT	ycr;
+		};
+	};
+} PIXEL_YC;
+#endif
+
 class CVsdFilter {
 	
   public:
@@ -91,33 +120,12 @@ class CVsdFilter {
 	/*** 画像オペレーション *************************************************/
 	
 	virtual void PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ) = 0;
-	virtual PIXEL_YC &GetPixel( int x, int y, UINT uFlag ) = 0;
 	
 	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag );
 	void DrawLine( int x1, int y1, int x2, int y2, int width, const PIXEL_YC &yc, UINT uFlag );
 	void FillLine( int x1, int y1, int x2,         const PIXEL_YC &yc, UINT uFlag );
 	void DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag );
 	void DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFlag );
-	
-	int ClipY( int y ){
-		return
-			y > 4095 ? 4095 :
-			y < 0    ? 0 : y;
-	}
-	
-	int ClipC( int c ){
-		return
-			c >  2047 ?  2047 :
-			c < -2048 ? -2048 : c;
-	}
-	
-	PIXEL_YC &GetYC( PIXEL_YC &yc, int r, int g, int b ){
-		yc.y  = ClipY(( int )( 0.299 * r + 0.587 * g + 0.114 * b ));
-		yc.cr = ClipC(( int )( 0.500 * r - 0.419 * g - 0.081 * b ));
-		yc.cb = ClipC(( int )(-0.169 * r - 0.331 * g + 0.500 * b ));
-		
-		return yc;
-	}
 	
 	void DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, UINT uFlag );
 	void DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag );

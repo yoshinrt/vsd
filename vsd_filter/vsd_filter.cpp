@@ -160,7 +160,6 @@ class CVsdFilterAvu : public CVsdFilter {
 	
 	// 仮想関数
 	virtual void PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag );
-	virtual PIXEL_YC &GetPixel( int x, int y, UINT uFlag );
 	
 	virtual int	GetWidth( void ){ return fpip->w ; }
 	virtual int	GetHeight( void ){ return fpip->h ; }
@@ -218,11 +217,6 @@ void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
 			}
 		}
 	}
-}
-
-PIXEL_YC &CVsdFilterAvu::GetPixel( int x, int y, UINT uFlag ){
-	PIXEL_YC	*ycp = fpip->ycp_edit;
-	return	ycp[ GetIndex( x, y ) ];
 }
 
 /*** ラップタイム再計算 *****************************************************/

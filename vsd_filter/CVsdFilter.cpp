@@ -200,7 +200,6 @@ void CVsdFilter::DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, U
 void CVsdFilter::DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFlag ){
 	
 	int			i, j;
-	PIXEL_YC	yc_void = { -1, 0, 0 };
 	
 	// Polygon ÉNÉäÉA
 	if( uFlag & IMG_FILL ){
