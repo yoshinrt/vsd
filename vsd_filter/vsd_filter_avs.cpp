@@ -34,7 +34,7 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
   public:
 	void Initialize( IScriptEnvironment* env );
 	
-	CVsdFilterAvs::CVsdFilterAvs(
+	CVsdFilterAvs(
 		PClip _child,
 		IScriptEnvironment* env
 	);
@@ -143,7 +143,7 @@ CVsdFilterAvs::CVsdFilterAvs(
 	m_piParamT[ TRACK_LEd2 ] = m_piParamT[ TRACK_LEd ] % 100;
 	m_piParamT[ TRACK_LEd  ] /= 100;
 	
-	ReadLog( args[ ARGID_CFG_FILE ].AsString() );
+	ReadLog( args[ ARGID_CFG_FILE ].AsString( "" ));
 }
 
 CVsdFilterAvs::~CVsdFilterAvs(){
@@ -240,7 +240,7 @@ PVideoFrame __stdcall CVsdFilterAvs::GetFrame( int n, IScriptEnvironment* env ){
 AVSValue __cdecl Create_VSDFilterCfgFile( AVSValue args, void* user_data, IScriptEnvironment* env ){
 	return new CVsdFilterAvs(
 		args[0].AsClip(),
-		args[1].AsString(),
+		args[1].AsString( "" ),
 		env
 	);
 }
@@ -264,7 +264,7 @@ extern "C" __declspec( dllexport ) const char* __stdcall AvisynthPluginInit2( IS
 		#define DEF_CHECKBOX( id, init, name, conf_name )			"[" conf_name "]i"
 		#define DEF_CHECKBOX_N( id, init, name, conf_name )
 		#include "def_checkbox.h"
-		"i*",
+		,
 		Create_VSDFilter, 0
 	);
 	

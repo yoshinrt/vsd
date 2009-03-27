@@ -348,12 +348,6 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 					){
 						m_piParamT[ i ] = iVal;
 						
-					#ifdef CIRCUIT_TOMO
-						if( i == TRACK_LSt || i == TRACK_LEd ){
-							m_piParamT[ i + 1 ] = m_piParamT[ i ] % 1000;
-							m_piParamT[ i ] /= 1000;
-						} else
-					#endif
 						if( i <= TRACK_LEd ){
 							m_piParamT[ i + 1 ] = m_piParamT[ i ] % 100;
 							m_piParamT[ i ] /= 100;
@@ -389,7 +383,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
   #ifdef CIRCUIT_TOMO
 	#define CONF_OUTPUT_FMT	"%s=%u\n"
   #else
-	#define CONF_OUTPUT_FMT	"\t%s=%u, \\\n"
+	#define CONF_OUTPUT_FMT	"\t%s=%u%c \\\n"
 	
 	char szBuf[ BUF_SIZE ];
 	
@@ -405,18 +399,18 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 		if( m_szTrackbarName[ i ] == NULL ) continue;
 		
 		fprintf( fp, CONF_OUTPUT_FMT, m_szTrackbarName[ i ],
-		#ifdef CIRCUIT_TOMO
-			( i == TRACK_LSt || i == TRACK_LEd ) ? m_piParamT[ i ] * 1000 + m_piParamT[ i + 1 ] :
-		#endif
 			( i <= TRACK_LEd ) ? m_piParamT[ i ] * 100 + m_piParamT[ i + 1 ] :
-			m_piParamT[ i ]
+			m_piParamT[ i ], ','
 		);
 	}
 	
 	for( i = 0; i < CHECK_N; ++i ){
 		if( m_szCheckboxName[ i ] == NULL ) continue;
 		
-		fprintf( fp, CONF_OUTPUT_FMT, m_szCheckboxName[ i ], m_piParamC[ i ] );
+		fprintf(
+			fp, CONF_OUTPUT_FMT, m_szCheckboxName[ i ], m_piParamC[ i ],
+			( i == CHECK_N - 1 ) ? '' : ','
+		);
 	}
 	
 	// 手動ラップ計測マーク出力
@@ -429,7 +423,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	}
 	
   #ifndef CIRCUIT_TOMO
-	fprintf( fp, "\t0 )\n" );
+	fprintf( fp, ")\n" );
   #endif
 	
 	fclose( fp );
@@ -741,8 +735,8 @@ void CVsdFilter::RotateMap( void ){
 #define VideoSt			( m_piParamT[ TRACK_VSt ] * 100 + m_piParamT[ TRACK_VSt2 ] )
 #define VideoEd			( m_piParamT[ TRACK_VEd ] * 100 + m_piParamT[ TRACK_VEd2 ] )
 #ifdef CIRCUIT_TOMO
-	#define LogSt		(( m_piParamT[ TRACK_LSt ] * 1000 + m_piParamT[ TRACK_LSt2 ] ) / 1000 * LOG_FREQ )
-	#define LogEd		(( m_piParamT[ TRACK_LEd ] * 1000 + m_piParamT[ TRACK_LEd2 ] ) / 1000 * LOG_FREQ )
+	#define LogSt		(( m_piParamT[ TRACK_LSt ] * 100 + m_piParamT[ TRACK_LSt2 ] ) * ( LOG_FREQ / 100 ))
+	#define LogEd		(( m_piParamT[ TRACK_LEd ] * 100 + m_piParamT[ TRACK_LEd2 ] ) * ( LOG_FREQ / 100 ))
 #else
 	#define LogSt		( m_piParamT[ TRACK_LSt ] * 100 + m_piParamT[ TRACK_LSt2 ] )
 	#define LogEd		( m_piParamT[ TRACK_LEd ] * 100 + m_piParamT[ TRACK_LEd2 ] )
