@@ -50,10 +50,9 @@ sub ConvCfg {
 	while( <fpIn> ){
 		s/[\x0D\x0A]//g;
 		
-		if( $bMark ){
-			$Marks .= "\t$_, \\\n";
-		}elsif( $_ eq 'MARK:' ){
+		if( $Marks || $_ eq 'MARK:' ){
 			$bMark = 1;
+			$Marks .= "$_\n";
 		}else{
 			$Param{ $1 } = $2 if( /(.+)=(.+)/ );
 		}
@@ -69,6 +68,8 @@ sub ConvCfg {
 		$Param{ TRACK_LSt } = $Param{ TRACK_LSt } * 100 + $Param{ TRACK_LSt2 };
 		$Param{ TRACK_LEd } = $Param{ TRACK_LEd } * 100 + $Param{ TRACK_LEd2 };
 	}
+	
+	$LogFile = $AvsFile if( $Marks );
 	
 	print fpOut<<EOF;
 DirectShowSource("$VidFile")
@@ -107,14 +108,7 @@ EOF
 EOF
 	}
 	
-	if( $Marks ){
-		$Marks =~ s/(.*),/$1/s;
-		
-		print fpOut<<EOF;
-VSDFilterMark( \\
-$Marks)
-EOF
-	}
+	print fpOut "__END__\n$Marks" if( $Marks );
 	
 	close( fpIn );
 	close( fpOut );

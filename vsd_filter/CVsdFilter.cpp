@@ -383,14 +383,14 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
   #ifdef CIRCUIT_TOMO
 	#define CONF_OUTPUT_FMT	"%s=%u\n"
   #else
-	#define CONF_OUTPUT_FMT	"\t%s=%u%c \\\n"
+	#define CONF_OUTPUT_FMT	"\t%s=%u%s \\\n"
 	
 	char szBuf[ BUF_SIZE ];
 	
 	fprintf( fp,
 		"DirectShowSource(\"%s\")\n"
 		"ConvertToYUY2()\n"
-		"VSDFilter( \\\n",
+		"VSDFilter( \\\n\t\"\", \\\n",
 		GetVideoFileName( szBuf )
 	);
   #endif
@@ -400,7 +400,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 		
 		fprintf( fp, CONF_OUTPUT_FMT, m_szTrackbarName[ i ],
 			( i <= TRACK_LEd ) ? m_piParamT[ i ] * 100 + m_piParamT[ i + 1 ] :
-			m_piParamT[ i ], ','
+			m_piParamT[ i ], ","
 		);
 	}
 	
@@ -408,8 +408,10 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 		if( m_szCheckboxName[ i ] == NULL ) continue;
 		
 		fprintf(
-			fp, CONF_OUTPUT_FMT, m_szCheckboxName[ i ], m_piParamC[ i ],
-			( i == CHECK_N - 1 ) ? '' : ','
+			fp, CONF_OUTPUT_FMT, m_szCheckboxName[ i ], m_piParamC[ i ]
+			#ifndef CIRCUIT_TOMO
+				, ( i == CHECK_SNAKE ) ? "" : ","
+			#endif
 		);
 	}
 	
@@ -846,7 +848,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		sprintf( szBuf, "V%6d/%6d", GetFrameCnt(), GetFrameMax() - 1 );
 		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, GetWidth() / 2, GetHeight() / 2 );
 	#ifdef CIRCUIT_TOMO
-		sprintf( szBuf, "L%.3f/%.3f", ( double )dLogNum / LOG_FREQ, m_iVsdLogNum / LOG_FREQ );
+		sprintf( szBuf, "L%.2f/%.2f", ( double )dLogNum / LOG_FREQ, m_iVsdLogNum / LOG_FREQ );
 	#else
 		sprintf( szBuf, "L%6d/%6d", ( int )dLogNum, m_iVsdLogNum - 1 );
 	#endif
@@ -1139,11 +1141,17 @@ BOOL CVsdFilter::DrawVSD( void ){
 						yc_line.y  = ( short )( MAP_LINE2.y  * dG + MAP_LINE1.y  * ( 1 - dG ));
 						yc_line.cb = ( short )( MAP_LINE2.cb * dG + MAP_LINE1.cb * ( 1 - dG ));
 						yc_line.cr = ( short )( MAP_LINE2.cr * dG + MAP_LINE1.cr * ( 1 - dG ));
+					#ifdef AVS_PLUGIN
+						yc_line.y1 = yc_line.y;
+					#endif
 					}else if( dG < 1.0 ){
 						dG = ( dG - 0.5 ) * 2;
 						yc_line.y  = ( short )( MAP_LINE3.y  * dG + MAP_LINE2.y  * ( 1 - dG ));
 						yc_line.cb = ( short )( MAP_LINE3.cb * dG + MAP_LINE2.cb * ( 1 - dG ));
 						yc_line.cr = ( short )( MAP_LINE3.cr * dG + MAP_LINE2.cr * ( 1 - dG ));
+					#ifdef AVS_PLUGIN
+						yc_line.y1 = yc_line.y;
+					#endif
 					}else{
 						yc_line = MAP_LINE3;
 					}
