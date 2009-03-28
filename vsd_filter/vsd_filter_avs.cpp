@@ -158,15 +158,6 @@ void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
 			}else{
 				*( USHORT *)( m_pPlane + iIndex ) = ( x & 1 ) ? yc.ycr : yc.ycb;
 				m_pPlane[ iIndex ] = yc.y;
-				
-			//	iIndex &= ~3;
-			//	if(( x ^ y ^ GetFrameCnt()) & 1 ){
-			//		// cr
-			//		m_pPlane[ iIndex + 3 ] = yc.cr;
-			//	}else{
-			//		// cb
-			//		m_pPlane[ iIndex + 1 ] = yc.cb;
-			//	}
 			}
 		}
 	}
