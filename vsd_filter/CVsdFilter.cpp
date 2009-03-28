@@ -303,7 +303,7 @@ inline void CVsdFilter::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
 
 /*** 設定ロード・セーブ *****************************************************/
 
-BOOL CVsdFilter::IsConfigParam( const char *szParamName, char *szBuf, int &iVal ){
+char *CVsdFilter::IsConfigParam( const char *szParamName, char *szBuf, int &iVal ){
 	
 	int	iLen;
 	
@@ -314,10 +314,20 @@ BOOL CVsdFilter::IsConfigParam( const char *szParamName, char *szBuf, int &iVal 
 		szBuf[ iLen ] == '='
 	){
 		iVal = atoi( szBuf + iLen + 1 );
-		return TRUE;
+		return szBuf + iLen + 1;
 	}
 	
-	return FALSE;
+	return NULL;
+}
+
+BOOL CVsdFilter::ParseMarkStr( const char *szMark ){
+	
+	while( szMark && *szMark ){
+		SetFrameMark( atoi( szMark ));
+		if( szMark = strchr( szMark, ',' )) ++szMark;	// 次のパラメータ
+	}
+	m_bCalcLapTimeReq = TRUE;
+	return TRUE;
 }
 
 BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
@@ -325,20 +335,14 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 	int 	i, iVal;
 	FILE	*fp;
 	char	szBuf[ BUF_SIZE ];
-	BOOL	bMark = FALSE;
 	
 	if(( fp = fopen( szFileName, "r" )) != NULL ){
 		m_bCalcLapTimeReq = TRUE;
 		
 		while( fgets( szBuf, BUF_SIZE, fp )){
-			if( bMark ){
-				// マークセット
-				SetFrameMark( atoi( szBuf ));
-				
-			}else if( strncmp( szBuf, "MARK:", 5 ) == 0 ){
-				// マークモードに入る
-				bMark = TRUE;
-				
+			if( char *p = IsConfigParam( "mark", szBuf, iVal )){
+				// ラップタイムマーク
+				ParseMarkStr( p + 1 );
 			}else{
 				// Mark 以外のパラメータ
 				for( i = 0; i < TRACK_N; ++i ){
@@ -380,27 +384,27 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	
 	if(( fp = fopen( szFileName, "w" )) == NULL ) return FALSE;
 	
-  #ifdef CIRCUIT_TOMO
-	#define CONF_OUTPUT_FMT	"%s=%u\n"
-  #else
-	#define CONF_OUTPUT_FMT	"\t%s=%u%s \\\n"
-	
-	char szBuf[ BUF_SIZE ];
-	
-	fprintf( fp,
-		"DirectShowSource(\"%s\")\n"
-		"ConvertToYUY2()\n"
-		"VSDFilter( \\\n\t\"\", \\\n",
-		GetVideoFileName( szBuf )
-	);
-  #endif
+	#ifdef CIRCUIT_TOMO
+		#define CONF_OUTPUT_FMT	"%s=%u\n"
+	#else
+		#define CONF_OUTPUT_FMT	", \\\n\t%s=%u"
+		
+		char szBuf[ BUF_SIZE ];
+		
+		fprintf( fp,
+			"DirectShowSource(\"%s\"). \\\n"
+			"ConvertToYUY2(). \\\n"
+			"VSDFilter( \\\n\tlog_file=\"\"",
+			GetVideoFileName( szBuf )
+		);
+	#endif
 	
 	for( i = 0; i < TRACK_N; ++i ){
 		if( m_szTrackbarName[ i ] == NULL ) continue;
 		
 		fprintf( fp, CONF_OUTPUT_FMT, m_szTrackbarName[ i ],
 			( i <= TRACK_LEd ) ? m_piParamT[ i ] * 100 + m_piParamT[ i + 1 ] :
-			m_piParamT[ i ], ","
+			m_piParamT[ i ]
 		);
 	}
 	
@@ -409,24 +413,28 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 		
 		fprintf(
 			fp, CONF_OUTPUT_FMT, m_szCheckboxName[ i ], m_piParamC[ i ]
-			#ifndef CIRCUIT_TOMO
-				, ( i == CHECK_SNAKE ) ? "" : ","
-			#endif
 		);
 	}
 	
 	// 手動ラップ計測マーク出力
 	if( IsHandLaptime() && m_iLapNum ){
-		fputs( "MARK:\n", fp );
+		#ifdef CIRCUIT_TOMO
+			fputs( "MARK:\n", fp );
+			for( i = 0; i < m_iLapNum; ++i ){
+				fprintf( fp, "%u\n", m_Lap[ i ].iLogNum );
+			}
+		#else
+			for( i = 0; i < m_iLapNum; ++i ){
+				fprintf( fp, "%s%u", i ? "," : ", \\\n\tmark=\"", m_Lap[ i ].iLogNum );
+			}
+			fputc( '"', fp );
+		#endif
 		
-		for( i = 0; i < m_iLapNum; ++i ){
-			fprintf( fp, "%u\n", m_Lap[ i ].iLogNum );
-		}
 	}
 	
-  #ifndef CIRCUIT_TOMO
-	fprintf( fp, ")\n" );
-  #endif
+	#ifndef CIRCUIT_TOMO
+		fprintf( fp, " \\\n)\n" );
+	#endif
 	
 	fclose( fp );
 	return TRUE;
@@ -500,9 +508,6 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	m_iBestLapLogNum= 0;
 	m_iLapIdx		= -1;
 	m_iBestLogNum	= 0;
-	
-	// 20070814 以降のログは，横 G が反転している
-	BOOL bReverseGy	= ( strcmp( StrTokFile( NULL, szBuf, STF_NAME ), "vsd20070814" ) >= 0 );
 	
 	// ログリード
 	
@@ -581,7 +586,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 				dGy = 0;
 				//dGy = ( m_VsdLog[ m_iVsdLogNum ].fSpeed - m_VsdLog[ m_iVsdLogNum - 1 ].fSpeed ) * ( 1000.0 / 3600 / 9.8 * LOG_FREQ );
 			}else if( dGx >= 4 ){	// 4 以下なら，すでに G が計算済み
-				if( bReverseGy ) dGx = -dGx;
+				dGx = -dGx;
 				
 				if( m_iVsdLogNum < G_CX_CNT ){
 					// G センター検出
@@ -596,7 +601,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 				}else{
 					// 単位を G に変換
 					dGx = ( dGx - dGcx ) / ACC_1G_Y;
-					dGy = ( dGy - dGcy ) / ( bReverseGy ? ACC_1G_Z : ACC_1G_X );
+					dGy = ( dGy - dGcy ) / ACC_1G_Z;
 				}
 			}
 			m_VsdLog[ m_iVsdLogNum ].fGx = ( float )dGx;

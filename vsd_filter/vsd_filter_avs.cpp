@@ -20,7 +20,7 @@
 
 enum {
 	ARGID_CLIP,
-	ARGID_CFG_FILE,
+	ARGID_LOG_FILE,
 	ARGID_PARAM_FILE,
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	ARGID_ ## id,
 	#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
@@ -28,6 +28,7 @@ enum {
 	#define DEF_CHECKBOX( id, init, name, conf_name )			ARGID_ ## id,
 	#define DEF_CHECKBOX_N( id, init, name, conf_name )
 	#include "def_checkbox.h"
+	ARGID_MARK,
 	ARGID_NUM
 };
 
@@ -35,19 +36,6 @@ enum {
 
 class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
   public:
-	void Initialize(
-		const char *szLogFile,
-		const char *szParamFile,
-		IScriptEnvironment* env
-	);
-	
-	CVsdFilterAvs(
-		PClip _child,
-		const char *szLogFile,
-		const char *szParamFile,
-		IScriptEnvironment* env
-	);
-	
 	CVsdFilterAvs(
 		PClip _child,
 		AVSValue args,
@@ -77,47 +65,10 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	int m_iBytesPerLine;
 	
 	BYTE	*m_pPlane;
+	const char *m_szMark;
 };
 
 /*** コンストラクタ・デストラクタ *******************************************/
-
-// 共通イニシャライザ
-void CVsdFilterAvs::Initialize(
-	const char *szLogFile,
-	const char *szParamFile,
-	IScriptEnvironment* env
-){
-	if( !vi.IsYUY2()) env->ThrowError( PROG_NAME ": requires YUY2 input.");
-	
-	// パラメータ初期化
-	m_piParamT	= new int[ TRACK_N ];
-	m_piParamC	= new int[ CHECK_N ];
-	
-	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	m_piParamT[ id ] = init;
-	#include "def_trackbar.h"
-	
-	#define DEF_CHECKBOX( id, init, name, conf_name )	m_piParamC[ id ] = init;
-	#include "def_checkbox.h"
-	
-	m_dVideoFPS = ( double )vi.fps_numerator / vi.fps_denominator;
-	
-	if( szParamFile ) if( !ConfigLoad( szParamFile ))
-		env->ThrowError( PROG_NAME ": read cfg \"%s\" failed." );
-	
-	if( szLogFile ) if( !ReadLog( szLogFile ))
-		env->ThrowError( PROG_NAME ": read log \"%s\" failed." );
-}
-
-// cfg ファイル指定
-CVsdFilterAvs::CVsdFilterAvs(
-	PClip _child,
-	const char *szLogFile,
-	const char *szParamFile,
-	IScriptEnvironment* env
-) : GenericVideoFilter( _child ){
-	
-	Initialize( szLogFile, szParamFile, env );
-}
 
 // param 指定
 CVsdFilterAvs::CVsdFilterAvs(
@@ -126,19 +77,34 @@ CVsdFilterAvs::CVsdFilterAvs(
 	IScriptEnvironment* env
 ) : GenericVideoFilter( _child ){
 	
-	Initialize(
-		args[ ARGID_CFG_FILE ].AsString( NULL ),
-		args[ ARGID_PARAM_FILE ].AsString( NULL ),
-		env
-	);
+	const char *p;
 	
+	if( !vi.IsYUY2()) env->ThrowError( PROG_NAME ": requires YUY2 input.");
+	
+	// パラメータ初期化
+	m_piParamT	= new int[ TRACK_N ];
+	m_piParamC	= new int[ CHECK_N ];
+	m_dVideoFPS = ( double )vi.fps_numerator / vi.fps_denominator;
+	
+	// パラメータ初期値
+	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	m_piParamT[ id ] = init;
+	#include "def_trackbar.h"
+	
+	#define DEF_CHECKBOX( id, init, name, conf_name )	m_piParamC[ id ] = init;
+	#include "def_checkbox.h"
+	
+	// パラメータファイルにより初期化
+	if( p = args[ ARGID_PARAM_FILE ].AsString( NULL )) if( !ConfigLoad( p ))
+		env->ThrowError( PROG_NAME ": read cfg \"%s\" failed.", p );
+	
+	// 引数指定により初期化
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name ) \
-		m_piParamT[ id ] = args[ ARGID_ ## id ].AsInt( init );
+		if( args[ ARGID_ ## id ].Defined()) m_piParamT[ id ] = args[ ARGID_ ## id ].AsInt();
 	#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
 	#include "def_trackbar.h"
 	
 	#define DEF_CHECKBOX( id, init, name, conf_name ) \
-		m_piParamC[ id ] = args[ ARGID_ ## id ].AsInt( init );
+		if( args[ ARGID_ ## id ].Defined()) m_piParamC[ id ] = args[ ARGID_ ## id ].AsInt();
 	#define DEF_CHECKBOX_N( id, init, name, conf_name )
 	#include "def_checkbox.h"
 	
@@ -151,7 +117,12 @@ CVsdFilterAvs::CVsdFilterAvs(
 	m_piParamT[ TRACK_LEd2 ] = m_piParamT[ TRACK_LEd ] % 100;
 	m_piParamT[ TRACK_LEd  ] /= 100;
 	
-	RotateMap();
+	// mark= 引数処理
+	if( p = args[ ARGID_MARK ].AsString( NULL )) ParseMarkStr( p );
+	
+	// ログリード
+	if( p = args[ ARGID_LOG_FILE ].AsString( NULL )) if( !ReadLog( p ))
+		env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
 }
 
 CVsdFilterAvs::~CVsdFilterAvs(){
@@ -273,7 +244,7 @@ extern "C" __declspec( dllexport ) const char* __stdcall AvisynthPluginInit2( IS
 		#define DEF_CHECKBOX( id, init, name, conf_name )			"[" conf_name "]i"
 		#define DEF_CHECKBOX_N( id, init, name, conf_name )
 		#include "def_checkbox.h"
-		,
+		"[mark]s",
 		Create_VSDFilter, 0
 	);
 	

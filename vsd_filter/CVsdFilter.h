@@ -184,8 +184,10 @@ class CVsdFilter {
 	/*** ログオペレーション *************************************************/
 	
   public:
-	BOOL IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
+	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
 	BOOL ConfigLoad( const char *szFileName );
+	BOOL ParseMarkStr( const char *szMark );
+	
 #ifndef AVS_PLUGIN
 	BOOL ConfigSave( const char *szFileName );
 #endif

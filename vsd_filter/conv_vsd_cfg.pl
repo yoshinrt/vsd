@@ -69,13 +69,17 @@ sub ConvCfg {
 		$Param{ TRACK_LEd } = $Param{ TRACK_LEd } * 100 + $Param{ TRACK_LEd2 };
 	}
 	
-	$LogFile = $AvsFile if( $Marks );
+	if( $Marks ){
+		$LogFile = "param_file=\"$AvsFile\"";
+	}else{
+		$LogFile = "log_file=\"$LogFile\"";
+	}
 	
 	print fpOut<<EOF;
 DirectShowSource("$VidFile")
 ConvertToYUY2()
 VSDFilter( \\
-	"$LogFile", \\
+	$LogFile, \\
 	video_start=$Param{TRACK_VSt}, \\
 	video_end=$Param{TRACK_VEd}, \\
 	log_start=$Param{TRACK_LSt}, \\
