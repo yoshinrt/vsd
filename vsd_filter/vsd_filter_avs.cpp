@@ -3,7 +3,7 @@
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
 	vsd_filter_avs.cpp - vsd_filter for AviSynth
-	$Id: CVsdImg.cpp 133 2009-03-24 15:11:10Z  $
+	$Id$
 	
 *****************************************************************************/
 
