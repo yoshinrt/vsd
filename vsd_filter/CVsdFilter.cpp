@@ -474,12 +474,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	float		NaN = 0;
 	NaN /= *( volatile float *)&NaN;
 	
-	// config ÉçÅ[Éh
-	ConfigLoad( ChangeExt( szBuf, ( char *)szFileName, CONFIG_EXT ));
-	
-	/******************/
-	
-	if( IsExt(( char *)szFileName, CONFIG_EXT ) || ( fp = fopen(( char *)szFileName, "r" )) == NULL ) return FALSE;
+	if(( fp = fopen(( char *)szFileName, "r" )) == NULL ) return FALSE;
 	
 #ifdef CIRCUIT_TOMO
 	int i;

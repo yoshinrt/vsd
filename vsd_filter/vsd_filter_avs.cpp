@@ -14,11 +14,14 @@
 #include "dds_lib/dds_lib.h"
 #include "CVsdFilter.h"
 
+#define PROG_NAME	"VSDFilter"
+
 /****************************************************************************/
 
 enum {
 	ARGID_CLIP,
 	ARGID_CFG_FILE,
+	ARGID_PARAM_FILE,
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	ARGID_ ## id,
 	#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
 	#include "def_trackbar.h"
@@ -32,15 +35,15 @@ enum {
 
 class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
   public:
-	void Initialize( IScriptEnvironment* env );
-	
-	CVsdFilterAvs(
-		PClip _child,
+	void Initialize(
+		const char *szLogFile,
+		const char *szParamFile,
 		IScriptEnvironment* env
 	);
 	
 	CVsdFilterAvs(
 		PClip _child,
+		const char *szLogFile,
 		const char *szParamFile,
 		IScriptEnvironment* env
 	);
@@ -79,8 +82,12 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 /*** コンストラクタ・デストラクタ *******************************************/
 
 // 共通イニシャライザ
-void CVsdFilterAvs::Initialize( IScriptEnvironment* env ){
-	if( !vi.IsYUY2() ) env->ThrowError( "VSDFilter: requires YUY2 input.");
+void CVsdFilterAvs::Initialize(
+	const char *szLogFile,
+	const char *szParamFile,
+	IScriptEnvironment* env
+){
+	if( !vi.IsYUY2()) env->ThrowError( PROG_NAME ": requires YUY2 input.");
 	
 	// パラメータ初期化
 	m_piParamT	= new int[ TRACK_N ];
@@ -93,26 +100,23 @@ void CVsdFilterAvs::Initialize( IScriptEnvironment* env ){
 	#include "def_checkbox.h"
 	
 	m_dVideoFPS = ( double )vi.fps_numerator / vi.fps_denominator;
-}
-
-// 引数なし
-CVsdFilterAvs::CVsdFilterAvs(
-	PClip _child,
-	IScriptEnvironment* env
-) : GenericVideoFilter( _child ){
 	
-	Initialize( env );
+	if( szParamFile ) if( !ConfigLoad( szParamFile ))
+		env->ThrowError( PROG_NAME ": read cfg \"%s\" failed." );
+	
+	if( szLogFile ) if( !ReadLog( szLogFile ))
+		env->ThrowError( PROG_NAME ": read log \"%s\" failed." );
 }
 
 // cfg ファイル指定
 CVsdFilterAvs::CVsdFilterAvs(
 	PClip _child,
+	const char *szLogFile,
 	const char *szParamFile,
 	IScriptEnvironment* env
 ) : GenericVideoFilter( _child ){
 	
-	Initialize( env );
-	ReadLog( szParamFile );
+	Initialize( szLogFile, szParamFile, env );
 }
 
 // param 指定
@@ -122,7 +126,11 @@ CVsdFilterAvs::CVsdFilterAvs(
 	IScriptEnvironment* env
 ) : GenericVideoFilter( _child ){
 	
-	Initialize( env );
+	Initialize(
+		args[ ARGID_CFG_FILE ].AsString( NULL ),
+		args[ ARGID_PARAM_FILE ].AsString( NULL ),
+		env
+	);
 	
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name ) \
 		m_piParamT[ id ] = args[ ARGID_ ## id ].AsInt( init );
@@ -143,7 +151,7 @@ CVsdFilterAvs::CVsdFilterAvs(
 	m_piParamT[ TRACK_LEd2 ] = m_piParamT[ TRACK_LEd ] % 100;
 	m_piParamT[ TRACK_LEd  ] /= 100;
 	
-	ReadLog( args[ ARGID_CFG_FILE ].AsString( "" ));
+	RotateMap();
 }
 
 CVsdFilterAvs::~CVsdFilterAvs(){
@@ -178,6 +186,16 @@ void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
 				m_pPlane[ iIndex + 1 ] = ((( x & 1 )? yc.cr : yc.cb ) + m_pPlane[ iIndex + 1 ] ) / 2;
 			}else{
 				*( USHORT *)( m_pPlane + iIndex ) = ( x & 1 ) ? yc.ycr : yc.ycb;
+				m_pPlane[ iIndex ] = yc.y;
+				
+			//	iIndex &= ~3;
+			//	if(( x ^ y ^ GetFrameCnt()) & 1 ){
+			//		// cr
+			//		m_pPlane[ iIndex + 3 ] = yc.cr;
+			//	}else{
+			//		// cb
+			//		m_pPlane[ iIndex + 1 ] = yc.cb;
+			//	}
 			}
 		}
 	}
@@ -237,14 +255,6 @@ PVideoFrame __stdcall CVsdFilterAvs::GetFrame( int n, IScriptEnvironment* env ){
 	return src;
 }
 
-AVSValue __cdecl Create_VSDFilterCfgFile( AVSValue args, void* user_data, IScriptEnvironment* env ){
-	return new CVsdFilterAvs(
-		args[0].AsClip(),
-		args[1].AsString( "" ),
-		env
-	);
-}
-
 AVSValue __cdecl Create_VSDFilter( AVSValue args, void* user_data, IScriptEnvironment* env ){
 	return new CVsdFilterAvs(
 		args[0].AsClip(),
@@ -254,10 +264,9 @@ AVSValue __cdecl Create_VSDFilter( AVSValue args, void* user_data, IScriptEnviro
 }
 
 extern "C" __declspec( dllexport ) const char* __stdcall AvisynthPluginInit2( IScriptEnvironment* env ){
-	env->AddFunction( "VSDFilterCfgFile", "cs", Create_VSDFilterCfgFile, 0 );
 	
 	env->AddFunction( "VSDFilter",
-		"cs"
+		"c[log_file]s[param_file]s"
 		#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	"[" conf_name "]i"
 		#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
 		#include "def_trackbar.h"

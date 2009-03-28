@@ -314,7 +314,8 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 
 BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
 	
-	TCHAR	szBuf[ BUF_SIZE ];
+	TCHAR	szBuf[ MAX_PATH ];
+	TCHAR	szBuf2[ MAX_PATH ];
 	int		iFrame;
 	
 	//	TRUEを返すと全体が再描画される
@@ -326,6 +327,11 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	  case WM_FILTER_IMPORT:
 		if( filter->exfunc->dlg_get_load_name( szBuf, FILE_EXT, NULL )){
 			
+			// config ロード
+			g_Vsd->ConfigLoad( ChangeExt( szBuf2, ( char *)szBuf, CONFIG_EXT ));
+			if( IsExt(( char *)szBuf, CONFIG_EXT )) return TRUE;
+			
+			// log リード
 			g_Vsd->ReadLog( szBuf );
 			
 			// trackbar 設定
