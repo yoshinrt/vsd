@@ -393,7 +393,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 		
 		fprintf( fp,
 			"DirectShowSource(\"%s\"). \\\n"
-			"ConvertToYUY2(). \\\n"
+			"ConvertToYUY2. \\\n"
 			"VSDFilter( \\\n\tlog_file=\"\"",
 			GetVideoFileName( szBuf )
 		);

@@ -509,11 +509,23 @@ u8 MSD_GetCIDRegister(sMSD_CID* MSD_cid)
 * Output         : None
 * Return         : None
 *******************************************************************************/
+#include <stdio.h>
+u32 MSD_WaitRdy( void ){
+	u32 uCount = 0xFFF;
+	u32 uResult;
+	
+	while( uCount-- && ( uResult = MSD_ReadByte()) != 0xFF );
+//printf( "[w:%d]", uResult != 0xFF );
+	return uResult != 0xFF;
+}
+
 void MSD_SendCmd(u8 Cmd, u32 Arg, u8 Crc)
 {
   u32 i = 0x00;
   u8 Frame[6];
 
+printf( "%02X", Cmd | 0x40 );
+  MSD_WaitRdy();
   /* Construct byte1 */
   Frame[0] = (Cmd | 0x40);
   /* Construct byte2 */
@@ -600,23 +612,19 @@ u8 MSD_GetDataResponse(void)
 u8 MSD_GetResponse(u8 Response)
 {
   u32 Count = 0xFFF;
+  u32 Result, Result2 = 0;
 
   /* Check if response is got or a timeout is happen */
-  while ((MSD_ReadByte() != Response) && Count)
+  while ((( Result = MSD_ReadByte()) != Response) && Count)
   {
     Count--;
+    if( Result != 0xFF ) Result2 = Result;
+    //if( Result != 0xFF ) break;
   }
 
-  if (Count == 0)
-  {
-    /* After time out */
-    return MSD_RESPONSE_FAILURE;
-  }
-  else
-  {
-    /* Right response got */
-    return MSD_RESPONSE_NO_ERROR;
-  }
+printf( "[%X]", Result == Response ? Result : Result2 );
+
+  return Result == Response ? MSD_RESPONSE_NO_ERROR : MSD_RESPONSE_FAILURE;
 }
 
 /*******************************************************************************
@@ -656,6 +664,8 @@ u16 MSD_GetStatus(void)
 *******************************************************************************/
 u8 MSD_GoIdleState(void)
 {
+  UINT  uCnt;
+  
   /* MSD chip select low */
   MSD_CS_LOW();
   /* Send CMD0 (GO_IDLE_STATE) to put MSD in SPI mode */
@@ -668,8 +678,8 @@ u8 MSD_GoIdleState(void)
     return MSD_RESPONSE_FAILURE;
   }
   /*----------Activates the card initialization process-----------*/
-  do
-  {
+  
+  for( uCnt = 0; uCnt < 10; ++uCnt ){
     /* MSD chip select high */
     MSD_CS_HIGH();
     /* Send Dummy byte 0xFF */
@@ -680,9 +690,11 @@ u8 MSD_GoIdleState(void)
 
     /* Send CMD1 (Activates the card process) until response equal to 0x0 */
     MSD_SendCmd(MSD_SEND_OP_COND, 0, 0xFF);
+    
+    timer( 1000000 );
     /* Wait for no error Response (R1 Format) equal to 0x00 */
+    if( !MSD_GetResponse(MSD_RESPONSE_NO_ERROR)) break;
   }
-  while (MSD_GetResponse(MSD_RESPONSE_NO_ERROR));
 
   /* MSD chip select high */
   MSD_CS_HIGH();
@@ -765,6 +777,8 @@ void SPI_Config(void)
   SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
   SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
   SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
+//  SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
+//  SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
   SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
   SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
   SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
