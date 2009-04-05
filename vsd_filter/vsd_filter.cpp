@@ -228,36 +228,36 @@ void CVsdFilterAvu::CalcLapTime( void ){
 	
 	FRAME_STATUS	fsp;
 	int				i;
-	double			dTime, dPrevTime;
+	int				iTime, iPrevTime;
 	
 	m_iLapNum	= 0;
-	m_fBestTime	= -1;
+	m_iBestTime	= BESTLAP_NONE;
 	
 	for( i = 0; i < GetFrameMax(); ++i ){
 		( filter )->exfunc->get_frame_status( editp, i, &fsp );
 		
 		if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
 			// ラップ検出
-			dTime = i / m_dVideoFPS;
+			iTime = ( int )( i * 1000.0 / m_dVideoFPS );
 			
 			m_Lap[ m_iLapNum ].uLap		= m_iLapNum;
 			m_Lap[ m_iLapNum ].iLogNum	= i;
-			m_Lap[ m_iLapNum ].fTime	= m_iLapNum ? ( float )( dTime - dPrevTime ) : 0;
+			m_Lap[ m_iLapNum ].iTime	= m_iLapNum ? iTime - iPrevTime : 0;
 			
 			if(
 				m_iLapNum &&
-				( m_fBestTime == -1 || m_fBestTime > m_Lap[ m_iLapNum ].fTime )
+				( m_iBestTime == BESTLAP_NONE || m_iBestTime > m_Lap[ m_iLapNum ].iTime )
 			){
-				m_fBestTime			= m_Lap[ m_iLapNum ].fTime;
+				m_iBestTime			= m_Lap[ m_iLapNum ].iTime;
 				m_iBestLapLogNum	= m_Lap[ m_iLapNum - 1 ].iLogNum;
 			}
 			
-			dPrevTime = dTime;
+			iPrevTime = iTime;
 			++m_iLapNum;
 		}
 	}
 	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
-	m_Lap[ m_iLapNum ].fTime	= 0;			// 番犬
+	m_Lap[ m_iLapNum ].iTime	= 0;			// 番犬
 }
 
 /*** フレームをマーク *******************************************************/

@@ -16,6 +16,8 @@
 #define MAX_LAP			200
 
 #ifdef AVS_PLUGIN
+	typedef UCHAR	PIXEL_t;
+	
 	#define RGB2YC( r, g, b ) { \
 		(( int )( 0.299 * r + 0.587 * g + 0.114 * b ) >> 4 ), \
 		(( int )(-0.169 * r - 0.331 * g + 0.500 * b ) >> 4 ) + 0x80, \
@@ -23,6 +25,8 @@
 		(( int )( 0.500 * r - 0.419 * g - 0.081 * b ) >> 4 ) + 0x80 \
 	}
 #else
+	typedef short	PIXEL_t;
+	
 	#define RGB2YC( r, g, b ) { \
 		( int )( 0.299 * r + 0.587 * g + 0.114 * b ), \
 		( int )(-0.169 * r - 0.331 * g + 0.500 * b ), \
@@ -51,6 +55,8 @@
 #else
 	#define CONFIG_EXT	"avs"
 #endif
+
+#define BESTLAP_NONE	959999
 
 /*** track / check ID *******************************************************/
 
@@ -82,7 +88,7 @@ typedef struct {
 typedef struct {
 	USHORT	uLap;
 	int		iLogNum;
-	float	fTime;
+	int		iTime;
 } LAP_t;
 
 typedef struct {
@@ -211,7 +217,7 @@ class CVsdFilter {
 	int			m_iVsdLogNum;
 	LAP_t		*m_Lap;
 	int			m_iLapNum;
-	float		m_fBestTime;
+	int			m_iBestTime;
 	int			m_iBestLapLogNum;
 	
 	double		m_dMapSize;

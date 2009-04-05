@@ -71,9 +71,9 @@ CVsdFilter::CVsdFilter () {
 	m_Lap	 			= new LAP_t[ MAX_LAP ];
 	m_iLapNum			= 0;
 	m_Lap[ 0 ].iLogNum	= 0x7FFFFFFF;	// 番犬
-	m_Lap[ 0 ].fTime	= 0;			// 番犬
+	m_Lap[ 0 ].iTime	= 0;			// 番犬
 	
-	m_fBestTime			= -1;
+	m_iBestTime			= BESTLAP_NONE;
 	m_iBestLapLogNum	= 0;
 	
 	m_dMapSize			= 0;
@@ -504,7 +504,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	// 初期化
 	m_iVsdLogNum	= 0;
 	m_iLapNum		= 0;
-	m_fBestTime		= -1;
+	m_iBestTime		= BESTLAP_NONE;
 	m_iBestLapLogNum= 0;
 	m_iLapIdx		= -1;
 	m_iBestLogNum	= 0;
@@ -531,18 +531,17 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 		if(( p = strstr( szBuf, "LAP" )) != NULL ){ // ラップタイム記録を見つけた
 			uCnt = sscanf( p, "LAP%d%d:%d.%d", &uLap, &uMin, &uSec, &uMSec );
 			
-			double dTime = uMin * 60 + uSec + ( double )uMSec / 1000;
+			int iTime = ( uMin * 60 + uSec ) * 1000 + uMSec;
 			
 			m_Lap[ m_iLapNum ].uLap		= uLap;
 			m_Lap[ m_iLapNum ].iLogNum	= m_iVsdLogNum;
-			m_Lap[ m_iLapNum ].fTime	=
-				( uCnt == 4 ) ? ( float )dTime : 0;
+			m_Lap[ m_iLapNum ].iTime	= ( uCnt == 4 ) ? iTime : 0;
 			
 			if(
 				uCnt == 4 &&
-				( m_fBestTime == -1 || m_fBestTime > dTime )
+				( m_iBestTime == BESTLAP_NONE || m_iBestTime > iTime )
 			){
-				m_fBestTime			= ( float )dTime;
+				m_iBestTime			= iTime;
 				m_iBestLapLogNum	= m_Lap[ m_iLapNum - 1 ].iLogNum;
 			}
 			++m_iLapNum;
@@ -693,7 +692,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	fclose( fp );
 	
 	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
-	m_Lap[ m_iLapNum ].fTime	= 0;			// 番犬
+	m_Lap[ m_iLapNum ].iTime	= 0;			// 番犬
 	
 	return TRUE;
 }
@@ -862,15 +861,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 		CalcLapTime();
 	}
 	
-	if( DispLap && m_iLapNum ){
-		/*
-		DrawRect(
-			iLapX, iLapY, GetWidth() - 1, iLapY + GetFontH() * 5 - 1,
-			COLOR_PANEL,
-			CVsdFilter::IMG_ALFA | CVsdFilter::IMG_FILL
-		);
-		*/
-		
+	// ラップインデックスを求める
+	if( m_iLapNum ){
 		if( IsHandLaptime() ){
 			// CIRCUIT_TOMO での m_Lap[].iLogNum はフレーム# なので
 			iLogNum = GetFrameCnt();
@@ -883,14 +875,17 @@ BOOL CVsdFilter::DrawVSD( void ){
 		) m_iLapIdx = -1;
 		
 		for( ; m_Lap[ m_iLapIdx + 1 ].iLogNum <= iLogNum; ++m_iLapIdx );
-		
+	}
+	
+	if( DispLap && m_iLapNum ){
 		// 時間表示
-		if( m_iLapIdx >= 0 && m_Lap[ m_iLapIdx + 1 ].fTime != 0 ){
-			double dTime = IsHandLaptime() ?
-				( double )( GetFrameCnt() - m_Lap[ m_iLapIdx ].iLogNum ) / m_dVideoFPS :
-				( dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) / LOG_FREQ;
+		if( m_iLapIdx >= 0 && m_Lap[ m_iLapIdx + 1 ].iTime != 0 ){
+			int iTime = ( int )( IsHandLaptime() ?
+				( GetFrameCnt() - m_Lap[ m_iLapIdx ].iLogNum ) * ( 1000.0 / m_dVideoFPS ) :
+				( dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * ( 1000.0 / LOG_FREQ )
+			);
 			
-			sprintf( szBuf, "Time%2d'%02d.%03d", ( int )dTime / 60, ( int )dTime % 60, ( int )( dTime * 1000 ) % 1000 );
+			sprintf( szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
 			DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - GetFontW() * 13, 1 );
 			bInLap = TRUE;
 		}else{
@@ -929,21 +924,24 @@ BOOL CVsdFilter::DrawVSD( void ){
 					// B: 最速ラップは，1/15秒の間にこの距離を走った
 					( m_VsdLog[ m_iBestLogNum + 1 ].fMileage - m_VsdLog[ m_iBestLogNum ].fMileage );
 				
-				double dDiffTime =
+				int iDiffTime = ( int )(
 					(
 						( dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) -
 						( dBestLogNum - m_iBestLapLogNum )
-					) / LOG_FREQ;
+					) * ( 1000.0 / LOG_FREQ )
+				);
 				
-				if( -0.001 < dDiffTime && dDiffTime < 0.001 ) dDiffTime = 0;
+				BOOL bSign = iDiffTime <= 0;
+				if( iDiffTime < 0 ) iDiffTime = -iDiffTime;
 				
 				sprintf(
-					szBuf, "    %c%d'%06.3f",
-					dDiffTime <= 0 ? '-' : '+',
-					( int )( fabs( dDiffTime )) / 60,
-					fmod( fabs( dDiffTime ), 60 )
+					szBuf, "    %c%d'%02d.%03d",
+					bSign ? '-' : '+',
+					iDiffTime / 60000,
+					iDiffTime / 1000 % 60,
+					iDiffTime % 1000
 				);
-				DrawString( szBuf, dDiffTime <= 0 ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
+				DrawString( szBuf, bSign ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
 			}else{
 				m_iPosY += GetFontH();
 			}
@@ -955,26 +953,26 @@ BOOL CVsdFilter::DrawVSD( void ){
 		// Best 表示
 		sprintf(
 			szBuf, "Best%2d'%02d.%03d",
-			( int )m_fBestTime / 60,
-			( int )m_fBestTime % 60,
-			( int )( m_fBestTime * 1000 ) % 1000
+			m_iBestTime / 60000,
+			m_iBestTime / 1000 % 60,
+			m_iBestTime % 1000
 		);
 		DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
 		
 		// Lapタイム表示
 		i = 0;
 		for( int iLapIdxTmp = m_iLapIdx + 1; iLapIdxTmp >= 0 && i < 3; --iLapIdxTmp ){
-			if( m_Lap[ iLapIdxTmp ].fTime != 0 ){
+			if( m_Lap[ iLapIdxTmp ].iTime != 0 ){
 				sprintf(
 					szBuf, "%3d%c%2d'%02d.%03d",
 					m_Lap[ iLapIdxTmp ].uLap,
 					( i == 0 && bInLap ) ? '*' : ' ',
-					( int )m_Lap[ iLapIdxTmp ].fTime / 60,
-					( int )m_Lap[ iLapIdxTmp ].fTime % 60,
-					( int )( m_Lap[ iLapIdxTmp ].fTime * 1000 ) % 1000
+					m_Lap[ iLapIdxTmp ].iTime / 60000,
+					m_Lap[ iLapIdxTmp ].iTime / 1000 % 60,
+					m_Lap[ iLapIdxTmp ].iTime % 1000
 				);
 				DrawString( szBuf,
-					m_fBestTime == m_Lap[ iLapIdxTmp ].fTime ? COLOR_BEST_LAP : COLOR_TIME,
+					m_iBestTime == m_Lap[ iLapIdxTmp ].iTime ? COLOR_BEST_LAP : COLOR_TIME,
 					COLOR_TIME_EDGE, 0 );
 				++i;
 			}
@@ -1138,17 +1136,17 @@ BOOL CVsdFilter::DrawVSD( void ){
 					
 					if( dG < 0.5 ){
 						dG *= 2;
-						yc_line.y  = ( short )( MAP_LINE2.y  * dG + MAP_LINE1.y  * ( 1 - dG ));
-						yc_line.cb = ( short )( MAP_LINE2.cb * dG + MAP_LINE1.cb * ( 1 - dG ));
-						yc_line.cr = ( short )( MAP_LINE2.cr * dG + MAP_LINE1.cr * ( 1 - dG ));
+						yc_line.y  = ( PIXEL_t )( MAP_LINE2.y  * dG + MAP_LINE1.y  * ( 1 - dG ));
+						yc_line.cb = ( PIXEL_t )( MAP_LINE2.cb * dG + MAP_LINE1.cb * ( 1 - dG ));
+						yc_line.cr = ( PIXEL_t )( MAP_LINE2.cr * dG + MAP_LINE1.cr * ( 1 - dG ));
 					#ifdef AVS_PLUGIN
 						yc_line.y1 = yc_line.y;
 					#endif
 					}else if( dG < 1.0 ){
 						dG = ( dG - 0.5 ) * 2;
-						yc_line.y  = ( short )( MAP_LINE3.y  * dG + MAP_LINE2.y  * ( 1 - dG ));
-						yc_line.cb = ( short )( MAP_LINE3.cb * dG + MAP_LINE2.cb * ( 1 - dG ));
-						yc_line.cr = ( short )( MAP_LINE3.cr * dG + MAP_LINE2.cr * ( 1 - dG ));
+						yc_line.y  = ( PIXEL_t )( MAP_LINE3.y  * dG + MAP_LINE2.y  * ( 1 - dG ));
+						yc_line.cb = ( PIXEL_t )( MAP_LINE3.cb * dG + MAP_LINE2.cb * ( 1 - dG ));
+						yc_line.cr = ( PIXEL_t )( MAP_LINE3.cr * dG + MAP_LINE2.cr * ( 1 - dG ));
 					#ifdef AVS_PLUGIN
 						yc_line.y1 = yc_line.y;
 					#endif

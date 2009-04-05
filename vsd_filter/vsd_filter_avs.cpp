@@ -173,30 +173,30 @@ void CVsdFilterAvs::SetFrameMark( int iFrame ){
 
 void CVsdFilterAvs::CalcLapTime( void ){
 	
-	int				i;
-	double			dTime, dPrevTime;
+	int	i;
+	int	iTime, iPrevTime;
 	
-	m_fBestTime	= -1;
+	m_iBestTime	= BESTLAP_NONE;
 	
 	for( i = 0; i < m_iLapNum; ++i ){
 		// ƒ‰ƒbƒvŒŸo
-		dTime = m_Lap[ i ].iLogNum / m_dVideoFPS;
+		iTime = ( int )( m_Lap[ i ].iLogNum * 1000.0 / m_dVideoFPS );
 		
 		m_Lap[ i ].uLap		= i;
-		m_Lap[ i ].fTime	= i ? ( float )( dTime - dPrevTime ) : 0;
+		m_Lap[ i ].iTime	= i ? iTime - iPrevTime : 0;
 		
 		if(
 			i &&
-			( m_fBestTime == -1 || m_fBestTime > m_Lap[ i ].fTime )
+			( m_iBestTime == BESTLAP_NONE || m_iBestTime > m_Lap[ i ].iTime )
 		){
-			m_fBestTime			= m_Lap[ i ].fTime;
+			m_iBestTime			= m_Lap[ i ].iTime;
 			m_iBestLapLogNum	= m_Lap[ i - 1 ].iLogNum;
 		}
 		
-		dPrevTime = dTime;
+		iPrevTime = iTime;
 	}
 	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// ”ÔŒ¢
-	m_Lap[ m_iLapNum ].fTime	= 0;			// ”ÔŒ¢
+	m_Lap[ m_iLapNum ].iTime	= 0;			// ”ÔŒ¢
 }
 
 /****************************************************************************/
