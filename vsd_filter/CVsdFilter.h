@@ -56,7 +56,7 @@
 	#define CONFIG_EXT	"avs"
 #endif
 
-#define BESTLAP_NONE	959999
+#define BESTLAP_NONE	599999
 
 /*** track / check ID *******************************************************/
 
