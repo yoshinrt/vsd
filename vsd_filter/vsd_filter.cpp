@@ -363,6 +363,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 		g_Vsd->m_piParamT	= filter->track;
 		g_Vsd->m_piParamC	= filter->check;
+		g_Vsd->m_piParamS	= new int[ SHADOW_N ];
 		g_Vsd->filter		= filter;
 		g_Vsd->editp		= editp;
 		

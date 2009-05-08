@@ -76,8 +76,7 @@ sub ConvCfg {
 	}
 	
 	print fpOut<<EOF;
-DirectShowSource("$VidFile")
-ConvertToYUY2()
+DirectShowSource("$VidFile").ConvertToYUY2(). \\
 VSDFilter( \\
 	$LogFile, \\
 	video_start=$Param{TRACK_VSt}, \\

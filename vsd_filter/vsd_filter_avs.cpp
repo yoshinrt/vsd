@@ -28,6 +28,8 @@ enum {
 	#define DEF_CHECKBOX( id, init, name, conf_name )			ARGID_ ## id,
 	#define DEF_CHECKBOX_N( id, init, name, conf_name )
 	#include "def_checkbox.h"
+	#define DEF_SHADOW( id, init, conf_name )					ARGID_ ## id,
+	#include "def_shadow.h"
 	ARGID_MARK,
 	ARGID_NUM
 };
@@ -84,6 +86,7 @@ CVsdFilterAvs::CVsdFilterAvs(
 	// パラメータ初期化
 	m_piParamT	= new int[ TRACK_N ];
 	m_piParamC	= new int[ CHECK_N ];
+	m_piParamS	= new int[ SHADOW_N ];
 	m_dVideoFPS = ( double )vi.fps_numerator / vi.fps_denominator;
 	
 	// パラメータ初期値
@@ -92,6 +95,9 @@ CVsdFilterAvs::CVsdFilterAvs(
 	
 	#define DEF_CHECKBOX( id, init, name, conf_name )	m_piParamC[ id ] = init;
 	#include "def_checkbox.h"
+	
+	#define DEF_SHADOW( id, init, conf_name )	m_piParamS[ id ] = init;
+	#include "def_shadow.h"
 	
 	// パラメータファイルにより初期化
 	if( p = args[ ARGID_PARAM_FILE ].AsString( NULL )) if( !ConfigLoad( p ))
@@ -107,6 +113,10 @@ CVsdFilterAvs::CVsdFilterAvs(
 		if( args[ ARGID_ ## id ].Defined()) m_piParamC[ id ] = args[ ARGID_ ## id ].AsInt();
 	#define DEF_CHECKBOX_N( id, init, name, conf_name )
 	#include "def_checkbox.h"
+	
+	#define DEF_SHADOW( id, init, conf_name ) \
+		if( args[ ARGID_ ## id ].Defined()) m_piParamS[ id ] = args[ ARGID_ ## id ].AsInt();
+	#include "def_shadow.h"
 	
 	m_piParamT[ TRACK_VSt2 ] = m_piParamT[ TRACK_VSt ] % 100;
 	m_piParamT[ TRACK_VSt  ] /= 100;
@@ -128,6 +138,7 @@ CVsdFilterAvs::CVsdFilterAvs(
 CVsdFilterAvs::~CVsdFilterAvs(){
 	delete [] m_piParamT;
 	delete [] m_piParamC;
+	delete [] m_piParamS;
 }
 
 /*** PutPixel ***************************************************************/
@@ -235,6 +246,8 @@ extern "C" __declspec( dllexport ) const char* __stdcall AvisynthPluginInit2( IS
 		#define DEF_CHECKBOX( id, init, name, conf_name )			"[" conf_name "]i"
 		#define DEF_CHECKBOX_N( id, init, name, conf_name )
 		#include "def_checkbox.h"
+		#define DEF_SHADOW( id, init, conf_name )					"[" conf_name "]i"
+		#include "def_shadow.h"
 		"[mark]s",
 		Create_VSDFilter, 0
 	);

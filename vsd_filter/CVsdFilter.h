@@ -35,8 +35,6 @@
 #endif
 
 #define G_CX_CNT		30
-#define G_HIST			(( int )( LOG_FREQ * 3 ))
-#define MAX_G_SCALE		1.5
 
 #define LINE_WIDTH		( GetWidth() / HIREZO_TH + 1 )
 
@@ -70,6 +68,12 @@ enum {
 	#define DEF_CHECKBOX( id, init, name, conf_name )	id,
 	#include "def_checkbox.h"
 	CHECK_N
+};
+
+enum {
+	#define DEF_SHADOW( id, init, conf_name )	id,
+	#include "def_shadow.h"
+	SHADOW_N
 };
 
 /*** new type ***************************************************************/
@@ -231,11 +235,13 @@ class CVsdFilter {
 	
 	int			*m_piParamT;
 	int			*m_piParamC;
+	int			*m_piParamS;
 	
 	BOOL		m_bCalcLapTimeReq;
 	
 	static const char *m_szTrackbarName[];
 	static const char *m_szCheckboxName[];
+	static const char *m_szShadowParamName[];
 	
 	// âºëzä÷êî
 	virtual void SetFrameMark( int iFrame ) = 0;

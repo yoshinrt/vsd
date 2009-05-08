@@ -19,6 +19,7 @@ DEF_TRACKBAR_N(	TRACK_LSt2,			0,		-200,	200,	"",			NULL			)
 DEF_TRACKBAR(	TRACK_LEd,			0,		0,		9999,	"logç≈å„",	"log_end"		)
 DEF_TRACKBAR_N(	TRACK_LEd2,			0,		-200,	200,	"",			NULL			)
 DEF_TRACKBAR(	TRACK_LineTrace,	0,		0,		1000,	"Mapïb",	"map_length"	)
+DEF_TRACKBAR(	TRACK_G_Len,		45,		-1,		200,	"Gí∑Ç≥",	"g_length"		)
 DEF_TRACKBAR(	TRACK_MapSize,		400,	0,		1000,	"MapÉTÉCÉY","map_size"		)
 DEF_TRACKBAR(	TRACK_MapAngle,		0,		0,		3600,	"MapâÒì]",	"map_angle"		)
 #else

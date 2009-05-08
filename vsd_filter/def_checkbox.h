@@ -9,7 +9,6 @@
 //				|				|	|					|
 DEF_CHECKBOX(	CHECK_LAP,		1,	"ラップタイム",		"lap_time"	)
 #ifndef CIRCUIT_TOMO
-DEF_CHECKBOX(	CHECK_SNAKE,	1,	"G軌跡",			"g_snake"	)
 DEF_CHECKBOX_N(	CHECK_LOGPOS,	0,	"log位置自動認識",	NULL		)
 #endif
 DEF_CHECKBOX_N(	CHECK_FRAME,	0,	"フレーム表示",		NULL		)

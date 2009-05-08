@@ -60,6 +60,10 @@ const char *CVsdFilter::m_szCheckboxName[] = {
 	#include "def_checkbox.h"
 };
 
+const char *CVsdFilter::m_szShadowParamName[] = {
+	#define DEF_SHADOW( id, init, conf_name ) conf_name,
+	#include "def_shadow.h"
+};
 
 /*** コンストラクタ *********************************************************/
 
@@ -103,6 +107,8 @@ CVsdFilter::~CVsdFilter () {
 	delete m_Lap;
 	m_Lap		= NULL;
 	m_iLapNum	= 0;
+	
+	delete [] m_piParamS;
 }
 
 /*** フォントデータ初期化 ***************************************************/
@@ -369,6 +375,13 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 						goto Next;
 					}
 				}
+				
+				for( i = 0; i < SHADOW_N; ++i ){
+					if( IsConfigParam( m_szShadowParamName[ i ], szBuf, iVal )){
+						m_piParamS[ i ] = iVal;
+						goto Next;
+					}
+				}
 			}
 		  Next: ;
 		}
@@ -415,6 +428,14 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 			fp, CONF_OUTPUT_FMT, m_szCheckboxName[ i ], m_piParamC[ i ]
 		);
 	}
+	
+	#ifdef CIRCUIT_TOMO
+		for( i = 0; i < SHADOW_N; ++i ){
+			fprintf(
+				fp, CONF_OUTPUT_FMT, m_szShadowParamName[ i ], m_piParamS[ i ]
+			);
+		}
+	#endif
 	
 	// 手動ラップ計測マーク出力
 	if( IsHandLaptime() && m_iLapNum ){
@@ -745,7 +766,8 @@ void CVsdFilter::RotateMap( void ){
 #define LineTrace		m_piParamT[ TRACK_LineTrace ]
 
 #define DispLap			m_piParamC[ CHECK_LAP ]
-#define DispGSnake		m_piParamC[ CHECK_SNAKE ]
+#define GSnakeLen		m_piParamS[ SHADOW_G_LEN ]
+#define GScale			( m_piParamS[ SHADOW_G_SCALE ] / 1000.0 )
 
 #define MAX_MAP_SIZE	( GetWidth() * m_piParamT[ TRACK_MapSize ] / 1000.0 )
 
@@ -824,9 +846,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 	const int	iMeterSCx		= iMeterR + 2;
 	const int	iMeterSMaxVal	= m_piParamT[ TRACK_SPEED ];
 #else
-	const int	iMeterR			= 50 * GetWidth() / 320;
-	const int	iMeterCx		= GetWidth() - iMeterR - 2;
-	const int	iMeterCy		= GetHeight() - iMeterR - 2;
+	const int	iMeterR			= piParamS[ SHADOW_METER_R  ] >= 0 ? piParamS[ SHADOW_METER_R  ] : 50 * GetWidth() / 320;
+	const int	iMeterCx		= piParamS[ SHADOW_METER_CX ] >= 0 ? piParamS[ SHADOW_METER_CX ] : GetWidth()  - iMeterR - 2;
+	const int	iMeterCy		= piParamS[ SHADOW_METER_CY ] >= 0 ? piParamS[ SHADOW_METER_CY ] : GetHeight() - iMeterR - 2;
 	const int	iMeterMinDeg	= 135;
 	const int	iMeterMaxDeg	= 45;
 	const int	iMeterMaxVal	= 7000;
@@ -1071,36 +1093,38 @@ BOOL CVsdFilter::DrawVSD( void ){
 	// G スネーク
 	int	iGx, iGy;
 	
-	if( DispGSnake ){
-		
-		int iGxPrev = 0, iGyPrev;
-		
-		for( i = -G_HIST; i <= 1 ; ++i ){
+	if( GSnakeLen >= 0 ){
+		if( GSnakeLen > 0 ){
 			
-			if( iLogNum + i >= 0 ){
-				// i == 1 時は最後の中途半端な LogNum
-				iGx = iMeterCx + ( int )((( i != 1 ) ? m_VsdLog[ iLogNum + i ].fGx : GetVsdLog( fGx )) * iMeterR / MAX_G_SCALE );
-				iGy = iMeterCy - ( int )((( i != 1 ) ? m_VsdLog[ iLogNum + i ].fGy : GetVsdLog( fGy )) * iMeterR / MAX_G_SCALE );
+			int iGxPrev = 0, iGyPrev;
+			
+			for( i = -GSnakeLen; i <= 1 ; ++i ){
 				
-				if( iGxPrev ) DrawLine(
-					iGx, iGy, iGxPrev, iGyPrev,
-					LINE_WIDTH, COLOR_G_HIST, 0
-				);
-				
-				iGxPrev = iGx;
-				iGyPrev = iGy;
+				if( iLogNum + i >= 0 ){
+					// i == 1 時は最後の中途半端な LogNum
+					iGx = iMeterCx + ( int )((( i != 1 ) ? m_VsdLog[ iLogNum + i ].fGx : GetVsdLog( fGx )) * iMeterR / GScale );
+					iGy = iMeterCy - ( int )((( i != 1 ) ? m_VsdLog[ iLogNum + i ].fGy : GetVsdLog( fGy )) * iMeterR / GScale );
+					
+					if( iGxPrev ) DrawLine(
+						iGx, iGy, iGxPrev, iGyPrev,
+						LINE_WIDTH, COLOR_G_HIST, 0
+					);
+					
+					iGxPrev = iGx;
+					iGyPrev = iGy;
+				}
 			}
+		}else{
+			iGx = iMeterCx + ( int )( GetVsdLog( fGx ) * iMeterR / GScale );
+			iGy = iMeterCy - ( int )( GetVsdLog( fGy ) * iMeterR / GScale );
 		}
-	}else{
-		iGx = iMeterCx + ( int )( GetVsdLog( fGx ) * iMeterR / MAX_G_SCALE );
-		iGy = iMeterCy - ( int )( GetVsdLog( fGy ) * iMeterR / MAX_G_SCALE );
+		
+		// G インジケータ
+		DrawCircle(
+			iGx, iGy, iMeterR / 20,
+			COLOR_G_SENSOR, CVsdFilter::IMG_FILL
+		);
 	}
-	
-	// G インジケータ
-	DrawCircle(
-		iGx, iGy, iMeterR / 20,
-		COLOR_G_SENSOR, CVsdFilter::IMG_FILL
-	);
 	
 	// MAP 表示
 	if( LineTrace ){
