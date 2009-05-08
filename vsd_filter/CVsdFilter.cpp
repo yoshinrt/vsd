@@ -392,8 +392,8 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 		char szBuf[ BUF_SIZE ];
 		
 		fprintf( fp,
-			"DirectShowSource(\"%s\"). \\\n"
-			"ConvertToYUY2. \\\n"
+			"DirectShowSource( \"%s\" )\n"
+			"ConvertToYUY2\n"
 			"VSDFilter( \\\n\tlog_file=\"\"",
 			GetVideoFileName( szBuf )
 		);
@@ -1222,11 +1222,16 @@ BOOL CVsdFilter::DrawVSD( void ){
 	);
 	
 #ifndef CIRCUIT_TOMO
-	sprintf( szBuf, "%2d\x82", ( int )( sqrt( GetVsdLog( fGx ) * GetVsdLog( fGx ) + GetVsdLog( fGy ) * GetVsdLog( fGy )) * 10 ));
+	sprintf( szBuf, "%02dG", ( int )( sqrt( GetVsdLog( fGx ) * GetVsdLog( fGx ) + GetVsdLog( fGy ) * GetVsdLog( fGy )) * 10 ));
 	DrawString(
 		szBuf,
 		COLOR_STR, 0,
 		iMeterCx - 2 * GetFontW(), iMeterCy + iMeterR / 2 - GetFontH()
+	);
+	DrawRect(
+		m_iPosX + GetFontW() - 1, m_iPosY - 4,
+		m_iPosX + GetFontW()    , m_iPosY - 3,
+		COLOR_STR, 0
 	);
 #else
 	// Speed ÇÃêj
