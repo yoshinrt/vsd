@@ -243,6 +243,8 @@ class CVsdFilter {
 	static const char *m_szCheckboxName[];
 	static const char *m_szShadowParamName[];
 	
+	char	*m_szLogFile;
+	
 	// âºëzä÷êî
 	virtual void SetFrameMark( int iFrame ) = 0;
 	virtual void CalcLapTime( void ) = 0;

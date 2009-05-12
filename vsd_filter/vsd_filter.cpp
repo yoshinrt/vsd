@@ -72,6 +72,12 @@ int		check_default[] = {
 	#include "def_checkbox.h"
 };
 
+// トラックバーの初期値
+int		shadow_default[] = {
+	#define DEF_SHADOW( id, init, conf_name )	init,
+	#include "def_shadow.h"
+};
+
 FILTER_DLL filter = {
 	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_IMPORT | FILTER_FLAG_EXPORT | FILTER_FLAG_MAIN_MESSAGE,
 								//	フィルタのフラグ
@@ -329,19 +335,20 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			
 			// config ロード
 			g_Vsd->ConfigLoad( ChangeExt( szBuf2, ( char *)szBuf, CONFIG_EXT ));
-			if( IsExt(( char *)szBuf, CONFIG_EXT )) return TRUE;
-			
-			// log リード
-			g_Vsd->ReadLog( szBuf );
-			
-			// trackbar 設定
-			track_e[ TRACK_LSt ] =
-			track_e[ TRACK_LEd ] =
-				#ifdef CIRCUIT_TOMO
-					( int )( g_Vsd->m_iVsdLogNum / LOG_FREQ + 1 );
-				#else
-					( g_Vsd->m_iVsdLogNum + 99 ) / 100;
-				#endif
+			if( !IsExt(( char *)szBuf, CONFIG_EXT )){
+				
+				// log リード
+				g_Vsd->ReadLog( szBuf );
+				
+				// trackbar 設定
+				track_e[ TRACK_LSt ] =
+				track_e[ TRACK_LEd ] =
+					#ifdef CIRCUIT_TOMO
+						( int )( g_Vsd->m_iVsdLogNum / LOG_FREQ + 1 );
+					#else
+						( g_Vsd->m_iVsdLogNum + 99 ) / 100;
+					#endif
+			}
 			
 			// 設定再描画
 			filter->exfunc->filter_window_update( filter );
@@ -363,7 +370,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 		g_Vsd->m_piParamT	= filter->track;
 		g_Vsd->m_piParamC	= filter->check;
-		g_Vsd->m_piParamS	= new int[ SHADOW_N ];
+		g_Vsd->m_piParamS	= shadow_default;
 		g_Vsd->filter		= filter;
 		g_Vsd->editp		= editp;
 		

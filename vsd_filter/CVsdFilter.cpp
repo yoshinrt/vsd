@@ -93,6 +93,8 @@ CVsdFilter::CVsdFilter () {
 	
 	m_bCalcLapTimeReq	= FALSE;
 	
+	m_szLogFile			= NULL;
+	
 	// DrawPolygon 用バッファ
 	m_Polygon = new PolygonData_t[ MAX_POLY_HEIGHT ];
 }
@@ -108,7 +110,7 @@ CVsdFilter::~CVsdFilter () {
 	m_Lap		= NULL;
 	m_iLapNum	= 0;
 	
-	delete [] m_piParamS;
+	delete [] m_szLogFile;
 }
 
 /*** フォントデータ初期化 ***************************************************/
@@ -398,17 +400,18 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	if(( fp = fopen( szFileName, "w" )) == NULL ) return FALSE;
 	
 	#ifdef CIRCUIT_TOMO
-		#define CONF_OUTPUT_FMT	"%s=%u\n"
+		#define CONF_OUTPUT_FMT	"%s=%d\n"
 	#else
-		#define CONF_OUTPUT_FMT	", \\\n\t%s=%u"
+		#define CONF_OUTPUT_FMT	", \\\n\t%s=%d"
 		
 		char szBuf[ BUF_SIZE ];
 		
 		fprintf( fp,
 			"DirectShowSource( \"%s\" )\n"
 			"ConvertToYUY2\n"
-			"VSDFilter( \\\n\tlog_file=\"\"",
-			GetVideoFileName( szBuf )
+			"VSDFilter( \\\n\tlog_file=\"%s\"",
+			GetVideoFileName( szBuf ),
+			m_szLogFile ? m_szLogFile : ""
 		);
 	#endif
 	
@@ -428,14 +431,6 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 			fp, CONF_OUTPUT_FMT, m_szCheckboxName[ i ], m_piParamC[ i ]
 		);
 	}
-	
-	#ifdef CIRCUIT_TOMO
-		for( i = 0; i < SHADOW_N; ++i ){
-			fprintf(
-				fp, CONF_OUTPUT_FMT, m_szShadowParamName[ i ], m_piParamS[ i ]
-			);
-		}
-	#endif
 	
 	// 手動ラップ計測マーク出力
 	if( IsHandLaptime() && m_iLapNum ){
@@ -504,6 +499,12 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	NaN /= *( volatile float *)&NaN;
 	
 	if(( fp = fopen(( char *)szFileName, "r" )) == NULL ) return FALSE;
+	
+#ifndef AVS_PLUGIN
+	if( m_szLogFile ) delete [] m_szLogFile;
+	m_szLogFile = new char[ strlen( szFileName ) + 1 ];
+	strcpy( m_szLogFile, szFileName );
+#endif
 	
 #ifdef CIRCUIT_TOMO
 	int i;
@@ -766,7 +767,7 @@ void CVsdFilter::RotateMap( void ){
 #define LineTrace		m_piParamT[ TRACK_LineTrace ]
 
 #define DispLap			m_piParamC[ CHECK_LAP ]
-#define GSnakeLen		m_piParamS[ SHADOW_G_LEN ]
+#define GSnakeLen		m_piParamT[ TRACK_G_Len ]
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] / 1000.0 )
 
 #define MAX_MAP_SIZE	( GetWidth() * m_piParamT[ TRACK_MapSize ] / 1000.0 )
@@ -846,9 +847,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 	const int	iMeterSCx		= iMeterR + 2;
 	const int	iMeterSMaxVal	= m_piParamT[ TRACK_SPEED ];
 #else
-	const int	iMeterR			= piParamS[ SHADOW_METER_R  ] >= 0 ? piParamS[ SHADOW_METER_R  ] : 50 * GetWidth() / 320;
-	const int	iMeterCx		= piParamS[ SHADOW_METER_CX ] >= 0 ? piParamS[ SHADOW_METER_CX ] : GetWidth()  - iMeterR - 2;
-	const int	iMeterCy		= piParamS[ SHADOW_METER_CY ] >= 0 ? piParamS[ SHADOW_METER_CY ] : GetHeight() - iMeterR - 2;
+	const int	iMeterR			= m_piParamS[ SHADOW_METER_R  ] >= 0 ? m_piParamS[ SHADOW_METER_R  ] : 50 * GetWidth() / 320;
+	const int	iMeterCx		= m_piParamS[ SHADOW_METER_CX ] >= 0 ? m_piParamS[ SHADOW_METER_CX ] : GetWidth()  - iMeterR - 2;
+	const int	iMeterCy		= m_piParamS[ SHADOW_METER_CY ] >= 0 ? m_piParamS[ SHADOW_METER_CY ] : GetHeight() - iMeterR - 2;
 	const int	iMeterMinDeg	= 135;
 	const int	iMeterMaxDeg	= 45;
 	const int	iMeterMaxVal	= 7000;
