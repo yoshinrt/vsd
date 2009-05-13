@@ -53,7 +53,6 @@
 
 #ifndef _WIN32
 //#define RISE_EDGE_CAR_SIGNAL
-//#define TEST_CLK	19
 
 //#define IR_FLASHER
 //#define TEST1SEC
@@ -139,9 +138,8 @@ enum {
 };
 
 enum {
-	AM_OFF,		// オートモード無効
-	AM_GEAR,	// ギアモードの自動切換え
-	AM_DISP,	// ↑+Tacho⇔Speed の自動切換え
+	AM_DISP,	// ↓+Tacho⇔Speed の自動切換え
+	AM_TBAR,	// タコバー自動切換え
 	AM_NUM
 };
 
@@ -160,7 +158,7 @@ typedef struct {
 	BOOL	bNewLap			:1;
 	UCHAR	uGearMode		:5;
 	UCHAR	uDispMode		:5;
-	UCHAR	uAutoMode		:2;
+	UCHAR	uAutoMode		:1;
 } Flags_t;
 
 typedef struct {

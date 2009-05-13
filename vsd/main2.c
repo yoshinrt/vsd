@@ -885,14 +885,13 @@ INLINE void ProcessPushSW( TouchPanel_t *pTP ){
 		
 		switch( pTP->uPushCnt ){
 		  case SWCMD_TACHO_SPD:	/* speed <--> tacho 切り替え */
-			g_Flags.uAutoMode = AM_OFF;
+			g_Flags.uAutoMode = AM_TBAR;
 			DoInputSerial( g_Flags.uDispMode != DISPMODE_SPEED ? 's' : 't' );
 			
 		  Case SWCMD_AUTOMODE:	/* town <--> circuit 切り替え */
 			g_Flags.uAutoMode	= ( g_Flags.uAutoMode + 1 ) % AM_NUM;
 			DispMsgStart(
-				g_Flags.uAutoMode == AM_GEAR ? "A-GEAR" :
-				g_Flags.uAutoMode == AM_DISP ? "A-dISP" : "A-OFF"
+				g_Flags.uAutoMode == AM_TBAR ? "A-tbAR" : "A-dISP";
 			);
 			
 		  Case SWCMD_VCARIB:
@@ -926,8 +925,6 @@ INLINE void ProcessPushSW( TouchPanel_t *pTP ){
 /*** オートモード処理 *******************************************************/
 
 INLINE UINT ProcessAutoMode( UINT uTimer ){
-	if( g_Flags.uAutoMode == AM_OFF ) return uTimer;
-	
 	if( g_Tacho.uVal >= 4500 ){
 		// 4500rpm 以上で，Circuit モードに移行
 		g_Flags.uGearMode	= GM_GEAR;
@@ -987,22 +984,6 @@ INLINE void SetupHW( void ){
 	TW.TIERW.BYTE	= 1 << 7;			// enable Timer-W ovf int.
 	TW.TMRW.BYTE	= 1 << 7;			// start TimerW
 	
-	/*** Test Pulse の設定 **************************************************/
-	
-  #ifdef TEST_CLK
-	TA.TMA.BYTE = 0x4 << 5;			// TimerA φW/32 = 1KHz
-	
-	TV.TCORA = TEST_CLK;
-	TV.TCORB = TEST_CLK / 2;
-	TV.TCSRV.BYTE =
-		( 1 << 2 )	|	// b, clr
-		2;				// a, set
-	
-	TV.TCRV0.BYTE =
-		( 1 << 3 ) |					// CLR = compare match A
-		5;								// clk src = ext clk, rise edge
-  #endif
-	
 	/*** IRQ0〜3 の設定 *****************************************************/
 	
 	IO.PMR1.BYTE =
@@ -1010,11 +991,7 @@ INLINE void SetupHW( void ){
 		( 1 << 6 ) |	// IRQ2
 		( 1 << 5 ) |	// IRQ1
 		( 1 << 4 ) |	// IRQ0
-	#ifdef TEST_CLK
-		( 1 << 0 );		// output TimerA clk
-	#else
 		0;
-	#endif
 	
 	//TMA = 0x04;
 	
