@@ -52,6 +52,22 @@ INLINE void _INITSCT( void ){
 	do{ *uDst++ = 0; }while(( unsigned )uDst < ( unsigned )uDstEnd );
 }
 
+/*** get 32bit of TimerW ****************************************************/
+
+/*INLINE*/ ULONG GetTimerW32( void ){
+	
+	UINT	uL, uH;
+	
+	uL = TW.TCNT;
+	uH = g_TimerWovf.w.l;
+	
+	if( !( uL & 0x8000 ) && TW.TSRW.BIT.OVF ){
+		++uH;
+	}
+	
+	return ((( ULONG )uH ) << 16 ) | uL;
+}
+
 /*** TIMER A ****************************************************************/
 
 ULONG g_uPrevTW;	// TimerW cnt
@@ -70,28 +86,12 @@ void int_timer_a( void ){
 	g_uPrevTW	= uTWCnt;
 }
 
-/*** get 32bit of TimerW ****************************************************/
-
-INLINE ULONG GetTimerW32( void ){
-	
-	UINT	uL, uH;
-	
-	uL = TW.TCNT;
-	uH = g_TimerWovf.w.l;
-	
-	if( !( uL & 0x8000 ) && TW.TSRW.BIT.OVF ){
-		++uH;
-	}
-	
-	return ((( ULONG )uH ) << 16 ) | uL;
-}
-
 /*** itoa *******************************************************************/
 
 void SerialPack( UINT uVal ){
 	
 	UCHAR	szBuf[ 4 ];
-	UCHAR	p = szBuf;
+	UCHAR	*p = szBuf;
 	
 	if(( uVal & 0xFF ) >= 0xFE ){ *p++ = 0xFE; uVal -= 0xFE; }
 	*p++ = uVal & 0xFF;
@@ -107,6 +107,8 @@ void SerialPack( UINT uVal ){
 
 #undef OutputSerial
 INLINE void OutputSerial( DispVal_t *val ){
+	UCHAR c = 0xFF;
+	
 	SerialPack( val->uTacho );
 	SerialPack( val->uSpeed );
 	SerialPack( g_uMileage );
@@ -121,7 +123,7 @@ INLINE void OutputSerial( DispVal_t *val ){
 		SerialPack( g_IR.Time.w.h );
 	}
 	
-	sci_write( "\xFF", 1 );
+	sci_write( &c, 1 );
 }
 
 /*** 各センサー値平滑化 *****************************************************/
@@ -144,13 +146,19 @@ INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
 /*** Tacho / Speed 計算 *****************************************************/
 
 #undef ComputeMeter
-INLINE void ComputeMeter( void ){
+/*INLINE*/ void ComputeMeter( void ){
+	BOOL bNoSpeedPulse;
 	
 	IENR1.BIT.IEN2 = 0;	// Tacho IRQ disable
 	
 	// Tacho 計算
 	if( g_Tacho.uPulseCnt ){
-		g_Tacho.uVal = ( TACO_ADJ >> 8 ) * g_Tacho.uPulseCnt / (( g_Tacho.Time.dw - g_Tacho.PrevTime.dw ) >> 8 );
+		
+		// 15 = 60[min/sec] / 2[pulse/roll] / 2[分母を半分にした分]
+		g_Tacho.uVal =
+			g_uHz * ( 15 * g_Tacho.uPulseCnt ) /
+			(( g_Tacho.Time.dw - g_Tacho.PrevTime.dw ) >> 1 );
+		
 		g_Tacho.PrevTime.dw = g_Tacho.Time.dw;
 		g_Tacho.uPulseCnt = 0;
 	}else if(
@@ -166,26 +174,35 @@ INLINE void ComputeMeter( void ){
 	IENR1.BIT.IEN2 = 1;	// Tacho IRQ enable
 	
 	// Speed 計算
-	BOOL	bNoSpeedPulse	= FALSE;
-	
-	IENR1.BIT.IEN3 = 0;	// Speed IRQ disable
-	if( !g_Speed.uPulseCnt ){
-		// パルスが入ってなかったら，パルスが1回だけ入ったものとして速度計算
-		// ★Time - PrevTime の差が膨大になることのストッパーが要る
-		g_Speed.uPulseCnt	= 1;
-		g_Speed.Time.dw		= GetTimerW32();
-		bNoSpeedPulse		= TRUE;
+	if( g_Speed.uPulseCnt || g_Speed.uVal ){	// パルスがなく，前回も 0km/h なら何もしない
+		
+		bNoSpeedPulse	= FALSE;
+		IENR1.BIT.IEN3 = 0;	// Speed IRQ disable
+		
+		if( !g_Speed.uPulseCnt ){
+			// パルスが入ってなかったら，パルスが1回だけ入ったものとして速度計算
+			g_Speed.uPulseCnt	= 1;
+			g_Speed.Time.dw		= GetTimerW32();
+			bNoSpeedPulse		= TRUE;
+		}
+		
+		// 「ギア計算とか.xls」参照
+		g_Speed.uVal =
+			(( g_uHz * g_Speed.uPulseCnt ) >> 13 ) *
+			( UINT )( 3600.0 * 100.0 / PULSE_PAR_1KM * ( 1 << 11 )) /
+			(( g_Speed.Time.dw - g_Speed.PrevTime.dw ) >> 2 );
+		
+		if( !bNoSpeedPulse ){
+			g_Speed.PrevTime.dw = g_Speed.Time.dw;
+			g_uMileage += g_Speed.uPulseCnt;
+		}
+		g_Speed.uPulseCnt = 0;
+		
+		// 1km/h 未満は 0km/h 扱い
+		if( g_Speed.uVal < 100 ) g_Speed.uVal = 0;
+		
+		IENR1.BIT.IEN3 = 1;	// Speed IRQ enable
 	}
-	
-	g_Speed.uVal = ( SPEED_ADJ >> 8 ) * g_Speed.uPulseCnt / (( g_Speed.Time.dw - g_Speed.PrevTime.dw ) >> 8 );
-	
-	if( !bNoSpeedPulse ){
-		g_Speed.PrevTime.dw = g_Speed.Time.dw;
-		g_uMileage += g_Speed.uPulseCnt;
-	}
-	g_Speed.uPulseCnt = 0;
-	
-	IENR1.BIT.IEN3 = 1;	// Speed IRQ enable
 	
 	// 0-100ゴール待ちモードで100km/hに達したらNewLap起動
 	if( g_Flags.uLapMode == MODE_ZERO_ONE_WAIT && g_Speed.uVal >= 10000 ){
@@ -204,7 +221,7 @@ INLINE void ComputeMeter( void ){
 #endif
 int main( void ){
 	
-	UINT			uTWovf;
+	UCHAR			cTimerA;
 	UINT			uAutoModeTimer	= g_uRTC;
 	DispVal_t		DispVal;
 	TouchPanel_t	TP;
@@ -214,6 +231,8 @@ int main( void ){
 	_INITSCT();
 	InitMain();
 	
+	SetVector( 19, int_timer_a );	// ★後で消す
+	
 	set_imask_ccr( 0 );			/* CPU permit interrupts */
 	
 	Print( g_szMsgOpening );
@@ -222,24 +241,24 @@ int main( void ){
 	BZero( DispVal );
 	BZero( TP );
 	
-	uTWovf = g_TimerWovf.w.l;
+	cTimerA = TA.TCA;
 	
 	for(;;){
 		
 		/*** ステート変化待ち ***/
 		
-		while( uTWovf == VOLATILE( UINT, g_TimerWovf.w.l )){
+		while( cTimerA == TA.TCA ){
 			//DispVal.uGx += G_SENSOR_X;
 			DispVal.uGx += G_SENSOR_Z;	// 前後 G の検出軸変更
 			DispVal.uGy += G_SENSOR_Y;
 			++DispVal.uCnt;
-			if( !( DispVal.uCnt & ( 128 - 1 ))) LED_Driver( g_TimerWovf.w.l );
+			if( !( DispVal.uCnt & ( 128 - 1 ))) LED_Driver( cTimerA );
 		}
 		
-		++uTWovf;
+		++cTimerA;
 		
-		if( !( uTWovf & ( CALC_DIVCNT - 1 ))){
-			// 約30Hz
+		if( !( cTimerA & ( CALC_DIVCNT - 1 ))){
+			// 32Hz
 			
 			ComputeMeter();
 			
@@ -250,7 +269,7 @@ int main( void ){
 			ComputeGear2();
 			
 			/*** LED 表示 ***/
-			DispLED_Carib( &DispVal, uTWovf );
+			DispLED_Carib( &DispVal, cTimerA );
 			
 			/*** Gセンサーによるスタート検出 ***/
 			/*** 未検証，うまくいかなかったら削る ***/
@@ -259,7 +278,7 @@ int main( void ){
 			/*** シリアル出力処理 ***/
 			if(
 				( CALC_DIVCNT == SERIAL_DIVCNT ) ||
-				!( uTWovf & ( SERIAL_DIVCNT - 1 ))
+				!( cTimerA & ( SERIAL_DIVCNT - 1 ))
 			){
 				// key 入力
 				UCHAR c;
