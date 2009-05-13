@@ -223,15 +223,11 @@ INLINE ULONG GetRTC( void ){
 	ULONG	uNowTime = GetRTC();
 	
 	// 直前時間ロード (16MHz 時計)
-	uPrevTime	= g_IR.PrevTime.dw;
+	uPrevTime			= g_IR.PrevTime.dw;
 	
 	// 今時間ロード (16MHz 時計)
-	g_IR.PrevTime.w.l = TW.TCNT;
-	g_IR.PrevTime.w.h = g_TimerWovf.w.l;
-	if( !( g_IR.PrevTime.w.l & 0x8000 ) && TW.TSRW.BIT.OVF ){
-		++g_IR.PrevTime.w.h;
-	}
-	uTime		= g_IR.PrevTime.dw;
+	g_IR.PrevTime.dw	= GetTimerW32();
+	uTime				= g_IR.PrevTime.dw;
 	
 	if(
 		// パルス幅が規定値以内だった
@@ -259,14 +255,7 @@ INLINE ULONG GetRTC( void ){
 #pragma interrupt( int_irq2 )
 /*__interrupt( vect = 16 )*/ void int_irq2( void ){
 	++g_Tacho.uPulseCnt;
-	
-	g_Tacho.Time.w.l = TW.TCNT;
-	g_Tacho.Time.w.h = g_TimerWovf.w.l;
-	
-	if( !( g_Tacho.Time.w.l & 0x8000 ) && TW.TSRW.BIT.OVF ){
-		++g_Tacho.Time.w.h;
-	}
-	
+	g_Tacho.Time.dw = GetTimerW32();
 	IRR1.BIT.IRRI2 = 0;	// IRRI2 クリア
 }
 
@@ -274,13 +263,7 @@ INLINE ULONG GetRTC( void ){
 #pragma interrupt( int_irq3 )
 /*__interrupt( vect = 17 )*/ void int_irq3( void ){
 	++g_Speed.uPulseCnt;
-	
-	g_Speed.Time.w.l = TW.TCNT;
-	g_Speed.Time.w.h = g_TimerWovf.w.l;
-	
-	if( !( g_Speed.Time.w.l & 0x8000 ) && TW.TSRW.BIT.OVF ){
-		++g_Speed.Time.w.h;
-	}
+	g_Speed.Time.dw = GetTimerW32();
 	
 	// Millage 時限爆弾が発動したら，NewLap起動
 	if( g_uRemainedMillage && !--g_uRemainedMillage ){
@@ -350,7 +333,6 @@ INLINE void SetBeep( UINT uCnt ){
 
 INLINE void ComputeMeter( UINT uTWovf ){
 	
-	//set_imask_ccr( 1 ); /* disable CPU interrupts */
 	IENR1.BIT.IEN2 = 0;	// Tacho IRQ disable
 	
 	// Tacho 計算
@@ -386,7 +368,6 @@ INLINE void ComputeMeter( UINT uTWovf ){
 	}
 	
 	IENR1.BIT.IEN3 = 1;	// Speed IRQ enable
-	//set_imask_ccr( 0 ); /* CPU permit interrupts */
 	
 	// 0-100ゴール待ちモードで100km/hに達したらNewLap起動
 	if( g_Flags.uLapMode == MODE_ZERO_ONE_WAIT && g_Speed.uVal >= 10000 ){

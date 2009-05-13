@@ -138,8 +138,9 @@ enum {
 };
 
 enum {
-	AM_DISP,	// ↓+Tacho⇔Speed の自動切換え
+	AM_OFF,
 	AM_TBAR,	// タコバー自動切換え
+	AM_DISP,	// TBAR + Tacho⇔Speed の自動切換え
 	AM_NUM
 };
 
@@ -158,7 +159,7 @@ typedef struct {
 	BOOL	bNewLap			:1;
 	UCHAR	uGearMode		:5;
 	UCHAR	uDispMode		:5;
-	UCHAR	uAutoMode		:1;
+	UCHAR	uAutoMode		:2;
 } Flags_t;
 
 typedef struct {
