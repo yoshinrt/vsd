@@ -531,7 +531,7 @@ function LoadFirmware()
 	TimeoutCnt = 1000
 	repeat
 		RxBuf = RxBuf .. System.sioRead()
-		pos = RxBuf:find( "*", 1, true )
+		pos = RxBuf:find( "\255", 1, true )
 		TimeoutCnt = TimeoutCnt - 1
 		if( TimeoutCnt == 0 ) then
 			DoMenu( ErrorInit )
@@ -558,48 +558,65 @@ function FormatLapTime( Time, Ch )
 	)
 end
 
---- 5文字→16bit x 2 get -----------------------------------------------------
+--- シリアルデータ→16bit 数値復元 -------------------------------------------
 
-function GetULong( str )
-	local i
-	local Ret = 0
+function SerialUnpack( str )
+	local i = 1
+	locar Ret
 	
-	for i = 1, 5 do
-		Ret = Ret * 0x80 + str:byte( i ) - 0x80
+	if( str:byte( i ) == 0xFE ) then
+		i = i + 1
+		Ret = str:byte( i ) + 0xFE
+	else
+		Ret = str:byte( i )
 	end
 	
-	return math.floor( Ret / 0x10000 ), math.fmod( Ret, 0x10000 )
+	i = i + 1
+	
+	if( str:byte( i ) == 0xFE ) then
+		i = i + 1
+		Ret = Ret + ( str:byte( i ) + 0xFE ) * 256
+	else
+		Ret = Ret + str:byte( i ) * 256
+	end
+	
+	return Ret, str:sub( i + 1 )
 end
 
 --- シリアルデータ処理 -------------------------------------------------------
+
+RxBuf1 = nil
 
 function ProcessSio()
 	
 	local LapTimeStr = ""
 	
-	if( not bSioDataRemained ) then
+	if( not RxBuf1 ) then
 		-- 処理残りデータが無いので，Sio からリードする
 		RxBuf = RxBuf .. System.sioRead()
 		
-		-- * を検索，無ければ何もせず return
-		LogPos = RxBuf:find( "*", 1, true )
+		-- \xFF を検索，無ければ何もせず return
+		LogPos = RxBuf:find( "\255", 1, true )
 		if( not LogPos ) then return end
 		
-		-- * を見つけた
-		Tacho, Speed = GetULong( RxBuf:sub( 1, 5 ))
+		-- \xFF を見つけた
+		RxBuf1 = sub( RxBuf, 1, LogPos - 1 )
+		RxBuf  = sub( RxBuf, LogPos + 1 )
 		
-		bSioDataRemained	= true
+		Tacho, RxBuf1 = SerialUnpack( RxBuf1 )
+		Speed, RxBuf1 = SerialUnpack( RxBuf1 )
+		
 		RefreshFlag			= true
 		return
 	end
 	
 	-- Speed/Tacho は処理済，残りを処理する
-	bSioDataRemained = false
-	
 	MileageWAPrev = MileageWA
 	
-	MileageWA, IRSensor = GetULong( RxBuf:sub(  6, 10 ))
-	GSensorX,  GSensorY = GetULong( RxBuf:sub( 11, 15 ))
+	MileageWA, RxBuf1 = SerialUnpack( RxBuf1 )
+	IRSensor,  RxBuf1 = SerialUnpack( RxBuf1 )
+	GSensorX,  RxBuf1 = SerialUnpack( RxBuf1 )
+	GSensorY,  RxBuf1 = SerialUnpack( RxBuf1 )
 	
 	if( MileageWAPrev > MileageWA ) then
 		MileageWACnt = MileageWACnt + 1
@@ -628,8 +645,11 @@ function ProcessSio()
 	
 	-- ラップタイム処理 ------------------------------------------------------
 	
-	if( LogPos == 21 ) then
-		local tmp, LapTime = GetULong( RxBuf:sub( 16, 20 ))
+	if( RxBuf1 ~= "" ) then
+		local tmp, LapTime
+		LapTime, RxBuf1 = SerialUnpack( RxBuf1 )
+		tmp             = SerialUnpack( RxBuf1 )
+		
 		LapTime = LapTime + tmp * 0x10000
 		local LapTimeDiff
 		
@@ -704,8 +724,6 @@ function ProcessSio()
 	end
 	
 	--DebugRefresh = DebugRefresh + 1
-	
-	RxBuf = RxBuf:sub( LogPos + 1 )
 end
 
 --- VSD モード設定 -----------------------------------------------------------
