@@ -17,7 +17,7 @@
 /*** new type ***************************************************************/
 /*** prototype **************************************************************/
 
-INLINE void LED_Driver( UINT uTWovf );
+INLINE void LED_Driver( UCHAR cTimerA );
 INLINE void _INITSCT( void );
 
 /*** const ******************************************************************/
@@ -331,7 +331,7 @@ INLINE void SetBeep( UINT uCnt ){
 
 /*** Tacho / Speed 計算 *****************************************************/
 
-INLINE void ComputeMeter( UINT uTWovf ){
+INLINE void ComputeMeter( UCHAR cTimerA ){
 	
 	IENR1.BIT.IEN2 = 0;	// Tacho IRQ disable
 	
@@ -363,7 +363,7 @@ INLINE void ComputeMeter( UINT uTWovf ){
 	}else{
 		// パルスが入ってなかったら，パルスが1回だけ入ったものとして速度計算
 		// それが表示中の速度より遅ければ，表示速度を更新する
-		UINT uSpeedTmp = ( SPEED_ADJ >> 8 ) / (((( ULONG )uTWovf << 16 ) - g_Speed.PrevTime.dw ) >> 8 );
+		UINT uSpeedTmp = ( SPEED_ADJ >> 8 ) / (((( ULONG )cTimerA << 16 ) - g_Speed.PrevTime.dw ) >> 8 );
 		if( uSpeedTmp < g_Speed.uVal ) g_Speed.uVal = uSpeedTmp;
 	}
 	
@@ -619,12 +619,12 @@ INLINE void DispLED( UCHAR cDispMode ){
 	}
 }
 
-INLINE void DispLED_Carib( DispVal_t *pDispVal, UINT uTWovf ){
+INLINE void DispLED_Carib( DispVal_t *pDispVal ){
 	if( g_uVideoCaribCnt ){
 		/*** video キャリブレーション表示 すべてを override ***/
 		--g_uVideoCaribCnt;
 		
-		if( g_uVideoCaribCnt <= 60 ){
+		if( g_uVideoCaribCnt <= 64 ){
 			g_Flags.bBlinkMain	= 0;
 			g_Flags.bBlinkSub	= 0;
 			
@@ -635,35 +635,23 @@ INLINE void DispLED_Carib( DispVal_t *pDispVal, UINT uTWovf ){
 			pDispVal->uSpeed = 60000;
 		}
 	}else{
-		
 		/*** LED 表示 ***/
-		if(
-			!( g_Flags.uDispMode == DISPMODE_SPEED || g_Flags.uDispMode == DISPMODE_TACHO ) ||
-			!( uTWovf & ( DISP_DIVCNT - 1 ))
-		){
-			DispLED( g_Flags.uDispMode );
-		}
+		DispLED( g_Flags.uDispMode );
 	}
 }
 
 /*** LED driver **************************************************************/
 
-/*
 #define SetLEDBar1( i ) \
 	if( \
 		g_cLEDBar >= ( i ) || \
-		( g_cLEDBar & 0xF0 ) == (( i ) - 0x10 ) && (( g_cLEDBar & 0xF ) >> 2 ) > (( uTWovf ) & 0x3 ) \
-	) cPat &= 0xFE;
-*/
-#define SetLEDBar1( i ) \
-	if( \
-		g_cLEDBar >= ( i ) || \
-		( g_cLEDBar & 0xF0 ) == (( i ) - 0x10 ) && (( g_cLEDBar & 0xF ) > 0x7 ) && ( uTWovf & ( BLINK_RATE << 3 )) \
+		( g_cLEDBar & 0xF0 ) == (( i ) - 0x10 ) && (( g_cLEDBar & 0xF ) > 0x7 ) && ( cTimerA & ( BLINK_RATE << 3 )) \
 	) cPat &= 0xFE;
 
-INLINE void LED_Driver( UINT uTWovf ){
+INLINE void LED_Driver( void ){
 	UCHAR	cLEDPos = IO.PDR5.BYTE & 0xF;
 	UCHAR	cPat;
+	UCHAR	cTimerA = TA.TCA;
 	
 	cLEDPos >>= 1;
 	
@@ -688,14 +676,14 @@ INLINE void LED_Driver( UINT uTWovf ){
 	
 	if(
 		( cLEDPos == 1 && g_Flags.bBlinkSub || cLEDPos != 1 && g_Flags.bBlinkMain ) &&
-		uTWovf & ( BLINK_RATE )
+		cTimerA & ( BLINK_RATE )
 	){
 		cPat |= 0xFE;
 	}
 	
 	if(
 		( g_cLEDBar >= 0x50 /*|| g_cLEDBar <= -0x50*/ ) &&
-		uTWovf & ( BLINK_RATE )
+		cTimerA & ( BLINK_RATE )
 	){
 		cPat |= 1;
 	}
@@ -821,7 +809,7 @@ INLINE void DoInputSerial( char c ){
 			
 		  Case 'a': g_Flags.uAutoMode	= g_lParam;	// オートモード
 			
-		  Case 'c': g_uVideoCaribCnt = 90;	// キャリブレーション
+		  Case 'c': g_uVideoCaribCnt = 96;	// キャリブレーション
 			
 		  Case 'G': g_Flags.uGearMode 			= g_lParam;
 		  //Case 'r': g_Flags.bReverse			= g_lParam;
@@ -877,7 +865,7 @@ INLINE void ProcessPushSW( TouchPanel_t *pTP ){
 			
 		  Case SWCMD_VCARIB:
 			// video キャリブレーション
-			g_uVideoCaribCnt = 60;
+			g_uVideoCaribCnt = 64;
 		}
 		pTP->uPushCnt = 0;
 	}

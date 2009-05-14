@@ -145,63 +145,70 @@ INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
 
 /*** Tacho / Speed 計算 *****************************************************/
 
+// 0rpm に切り下げる EG 回転数のパルス幅 = 200rpm (clk数@16MHz)
+#define TACHO_0RPM_TH	(( ULONG )( H8HZ / ( 200 / 60.0 * 2 )))
+
+// 0km/h に切り下げる speed パルス幅 = 1km/h (clk数@16MHz)
+#define SPEED_0KPH_TH	(( ULONG )( H8HZ / ( PLUSE_PAR_1KM / 3600.0 )))
+
 #undef ComputeMeter
 /*INLINE*/ void ComputeMeter( void ){
-	BOOL bNoSpeedPulse;
+	ULONG	uPrevTime, uTime;
+	UINT	uPulseCnt;
 	
+	// パラメータロード
 	IENR1.BIT.IEN2 = 0;	// Tacho IRQ disable
+	uTime				= g_Tacho.uTime;
+	uPulseCnt			= g_Tacho.uPluseCnt;
+	g_Tacho.uPluseCnt	= 0;
+	IENR1.BIT.IEN2 = 1;	// Tacho IRQ enable
+	uPrevTime			= g_Tacho.uPrevTime;
 	
 	// Tacho 計算
-	if( g_Tacho.uPulseCnt ){
-		
+	if( uPulseCnt ){
 		// 15 = 60[min/sec] / 2[pulse/roll] / 2[分母を半分にした分]
 		g_Tacho.uVal =
-			g_uHz * ( 15 * g_Tacho.uPulseCnt ) /
-			(( g_Tacho.Time.dw - g_Tacho.PrevTime.dw ) >> 1 );
+			g_uHz * ( 15 * uPulseCnt ) /
+			(( uTime - uPrevTime ) >> 1 );
 		
-		g_Tacho.PrevTime.dw = g_Tacho.Time.dw;
-		g_Tacho.uPulseCnt = 0;
+		g_Tacho.uPrevTime.dw = uTime;
 	}else if(
-		// 0.2秒後 に0に
-		g_TimerWovf.w.l - g_Tacho.Time.w.h >= ( UINT )(( ULONG )( H8HZ * 0.2 ) >> 16 )
+		uTime = GetTimerW32(),
+		// 0.2秒後 に0に (0.2s = 150rpm)
+		uTime - uPrevTime >= TACHO_0RPM_TH;
 	){
-		g_Tacho.uVal = 0;
-		g_Tacho.PrevTime.dw = g_Tacho.Time.dw;
-		g_Tacho.Time.w.h	= g_TimerWovf.w.l;
-		g_Tacho.Time.w.l	= 0;
+		g_Tacho.uVal		= 0;
+		g_Tacho.PrevTime.dw	= uTime - TACHO_0RPM_TH;
 	}
 	
-	IENR1.BIT.IEN2 = 1;	// Tacho IRQ enable
+	// パラメータロード
+	IENR1.BIT.IEN2 = 0;	// Speed IRQ disable
+	uTime				= g_Speed.uTime;
+	uPulseCnt			= g_Speed.uPluseCnt;
+	g_Speed.uPluseCnt	= 0;
+	IENR1.BIT.IEN2 = 1;	// Speed IRQ enable
+	uPrevTime			= g_Speed.uPrevTime;
 	
 	// Speed 計算
-	if( g_Speed.uPulseCnt || g_Speed.uVal ){	// パルスがなく，前回も 0km/h なら何もしない
-		
-		bNoSpeedPulse	= FALSE;
-		IENR1.BIT.IEN3 = 0;	// Speed IRQ disable
-		
-		if( !g_Speed.uPulseCnt ){
-			// パルスが入ってなかったら，パルスが1回だけ入ったものとして速度計算
-			g_Speed.uPulseCnt	= 1;
-			g_Speed.Time.dw		= GetTimerW32();
-			bNoSpeedPulse		= TRUE;
-		}
-		
-		// 「ギア計算とか.xls」参照
-		g_Speed.uVal =
-			(( g_uHz * g_Speed.uPulseCnt ) >> 13 ) *
-			( UINT )( 3600.0 * 100.0 / PULSE_PAR_1KM * ( 1 << 11 )) /
-			(( g_Speed.Time.dw - g_Speed.PrevTime.dw ) >> 2 );
-		
-		if( !bNoSpeedPulse ){
-			g_Speed.PrevTime.dw = g_Speed.Time.dw;
-			g_uMileage += g_Speed.uPulseCnt;
-		}
-		g_Speed.uPulseCnt = 0;
-		
-		// 1km/h 未満は 0km/h 扱い
-		if( g_Speed.uVal < 100 ) g_Speed.uVal = 0;
-		
-		IENR1.BIT.IEN3 = 1;	// Speed IRQ enable
+	if( uPulseCnt ){
+		g_uMileage += uPulseCnt;
+		g_Speed.PrevTime.dw = uTime;
+	}else{
+		// パルスが入ってなかったら，パルスが1回だけ入ったものとして速度計算
+		uPulseCnt		= 1;
+		uTime			= GetTimerW32();
+	}
+	
+	// 「ギア計算とか.xls」参照
+	g_Speed.uVal =
+		(( g_uHz * uPulseCnt ) >> 13 ) *
+		( UINT )( 3600.0 * 100.0 / PULSE_PAR_1KM * ( 1 << 11 )) /
+		(( uTime - uPrevTime ) >> 2 );
+	
+	// 1km/h 未満は 0km/h 扱い
+	if( g_Speed.uVal < 100 ){
+		g_Speed.uVal = 0;
+		g_Speed.PrevTime.dw = uTime - SPEED_0KPH_TH;
 	}
 	
 	// 0-100ゴール待ちモードで100km/hに達したらNewLap起動
@@ -227,7 +234,9 @@ int main( void ){
 	TouchPanel_t	TP;
 	
 	set_imask_ccr( 1 );
+#ifdef MONITOR_ROM
 	if( !IO.PDR5.BIT.B4 ) IR_Flasher();
+#endif
 	_INITSCT();
 	InitMain();
 	
