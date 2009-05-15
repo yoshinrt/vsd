@@ -149,7 +149,7 @@ INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
 #define TACHO_0RPM_TH	(( ULONG )( H8HZ / ( 200 / 60.0 * 2 )))
 
 // 0km/h に切り下げる speed パルス幅 = 1km/h (clk数@16MHz)
-#define SPEED_0KPH_TH	(( ULONG )( H8HZ / ( PLUSE_PAR_1KM / 3600.0 )))
+#define SPEED_0KPH_TH	(( ULONG )( H8HZ / ( PULSE_PAR_1KM / 3600.0 )))
 
 #undef ComputeMeter
 /*INLINE*/ void ComputeMeter( void ){
@@ -158,11 +158,11 @@ INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
 	
 	// パラメータロード
 	IENR1.BIT.IEN2 = 0;	// Tacho IRQ disable
-	uTime				= g_Tacho.uTime;
-	uPulseCnt			= g_Tacho.uPluseCnt;
-	g_Tacho.uPluseCnt	= 0;
+	uTime				= g_Tacho.Time.dw;
+	uPulseCnt			= g_Tacho.uPulseCnt;
+	g_Tacho.uPulseCnt	= 0;
 	IENR1.BIT.IEN2 = 1;	// Tacho IRQ enable
-	uPrevTime			= g_Tacho.uPrevTime;
+	uPrevTime			= g_Tacho.PrevTime.dw;
 	
 	// Tacho 計算
 	if( uPulseCnt ){
@@ -171,11 +171,11 @@ INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
 			g_uHz * ( 15 * uPulseCnt ) /
 			(( uTime - uPrevTime ) >> 1 );
 		
-		g_Tacho.uPrevTime.dw = uTime;
+		g_Tacho.PrevTime.dw = uTime;
 	}else if(
 		uTime = GetTimerW32(),
 		// 0.2秒後 に0に (0.2s = 150rpm)
-		uTime - uPrevTime >= TACHO_0RPM_TH;
+		uTime - uPrevTime >= TACHO_0RPM_TH
 	){
 		g_Tacho.uVal		= 0;
 		g_Tacho.PrevTime.dw	= uTime - TACHO_0RPM_TH;
@@ -183,11 +183,11 @@ INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
 	
 	// パラメータロード
 	IENR1.BIT.IEN2 = 0;	// Speed IRQ disable
-	uTime				= g_Speed.uTime;
-	uPulseCnt			= g_Speed.uPluseCnt;
-	g_Speed.uPluseCnt	= 0;
+	uTime				= g_Speed.Time.dw;
+	uPulseCnt			= g_Speed.uPulseCnt;
+	g_Speed.uPulseCnt	= 0;
 	IENR1.BIT.IEN2 = 1;	// Speed IRQ enable
-	uPrevTime			= g_Speed.uPrevTime;
+	uPrevTime			= g_Speed.PrevTime.dw;
 	
 	// Speed 計算
 	if( uPulseCnt ){
