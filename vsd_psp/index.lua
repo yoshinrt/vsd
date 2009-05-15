@@ -13,7 +13,7 @@ MODE_NUM		= 4
 
 H8HZ			= 16030000
 SERIAL_DIVCNT	= 16		-- シリアル出力を行う周期
-LOG_FREQ		= ( H8HZ / 65536 / SERIAL_DIVCNT )
+LOG_FREQ		= 16
 
 -- スピード * 100/Taco 比
 -- ELISE
@@ -560,38 +560,37 @@ end
 
 --- シリアルデータ→16bit 数値復元 -------------------------------------------
 
+RxBufPos = 1
+
 function SerialUnpack( str )
-	local i = 1
-	locar Ret
+	local Ret
 	
-	if( str:byte( i ) == 0xFE ) then
-		i = i + 1
-		Ret = str:byte( i ) + 0xFE
+	if( str:byte( RxBufPos ) == 0xFE ) then
+		RxBufPos = RxBufPos + 1
+		Ret = str:byte( RxBufPos ) + 0xFE
 	else
-		Ret = str:byte( i )
+		Ret = str:byte( RxBufPos )
 	end
+	RxBufPos = RxBufPos + 1
 	
-	i = i + 1
-	
-	if( str:byte( i ) == 0xFE ) then
-		i = i + 1
-		Ret = Ret + ( str:byte( i ) + 0xFE ) * 256
+	if( str:byte( RxBufPos ) == 0xFE ) then
+		RxBufPos = RxBufPos + 1
+		Ret = Ret + ( str:byte( RxBufPos ) + 0xFE ) * 256
 	else
-		Ret = Ret + str:byte( i ) * 256
+		Ret = Ret + str:byte( RxBufPos ) * 256
 	end
+	RxBufPos = RxBufPos + 1
 	
-	return Ret, str:sub( i + 1 )
+	return Ret
 end
 
 --- シリアルデータ処理 -------------------------------------------------------
-
-RxBuf1 = nil
 
 function ProcessSio()
 	
 	local LapTimeStr = ""
 	
-	if( not RxBuf1 ) then
+	if( RxBufPos == 1 ) then
 		-- 処理残りデータが無いので，Sio からリードする
 		RxBuf = RxBuf .. System.sioRead()
 		
@@ -599,24 +598,22 @@ function ProcessSio()
 		LogPos = RxBuf:find( "\255", 1, true )
 		if( not LogPos ) then return end
 		
-		-- \xFF を見つけた
-		RxBuf1 = sub( RxBuf, 1, LogPos - 1 )
-		RxBuf  = sub( RxBuf, LogPos + 1 )
-		
-		Tacho, RxBuf1 = SerialUnpack( RxBuf1 )
-		Speed, RxBuf1 = SerialUnpack( RxBuf1 )
+		RxBufPos = 1
+		Tacho = SerialUnpack( RxBuf )
+		Speed = SerialUnpack( RxBuf )
 		
 		RefreshFlag			= true
 		return
 	end
 	
 	-- Speed/Tacho は処理済，残りを処理する
+	
 	MileageWAPrev = MileageWA
 	
-	MileageWA, RxBuf1 = SerialUnpack( RxBuf1 )
-	IRSensor,  RxBuf1 = SerialUnpack( RxBuf1 )
-	GSensorX,  RxBuf1 = SerialUnpack( RxBuf1 )
-	GSensorY,  RxBuf1 = SerialUnpack( RxBuf1 )
+	MileageWA = SerialUnpack( RxBuf )
+	IRSensor  = SerialUnpack( RxBuf )
+	GSensorX  = SerialUnpack( RxBuf )
+	GSensorY  = SerialUnpack( RxBuf )
 	
 	if( MileageWAPrev > MileageWA ) then
 		MileageWACnt = MileageWACnt + 1
@@ -645,10 +642,9 @@ function ProcessSio()
 	
 	-- ラップタイム処理 ------------------------------------------------------
 	
-	if( RxBuf1 ~= "" ) then
-		local tmp, LapTime
-		LapTime, RxBuf1 = SerialUnpack( RxBuf1 )
-		tmp             = SerialUnpack( RxBuf1 )
+	if( RxBuf:byte( RxBufPos ) =~ 0xFF ) then
+		local LapTime = SerialUnpack( RxBuf )
+		local tmp     = SerialUnpack( RxBuf )
 		
 		LapTime = LapTime + tmp * 0x10000
 		local LapTimeDiff
@@ -701,7 +697,7 @@ function ProcessSio()
 	if( fpLog ) then
 		-- テキストログ
 		fpLog:write( string.format(
-			"%u\t%.2f\t%.2f\t%.5f\t%.5f\t%u",
+			"%u\t%.2f\t%.2f\t%.4f\t%.4f\t%u",
 			Tacho, Speed / 100, Mileage / PULSE_PAR_1KM * 1000,
 			GSensorY, GSensorX, IRSensor
 		))
@@ -718,12 +714,15 @@ function ProcessSio()
 		end
 		
 		-- ラップタイム
-		fpLog:write( LapTimeStr .. "\r\n" )
+		fpLog:write( LapTimeStr .. "\n" )
 		
 		LogCnt = LogCnt + 1
 	end
 	
 	--DebugRefresh = DebugRefresh + 1
+	
+	RxBuf = RxBuf:sub( LogPos + 1 )
+	RxBufPos = 1
 end
 
 --- VSD モード設定 -----------------------------------------------------------
