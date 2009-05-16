@@ -167,25 +167,17 @@ typedef struct {
 	UCHAR	uTrig		:4;
 } PushSW_t;
 
-typedef struct {
-	union {
-		ULONG	dw;
-		struct	{ UINT	h, l; } w;
-	} Time;					// timer W のカウント
-	
-	union {
-		ULONG	dw;
-		struct	{ UINT	h, l; } w;
-	} PrevTime;				// 前回の timer W のカウント
-	
-	UINT	uPulseCnt;		// パルス入力回数
-	UINT	uVal;			// スピード等の計算値
-} PULSE;
-
 typedef union {
 	ULONG	dw;
 	struct	{ UINT	h, l; } w;
 } UNI_LONG;
+
+typedef struct {
+	UNI_LONG	Time;			// timer W のカウント
+	UNI_LONG	PrevTime;		// 前回の timer W のカウント
+	UINT		uPulseCnt;		// パルス入力回数
+	UINT		uVal;			// スピード等の計算値
+} PULSE;
 
 typedef union {
 	ULONG	lDisp;
@@ -198,8 +190,8 @@ typedef struct {
 } TouchPanel_t;
 
 typedef struct{
-	ULONG	uTacho;
-	ULONG	uSpeed;
+	ULONG	uTacho;		// ★UINT にできる
+	ULONG	uSpeed;		// ★
 	ULONG	uGx, uGy;
 	UINT	uPrevGx;
 	UINT	uCnt;
