@@ -495,6 +495,8 @@ SndNewLap  = Sound.load( "new_lap.wav" )
 
 function LoadFirmware()
 	
+	local pos
+	
 	-- ログファイル リオープン
 	if not Controls.read():r() then
 		OpenLog()
@@ -508,41 +510,41 @@ function LoadFirmware()
 	
 	-- firmware ロード
 	
-	local fpFirm = io.open( FirmWare, "rb" )
-	
-	if( fpFirm ) then
-		System.sioWrite( "z\r" )
-		screen.waitVblankStart( 6 )
-		System.sioWrite( "l\r" )
-		
-		System.sioWrite( string.gsub( fpFirm:read( "*a" ), "\r\n", "\r" ))
-		fpFirm:close()
-	end
-	
-	screen.waitVblankStart( 6 )
-	System.sioWrite( "g\r" )
-	
-	-- バッファクリア
-	local pos
-	System.sioRead()
-	RxBuf = ""
-	
-	-- オープニングメッセージスキップ
-	TimeoutCnt = 1000
 	repeat
-		RxBuf = RxBuf .. System.sioRead()
-		pos = RxBuf:find( "\255", 1, true )
-		TimeoutCnt = TimeoutCnt - 1
-		if( TimeoutCnt == 0 ) then
-			DoMenu( ErrorInit )
-			return false
+		local fpFirm = io.open( FirmWare, "rb" )
+		
+		if( fpFirm ) then
+			System.sioWrite( "z\r" )
+			screen.waitVblankStart( 6 )
+			System.sioWrite( "l\r" )
+			
+			System.sioWrite( string.gsub( fpFirm:read( "*a" ), "\r\n", "\r" ))
+			fpFirm:close()
 		end
+		
+		screen.waitVblankStart( 6 )
+		System.sioWrite( "g\r" )
+		
+		-- バッファクリア
+		System.sioRead()
+		RxBuf = ""
+		
+		-- オープニングメッセージスキップ
+		local TimeoutCnt = 1000
+		repeat
+			RxBuf = RxBuf .. System.sioRead()
+			pos = RxBuf:find( "\255", 1, true )
+			TimeoutCnt = TimeoutCnt - 1
+			if( TimeoutCnt == 0 and not DoMenu( ErrorInit )) then
+				return false
+			end
+		until pos
 	until pos
 	
 	RxBuf = RxBuf:sub( pos + 1 )
 	
 	-- VSD モード設定
-	System.sioWrite( "3Gs1a" )
+	System.sioWrite( "s1a" )
 	
 	return true
 end
@@ -642,7 +644,7 @@ function ProcessSio()
 	
 	-- ラップタイム処理 ------------------------------------------------------
 	
-	if( RxBuf:byte( RxBufPos ) =~ 0xFF ) then
+	if( RxBuf:byte( RxBufPos ) ~= 0xFF ) then
 		local LapTime = SerialUnpack( RxBuf )
 		local tmp     = SerialUnpack( RxBuf )
 		
@@ -933,9 +935,8 @@ MainMenu = {
 }
 
 ErrorInit = {
-	width = 35;
-	"Error: VSD Initialization failed",
-	"Press O to Exit"
+	width = 40;
+	"Error: VSD Initialization failed. Retry?"
 }
 
 ------------------------------------------------------------------------------
