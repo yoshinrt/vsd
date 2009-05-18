@@ -152,12 +152,57 @@ function OpenLog( bAppend )
 	LogCnt = 0
 end
 
+--- コンソール風出力 ---------------------------------------------------------
+
+Console = {
+	Color		= Color.new( 0, 160, 160 ),
+	ColorDbg	= Color.new( 255, 255, 255 ),
+	x = 0,
+	y = 0,
+}
+
+Console.print = function( this, str, Color )
+	screen:print( this.x, this.y, str, Color or this.Color )
+	this.y = this.y + 8
+end
+
+Console.DbgPrint = function( this, str, Color )
+	screen.flip()
+	Console:print( str, Color or this.ColorDbg )
+	screen.flip()
+	if( OS ) then
+		screen.waitVblankStart()
+	end
+end
+
+Console.SetPos = function( this, x, y )
+	this.x, this.y = x, y
+end
+
+Console.Open = function( this, w, h, x, y, Color )
+	x = ( x or ( 480 - ( w + 2 ) * 8 ) / 2 / 8 ) * 8
+	y = ( y or ( 272 - ( h + 2 ) * 8 ) / 2 / 8 ) * 8
+	
+	screen:fillRect(
+		x, y,
+		( w + 2 ) * 8, ( h + 2 ) * 8,
+		Color or ColorLapBG
+	)
+	
+	screen:drawRect(
+		x + 4, y + 4, ( w + 1 ) * 8, ( h + 1 ) * 8,
+		Color or ColorInfo
+	)
+	
+	this:SetPos( x + 8, y + 8 )
+end
+
 ------------------------------------------------------------------------------
 -- Display Driver ------------------------------------------------------------
 ------------------------------------------------------------------------------
 
--- Console:SetPos( 0, 0 )
--- Console:print( "loading font" ); screen.flip()
+Console:SetPos( 0, 0 )
+Console:DbgPrint( "Loading font" );
 
 -- フォント初期化
 FontSpeed = Font.createMonoSpaced()
@@ -177,7 +222,7 @@ ColorLapBad = Color.new( 255, 80, 0 )
 ColorMenuCursor = ColorLapBad
 
 -- 背景ロード
--- Console:print( "loading tacho image" ); screen.flip()
+Console:DbgPrint( "Loading image" );
 
 fpImg = io.open( "vsd_tacho.png", "rb" ); ImgData = fpImg:read( "*a" ); fpImg:close()
 ImageTacho = Image.loadFromMemory( ImgData )
@@ -185,16 +230,14 @@ ImageTacho = Image.loadFromMemory( ImgData )
 ImageSpeed = {}
 
 for i = 1, 5 do
-	-- Console:print( "loading speed image" .. i ); screen.flip()
+	-- Console:DbgPrint( "Loading speed image" .. i );
 	fpImg = io.open( "vsd_speed" .. i .. ".png", "rb" ); ImgData = fpImg:read( "*a" ); fpImg:close()
 	ImageSpeed[ i ] = Image.loadFromMemory( ImgData )
 end
 
--- Console:print( "loading G image" ); screen.flip()
+-- Console:DbgPrint( "Loading G image" );
 fpImg = io.open( "vsd_g.png", "rb" ); ImgData = fpImg:read( "*a" ); fpImg:close()
 ImageG = Image.loadFromMemory( ImgData )
-
--- Console:print( "init completed." ); screen.flip()
 
 -- 画面パラメータ
 TachoCx			= 60
@@ -244,43 +287,6 @@ Image.drawRect = function( this, x, y, w, h, Color )
 end
 
 screen.drawRect = Image.drawRect
-
---- コンソール風出力 ---------------------------------------------------------
-
-Console = {
-	Color = nil,
-	x = 0,
-	y = 0,
-}
-
-Console.print = function( this, str, Color )
-	screen:print( this.x, this.y, str, Color or this.Color )
-	this.y = this.y + 8
-end
-
-Console.SetPos = function( this, x, y )
-	this.x, this.y = x, y
-end
-
-Console.Open = function( this, w, h, x, y, Color )
-	x = ( x or ( 480 - ( w + 2 ) * 8 ) / 2 / 8 ) * 8
-	y = ( y or ( 272 - ( h + 2 ) * 8 ) / 2 / 8 ) * 8
-	
-	screen:fillRect(
-		x, y,
-		( w + 2 ) * 8, ( h + 2 ) * 8,
-		Color or ColorLapBG
-	)
-	
-	screen:drawRect(
-		x + 4, y + 4, ( w + 1 ) * 8, ( h + 1 ) * 8,
-		Color or ColorInfo
-	)
-	
-	this:SetPos( x + 8, y + 8 )
-end
-
-Console.Color = ColorInfo
 
 --- ラップタイムウィンドウ描画 -----------------------------------------------
 
@@ -488,6 +494,7 @@ GSensorCy	= 0
 
 -- サウンドロード
 
+Console:DbgPrint( "Loading sound" );
 SndBestLap = Sound.load( "best_lap.wav" )
 SndNewLap  = Sound.load( "new_lap.wav" )
 
@@ -503,6 +510,8 @@ function LoadFirmware()
 	end
 	
 	-- SIO 初期化
+	Console:DbgPrint( ".Init SIO" )
+	
 	if( not bSIOActive ) then
 		System.sioInit( 38400 )
 		bSIOActive = true
@@ -514,6 +523,8 @@ function LoadFirmware()
 		local fpFirm = io.open( FirmWare, "rb" )
 		
 		if( fpFirm ) then
+			Console:DbgPrint( ".Transfering firmware" )
+			
 			System.sioWrite( "z\r" )
 			screen.waitVblankStart( 6 )
 			System.sioWrite( "l\r" )
@@ -531,15 +542,23 @@ function LoadFirmware()
 		
 		-- オープニングメッセージスキップ
 		local TimeoutCnt = 1000
+		Console:DbgPrint( ".waiting synchoronization code" )
+		
 		repeat
 			RxBuf = RxBuf .. System.sioRead()
 			pos = RxBuf:find( "\255", 1, true )
 			TimeoutCnt = TimeoutCnt - 1
-			if( TimeoutCnt == 0 and not DoMenu( ErrorInit )) then
-				return false
+			if( TimeoutCnt == 0 ) then
+				Console:DbgPrint( ".Timeout. Retry? [O]/[X]" )
+				local pad
+				
+				repeat
+					if( Controls.read():cross()) then return false end
+				until Controls.read():circle()
+				pos = 0	-- 内側ループを抜ける手段
 			end
 		until pos
-	until pos
+	until pos > 0
 	
 	RxBuf = RxBuf:sub( pos + 1 )
 	
@@ -548,6 +567,11 @@ function LoadFirmware()
 	
 	return true
 end
+
+ErrorInit = {
+	width = 40;
+	"Error: VSD Initialization failed. Retry?"
+}
 
 --- FormatLapTime ------------------------------------------------------------
 
@@ -934,11 +958,6 @@ MainMenu = {
 	}
 }
 
-ErrorInit = {
-	width = 40;
-	"Error: VSD Initialization failed. Retry?"
-}
-
 ------------------------------------------------------------------------------
 --- GPS ----------------------------------------------------------------------
 ------------------------------------------------------------------------------
@@ -1009,7 +1028,7 @@ end
 
 -- メイン処理 ----------------------------------------------------------------
 
--- Console:print( "loading firmware" ); screen.flip()
+Console:DbgPrint( "Loading firmware" );
 -- sio 初期化・ファームロード
 if( NoSio ) then
 	-- ログファイル リオープン
@@ -1018,7 +1037,7 @@ if( NoSio ) then
 	bSIOActive = true
 elseif not Controls.read():l() then
 	if( not LoadFirmware()) then
-		return
+		-- return	-- Fail しても通常画面に戻って，config できるようにする
 	end
 end
 
@@ -1026,6 +1045,7 @@ end
 CtrlPrev = Controls.read()
 PrevMin = 99
 
+Console:DbgPrint( "Init GPS" );
 UsbGps.open()
 UsbGps.set_init_loc( 0 )
 
