@@ -114,11 +114,11 @@ void SerialPack( UINT uVal ){
 INLINE void OutputSerial( DispVal_t *val ){
 	UCHAR c = 0xFF;
 	
-	SerialPack( val->uTacho );
-	SerialPack( val->uSpeed );
+	SerialPack( g_Tacho.uVal );
+	SerialPack( g_Speed.uVal );
 	
 	SerialPack( g_uMileage );
-	SerialPack( g_IR.uVal );
+	SerialPack(( TA.TCA << 8 ) | g_IR.uVal & 0xFF );
 	SerialPack( val->uGy );
 	SerialPack( val->uGx );
 	
@@ -136,15 +136,11 @@ INLINE void OutputSerial( DispVal_t *val ){
 
 #undef OutputSerialSmooth
 INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
-	pDispVal->uSpeed	= pDispVal->uSpeed / ( SERIAL_DIVCNT / CALC_DIVCNT );
-	pDispVal->uTacho	= pDispVal->uTacho / ( SERIAL_DIVCNT / CALC_DIVCNT );
 	pDispVal->uGx		= pDispVal->uGx / pDispVal->uCnt;
 	pDispVal->uGy		= pDispVal->uGy / pDispVal->uCnt;
 	
 	OutputSerial( pDispVal );
 	
-	pDispVal->uSpeed	=
-	pDispVal->uTacho	=
 	pDispVal->uGx		=
 	pDispVal->uGy		= 0;
 	pDispVal->uCnt 		= 0;
@@ -179,9 +175,13 @@ INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
 	if( uPulseCnt ){
 		// 30 = 60[min/sec] / 2[pulse/roll]
 		// << 7 は，分母 >> 1 と g_uHz を << 8 する分
-		g_Tacho.uVal =
-			( ULONG )g_uHz * (( 30 << 7 ) * uPulseCnt ) /
-			(( uTime - uPrevTime ) >> 1 );
+		g_Tacho.uVal = (
+			( UINT )(
+				( ULONG )g_uHz * (( 30 << 7 ) * uPulseCnt ) /
+				(( uTime - uPrevTime ) >> 1 )
+			) +
+			g_Tacho.uVal
+		) >> 1;
 		
 		g_Tacho.PrevTime.dw = uTime;
 	}else if(
@@ -214,10 +214,14 @@ INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
 		
 		// 「ギア計算とか.xls」参照
 		// 5 = 13(本来の定数) - 8(g_uHz のシフト分)
-		g_Speed.uVal =
-			((( ULONG )g_uHz * uPulseCnt ) >> 5 ) *
-			( UINT )( 3600.0 * 100.0 / PULSE_PAR_1KM * ( 1 << 11 )) /
-			(( uTime - uPrevTime ) >> 2 );
+		g_Speed.uVal = (
+			( UINT )(
+				((( ULONG )g_uHz * uPulseCnt ) >> 5 ) *
+				( UINT )( 3600.0 * 100.0 / PULSE_PAR_1KM * ( 1 << 11 )) /
+				(( uTime - uPrevTime ) >> 2 )
+			) +
+			g_Speed.uVal
+		) >> 1;
 	}
 	
 	// 1km/h 未満は 0km/h 扱い
@@ -251,15 +255,11 @@ int main( void ){
 #endif
 	_INITSCT();
 	InitMain();
-	
 	SetVector( 19, int_timer_a );	// ★後で消す
-	
 	set_imask_ccr( 0 );			/* CPU permit interrupts */
 	
 	Print( g_szMsgOpening );
-	
 	g_Flags.uAutoMode	= AM_DISP;
-	
 	cTimerA = TA.TCA;
 	
 	for(;;){
@@ -267,7 +267,6 @@ int main( void ){
 		/*** ステート変化待ち ***/
 		
 		while( cTimerA == TA.TCA ){
-			//g_DispVal.uGx += G_SENSOR_X;
 			g_DispVal.uGx += G_SENSOR_Z;	// 前後 G の検出軸変更
 			g_DispVal.uGy += G_SENSOR_Y;
 			++g_DispVal.uCnt;
@@ -278,23 +277,19 @@ int main( void ){
 		
 		if( !( cTimerA & ( CALC_DIVCNT - 1 ))){
 			
-			g_Tacho.Time.dw = GetTimerW32();
-			g_Tacho.uPulseCnt = 3;
-			
+			/* 
+			//デバッグコード
+			g_Tacho.Time.dw = g_Speed.Time.dw = GetTimerW32();
+			g_Tacho.uPulseCnt = (( GetRTC() >> 7 ) & 0x7 ) + 1;
+			g_Speed.uPulseCnt = (( GetRTC() >> 6 ) & 0xF ) + 1;
 			if( IO.PDR5.BYTE & ( 1 << 6 )){
-				g_Tacho.Time.dw = GetTimerW32();
 				g_Tacho.uPulseCnt = 8;
-				
-				g_Speed.Time.dw = GetTimerW32();
-				g_Speed.uPulseCnt = 20;
 			}
+			*/
 			
 			// 32Hz
 			
 			ComputeMeter();
-			
-			g_DispVal.uTacho += g_Tacho.uVal;
-			g_DispVal.uSpeed += g_Speed.uVal;
 			
 			/*** ギア計算 ***/
 			ComputeGear2();

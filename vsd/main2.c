@@ -45,7 +45,7 @@ PULSE	g_IR;		//	= { 0 };
 UINT	g_Padding[1];	/*** この辺はメモリ配置のため順番を変えるときは注意!!! ***/
 
 ULONG		g_lParam;	// serial 数値入力
-UNI_LONG	g_TimerWovf;
+UNI_LONG	g_TimerWovf;	// ★ UINT にする
 
 UINT	g_uRemainedMillage;	// NewLap トリガを起動するまでの残り距離パルス
 
@@ -69,7 +69,7 @@ const char g_szMsgMileage[]		= "MILE";
 const char g_szMsgCalibrate[]	= "CALIbrAtE";
 const char g_szMsgOpening[]		=
 	EOL
-	"VSD system v1.08" EOL
+	"VSD system v1.09" EOL
 	"Copyright(C) by DDS" EOL;
 
 PushSW_t	g_PushSW;

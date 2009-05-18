@@ -190,8 +190,6 @@ typedef struct {
 } TouchPanel_t;
 
 typedef struct{
-	ULONG	uTacho;		// šUINT ‚É‚Å‚«‚é
-	ULONG	uSpeed;		// š
 	ULONG	uGx, uGy;
 	UINT	uPrevGx;
 	UINT	uCnt;
