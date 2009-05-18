@@ -167,6 +167,8 @@ Console.print = function( this, str, Color )
 end
 
 Console.DbgPrint = function( this, str, Color )
+	if( this.y >= 272 ) then this.y = 0 end
+	
 	screen.flip()
 	Console:print( str, Color or this.ColorDbg )
 	screen.flip()
@@ -523,7 +525,7 @@ function LoadFirmware()
 		local fpFirm = io.open( FirmWare, "rb" )
 		
 		if( fpFirm ) then
-			Console:DbgPrint( ".Transfering firmware" )
+			Console:DbgPrint( ".Transferring firmware" )
 			
 			System.sioWrite( "z\r" )
 			screen.waitVblankStart( 6 )
@@ -541,22 +543,22 @@ function LoadFirmware()
 		RxBuf = ""
 		
 		-- オープニングメッセージスキップ
-		local TimeoutCnt = 1000
-		Console:DbgPrint( ".waiting synchoronization code" )
+		local TimeoutCnt = 60
+		Console:DbgPrint( ".waiting sync. code" )
 		
 		repeat
-			RxBuf = RxBuf .. System.sioRead()
+			RxBuf = System.sioRead()
 			pos = RxBuf:find( "\255", 1, true )
 			TimeoutCnt = TimeoutCnt - 1
+			
 			if( TimeoutCnt == 0 ) then
-				Console:DbgPrint( ".Timeout. Retry? [O]/[X]" )
-				local pad
+				Console:DbgPrint( ".Timeout. Retrying... [X] to cancel" )
+				if( Controls.read():cross()) then return false end
 				
-				repeat
-					if( Controls.read():cross()) then return false end
-				until Controls.read():circle()
 				pos = 0	-- 内側ループを抜ける手段
 			end
+			
+			screen.waitVblankStart( 1 )
 		until pos
 	until pos > 0
 	
@@ -567,11 +569,6 @@ function LoadFirmware()
 	
 	return true
 end
-
-ErrorInit = {
-	width = 40;
-	"Error: VSD Initialization failed. Retry?"
-}
 
 --- FormatLapTime ------------------------------------------------------------
 
