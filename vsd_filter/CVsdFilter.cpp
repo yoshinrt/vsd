@@ -805,6 +805,11 @@ static const PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
 	m_VsdLog[ ( UINT )dLogNum     ].p * ( 1 - ( dLogNum - ( UINT )dLogNum )) + \
 	m_VsdLog[ ( UINT )dLogNum + 1 ].p * (       dLogNum - ( UINT )dLogNum ))
 
+// ログ番号からフレームカウントを得る
+#define GetFrameNum( i ) ( \
+	( LogEd == LogSt ) ? 0 : \
+	((( i ) - LogSt ) * ( VideoEd - VideoSt ) / ( double )( LogEd - LogSt ) + VideoSt ) \
+)
 
 BOOL CVsdFilter::DrawVSD( void ){
 //
@@ -865,6 +870,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 						( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + LogSt;
 	int		iLogNum = ( int )dLogNum;
 	
+	double	dLogFreq;	// 自動計測モード時の，実測 Log Freq
+	
 	// フレーム表示
 	if( m_piParamC[ CHECK_FRAME ] ){
 		sprintf( szBuf, "V%6d/%6d", GetFrameCnt(), GetFrameMax() - 1 );
@@ -903,10 +910,18 @@ BOOL CVsdFilter::DrawVSD( void ){
 	if( DispLap && m_iLapNum ){
 		// 時間表示
 		if( m_iLapIdx >= 0 && m_Lap[ m_iLapIdx + 1 ].iTime != 0 ){
-			int iTime = ( int )( IsHandLaptime() ?
-				( GetFrameCnt() - m_Lap[ m_iLapIdx ].iLogNum ) * ( 1000.0 / m_dVideoFPS ) :
-				( dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * ( 1000.0 / LOG_FREQ )
-			);
+			int iTime;
+			if( IsHandLaptime()){
+				// 手動計測モードのときは，フレーム数から計算
+				iTime = ( int )(( GetFrameCnt() - m_Lap[ m_iLapIdx ].iLogNum ) * 1000.0 / m_dVideoFPS );
+			}else{
+				// 自動計測時は，タイム / ログ数 から計算
+				dLogFreq =
+					( double )(( m_Lap[ m_iLapIdx + 1 ].iLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 ) /
+					m_Lap[ m_iLapIdx + 1 ].iTime;
+				
+				iTime = ( int )(( dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 / dLogFreq );
+			}
 			
 			sprintf( szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
 			DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - GetFontW() * 13, 1 );
@@ -951,7 +966,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 					(
 						( dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) -
 						( dBestLogNum - m_iBestLapLogNum )
-					) * ( 1000.0 / LOG_FREQ )
+					) * 1000.0 / dLogFreq
 				);
 				
 				BOOL bSign = iDiffTime <= 0;
