@@ -152,7 +152,7 @@ INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
 #define TACHO_0RPM_TH	(( ULONG )( H8HZ / ( 200 / 60.0 * 2 )))
 
 // 0km/h に切り下げる speed パルス幅 = 1km/h (clk数@16MHz)
-#define SPEED_0KPH_TH	(( ULONG )( H8HZ / ( PULSE_PAR_1KM / 3600.0 )))
+#define SPEED_0KPH_TH	(( ULONG )( H8HZ / ( PULSE_PER_1KM / 3600.0 )))
 
 #undef ComputeMeter
 /*INLINE*/ void ComputeMeter( void ){
@@ -217,7 +217,7 @@ INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
 		g_Speed.uVal = (
 			( UINT )(
 				((( ULONG )g_uHz * uPulseCnt ) >> 5 ) *
-				( UINT )( 3600.0 * 100.0 / PULSE_PAR_1KM * ( 1 << 11 )) /
+				( UINT )( 3600.0 * 100.0 / PULSE_PER_1KM * ( 1 << 11 )) /
 				(( uTime - uPrevTime ) >> 2 )
 			) +
 			g_Speed.uVal

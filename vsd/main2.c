@@ -272,7 +272,7 @@ INLINE ULONG GetRTC( void ){
 		
 		if( g_Flags.uLapMode == MODE_ZERO_FOUR ){
 			// 0-400モードなら，距離を400mに設定
-			g_uRemainedMillage = ( UINT )( PULSE_PAR_1KM * 400 / 1000 + 0.5 );
+			g_uRemainedMillage = ( UINT )( PULSE_PER_1KM * 400 / 1000 + 0.5 );
 			g_Flags.uLapMode = MODE_LAPTIME;
 		}else if( g_Flags.uLapMode == MODE_ZERO_ONE ){
 			// 0-100 モードなら，0-100ゴール待ちモードに移行
@@ -926,7 +926,7 @@ void CheckStartByGSensor( DispVal_t *pDispVal ){
 			
 			if( g_Flags.uLapMode == MODE_ZERO_FOUR ){
 				// 0-400モードなら，距離を400mに設定
-				g_uRemainedMillage = ( UINT )( PULSE_PAR_1KM * 400 / 1000 + 0.5 );
+				g_uRemainedMillage = ( UINT )( PULSE_PER_1KM * 400 / 1000 + 0.5 );
 				g_Flags.uLapMode = MODE_LAPTIME;
 			}else /*if( g_Flags.uLapMode == MODE_ZERO_ONE )*/ {
 				// 0-100 モードなら，0-100ゴール待ちモードに移行

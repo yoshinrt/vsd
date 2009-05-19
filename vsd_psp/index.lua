@@ -24,7 +24,7 @@ GEAR_RATIO3 = 2.37581451065366
 GEAR_RATIO4 = 2.95059529470571
 
 -- たぶん，ホイル一周が30パルス
-PULSE_PAR_1KM	= ( 68774.48913 / 4.597593609 )	-- ELISE(補正後)
+PULSE_PER_1KM	= ( 68774.48913 / 4.597593609 )	-- ELISE(補正後)
 
 ITOA_RADIX_BIT	= 7
 ITOA_DIGIT_NUM	= (( 32 + ITOA_RADIX_BIT - 1 ) / ITOA_RADIX_BIT )
@@ -40,7 +40,7 @@ RevLimit = 6500
 -- config
 FirmWare			= "vsd_rom.mot"	-- ファームウェア
 StartGThrethold		= 500	-- 車がスタートしたとみなすGセンサの数値
-GymkhanaStartMargin	= 0.5 * ( PULSE_PAR_1KM / 1000 )	-- スタートまでの移動距離
+GymkhanaStartMargin	= 0.5 * ( PULSE_PER_1KM / 1000 )	-- スタートまでの移動距離
 SectorCntMax		= 1		-- マグネット数
 
 --dofile( "sio_emulation.lua" )
@@ -127,7 +127,7 @@ function SetupMagnet( Cnt )
 end
 
 function SetupStartDist( Dist )
-	GymkhanaStartMargin = Dist * ( PULSE_PAR_1KM / 1000 )
+	GymkhanaStartMargin = Dist * ( PULSE_PER_1KM / 1000 )
 	SaveConfig()
 end
 
@@ -437,7 +437,7 @@ function DrawMeters()
 	if( bDispInfo ) then
 		Console:Open( 10, 4, 47, 15 )
 	--	Console:print( os.date( "%y/%m/%d" ))
-		Console:print( string.format( "%8.3fkm", Mileage / PULSE_PAR_1KM ))
+		Console:print( string.format( "%8.3fkm", Mileage / PULSE_PER_1KM ))
 		Console:print( string.format( "Sector:%d", SectorCnt ))
 		Console:print( string.format( "GPS:%d", GPS_Valid ))
 	end
@@ -721,7 +721,7 @@ function ProcessSio()
 		-- テキストログ
 		fpLog:write( string.format(
 			"%u\t%.2f\t%.2f\t%.4f\t%.4f\t%u",
-			Tacho, Speed / 100, Mileage / PULSE_PAR_1KM * 1000,
+			Tacho, Speed / 100, Mileage / PULSE_PER_1KM * 1000,
 			GSensorY, GSensorX, IRSensor
 		))
 		

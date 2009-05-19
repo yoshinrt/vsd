@@ -40,7 +40,7 @@
 
 
 // たぶん，ホイル一周が30パルス
-#define PULSE_PAR_1KM	(( double )68774.48913 / 4.597593609 )
+#define PULSE_PER_1KM	(( double )68774.48913 / 4.597593609 )
 
 #define ITOA_RADIX_BIT	7
 #define ITOA_DIGIT_NUM	(( 32 + ITOA_RADIX_BIT - 1 ) / ITOA_RADIX_BIT )
@@ -93,7 +93,7 @@
 #define CALC_DIVCNT		8		// Taco 計算等を行う周期
 #define DISP_DIVCNT		1		// speed 表示を行う周期
 
-#define SPEED_ADJ		(( ULONG )(( double )H8HZ * 3600 * 100 / PULSE_PAR_1KM ))
+#define SPEED_ADJ		(( ULONG )(( double )H8HZ * 3600 * 100 / PULSE_PER_1KM ))
 #define TACO_ADJ		(( ULONG )(( double )H8HZ * 60 / 2 ))
 
 // 直前のNewLapからこれだけ空かないとNewLapとして認めない(3秒)

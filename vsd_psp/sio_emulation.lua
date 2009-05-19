@@ -58,7 +58,7 @@ if( type( NoSio ) == "string" ) then
 			
 			Ret =
 				ItoA( Params[ 1 ], math.floor( Params[ 2 ] * 100 )) ..
-				ItoA( math.floor( math.fmod( Params[ 3 ] / 1000 * PULSE_PAR_1KM, 0x10000 )), 0 ) ..
+				ItoA( math.floor( math.fmod( Params[ 3 ] / 1000 * PULSE_PER_1KM, 0x10000 )), 0 ) ..
 				ItoA( Params[ 5 ], Params[ 4 ] )
 			
 			-- ラップタイムあり?
