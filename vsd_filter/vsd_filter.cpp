@@ -21,9 +21,9 @@
 /*** macros *****************************************************************/
 
 #ifdef CIRCUIT_TOMO
-	#define	FILE_EXT		"Pulse-Time Data (*.ptd)\0*.ptd\0Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
+	#define	FILE_EXT		"log/config file\0*.ptd; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 #else
-	#define	FILE_EXT		"LogFile (*.log)\0*.log\0Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
+	#define	FILE_EXT		"log/config file\0*.log; *.gz; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 #endif
 
 #define	FILE_CFG_EXT		"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
@@ -334,7 +334,10 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		if( filter->exfunc->dlg_get_load_name( szBuf, FILE_EXT, NULL )){
 			
 			// config ロード
-			g_Vsd->ConfigLoad( ChangeExt( szBuf2, ( char *)szBuf, CONFIG_EXT ));
+			// .log.gz かもしれないので，拡張子を削除してみる
+			ChangeExt( szBuf2, ( char *)szBuf, NULL );
+			
+			g_Vsd->ConfigLoad( ChangeExt( szBuf2, ( char *)szBuf2, CONFIG_EXT ));
 			if( !IsExt(( char *)szBuf, CONFIG_EXT )){
 				
 				// log リード

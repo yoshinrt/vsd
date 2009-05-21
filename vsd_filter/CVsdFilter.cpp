@@ -14,6 +14,9 @@
 #include <float.h>
 #include <ctype.h>
 
+#include "zlib.h"
+#include "zconf.h"
+
 #include "dds.h"
 #include "../vsd/main.h"
 #include "dds_lib/dds_lib.h"
@@ -460,7 +463,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 /*** ログリード *************************************************************/
 
 #ifdef CIRCUIT_TOMO
-UINT CVsdFilter::ReadPTD( FILE *fp, UINT uOffs ){
+UINT CVsdFilter::ReadPTD( gzFile *fp, UINT uOffs, TCHAR szBuf ){
 	
 	UINT	uCnt		= 0;
 	UINT	uPulseCnt	= 0;
@@ -468,11 +471,13 @@ UINT CVsdFilter::ReadPTD( FILE *fp, UINT uOffs ){
 	UINT	uPrevTime	= 0;
 	UINT	u;
 	
-	fscanf( fp, "%u", &uCnt );
+	gzgets( fp, szBuf, BUF_SIZE );
+	uCnt = atoi( szBuf );
 	
 	while( uCnt ){
 		do{
-			fscanf( fp, "%u", &u );
+			gzgets( fp, szBuf, BUF_SIZE );
+			u = atoi( szBuf );
 			
 			--uCnt;
 			++uPulseCnt;
@@ -492,13 +497,13 @@ UINT CVsdFilter::ReadPTD( FILE *fp, UINT uOffs ){
 
 BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	TCHAR	szBuf[ BUF_SIZE ];
-	FILE	*fp;
+	gzFile	*fp;
 	BOOL	bCalibrating = FALSE;
 	
 	float		NaN = 0;
 	NaN /= *( volatile float *)&NaN;
 	
-	if(( fp = fopen(( char *)szFileName, "r" )) == NULL ) return FALSE;
+	if(( fp = gzopen(( char *)szFileName, "r" )) == NULL ) return FALSE;
 	
 #ifndef AVS_PLUGIN
 	if( m_szLogFile ) delete [] m_szLogFile;
@@ -512,8 +517,8 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 		m_VsdLog[ i ].fSpeed = m_VsdLog[ i ].fTacho = 0;
 	}
 	
-	m_iVsdLogNum	= ReadPTD( fp, offsetof( VSD_LOG_t, fTacho ));
-	i				= ReadPTD( fp, offsetof( VSD_LOG_t, fSpeed ));
+	m_iVsdLogNum	= ReadPTD( fp, offsetof( VSD_LOG_t, fTacho ), szBuf );
+	i				= ReadPTD( fp, offsetof( VSD_LOG_t, fSpeed ), szBuf );
 	
 	if( i > m_iVsdLogNum ) m_iVsdLogNum = i;
 	
@@ -549,7 +554,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	
 	TCHAR	*p;
 	
-	while( fgets( szBuf, BUF_SIZE, fp ) != NULL ){
+	while( gzgets( szBuf, BUF_SIZE, fp ) != NULL ){
 		if(( p = strstr( szBuf, "LAP" )) != NULL ){ // ラップタイム記録を見つけた
 			uCnt = sscanf( p, "LAP%d%d:%d.%d", &uLap, &uMin, &uSec, &uMSec );
 			
@@ -697,13 +702,6 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 		
 		// Map 回転
 		RotateMap();
-		
-		/*
-		FILE *fp = fopen( "c:\\dds\\hoge.log", "w" );
-		for( i = 0; i < m_iVsdLogNum; ++i )
-			fprintf( fp, "%g\t%g\n", m_VsdLog[ i ].fX, m_VsdLog[ i ].fY );
-		fclose( fp );
-		*/
 	}
 	
 	delete [] GPSLog;
@@ -711,7 +709,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	
 	/********************************************************************/
 	
-	fclose( fp );
+	gzclose( fp );
 	
 	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
 	m_Lap[ m_iLapNum ].iTime	= 0;			// 番犬
