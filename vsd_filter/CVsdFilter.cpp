@@ -14,8 +14,8 @@
 #include <float.h>
 #include <ctype.h>
 
-#include "zlib.h"
-#include "zconf.h"
+#include "zlib/zlib.h"
+#include "zlib/zconf.h"
 
 #include "dds.h"
 #include "../vsd/main.h"
@@ -463,7 +463,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 /*** ログリード *************************************************************/
 
 #ifdef CIRCUIT_TOMO
-UINT CVsdFilter::ReadPTD( gzFile *fp, UINT uOffs, TCHAR szBuf ){
+UINT CVsdFilter::ReadPTD( gzFile fp, UINT uOffs, TCHAR szBuf ){
 	
 	UINT	uCnt		= 0;
 	UINT	uPulseCnt	= 0;
@@ -497,13 +497,13 @@ UINT CVsdFilter::ReadPTD( gzFile *fp, UINT uOffs, TCHAR szBuf ){
 
 BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	TCHAR	szBuf[ BUF_SIZE ];
-	gzFile	*fp;
+	gzFile	fp;
 	BOOL	bCalibrating = FALSE;
 	
 	float		NaN = 0;
 	NaN /= *( volatile float *)&NaN;
 	
-	if(( fp = gzopen(( char *)szFileName, "r" )) == NULL ) return FALSE;
+	if(( fp = gzopen(( char *)szFileName, "rb" )) == NULL ) return FALSE;
 	
 #ifndef AVS_PLUGIN
 	if( m_szLogFile ) delete [] m_szLogFile;
@@ -554,7 +554,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	
 	TCHAR	*p;
 	
-	while( gzgets( szBuf, BUF_SIZE, fp ) != NULL ){
+	while( gzgets( fp, szBuf, BUF_SIZE ) != Z_NULL ){
 		if(( p = strstr( szBuf, "LAP" )) != NULL ){ // ラップタイム記録を見つけた
 			uCnt = sscanf( p, "LAP%d%d:%d.%d", &uLap, &uMin, &uSec, &uMSec );
 			

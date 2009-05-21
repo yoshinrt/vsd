@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="vsd_filter"
 	ProjectGUID="{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}"
+	RootNamespace="vsd_filter"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -73,6 +74,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="zlib\zlib_MD.lib"
 				OutputFile="C:\Program Files\AVIUTL\vsd_filter.auf"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -168,6 +170,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="zlib\zlib_MTd.lib"
 				OutputFile="C:\Program Files\AVIUTL\vsd_filter.auf"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -262,6 +265,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="zlib\zlib_MT.lib"
 				OutputFile="C:\Program Files\AVIUTL\vsd_filter.auf"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -357,6 +361,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="zlib\zlib_MTd.lib"
 				OutputFile="C:\Program Files\AVIUTL\vsd_filter.auf"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -443,6 +448,14 @@
 			</File>
 			<File
 				RelativePath=".\font_9p.h"
+				>
+			</File>
+			<File
+				RelativePath=".\zlib\zconf.h"
+				>
+			</File>
+			<File
+				RelativePath=".\zlib\zlib.h"
 				>
 			</File>
 		</Filter>
