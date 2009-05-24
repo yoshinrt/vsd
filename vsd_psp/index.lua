@@ -543,7 +543,7 @@ function LoadFirmware()
 		RxBuf = ""
 		
 		-- オープニングメッセージスキップ
-		local TimeoutCnt = 60
+		local TimeoutCnt = 120
 		Console:DbgPrint( ".waiting sync. code" )
 		
 		repeat
@@ -737,7 +737,7 @@ function ProcessSio()
 		end
 		
 		-- ラップタイム
-		fpLog:write( LapTimeStr .. "\n" )
+		fpLog:write( LapTimeStr .. "\r\n" )
 		
 		LogCnt = LogCnt + 1
 	end
