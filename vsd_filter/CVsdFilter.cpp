@@ -646,6 +646,13 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 				bCalibrating = FALSE;
 			}
 			
+			// ÉÅÅ[É^Å[ï‚ê≥
+			m_VsdLog[ m_iVsdLogNum ].fTacho = ( float )(
+				m_VsdLog[ m_iVsdLogNum ].fTacho * m_piParamS[ METER_ADJUST ] / 1000.0
+			);
+			m_VsdLog[ m_iVsdLogNum ].fSpeed = ( float )(
+				m_VsdLog[ m_iVsdLogNum ].fSpeed * m_piParamS[ METER_ADJUST ] / 1000.0
+			);
 			++m_iVsdLogNum;
 		}
 	}
