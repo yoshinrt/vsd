@@ -238,6 +238,30 @@ INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
 	}
 }
 
+/******/
+
+#undef DispLED_Carib
+INLINE void DispLED_Carib( DispVal_t *pDispVal ){
+	if( g_uVideoCaribCnt ){
+		/*** video キャリブレーション表示 すべてを override ***/
+		--g_uVideoCaribCnt;
+		
+		if( g_uVideoCaribCnt <= 64 ){
+			g_Flags.bBlinkMain	= 0;
+			g_Flags.bBlinkSub	= 0;
+			
+			g_cLEDBar = 0x40;
+			PrintLEDStr(( UCHAR *)"CARb" );
+			
+			g_Tacho.uVal = 0;
+			g_Speed.uVal = 30000;
+		}
+	}else{
+		/*** LED 表示 ***/
+		DispLED( g_Flags.uDispMode );
+	}
+}
+
 /*** main *******************************************************************/
 
 #ifdef MONITOR_ROM
