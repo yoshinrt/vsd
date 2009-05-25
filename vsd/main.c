@@ -299,10 +299,9 @@ int main( void ){
 		
 		++cTimerA;
 		
-		if( !( cTimerA & ( CALC_DIVCNT - 1 ))){
-			
+		if( !( cTimerA & ( CALC_DIVCNT - 1 ))){	// 32Hz
 			/* 
-			//デバッグコード
+			//デバッグ用コード
 			g_Tacho.Time.dw = g_Speed.Time.dw = GetTimerW32();
 			g_Tacho.uPulseCnt = (( GetRTC() >> 7 ) & 0x7 ) + 1;
 			g_Speed.uPulseCnt = (( GetRTC() >> 6 ) & 0xF ) + 1;
@@ -311,18 +310,11 @@ int main( void ){
 			}
 			*/
 			
-			// 32Hz
-			
-			ComputeMeter();
-			
-			/*** ギア計算 ***/
-			ComputeGear2();
-			
-			/*** LED 表示 ***/
-			DispLED_Carib( &g_DispVal, cTimerA );
+			ComputeMeter();							// speed, tacho 計算
+			ComputeGear2();							// ギア計算
+			DispLED_Carib( &g_DispVal, cTimerA );	// LED 表示データ生成
 			
 			/*** Gセンサーによるスタート検出 ***/
-			/*** 未検証，うまくいかなかったら削る ***/
 			CheckStartByGSensor( &g_DispVal );
 			
 			/*** シリアル出力処理 ***/
