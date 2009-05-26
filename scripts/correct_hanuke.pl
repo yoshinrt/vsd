@@ -1,44 +1,41 @@
 #!/usr/bin/perl -w
 
-# ªı»¥§±•«°º•ø§Ú ›¥…§π§Î
+# ªı»¥§±•«°º•ø§Ú ‰¥∞§π§Î
 
-@Line = ();
-$PrevMileage = 0;
-
+# read
 while( <> ){
-	push( @Line, $_ );
-	
-	/^\S+\s+\S+\s+(\S+)\s+/;
-	push( @MileageDiff, $1 - $PrevMileage );
-	$PrevMileage = $1;
+	s/[\x0D\x0A]//g;
+	push( @Log, [ split( /\t/, $_ ) ] );
 }
 
-print $Line[ 0 ];
+PrintLog( 0 );
 
-for( $i = 1; $i < $#Line; ++$i ){
-	$tmp = 0;
+for( $i = 1; $i < $#Log; ++$i ){
 	if(
-		$MileageDiff[ $i ] > 0 &&
-		( $MileageDiff[ $i - 1 ] + $MileageDiff[ $i + 1 ] ) > 0
+		MileDiff( $i ) > 0 &&
+		( MileDiff( $i - 1 ) + MileDiff( $i + 1 )) > 0
 	){
-		$tmp = $MileageDiff[ $i ] / ( $MileageDiff[ $i - 1 ] + $MileageDiff[ $i + 1 ] );
-		if( 0.8 <= $tmp ){
-			@a = split( /\t/, $Line[ $i - 1 ] );
-			@b = split( /\t/, $Line[ $i ] );
-			
+		if( 0.8 <= MileDiff( $i ) / ( MileDiff( $i - 1 ) + MileDiff( $i + 1 ))){
 			printf( "%d\t%.2f\t%.2f\t%.3f\t%.3f\r\n",
-				( $a[ 0 ] + $b[ 0 ] ) / 2,
-				( $a[ 1 ] + $b[ 1 ] ) / 2,
-				( $a[ 2 ] + $b[ 2 ] ) / 2,
-				( $a[ 3 ] + $b[ 3 ] ) / 2,
-				( $a[ 4 ] + $b[ 4 ] ) / 2
+				( $Log[ $i - 1 ][ 0 ] + $Log[ $i ][ 0 ] ) / 2,
+				( $Log[ $i - 1 ][ 1 ] + $Log[ $i ][ 1 ] ) / 2,
+				( $Log[ $i - 1 ][ 2 ] + $Log[ $i ][ 2 ] ) / 2,
+				( $Log[ $i - 1 ][ 3 ] + $Log[ $i ][ 3 ] ) / 2,
+				( $Log[ $i - 1 ][ 4 ] + $Log[ $i ][ 4 ] ) / 2
 			);
 		}
 	}
-	$_ = $Line[ $i ];
-#	s/[\x0D\x0A]//g;
-#	print "$_\t$MileageDiff[$i]\t$tmp\r\n";
-	print $Line[ $i ];
+	PrintLog( $i );
 }
 
-print $Line[ $i ];
+PrintLog( $i );
+
+sub MileDiff {
+	local( $_ ) = @_;
+	return $Log[ $_ ][ 2 ] - $Log[ $_ - 1 ][ 2 ];
+}
+
+sub PrintLog {
+	local( $_ ) = @_;
+	print join( "\t", @{ $Log[ $_ ] } ) . "\r\n";
+}
