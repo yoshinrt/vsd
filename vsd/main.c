@@ -225,7 +225,7 @@ INLINE void OutputSerialSmooth( DispVal_t *pDispVal ){
 	}
 	
 	// 1km/h Ì¤Ëþ¤Ï 0km/h °·¤¤
-	if( g_Speed.uVal < 100 ){
+	if( g_Speed.uVal < 100 && uPulseCnt == 0 ){
 		g_Speed.uVal = 0;
 		g_Speed.PrevTime.dw = uTime - SPEED_0KPH_TH;
 	}
