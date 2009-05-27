@@ -1,0 +1,111 @@
+Optimizing Linkage Editor (V.9.00.02.000)         19-May-2009 21:23:26
+
+*** Options ***
+
+-subcommand=G:\DDS\vsd\vsd\vsd\release\vsd.hlk
+-noprelink
+-nodebug
+-nomessage
+-list="G:\DDS\vsd\vsd\vsd\release\vsd.map"
+-show=symbol
+-optimize=safe
+-start=P,C,D,B/0F780,S/0FEAE
+-nologo
+-input="G:\DDS\vsd\vsd\vsd\release\main.obj"
+-input="G:\DDS\vsd\vsd\vsd\release\rom_entry.obj"
+-library="G:\DDS\vsd\vsd\vsd\release\vsd.lib"
+-output="G:\DDS\vsd\vsd\vsd\release\vsd.abs"
+-end
+
+*** Error information ***
+
+** L1100 (W) Cannot find "C" specified in option "start"
+** L1100 (W) Cannot find "D" specified in option "start"
+
+*** Mapping List ***
+
+SECTION                            START      END         SIZE   ALIGN
+
+$VECT0
+                                  00000000  00000001         2   2
+P
+                                  0000f780  0000fb47       3c8   2
+B
+                                  0000fb48  0000fb5b        14   2
+S
+                                  0000feae  0000feae         0   2
+
+*** Symbol List ***
+
+SECTION=
+FILE=                               START        END    SIZE
+  SYMBOL                            ADDR        SIZE    INFO      COUNTS  OPT
+
+SECTION=$VECT0
+FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
+                                  00000000  00000001         2
+
+SECTION=P
+FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
+                                  0000f780  0000faf1       372
+  _GetTimerW32
+                                  0000f780        1c   func ,g         * 
+  _int_timer_a
+                                  0000f79c        42   func ,g         * 
+  _SerialPack
+                                  0000f7de        4e   func ,g         * 
+  _ComputeMeter
+                                  0000f82c       140   func ,g         * 
+  _main
+                                  0000f96c       186   entry,g         * 
+FILE=mull3
+                                  0000faf2  0000fb11        20
+  $MULL$3
+                                  0000faf2         0   none ,g         * 
+FILE=spregsv3
+                                  0000fb12  0000fb31        20
+  $sp_regsv$3
+                                  0000fb12         0   none ,g         * 
+FILE=sprgld23
+                                  0000fb32  0000fb47        16
+  $spregld2$3
+                                  0000fb32         0   none ,g         * 
+
+SECTION=B
+FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
+                                  0000fb48  0000fb5b        14
+  _g_uPrevTW
+                                  0000fb48         2   data ,g         * 
+  _g_uHz
+                                  0000fb4a         2   data ,g         * 
+  _g_uAutoModeTimer
+                                  0000fb4c         2   data ,g         * 
+  _g_DispVal
+                                  0000fb4e         c   data ,g         * 
+  _g_TP
+                                  0000fb5a         2   data ,g         * 
+
+Absolute value symbols
+FILE=G:\DDS\vsd\vsd\vsd\release\rom_entry.obj
+  $BRR
+                                  0000000c         0   none ,g         * 
+  $STACK
+                                  0000feb2         0   none ,g         * 
+  $DIVUL$3
+                                  0000309e         0   none ,g         * 
+
+*** Delete Symbols ***
+
+SYMBOL                                SIZE    INFO
+
+*** Variable Accessible with Abs8 ***
+
+SYMBOL                                SIZE    COUNTS  OPTIMIZE
+
+*** Variable Accessible with Abs16 ***
+
+SYMBOL                                SIZE    COUNTS  OPTIMIZE
+
+*** Function Call ***
+
+SYMBOL                              COUNTS  OPTIMIZE
