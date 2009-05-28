@@ -27,12 +27,46 @@
 SYSTEM_HDL:	STC.W	CCR,@-ER7		; Save User CCR
 		LDC.B	#H'C0,CCR		; Disable Interrupt
 		PUSH.W	R0			; Save User R0
-		MOV.W	@(4,ER7),R0		; Return Address --> R0
+		PUSH.W	R0			; Save User R0
+		PUSH.W	R1			; Save User R1
+		MOV.W	@(8,ER7),R0		; Return Address --> R0
 		SUB.W	#INT001,R0		; Vector Offset --> R0
 		SHLR.W	R0			; Adjust Vector Offset
-		ADD.W	#LARGE_AREA,R0		; Real Vector Address --> R0
-		MOV.W	@ER0,R0			; User PC --> R0
-		MOV.W	R0,@(4,ER7)		; Recovery User PC
+		MOV.B	R0L,@ANA_BUF+26		; Save Vector Offset
+		MOV.W	@VECTOR_TBL,R1		; Vector Address --> R1
+		ADD.W	R1,R0			; Real Vector Address --> R0
+		MOV.W	@ER0,R1			; User PC --> R1
+		BEQ	UNDEF_HDL:16		; Goto Undefine Handler
+		MOV.B	@RET_TBL,R0L		; PreCommand is Break or Step ?
+		BNE	$+14			;
+		MOV.W	R1,@(8,ER7)		; Recovery User PC
+		POP.W	R1			; Recovery User R1
 		POP.W	R0			; Recovery User R0
+		ADDS	#2,ER7			; Increment Stack Pointer
 		RTE				; Goto User Interrupt Module
+		INC.W	#2,R1			; Increment Trace Address
+		MOV.W	@(12,ER7),R0		; Instruction Address --> R0
+		CMP.W	#INT001,R0		; Instruction is Trace Handler ?
+		BEQ	$+30			;
+		MOV.W	R1,@(8,ER7)		; Recovery User PC
+		MOV.W	@(6,ER7),R0		; User CCR --> R0
+		MOV.W	R0,@(2,ER7)		; Recovery User CCR
+		MOV.W	@(4,ER7),R0		; Recovery User R0
+		MOV.W	#INT01,R1		; Trace Handler --> R1
+		MOV.W	R1,@(4,ER7)		; Recovery Trace Handler
+		POP.W	R1			; Recovery User R1
+		RTE				; Goto Trace Handler
+		MOV.W	@(10,ER7),R0		; User CCR --> R0H
+		MOV.W	R0,@(12,ER7)		; Recovery User CCR
+		MOV.W	R1,@(10,R7)		; Recovery User PC
+		MOV.W	@(14,ER7),R0		; Interrupt Address --> R0
+		DEC.W	#2,R0			; Decrement Interrupt Address
+		MOV.W	R0,@(14,ER7)		; Set Interrupt Address
+		MOV.W	@(6,ER7),R0		; User CCR --> R0
+		MOV.W	R0,@(4,ER7)		; Recovery User CCR
+		MOV.W	#INT01,R0		; Trace Handler --> R0
+		MOV.W	R0,@(6,R7)		; Recovery Trace Hanlder
+		POP.W	R1			; Recovery User R1
+		POP.W	R0			; Recovery User R0
+		RTE				; Goto Trace Handler
 		.END
