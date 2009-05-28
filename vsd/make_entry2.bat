@@ -1,3 +1,11 @@
+@echo off
+set perlscr=%0 %*
+set perlscr=%perlscr:\=\\\\%
+C:\cygwin\bin\bash --login -i -c 'cd "%CD%";perl -x %perlscr%'
+goto :EOF
+
+#.tab=4
+##############################################################################
 #!/usr/bin/perl -w
 
 # $Id$
@@ -6,6 +14,8 @@ use strict 'vars';
 use strict 'refs';
 
 $_ = ();
+
+@ARGV = ( '300thew3/monitor/Release/MONITOR.MAP', 'main2.c', 'sci.c' );
 
 # SYM list parser
 open( fpIn,  "< $ARGV[ 0 ]" );
@@ -48,7 +58,7 @@ s/\n/ /g;
 s/\s*[;#]\s*/\n/g;
 s/\b__inline\s+//g;
 s/\bINLINE\s+//g;
-# ¢­ROMENTRY ¤Ë¤¢¤ë´Ø¿ô¤Çºï¤ê¤¿¤¤¤ä¤Ä
+# «ROMENTRY ‚É‚ ‚éŠÖ”‚Åí‚è‚½‚¢‚â‚Â
 s/^.*\b(?:main)\b.*$//gm;
 s/\n+/\n/g;
 s/^\s+//g;
