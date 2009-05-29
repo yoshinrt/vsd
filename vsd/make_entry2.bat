@@ -58,7 +58,8 @@ s/\n/ /g;
 s/\s*[;#]\s*/\n/g;
 s/\b__inline\s+//g;
 s/\bINLINE\s+//g;
-# «ROMENTRY ‚É‚ ‚éŠÖ”‚Åí‚è‚½‚¢‚â‚Â
+
+# functions to be deleted
 s/^.*\b(?:main)\b.*$//gm;
 s/\n+/\n/g;
 s/^\s+//g;

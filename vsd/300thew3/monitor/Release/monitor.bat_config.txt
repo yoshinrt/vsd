@@ -1,0 +1,21 @@
+ H8/300H Series Normal Mode Monitor Configuration Batch
+ Copyright (C) 2003 Renesas Technology Corp.
+Execute Monitor Customize ? {y/n} : y
+Link with Assemble    Command Module ? {y/n} : n
+Link with Breakpoint  Command Module ? {y/n} : n
+Link with Dump        Command Module ? {y/n} : n
+Link with DisAssemble Command Module ? {y/n} : n
+Link with Fill        Command Module ? {y/n} : n
+Link with Go          Command Module ? {y/n} : y
+Link with H8 status   Command Module ? {y/n} : n
+Link with Load        Command Module ? {y/n} : y
+Link with Memory      Command Module ? {y/n} : n
+Link with Register    Command Module ? {y/n} : n
+Link with Step        Command Module ? {y/n} : n
+Link with .<register> Command Module ? {y/n} : n
+Link with help        Command Module ? {y/n} : n
+Link with return      Command Module ? {y/n} : n
+Link with <command>.  Command Module ? {y/n} : n
+Link with interrupt         Function ? {y/n} : y
+Link with abort             Function ? {y/n} : y
+Configuration Execute OK ? {y/n} : y
