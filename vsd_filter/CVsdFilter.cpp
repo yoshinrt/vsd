@@ -611,25 +611,36 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 				dGx = 0;
 				dGy = 0;
 				//dGy = ( m_VsdLog[ m_iVsdLogNum ].fSpeed - m_VsdLog[ m_iVsdLogNum - 1 ].fSpeed ) * ( 1000.0 / 3600 / 9.8 * LOG_FREQ );
-			}else if( dGx >= 4 ){	// 4 以下なら，すでに G が計算済み
-				dGx = -dGx;
-				
-				if( m_iVsdLogNum < G_CX_CNT ){
-					// G センター検出
-					dGcx += dGx;
-					dGcy += dGy;
-					dGx = dGy = 0;
-					
-					if( m_iVsdLogNum == G_CX_CNT - 1 ){
-						dGcx /= G_CX_CNT;
-						dGcy /= G_CX_CNT;
-					}
-				}else{
+			}else{
+				if( dGx >= 4 ){	
 					// 単位を G に変換
-					dGx = ( dGx - dGcx ) / ACC_1G_Y;
-					dGy = ( dGy - dGcy ) / ACC_1G_Z;
+					dGx = -dGx / ACC_1G_Y;
+					dGy =  dGy / ACC_1G_Z;
+				}
+				
+				if( m_iVsdLogNum == 0 ){
+					// G センターの初期値
+					dGcx = dGx;
+					dGcy = dGy;
+				}
+				
+				// G センターだし
+				dGx -= dGcx;
+				dGy -= dGcy;
+				
+				// 静止していると思しきときは，G センターを補正する
+				// 走行距離 == 0 && ±0.02G
+				if(
+					m_iVsdLogNum &&
+					m_VsdLog[ m_iVsdLogNum - 1 ].fMileage == m_VsdLog[ m_iVsdLogNum ].fMileage &&
+					( m_VsdLog[ m_iVsdLogNum - 1 ].fGy - dGy ) >= -0.02 &&
+					( m_VsdLog[ m_iVsdLogNum - 1 ].fGy - dGy ) <=  0.02
+				){
+					dGcx += dGx / 160;
+					dGcy += dGy / 160;
 				}
 			}
+			
 			m_VsdLog[ m_iVsdLogNum ].fGx = ( float )dGx;
 			m_VsdLog[ m_iVsdLogNum ].fGy = ( float )dGy;
 			
