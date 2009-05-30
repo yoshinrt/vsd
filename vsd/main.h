@@ -40,7 +40,8 @@
 
 
 // たぶん，ホイル一周が30パルス
-#define PULSE_PER_1KM	(( double )68774.48913 / 4.597593609 )
+//#define PULSE_PER_1KM	(( double )14958.80127 )	// ノーマル
+#define PULSE_PER_1KM	(( double )15473.76689 )	// CE28N
 
 #define ITOA_RADIX_BIT	7
 #define ITOA_DIGIT_NUM	(( 32 + ITOA_RADIX_BIT - 1 ) / ITOA_RADIX_BIT )

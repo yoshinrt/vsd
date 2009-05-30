@@ -1,4 +1,4 @@
-Optimizing Linkage Editor (V.9.00.02.000)         26-May-2008 11:26:12
+Optimizing Linkage Editor (V.9.00.02.000)         30-May-2009 21:59:26
 
 *** Options ***
 
@@ -28,11 +28,11 @@ SECTION                            START      END         SIZE   ALIGN
 VECTOR
                                   00000000  0000003f        40   2
 ROM
-                                  00000100  00003419      331a   2
+                                  00000100  000035a9      34aa   2
 C
-                                  0000341a  00003580       167   2
+                                  000035aa  00003708       15f   2
 D
-                                  00003582  00003589         8   2
+                                  0000370a  00003711         8   2
 S
                                   0000feae  0000feae         0   2
 BPAD
@@ -40,9 +40,9 @@ BPAD
 RAM
                                   0000fec0  0000ff4b        8c   2
 B
-                                  0000feae  0000ff41        94   2
+                                  0000feae  0000ff55        a8   2
 R
-                                  0000ff42  0000ff49         8   2
+                                  0000ff56  0000ff5d         8   2
 USER
                                   0000ff4c  0000ff4c         0   2
 SCI
@@ -98,519 +98,523 @@ FILE=sci.obj
   _sci_int_handler
                                   000003ac        a6   func ,g         * 
 FILE=main.obj
-                                  00000452  0000296d      251c
+                                  00000452  00002afd      26ac
   _PrintLED4
                                   00000452        56   func ,g         * 
   _PrintLED
                                   000004a8        4a   func ,g         * 
+  _GetTimerW32
+                                  000004f2        1c   func ,g         * 
   _int_timer_a
-                                  000004f2       10a   func ,g         * 
+                                  0000050e        5a   func ,g         * 
   _GetRTC
-                                  000005fc        2e   func ,g         * 
+                                  00000568        2e   func ,g         * 
   _int_timer_w
-                                  0000062a        1c   func ,g         * 
+                                  00000596        1c   func ,g         * 
   _int_irq0
-                                  00000646        6e   func ,g         * 
+                                  000005b2        6e   func ,g         * 
   _int_wkp
-                                  000006b4        7e   func ,g         * 
+                                  00000620        7e   func ,g         * 
   _int_irq1
-                                  00000732        da   func ,g         * 
+                                  0000069e        d0   func ,g         * 
   _int_irq2
-                                  0000080c        38   func ,g         * 
+                                  0000076e        3c   func ,g         * 
   _int_irq3
-                                  00000844        c2   func ,g         * 
+                                  000007aa        b8   func ,g         * 
   _INT_SCI3
-                                  00000906        18   func ,g         * 
+                                  00000862        18   func ,g         * 
   _GoMonitor
-                                  0000091e        12   func ,g         * 
+                                  0000087a        12   func ,g         * 
   _SetBeep
-                                  00000930        52   func ,g         * 
+                                  0000088c        52   func ,g         * 
   _ComputeMeter
-                                  00000982       1ec   func ,g         * 
+                                  000008de       1dc   func ,g         * 
   _ComputeGear
-                                  00000b6e       16e   func ,g         * 
+                                  00000aba       16e   func ,g         * 
   _ComputeGear2
-                                  00000cdc        22   func ,g         * 
+                                  00000c28        22   func ,g         * 
   _DoAnimation
-                                  00000cfe        72   func ,g         * 
+                                  00000c4a        72   func ,g         * 
   _DispLEDMsg
-                                  00000d70        90   func ,g         * 
+                                  00000cbc        90   func ,g         * 
   _DispLEDMsgPC
-                                  00000e00        90   func ,g         * 
+                                  00000d4c        90   func ,g         * 
   _DispLEDAnimePC
-                                  00000e90        6c   func ,g         * 
+                                  00000ddc        6c   func ,g         * 
   _DispMsgStart
-                                  00000efc        22   func ,g         * 
+                                  00000e48        22   func ,g         * 
   _DispAnimeStart
-                                  00000f1e        20   func ,g         * 
+                                  00000e6a        20   func ,g         * 
   _PrintLEDStr
-                                  00000f3e        4e   func ,g         * 
+                                  00000e8a        4e   func ,g         * 
   _DispLED
-                                  00000f8c       260   func ,g         * 
+                                  00000ed8       260   func ,g         * 
   _DispLED_Carib
-                                  000011ec       2fc   func ,g         * 
+                                  00001138       2e8   func ,g         * 
   _LED_Driver
-                                  000014e8        f2   func ,g         * 
+                                  00001420        e0   func ,g         * 
   _Print
-                                  000015da        22   func ,g         * 
+                                  00001500        22   func ,g         * 
   _Print_ud
-                                  000015fc        68   func ,g         * 
+                                  00001522        68   func ,g         * 
   _Print_ItoA
-                                  00001664        60   func ,g         * 
+                                  0000158a        60   func ,g         * 
+  _SerialPack
+                                  000015ea        54   func ,g         * 
   _ItoA128
-                                  000016c4        50   func ,g         * 
+                                  0000163e        50   func ,g         * 
   _OutputSerial
-                                  00001714       132   func ,g         * 
+                                  0000168e       28c   func ,g         * 
   _OutputSerialSmooth
-                                  00001846       18e   func ,g         * 
+                                  0000191a       2c6   func ,g         * 
   _DoInputSerial
-                                  000019d4       2e4   func ,g         * 
+                                  00001be0       2e4   func ,g         * 
   _ScanPushSW
-                                  00001cb8        7a   func ,g         * 
+                                  00001ec4        7a   func ,g         * 
   _ProcessPushSW
-                                  00001d32       73e   func ,g         * 
+                                  00001f3e       730   func ,g         * 
   _ProcessAutoMode
-                                  00002470        74   func ,g         * 
+                                  0000266e        6a   func ,g         * 
   _CheckStartByGSensor
-                                  000024e4        c2   func ,g         * 
+                                  000026d8        c0   func ,g         * 
   _SetupHW
-                                  000025a6        a0   func ,g         * 
+                                  00002798        a0   func ,g         * 
   _InitMain
-                                  00002646       104   func ,g         * 
+                                  00002838       104   func ,g         * 
   _bzero
-                                  0000274a        14   func ,g         * 
+                                  0000293c        14   func ,g         * 
   _int_timer_v_IR
-                                  0000275e        22   func ,g         * 
+                                  00002950        22   func ,g         * 
   _IR_Flasher
-                                  00002780        70   func ,g         * 
+                                  00002972        70   func ,g         * 
   __INITSCT
-                                  000027f0        32   func ,g         * 
+                                  000029e2        32   func ,g         * 
   _main
-                                  00002822       14c   func ,g         * 
+                                  00002a14        ea   func ,g         * 
 FILE=OUT_CRLF
-                                  0000296e  0000297d        10
+                                  00002afe  00002b0d        10
   OUT_CRLF
-                                  0000296e         0   none ,g         * 
+                                  00002afe         0   none ,g         * 
 FILE=OUT_STRING
-                                  0000297e  00002989         c
+                                  00002b0e  00002b19         c
   OUT_STRING
-                                  0000297e         0   none ,g         * 
+                                  00002b0e         0   none ,g         * 
 FILE=IN_STRING
-                                  0000298a  000029fd        74
+                                  00002b1a  00002b8d        74
   IN_STRING
-                                  0000298a         0   none ,g         * 
+                                  00002b1a         0   none ,g         * 
   BS_MSG
-                                  000029fa         0   none ,l         * 
+                                  00002b8a         0   none ,l         * 
 FILE=ERR
-                                  000029fe  00002b5a       15d
+                                  00002b8e  00002cea       15d
   ERR
-                                  000029fe         0   none ,g         * 
+                                  00002b8e         0   none ,g         * 
   ERR00
-                                  00002a00         0   none ,g         * 
+                                  00002b90         0   none ,g         * 
   ERR01
-                                  00002a04         0   none ,g         * 
+                                  00002b94         0   none ,g         * 
   ERR02
-                                  00002a08         0   none ,g         * 
+                                  00002b98         0   none ,g         * 
   ERR03
-                                  00002a0c         0   none ,g         * 
+                                  00002b9c         0   none ,g         * 
   ERR04
-                                  00002a10         0   none ,g         * 
+                                  00002ba0         0   none ,g         * 
   ERR05
-                                  00002a14         0   none ,g         * 
+                                  00002ba4         0   none ,g         * 
   ERR06
-                                  00002a18         0   none ,g         * 
+                                  00002ba8         0   none ,g         * 
   ERR07
-                                  00002a1c         0   none ,g         * 
-  ERR08
-                                  00002a20         0   none ,g         * 
-  ERR09
-                                  00002a24         0   none ,g         * 
-  ERR10
-                                  00002a28         0   none ,g         * 
-  ERR11
-                                  00002a2c         0   none ,g         * 
-  ERR_MSG
-                                  00002a6c         0   none ,l         * 
-  ERR00_MSG
-                                  00002a79         0   none ,l         * 
-  ERR01_MSG
-                                  00002a89         0   none ,l         * 
-  ERR02_MSG
-                                  00002a99         0   none ,l         * 
-  ERR03_MSG
-                                  00002aab         0   none ,l         * 
-  ERR04_MSG
-                                  00002ac1         0   none ,l         * 
-  ERR05_MSG
-                                  00002ad5         0   none ,l         * 
-  ERR06_MSG
-                                  00002aea         0   none ,l         * 
-  ERR07_MSG
-                                  00002afa         0   none ,l         * 
-  ERR08_MSG
-                                  00002b0e         0   none ,l         * 
-  ERR09_MSG
-                                  00002b22         0   none ,l         * 
-  ERR10_MSG
-                                  00002b37         0   none ,l         * 
-  ERR11_MSG
-                                  00002b4b         0   none ,l         * 
-FILE=TBL_ANA
-                                  00002b5c  00002bab        50
-  TBL_ANA
-                                  00002b5c         0   none ,g         * 
-FILE=COM_SPLIT
-                                  00002bac  00002c73        c8
-  COM_SPLIT
                                   00002bac         0   none ,g         * 
+  ERR08
+                                  00002bb0         0   none ,g         * 
+  ERR09
+                                  00002bb4         0   none ,g         * 
+  ERR10
+                                  00002bb8         0   none ,g         * 
+  ERR11
+                                  00002bbc         0   none ,g         * 
+  ERR_MSG
+                                  00002bfc         0   none ,l         * 
+  ERR00_MSG
+                                  00002c09         0   none ,l         * 
+  ERR01_MSG
+                                  00002c19         0   none ,l         * 
+  ERR02_MSG
+                                  00002c29         0   none ,l         * 
+  ERR03_MSG
+                                  00002c3b         0   none ,l         * 
+  ERR04_MSG
+                                  00002c51         0   none ,l         * 
+  ERR05_MSG
+                                  00002c65         0   none ,l         * 
+  ERR06_MSG
+                                  00002c7a         0   none ,l         * 
+  ERR07_MSG
+                                  00002c8a         0   none ,l         * 
+  ERR08_MSG
+                                  00002c9e         0   none ,l         * 
+  ERR09_MSG
+                                  00002cb2         0   none ,l         * 
+  ERR10_MSG
+                                  00002cc7         0   none ,l         * 
+  ERR11_MSG
+                                  00002cdb         0   none ,l         * 
+FILE=TBL_ANA
+                                  00002cec  00002d3b        50
+  TBL_ANA
+                                  00002cec         0   none ,g         * 
+FILE=COM_SPLIT
+                                  00002d3c  00002e03        c8
+  COM_SPLIT
+                                  00002d3c         0   none ,g         * 
   SPTB_CHK
-                                  00002c38         0   none ,g         * 
+                                  00002dc8         0   none ,g         * 
   SPL_CHK
-                                  00002c48         0   none ,l         * 
+                                  00002dd8         0   none ,l         * 
   LOW_CHK
-                                  00002c58         0   none ,g         * 
+                                  00002de8         0   none ,g         * 
   ANA_BUF_ADR
-                                  00002c68         0   none ,l         * 
+                                  00002df8         0   none ,l         * 
 FILE=A_COM
-                                  00002c74  00002c77         4
+                                  00002e04  00002e07         4
   A_COM
-                                  00002c74         0   none ,g         * 
+                                  00002e04         0   none ,g         * 
 FILE=B_COM
-                                  00002c78  00002c89        12
+                                  00002e08  00002e19        12
   B_COM
-                                  00002c78         0   none ,g         * 
+                                  00002e08         0   none ,g         * 
   B_COM_INIT
-                                  00002c7c         0   none ,g         * 
+                                  00002e0c         0   none ,g         * 
   BREAK_CHK
-                                  00002c7e         0   none ,g         * 
+                                  00002e0e         0   none ,g         * 
   B_SUB_COM
-                                  00002c7e         0   none ,g         * 
+                                  00002e0e         0   none ,g         * 
   BREAK_SET
-                                  00002c82         0   none ,g         * 
+                                  00002e12         0   none ,g         * 
   BREAK_CLR
-                                  00002c88         0   none ,g         * 
+                                  00002e18         0   none ,g         * 
 FILE=D_COM
-                                  00002c8a  00002c8d         4
+                                  00002e1a  00002e1d         4
   D_COM
-                                  00002c8a         0   none ,g         * 
+                                  00002e1a         0   none ,g         * 
   D_ANA_SUB
-                                  00002c8e         0   none ,g         * 
+                                  00002e1e         0   none ,g         * 
   D_COM_SUB
-                                  00002c8e         0   none ,g         * 
+                                  00002e1e         0   none ,g         * 
 FILE=DA_COM
-                                  00002c8e  00002c93         6
+                                  00002e1e  00002e23         6
   DA_COM
-                                  00002c8e         0   none ,g         * 
+                                  00002e1e         0   none ,g         * 
   DA_SUB_COM
-                                  00002c92         0   none ,g         * 
+                                  00002e22         0   none ,g         * 
   DA_COM_SUB
-                                  00002c92         0   none ,g         * 
+                                  00002e22         0   none ,g         * 
 FILE=F_COM
-                                  00002c94  00002c97         4
+                                  00002e24  00002e27         4
   F_COM
-                                  00002c94         0   none ,g         * 
+                                  00002e24         0   none ,g         * 
 FILE=G_COM
-                                  00002c98  00002d01        6a
+                                  00002e28  00002e91        6a
   G_COM
-                                  00002c98         0   none ,g         * 
+                                  00002e28         0   none ,g         * 
   G_COM_SUB
-                                  00002cc6         0   none ,g         * 
+                                  00002e56         0   none ,g         * 
   SET_MOD
-                                  00002d00         0   none ,l         * 
+                                  00002e90         0   none ,l         * 
 FILE=H8_COM
-                                  00002d02  00002d05         4
+                                  00002e92  00002e95         4
   H8_COM
-                                  00002d02         0   none ,g         * 
+                                  00002e92         0   none ,g         * 
 FILE=L_COM
-                                  00002d06  00002e7b       176
+                                  00002e96  0000300b       176
   L_COM
-                                  00002d06         0   none ,g         * 
+                                  00002e96         0   none ,g         * 
   L_COM_SUB
-                                  00002d52         0   none ,l         * 
+                                  00002ee2         0   none ,l         * 
   S0
-                                  00002dde         0   none ,l         * 
-  S1
-                                  00002df0         0   none ,l         * 
-  S9
-                                  00002e20         0   none ,l         * 
-  L_MOD
-                                  00002e30         0   none ,l         * 
-  L_IOB
-                                  00002e44         0   none ,l         * 
-  L_MSG
-                                  00002e64         0   none ,l         * 
-FILE=M_COM
-                                  00002e7c  00002e7f         4
-  M_COM
-                                  00002e7c         0   none ,g         * 
-FILE=R_COM
-                                  00002e80  00002ea7        28
-  R_COM
-                                  00002e80         0   none ,g         * 
-  R_COM_INIT
-                                  00002e84         0   none ,g         * 
-  R_SUB_COM
-                                  00002ea6         0   none ,g         * 
-FILE=S_COM
-                                  00002ea8  00002eab         4
-  S_COM
-                                  00002ea8         0   none ,g         * 
-  S_SUB_COM
-                                  00002eac         0   none ,g         * 
-  S_COM_SUB
-                                  00002eac         0   none ,g         * 
-FILE=REG_COM
-                                  00002eac  00002eaf         4
-  REG_COM
-                                  00002eac         0   none ,g         * 
-FILE=HELP_COM
-                                  00002eb0  00002eb3         4
-  HELP_COM_SUB
-                                  00002eb0         0   none ,g         * 
-  HELP_COM
-                                  00002eb0         0   none ,g         * 
-FILE=RET_COM
-                                  00002eb4  00002ebf         c
-  RET_COM
-                                  00002eb4         0   none ,g         * 
-  RET_COM_SUB
-                                  00002eb8         0   none ,g         * 
-FILE=BACK_COM
-                                  00002ec0  00002ec5         6
-  BACK_COM
-                                  00002ec0         0   none ,g         * 
-  BACK_COM_INIT
-                                  00002ec4         0   none ,g         * 
-  BACK_COM_SUB
-                                  00002ec4         0   none ,g         * 
-FILE=SWAPV
-                                  00002ec6  00002ed7        12
-  VECTOR_INIT
-                                  00002ec6         0   none ,g         * 
-  VECTOR_SET
-                                  00002ed6         0   none ,g         * 
-  VECTOR_CLR
-                                  00002ed6         0   none ,g         * 
-FILE=INIT
-                                  00002ed8  00002f4a        73
-  INIT
-                                  00002ed8         0   none ,g         * 
-  OPEN_MSG
-                                  00002ef0         0   none ,g         * 
-FILE=INT_MSG
-                                  00002f4c  0000309d       152
-  VECTOR_TBL
-                                  00002f4c         0   none ,g         * 
-  INT001
-                                  00002f4e         0   none ,g         * 
-  INT002
-                                  00002f52         0   none ,l         * 
-  INT003
-                                  00002f56         0   none ,l         * 
-  INT004
-                                  00002f5a         0   none ,l         * 
-  INT005
-                                  00002f5e         0   none ,l         * 
-  INT006
-                                  00002f62         0   none ,l         * 
-  INT007
-                                  00002f66         0   none ,l         * 
-  INT008
-                                  00002f6a         0   none ,l         * 
-  INT009
                                   00002f6e         0   none ,l         * 
+  S1
+                                  00002f80         0   none ,l         * 
+  S9
+                                  00002fb0         0   none ,l         * 
+  L_MOD
+                                  00002fc0         0   none ,l         * 
+  L_IOB
+                                  00002fd4         0   none ,l         * 
+  L_MSG
+                                  00002ff4         0   none ,l         * 
+FILE=M_COM
+                                  0000300c  0000300f         4
+  M_COM
+                                  0000300c         0   none ,g         * 
+FILE=R_COM
+                                  00003010  00003037        28
+  R_COM
+                                  00003010         0   none ,g         * 
+  R_COM_INIT
+                                  00003014         0   none ,g         * 
+  R_SUB_COM
+                                  00003036         0   none ,g         * 
+FILE=S_COM
+                                  00003038  0000303b         4
+  S_COM
+                                  00003038         0   none ,g         * 
+  S_SUB_COM
+                                  0000303c         0   none ,g         * 
+  S_COM_SUB
+                                  0000303c         0   none ,g         * 
+FILE=REG_COM
+                                  0000303c  0000303f         4
+  REG_COM
+                                  0000303c         0   none ,g         * 
+FILE=HELP_COM
+                                  00003040  00003043         4
+  HELP_COM_SUB
+                                  00003040         0   none ,g         * 
+  HELP_COM
+                                  00003040         0   none ,g         * 
+FILE=RET_COM
+                                  00003044  0000304f         c
+  RET_COM
+                                  00003044         0   none ,g         * 
+  RET_COM_SUB
+                                  00003048         0   none ,g         * 
+FILE=BACK_COM
+                                  00003050  00003055         6
+  BACK_COM
+                                  00003050         0   none ,g         * 
+  BACK_COM_INIT
+                                  00003054         0   none ,g         * 
+  BACK_COM_SUB
+                                  00003054         0   none ,g         * 
+FILE=SWAPV
+                                  00003056  00003067        12
+  VECTOR_INIT
+                                  00003056         0   none ,g         * 
+  VECTOR_SET
+                                  00003066         0   none ,g         * 
+  VECTOR_CLR
+                                  00003066         0   none ,g         * 
+FILE=INIT
+                                  00003068  000030da        73
+  INIT
+                                  00003068         0   none ,g         * 
+  OPEN_MSG
+                                  00003080         0   none ,g         * 
+FILE=INT_MSG
+                                  000030dc  0000322d       152
+  VECTOR_TBL
+                                  000030dc         0   none ,g         * 
+  INT001
+                                  000030de         0   none ,g         * 
+  INT002
+                                  000030e2         0   none ,l         * 
+  INT003
+                                  000030e6         0   none ,l         * 
+  INT004
+                                  000030ea         0   none ,l         * 
+  INT005
+                                  000030ee         0   none ,l         * 
+  INT006
+                                  000030f2         0   none ,l         * 
+  INT007
+                                  000030f6         0   none ,l         * 
+  INT008
+                                  000030fa         0   none ,l         * 
+  INT009
+                                  000030fe         0   none ,l         * 
   INT010
-                                  00002f72         0   none ,l         * 
+                                  00003102         0   none ,l         * 
   INT011
-                                  00002f76         0   none ,l         * 
+                                  00003106         0   none ,l         * 
   INT012
-                                  00002f7a         0   none ,l         * 
+                                  0000310a         0   none ,l         * 
   INT013
-                                  00002f7e         0   none ,l         * 
+                                  0000310e         0   none ,l         * 
   INT014
-                                  00002f82         0   none ,l         * 
+                                  00003112         0   none ,l         * 
   INT015
-                                  00002f86         0   none ,l         * 
+                                  00003116         0   none ,l         * 
   INT016
-                                  00002f8a         0   none ,l         * 
+                                  0000311a         0   none ,l         * 
   INT017
-                                  00002f8e         0   none ,l         * 
+                                  0000311e         0   none ,l         * 
   INT018
-                                  00002f92         0   none ,l         * 
+                                  00003122         0   none ,l         * 
   INT019
-                                  00002f96         0   none ,l         * 
+                                  00003126         0   none ,l         * 
   INT020
-                                  00002f9a         0   none ,l         * 
+                                  0000312a         0   none ,l         * 
   INT021
-                                  00002f9e         0   none ,l         * 
+                                  0000312e         0   none ,l         * 
   INT022
-                                  00002fa2         0   none ,l         * 
+                                  00003132         0   none ,l         * 
   INT023
-                                  00002fa6         0   none ,l         * 
+                                  00003136         0   none ,l         * 
   INT024
-                                  00002faa         0   none ,l         * 
+                                  0000313a         0   none ,l         * 
   INT025
-                                  00002fae         0   none ,l         * 
+                                  0000313e         0   none ,l         * 
   INT026
-                                  00002fb2         0   none ,l         * 
+                                  00003142         0   none ,l         * 
   INT027
-                                  00002fb6         0   none ,l         * 
+                                  00003146         0   none ,l         * 
   INT028
-                                  00002fba         0   none ,l         * 
+                                  0000314a         0   none ,l         * 
   INT029
-                                  00002fbe         0   none ,l         * 
+                                  0000314e         0   none ,l         * 
   INT030
-                                  00002fc2         0   none ,l         * 
+                                  00003152         0   none ,l         * 
   INT031
-                                  00002fc6         0   none ,l         * 
+                                  00003156         0   none ,l         * 
   MEM_CHK
-                                  00002fca         0   none ,g         * 
-  INT_CHK
-                                  00002fce         0   none ,g         * 
-  INT_MSG
-                                  00002fd2         0   none ,g         * 
-FILE=divul3
-                                  0000309e  000030d9        3c
-  $DIVUL$3
-                                  0000309e         0   none ,g         * 
-  
-                                  000030b6         0   none ,l         * 
-  
-                                  000030c0         0   none ,l         * 
-  
-                                  000030ca         0   none ,l         * 
-  
-                                  000030d4         0   none ,l         * 
-FILE=OUT_CHAR
-                                  000030da  000030ed        14
-  OUT_CHAR
-                                  000030da         0   none ,g         * 
-FILE=OUT_VALUE
-                                  000030ee  000030fb         e
-  OUT_VALUE
-                                  000030ee         0   none ,g         * 
-FILE=BIN_ASC_4
-                                  000030fc  00003101         6
-  BIN_ASC_4
-                                  000030fc         0   none ,g         * 
-FILE=IN_CHAR
-                                  00003102  00003137        36
-  IN_CHAR
-                                  00003102         0   none ,g         * 
-FILE=IN_SCHAR
-                                  00003138  00003159        22
-  IN_SCHAR
-                                  00003138         0   none ,g         * 
-FILE=ASC_BCD_2
-                                  0000315a  00003173        1a
-  ASC_BCD_2
                                   0000315a         0   none ,g         * 
+  INT_CHK
+                                  0000315e         0   none ,g         * 
+  INT_MSG
+                                  00003162         0   none ,g         * 
+FILE=divul3
+                                  0000322e  00003269        3c
+  $DIVUL$3
+                                  0000322e         0   none ,g         * 
+  
+                                  00003246         0   none ,l         * 
+  
+                                  00003250         0   none ,l         * 
+  
+                                  0000325a         0   none ,l         * 
+  
+                                  00003264         0   none ,l         * 
+FILE=OUT_CHAR
+                                  0000326a  0000327d        14
+  OUT_CHAR
+                                  0000326a         0   none ,g         * 
+FILE=OUT_VALUE
+                                  0000327e  0000328b         e
+  OUT_VALUE
+                                  0000327e         0   none ,g         * 
+FILE=BIN_ASC_4
+                                  0000328c  00003291         6
+  BIN_ASC_4
+                                  0000328c         0   none ,g         * 
+FILE=IN_CHAR
+                                  00003292  000032c7        36
+  IN_CHAR
+                                  00003292         0   none ,g         * 
+FILE=IN_SCHAR
+                                  000032c8  000032e9        22
+  IN_SCHAR
+                                  000032c8         0   none ,g         * 
+FILE=ASC_BCD_2
+                                  000032ea  00003303        1a
+  ASC_BCD_2
+                                  000032ea         0   none ,g         * 
   BCD_CHK
-                                  00003164         0   none ,g         * 
+                                  000032f4         0   none ,g         * 
 FILE=ASC_BIN_4
-                                  00003174  0000317d         a
+                                  00003304  0000330d         a
   ASC_BIN_4
-                                  00003174         0   none ,g         * 
+                                  00003304         0   none ,g         * 
 FILE=TBL_CHK
-                                  0000317e  0000319b        1e
+                                  0000330e  0000332b        1e
   TBL_CHK
-                                  0000317e         0   none ,g         * 
+                                  0000330e         0   none ,g         * 
 FILE=SYSTEM_HDL
-                                  0000319c  00003227        8c
+                                  0000332c  000033b7        8c
   SYSTEM_HDL
-                                  0000319c         0   none ,g         * 
+                                  0000332c         0   none ,g         * 
 FILE=BREAK
-                                  00003228  0000322b         4
+                                  000033b8  000033bb         4
   INT02
-                                  00003228         0   none ,g         * 
+                                  000033b8         0   none ,g         * 
 FILE=TRACE
-                                  0000322c  0000322f         4
+                                  000033bc  000033bf         4
   INT01
-                                  0000322c         0   none ,g         * 
+                                  000033bc         0   none ,g         * 
 FILE=TRACEA
-                                  00003230  00003231         2
+                                  000033c0  000033c1         2
   TRACE_SET
-                                  00003230         0   none ,g         * 
+                                  000033c0         0   none ,g         * 
   TRACE_CLR
-                                  00003230         0   none ,g         * 
+                                  000033c0         0   none ,g         * 
 FILE=ABORT
-                                  00003232  00003293        62
+                                  000033c2  00003423        62
   INT07
-                                  00003232         0   none ,g         * 
+                                  000033c2         0   none ,g         * 
   ABORT_MSG
-                                  00003288         0   none ,l         * 
+                                  00003418         0   none ,l         * 
 FILE=OUT_2SP
-                                  00003294  0000329d         a
+                                  00003424  0000342d         a
   OUT_2SP
-                                  00003294         0   none ,g         * 
+                                  00003424         0   none ,g         * 
 FILE=BIN_ASC
-                                  0000329e  000032c5        28
+                                  0000342e  00003455        28
   BIN_ASC
-                                  0000329e         0   none ,g         * 
+                                  0000342e         0   none ,g         * 
 FILE=ASC_BIN
-                                  000032c6  00003305        40
+                                  00003456  00003495        40
   ASC_BIN
-                                  000032c6         0   none ,g         * 
+                                  00003456         0   none ,g         * 
   ASC_CHK
-                                  000032f6         0   none ,g         * 
+                                  00003486         0   none ,g         * 
 FILE=UNDEF_HDL
-                                  00003306  00003412       10d
+                                  00003496  000035a2       10d
   UNDEF_HDL
-                                  00003306         0   none ,g         * 
+                                  00003496         0   none ,g         * 
   UNDEF_MOD
-                                  0000336a         0   none ,g         * 
+                                  000034fa         0   none ,g         * 
   UNDEF_ROU
-                                  00003390         0   none ,g         * 
+                                  00003520         0   none ,g         * 
   OUT_MEM
-                                  000033b4         0   none ,l         * 
+                                  00003544         0   none ,l         * 
   OUT_INT
-                                  000033ce         0   none ,g         * 
+                                  0000355e         0   none ,g         * 
   CLR_MOD
-                                  000033f4         0   none ,l         * 
+                                  00003584         0   none ,l         * 
   OUT_MOD
-                                  000033f8         0   none ,l         * 
+                                  00003588         0   none ,l         * 
   MEM_MSG
-                                  000033fa         0   none ,l         * 
+                                  0000358a         0   none ,l         * 
 FILE=BIN_ASC_2
-                                  00003414  00003419         6
+                                  000035a4  000035a9         6
   BIN_ASC_2
-                                  00003414         0   none ,g         * 
+                                  000035a4         0   none ,g         * 
 
 SECTION=C
 FILE=main.obj
-                                  0000341a  00003580       167
+                                  000035aa  00003708       15f
   _g_uTachoBar
-                                  0000343e         a   data ,g         * 
+                                  000035ce         a   data ,g         * 
   _g_cFont
-                                  00003448         a   data ,g         * 
+                                  000035d8         a   data ,g         * 
   _g_cFontR
-                                  00003452         a   data ,g         * 
+                                  000035e2         a   data ,g         * 
   _g_szMsgReadyToGo
-                                  0000345c         c   data ,g         * 
+                                  000035ec         c   data ,g         * 
   _g_szMsgTacho
-                                  00003468         5   data ,g         * 
+                                  000035f8         5   data ,g         * 
   _g_szMsgSpeed
-                                  0000346d         4   data ,g         * 
+                                  000035fd         4   data ,g         * 
   _g_szMsgWaterTemp
-                                  00003471         6   data ,g         * 
+                                  00003601         6   data ,g         * 
   _g_szMsgIRCnt
-                                  00003477         3   data ,g         * 
+                                  00003607         3   data ,g         * 
   _g_szMsgFuel
-                                  0000347a         5   data ,g         * 
+                                  0000360a         5   data ,g         * 
   _g_szMsgMileage
-                                  0000347f         5   data ,g         * 
+                                  0000360f         5   data ,g         * 
   _g_szMsgCalibrate
-                                  00003484         a   data ,g         * 
+                                  00003614         a   data ,g         * 
   _g_szMsgOpening
-                                  0000348e        2a   data ,g         * 
+                                  0000361e        2a   data ,g         * 
   _g_LEDAnimeOpening
-                                  000034b8        3d   data ,g         * 
+                                  00003648        3d   data ,g         * 
   _g_cLEDFont
-                                  000034f5        65   data ,g         * 
+                                  00003685        65   data ,g         * 
 
 SECTION=D
 FILE=main.obj
-                                  00003582  00003589         8
+                                  0000370a  00003711         8
 
 SECTION=BPAD
 FILE=padding.obj
@@ -652,7 +656,7 @@ FILE=sci.obj
   _tx_idx_tail
                                   0000ff03         1   data ,g         * 
 FILE=main.obj
-                                  0000ff04  0000ff41        3e
+                                  0000ff04  0000ff55        52
   _g_Tacho
                                   0000ff04         c   data ,g         * 
   _g_Speed
@@ -675,24 +679,34 @@ FILE=main.obj
                                   0000ff38         2   data ,g         * 
   _g_uRTC
                                   0000ff3a         2   data ,g         * 
+  _g_uPrevTW
+                                  0000ff3c         2   data ,g         * 
+  _g_uHz
+                                  0000ff3e         2   data ,g         * 
+  _g_uAutoModeTimer
+                                  0000ff40         2   data ,g         * 
+  _g_DispVal
+                                  0000ff42         c   data ,g         * 
+  _g_TP
+                                  0000ff4e         2   data ,g         * 
   _g_Flags
-                                  0000ff3c         3   data ,g         * 
+                                  0000ff50         3   data ,g         * 
   _g_cLEDBar
-                                  0000ff3f         1   data ,g         * 
+                                  0000ff53         1   data ,g         * 
   _g_PushSW
-                                  0000ff40         1   data ,g         * 
+                                  0000ff54         1   data ,g         * 
   _g_uVideoCaribCnt
-                                  0000ff41         1   data ,g         * 
+                                  0000ff55         1   data ,g         * 
 
 SECTION=R
 FILE=main.obj
-                                  0000ff42  0000ff49         8
+                                  0000ff56  0000ff5d         8
   _g_VRAM
-                                  0000ff42         4   data ,g         * 
+                                  0000ff56         4   data ,g         * 
   _g_szLEDMsg
-                                  0000ff46         2   data ,g         * 
-  __$uCntPrev$144
-                                  0000ff48         2   data ,l         * 
+                                  0000ff5a         2   data ,g         * 
+  __$uCntPrev$151
+                                  0000ff5c         2   data ,l         * 
 
 SECTION=USER
 FILE=LARGE_AREA
@@ -810,8 +824,6 @@ _ProcessAutoMode
 _CheckStartByGSensor
                                          * 
 _InitMain
-                                         * 
-_bzero
                                          * 
 _IR_Flasher
                                          * 
