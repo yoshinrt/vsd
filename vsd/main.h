@@ -58,9 +58,6 @@
 //#define IR_FLASHER
 //#define TEST1SEC
 
-// ベクタセットアップ
-#define SetVector( v, f )	( *( void **)(( v ) * 2 + 0xFF4C ) = ( f ))
-
 // モニター起動
 #define MONITOR_ENTRY	( *(( void (*)( void ))0x10E ))
 //#define GoMonitor	INT000

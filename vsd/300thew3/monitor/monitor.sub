@@ -1,4 +1,4 @@
-INPUT	NORMAL,MONITOR,sci,main,padding
+INPUT	NORMAL,MONITOR,sci,main,int_handler
 LIST	MONITOR.MAP
 SHOW	SYMBOL
 OUTPUT	MONITOR.MOT
@@ -7,23 +7,17 @@ NOOPTIMIZE
 LIBRARY	NORMAL,3664
 LIBRARY	MONITOR
 DEFINE	$BRR=C
-DEFINE	$STACK=FEB2
+DEFINE	$STACK=FEF4
 ROM	D=R
-START	VECTOR/0,ROM,C,D/100,S,BPAD,RAM:B,R/FEAE,USER/FF4C,SCI/FFA8
+START	VECTOR:USER/0,ROM,C,D/100,BPAD_MON,RAM:BPAD_C,S,B,R,RAM_VectorTblPtr/F780,SCI/FFA8
 
-; セクション配置の注意点
-; RET_TBL が R, B とかぶらないようにする
-; ANA_BUF + 26 が R, B の未使用領域になる様にする
-; STACK の値を調整する
-; USER は，割り込みベクタテーブルのこと
-
-;  *---B---*---R---**
-; S*--BPAD--*--RAM--*--USER--*
-;               |  |
-;               |  + RET_TBL
-;               +--- ANA_BUF + 26
+;                                   VectorTblPtr
+;		                          |
+; *--BPAD_C----*---S----*---B---*---R----**
+; *--BPAD_MON---------------------*--RAM--*
+;
 ; 調整手順
-; 1. R の最後が FF49 になるように B の先頭を決定
-; 2. RAM の最後が FF4B になるように BPAD サイズ変更
-; 3. _g_Padding が 0xFF28 になるように UINT g_Padding の位置調整
-; ROM じゃないほうの vsd.mot の S をここの S にあわせる
+; 1. VectorTblPtr の最後が FF7F になるように BPAD_C のサイズを決定
+; 2. RAM の最後が FF7F になるように BPAD_MON サイズ変更
+; 3. ねんのため DEFINE	$STACK=FEF4 を値を RAM 先頭にする
+; 4. ROM じゃないほうの vsd.mot の S をここの S にあわせる

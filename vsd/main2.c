@@ -20,31 +20,21 @@
 INLINE void _INITSCT( void );
 
 /*** const ******************************************************************/
+/*** extern *****************************************************************/
+
+extern void *VectorTblPtr;
+
 /*** gloval vars ************************************************************/
 
 VRAM	g_VRAM = { MakeDisp( SP, SP, SP, SP ) };
-
-const UCHAR g_cFont[] = {
-	#define LED_PATN( val, name ) val,
-	#define LED_PAT( val, name )
-	#include "led_font.h"
-};
-
-const UCHAR g_cFontR[] = {
-	#define LED_PATN( val, name ) LED_REV( val ),
-	#define LED_PAT( val, name )
-	#include "led_font.h"
-};
 
 // メーター数値
 PULSE	g_Tacho;	//	= { 0 };
 PULSE	g_Speed;	//	= { 0 };
 PULSE	g_IR;		//	= { 0 };
 
-UINT	g_Padding[1];	/*** この辺はメモリ配置のため順番を変えるときは注意!!! ***/
-
-ULONG		g_lParam;	// serial 数値入力
-UNI_LONG	g_TimerWovf;	// ★ UINT にする
+ULONG	g_lParam;	// serial 数値入力
+UINT	g_uTimerWovf;
 
 UINT	g_uRemainedMillage;	// NewLap トリガを起動するまでの残り距離パルス
 
@@ -58,12 +48,27 @@ UINT	g_uRTC;
 UINT	g_uPrevTW;	// TimerW >> 8
 UINT	g_uHz;		// Hz >> 8 @ 1s
 
-UINT			g_uAutoModeTimer;	//★ UCHAR にできる
 DispVal_t		g_DispVal;
 TouchPanel_t	g_TP;
+PushSW_t		g_PushSW;
 
 Flags_t		g_Flags;
-char		g_cLEDBar;		//= 0;
+
+char	g_cLEDBar;		//= 0;
+UCHAR	g_cAutoModeTimer;
+UCHAR	g_uVideoCaribCnt;
+
+const UCHAR g_cFont[] = {
+	#define LED_PATN( val, name ) val,
+	#define LED_PAT( val, name )
+	#include "led_font.h"
+};
+
+const UCHAR g_cFontR[] = {
+	#define LED_PATN( val, name ) LED_REV( val ),
+	#define LED_PAT( val, name )
+	#include "led_font.h"
+};
 
 const char g_szMsgReadyToGo[]	= "REAdy to Go";
 const char g_szMsgTacho[]		= "tACo";
@@ -77,8 +82,6 @@ const char g_szMsgOpening[]		=
 	EOL
 	"VSD system v1.09" EOL
 	"Copyright(C) by DDS" EOL;
-
-PushSW_t	g_PushSW;
 
 const UCHAR g_LEDAnimeOpening[] = {
 	LED_ANIME( _1, _1, _1, _1, 0x10, 32 ),
@@ -94,8 +97,6 @@ const UCHAR g_LEDAnimeOpening[] = {
 	0
 };
 
-UCHAR	*g_szLEDMsg = g_LEDAnimeOpening;
-
 const UCHAR g_cLEDFont[] = {
 //	FONT_SP, FONT_SP, FONT_SP, FONT_SP, FONT_SP, FONT_SP, FONT_SP, FONT_SP, // 0x00
 //	FONT_SP, FONT_SP, FONT_SP, FONT_SP, FONT_SP, FONT_SP, FONT_SP, FONT_SP, // 0x08
@@ -108,11 +109,11 @@ const UCHAR g_cLEDFont[] = {
 	#include "led_font.h"
 };
 
-UCHAR	g_uVideoCaribCnt;
-
 const UINT g_uTachoBar[] = {
 	334, 200, 150, 118, 97
 };
+
+UCHAR			*g_szLEDMsg = g_LEDAnimeOpening;
 
 /*** 10進->LED フォーマッタ *************************************************/
 
@@ -150,7 +151,7 @@ INLINE ULONG GetTimerW32( void ){
 	UINT	uL, uH;
 	
 	uL = TW.TCNT;
-	uH = g_TimerWovf.w.l;
+	uH = g_uTimerWovf;
 	
 	if( !( uL & 0x8000 ) && TW.TSRW.BIT.OVF ){
 		++uH;
@@ -188,7 +189,7 @@ INLINE ULONG GetRTC( void ){
 
 #pragma interrupt( int_timer_w )
 /*__interrupt( vect = 21 )*/ void int_timer_w( void ){
-	++g_TimerWovf.dw;	// 約240Hz
+	++g_uTimerWovf;	// 約240Hz
 	TW.TSRW.BIT.OVF = 0;
 }
 
@@ -316,6 +317,61 @@ INLINE ULONG GetRTC( void ){
 	sci_int_handler( 0 );
 }
 
+/*** TIMER V ****************************************************************/
+
+#pragma interrupt( int_timer_v_IR )
+/*__interrupt( vect = 22 )*/ void int_timer_v_IR( void ){
+	
+	// TV.TCORB を汎用変数の代わりに使ってる (^^;
+	// 1/4 で ON
+	if(( ++TV.TCORB ) & 3 ){
+		// off
+		TW.TMRW.BIT.CTS = 0;	// 38KHz カウンタ停止
+		TW.TCRW.BIT.TOA = 0;	// 出力0
+	}else{
+		TW.TMRW.BIT.CTS = 1;	// 38KHz カウンタ開始
+	}
+	
+	TV.TCSRV.BIT.CMFA = 0;		// 割り込みフラグクリア
+}
+
+/*** 割り込みベクタテーブル *************************************************/
+
+void * const VectorTable[] = {
+	0,				//  0
+	0,				//  1
+	0,				//  2
+	0,				//  3
+	0,				//  4
+	0,				//  5
+	0,				//  6
+	0,				//  7
+	0,				//  8
+	0,				//  9
+	0,				// 10
+	0,				// 11
+	0,				// 12
+	0,				// 13
+	int_irq0,		// 14
+	int_irq1,		// 15
+	int_irq2,		// 16
+	int_irq3,		// 17
+	int_wkp,		// 18
+	int_timer_a,	// 19
+	0,				// 20
+	int_timer_w,	// 21
+	int_timer_v_IR,	// 22
+	INT_SCI3,		// 23
+	0,				// 24
+	0,				// 25
+	0,				// 26
+	0,				// 27
+	0,				// 28
+	0,				// 29
+	0,				// 30
+	0,				// 31
+};
+
 /*** モニター起動 ***********************************************************/
 
 INLINE void GoMonitor( void ){
@@ -336,7 +392,7 @@ INLINE void GoMonitor( void ){
 /*** SetBeep ****************************************************************/
 
 INLINE void SetBeep( UINT uCnt ){
-	static uCntPrev = BEEP_OFF;
+	static UINT uCntPrev = BEEP_OFF;
 	
 	if( !g_Flags.bBeep ) uCnt = BEEP_OFF;
 	
@@ -982,12 +1038,12 @@ INLINE void ProcessPushSW( TouchPanel_t *pTP ){
 
 /*** オートモード処理 *******************************************************/
 
-INLINE UINT ProcessAutoMode( UINT uTimer ){
+INLINE UINT ProcessAutoMode( void ){
 	if( g_Tacho.uVal >= 4500 ){
 		// 4500rpm 以上で，Circuit モードに移行
 		g_Flags.uGearMode	= GM_GEAR;
-		uTimer				= g_uRTC;
-	}else if( g_uRTC - uTimer >= 120 ){
+		g_cAutoModeTimer	= g_uRTC;
+	}else if( g_uRTC - g_cAutoModeTimer >= 120 ){
 		// 2分間，4500rpm 以下なら，街乗りモードに移行
 		g_Flags.uGearMode	= GM_TOWN;
 	}
@@ -997,8 +1053,6 @@ INLINE UINT ProcessAutoMode( UINT uTimer ){
 		if( g_Tacho.uVal < 1500 ) g_Flags.uDispModeNext = DISPMODE_TACHO;
 		else if( g_Speed.uVal >= 70 * 100 ) g_Flags.uDispModeNext = DISPMODE_SPEED;
 	}
-	
-	return uTimer;
 }
 
 /*** Gセンサーによるスタート検出 ********************************************/
@@ -1110,17 +1164,7 @@ INLINE void InitMain( void ){
 	
 	/*** ベクタ設定 *********************************************************/
 	
-#ifdef USE_IRQ0
-	SetVector( 14, int_irq0 );
-#endif
-	SetVector( 15, int_irq1 );
-	SetVector( 16, int_irq2 );
-	SetVector( 17, int_irq3 );
-	SetVector( 18, int_wkp );
-	SetVector( 19, int_timer_a );
-	SetVector( 21, int_timer_w );
-//	SetVector( 22, int_timer_v_IR );
-	SetVector( 23, INT_SCI3 );
+	VectorTblPtr = ( void *)VectorTable;
 	
 	/************************************************************************/
 	
@@ -1144,25 +1188,8 @@ INLINE void InitMain( void ){
 /*** bzero ******************************************************************/
 
 INLINE void bzero( UCHAR *p, UINT uSize ){
-	while( uSize-- ) *p++ = 0;
-}
-
-/*** TIMER V ****************************************************************/
-
-#pragma interrupt( int_timer_v_IR )
-/*__interrupt( vect = 22 )*/ void int_timer_v_IR( void ){
-	
-	// TV.TCORB を汎用変数の代わりに使ってる (^^;
-	// 1/4 で ON
-	if(( ++TV.TCORB ) & 3 ){
-		// off
-		TW.TMRW.BIT.CTS = 0;	// 38KHz カウンタ停止
-		TW.TCRW.BIT.TOA = 0;	// 出力0
-	}else{
-		TW.TMRW.BIT.CTS = 1;	// 38KHz カウンタ開始
-	}
-	
-	TV.TCSRV.BIT.CMFA = 0;		// 割り込みフラグクリア
+	UCHAR	*pEnd = p + uSize;
+	while( p < pEnd ) *p++ = 0;
 }
 
 /*** IR 投光機用の main *****************************************************/
@@ -1178,8 +1205,6 @@ void IR_Flasher( void ){
 	
 	/*** ベクタ設定 *********************************************************/
 	
-	SetVector( 22, int_timer_v_IR );
-	SetVector( 23, INT_SCI3 );
 	IENR1.BYTE = 0;
 	
 	_INITSCT();

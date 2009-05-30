@@ -35,17 +35,13 @@
 INLINE void _INITSCT( void ){
 	unsigned *uSrc, *uDst, *uDstEnd;
 	
-	#ifdef MONITOR_ROM
-		uSrc	= __sectop( "D" );
-		uDst	= __sectop( "R" );
-		uDstEnd	= __secend( "R" );
-		
-		do{
-			*uDst++ = *uSrc++;
-		}while( uDst < uDstEnd );
-	#else
-		_INITSCT_ROM();
-	#endif
+	uSrc	= __sectop( "D" );
+	uDst	= __sectop( "R" );
+	uDstEnd	= __secend( "R" );
+	
+	do{
+		*uDst++ = *uSrc++;
+	}while( uDst < uDstEnd );
 	
 	uDst	= __sectop( "B" );
 	uDstEnd = __secend( "B" );
@@ -66,8 +62,10 @@ int main( void ){
 	set_imask_ccr( 1 );
 #ifdef MONITOR_ROM
 	if( !IO.PDR5.BIT.B4 ) IR_Flasher();
-#endif
+#else
 	_INITSCT();
+#endif
+	
 	InitMain();
 	set_imask_ccr( 0 );			/* CPU permit interrupts */
 	
@@ -122,7 +120,7 @@ int main( void ){
 			}
 			
 			/*** オートモード ***/
-			g_uAutoModeTimer = ProcessAutoMode( g_uAutoModeTimer );
+			ProcessAutoMode();
 		}
 		
 		/*** WDT ***/
