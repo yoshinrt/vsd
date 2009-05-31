@@ -96,8 +96,6 @@ sub Replace {
 		#undef( $Vars{ $_ } );
 		$Vars{ $_ } = '$ALREADY_USED$';
 		
-		$_ .= '_ROM' if( $_ eq '_INITSCT' );
-		
 		return( "#$_#$Addr#" );
 	}
 	return( $_ );

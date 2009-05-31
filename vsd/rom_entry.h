@@ -1,4 +1,4 @@
-#define _INITSCT_ROM	((void (*)( void ))0x000029a6)
+#define _INITSCT	((void (*)( void ))0x000029a6)
 #define VectorTblPtr	(*(extern void *(*))0x0000ff7e)
 #define g_VRAM	(*(VRAM (*))0x0000ff76)
 #define g_Tacho	(*(PULSE (*))0x0000ff28)

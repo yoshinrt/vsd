@@ -40,6 +40,7 @@
 
 
 // たぶん，ホイル一周が30パルス
+// ★これ使っているところを変数で可変にし，シリアル経由で設定可にする必要がある
 //#define PULSE_PER_1KM	(( double )14958.80127 )	// ノーマル
 #define PULSE_PER_1KM	(( double )15473.76689 )	// CE28N
 
@@ -136,7 +137,7 @@ enum {
 };
 
 enum {
-	AM_OFF,
+	AM_OFF,		// ★削除
 	AM_TBAR,	// タコバー自動切換え
 	AM_DISP,	// TBAR + Tacho⇔Speed の自動切換え
 	AM_NUM
@@ -185,7 +186,7 @@ typedef union {
 typedef struct {
 	UCHAR	uPushElapsed;
 	UCHAR	uPushCnt;
-} TouchPanel_t;
+} TouchPanel_t;		// ★PushSW_t と統合
 
 typedef struct{
 	ULONG	uGx, uGy;

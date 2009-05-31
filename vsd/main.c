@@ -32,20 +32,149 @@
 /*** gloval vars ************************************************************/
 /*** init sector ************************************************************/
 
-INLINE void _INITSCT( void ){
-	unsigned *uSrc, *uDst, *uDstEnd;
+INLINE void InitSector(
+/*	UINT	*uDStart,
+	UINT	*uRStart,
+	UINT	*uREnd,		*/
+	UINT	*uBStart,
+	UINT	*uBEnd
+){
+	// RAM 実行には R がない
+	/*
+	while( uRStart < uREnd ){
+		*uRStart++ = *uDStart++;
+	}
+	*/
 	
-	uSrc	= __sectop( "D" );
-	uDst	= __sectop( "R" );
-	uDstEnd	= __secend( "R" );
+	while( uBStart < uBEnd ){ *uBStart++ = 0; };
+}
+
+/*** Tacho / Speed 計算 *****************************************************/
+
+// 0rpm に切り下げる EG 回転数のパルス幅 = 200rpm (clk数@16MHz)
+#define TACHO_0RPM_TH	(( ULONG )( H8HZ / ( 200 / 60.0 * 2 )))
+
+// 0km/h に切り下げる speed パルス幅 = 1km/h (clk数@16MHz)
+#define SPEED_0KPH_TH	(( ULONG )( H8HZ / ( PULSE_PER_1KM / 3600.0 )))
+
+INLINE void ComputeMeterTacho( void ){
+	ULONG	uPrevTime, uTime;
+	UINT	uPulseCnt;
 	
-	do{
-		*uDst++ = *uSrc++;
-	}while( uDst < uDstEnd );
+	// パラメータロード
+	IENR1.BIT.IEN2 = 0;	// Tacho IRQ disable
+	uTime				= g_Tacho.Time.dw;
+	uPulseCnt			= g_Tacho.uPulseCnt;
+	g_Tacho.uPulseCnt	= 0;
+	IENR1.BIT.IEN2 = 1;	// Tacho IRQ enable
+	uPrevTime			= g_Tacho.PrevTime.dw;
 	
-	uDst	= __sectop( "B" );
-	uDstEnd = __secend( "B" );
-	do{ *uDst++ = 0; }while(( unsigned )uDst < ( unsigned )uDstEnd );
+	// Tacho 計算
+	if( uPulseCnt ){
+		// 30 = 60[min/sec] / 2[pulse/roll]
+		// << 7 は，分母 >> 1 と g_uHz を << 8 する分
+		g_Tacho.uVal = (
+			( UINT )(
+				( ULONG )g_uHz * (( 30 << 7 ) * uPulseCnt ) /
+				(( uTime - uPrevTime ) >> 1 )
+			) +
+			g_Tacho.uVal
+		) >> 1;
+		
+		g_Tacho.PrevTime.dw = uTime;
+	}else if(
+		uTime = GetTimerW32(),
+		// 0.2秒後 に0に (0.2s = 150rpm)
+		uTime - uPrevTime >= TACHO_0RPM_TH
+	){
+		g_Tacho.uVal		= 0;
+		g_Tacho.PrevTime.dw	= uTime - TACHO_0RPM_TH;
+	}
+}
+
+UINT g_uSpeedCalcConst = ( UINT )( 3600.0 * 100.0 / PULSE_PER_1KM * ( 1 << 11 ));
+
+INLINE void ComputeMeterSpeed( void ){
+	ULONG	uPrevTime, uTime;
+	UINT	uPulseCnt;
+	UINT	uPulseCntTmp;
+	
+	// パラメータロード
+	IENR1.BIT.IEN2 = 0;	// Speed IRQ disable
+	uTime				= g_Speed.Time.dw;
+	uPulseCnt			= g_Speed.uPulseCnt;
+	g_Speed.uPulseCnt	= 0;
+	IENR1.BIT.IEN2 = 1;	// Speed IRQ enable
+	uPrevTime			= g_Speed.PrevTime.dw;
+	
+	uPulseCntTmp = uPulseCnt;
+	
+	// Speed 計算
+	if( uPulseCnt || g_Speed.uVal ){
+		if( uPulseCnt ){
+			g_uMileage += uPulseCnt;
+			g_Speed.PrevTime.dw = uTime;
+		}else{
+			// パルスが入ってなかったら，パルスが1回だけ入ったものとして速度計算
+			uPulseCnt		= 1;
+			uTime			= GetTimerW32();
+		}
+		
+		// 「ギア計算とか.xls」参照
+		// 5 = 13(本来の定数) - 8(g_uHz のシフト分)
+		g_Speed.uVal = (
+			( UINT )(
+				((( ULONG )g_uHz * uPulseCnt ) >> 5 ) *
+				//( UINT )( 3600.0 * 100.0 / PULSE_PER_1KM * ( 1 << 11 )) /
+				g_uSpeedCalcConst /
+				(( uTime - uPrevTime ) >> 2 )
+			) +
+			g_Speed.uVal
+		) >> 1;
+	}
+	
+	if( uPulseCntTmp ){
+		// パルスが入ったときは必ず 1km/h 以上
+		if( g_Speed.uVal < 100 ) g_Speed.uVal = 100;
+	}else{
+		// 1km/h 未満は 0km/h 扱い
+		if( g_Speed.uVal < 100 ){
+			g_Speed.uVal = 0;
+			g_Speed.PrevTime.dw = uTime - SPEED_0KPH_TH;
+		}
+	}
+	
+	// 0-100ゴール待ちモードで100km/hに達したらNewLap起動
+	if( g_Flags.uLapMode == MODE_ZERO_ONE_WAIT && g_Speed.uVal >= 10000 ){
+		g_IR.Time.dw = GetRTC();
+		g_Flags.bNewLap = TRUE;
+		g_Flags.uLapMode = MODE_LAPTIME;
+	}
+}
+
+#undef ComputeMeter
+INLINE void ComputeMeter( void ){
+	
+	if( g_uHz < (( H8HZ - 500000 ) >> 8 )){
+		g_uHz = H8HZ >> 8;
+	}
+	
+	ComputeMeterTacho();
+	ComputeMeterSpeed();
+	
+	if( g_Flags.uDispMode >= DISPMODE_SPEED ){
+		ComputeGear( g_uTachoBar );
+	}else{
+		g_Flags.bBlinkMain	= 0;
+		g_Flags.bBlinkSub	= 0;
+	}
+}
+
+void ProcessUIO( void ){
+	UCHAR c;
+	while( sci_read( &c, 1 )) DoInputSerial( c );	// serial 入力
+	OutputSerialSmooth( &g_DispVal );				// serial 出力
+	ProcessPushSW( &g_TP );							// sw 入力
 }
 
 /*** main *******************************************************************/
@@ -63,14 +192,14 @@ int main( void ){
 #ifdef MONITOR_ROM
 	if( !IO.PDR5.BIT.B4 ) IR_Flasher();
 #else
-	_INITSCT();
+	InitSector( __sectop( "B" ), __secend( "B" ));
 #endif
 	
 	InitMain();
 	set_imask_ccr( 0 );			/* CPU permit interrupts */
 	
-	Print( g_szMsgOpening );
-	g_Flags.uAutoMode	= AM_DISP;
+//	Print( g_szMsgOpening );
+	g_Flags.uAutoMode	= AM_DISP;	// ★ AM_DISP = 0 にして削除
 	cTimerA = TA.TCA;
 	
 	for(;;){
@@ -97,30 +226,16 @@ int main( void ){
 			}
 			*/
 			
-			ComputeMeter();							// speed, tacho 計算
-			ComputeGear2();							// ギア計算
-			DispLED_Carib( &g_DispVal );	// LED 表示データ生成
-			
-			/*** Gセンサーによるスタート検出 ***/
-			CheckStartByGSensor( &g_DispVal );
+			ComputeMeter();						// speed, tacho, gear 計算
+			DispLED_Carib( &g_DispVal );		// LED 表示データ生成
+			CheckStartByGSensor( &g_DispVal );	// Gセンサーによるスタート検出
+			ProcessAutoMode();					// オートモード
 			
 			/*** シリアル出力処理 ***/
-			if(
-				( CALC_DIVCNT == SERIAL_DIVCNT ) ||
-				!( cTimerA & ( SERIAL_DIVCNT - 1 ))
-			){
-				// key 入力
-				UCHAR c;
-				while( sci_read( &c, 1 )) DoInputSerial( c );
-				
-				OutputSerialSmooth( &g_DispVal );
-				
-				// sw 入力
-				ProcessPushSW( &g_TP );
+			if( !( cTimerA & ( SERIAL_DIVCNT - 1 ))){
+				// SIO, sw 等の UserIO 処理
+				ProcessUIO();
 			}
-			
-			/*** オートモード ***/
-			ProcessAutoMode();
 		}
 		
 		/*** WDT ***/

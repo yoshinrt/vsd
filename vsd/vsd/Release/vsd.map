@@ -1,4 +1,4 @@
-Optimizing Linkage Editor (V.9.00.02.000)         30-May-2009 18:13:27
+Optimizing Linkage Editor (V.9.00.02.000)         31-May-2009 17:02:08
 
 *** Options ***
 
@@ -9,7 +9,7 @@ Optimizing Linkage Editor (V.9.00.02.000)         30-May-2009 18:13:27
 -list="G:\DDS\vsd\vsd\vsd\release\vsd.map"
 -show=symbol
 -optimize=safe
--start=P,C,D,B/0F780,S/0FEAE
+-start=P,C,D,B/0F780,S/0FED2
 -nologo
 -input="G:\DDS\vsd\vsd\vsd\release\main.obj"
 -input="G:\DDS\vsd\vsd\vsd\release\rom_entry.obj"
@@ -19,7 +19,7 @@ Optimizing Linkage Editor (V.9.00.02.000)         30-May-2009 18:13:27
 
 *** Error information ***
 
-** L1100 (W) Cannot find "D" specified in option "start"
+** L1100 (W) Cannot find "C" specified in option "start"
 
 *** Mapping List ***
 
@@ -28,13 +28,13 @@ SECTION                            START      END         SIZE   ALIGN
 $VECT0
                                   00000000  00000001         2   2
 P
-                                  0000f780  0000fb7b       3fc   2
-C
-                                  0000fb7c  0000fb80         5   2
+                                  0000f780  0000f9c1       242   2
+D
+                                  0000f9c2  0000f9c3         2   2
 B
-                                  0000fb82  0000fb95        14   2
+                                  0000f9c4  0000f9c4         0   2
 S
-                                  0000feae  0000feae         0   2
+                                  0000fed2  0000fed2         0   2
 
 *** Symbol List ***
 
@@ -48,56 +48,30 @@ FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
 
 SECTION=P
 FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
-                                  0000f780  0000fb25       3a6
-  _GetTimerW32
-                                  0000f780        1c   func ,g         * 
-  _int_timer_a
-                                  0000f79c        42   func ,g         * 
-  _SerialPack
-                                  0000f7de        4e   func ,g         * 
-  _ComputeMeter
-                                  0000f82c       144   func ,g         * 
+                                  0000f780  0000f9c1       242
+  _ProcessUIO
+                                  0000f780        2c   func ,g         * 
   _main
-                                  0000f970       1b6   entry,g         * 
-FILE=mull3
-                                  0000fb26  0000fb45        20
-  $MULL$3
-                                  0000fb26         0   none ,g         * 
-FILE=spregsv3
-                                  0000fb46  0000fb65        20
-  $sp_regsv$3
-                                  0000fb46         0   none ,g         * 
-FILE=sprgld23
-                                  0000fb66  0000fb7b        16
-  $spregld2$3
-                                  0000fb66         0   none ,g         * 
+                                  0000f7ac       216   entry,g         * 
 
-SECTION=C
+SECTION=D
 FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
-                                  0000fb7c  0000fb80         5
-
-SECTION=B
-FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
-                                  0000fb82  0000fb95        14
-  _g_uPrevTW
-                                  0000fb82         2   data ,g         * 
-  _g_uHz
-                                  0000fb84         2   data ,g         * 
-  _g_uAutoModeTimer
-                                  0000fb86         2   data ,g         * 
-  _g_DispVal
-                                  0000fb88         c   data ,g         * 
-  _g_TP
-                                  0000fb94         2   data ,g         * 
+                                  0000f9c2  0000f9c3         2
+  _g_uSpeedCalcConst
+                                  0000f9c2         2   data ,g         * 
 
 Absolute value symbols
 FILE=G:\DDS\vsd\vsd\vsd\release\rom_entry.obj
   $BRR
                                   0000000c         0   none ,g         * 
   $STACK
-                                  0000feb2         0   none ,g         * 
+                                  0000fef4         0   none ,g         * 
+  $DIVL$3
+                                  00003208         0   none ,g         * 
+  $MULL$3
+                                  0000326a         0   none ,g         * 
   $DIVUL$3
-                                  0000309e         0   none ,g         * 
+                                  0000322e         0   none ,g         * 
 
 *** Delete Symbols ***
 
