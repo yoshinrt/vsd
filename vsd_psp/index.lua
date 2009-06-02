@@ -24,10 +24,7 @@ GEAR_RATIO3 = 2.37581451065366
 GEAR_RATIO4 = 2.95059529470571
 
 -- たぶん，ホイル一周が30パルス
-PULSE_PER_1KM	= ( 68774.48913 / 4.597593609 )	-- ELISE(補正後)
-
-ITOA_RADIX_BIT	= 7
-ITOA_DIGIT_NUM	= (( 32 + ITOA_RADIX_BIT - 1 ) / ITOA_RADIX_BIT )
+PULSE_PER_1KM	= 15473.76689	-- ELISE(CE28N)
 
 ACC_1G_X	= 6762.594337
 ACC_1G_Y	= 6667.738702
@@ -626,6 +623,10 @@ function ProcessSio()
 		Speed = SerialUnpack( RxBuf )
 		
 		RefreshFlag			= true
+		
+		-- 動いたらログ記録開始  carib でも開始するはず
+		if( Speed > 0 ) then bStartLog = true end
+		
 		return
 	end
 	
@@ -717,7 +718,7 @@ function ProcessSio()
 	-- ログに改行が付いたので，可視化ログに出力 ------------------------------
 	
 	--if( type( NoSio ) ~= "string" ) then
-	if( fpLog ) then
+	if( fpLog and bStartLog ) then
 		-- テキストログ
 		fpLog:write( string.format(
 			"%u\t%.2f\t%.2f\t%.4f\t%.4f\t%u",
