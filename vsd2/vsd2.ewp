@@ -173,7 +173,7 @@
         </option>
         <option>
           <name>CCDiagSuppress</name>
-          <state></state>
+          <state>Pa050</state>
         </option>
         <option>
           <name>CCDiagRemark</name>
@@ -218,7 +218,7 @@
         </option>
         <option>
           <name>CCLangConformance</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>CCSignedPlainChar</name>
@@ -937,7 +937,7 @@
         </option>
         <option>
           <name>CCDiagSuppress</name>
-          <state></state>
+          <state>Pa050</state>
         </option>
         <option>
           <name>CCDiagRemark</name>
@@ -1375,7 +1375,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>STM32F10x_SRAM.icf</state>
+          <state>G:\DDS\vsd\vsd2\STM32F10x_SRAM.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>

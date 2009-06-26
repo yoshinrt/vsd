@@ -28,6 +28,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "msd.h"
 
+#define DEBUG
+#include "dds.h"
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -515,35 +518,33 @@ u32 MSD_WaitRdy( void ){
 	u32 uResult;
 	
 	while( uCount-- && ( uResult = MSD_ReadByte()) != 0xFF );
-//printf( "[w:%d]", uResult != 0xFF );
+	DbgMsg(( "[w:%d]", uResult != 0xFF ));
 	return uResult != 0xFF;
 }
 
-void MSD_SendCmd(u8 Cmd, u32 Arg, u8 Crc)
-{
-  u32 i = 0x00;
-  u8 Frame[6];
-
-printf( "%02X", Cmd | 0x40 );
-  MSD_WaitRdy();
-  /* Construct byte1 */
-  Frame[0] = (Cmd | 0x40);
-  /* Construct byte2 */
-  Frame[1] = (u8)(Arg >> 24);
-  /* Construct byte3 */
-  Frame[2] = (u8)(Arg >> 16);
-  /* Construct byte4 */
-  Frame[3] = (u8)(Arg >> 8);
-  /* Construct byte5 */
-  Frame[4] = (u8)(Arg);
-  /* Construct CRC: byte6 */
-  Frame[5] = (Crc);
-
-  /* Send the Cmd bytes */
-  for (i = 0; i < 6; i++)
-  {
-    MSD_WriteByte(Frame[i]);
-  }
+void MSD_SendCmd( u8 Cmd, u32 Arg, u8 Crc ){
+	u32 i = 0x00;
+	u8 Frame[6];
+	
+	DbgMsg(( "%02d", Cmd ));
+	//MSD_WaitRdy();
+	/* Construct byte1 */
+	Frame[0] = (Cmd | 0x40);
+	/* Construct byte2 */
+	Frame[1] = (u8)(Arg >> 24);
+	/* Construct byte3 */
+	Frame[2] = (u8)(Arg >> 16);
+	/* Construct byte4 */
+	Frame[3] = (u8)(Arg >> 8);
+	/* Construct byte5 */
+	Frame[4] = (u8)(Arg);
+	/* Construct CRC: byte6 */
+	Frame[5] = (Crc);
+	
+	/* Send the Cmd bytes */
+	for( i = 0; i < 6; i++ ){
+		MSD_WriteByte( Frame[i] );
+	}
 }
 
 /*******************************************************************************
@@ -609,22 +610,21 @@ u8 MSD_GetDataResponse(void)
 * Return         : The MSD Response: - MSD_RESPONSE_FAILURE: Sequence failed
 *                                    - MSD_RESPONSE_NO_ERROR: Sequence succeed 
 *******************************************************************************/
-u8 MSD_GetResponse(u8 Response)
-{
-  u32 Count = 0xFFF;
-  u32 Result, Result2 = 0;
-
-  /* Check if response is got or a timeout is happen */
-  while ((( Result = MSD_ReadByte()) != Response) && Count)
-  {
-    Count--;
-    if( Result != 0xFF ) Result2 = Result;
-    //if( Result != 0xFF ) break;
-  }
-
-printf( "[%X]", Result == Response ? Result : Result2 );
-
-  return Result == Response ? MSD_RESPONSE_NO_ERROR : MSD_RESPONSE_FAILURE;
+u8 MSD_GetResponse(u8 Response){
+	
+	u32 Count = 0xFFF;
+	u32 Result;
+	
+	/* Check if response is got or a timeout is happen */
+	while ((( Result = MSD_ReadByte()) != Response) && Count)
+	{
+		Count--;
+		if( Result != 0xFF ) break;
+	}
+	
+	DbgMsg(( "[%X]", Result ));
+	
+	return Result == Response ? MSD_RESPONSE_NO_ERROR : MSD_RESPONSE_FAILURE;
 }
 
 /*******************************************************************************
@@ -662,46 +662,56 @@ u16 MSD_GetStatus(void)
 * Return         : The MSD Response: - MSD_RESPONSE_FAILURE: Sequence failed
 *                                    - MSD_RESPONSE_NO_ERROR: Sequence succeed 
 *******************************************************************************/
-u8 MSD_GoIdleState(void)
-{
-  UINT  uCnt;
-  
-  /* MSD chip select low */
-  MSD_CS_LOW();
-  /* Send CMD0 (GO_IDLE_STATE) to put MSD in SPI mode */
-  MSD_SendCmd(MSD_GO_IDLE_STATE, 0, 0x95);
 
-  /* Wait for In Idle State Response (R1 Format) equal to 0x01 */
-  if (MSD_GetResponse(MSD_IN_IDLE_STATE))
-  {
-    /* No Idle State Response: return response failue */
-    return MSD_RESPONSE_FAILURE;
-  }
-  /*----------Activates the card initialization process-----------*/
-  
-  for( uCnt = 0; uCnt < 10; ++uCnt ){
-    /* MSD chip select high */
-    MSD_CS_HIGH();
-    /* Send Dummy byte 0xFF */
-    MSD_WriteByte(DUMMY);
+#define RETRY_CNT	10
 
-    /* MSD chip select low */
-    MSD_CS_LOW();
-
-    /* Send CMD1 (Activates the card process) until response equal to 0x0 */
-    MSD_SendCmd(MSD_SEND_OP_COND, 0, 0xFF);
-    
-    timer( 1000000 );
-    /* Wait for no error Response (R1 Format) equal to 0x00 */
-    if( !MSD_GetResponse(MSD_RESPONSE_NO_ERROR)) break;
-  }
-
-  /* MSD chip select high */
-  MSD_CS_HIGH();
-  /* Send dummy byte 0xFF */
-  MSD_WriteByte(DUMMY);
-
-  return MSD_RESPONSE_NO_ERROR;
+u8 MSD_GoIdleState(void){
+	
+	UINT  uCnt;
+	
+	/* MSD chip select low */
+	MSD_CS_LOW();
+	
+	uCnt = RETRY_CNT;
+	while( 1 ){
+		/* Send CMD0 (GO_IDLE_STATE) to put MSD in SPI mode */
+		MSD_SendCmd( MSD_GO_IDLE_STATE, 0, 0x95 );
+		
+		/* Wait for In Idle State Response (R1 Format) equal to 0x01 */
+		if( MSD_GetResponse( MSD_SEND_OP_COND ) == MSD_RESPONSE_NO_ERROR ){
+			// 初期化完了したので break
+			break;
+		}
+		
+		// timeout
+		if( !--uCnt ){
+			DbgMsg(( "GoIdle:CMD0 timeout\n" ));
+			return MSD_RESPONSE_FAILURE;
+		}
+	}
+	
+	/*** 初期化をやってみる *************************************************/
+	
+	for( uCnt = 0; uCnt < RETRY_CNT; ++uCnt ){
+		/* Send ACMD41 (Activates the card process) until response equal to 0x0 */
+		// SD - ACMD41
+		MSD_SendCmd( 55, 0, 0 ); MSD_GetResponse( MSD_IN_IDLE_STATE );
+		MSD_SendCmd( 41, 0, 0 );
+		
+		// MMC - CMD1
+	//	MSD_SendCmd(MSD_SEND_OP_COND, 0, 0xFF);
+		
+		timer( 1000000 );
+		/* Wait for no error Response (R1 Format) equal to 0x00 */
+		if( !MSD_GetResponse(MSD_RESPONSE_NO_ERROR)) break;
+	}
+	
+	/* MSD chip select high */
+	MSD_CS_HIGH();
+	/* Send dummy byte 0xFF */
+	MSD_WriteByte(DUMMY);
+	
+	return MSD_RESPONSE_NO_ERROR;
 }
 
 /*******************************************************************************

@@ -124,7 +124,7 @@ __noreturn void JumpTo( u32 uJmpAddr, u32 uSP ){
 
 __noreturn int main( void ){
 	u32		uCnt;
-	char	buf[ 512 ];
+	char	szBuf[ 512 ];
 	int		i;
 	
 #ifdef DEBUG
@@ -193,16 +193,16 @@ __noreturn int main( void ){
 	res = f_open( &fp, "HOGE.TXT", FA_READ );
 	printf( "f_open:%d\n", res );
 	
-	for( i = 0; i < 512; ++i ) buf[ i ] = 0xAA;
+	for( i = 0; i < 512; ++i ) szBuf[ i ] = 0xAA;
 	
     UINT u;
-	res = f_read( &fp, buf, 512, &u );
+	res = f_read( &fp, szBuf, 512, &u );
 	printf( "f_read:%d: read=%d\n", res, u );
 	
 	res = f_close( &fp );
 	printf( "f_close:%d\n", res );
 	
-	dump( buf );
+	dump( szBuf );
 	
 	while(1){
 		for(t=0; t < 0x1000; t++){
@@ -217,7 +217,7 @@ __noreturn int main( void ){
 	Set_USBClock();
 	USB_Interrupts_Config();
 	USB_Init();
-	DFU_Butn_Config();
+	//DFU_Butn_Config();
 	
 	printf( "VSD2 - Vehicle Status Datalogger 2\n" );
 	
