@@ -610,21 +610,24 @@ u8 MSD_GetDataResponse(void)
 * Return         : The MSD Response: - MSD_RESPONSE_FAILURE: Sequence failed
 *                                    - MSD_RESPONSE_NO_ERROR: Sequence succeed 
 *******************************************************************************/
-u8 MSD_GetResponse(u8 Response){
+u32 MSD_GetResponse2( void ){
 	
 	u32 Count = 0xFFF;
 	u32 Result;
 	
 	/* Check if response is got or a timeout is happen */
-	while ((( Result = MSD_ReadByte()) != Response) && Count)
-	{
-		Count--;
-		if( Result != 0xFF ) break;
-	}
+	while((( Result = MSD_ReadByte()) == 0xFF ) && --Count );
 	
 	DbgMsg(( "[%X]", Result ));
 	
-	return Result == Response ? MSD_RESPONSE_NO_ERROR : MSD_RESPONSE_FAILURE;
+	return Result;
+}
+
+
+u8 MSD_GetResponse(u8 Response){
+	return
+		MSD_GetResponse2() == Response ?
+			MSD_RESPONSE_NO_ERROR : MSD_RESPONSE_FAILURE;
 }
 
 /*******************************************************************************
@@ -673,13 +676,15 @@ u8 MSD_GoIdleState(void){
 	MSD_CS_LOW();
 	
 	uCnt = RETRY_CNT;
+	BOOL bACMD = TRUE;
+	
 	while( 1 ){
 		/* Send CMD0 (GO_IDLE_STATE) to put MSD in SPI mode */
 		MSD_SendCmd( MSD_GO_IDLE_STATE, 0, 0x95 );
 		
 		/* Wait for In Idle State Response (R1 Format) equal to 0x01 */
-		if( MSD_GetResponse( MSD_SEND_OP_COND ) == MSD_RESPONSE_NO_ERROR ){
-			// 初期化完了したので break
+		if( MSD_GetResponse2() == MSD_SEND_OP_COND ){
+			// 初期化が終了したので，break
 			break;
 		}
 		
@@ -690,16 +695,24 @@ u8 MSD_GoIdleState(void){
 		}
 	}
 	
-	/*** 初期化をやってみる *************************************************/
+	/*** CMD1 / 41 で初期化 **************************************************/
 	
 	for( uCnt = 0; uCnt < RETRY_CNT; ++uCnt ){
-		/* Send ACMD41 (Activates the card process) until response equal to 0x0 */
-		// SD - ACMD41
-		MSD_SendCmd( 55, 0, 0 ); MSD_GetResponse( MSD_IN_IDLE_STATE );
-		MSD_SendCmd( 41, 0, 0 );
 		
-		// MMC - CMD1
-	//	MSD_SendCmd(MSD_SEND_OP_COND, 0, 0xFF);
+		if( bACMD ){
+			/* Send ACMD41 (Activates the card process) until response equal to 0x0 */
+			// SD - ACMD41
+			MSD_SendCmd( 55, 0, 0 );
+			if( MSD_GetResponse2() & ( 1 << 2 )){
+				// illegal command なので，CMD1 で初期化する
+				bACMD = FALSE;
+				continue;
+			}
+			MSD_SendCmd( 41, 0, 0 );
+		}else{
+			// MMC - CMD1
+			MSD_SendCmd(MSD_SEND_OP_COND, 0, 0xFF);
+		}
 		
 		timer( 1000000 );
 		/* Wait for no error Response (R1 Format) equal to 0x00 */

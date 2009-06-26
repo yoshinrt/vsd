@@ -611,7 +611,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>STM32F10x_FLASH.icf</state>
+          <state>$PROJ_DIR$\STM32F10x_FLASH.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -1287,7 +1287,7 @@
       <archiveVersion>1</archiveVersion>
       <data>
         <prebuild></prebuild>
-        <postbuild>bin\s2bin exec_sram\Exe\vsd2.s19</postbuild>
+        <postbuild>$PROJ_DIR$\bin\s2bin $PROJ_DIR$\exec_sram\Exe\vsd2.s19</postbuild>
       </data>
     </settings>
     <settings>
@@ -1375,7 +1375,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>G:\DDS\vsd\vsd2\STM32F10x_SRAM.icf</state>
+          <state>$PROJ_DIR$\STM32F10x_SRAM.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
