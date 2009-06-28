@@ -190,7 +190,9 @@ __noreturn int main( void ){
 	res = f_mount( 0, &fatfs );
 	printf( "f_mount:%d\n", res );
 	
-	res = f_open( &fp, "HOGE.TXT", FA_READ );
+	while( res = f_open( &fp, "HOGE.TXT", FA_READ )){
+		printf( "f_open:%d\n", res );
+	}
 	printf( "f_open:%d\n", res );
 	
 	for( i = 0; i < 512; ++i ) szBuf[ i ] = 0xAA;
@@ -198,6 +200,24 @@ __noreturn int main( void ){
     UINT u;
 	res = f_read( &fp, szBuf, 512, &u );
 	printf( "f_read:%d: read=%d\n", res, u );
+	
+	res = f_close( &fp );
+	printf( "f_close:%d\n", res );
+	
+	//dump( szBuf );
+	
+	while( res = f_open( &fp, "HOGE2.TXT", FA_WRITE | FA_CREATE_ALWAYS )){
+		printf( "f_open:%d\n", res );
+	}
+	printf( "f_open:%d\n", res );
+	
+	i = 1024 * 1024 / 512;
+	while( i-- ){
+		res = f_write( &fp, szBuf, 512, &u );
+		GPIOC_ODR ^= 0x40;    // LED‚Ìo—Í‚ð”½“]‚³‚¹‚éB
+	}
+	
+	printf( "f_write:%d: write=%d\n", res, u );
 	
 	res = f_close( &fp );
 	printf( "f_close:%d\n", res );

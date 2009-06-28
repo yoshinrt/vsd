@@ -1,0 +1,7 @@
+; #!"C:\Program Files\teraterm\ttpmacro.exe" /I
+
+connect '/c=5'
+timeout = 1
+wait 'hoge'
+
+sendfile 'G:\\DDS\\vsd\\vsd2\\exec_sram\\Exe\\vsd2.s19.bin' 1

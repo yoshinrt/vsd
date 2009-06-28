@@ -527,7 +527,7 @@ void MSD_SendCmd( u8 Cmd, u32 Arg, u8 Crc ){
 	u8 Frame[6];
 	
 	DbgMsg(( "%02d", Cmd ));
-	//MSD_WaitRdy();
+	MSD_WaitRdy();
 	/* Construct byte1 */
 	Frame[0] = (Cmd | 0x40);
 	/* Construct byte2 */
@@ -684,7 +684,7 @@ u8 MSD_GoIdleState(void){
 		
 		/* Wait for In Idle State Response (R1 Format) equal to 0x01 */
 		if( MSD_GetResponse2() == MSD_SEND_OP_COND ){
-			// 介袋步が姜位したので·break
+			// 弶婜壔偑廔椆偟偨偺偱丆break
 			break;
 		}
 		
@@ -695,7 +695,7 @@ u8 MSD_GoIdleState(void){
 		}
 	}
 	
-	/*** CMD1 / 41 で介袋步 **************************************************/
+	/*** CMD1 / 41 偱弶婜壔 **************************************************/
 	
 	for( uCnt = 0; uCnt < RETRY_CNT; ++uCnt ){
 		
@@ -704,7 +704,7 @@ u8 MSD_GoIdleState(void){
 			// SD - ACMD41
 			MSD_SendCmd( 55, 0, 0 );
 			if( MSD_GetResponse2() & ( 1 << 2 )){
-				// illegal command なので·CMD1 で介袋步する
+				// illegal command 側偺偱丆CMD1 偱弶婜壔偡傞
 				bACMD = FALSE;
 				continue;
 			}
@@ -805,7 +805,7 @@ void SPI_Config(void)
   SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
   SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
   SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
+  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256; // org is 4
   SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
   SPI_InitStructure.SPI_CRCPolynomial = 7;
   SPI_Init(SPI1, &SPI_InitStructure);

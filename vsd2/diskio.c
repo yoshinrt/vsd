@@ -92,7 +92,7 @@ DRESULT disk_read (
 	DWORD sector,	/* Sector address (LBA) */
 	BYTE count		/* Number of sectors to read (1..255) */
 ){
-	MSD_ReadBlock( buff, sector << 9, count << 9 );
+	MSD_ReadBuffer( buff, sector << 9, count << 9 );
 	return RES_OK;
 }
 
@@ -109,7 +109,7 @@ DRESULT disk_write (
 	BYTE count			/* Number of sectors to write (1..255) */
 )
 {
-	MSD_WriteBlock(( u8 *)buff, sector << 9, count << 9 );
+	MSD_WriteBuffer(( u8 *)buff, sector << 9, count << 9 );
 	return RES_OK;
 }
 #endif /* _READONLY */
