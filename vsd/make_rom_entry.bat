@@ -13,7 +13,6 @@ open( fpOut, '> rom_entry.src' );
 
 print fpOut<<'EOF';
 	.CPU	300HN
-	.EXPORT     $DIVUL$3
 	.SECTION    P,CODE,ALIGN=2
 EOF
 

@@ -49,6 +49,15 @@ INLINE void InitSector(
 	while( uBStart < uBEnd ){ *uBStart++ = 0; };
 }
 
+/*** ユーザ IO 処理 *********************************************************/
+
+void ProcessUIO( void ){
+	UCHAR c;
+	while( sci_read( &c, 1 )) DoInputSerial( c );	// serial 入力
+	OutputSerialSmooth( &g_DispVal );				// serial 出力
+	ProcessPushSW( &g_TP );							// sw 入力
+}
+
 /*** Tacho / Speed 計算 *****************************************************/
 
 // 0rpm に切り下げる EG 回転数のパルス幅 = 200rpm (clk数@16MHz)
@@ -170,11 +179,27 @@ INLINE void ComputeMeter( void ){
 	}
 }
 
-void ProcessUIO( void ){
-	UCHAR c;
-	while( sci_read( &c, 1 )) DoInputSerial( c );	// serial 入力
-	OutputSerialSmooth( &g_DispVal );				// serial 出力
-	ProcessPushSW( &g_TP );							// sw 入力
+/*** オートモード処理 *******************************************************/
+
+#undef ProcessAutoMode
+INLINE UINT ProcessAutoMode( void ){
+	if( g_Tacho.uVal >= 4500 ){
+		// 4500rpm 以上で，Circuit モードに移行
+		g_Flags.uGearMode	= GM_GEAR;
+		g_cAutoModeTimer	= g_uRTC;
+	}else if(( UCHAR )g_uRTC - g_cAutoModeTimer >= 120 ){
+		// 2分間，4500rpm 以下なら，街乗りモードに移行
+		g_Flags.uGearMode	= GM_TOWN;
+	}
+	
+	if( g_Flags.uAutoMode == AM_DISP ){
+		// AM_DISP のとき，Speed⇔Tacho の自動切換え
+		if( g_Tacho.uVal < 1500 ){
+			g_Flags.uDispModeNext = DISPMODE_TACHO;
+		}else if( g_Speed.uVal >= 70 * 100 ){
+			g_Flags.uDispModeNext = DISPMODE_SPEED;
+		}
+	}
 }
 
 /*** main *******************************************************************/
@@ -189,12 +214,13 @@ int main( void ){
 	UCHAR			cTimerA;
 	
 	set_imask_ccr( 1 );
-#ifdef MONITOR_ROM
-	if( !IO.PDR5.BIT.B4 ) IR_Flasher();
-#else
-	InitSector( __sectop( "B" ), __secend( "B" ));
-#endif
+	#ifdef MONITOR_ROM
+		if( !IO.PDR5.BIT.B4 ) IR_Flasher();
+	#else
+		InitSector( __sectop( "B" ), __secend( "B" ));
+	#endif
 	
+	g_szLEDMsg = g_LEDAnimeOpening;	// ★ ROM化の際に削除
 	InitMain();
 	set_imask_ccr( 0 );			/* CPU permit interrupts */
 	

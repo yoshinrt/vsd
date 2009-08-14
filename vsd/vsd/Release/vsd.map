@@ -1,4 +1,4 @@
-Optimizing Linkage Editor (V.9.00.02.000)         31-May-2009 17:02:08
+Optimizing Linkage Editor (V.9.00.02.000)         14-Aug-2009 16:25:29
 
 *** Options ***
 
@@ -28,11 +28,11 @@ SECTION                            START      END         SIZE   ALIGN
 $VECT0
                                   00000000  00000001         2   2
 P
-                                  0000f780  0000f9c1       242   2
+                                  0000f780  0000fa1f       2a0   2
 D
-                                  0000f9c2  0000f9c3         2   2
+                                  0000fa20  0000fa21         2   2
 B
-                                  0000f9c4  0000f9c4         0   2
+                                  0000fa22  0000fa22         0   2
 S
                                   0000fed2  0000fed2         0   2
 
@@ -48,17 +48,17 @@ FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
 
 SECTION=P
 FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
-                                  0000f780  0000f9c1       242
+                                  0000f780  0000fa1f       2a0
   _ProcessUIO
                                   0000f780        2c   func ,g         * 
   _main
-                                  0000f7ac       216   entry,g         * 
+                                  0000f7ac       274   entry,g         * 
 
 SECTION=D
 FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
-                                  0000f9c2  0000f9c3         2
+                                  0000fa20  0000fa21         2
   _g_uSpeedCalcConst
-                                  0000f9c2         2   data ,g         * 
+                                  0000fa20         2   data ,g         * 
 
 Absolute value symbols
 FILE=G:\DDS\vsd\vsd\vsd\release\rom_entry.obj

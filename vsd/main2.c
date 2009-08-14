@@ -113,7 +113,7 @@ const UINT g_uTachoBar[] = {
 	334, 200, 150, 118, 97
 };
 
-UCHAR			*g_szLEDMsg = g_LEDAnimeOpening;
+UCHAR			*g_szLEDMsg = g_LEDAnimeOpening;	// ★初期値削除
 
 /*** 10進->LED フォーマッタ *************************************************/
 
@@ -489,11 +489,11 @@ INLINE void ComputeMeter( void ){
 		) >> 1;
 	}
 	
-	// 1km/h 未満は 0km/h 扱い
+		// 1km/h 未満は 0km/h 扱い
 	if( g_Speed.uVal < 100 && uPulseCnt == 0 ){
-		g_Speed.uVal = 0;
-		g_Speed.PrevTime.dw = uTime - SPEED_0KPH_TH;
-	}
+			g_Speed.uVal = 0;
+			g_Speed.PrevTime.dw = uTime - SPEED_0KPH_TH;
+		}
 	
 	// 0-100ゴール待ちモードで100km/hに達したらNewLap起動
 	if( g_Flags.uLapMode == MODE_ZERO_ONE_WAIT && g_Speed.uVal >= 10000 ){
@@ -1173,6 +1173,10 @@ INLINE void InitMain( void ){
 	g_Flags.bBeep			= 1;
 	g_Flags.uDispMode		= DISPMODE_OPENING;
 	g_Flags.uDispModeNext	= DISPMODE_TACHO;
+	
+	// ROM prog によってポインタが進むので
+	// RAM 実行の際にポインタを元に戻す必要がある
+	g_szLEDMsg				= g_LEDAnimeOpening;
 	
 	//sci_init( cRxBuf, sizeof( cRxBuf ), cTxBuf, sizeof( cTxBuf ));
 	sci_init( 0 );
