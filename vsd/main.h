@@ -137,9 +137,8 @@ enum {
 };
 
 enum {
-	AM_OFF,		// ★削除
-	AM_TBAR,	// タコバー自動切換え
 	AM_DISP,	// TBAR + Tacho⇔Speed の自動切換え
+	AM_TBAR,	// タコバー自動切換え
 	AM_NUM
 };
 
@@ -150,18 +149,22 @@ enum {
 
 // 上詰めなので下に追記する
 typedef struct {
+	// 16bit
 	UCHAR	uDispModeNext	:4;
+	UCHAR	uDispMode		:4;
+	UCHAR	uGearMode		:3;
+	UCHAR	uAutoMode		:1;
 	UCHAR	uLapMode		:2;
 	BOOL	bBlinkMain		:1;
 	BOOL	bBlinkSub		:1;
+	
 	BOOL	bBeep			:1;
 	BOOL	bNewLap			:1;
-	UCHAR	uGearMode		:5;
-	UCHAR	uDispMode		:5;
-	UCHAR	uAutoMode		:2;
 } Flags_t;
 
 typedef struct {
+	UCHAR	uPushElapsed;
+	UCHAR	uPushCnt;
 	UCHAR	uPrev		:4;
 	UCHAR	uTrig		:4;
 } PushSW_t;
@@ -183,15 +186,9 @@ typedef union {
 	UCHAR	cDisp[ 4 ];
 } VRAM;
 
-typedef struct {
-	UCHAR	uPushElapsed;
-	UCHAR	uPushCnt;
-} TouchPanel_t;		// ★PushSW_t と統合
-
 typedef struct{
-	ULONG	uGx, uGy;
+	UINT	uGx, uGy;
 	UINT	uPrevGx;
-	UINT	uCnt;
 } DispVal_t;
 
 /*** extern *****************************************************************/

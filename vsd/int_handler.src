@@ -39,7 +39,7 @@ SYSTEM_HDL:	PUSH.W	R0			; Save User R0
 
 ; padding for C code
 		.SECTION  BPAD_C,DATA,ALIGN=2
-		.RES.B	H'800 - H'a4 - H'8 - H'2
+		.RES.B	H'800 - H'A0 - H'8 - H'2
 		;               B      R     RAM_VectorTblPtr
 		
 ; padding for MONITOR
