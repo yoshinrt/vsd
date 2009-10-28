@@ -8,9 +8,7 @@
 //				|				|	|					config 名
 //				|				|	|					|
 DEF_CHECKBOX(	CHECK_LAP,		1,	"ラップタイム",		"lap_time"	)
-#ifndef CIRCUIT_TOMO
 DEF_CHECKBOX_N(	CHECK_LOGPOS,	0,	"log位置自動認識",	NULL		)
-#endif
 DEF_CHECKBOX_N(	CHECK_FRAME,	0,	"フレーム表示",		NULL		)
 
 #undef DEF_CHECKBOX

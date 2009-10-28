@@ -48,11 +48,7 @@
 #define HIREZO_TH		600			// ハイレゾモード時の横幅スレッショルド
 #define POS_DEFAULT		0x80000000
 
-#ifdef CIRCUIT_TOMO
-	#define CONFIG_EXT	"cfg"
-#else
-	#define CONFIG_EXT	"avs"
-#endif
+#define CONFIG_EXT		"avs"
 
 #define BESTLAP_NONE	599999
 
@@ -81,12 +77,10 @@ enum {
 typedef struct {
 	float	fSpeed;
 	float	fTacho;
-#ifndef CIRCUIT_TOMO
 	float	fMileage;
 	float	fGx, fGy;
 	float	fX, fX0;
 	float	fY, fY0;
-#endif
 } VSD_LOG_t;
 
 typedef struct {
@@ -202,19 +196,11 @@ class CVsdFilter {
 	BOOL ConfigSave( const char *szFileName );
 #endif
 	BOOL ReadLog( const char *szFileName );
-#ifdef CIRCUIT_TOMO
-	UINT ReadPTD( FILE *fp, UINT uOffs );
-#else
 	void RotateMap( void );
-#endif
 	
 	// 手動ラップタイム計測モードかどうか
 	BOOL IsHandLaptime( void ){
-		#ifdef CIRCUIT_TOMO
-			return TRUE;
-		#else
-			return m_iVsdLogNum == 0;
-		#endif
+		return m_iVsdLogNum == 0;
 	}
 	
 	VSD_LOG_t	*m_VsdLog;

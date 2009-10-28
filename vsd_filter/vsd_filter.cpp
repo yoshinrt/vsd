@@ -20,12 +20,7 @@
 
 /*** macros *****************************************************************/
 
-#ifdef CIRCUIT_TOMO
-	#define	FILE_EXT		"log/config file\0*.ptd; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
-#else
-	#define	FILE_EXT		"log/config file\0*.log; *.gz; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
-#endif
-
+#define	FILE_EXT		"log/config file\0*.log; *.gz; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 #define	FILE_CFG_EXT		"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 
 /*** new type ***************************************************************/
@@ -345,21 +340,14 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				
 				// trackbar 設定
 				track_e[ TRACK_LSt ] =
-				track_e[ TRACK_LEd ] =
-					#ifdef CIRCUIT_TOMO
-						( int )( g_Vsd->m_iVsdLogNum / LOG_FREQ + 1 );
-					#else
-						( g_Vsd->m_iVsdLogNum + 99 ) / 100;
-					#endif
+				track_e[ TRACK_LEd ] = ( g_Vsd->m_iVsdLogNum + 99 ) / 100;
 			}
 			
 			// 設定再描画
 			filter->exfunc->filter_window_update( filter );
 			
-			#ifndef CIRCUIT_TOMO
-				// log pos 更新
-				func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
-			#endif
+			// log pos 更新
+			func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
 		}
 		return TRUE;
 		
@@ -437,7 +425,6 @@ BOOL func_update( FILTER *fp, int status ){
 	
 	bReEnter = TRUE;
 	
-#ifndef CIRCUIT_TOMO
 	if(
 		status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS ) &&
 		fp->check[ CHECK_LOGPOS ]
@@ -455,7 +442,6 @@ BOOL func_update( FILTER *fp, int status ){
 	if( status == ( FILTER_UPDATE_STATUS_TRACK + TRACK_MapAngle )){
 		g_Vsd->RotateMap();
 	}
-#endif
 	
 	bReEnter = FALSE;
 	

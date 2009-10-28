@@ -402,26 +402,20 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	
 	if(( fp = fopen( szFileName, "w" )) == NULL ) return FALSE;
 	
-	#ifdef CIRCUIT_TOMO
-		#define CONF_OUTPUT_FMT	"%s=%d\n"
-	#else
-		#define CONF_OUTPUT_FMT	", \\\n\t%s=%d"
-		
-		char szBuf[ BUF_SIZE ];
-		
-		fprintf( fp,
-			"DirectShowSource( \"%s\" )\n"
-			"ConvertToYUY2\n"
-			"VSDFilter( \\\n\tlog_file=\"%s\"",
-			GetVideoFileName( szBuf ),
-			m_szLogFile ? m_szLogFile : ""
-		);
-	#endif
+	char szBuf[ BUF_SIZE ];
+	
+	fprintf( fp,
+		"DirectShowSource( \"%s\" )\n"
+		"ConvertToYUY2\n"
+		"VSDFilter( \\\n\tlog_file=\"%s\"",
+		GetVideoFileName( szBuf ),
+		m_szLogFile ? m_szLogFile : ""
+	);
 	
 	for( i = 0; i < TRACK_N; ++i ){
 		if( m_szTrackbarName[ i ] == NULL ) continue;
 		
-		fprintf( fp, CONF_OUTPUT_FMT, m_szTrackbarName[ i ],
+		fprintf( fp, ", \\\n\t%s=%d", m_szTrackbarName[ i ],
 			( i <= TRACK_LEd ) ? m_piParamT[ i ] * 100 + m_piParamT[ i + 1 ] :
 			m_piParamT[ i ]
 		);
@@ -431,29 +425,19 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 		if( m_szCheckboxName[ i ] == NULL ) continue;
 		
 		fprintf(
-			fp, CONF_OUTPUT_FMT, m_szCheckboxName[ i ], m_piParamC[ i ]
+			fp, ", \\\n\t%s=%d", m_szCheckboxName[ i ], m_piParamC[ i ]
 		);
 	}
 	
 	// 手動ラップ計測マーク出力
 	if( IsHandLaptime() && m_iLapNum ){
-		#ifdef CIRCUIT_TOMO
-			fputs( "MARK:\n", fp );
-			for( i = 0; i < m_iLapNum; ++i ){
-				fprintf( fp, "%u\n", m_Lap[ i ].iLogNum );
-			}
-		#else
-			for( i = 0; i < m_iLapNum; ++i ){
-				fprintf( fp, "%s%u", i ? "," : ", \\\n\tmark=\"", m_Lap[ i ].iLogNum );
-			}
-			fputc( '"', fp );
-		#endif
-		
+		for( i = 0; i < m_iLapNum; ++i ){
+			fprintf( fp, "%s%u", i ? "," : ", \\\n\tmark=\"", m_Lap[ i ].iLogNum );
+		}
+		fputc( '"', fp );
 	}
 	
-	#ifndef CIRCUIT_TOMO
-		fprintf( fp, " \\\n)\n" );
-	#endif
+	fprintf( fp, " \\\n)\n" );
 	
 	fclose( fp );
 	return TRUE;
@@ -461,39 +445,6 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 #endif
 
 /*** ログリード *************************************************************/
-
-#ifdef CIRCUIT_TOMO
-UINT CVsdFilter::ReadPTD( gzFile fp, UINT uOffs, TCHAR szBuf ){
-	
-	UINT	uCnt		= 0;
-	UINT	uPulseCnt	= 0;
-	UINT	uOutCnt		= 0;
-	UINT	uPrevTime	= 0;
-	UINT	u;
-	
-	gzgets( fp, szBuf, BUF_SIZE );
-	uCnt = atoi( szBuf );
-	
-	while( uCnt ){
-		do{
-			gzgets( fp, szBuf, BUF_SIZE );
-			u = atoi( szBuf );
-			
-			--uCnt;
-			++uPulseCnt;
-		}while(( double )u / PTD_LOG_FREQ < ( double )uOutCnt / LOG_FREQ && uCnt );
-		
-		while(( double )uOutCnt / LOG_FREQ < ( double )u / PTD_LOG_FREQ ){
-			*( float *)(( char *)( &m_VsdLog[ uOutCnt ] ) + uOffs ) =
-				( float )(( double )uPulseCnt / ( u - uPrevTime ) * PTD_LOG_FREQ );
-			++uOutCnt;
-		}
-		uPrevTime = u;
-		uPulseCnt = 0;
-	}
-	return( uOutCnt );
-}
-#endif
 
 BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	TCHAR	szBuf[ BUF_SIZE ];
@@ -510,19 +461,6 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	m_szLogFile = new char[ strlen( szFileName ) + 1 ];
 	strcpy( m_szLogFile, szFileName );
 #endif
-	
-#ifdef CIRCUIT_TOMO
-	int i;
-	for( i = 0; i < MAX_VSD_LOG; ++i ){
-		m_VsdLog[ i ].fSpeed = m_VsdLog[ i ].fTacho = 0;
-	}
-	
-	m_iVsdLogNum	= ReadPTD( fp, offsetof( VSD_LOG_t, fTacho ), szBuf );
-	i				= ReadPTD( fp, offsetof( VSD_LOG_t, fSpeed ), szBuf );
-	
-	if( i > m_iVsdLogNum ) m_iVsdLogNum = i;
-	
-#else // CIRCUIT_TOMO
 	
 	// GPS ログ用
 	UINT		uGPSCnt = 0;
@@ -723,7 +661,6 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	}
 	
 	delete [] GPSLog;
-#endif // CIRCUIT_TOMO
 	
 	/********************************************************************/
 	
@@ -737,7 +674,6 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 
 /*** MAP 回転処理 ***********************************************************/
 
-#ifndef CIRCUIT_TOMO
 void CVsdFilter::RotateMap( void ){
 	
 	int i;
@@ -763,7 +699,6 @@ void CVsdFilter::RotateMap( void ){
 	m_dMapOffsX		= dMinX;
 	m_dMapOffsY		= dMinY;
 }
-#endif
 
 /****************************************************************************/
 /*** メーター描画 ***********************************************************/
@@ -773,13 +708,8 @@ void CVsdFilter::RotateMap( void ){
 
 #define VideoSt			( m_piParamT[ TRACK_VSt ] * 100 + m_piParamT[ TRACK_VSt2 ] )
 #define VideoEd			( m_piParamT[ TRACK_VEd ] * 100 + m_piParamT[ TRACK_VEd2 ] )
-#ifdef CIRCUIT_TOMO
-	#define LogSt		(( m_piParamT[ TRACK_LSt ] * 100 + m_piParamT[ TRACK_LSt2 ] ) * ( LOG_FREQ / 100 ))
-	#define LogEd		(( m_piParamT[ TRACK_LEd ] * 100 + m_piParamT[ TRACK_LEd2 ] ) * ( LOG_FREQ / 100 ))
-#else
-	#define LogSt		( m_piParamT[ TRACK_LSt ] * 100 + m_piParamT[ TRACK_LSt2 ] )
-	#define LogEd		( m_piParamT[ TRACK_LEd ] * 100 + m_piParamT[ TRACK_LEd2 ] )
-#endif
+#define LogSt			( m_piParamT[ TRACK_LSt ] * 100 + m_piParamT[ TRACK_LSt2 ] )
+#define LogEd			( m_piParamT[ TRACK_LEd ] * 100 + m_piParamT[ TRACK_LEd2 ] )
 #define LineTrace		m_piParamT[ TRACK_LineTrace ]
 
 #define DispLap			m_piParamC[ CHECK_LAP ]
@@ -855,19 +785,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	BOOL	bInLap = FALSE;	// ラップタイム計測中
 	
-#ifdef CIRCUIT_TOMO
-	const int	iMeterR			= 50 * GetWidth() / 320;
-	const int	iMeterCx		= iMeterR * 3 + 4;
-	const int	iMeterCy		= ( int )( GetHeight() - iMeterR * 0.75 - 2 );
-	const int	iMeterMinDeg	= 135;
-	const int	iMeterMaxDeg	= 45;
-	const int	iMeterMaxVal	= m_piParamT[ TRACK_TACHO ] * 1000;
-	const int	iMeterDegRange	= ( iMeterMaxDeg + 360 - iMeterMinDeg ) % 360;
-	const int	iMeterScaleLen	= iMeterR / 8;
-	
-	const int	iMeterSCx		= iMeterR + 2;
-	const int	iMeterSMaxVal	= m_piParamT[ TRACK_SPEED ];
-#else
 	const int	iMeterR			= m_piParamS[ SHADOW_METER_R  ] >= 0 ? m_piParamS[ SHADOW_METER_R  ] : 50 * GetWidth() / 320;
 	const int	iMeterCx		= m_piParamS[ SHADOW_METER_CX ] >= 0 ? m_piParamS[ SHADOW_METER_CX ] : GetWidth()  - iMeterR - 2;
 	const int	iMeterCy		= m_piParamS[ SHADOW_METER_CY ] >= 0 ? m_piParamS[ SHADOW_METER_CY ] : GetHeight() - iMeterR - 2;
@@ -876,7 +793,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 	const int	iMeterMaxVal	= 7000;
 	const int	iMeterDegRange	= ( iMeterMaxDeg + 360 - iMeterMinDeg ) % 360;
 	const int	iMeterScaleLen	= iMeterR / 8;
-#endif
 	
 	// フォントサイズ初期化
 	InitFont();
@@ -892,11 +808,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	if( m_piParamC[ CHECK_FRAME ] ){
 		sprintf( szBuf, "V%6d/%6d", GetFrameCnt(), GetFrameMax() - 1 );
 		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, GetWidth() / 2, GetHeight() / 2 );
-	#ifdef CIRCUIT_TOMO
-		sprintf( szBuf, "L%.2f/%.2f", ( double )dLogNum / LOG_FREQ, m_iVsdLogNum / LOG_FREQ );
-	#else
 		sprintf( szBuf, "L%6d/%6d", ( int )dLogNum, m_iVsdLogNum - 1 );
-	#endif
 		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 	}
 	
@@ -947,7 +859,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 			DrawString( "Time -'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - GetFontW() * 13, 1 );
 		}
 		
-	#ifndef CIRCUIT_TOMO
 		/*** ベストとの車間距離表示 ***/
 		if( !IsHandLaptime() ){
 			if( bInLap ){
@@ -1000,7 +911,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 				m_iPosY += GetFontH();
 			}
 		}
-	#endif
 		
 		m_iPosY += GetFontH() / 4;
 		
@@ -1070,44 +980,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 	}
 	
-#ifdef CIRCUIT_TOMO
-	// スピードメーターパネル
-	DrawCircle(
-		iMeterSCx, iMeterCy, iMeterR, COLOR_PANEL,
-		CVsdFilter::IMG_ALFA | CVsdFilter::IMG_FILL
-	);
-	
-	int	iStep = (( iMeterSMaxVal / 20 ) + 4 ) / 5 * 5;
-	
-	for( i = 0; i <= iMeterSMaxVal; i += iStep ){
-		int iDeg = iMeterDegRange * i / iMeterSMaxVal + iMeterMinDeg;
-		if( iDeg >= 360 ) iDeg -= 360;
-		
-		// メーターパネル目盛り
-		if( i % iStep == 0 ){
-			DrawLine(
-				( int )( cos( iDeg * ToRAD ) * iMeterR ) + iMeterSCx,
-				( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
-				( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterSCx,
-				( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
-				( i % ( iStep * 2 ) == 0 ) ? 2 : 1,
-				COLOR_SCALE, 0
-			);
-			
-			// メーターパネル目盛り数値
-			if( i % ( iStep * 2 ) == 0 ){
-				sprintf( szBuf, "%d", i );
-				DrawString(
-					szBuf,
-					COLOR_STR, 0,
-					( int )( cos( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterSCx - GetFontW() * strlen( szBuf ) / 2,
-					( int )( sin( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCy - GetFontH() / 2
-				);
-			}
-		}
-	}
-#endif // CIRCUIT_TOMO
-	
 	/*** メーター描画 ***/
 	
 	if( dLogNum < 0 || dLogNum > m_iVsdLogNum - 1 ) return TRUE;
@@ -1115,13 +987,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 	double	dSpeed	= GetVsdLog( fSpeed );
 	double	dTacho	= GetVsdLog( fTacho );
 	
-#ifdef CIRCUIT_TOMO
-	// スピード・タコ修正
-	
-	dSpeed *= 3600.0 / m_piParamT[ TRACK_PULSE_SPEED ];
-	dTacho *= 1000.0 * 60 / m_piParamT[ TRACK_PULSE_TACHO ];
-	
-#else // CIRCUIT_TOMO
 	// G スネーク
 	int	iGx, iGy;
 	
@@ -1233,25 +1098,11 @@ BOOL CVsdFilter::DrawVSD( void ){
 			COLOR_CURRENT_POS, CVsdFilter::IMG_FILL
 		);
 	}
-#endif // CIRCUIT_TOMO
 	
 	// スピード / ギア
 	UINT uGear = 0;
 	
 	if( dTacho ){
-	#ifdef CIRCUIT_TOMO
-		UINT	u;
-		uGear = 6;
-		for( u = 1; u <= 5; ++u ){
-			if(
-				( m_piParamT[ TRACK_GEAR1 + u - 1 ] + m_piParamT[ TRACK_GEAR1 + u ] ) / 20000.0 >
-				dSpeed / 3600 * 1000 * 60 / dTacho
-			){
-				uGear = u;
-				break;
-			}
-		}
-	#else
 		UINT uGearRatio = ( int )( dSpeed * 100 * ( 1 << 8 ) / dTacho );
 		
 		if     ( uGearRatio < GEAR_TH( 1 ))	uGear = 1;
@@ -1259,7 +1110,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 		else if( uGearRatio < GEAR_TH( 3 ))	uGear = 3;
 		else if( uGearRatio < GEAR_TH( 4 ))	uGear = 4;
 		else								uGear = 5;
-	#endif
 	}
 	
 	// スピード表示
@@ -1277,7 +1127,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 		iMeterCx - 3 * GetFontW(), iMeterCy + iMeterR / 2
 	);
 	
-#ifndef CIRCUIT_TOMO
 	sprintf( szBuf, "%02dG", ( int )( sqrt( GetVsdLog( fGx ) * GetVsdLog( fGx ) + GetVsdLog( fGy ) * GetVsdLog( fGy )) * 10 ));
 	DrawString(
 		szBuf,
@@ -1289,22 +1138,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_iPosX + GetFontW()    , m_iPosY - 3,
 		COLOR_STR, 0
 	);
-#else
-	// Speed の針
-	double dSpeedNeedle =
-		iMeterDegRange / ( double )iMeterSMaxVal * dSpeed + iMeterMinDeg;
-	if( dSpeedNeedle >= 360 ) dSpeedNeedle -= 360;
-	dSpeedNeedle = dSpeedNeedle * ToRAD;
-	
-	DrawLine(
-		iMeterSCx, iMeterCy,
-		( int )( cos( dSpeedNeedle ) * iMeterR * 0.95 + .5 ) + iMeterSCx,
-		( int )( sin( dSpeedNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
-		LINE_WIDTH, COLOR_NEEDLE, 0
-	);
-	
-	DrawCircle( iMeterSCx, iMeterCy,  iMeterR / 25, COLOR_NEEDLE, CVsdFilter::IMG_FILL );
-#endif
 	
 	// Tacho の針
 	double dTachoNeedle = iMeterDegRange / ( double )iMeterMaxVal * dTacho + iMeterMinDeg;
