@@ -13,6 +13,7 @@
 #define BUF_SIZE	1024
 
 #define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 2 ))
+#define GPS_FREQ		5
 #define MAX_LAP			200
 
 #ifdef AVS_PLUGIN
@@ -94,7 +95,7 @@ typedef struct {
 	float	fY;
 	float	fVX;
 	float	fVY;
-	int		iLogNum;
+	float	fTime;
 } GPS_LOG_t;
 
 typedef struct {

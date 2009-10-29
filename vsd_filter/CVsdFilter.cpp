@@ -405,8 +405,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	char szBuf[ BUF_SIZE ];
 	
 	fprintf( fp,
-		"DirectShowSource( \"%s\" )\n"
-		"ConvertToYUY2\n"
+		"DirectShowSource( \"%s\", pixel_type=\"YUY2\", convertfps = true  )\n"
 		"VSDFilter( \\\n\tlog_file=\"%s\"",
 		GetVideoFileName( szBuf ),
 		m_szLogFile ? m_szLogFile : ""
@@ -444,6 +443,73 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 }
 #endif
 
+/*** GPS ログの up-convert **************************************************/
+
+void UpConvertGPSLog( VSD_LOG_t *Out, GPS_LOG_t *In, UINT uCnt ){
+	
+	int		iLogNum;
+	int		i		= -1;
+	
+	double	dX3, dX2, dX1, dX0;
+	double	dY3, dY2, dY1, dY0;
+	double	t;
+	
+	In[ uCnt ].fTime = 9999999; // 番犬
+	
+	iLogNum = ( int )( In[ 0 ].fTime * LOG_FREQ + 1 );
+
+	for(;; ++iLogNum ){
+		
+		// In[ i ].fTime <= iLogNum / LOG_FREQ < In[ i + 1 ].fTime
+		// の範囲になければ，正しい i を探す
+		if( i == -1 || ( float )iLogNum / LOG_FREQ >= In[ i + 1 ].fTime ){
+			
+			for( ++i; ( float )iLogNum / LOG_FREQ >= In[ i + 1 ].fTime; ++i );
+			
+			// GPS ログ範囲を超えたので return
+			if( i > ( int )uCnt - 2 ) return;
+			
+			// パラメータを計算
+			#define X0	In[ i ].fX
+			#define Y0	In[ i ].fY
+			#define VX0	In[ i ].fVX
+			#define VY0	In[ i ].fVY
+			#define X1	In[ i + 1 ].fX
+			#define Y1	In[ i + 1 ].fY
+			#define VX1	In[ i + 1 ].fVX
+			#define VY1	In[ i + 1 ].fVY
+			
+			dX3 = 2 * ( X0 - X1 ) + VX0 + VX1;
+			dX2 = 3 * ( -X0 + X1 ) - 2 * VX0 - VX1;
+			dX1 = VX0;
+			dX0 = X0;
+			dY3 = 2 * ( Y0 - Y1 ) + VY0 + VY1;
+			dY2 = 3 * ( -Y0 + Y1 ) - 2 * VY0 - VY1;
+			dY1 = VY0;
+			dY0 = Y0;
+			
+			#undef X0
+			#undef Y0
+			#undef VX0
+			#undef VY0
+			#undef X1
+			#undef Y1
+			#undef VX1
+			#undef VY1
+		}
+		
+		// 5秒以上 GPS ログがあいていれば，補完情報の計算をしない
+		//if( In[ i + 1 ].fTime - In[ i ].fTime > 5 ) continue;
+		
+		t =
+			( double )(( float )iLogNum / LOG_FREQ - In[ i ].fTime ) /
+			( In[ i + 1 ].fTime - In[ i ].fTime );
+		
+		Out[ iLogNum ].fX0 = ( float )((( dX3 * t + dX2 ) * t + dX1 ) * t + dX0 );
+		Out[ iLogNum ].fY0 = ( float )((( dY3 * t + dY2 ) * t + dY1 ) * t + dY0 );
+	}
+}
+
 /*** ログリード *************************************************************/
 
 BOOL CVsdFilter::ReadLog( const char *szFileName ){
@@ -464,7 +530,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	
 	// GPS ログ用
 	UINT		uGPSCnt = 0;
-	GPS_LOG_t	*GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG / LOG_FREQ ) ];
+	GPS_LOG_t	*GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG * GPS_FREQ / LOG_FREQ ) ];
 	
 	// 初期化
 	m_iVsdLogNum	= 0;
@@ -481,12 +547,12 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	double	dGcy = 0;
 	double	dGx, dGy;
 	
-	float	fLati;
-	float	fLong;
+	double	dLati;
+	double	dLong;
 	double	dLati0 = 0;
 	double	dLong0 = 0;
-	float	fSpeed;
-	float	fBearing;
+	double	dSpeed;
+	double	dBearing;
 	
 	m_iLogStart = m_iLogStop = 0;
 	
@@ -513,27 +579,25 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 		}
 		
 		if(( p = strstr( szBuf, "GPS" )) != NULL ){ // GPS記録を見つけた
-			sscanf( p, "GPS%g%g%g%g", &fLati, &fLong, &fSpeed, &fBearing );
+			sscanf( p, "GPS%lg%lg%lg%lg", &dLati, &dLong, &dSpeed, &dBearing );
 			
 			if( dLati0 == 0 ){
-				dLati0 = fLati;
-				dLong0 = fLong;
+				dLati0 = dLati;
+				dLong0 = dLong;
 			}
 			
 			// 単位を補正
 			// 緯度・経度→メートル
-			GPSLog[ uGPSCnt ].fX = ( float )(( fLong - dLong0 ) * LAT_M_DEG * cos( fLati * ToRAD ));
-			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - fLati ) * LNG_M_DEG );
+			GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * LAT_M_DEG * cos( dLati * ToRAD ));
+			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * LNG_M_DEG );
 			
 			// 速度・向き→ベクトル座標
-			double dBearing	= fBearing * ToRAD;
-			double dSpeed	= fSpeed * ( 1000.0 / 3600 );
+			dBearing *= ToRAD;
+			dSpeed	 *= ( 1000.0 / 3600 );
 			GPSLog[ uGPSCnt ].fVX	= ( float )(  sin( dBearing ) * dSpeed );
 			GPSLog[ uGPSCnt ].fVY	= ( float )( -cos( dBearing ) * dSpeed );
 			
-			GPSLog[ uGPSCnt++ ].iLogNum =
-				( m_iVsdLogNum - GPS_LOG_OFFS ) >= 0 ?
-					( m_iVsdLogNum - GPS_LOG_OFFS ) : 0;
+			GPSLog[ uGPSCnt++ ].fTime = ( m_iVsdLogNum - GPS_LOG_OFFS ) / ( float )LOG_FREQ;
 		}
 		
 		// 普通の log
@@ -609,55 +673,8 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	/*** GPS ログから軌跡を求める ***************************************/
 	
 	if( uGPSCnt ){
-		UINT	u;
-		
-		// 補完点を計算
-		for( u = 0; u < uGPSCnt - 1; ++u ){
-			// 2秒以上 GPS ログがあいていれば，補完情報の計算をしない
-			if( GPSLog[ u + 1 ].iLogNum - GPSLog[ u ].iLogNum > ( int )( LOG_FREQ * 5 )) continue;
-			
-			double dX3, dX2, dX1, dX0;
-			double dY3, dY2, dY1, dY0;
-			
-			#define X0	GPSLog[ u ].fX
-			#define Y0	GPSLog[ u ].fY
-			#define VX0	GPSLog[ u ].fVX
-			#define VY0	GPSLog[ u ].fVY
-			#define X1	GPSLog[ u + 1 ].fX
-			#define Y1	GPSLog[ u + 1 ].fY
-			#define VX1	GPSLog[ u + 1 ].fVX
-			#define VY1	GPSLog[ u + 1 ].fVY
-			
-			dX3 = 2 * ( X0 - X1 ) + VX0 + VX1;
-			dX2 = 3 * ( -X0 + X1 ) - 2 * VX0 - VX1;
-			dX1 = VX0;
-			dX0 = X0;
-			dY3 = 2 * ( Y0 - Y1 ) + VY0 + VY1;
-			dY2 = 3 * ( -Y0 + Y1 ) - 2 * VY0 - VY1;
-			dY1 = VY0;
-			dY0 = Y0;
-			
-			#undef X0
-			#undef Y0
-			#undef VX0
-			#undef VY0
-			#undef X1
-			#undef Y1
-			#undef VX1
-			#undef VY1
-			
-			for( int i = GPSLog[ u ].iLogNum; i <= GPSLog[ u + 1 ].iLogNum; ++i ){
-				double t =
-					( double )( i - GPSLog[ u ].iLogNum ) /
-					( GPSLog[ u + 1 ].iLogNum - GPSLog[ u ].iLogNum );
-				
-				m_VsdLog[ i ].fX0 = ( float )((( dX3 * t + dX2 ) * t + dX1 ) * t + dX0 );
-				m_VsdLog[ i ].fY0 = ( float )((( dY3 * t + dY2 ) * t + dY1 ) * t + dY0 );
-			}
-		}
-		
-		// Map 回転
-		RotateMap();
+		UpConvertGPSLog( m_VsdLog, GPSLog, uGPSCnt );
+		RotateMap();	// Map 回転
 	}
 	
 	delete [] GPSLog;
