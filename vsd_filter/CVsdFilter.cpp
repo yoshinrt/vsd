@@ -24,18 +24,15 @@
 #ifndef AVS_PLUGIN
 	#include "filter.h"
 #endif
+#include "CVsdLog.h"
 #include "CVsdFilter.h"
 
 /*** macros *****************************************************************/
-
-#define PI			3.14159265358979323
-#define ToRAD		( PI / 180 )
 
 #define LAT_M_DEG	110863.95	// 緯度1度の距離
 #define LNG_M_DEG	111195.10	// 経度1度の距離 @ 0N
 
 #define INVALID_POS_I	0x7FFFFFFF
-#define INVALID_POS_D	NaN
 
 #define PTD_LOG_FREQ	11025.0
 
@@ -72,8 +69,8 @@ const char *CVsdFilter::m_szShadowParamName[] = {
 
 CVsdFilter::CVsdFilter () {
 	
-	m_VsdLog 			= new VSD_LOG_t[ MAX_VSD_LOG ];;
-	m_iVsdLogNum		= 0;
+	m_VsdLog 			= NULL;
+	m_GPSLog 			= NULL;
 	
 	m_Lap	 			= new LAP_t[ MAX_LAP ];
 	m_iLapNum			= 0;
@@ -82,10 +79,6 @@ CVsdFilter::CVsdFilter () {
 	
 	m_iBestTime			= BESTLAP_NONE;
 	m_iBestLapLogNum	= 0;
-	
-	m_dMapSize			= 0;
-	m_dMapOffsX			= 0;
-	m_dMapOffsY			= 0;
 	
 	m_dVideoFPS			= 30.0;
 	
@@ -105,9 +98,8 @@ CVsdFilter::CVsdFilter () {
 /*** デストラクタ ***********************************************************/
 
 CVsdFilter::~CVsdFilter () {
-	delete m_VsdLog;
-	m_VsdLog	= NULL;
-	m_iVsdLogNum= 0;
+	delete m_VsdLog; m_VsdLog = NULL;
+	delete m_GPSLog; m_GPSLog = NULL;
 	
 	delete m_Lap;
 	m_Lap		= NULL;
@@ -443,82 +435,174 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 }
 #endif
 
-/*** GPS ログの up-convert **************************************************/
+/*** GPS ログリード ********************************************************/
 
-void UpConvertGPSLog( VSD_LOG_t *Out, GPS_LOG_t *In, UINT uCnt ){
+BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	
-	int		iLogNum;
-	int		i		= -1;
+	UINT	uGPSCnt = 0;
+	TCHAR	szBuf[ BUF_SIZE ];
 	
-	double	dX3, dX2, dX1, dX0;
-	double	dY3, dY2, dY1, dY0;
-	double	t;
+	double	dLati, dLati0 = 0;
+	double	dLong, dLong0 = 0;
+	double	dSpeed;
+	double	dBearing;
+	double	dTime, dTime0;
+	gzFile	fp;
 	
-	In[ uCnt ].fTime = 9999999; // 番犬
+	UINT	u;
+	UINT	uSameCnt = 0;
 	
-	iLogNum = ( int )( In[ 0 ].fTime * LOG_FREQ + 1 );
-
-	for(;; ++iLogNum ){
+	if( m_GPSLog ){
+		delete m_GPSLog;
+		m_GPSLog = NULL;
+	}
+	
+	if(( fp = gzopen(( char *)szFileName, "rb" )) == NULL ) return FALSE;
+	
+	GPS_LOG_t	*GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG * GPS_FREQ / LOG_FREQ ) ];
+	
+	while( gzgets( fp, szBuf, BUF_SIZE ) != Z_NULL ){
 		
-		// In[ i ].fTime <= iLogNum / LOG_FREQ < In[ i + 1 ].fTime
-		// の範囲になければ，正しい i を探す
-		if( i == -1 || ( float )iLogNum / LOG_FREQ >= In[ i + 1 ].fTime ){
+		u = sscanf( szBuf,
+			"$GPRMC,%lg%*[^0-9]%lg%*[^0-9]%lg%*[^0-9]%lg%*[^0-9]%lg",
+			&dTime, &dLati, &dLong, &dSpeed, &dBearing
+		);
+		
+		// $GPRMC センテンス以外はスキップ
+		if( u < 5 ) continue;
+		
+		// 値補正
+		// 225446.00 → 22:54:46.00
+		dTime =	( int )dTime / 10000 * 3600 +
+				( int )dTime / 100 % 100 * 60 +
+				fmod( dTime, 100 );
+		
+		// 4916.452653 → 49度16.45分
+		dLati =	( int )dLati / 100 + fmod( dLati, 100 ) / 60;
+		dLong =	( int )dLong / 100 + fmod( dLong, 100 ) / 60;
 			
-			for( ++i; ( float )iLogNum / LOG_FREQ >= In[ i + 1 ].fTime; ++i );
-			
-			// GPS ログ範囲を超えたので return
-			if( i > ( int )uCnt - 2 ) return;
-			
-			// パラメータを計算
-			#define X0	In[ i ].fX
-			#define Y0	In[ i ].fY
-			#define VX0	In[ i ].fVX
-			#define VY0	In[ i ].fVY
-			#define X1	In[ i + 1 ].fX
-			#define Y1	In[ i + 1 ].fY
-			#define VX1	In[ i + 1 ].fVX
-			#define VY1	In[ i + 1 ].fVY
-			
-			dX3 = 2 * ( X0 - X1 ) + VX0 + VX1;
-			dX2 = 3 * ( -X0 + X1 ) - 2 * VX0 - VX1;
-			dX1 = VX0;
-			dX0 = X0;
-			dY3 = 2 * ( Y0 - Y1 ) + VY0 + VY1;
-			dY2 = 3 * ( -Y0 + Y1 ) - 2 * VY0 - VY1;
-			dY1 = VY0;
-			dY0 = Y0;
-			
-			#undef X0
-			#undef Y0
-			#undef VX0
-			#undef VY0
-			#undef X1
-			#undef Y1
-			#undef VX1
-			#undef VY1
+		if( dLati0 == 0 ){
+			dLati0 = dLati;
+			dLong0 = dLong;
+			dTime0 = dTime;
 		}
 		
-		// 5秒以上 GPS ログがあいていれば，補完情報の計算をしない
-		//if( In[ i + 1 ].fTime - In[ i ].fTime > 5 ) continue;
+		if( dTime < dTime0 ) dTime += 24 * 3600;
+		dTime -= dTime0;
 		
-		t =
-			( double )(( float )iLogNum / LOG_FREQ - In[ i ].fTime ) /
-			( In[ i + 1 ].fTime - In[ i ].fTime );
+		// 単位を補正
+		// 緯度・経度→メートル
+		GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * LAT_M_DEG * cos( dLati * ToRAD ));
+		GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * LNG_M_DEG );
 		
-		Out[ iLogNum ].fX0 = ( float )((( dX3 * t + dX2 ) * t + dX1 ) * t + dX0 );
-		Out[ iLogNum ].fY0 = ( float )((( dY3 * t + dY2 ) * t + dY1 ) * t + dY0 );
+		// 速度・向き→ベクトル座標
+		dBearing *= ToRAD;
+		dSpeed	 *= ( 1852.00 / 3600 );	// knot/h → m/s
+		GPSLog[ uGPSCnt ].fVX	= ( float )(  sin( dBearing ) * dSpeed );
+		GPSLog[ uGPSCnt ].fVY	= ( float )( -cos( dBearing ) * dSpeed );
+		GPSLog[ uGPSCnt ].fTime = ( float )dTime;
+		
+		if( uGPSCnt >=2 ){
+			if( GPSLog[ uGPSCnt - 1 ].fTime == GPSLog[ uGPSCnt ].fTime ){
+				// 時刻が同じログが続くときそのカウントをする
+				++uSameCnt;
+			}else if( uSameCnt ){
+				// 時刻が同じログが途切れたので，時間を補正する
+				++uSameCnt;
+				
+				for( u = 1; u < uSameCnt; ++ u ){
+					GPSLog[ uGPSCnt - uSameCnt + u ].fTime +=
+						( GPSLog[ uGPSCnt ].fTime - GPSLog[ uGPSCnt - uSameCnt ].fTime )
+						/ uSameCnt * u;
+				}
+				uSameCnt = 0;
+			}
+		}
+		uGPSCnt++;
 	}
+	
+	gzclose( fp );
+	
+	/* デバッグ用
+	{
+		FILE *fpp = fopen( "G:\\DDS\\vsd\\vsd_filter\\zGPS", "w" );
+		for( u = 0; u < uGPSCnt; ++u ){
+			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\n",
+				GPSLog[ u ].fX,
+				GPSLog[ u ].fY,
+				GPSLog[ u ].fVX,
+				GPSLog[ u ].fVY,
+				GPSLog[ u ].fTime
+			);
+		}
+		fclose( fpp );
+	}
+	*/
+	
+	// アップコンバート用バッファ確保・初期化
+	m_GPSLog = new CVsdLog;
+	m_GPSLog->GPSLogUpConvert( GPSLog, uGPSCnt );
+	delete [] GPSLog;
+	
+	DeleteIfZero( m_GPSLog );
+	if( !m_GPSLog ) return FALSE;
+	
+	double dMileage	= 0;
+	double dDistance= 0;
+	double dGx		= 0;
+	double dGy		= 0;
+	dSpeed	= 0;
+	
+	// 速度・距離・G を生成
+	for( u = 0; u < ( UINT )m_GPSLog->m_iCnt - 1; ++u ){
+		if( !_isnan( m_GPSLog->m_Log[ u ].fX0 ) && !_isnan( m_GPSLog->m_Log[ u + 1 ].fX0 )){
+			dDistance = sqrt(
+					pow( m_GPSLog->m_Log[ u + 1 ].fX0 - m_GPSLog->m_Log[ u ].fX0, 2 ) +
+					pow( m_GPSLog->m_Log[ u + 1 ].fY0 - m_GPSLog->m_Log[ u ].fY0, 2 )
+				);
+			
+			dSpeed	  = dDistance * ( 3600.0 / 1000 * LOG_FREQ );
+			dMileage += dDistance;
+		}
+		
+		m_GPSLog->m_Log[ u ].fSpeed		= ( float )dSpeed;
+		m_GPSLog->m_Log[ u ].fTacho		= 0;
+		m_GPSLog->m_Log[ u ].fMileage	= ( float )dMileage;
+		m_GPSLog->m_Log[ u ].fGx		= ( float )dGx;
+		m_GPSLog->m_Log[ u ].fGy		= ( float )dGy;
+	}
+	
+	{
+		FILE *fpp = fopen( "G:\\DDS\\vsd\\vsd_filter\\z", "w" );
+		for( u = 0; u < m_GPSLog->m_iCnt; ++u ){
+			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
+				m_GPSLog->m_Log[ u ].fSpeed,
+				m_GPSLog->m_Log[ u ].fTacho,
+				m_GPSLog->m_Log[ u ].fMileage,
+				m_GPSLog->m_Log[ u ].fX,
+				m_GPSLog->m_Log[ u ].fX0,
+				m_GPSLog->m_Log[ u ].fY,
+				m_GPSLog->m_Log[ u ].fY0
+			);
+		}
+		fclose( fpp );
+	}
+	
+	return TRUE;
 }
 
 /*** ログリード *************************************************************/
 
 BOOL CVsdFilter::ReadLog( const char *szFileName ){
+	
 	TCHAR	szBuf[ BUF_SIZE ];
 	gzFile	fp;
 	BOOL	bCalibrating = FALSE;
 	
-	float		NaN = 0;
-	NaN /= *( volatile float *)&NaN;
+	if( m_VsdLog ){
+		delete m_VsdLog;
+		m_VsdLog = NULL;
+	}
 	
 	if(( fp = gzopen(( char *)szFileName, "rb" )) == NULL ) return FALSE;
 	
@@ -530,19 +614,21 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	
 	// GPS ログ用
 	UINT		uGPSCnt = 0;
-	GPS_LOG_t	*GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG * GPS_FREQ / LOG_FREQ ) ];
+	GPS_LOG_t	*GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG / LOG_FREQ ) ];
 	
 	// 初期化
-	m_iVsdLogNum	= 0;
 	m_iLapNum		= 0;
 	m_iBestTime		= BESTLAP_NONE;
 	m_iBestLapLogNum= 0;
 	m_iLapIdx		= -1;
 	m_iBestLogNum	= 0;
 	
+	m_VsdLog = new CVsdLog;
+	
 	// ログリード
 	
-	UINT	uCnt, uLap, uMin, uSec, uMSec;
+	UINT	uReadCnt, uLap, uMin, uSec, uMSec;
+	UINT	uLogNum = 0;
 	double	dGcx = 0;
 	double	dGcy = 0;
 	double	dGx, dGy;
@@ -560,16 +646,16 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	
 	while( gzgets( fp, szBuf, BUF_SIZE ) != Z_NULL ){
 		if(( p = strstr( szBuf, "LAP" )) != NULL ){ // ラップタイム記録を見つけた
-			uCnt = sscanf( p, "LAP%d%d:%d.%d", &uLap, &uMin, &uSec, &uMSec );
+			uReadCnt = sscanf( p, "LAP%d%d:%d.%d", &uLap, &uMin, &uSec, &uMSec );
 			
 			int iTime = ( uMin * 60 + uSec ) * 1000 + uMSec;
 			
 			m_Lap[ m_iLapNum ].uLap		= uLap;
-			m_Lap[ m_iLapNum ].iLogNum	= m_iVsdLogNum;
-			m_Lap[ m_iLapNum ].iTime	= ( uCnt == 4 ) ? iTime : 0;
+			m_Lap[ m_iLapNum ].iLogNum	= uLogNum;
+			m_Lap[ m_iLapNum ].iTime	= ( uReadCnt == 4 ) ? iTime : 0;
 			
 			if(
-				uCnt == 4 &&
+				uReadCnt == 4 &&
 				( m_iBestTime == BESTLAP_NONE || m_iBestTime > iTime )
 			){
 				m_iBestTime			= iTime;
@@ -597,22 +683,22 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 			GPSLog[ uGPSCnt ].fVX	= ( float )(  sin( dBearing ) * dSpeed );
 			GPSLog[ uGPSCnt ].fVY	= ( float )( -cos( dBearing ) * dSpeed );
 			
-			GPSLog[ uGPSCnt++ ].fTime = ( m_iVsdLogNum - GPS_LOG_OFFS ) / ( float )LOG_FREQ;
+			GPSLog[ uGPSCnt++ ].fTime = ( uLogNum - GPS_LOG_OFFS ) / ( float )LOG_FREQ;
 		}
 		
 		// 普通の log
-		if(( uCnt = sscanf( szBuf, "%g%g%g%lg%lg",
-			&m_VsdLog[ m_iVsdLogNum ].fTacho,
-			&m_VsdLog[ m_iVsdLogNum ].fSpeed,
-			&m_VsdLog[ m_iVsdLogNum ].fMileage,
+		if(( uReadCnt = sscanf( szBuf, "%g%g%g%lg%lg",
+			&m_VsdLog->m_Log[ uLogNum ].fTacho,
+			&m_VsdLog->m_Log[ uLogNum ].fSpeed,
+			&m_VsdLog->m_Log[ uLogNum ].fMileage,
 			&dGy,
 			&dGx
 		)) >= 3 ){
-			if( uCnt < 5 && m_iVsdLogNum ){
+			if( uReadCnt < 5 && uLogNum ){
 				// Gデータがないときは，speedから求める←廃止
 				dGx = 0;
 				dGy = 0;
-				//dGy = ( m_VsdLog[ m_iVsdLogNum ].fSpeed - m_VsdLog[ m_iVsdLogNum - 1 ].fSpeed ) * ( 1000.0 / 3600 / 9.8 * LOG_FREQ );
+				//dGy = ( m_VsdLog->m_Log[ uLogNum ].fSpeed - m_VsdLog->m_Log[ uLogNum - 1 ].fSpeed ) * ( 1000.0 / 3600 / 9.8 * LOG_FREQ );
 			}else{
 				if( dGx >= 4 ){	
 					// 単位を G に変換
@@ -620,7 +706,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 					dGy =  dGy / ACC_1G_Z;
 				}
 				
-				if( m_iVsdLogNum == 0 ){
+				if( uLogNum == 0 ){
 					// G センターの初期値
 					dGcx = dGx;
 					dGcy = dGy;
@@ -633,48 +719,47 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 				// 静止していると思しきときは，G センターを補正する
 				// 走行距離 == 0 && ±0.02G
 				if(
-					m_iVsdLogNum &&
-					m_VsdLog[ m_iVsdLogNum - 1 ].fMileage == m_VsdLog[ m_iVsdLogNum ].fMileage &&
-					( m_VsdLog[ m_iVsdLogNum - 1 ].fGy - dGy ) >= -0.02 &&
-					( m_VsdLog[ m_iVsdLogNum - 1 ].fGy - dGy ) <=  0.02
+					uLogNum &&
+					m_VsdLog->m_Log[ uLogNum - 1 ].fMileage == m_VsdLog->m_Log[ uLogNum ].fMileage &&
+					( m_VsdLog->m_Log[ uLogNum - 1 ].fGy - dGy ) >= -0.02 &&
+					( m_VsdLog->m_Log[ uLogNum - 1 ].fGy - dGy ) <=  0.02
 				){
 					dGcx += dGx / 160;
 					dGcy += dGy / 160;
 				}
 			}
 			
-			m_VsdLog[ m_iVsdLogNum ].fGx = ( float )dGx;
-			m_VsdLog[ m_iVsdLogNum ].fGy = ( float )dGy;
-			
-			m_VsdLog[ m_iVsdLogNum ].fX0 = m_VsdLog[ m_iVsdLogNum ].fY0 = INVALID_POS_D;
+			m_VsdLog->m_Log[ uLogNum ].fGx = ( float )dGx;
+			m_VsdLog->m_Log[ uLogNum ].fGy = ( float )dGy;
 			
 			// ログ開始・終了認識
-			if( m_VsdLog[ m_iVsdLogNum ].fSpeed >= 300 ){
+			if( m_VsdLog->m_Log[ uLogNum ].fSpeed >= 300 ){
 				if( !bCalibrating ){
 					bCalibrating = TRUE;
 					m_iLogStart  = m_iLogStop;
-					m_iLogStop   = m_iVsdLogNum;
+					m_iLogStop   = uLogNum;
 				}
 			}else{
 				bCalibrating = FALSE;
 			}
 			
 			// メーター補正
-			m_VsdLog[ m_iVsdLogNum ].fTacho = ( float )(
-				m_VsdLog[ m_iVsdLogNum ].fTacho * m_piParamS[ METER_ADJUST ] / 1000.0
+			m_VsdLog->m_Log[ uLogNum ].fTacho = ( float )(
+				m_VsdLog->m_Log[ uLogNum ].fTacho * m_piParamS[ METER_ADJUST ] / 1000.0
 			);
-			m_VsdLog[ m_iVsdLogNum ].fSpeed = ( float )(
-				m_VsdLog[ m_iVsdLogNum ].fSpeed * m_piParamS[ METER_ADJUST ] / 1000.0
+			m_VsdLog->m_Log[ uLogNum ].fSpeed = ( float )(
+				m_VsdLog->m_Log[ uLogNum ].fSpeed * m_piParamS[ METER_ADJUST ] / 1000.0
 			);
-			++m_iVsdLogNum;
+			++uLogNum;
 		}
 	}
+	m_VsdLog->m_iCnt = uLogNum;
 	
 	/*** GPS ログから軌跡を求める ***************************************/
 	
 	if( uGPSCnt ){
-		UpConvertGPSLog( m_VsdLog, GPSLog, uGPSCnt );
-		RotateMap();	// Map 回転
+		m_VsdLog->GPSLogUpConvert( GPSLog, uGPSCnt );
+		m_VsdLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	}
 	
 	delete [] GPSLog;
@@ -686,35 +771,9 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
 	m_Lap[ m_iLapNum ].iTime	= 0;			// 番犬
 	
+	DeleteIfZero( m_VsdLog );
+	
 	return TRUE;
-}
-
-/*** MAP 回転処理 ***********************************************************/
-
-void CVsdFilter::RotateMap( void ){
-	
-	int i;
-	double dMaxX, dMinX, dMaxY, dMinY;
-	double dMapAngle = ( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
-	
-	dMaxX = dMinX = dMaxY = dMinY = 0;
-	
-	for( i = 0; i < m_iVsdLogNum; ++i ){
-		m_VsdLog[ i ].fX = ( float )(  cos( dMapAngle ) * m_VsdLog[ i ].fX0 + sin( dMapAngle ) * m_VsdLog[ i ].fY0 );
-		m_VsdLog[ i ].fY = ( float )( -sin( dMapAngle ) * m_VsdLog[ i ].fX0 + cos( dMapAngle ) * m_VsdLog[ i ].fY0 );
-		
-		if     ( dMaxX < m_VsdLog[ i ].fX ) dMaxX = m_VsdLog[ i ].fX;
-		else if( dMinX > m_VsdLog[ i ].fX ) dMinX = m_VsdLog[ i ].fX;
-		if     ( dMaxY < m_VsdLog[ i ].fY ) dMaxY = m_VsdLog[ i ].fY;
-		else if( dMinY > m_VsdLog[ i ].fY ) dMinY = m_VsdLog[ i ].fY;
-	}
-	
-	dMaxX -= dMinX;
-	dMaxY -= dMinY;
-	
-	m_dMapSize	= dMaxX > dMaxY ? dMaxX : dMaxY;
-	m_dMapOffsX		= dMinX;
-	m_dMapOffsY		= dMinY;
 }
 
 /****************************************************************************/
@@ -763,17 +822,6 @@ static const PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
 #define COLOR_CURRENT_POS	yc_red
 #define COLOR_FASTEST_POS	yc_green
 
-// 半端な dLogNum 値からログの中間値を求める
-#define GetVsdLog( p ) ( \
-	m_VsdLog[ ( UINT )dLogNum     ].p * ( 1 - ( dLogNum - ( UINT )dLogNum )) + \
-	m_VsdLog[ ( UINT )dLogNum + 1 ].p * (       dLogNum - ( UINT )dLogNum ))
-
-// ログ番号からフレームカウントを得る
-#define GetFrameNum( i ) ( \
-	( LogEd == LogSt ) ? 0 : \
-	((( i ) - LogSt ) * ( VideoEd - VideoSt ) / ( double )( LogEd - LogSt ) + VideoSt ) \
-)
-
 BOOL CVsdFilter::DrawVSD( void ){
 //
 //	fp->track[n]			: トラックバーの数値
@@ -814,20 +862,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 	// フォントサイズ初期化
 	InitFont();
 	
-	// ログ位置の計算
-	double	dLogNum = ( VideoEd == VideoSt ) ? -1 :
-						( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + LogSt;
-	int		iLogNum = ( int )dLogNum;
+	CVsdLog *Log = m_GPSLog;
 	
 	double	dLogFreq;	// 自動計測モード時の，実測 Log Freq
-	
-	// フレーム表示
-	if( m_piParamC[ CHECK_FRAME ] ){
-		sprintf( szBuf, "V%6d/%6d", GetFrameCnt(), GetFrameMax() - 1 );
-		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, GetWidth() / 2, GetHeight() / 2 );
-		sprintf( szBuf, "L%6d/%6d", ( int )dLogNum, m_iVsdLogNum - 1 );
-		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
-	}
 	
 	/*** Lap タイム描画 ***/
 	
@@ -838,10 +875,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	// ラップインデックスを求める
 	if( m_iLapNum ){
-		if( IsHandLaptime() ){
-			// CIRCUIT_TOMO での m_Lap[].iLogNum はフレーム# なので
-			iLogNum = GetFrameCnt();
-		}
+		int iLogNum = IsHandLaptime() ?
+			GetFrameCnt() :		// 手動計測での m_Lap[].iLogNum はフレーム# なので
+			Log->m_iLogNum;
 		
 		// カレントポインタがおかしいときは，-1 にリセット
 		if(
@@ -865,7 +901,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 					( double )(( m_Lap[ m_iLapIdx + 1 ].iLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 ) /
 					m_Lap[ m_iLapIdx + 1 ].iTime;
 				
-				iTime = ( int )(( dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 / dLogFreq );
+				iTime = ( int )(( Log->m_dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 / dLogFreq );
 			}
 			
 			sprintf( szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
@@ -880,21 +916,21 @@ BOOL CVsdFilter::DrawVSD( void ){
 		if( !IsHandLaptime() ){
 			if( bInLap ){
 				// この周の走行距離を求める
-				double dMileage = GetVsdLog( fMileage ) - m_VsdLog[ m_Lap[ m_iLapIdx ].iLogNum ].fMileage;
+				double dMileage = Log->Mileage() - Log->m_Log[ m_Lap[ m_iLapIdx ].iLogNum ].fMileage;
 				
 				// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
 				// m_iBestLogNum <= 最終的に求める結果 < m_iBestLogNum + 1  となる
 				// m_iBestLogNum がおかしかったら，リセット
 				if(
 					m_iBestLogNum < m_iBestLapLogNum ||
-					m_iBestLogNum >= m_iVsdLogNum ||
-					( m_VsdLog[ m_iBestLogNum ].fMileage - m_VsdLog[ m_iBestLapLogNum ].fMileage ) > dMileage
+					m_iBestLogNum >= Log->m_iCnt ||
+					( Log->m_Log[ m_iBestLogNum ].fMileage - Log->m_Log[ m_iBestLapLogNum ].fMileage ) > dMileage
 				) m_iBestLogNum = m_iBestLapLogNum;
 				
 				for(
 					;
-					( m_VsdLog[ m_iBestLogNum + 1 ].fMileage - m_VsdLog[ m_iBestLapLogNum ].fMileage ) <= dMileage &&
-					m_iBestLogNum < m_iVsdLogNum;
+					( Log->m_Log[ m_iBestLogNum + 1 ].fMileage - Log->m_Log[ m_iBestLapLogNum ].fMileage ) <= dMileage &&
+					m_iBestLogNum < Log->m_iCnt;
 					++m_iBestLogNum
 				);
 				
@@ -902,13 +938,13 @@ BOOL CVsdFilter::DrawVSD( void ){
 				double dBestLogNum =
 					( double )m_iBestLogNum +
 					// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
-					( dMileage - ( m_VsdLog[ m_iBestLogNum ].fMileage - m_VsdLog[ m_iBestLapLogNum ].fMileage )) /
+					( dMileage - ( Log->m_Log[ m_iBestLogNum ].fMileage - Log->m_Log[ m_iBestLapLogNum ].fMileage )) /
 					// B: 最速ラップは，1/15秒の間にこの距離を走った
-					( m_VsdLog[ m_iBestLogNum + 1 ].fMileage - m_VsdLog[ m_iBestLogNum ].fMileage );
+					( Log->m_Log[ m_iBestLogNum + 1 ].fMileage - Log->m_Log[ m_iBestLogNum ].fMileage );
 				
 				int iDiffTime = ( int )(
 					(
-						( dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) -
+						( Log->m_dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) -
 						( dBestLogNum - m_iBestLapLogNum )
 					) * 1000.0 / dLogFreq
 				);
@@ -960,7 +996,20 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 	}
 	
-	if( m_iVsdLogNum == 0 ) return TRUE;
+	if( !Log ) return TRUE;
+	
+	// ログ位置の計算
+	Log->m_dLogNum = ( VideoEd == VideoSt ) ? -1 :
+		( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + LogSt;
+	Log->m_iLogNum = ( int )Log->m_dLogNum;
+	
+	// フレーム表示
+	if( m_piParamC[ CHECK_FRAME ] ){
+		sprintf( szBuf, "V%6d/%6d", GetFrameCnt(), GetFrameMax() - 1 );
+		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, GetWidth() / 2, GetHeight() / 2 );
+		sprintf( szBuf, "L%6d/%6d", ( int )Log->m_dLogNum, Log->m_iCnt - 1 );
+		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+	}
 	
 	/*** メーターパネル ***/
 	DrawCircle(
@@ -999,10 +1048,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	/*** メーター描画 ***/
 	
-	if( dLogNum < 0 || dLogNum > m_iVsdLogNum - 1 ) return TRUE;
+	if( Log->m_dLogNum < 0 || Log->m_dLogNum > Log->m_iCnt - 1 ) return TRUE;
 	
-	double	dSpeed	= GetVsdLog( fSpeed );
-	double	dTacho	= GetVsdLog( fTacho );
+	double	dSpeed	= Log->Speed();
+	double	dTacho	= Log->Tacho();
 	
 	// G スネーク
 	int	iGx, iGy;
@@ -1014,10 +1063,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 			
 			for( i = -GSnakeLen; i <= 1 ; ++i ){
 				
-				if( iLogNum + i >= 0 ){
+				if( Log->m_iLogNum + i >= 0 ){
 					// i == 1 時は最後の中途半端な LogNum
-					iGx = iMeterCx + ( int )((( i != 1 ) ? m_VsdLog[ iLogNum + i ].fGx : GetVsdLog( fGx )) * iMeterR / GScale );
-					iGy = iMeterCy - ( int )((( i != 1 ) ? m_VsdLog[ iLogNum + i ].fGy : GetVsdLog( fGy )) * iMeterR / GScale );
+					iGx = iMeterCx + ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGx : Log->Gx()) * iMeterR / GScale );
+					iGy = iMeterCy - ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGy : Log->Gy()) * iMeterR / GScale );
 					
 					if( iGxPrev ) DrawLine(
 						iGx, iGy, iGxPrev, iGyPrev,
@@ -1029,8 +1078,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 				}
 			}
 		}else{
-			iGx = iMeterCx + ( int )( GetVsdLog( fGx ) * iMeterR / GScale );
-			iGy = iMeterCy - ( int )( GetVsdLog( fGy ) * iMeterR / GScale );
+			iGx = iMeterCx + ( int )( Log->Gx() * iMeterR / GScale );
+			iGy = iMeterCy - ( int )( Log->Gy() * iMeterR / GScale );
 		}
 		
 		// G インジケータ
@@ -1047,17 +1096,17 @@ BOOL CVsdFilter::DrawVSD( void ){
 		int iGxPrev = INVALID_POS_I, iGyPrev;
 		
 		int	iLineSt = m_iLapIdx >= 0 ? m_Lap[ m_iLapIdx ].iLogNum : 0;
-		if( iLogNum - iLineSt > ( int )( LineTrace * LOG_FREQ ))
-			iLineSt = iLogNum - ( int )( LineTrace * LOG_FREQ );
+		if( Log->m_iLogNum - iLineSt > ( int )( LineTrace * LOG_FREQ ))
+			iLineSt = Log->m_iLogNum - ( int )( LineTrace * LOG_FREQ );
 		
-		int iLineEd = m_iLapIdx != m_iLapNum - 1 ? m_Lap[ m_iLapIdx + 1 ].iLogNum : m_iVsdLogNum - 1;
-		if( iLineEd - iLogNum > ( int )( LineTrace * LOG_FREQ ))
-			iLineEd = iLogNum + ( int )( LineTrace * LOG_FREQ );
+		int iLineEd = m_iLapIdx != m_iLapNum - 1 ? m_Lap[ m_iLapIdx + 1 ].iLogNum : Log->m_iCnt - 1;
+		if( iLineEd - Log->m_iLogNum > ( int )( LineTrace * LOG_FREQ ))
+			iLineEd = Log->m_iLogNum + ( int )( LineTrace * LOG_FREQ );
 		
 		for( i = iLineSt; i <= iLineEd ; ++i ){
-			#define GetMapPos( p, a ) ( (( p ) - m_dMapOffs ## a ) / m_dMapSize * MAX_MAP_SIZE + 8 )
-			dGx = GetMapPos( m_VsdLog[ i ].fX, X );
-			dGy = GetMapPos( m_VsdLog[ i ].fY, Y );
+			#define GetMapPos( p, a ) ( (( p ) - Log->m_dMapOffs ## a ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 )
+			dGx = GetMapPos( Log->m_Log[ i ].fX, X );
+			dGy = GetMapPos( Log->m_Log[ i ].fY, Y );
 			
 			if( !_isnan( dGx )){
 				iGx = ( int )dGx;
@@ -1066,8 +1115,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 				if( iGxPrev != INVALID_POS_I ){
 					// Line の色用に G を求める
 					double dG = sqrt(
-						m_VsdLog[ i ].fGx * m_VsdLog[ i ].fGx +
-						m_VsdLog[ i ].fGy * m_VsdLog[ i ].fGy
+						Log->m_Log[ i ].fGx * Log->m_Log[ i ].fGx +
+						Log->m_Log[ i ].fGy * Log->m_Log[ i ].fGy
 					) / MAP_G_MAX;
 					
 					PIXEL_YC yc_line;
@@ -1107,8 +1156,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 		
 		// MAP インジケータ (自車)
-		dGx = GetMapPos( GetVsdLog( fX ), X );
-		dGy = GetMapPos( GetVsdLog( fY ), Y );
+		dGx = GetMapPos( Log->X(), X );
+		dGy = GetMapPos( Log->Y(), Y );
 		
 		if( !_isnan( dGx )) DrawCircle(
 			( int )dGx, ( int )dGy, iMeterR / 20,
@@ -1144,7 +1193,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		iMeterCx - 3 * GetFontW(), iMeterCy + iMeterR / 2
 	);
 	
-	sprintf( szBuf, "%02dG", ( int )( sqrt( GetVsdLog( fGx ) * GetVsdLog( fGx ) + GetVsdLog( fGy ) * GetVsdLog( fGy )) * 10 ));
+	sprintf( szBuf, "%02dG", ( int )( sqrt( Log->Gx() * Log->Gx() + Log->Gy() * Log->Gy()) * 10 ));
 	DrawString(
 		szBuf,
 		COLOR_STR, 0,

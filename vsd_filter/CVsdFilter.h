@@ -7,14 +7,12 @@
 	
 *****************************************************************************/
 
-#ifndef _CVsdLog_h_
-#define _CVsdLog_h_
+#ifndef _CVsdFilter_h_
+#define _CVsdFilter_h_
 
 #define BUF_SIZE	1024
-
-#define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 2 ))
-#define GPS_FREQ		5
-#define MAX_LAP			200
+#define MAX_LAP		200
+#define GPS_FREQ	10
 
 #ifdef AVS_PLUGIN
 	typedef UCHAR	PIXEL_t;
@@ -53,6 +51,9 @@
 
 #define BESTLAP_NONE	599999
 
+#define PI			3.14159265358979323
+#define ToRAD		( PI / 180 )
+
 /*** track / check ID *******************************************************/
 
 enum {
@@ -76,27 +77,10 @@ enum {
 /*** new type ***************************************************************/
 
 typedef struct {
-	float	fSpeed;
-	float	fTacho;
-	float	fMileage;
-	float	fGx, fGy;
-	float	fX, fX0;
-	float	fY, fY0;
-} VSD_LOG_t;
-
-typedef struct {
 	USHORT	uLap;
 	int		iLogNum;
 	int		iTime;
 } LAP_t;
-
-typedef struct {
-	float	fX;
-	float	fY;
-	float	fVX;
-	float	fVY;
-	float	fTime;
-} GPS_LOG_t;
 
 typedef struct {
 	short	iLeft, iRight;
@@ -192,28 +176,23 @@ class CVsdFilter {
 	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
 	BOOL ConfigLoad( const char *szFileName );
 	BOOL ParseMarkStr( const char *szMark );
-	
+	BOOL GPSLogLoad( const char *szFileName );
+
 #ifndef AVS_PLUGIN
 	BOOL ConfigSave( const char *szFileName );
 #endif
 	BOOL ReadLog( const char *szFileName );
-	void RotateMap( void );
 	
 	// 手動ラップタイム計測モードかどうか
-	BOOL IsHandLaptime( void ){
-		return m_iVsdLogNum == 0;
-	}
+	BOOL IsHandLaptime( void ){ return m_VsdLog == NULL; }
 	
-	VSD_LOG_t	*m_VsdLog;
-	int			m_iVsdLogNum;
+	CVsdLog		*m_VsdLog;
+	CVsdLog		*m_GPSLog;
+	
 	LAP_t		*m_Lap;
 	int			m_iLapNum;
 	int			m_iBestTime;
 	int			m_iBestLapLogNum;
-	
-	double		m_dMapSize;
-	double		m_dMapOffsX;
-	double		m_dMapOffsY;
 	
 	int			m_iLogStart;
 	int			m_iLogStop;

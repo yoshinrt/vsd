@@ -16,12 +16,13 @@
 #include "../vsd/main.h"
 #include "filter.h"
 #include "dds_lib/dds_lib.h"
+#include "CVsdLog.h"
 #include "CVsdFilter.h"
 
 /*** macros *****************************************************************/
 
 #define	FILE_EXT		"log/config file\0*.log; *.gz; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
-#define	FILE_CFG_EXT		"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
+#define	FILE_CFG_EXT	"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 
 /*** new type ***************************************************************/
 
@@ -304,6 +305,7 @@ BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
 //	fpip->ycp_edit と fpip->ycp_temp を入れ替えます。
 //
 	
+	if( !g_Vsd ) return 0;
 	// クラスに変換
 	g_Vsd->filter	= fp;
 	g_Vsd->fpip		= fpip;
@@ -332,7 +334,14 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			// .log.gz かもしれないので，拡張子を削除してみる
 			ChangeExt( szBuf2, ( char *)szBuf, NULL );
 			
+			// .avs ロード
 			g_Vsd->ConfigLoad( ChangeExt( szBuf2, ( char *)szBuf2, CONFIG_EXT ));
+			
+			// .nmea ロード
+			g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf2, "nmea.gz" )) ||
+			g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf2, "nmea" ));
+			
+			// .log ロード
 			if( !IsExt(( char *)szBuf, CONFIG_EXT )){
 				
 				// log リード
@@ -340,7 +349,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				
 				// trackbar 設定
 				track_e[ TRACK_LSt ] =
-				track_e[ TRACK_LEd ] = ( g_Vsd->m_iVsdLogNum + 99 ) / 100;
+				track_e[ TRACK_LEd ] = ( g_Vsd->m_VsdLog->m_iCnt + 99 ) / 100;
 			}
 			
 			// 設定再描画
@@ -440,7 +449,10 @@ BOOL func_update( FILTER *fp, int status ){
 	
 	// マップ回転
 	if( status == ( FILTER_UPDATE_STATUS_TRACK + TRACK_MapAngle )){
-		g_Vsd->RotateMap();
+		if( g_Vsd->m_VsdLog )
+			g_Vsd->m_VsdLog->RotateMap( fp->track[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
+		if( g_Vsd->m_GPSLog )
+			g_Vsd->m_GPSLog->RotateMap( fp->track[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	}
 	
 	bReEnter = FALSE;

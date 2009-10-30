@@ -12,6 +12,7 @@
 
 #include "dds.h"
 #include "dds_lib/dds_lib.h"
+#include "CVsdLog.h"
 #include "CVsdFilter.h"
 
 #define PROG_NAME	"VSDFilter"

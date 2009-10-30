@@ -17,34 +17,20 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
-		TOMO Debug|Win32 = TOMO Debug|Win32
-		TOMO Release|Win32 = TOMO Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.Debug|Win32.ActiveCfg = Debug|Win32
 		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.Debug|Win32.Build.0 = Debug|Win32
 		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.Release|Win32.ActiveCfg = Release|Win32
 		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.Release|Win32.Build.0 = Release|Win32
-		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.TOMO Debug|Win32.ActiveCfg = TOMO Debug|Win32
-		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.TOMO Debug|Win32.Build.0 = TOMO Debug|Win32
-		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.TOMO Release|Win32.ActiveCfg = TOMO Release|Win32
-		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.TOMO Release|Win32.Build.0 = TOMO Release|Win32
 		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.Debug|Win32.ActiveCfg = Debug|Win32
 		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.Debug|Win32.Build.0 = Debug|Win32
 		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.Release|Win32.ActiveCfg = Release|Win32
 		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.Release|Win32.Build.0 = Release|Win32
-		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.TOMO Debug|Win32.ActiveCfg = TOMO Debug|Win32
-		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.TOMO Debug|Win32.Build.0 = TOMO Debug|Win32
-		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.TOMO Release|Win32.ActiveCfg = TOMO Release|Win32
-		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.TOMO Release|Win32.Build.0 = TOMO Release|Win32
 		{41F84FCE-9EAA-491D-818B-D3AD73C8AD12}.Debug|Win32.ActiveCfg = Debug|Win32
 		{41F84FCE-9EAA-491D-818B-D3AD73C8AD12}.Debug|Win32.Build.0 = Debug|Win32
 		{41F84FCE-9EAA-491D-818B-D3AD73C8AD12}.Release|Win32.ActiveCfg = Release|Win32
 		{41F84FCE-9EAA-491D-818B-D3AD73C8AD12}.Release|Win32.Build.0 = Release|Win32
-		{41F84FCE-9EAA-491D-818B-D3AD73C8AD12}.TOMO Debug|Win32.ActiveCfg = Debug|Win32
-		{41F84FCE-9EAA-491D-818B-D3AD73C8AD12}.TOMO Debug|Win32.Build.0 = Debug|Win32
-		{41F84FCE-9EAA-491D-818B-D3AD73C8AD12}.TOMO Release|Win32.ActiveCfg = Release|Win32
-		{41F84FCE-9EAA-491D-818B-D3AD73C8AD12}.TOMO Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
