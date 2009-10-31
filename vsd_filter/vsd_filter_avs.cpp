@@ -22,6 +22,7 @@
 enum {
 	ARGID_CLIP,
 	ARGID_LOG_FILE,
+	ARGID_GPS_FILE,
 	ARGID_PARAM_FILE,
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	ARGID_ ## id,
 	#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
@@ -134,6 +135,10 @@ CVsdFilterAvs::CVsdFilterAvs(
 	// ログリード
 	if( p = args[ ARGID_LOG_FILE ].AsString( NULL )) if( !ReadLog( p ))
 		env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
+	
+	// ログリード
+	if( p = args[ ARGID_GPS_FILE ].AsString( NULL )) if( !GPSLogLoad( p ))
+		env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
 }
 
 CVsdFilterAvs::~CVsdFilterAvs(){
@@ -240,7 +245,7 @@ AVSValue __cdecl Create_VSDFilter( AVSValue args, void* user_data, IScriptEnviro
 extern "C" __declspec( dllexport ) const char* __stdcall AvisynthPluginInit2( IScriptEnvironment* env ){
 	
 	env->AddFunction( "VSDFilter",
-		"c[log_file]s[param_file]s"
+		"c[log_file]s[gps_file]s[param_file]s"
 		#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	"[" conf_name "]i"
 		#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
 		#include "def_trackbar.h"

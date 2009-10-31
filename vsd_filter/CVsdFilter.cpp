@@ -29,10 +29,9 @@
 
 /*** macros *****************************************************************/
 
-#define LAT_M_DEG		110863.95	// 緯度1度の距離
-#define LNG_M_DEG		111195.10	// 経度1度の距離 @ 0N
+#define LAT_M_DEG		110949.769	// 35-36N   の距離 @ 135E
+#define LNG_M_DEG		111441.812	// 135-136E の距離 @ 35N / cos(35度)
 #define INVALID_POS_I	0x7FFFFFFF
-#define PTD_LOG_FREQ	11025.0
 #define MAX_POLY_HEIGHT	2000		// polygon 用ライン数
 
 #define VideoSt			( m_piParamT[ TRACK_VSt ] * 100 + m_piParamT[ TRACK_VSt2 ] )
