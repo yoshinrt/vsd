@@ -3,7 +3,7 @@
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
 	CVsdLog.cpp - CVsdLog class implementation
-	$Id: CVsdLog.cpp 218 2009-10-29 15:22:40Z  $
+	$Id$
 	
 *****************************************************************************/
 
