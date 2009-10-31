@@ -366,7 +366,7 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 					){
 						m_piParamT[ i ] = iVal;
 						
-						if( i <= TRACK_LEd ){
+						if( i <= TRACK_GEd ){
 							m_piParamT[ i + 1 ] = m_piParamT[ i ] % 100;
 							m_piParamT[ i ] /= 100;
 						}
@@ -418,7 +418,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 		if( m_szTrackbarName[ i ] == NULL ) continue;
 		
 		fprintf( fp, ", \\\n\t%s=%d", m_szTrackbarName[ i ],
-			( i <= TRACK_LEd ) ? m_piParamT[ i ] * 100 + m_piParamT[ i + 1 ] :
+			( i <= TRACK_GEd ) ? m_piParamT[ i ] * 100 + m_piParamT[ i + 1 ] :
 			m_piParamT[ i ]
 		);
 	}

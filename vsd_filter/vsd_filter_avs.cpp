@@ -128,6 +128,10 @@ CVsdFilterAvs::CVsdFilterAvs(
 	m_piParamT[ TRACK_LSt  ] /= 100;
 	m_piParamT[ TRACK_LEd2 ] = m_piParamT[ TRACK_LEd ] % 100;
 	m_piParamT[ TRACK_LEd  ] /= 100;
+	m_piParamT[ TRACK_GSt2 ] = m_piParamT[ TRACK_GSt ] % 100;
+	m_piParamT[ TRACK_GSt  ] /= 100;
+	m_piParamT[ TRACK_GEd2 ] = m_piParamT[ TRACK_GEd ] % 100;
+	m_piParamT[ TRACK_GEd  ] /= 100;
 	
 	// mark= à¯êîèàóù
 	if( p = args[ ARGID_MARK ].AsString( NULL )) ParseMarkStr( p );
