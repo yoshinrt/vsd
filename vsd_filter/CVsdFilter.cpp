@@ -29,14 +29,26 @@
 
 /*** macros *****************************************************************/
 
-#define LAT_M_DEG	110863.95	// 緯度1度の距離
-#define LNG_M_DEG	111195.10	// 経度1度の距離 @ 0N
-
+#define LAT_M_DEG		110863.95	// 緯度1度の距離
+#define LNG_M_DEG		111195.10	// 経度1度の距離 @ 0N
 #define INVALID_POS_I	0x7FFFFFFF
-
 #define PTD_LOG_FREQ	11025.0
+#define MAX_POLY_HEIGHT	2000		// polygon 用ライン数
 
-#define MAX_POLY_HEIGHT		2000		// polygon 用ライン数
+#define VideoSt			( m_piParamT[ TRACK_VSt ] * 100 + m_piParamT[ TRACK_VSt2 ] )
+#define VideoEd			( m_piParamT[ TRACK_VEd ] * 100 + m_piParamT[ TRACK_VEd2 ] )
+#define LogSt			( m_piParamT[ TRACK_LSt ] * 100 + m_piParamT[ TRACK_LSt2 ] )
+#define LogEd			( m_piParamT[ TRACK_LEd ] * 100 + m_piParamT[ TRACK_LEd2 ] )
+#define GPSSt			( m_piParamT[ TRACK_GSt ] * 100 + m_piParamT[ TRACK_GSt2 ] )
+#define GPSEd			( m_piParamT[ TRACK_GEd ] * 100 + m_piParamT[ TRACK_GEd2 ] )
+#define LineTrace		m_piParamT[ TRACK_LineTrace ]
+
+#define DispLap			m_piParamC[ CHECK_LAP ]
+#define GSnakeLen		m_piParamT[ TRACK_G_Len ]
+#define GScale			( m_piParamS[ SHADOW_G_SCALE ] / 1000.0 )
+#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
+
+#define MAX_MAP_SIZE	( GetWidth() * m_piParamT[ TRACK_MapSize ] / 1000.0 )
 
 /*** static member **********************************************************/
 
@@ -541,25 +553,27 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	// アップコンバート用バッファ確保・初期化
 	m_GPSLog = new CVsdLog;
 	m_GPSLog->GPSLogUpConvert( GPSLog, uGPSCnt, TRUE );
+	m_GPSLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
+	
 	delete [] GPSLog;
 	
-	/* デバッグ用
-	{
-		FILE *fpp = fopen( "G:\\DDS\\vsd\\vsd_filter\\z", "w" );
+	DebugCmd( {
+		FILE *fpp = fopen( "G:\\DDS\\vsd\\vsd_filter\\z_upcon_gps.txt", "w" );
 		for( u = 0; u < ( UINT )m_GPSLog->m_iCnt; ++u ){
-			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
+			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 				m_GPSLog->m_Log[ u ].fSpeed,
 				m_GPSLog->m_Log[ u ].fTacho,
 				m_GPSLog->m_Log[ u ].fMileage,
 				m_GPSLog->m_Log[ u ].fX,
 				m_GPSLog->m_Log[ u ].fX0,
 				m_GPSLog->m_Log[ u ].fY,
-				m_GPSLog->m_Log[ u ].fY0
+				m_GPSLog->m_Log[ u ].fY0,
+				m_GPSLog->m_Log[ u ].fGx,
+				m_GPSLog->m_Log[ u ].fGy
 			);
 		}
 		fclose( fpp );
-	}
-	*/
+	} )
 	
 	DeleteIfZero( m_GPSLog );
 	return m_GPSLog != NULL;
@@ -746,26 +760,33 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	return TRUE;
 }
 
+/*** ラップタイムログ → ログ番号 変換 **************************************/
+
+double CVsdFilter::LapNum2LogNum( CVsdLog *Log, int iLapNum ){
+	
+	// iLapNum がおかしいときは 0 を返しとく
+	if( iLapNum < 0 ) return 0;
+	
+	// 自動ラップ計測なら，Lap 構造体のログ番号は信用できる
+	if( Log == m_VsdLog ) return m_Lap[ iLapNum ].iLogNum;
+	
+	// GPS のログ番号に要変換
+	if( m_VsdLog ){
+		// 自動計測
+		return
+			( double )( m_Lap[ iLapNum ].iLogNum - LogSt ) / ( LogEd - LogSt )
+			* ( GPSEd - GPSSt ) + GPSSt;
+	}
+	
+	// 手動計測
+	return
+		( double )( m_Lap[ iLapNum ].iLogNum - VideoSt ) / ( VideoEd - VideoSt )
+		* ( GPSEd - GPSSt ) + GPSSt;
+}
+
 /****************************************************************************/
 /*** メーター描画 ***********************************************************/
 /****************************************************************************/
-
-/*** macros *****************************************************************/
-
-#define VideoSt			( m_piParamT[ TRACK_VSt ] * 100 + m_piParamT[ TRACK_VSt2 ] )
-#define VideoEd			( m_piParamT[ TRACK_VEd ] * 100 + m_piParamT[ TRACK_VEd2 ] )
-#define LogSt			( m_piParamT[ TRACK_LSt ] * 100 + m_piParamT[ TRACK_LSt2 ] )
-#define LogEd			( m_piParamT[ TRACK_LEd ] * 100 + m_piParamT[ TRACK_LEd2 ] )
-#define GPSSt			( m_piParamT[ TRACK_GSt ] * 100 + m_piParamT[ TRACK_GSt2 ] )
-#define GPSEd			( m_piParamT[ TRACK_GEd ] * 100 + m_piParamT[ TRACK_GEd2 ] )
-#define LineTrace		m_piParamT[ TRACK_LineTrace ]
-
-#define DispLap			m_piParamC[ CHECK_LAP ]
-#define GSnakeLen		m_piParamT[ TRACK_G_Len ]
-#define GScale			( m_piParamS[ SHADOW_G_SCALE ] / 1000.0 )
-#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
-
-#define MAX_MAP_SIZE	( GetWidth() * m_piParamT[ TRACK_MapSize ] / 1000.0 )
 
 /*** メーター等描画 *********************************************************/
 
@@ -1118,18 +1139,20 @@ BOOL CVsdFilter::DrawVSD( void ){
 		
 		int iGxPrev = INVALID_POS_I, iGyPrev;
 		
-		int	iLineSt = m_iLapIdx >= 0 ? m_Lap[ m_iLapIdx ].iLogNum : 0;
+		int iLineSt = ( int )LapNum2LogNum( Log, m_iLapIdx );
 		if( Log->m_iLogNum - iLineSt > ( int )( LineTrace * LOG_FREQ ))
 			iLineSt = Log->m_iLogNum - ( int )( LineTrace * LOG_FREQ );
 		
-		int iLineEd = m_iLapIdx != m_iLapNum - 1 ? m_Lap[ m_iLapIdx + 1 ].iLogNum : Log->m_iCnt - 1;
+		int iLineEd = m_iLapIdx != m_iLapNum - 1
+			? ( int )LapNum2LogNum( Log, m_iLapIdx + 1 ) : Log->m_iCnt - 1;
+		
 		if( iLineEd - Log->m_iLogNum > ( int )( LineTrace * LOG_FREQ ))
 			iLineEd = Log->m_iLogNum + ( int )( LineTrace * LOG_FREQ );
 		
 		for( i = iLineSt; i <= iLineEd ; ++i ){
 			#define GetMapPos( p, a ) ( (( p ) - Log->m_dMapOffs ## a ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 )
-			dGx = GetMapPos( Log->m_Log[ i ].fX, X );
-			dGy = GetMapPos( Log->m_Log[ i ].fY, Y );
+			dGx = GetMapPos( Log->X( i ), X );
+			dGy = GetMapPos( Log->Y( i ), Y );
 			
 			if( !_isnan( dGx )){
 				iGx = ( int )dGx;
@@ -1138,8 +1161,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 				if( iGxPrev != INVALID_POS_I ){
 					// Line の色用に G を求める
 					double dG = sqrt(
-						Log->m_Log[ i ].fGx * Log->m_Log[ i ].fGx +
-						Log->m_Log[ i ].fGy * Log->m_Log[ i ].fGy
+						Log->Gx( i ) * Log->Gx( i ) +
+						Log->Gy( i ) * Log->Gy( i )
 					) / MAP_G_MAX;
 					
 					PIXEL_YC yc_line;

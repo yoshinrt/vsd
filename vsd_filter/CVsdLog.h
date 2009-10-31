@@ -16,6 +16,9 @@
 
 #define DeleteIfZero( v ) if(( v ) && !( v )->m_iCnt ){ delete v; v = NULL; }
 
+#define PI			3.14159265358979323
+#define ToRAD		( PI / 180 )
+
 /*** new type ***************************************************************/
 
 typedef struct {

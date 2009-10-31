@@ -51,9 +51,6 @@
 
 #define BESTLAP_NONE	599999
 
-#define PI			3.14159265358979323
-#define ToRAD		( PI / 180 )
-
 /*** track / check ID *******************************************************/
 
 enum {
@@ -185,6 +182,7 @@ class CVsdFilter {
 	
 	// 手動ラップタイム計測モードかどうか
 	BOOL IsHandLaptime( void ){ return m_VsdLog == NULL; }
+	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
 	
 	CVsdLog		*m_VsdLog;
 	CVsdLog		*m_GPSLog;

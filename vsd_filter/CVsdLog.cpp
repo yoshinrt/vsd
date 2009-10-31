@@ -18,6 +18,8 @@
 
 /*** macros *****************************************************************/
 
+#define GRAVITY			9.80665
+
 /*** コンストラクタ *********************************************************/
 
 CVsdLog::CVsdLog(){
@@ -54,6 +56,14 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 	
 	double	t;
 	double	dMileage = 0;
+	double	dBearing;
+	double	dBearingPrev = GPSLog[ 0 ].fBearing;
+	
+	m_Log[ 0 ].fSpeed	=
+	m_Log[ 0 ].fTacho	=
+	m_Log[ 0 ].fGx		=
+	m_Log[ 0 ].fGy		=
+	m_Log[ 0 ].fMileage	= 0;
 	
 	for( ;; ++m_iCnt ){
 		
@@ -80,10 +90,10 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 			/ ( GPSLog[ u + 1 ].fTime - GPSLog[ u ].fTime );
 		
 		#define GetLogIntermediateVal( p )\
-			(( float )( GPSLog[ u ].p * ( 1 - t ) + GPSLog[ u + 1 ].p * t ))
+			( GPSLog[ u ].p * ( 1 - t ) + GPSLog[ u + 1 ].p * t )
 		
-		m_Log[ m_iCnt ].fX0 = GetLogIntermediateVal( fX );
-		m_Log[ m_iCnt ].fY0 = GetLogIntermediateVal( fY );
+		m_Log[ m_iCnt ].fX0 = ( float )GetLogIntermediateVal( fX );
+		m_Log[ m_iCnt ].fY0 = ( float )GetLogIntermediateVal( fY );
 		
 		if( bAllParam ){
 			m_Log[ m_iCnt ].fSpeed = ( float )GetLogIntermediateVal( fSpeed );
@@ -93,11 +103,24 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 					pow( m_Log[ m_iCnt - 1 ].fX0 - m_Log[ m_iCnt ].fX0, 2 ) +
 					pow( m_Log[ m_iCnt - 1 ].fY0 - m_Log[ m_iCnt ].fY0, 2 )
 				);
+				
+				m_Log[ m_iCnt ].fGy = ( float )(
+					( m_Log[ m_iCnt ].fSpeed - m_Log[ m_iCnt - 1 ].fSpeed )
+					* ( LOG_FREQ / 3.600 / GRAVITY )
+				);
+				
+				// 横G = vω
+				dBearing = ( float )GetLogIntermediateVal( fBearing );
+				
+				m_Log[ m_iCnt ].fGx = ( float )(
+					( dBearing - dBearingPrev )	* ( ToRAD * LOG_FREQ / GRAVITY )
+					* ( m_Log[ m_iCnt ].fSpeed / 3.600 )
+				);
+				
+				dBearingPrev = dBearing;
 			}
 			m_Log[ m_iCnt ].fMileage = ( float )dMileage;
 			
-			m_Log[ m_iCnt ].fGx =
-			m_Log[ m_iCnt ].fGy =
 			m_Log[ m_iCnt ].fTacho = 0;
 		}
 	}
