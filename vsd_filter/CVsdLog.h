@@ -30,8 +30,8 @@ typedef struct {
 typedef struct {
 	float	fX;
 	float	fY;
-	float	fVX;
-	float	fVY;
+	float	fSpeed;
+	float	fBearing;
 	float	fTime;
 } GPS_LOG_t;
 
@@ -50,21 +50,35 @@ class CVsdLog {
 	
 	CVsdLog();
 	~CVsdLog();
-	UINT GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt );
+	UINT GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam = FALSE );
 	void RotateMap( double dAngle );
 	
-	#define VsdLogGetData( p ) (( float )( \
-		m_Log[ ( UINT )m_dLogNum     ].p * ( 1 - ( m_dLogNum - ( UINT )m_dLogNum )) + \
-		m_Log[ ( UINT )m_dLogNum + 1 ].p * (       m_dLogNum - ( UINT )m_dLogNum )))
+	BOOL IsDataExist( void ){
+		return 0 <= m_dLogNum && m_dLogNum < m_iCnt - 1;
+	}
 	
-	float Speed		( void ){ return VsdLogGetData( fSpeed	); }
-	float Tacho		( void ){ return VsdLogGetData( fTacho	); }
-	float Mileage	( void ){ return VsdLogGetData( fMileage); }
-	float Gx		( void ){ return VsdLogGetData( fGx		); }
-	float Gy		( void ){ return VsdLogGetData( fGy		); }
-	float X			( void ){ return VsdLogGetData( fX		); }
-	float X0		( void ){ return VsdLogGetData( fX0		); }
-	float Y			( void ){ return VsdLogGetData( fY		); }
-	float Y0		( void ){ return VsdLogGetData( fY0		); }
+	#define VsdLogGetData( p, n ) (( float )( \
+		m_Log[ ( UINT )( n )     ].p * ( 1 - (( n ) - ( UINT )( n ))) + \
+		m_Log[ ( UINT )( n ) + 1 ].p * (      ( n ) - ( UINT )( n ))))
+	
+	float Speed		( void ){ return VsdLogGetData( fSpeed,		m_dLogNum ); }
+	float Tacho		( void ){ return VsdLogGetData( fTacho,		m_dLogNum ); }
+	float Mileage	( void ){ return VsdLogGetData( fMileage,	m_dLogNum ); }
+	float Gx		( void ){ return VsdLogGetData( fGx,		m_dLogNum ); }
+	float Gy		( void ){ return VsdLogGetData( fGy,		m_dLogNum ); }
+	float X			( void ){ return VsdLogGetData( fX,			m_dLogNum ); }
+	float X0		( void ){ return VsdLogGetData( fX0,		m_dLogNum ); }
+	float Y			( void ){ return VsdLogGetData( fY,			m_dLogNum ); }
+	float Y0		( void ){ return VsdLogGetData( fY0,		m_dLogNum ); }
+	
+	float Speed		( double dIndex ){ return VsdLogGetData( fSpeed,	dIndex ); }
+	float Tacho		( double dIndex ){ return VsdLogGetData( fTacho,	dIndex ); }
+	float Mileage	( double dIndex ){ return VsdLogGetData( fMileage,	dIndex ); }
+	float Gx		( double dIndex ){ return VsdLogGetData( fGx,		dIndex ); }
+	float Gy		( double dIndex ){ return VsdLogGetData( fGy,		dIndex ); }
+	float X			( double dIndex ){ return VsdLogGetData( fX,		dIndex ); }
+	float X0		( double dIndex ){ return VsdLogGetData( fX0,		dIndex ); }
+	float Y			( double dIndex ){ return VsdLogGetData( fY,		dIndex ); }
+	float Y0		( double dIndex ){ return VsdLogGetData( fY0,		dIndex ); }
 };
 #endif

@@ -21,7 +21,7 @@
 
 /*** macros *****************************************************************/
 
-#define	FILE_EXT		"log/config file\0*.log; *.gz; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
+#define	FILE_EXT		"log/config file\0*.log; *.nme*; *.gz; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 #define	FILE_CFG_EXT	"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 
 /*** new type ***************************************************************/
@@ -332,21 +332,20 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			
 			// config ロード
 			// .log.gz かもしれないので，拡張子を削除してみる
-			ChangeExt( szBuf2, ( char *)szBuf, NULL );
+			ChangeExt( szBuf, ( char *)szBuf, NULL );
 			
 			// .avs ロード
-			g_Vsd->ConfigLoad( ChangeExt( szBuf2, ( char *)szBuf2, CONFIG_EXT ));
+			g_Vsd->ConfigLoad( ChangeExt( szBuf2, ( char *)szBuf, CONFIG_EXT ));
 			
 			// .nmea ロード
-			g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf2, "nmea.gz" )) ||
-			g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf2, "nmea" ));
+			g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea.gz" )) ||
+			g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea" ));
 			
 			// .log ロード
-			if( !IsExt(( char *)szBuf, CONFIG_EXT )){
-				
-				// log リード
-				g_Vsd->ReadLog( szBuf );
-				
+			if(
+				g_Vsd->ReadLog( ChangeExt( szBuf2, ( char *)szBuf, "log.gz" )) ||
+				g_Vsd->ReadLog( ChangeExt( szBuf2, ( char *)szBuf, "log" ))
+			){
 				// trackbar 設定
 				track_e[ TRACK_LSt ] =
 				track_e[ TRACK_LEd ] = ( g_Vsd->m_VsdLog->m_iCnt + 99 ) / 100;

@@ -43,20 +43,17 @@ CVsdLog::~CVsdLog(){
 
 /*** GPS ログの up-convert **************************************************/
 
-UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt ){
+UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 	
 	UINT	u		= 0;
-	BOOL	bReload	= TRUE;
-	
-	double	dX3, dX2, dX1, dX0;
-	double	dY3, dY2, dY1, dY0;
-	double	dDiff;
-	double	t;
 	
 	m_iCnt = 0;
 	
 	if( uCnt < 2 ) return 0;						// 2個データがなければ終了
 	GPSLog[ uCnt ].fTime = ( float )999999999.9;	// 番犬
+	
+	double	t;
+	double	dMileage = 0;
 	
 	for( ;; ++m_iCnt ){
 		
@@ -65,61 +62,46 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt ){
 		
 		// m_iCnt が下限を下回っているのでインクリ
 		if(( float )m_iCnt / LOG_FREQ < GPSLog[ u ].fTime ){
-			bReload = TRUE;
 			for( ; ( float )m_iCnt / LOG_FREQ < GPSLog[ u ].fTime; ++m_iCnt );
 		}
 		
 		// m_iCnt が上限を上回っているので，u をインクリ
 		if(( float )m_iCnt / LOG_FREQ >= GPSLog[ u + 1 ].fTime ){
-			bReload = TRUE;
 			for( ; ( float )m_iCnt / LOG_FREQ >= GPSLog[ u + 1 ].fTime; ++u );
 			
 			// GPS ログ範囲を超えたので return
-			if( u > uCnt - 2 ) return m_iCnt;
-		}
-		
-		if( bReload ){
-			bReload = FALSE;
-			
-			dDiff = ( GPSLog[ u + 1 ].fTime - GPSLog[ u ].fTime );
-			
-			// パラメータをリロード
-			#define X0	GPSLog[ u ].fX
-			#define Y0	GPSLog[ u ].fY
-			#define VX0	( GPSLog[ u ].fVX * dDiff )
-			#define VY0	( GPSLog[ u ].fVY * dDiff )
-			#define X1	GPSLog[ u + 1 ].fX
-			#define Y1	GPSLog[ u + 1 ].fY
-			#define VX1	( GPSLog[ u + 1 ].fVX * dDiff )
-			#define VY1	( GPSLog[ u + 1 ].fVY * dDiff )
-			
-			dX3 = 2 * ( X0 - X1 ) + VX0 + VX1;
-			dX2 = 3 * ( -X0 + X1 ) - 2 * VX0 - VX1;
-			dX1 = VX0;
-			dX0 = X0;
-			dY3 = 2 * ( Y0 - Y1 ) + VY0 + VY1;
-			dY2 = 3 * ( -Y0 + Y1 ) - 2 * VY0 - VY1;
-			dY1 = VY0;
-			dY0 = Y0;
-			
-			#undef X0
-			#undef Y0
-			#undef VX0
-			#undef VY0
-			#undef X1
-			#undef Y1
-			#undef VX1
-			#undef VY1
+			if( u > uCnt - 2 ) break;
 		}
 		
 		// 5秒以上 GPS ログがあいていれば，補完情報の計算をしない
 		//if( GPSLog[ u + 1 ].fTime - GPSLog[ u ].fTime > 5 ) continue;
 		
-		t = (( double )m_iCnt / LOG_FREQ - GPSLog[ u ].fTime ) / dDiff;
+		t = (( double )m_iCnt / LOG_FREQ - GPSLog[ u ].fTime )
+			/ ( GPSLog[ u + 1 ].fTime - GPSLog[ u ].fTime );
 		
-		m_Log[ m_iCnt ].fX0 = ( float )((( dX3 * t + dX2 ) * t + dX1 ) * t + dX0 );
-		m_Log[ m_iCnt ].fY0 = ( float )((( dY3 * t + dY2 ) * t + dY1 ) * t + dY0 );
+		#define GetLogIntermediateVal( p )\
+			(( float )( GPSLog[ u ].p * ( 1 - t ) + GPSLog[ u + 1 ].p * t ))
+		
+		m_Log[ m_iCnt ].fX0 = GetLogIntermediateVal( fX );
+		m_Log[ m_iCnt ].fY0 = GetLogIntermediateVal( fY );
+		
+		if( bAllParam ){
+			m_Log[ m_iCnt ].fSpeed = ( float )GetLogIntermediateVal( fSpeed );
+			
+			if( m_iCnt ){
+				dMileage += sqrt(
+					pow( m_Log[ m_iCnt - 1 ].fX0 - m_Log[ m_iCnt ].fX0, 2 ) +
+					pow( m_Log[ m_iCnt - 1 ].fY0 - m_Log[ m_iCnt ].fY0, 2 )
+				);
+			}
+			m_Log[ m_iCnt ].fMileage = ( float )dMileage;
+			
+			m_Log[ m_iCnt ].fGx =
+			m_Log[ m_iCnt ].fGy =
+			m_Log[ m_iCnt ].fTacho = 0;
+		}
 	}
+	return m_iCnt;
 }
 
 /*** MAP 回転処理 ***********************************************************/

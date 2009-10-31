@@ -496,11 +496,10 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 		GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * LNG_M_DEG );
 		
 		// 速度・向き→ベクトル座標
-		dBearing *= ToRAD;
-		dSpeed	 *= ( 1852.00 / 3600 );	// knot/h → m/s
-		GPSLog[ uGPSCnt ].fVX	= ( float )(  sin( dBearing ) * dSpeed );
-		GPSLog[ uGPSCnt ].fVY	= ( float )( -cos( dBearing ) * dSpeed );
-		GPSLog[ uGPSCnt ].fTime = ( float )dTime;
+		dSpeed	 *= 1.852;	// knot/h → km/h
+		GPSLog[ uGPSCnt ].fSpeed	= ( float )dSpeed;
+		GPSLog[ uGPSCnt ].fBearing	= ( float )dBearing;
+		GPSLog[ uGPSCnt ].fTime 	= ( float )dTime;
 		
 		if( uGPSCnt >=2 ){
 			if( GPSLog[ uGPSCnt - 1 ].fTime == GPSLog[ uGPSCnt ].fTime ){
@@ -541,40 +540,13 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	
 	// アップコンバート用バッファ確保・初期化
 	m_GPSLog = new CVsdLog;
-	m_GPSLog->GPSLogUpConvert( GPSLog, uGPSCnt );
+	m_GPSLog->GPSLogUpConvert( GPSLog, uGPSCnt, TRUE );
 	delete [] GPSLog;
 	
-	DeleteIfZero( m_GPSLog );
-	if( !m_GPSLog ) return FALSE;
-	
-	double dMileage	= 0;
-	double dDistance= 0;
-	double dGx		= 0;
-	double dGy		= 0;
-	dSpeed	= 0;
-	
-	// 速度・距離・G を生成
-	for( u = 0; u < ( UINT )m_GPSLog->m_iCnt - 1; ++u ){
-		if( !_isnan( m_GPSLog->m_Log[ u ].fX0 ) && !_isnan( m_GPSLog->m_Log[ u + 1 ].fX0 )){
-			dDistance = sqrt(
-					pow( m_GPSLog->m_Log[ u + 1 ].fX0 - m_GPSLog->m_Log[ u ].fX0, 2 ) +
-					pow( m_GPSLog->m_Log[ u + 1 ].fY0 - m_GPSLog->m_Log[ u ].fY0, 2 )
-				);
-			
-			dSpeed	  = dDistance * ( 3600.0 / 1000 * LOG_FREQ );
-			dMileage += dDistance;
-		}
-		
-		m_GPSLog->m_Log[ u ].fSpeed		= ( float )dSpeed;
-		m_GPSLog->m_Log[ u ].fTacho		= 0;
-		m_GPSLog->m_Log[ u ].fMileage	= ( float )dMileage;
-		m_GPSLog->m_Log[ u ].fGx		= ( float )dGx;
-		m_GPSLog->m_Log[ u ].fGy		= ( float )dGy;
-	}
-	
+	/* デバッグ用
 	{
 		FILE *fpp = fopen( "G:\\DDS\\vsd\\vsd_filter\\z", "w" );
-		for( u = 0; u < m_GPSLog->m_iCnt; ++u ){
+		for( u = 0; u < ( UINT )m_GPSLog->m_iCnt; ++u ){
 			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 				m_GPSLog->m_Log[ u ].fSpeed,
 				m_GPSLog->m_Log[ u ].fTacho,
@@ -587,8 +559,10 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 		}
 		fclose( fpp );
 	}
+	*/
 	
-	return TRUE;
+	DeleteIfZero( m_GPSLog );
+	return m_GPSLog != NULL;
 }
 
 /*** ログリード *************************************************************/
@@ -676,12 +650,8 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 			// 緯度・経度→メートル
 			GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * LAT_M_DEG * cos( dLati * ToRAD ));
 			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * LNG_M_DEG );
-			
-			// 速度・向き→ベクトル座標
-			dBearing *= ToRAD;
-			dSpeed	 *= ( 1000.0 / 3600 );
-			GPSLog[ uGPSCnt ].fVX	= ( float )(  sin( dBearing ) * dSpeed );
-			GPSLog[ uGPSCnt ].fVY	= ( float )( -cos( dBearing ) * dSpeed );
+			GPSLog[ uGPSCnt ].fSpeed	= ( float )dSpeed;
+			GPSLog[ uGPSCnt ].fBearing	= ( float )dBearing;
 			
 			GPSLog[ uGPSCnt++ ].fTime = ( uLogNum - GPS_LOG_OFFS ) / ( float )LOG_FREQ;
 		}
@@ -786,11 +756,14 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 #define VideoEd			( m_piParamT[ TRACK_VEd ] * 100 + m_piParamT[ TRACK_VEd2 ] )
 #define LogSt			( m_piParamT[ TRACK_LSt ] * 100 + m_piParamT[ TRACK_LSt2 ] )
 #define LogEd			( m_piParamT[ TRACK_LEd ] * 100 + m_piParamT[ TRACK_LEd2 ] )
+#define GPSSt			( m_piParamT[ TRACK_GSt ] * 100 + m_piParamT[ TRACK_GSt2 ] )
+#define GPSEd			( m_piParamT[ TRACK_GEd ] * 100 + m_piParamT[ TRACK_GEd2 ] )
 #define LineTrace		m_piParamT[ TRACK_LineTrace ]
 
 #define DispLap			m_piParamC[ CHECK_LAP ]
 #define GSnakeLen		m_piParamT[ TRACK_G_Len ]
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] / 1000.0 )
+#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
 
 #define MAX_MAP_SIZE	( GetWidth() * m_piParamT[ TRACK_MapSize ] / 1000.0 )
 
@@ -858,11 +831,12 @@ BOOL CVsdFilter::DrawVSD( void ){
 	const int	iMeterMaxVal	= 7000;
 	const int	iMeterDegRange	= ( iMeterMaxDeg + 360 - iMeterMinDeg ) % 360;
 	const int	iMeterScaleLen	= iMeterR / 8;
+	const int	iMeterSMaxVal	= m_piParamT[ TRACK_SPEED ];
 	
 	// フォントサイズ初期化
 	InitFont();
 	
-	CVsdLog *Log = m_GPSLog;
+	CVsdLog *Log = m_VsdLog;
 	
 	double	dLogFreq;	// 自動計測モード時の，実測 Log Freq
 	
@@ -912,11 +886,11 @@ BOOL CVsdFilter::DrawVSD( void ){
 			DrawString( "Time -'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - GetFontW() * 13, 1 );
 		}
 		
-		/*** ベストとの車間距離表示 ***/
-		if( !IsHandLaptime() ){
+		/*** ベストとの車間距離表示 - ***/
+		if( !IsHandLaptime()){
 			if( bInLap ){
 				// この周の走行距離を求める
-				double dMileage = Log->Mileage() - Log->m_Log[ m_Lap[ m_iLapIdx ].iLogNum ].fMileage;
+				double dMileage = Log->Mileage() - Log->Mileage( m_Lap[ m_iLapIdx ].iLogNum );
 				
 				// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
 				// m_iBestLogNum <= 最終的に求める結果 < m_iBestLogNum + 1  となる
@@ -924,12 +898,12 @@ BOOL CVsdFilter::DrawVSD( void ){
 				if(
 					m_iBestLogNum < m_iBestLapLogNum ||
 					m_iBestLogNum >= Log->m_iCnt ||
-					( Log->m_Log[ m_iBestLogNum ].fMileage - Log->m_Log[ m_iBestLapLogNum ].fMileage ) > dMileage
+					( Log->Mileage( m_iBestLogNum ) - Log->Mileage( m_iBestLapLogNum )) > dMileage
 				) m_iBestLogNum = m_iBestLapLogNum;
 				
 				for(
 					;
-					( Log->m_Log[ m_iBestLogNum + 1 ].fMileage - Log->m_Log[ m_iBestLapLogNum ].fMileage ) <= dMileage &&
+					( Log->Mileage( m_iBestLogNum + 1 ) - Log->Mileage( m_iBestLapLogNum )) <= dMileage &&
 					m_iBestLogNum < Log->m_iCnt;
 					++m_iBestLogNum
 				);
@@ -938,9 +912,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 				double dBestLogNum =
 					( double )m_iBestLogNum +
 					// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
-					( dMileage - ( Log->m_Log[ m_iBestLogNum ].fMileage - Log->m_Log[ m_iBestLapLogNum ].fMileage )) /
+					( dMileage - ( Log->Mileage( m_iBestLogNum ) - Log->Mileage( m_iBestLapLogNum ))) /
 					// B: 最速ラップは，1/15秒の間にこの距離を走った
-					( Log->m_Log[ m_iBestLogNum + 1 ].fMileage - Log->m_Log[ m_iBestLogNum ].fMileage );
+					( Log->Mileage( m_iBestLogNum + 1 ) - Log->Mileage( m_iBestLogNum ));
 				
 				int iDiffTime = ( int )(
 					(
@@ -996,20 +970,33 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 	}
 	
-	if( !Log ) return TRUE;
-	
 	// ログ位置の計算
-	Log->m_dLogNum = ( VideoEd == VideoSt ) ? -1 :
-		( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + LogSt;
-	Log->m_iLogNum = ( int )Log->m_dLogNum;
+	if( m_VsdLog ){
+		m_VsdLog->m_dLogNum = ( VideoEd == VideoSt ) ? -1 :
+			( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + LogSt;
+		m_VsdLog->m_iLogNum = ( int )m_VsdLog->m_dLogNum;
+	}
+	if( m_GPSLog ){
+		m_GPSLog->m_dLogNum = ( VideoEd == VideoSt ) ? -1 :
+			( double )( GPSEd - GPSSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + GPSSt;
+		m_GPSLog->m_iLogNum = ( int )m_GPSLog->m_dLogNum;
+	}
 	
 	// フレーム表示
 	if( m_piParamC[ CHECK_FRAME ] ){
 		sprintf( szBuf, "V%6d/%6d", GetFrameCnt(), GetFrameMax() - 1 );
 		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, GetWidth() / 2, GetHeight() / 2 );
-		sprintf( szBuf, "L%6d/%6d", ( int )Log->m_dLogNum, Log->m_iCnt - 1 );
-		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+		if( m_VsdLog ){
+			sprintf( szBuf, "L%6d/%6d", ( int )m_VsdLog->m_dLogNum, m_VsdLog->m_iCnt - 1 );
+			DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+		}
+		if( m_GPSLog ){
+			sprintf( szBuf, "G%6d/%6d", ( int )m_GPSLog->m_dLogNum, m_GPSLog->m_iCnt - 1 );
+			DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+		}
 	}
+	
+	if( !m_VsdLog && !m_GPSLog ) return TRUE;
 	
 	/*** メーターパネル ***/
 	DrawCircle(
@@ -1017,46 +1004,80 @@ BOOL CVsdFilter::DrawVSD( void ){
 		CVsdFilter::IMG_ALFA | CVsdFilter::IMG_FILL
 	);
 	
-	// タコメータ
-	for( i = 0; i <= iMeterMaxVal; i += 500 ){
-		int iDeg = iMeterDegRange * i / iMeterMaxVal + iMeterMinDeg;
-		if( iDeg >= 360 ) iDeg -= 360;
+	if( GPSPriority && m_GPSLog ){
+		// GPS ログ優先時はスピードメーターパネル
+		int	iStep = (( iMeterSMaxVal / 20 ) + 4 ) / 5 * 5;
 		
-		// メーターパネル目盛り
-		if( iMeterMaxVal <= 12000 || i % 1000 == 0 ){
-			DrawLine(
-				( int )( cos( iDeg * ToRAD ) * iMeterR ) + iMeterCx,
-				( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
-				( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCx,
-				( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
-				( iMeterMaxVal <= 12000 && i % 1000 == 0 || i % 2000 == 0 ) ? 2 : 1,
-				COLOR_SCALE, 0
-			);
+		for( i = 0; i <= iMeterSMaxVal; i += iStep ){
+			int iDeg = iMeterDegRange * i / iMeterSMaxVal + iMeterMinDeg;
 			
-			// メーターパネル目盛り数値
-			if( iMeterMaxVal <= 12000 && i % 1000 == 0 || i % 2000 == 0 ){
-				sprintf( szBuf, "%d", i / 1000 );
-				DrawString(
-					szBuf,
-					COLOR_STR, 0,
-					( int )( cos( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCx - GetFontW() / ( i >= 10000 ? 1 : 2 ),
-					( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - GetFontH() / 2
+			// メーターパネル目盛り
+			if( i % iStep == 0 ){
+				DrawLine(
+					( int )( cos( iDeg * ToRAD ) * iMeterR ) + iMeterCx,
+					( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
+					( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCx,
+					( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
+					( i % ( iStep * 2 ) == 0 ) ? 2 : 1,
+					COLOR_SCALE, 0
 				);
+				
+				// メーターパネル目盛り数値
+				if( i % ( iStep * 2 ) == 0 ){
+					sprintf( szBuf, "%d", i );
+					DrawString(
+						szBuf,
+						COLOR_STR, 0,
+						( int )( cos( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCx - GetFontW() * strlen( szBuf ) / 2,
+						( int )( sin( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCy - GetFontH() / 2
+					);
+				}
+			}
+		}
+	}else{
+		// VSD ログがあるときはタコメータ
+		for( i = 0; i <= iMeterMaxVal; i += 500 ){
+			int iDeg = iMeterDegRange * i / iMeterMaxVal + iMeterMinDeg;
+			
+			// メーターパネル目盛り
+			if( iMeterMaxVal <= 12000 || i % 1000 == 0 ){
+				DrawLine(
+					( int )( cos( iDeg * ToRAD ) * iMeterR ) + iMeterCx,
+					( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
+					( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCx,
+					( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
+					( iMeterMaxVal <= 12000 && i % 1000 == 0 || i % 2000 == 0 ) ? 2 : 1,
+					COLOR_SCALE, 0
+				);
+				
+				// メーターパネル目盛り数値
+				if( iMeterMaxVal <= 12000 && i % 1000 == 0 || i % 2000 == 0 ){
+					sprintf( szBuf, "%d", i / 1000 );
+					DrawString(
+						szBuf,
+						COLOR_STR, 0,
+						( int )( cos( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCx - GetFontW() / ( i >= 10000 ? 1 : 2 ),
+						( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - GetFontH() / 2
+					);
+				}
 			}
 		}
 	}
 	
-	/*** メーター描画 ***/
+	/*** メーターデータ描画 ***/
 	
-	if( Log->m_dLogNum < 0 || Log->m_dLogNum > Log->m_iCnt - 1 ) return TRUE;
+	// VSD log を優先，ただしチェックボックスでオーバーライドできる
+	#define SelectLogVsd ( Log = ( GPSPriority || !m_VsdLog ) ? m_GPSLog : m_VsdLog )
 	
-	double	dSpeed	= Log->Speed();
-	double	dTacho	= Log->Tacho();
+	// GPS log を優先
+	#define SelectLogGPS ( Log = m_GPSLog ? m_GPSLog : m_VsdLog )
+	
+	SelectLogVsd;
 	
 	// G スネーク
 	int	iGx, iGy;
 	
-	if( GSnakeLen >= 0 ){
+	if( GSnakeLen >= 0 && Log->IsDataExist() ){
 		if( GSnakeLen > 0 ){
 			
 			int iGxPrev = 0, iGyPrev;
@@ -1090,7 +1111,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 	}
 	
 	// MAP 表示
-	if( LineTrace ){
+	SelectLogGPS;
+	
+	if( LineTrace && Log->IsDataExist() ){
 		double dGx, dGy;
 		
 		int iGxPrev = INVALID_POS_I, iGyPrev;
@@ -1165,57 +1188,83 @@ BOOL CVsdFilter::DrawVSD( void ){
 		);
 	}
 	
-	// スピード / ギア
-	UINT uGear = 0;
-	
-	if( dTacho ){
-		UINT uGearRatio = ( int )( dSpeed * 100 * ( 1 << 8 ) / dTacho );
+	// ギア表示 - VsdLog しか使用しない
+	if( m_VsdLog && m_VsdLog->IsDataExist() ){
 		
-		if     ( uGearRatio < GEAR_TH( 1 ))	uGear = 1;
-		else if( uGearRatio < GEAR_TH( 2 ))	uGear = 2;
-		else if( uGearRatio < GEAR_TH( 3 ))	uGear = 3;
-		else if( uGearRatio < GEAR_TH( 4 ))	uGear = 4;
-		else								uGear = 5;
+		UINT uGear = 0;
+		
+		if( m_VsdLog->Tacho() != 0 ){
+			UINT uGearRatio = ( int )( m_VsdLog->Speed() * 100 * ( 1 << 8 ) / m_VsdLog->Tacho() );
+			
+			if     ( uGearRatio < GEAR_TH( 1 ))	uGear = 1;
+			else if( uGearRatio < GEAR_TH( 2 ))	uGear = 2;
+			else if( uGearRatio < GEAR_TH( 3 ))	uGear = 3;
+			else if( uGearRatio < GEAR_TH( 4 ))	uGear = 4;
+			else								uGear = 5;
+		}
+		
+		sprintf( szBuf, "%d\x7F", uGear );
+		DrawString(
+			szBuf,
+			COLOR_STR, 0,
+			iMeterCx - 1 * GetFontW(), iMeterCy - iMeterR / 2
+		);
 	}
 	
-	// スピード表示
-	sprintf( szBuf, "%d\x7F", uGear );
-	DrawString(
-		szBuf,
-		COLOR_STR, 0,
-		iMeterCx - 1 * GetFontW(), iMeterCy - iMeterR / 2
-	);
+	SelectLogVsd;
 	
-	sprintf( szBuf, "%3d\x80\x81", ( int )dSpeed );
-	DrawString(
-		szBuf,
-		COLOR_STR, 0,
-		iMeterCx - 3 * GetFontW(), iMeterCy + iMeterR / 2
-	);
+	if( Log->IsDataExist()){
+		// スピード表示
+		sprintf( szBuf, "%3d\x80\x81", ( int )Log->Speed() );
+		DrawString(
+			szBuf,
+			COLOR_STR, 0,
+			iMeterCx - 3 * GetFontW(), iMeterCy + iMeterR / 2
+		);
+		
+		// G 数値
+		sprintf( szBuf, "%02dG", ( int )( sqrt( Log->Gx() * Log->Gx() + Log->Gy() * Log->Gy()) * 10 ));
+		DrawString(
+			szBuf,
+			COLOR_STR, 0,
+			iMeterCx - 2 * GetFontW(), iMeterCy + iMeterR / 2 - GetFontH()
+		);
+		DrawRect(
+			m_iPosX + GetFontW() - 1, m_iPosY - 4,
+			m_iPosX + GetFontW()    , m_iPosY - 3,
+			COLOR_STR, 0
+		);
+	}
 	
-	sprintf( szBuf, "%02dG", ( int )( sqrt( Log->Gx() * Log->Gx() + Log->Gy() * Log->Gy()) * 10 ));
-	DrawString(
-		szBuf,
-		COLOR_STR, 0,
-		iMeterCx - 2 * GetFontW(), iMeterCy + iMeterR / 2 - GetFontH()
-	);
-	DrawRect(
-		m_iPosX + GetFontW() - 1, m_iPosY - 4,
-		m_iPosX + GetFontW()    , m_iPosY - 3,
-		COLOR_STR, 0
-	);
-	
-	// Tacho の針
-	double dTachoNeedle = iMeterDegRange / ( double )iMeterMaxVal * dTacho + iMeterMinDeg;
-	if( dTachoNeedle >= 360 ) dTachoNeedle -= 360;
-	dTachoNeedle = dTachoNeedle * ToRAD;
-	
-	DrawLine(
-		iMeterCx, iMeterCy,
-		( int )( cos( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCx,
-		( int )( sin( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
-		LINE_WIDTH, COLOR_NEEDLE, 0
-	);
+	if( GPSPriority && m_GPSLog ){
+		if( m_GPSLog->IsDataExist()){
+			// Speed の針
+			double dSpeedNeedle =
+				iMeterDegRange / ( double )iMeterSMaxVal * m_GPSLog->Speed() + iMeterMinDeg;
+			
+			dSpeedNeedle = dSpeedNeedle * ToRAD;
+			
+			DrawLine(
+				iMeterCx, iMeterCy,
+				( int )( cos( dSpeedNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCx,
+				( int )( sin( dSpeedNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
+				LINE_WIDTH, COLOR_NEEDLE, 0
+			);
+		}
+	}else{
+		if( m_VsdLog->IsDataExist()){
+			// Tacho の針 - VsdLog しか使用しない
+			double dTachoNeedle = iMeterDegRange / ( double )iMeterMaxVal * m_VsdLog->Tacho() + iMeterMinDeg;
+			dTachoNeedle = dTachoNeedle * ToRAD;
+			
+			DrawLine(
+				iMeterCx, iMeterCy,
+				( int )( cos( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCx,
+				( int )( sin( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
+				LINE_WIDTH, COLOR_NEEDLE, 0
+			);
+		}
+	}
 	
 	DrawCircle( iMeterCx, iMeterCy,  iMeterR / 25, COLOR_NEEDLE, CVsdFilter::IMG_FILL );
 	
