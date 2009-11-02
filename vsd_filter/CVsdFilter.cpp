@@ -814,7 +814,7 @@ double CVsdFilter::LapNum2LogNum( CVsdLog *Log, int iLapNum ){
 	
 	// Žè“®Œv‘ª
 	return
-		VideoEd - VideoSt ? 0 :
+		VideoEd == VideoSt ? 0 :
 		( double )( m_Lap[ iLapNum ].iLogNum - VideoSt ) / ( VideoEd - VideoSt )
 		* ( GPSEd - GPSSt ) + GPSSt;
 }

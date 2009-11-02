@@ -1,16 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dds_lib", "DDS_LIB\dds_lib.vcproj", "{35D23BED-1583-4DE5-AAAF-4FD421CB3023}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dds_lib", "dds_lib\dds_lib.vcproj", "{32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsd_filter", "vsd_filter.vcproj", "{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}"
 	ProjectSection(ProjectDependencies) = postProject
-		{35D23BED-1583-4DE5-AAAF-4FD421CB3023} = {35D23BED-1583-4DE5-AAAF-4FD421CB3023}
+		{32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD} = {32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsd_filter_avs", "vsd_filter_avs\vsd_filter_avs\vsd_filter_avs.vcproj", "{41F84FCE-9EAA-491D-818B-D3AD73C8AD12}"
 	ProjectSection(ProjectDependencies) = postProject
-		{35D23BED-1583-4DE5-AAAF-4FD421CB3023} = {35D23BED-1583-4DE5-AAAF-4FD421CB3023}
+		{32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD} = {32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD}
 	EndProjectSection
 EndProject
 Global
@@ -19,10 +19,10 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.Debug|Win32.ActiveCfg = Debug|Win32
-		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.Debug|Win32.Build.0 = Debug|Win32
-		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.Release|Win32.ActiveCfg = Release|Win32
-		{35D23BED-1583-4DE5-AAAF-4FD421CB3023}.Release|Win32.Build.0 = Release|Win32
+		{32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD}.Debug|Win32.Build.0 = Debug|Win32
+		{32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD}.Release|Win32.ActiveCfg = Release|Win32
+		{32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD}.Release|Win32.Build.0 = Release|Win32
 		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.Debug|Win32.ActiveCfg = Debug|Win32
 		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.Debug|Win32.Build.0 = Debug|Win32
 		{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}.Release|Win32.ActiveCfg = Release|Win32
