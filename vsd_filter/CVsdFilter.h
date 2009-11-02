@@ -184,6 +184,8 @@ class CVsdFilter {
 	BOOL IsHandLaptime( void ){ return m_VsdLog == NULL; }
 	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
 	
+	void DrawSpeedGraph( CVsdLog *Log, const PIXEL_YC &yc );
+	
 	CVsdLog		*m_VsdLog;
 	CVsdLog		*m_GPSLog;
 	
@@ -208,6 +210,7 @@ class CVsdFilter {
 	static const char *m_szShadowParamName[];
 	
 	char	*m_szLogFile;
+	char	*m_szGPSLogFile;
 	
 	// âºëzä÷êî
 	virtual void SetFrameMark( int iFrame ) = 0;
