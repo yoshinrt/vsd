@@ -20,6 +20,12 @@
 
 #define GRAVITY			9.80665
 
+#ifdef GPS_ONLY
+	#define INVERT_GPS_ONLY	(-1)
+#else
+	#define INVERT_GPS_ONLY	1
+#endif
+
 /*** コンストラクタ *********************************************************/
 
 CVsdLog::CVsdLog(){
@@ -109,7 +115,7 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 					pow( m_Log[ m_iCnt - 1 ].fY0 - m_Log[ m_iCnt ].fY0, 2 )
 				);
 				
-				m_Log[ m_iCnt ].fGy = ( float )(
+				m_Log[ m_iCnt ].fGy = INVERT_GPS_ONLY * ( float )(
 					( m_Log[ m_iCnt ].fSpeed - m_Log[ m_iCnt - 1 ].fSpeed )
 					* ( LOG_FREQ / 3.600 / GRAVITY )
 				);
@@ -127,7 +133,7 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 				if     ( dBearingPrev >  180 ) dBearingPrev -= 360;
 				else if( dBearingPrev < -180 ) dBearingPrev += 360;
 				
-				m_Log[ m_iCnt ].fGx = ( float )(
+				m_Log[ m_iCnt ].fGx = INVERT_GPS_ONLY * ( float )(
 					dBearingPrev * ( ToRAD * LOG_FREQ / GRAVITY )
 					* ( m_Log[ m_iCnt ].fSpeed / 3.600 )
 				);

@@ -124,10 +124,12 @@ CVsdFilterAvs::CVsdFilterAvs(
 	m_piParamT[ TRACK_VSt  ] /= 100;
 	m_piParamT[ TRACK_VEd2 ] = m_piParamT[ TRACK_VEd ] % 100;
 	m_piParamT[ TRACK_VEd  ] /= 100;
+#ifndef GPS_ONLY
 	m_piParamT[ TRACK_LSt2 ] = m_piParamT[ TRACK_LSt ] % 100;
 	m_piParamT[ TRACK_LSt  ] /= 100;
 	m_piParamT[ TRACK_LEd2 ] = m_piParamT[ TRACK_LEd ] % 100;
 	m_piParamT[ TRACK_LEd  ] /= 100;
+#endif
 	m_piParamT[ TRACK_GSt2 ] = m_piParamT[ TRACK_GSt ] % 100;
 	m_piParamT[ TRACK_GSt  ] /= 100;
 	m_piParamT[ TRACK_GEd2 ] = m_piParamT[ TRACK_GEd ] % 100;

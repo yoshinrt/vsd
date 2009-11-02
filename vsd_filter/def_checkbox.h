@@ -8,8 +8,11 @@
 //				|				|	|					config 名
 //				|				|	|					|
 DEF_CHECKBOX(	CHECK_LAP,		1,	"ラップタイム",		"lap_time"	)
-DEF_CHECKBOX(	CHECK_GPS_PRIO,	0,	"GPS優先",			"gps_priority"	)
+DEF_CHECKBOX(	CHECK_METER_POS,0,	"メーター位置変更",	"meter_pos"	)
+#ifndef GPS_ONLY
+DEF_CHECKBOX_N(	CHECK_GPS_PRIO,	0,	"GPS優先",			NULL		)
 DEF_CHECKBOX_N(	CHECK_LOGPOS,	0,	"log位置自動認識",	NULL		)
+#endif
 DEF_CHECKBOX_N(	CHECK_FRAME,	0,	"フレーム表示",		NULL		)
 
 #undef DEF_CHECKBOX

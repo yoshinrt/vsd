@@ -21,7 +21,14 @@
 
 /*** macros *****************************************************************/
 
-#define	FILE_EXT		"log/config file\0*.log; *.nme*; *.gz; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
+#ifdef GPS_ONLY
+	#define CONFIG_EXT		"cfg"
+	#define	FILE_EXT		"log/config file\0*.nme*; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
+#else
+	#define CONFIG_EXT		"avs"
+	#define	FILE_EXT		"log/config file\0*.log; *.nme*; *.gz; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
+#endif
+
 #define	FILE_CFG_EXT	"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 
 /*** new type ***************************************************************/
@@ -330,38 +337,56 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	  case WM_FILTER_IMPORT:
 		if( filter->exfunc->dlg_get_load_name( szBuf, FILE_EXT, NULL )){
 			
-			// config ロード
-			// .log.gz かもしれないので，拡張子を削除してみる
-			ChangeExt( szBuf, ( char *)szBuf, NULL );
-			
-			// .avs ロード
-			g_Vsd->ConfigLoad( ChangeExt( szBuf2, ( char *)szBuf, CONFIG_EXT ));
-			
-			// .nmea ロード
-			if(
-				g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea.gz" )) ||
-				g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea" ))
-			){
-				// trackbar 設定
-				track_e[ TRACK_GSt ] =
-				track_e[ TRACK_GEd ] = ( g_Vsd->m_GPSLog->m_iCnt + 99 ) / 100;
-			}
-			
-			// .log ロード
-			if(
-				g_Vsd->ReadLog( ChangeExt( szBuf2, ( char *)szBuf, "log.gz" )) ||
-				g_Vsd->ReadLog( ChangeExt( szBuf2, ( char *)szBuf, "log" ))
-			){
-				// trackbar 設定
-				track_e[ TRACK_LSt ] =
-				track_e[ TRACK_LEd ] = ( g_Vsd->m_VsdLog->m_iCnt + 99 ) / 100;
-			}
+			#ifdef GPS_ONLY
+				// config ロード
+				// .log.gz かもしれないので，拡張子を削除してみる
+				ChangeExt( szBuf2, ( char *)szBuf, NULL );
+				
+				// .avs ロード
+				g_Vsd->ConfigLoad( ChangeExt( szBuf2, ( char *)szBuf2, CONFIG_EXT ));
+				
+				// .nmea ロード
+				if( g_Vsd->GPSLogLoad( szBuf )){
+					// trackbar 設定
+					track_e[ TRACK_GSt ] =
+					track_e[ TRACK_GEd ] = ( g_Vsd->m_GPSLog->m_iCnt + 99 ) / 100;
+				}
+			#else
+				// config ロード
+				// .log.gz かもしれないので，拡張子を削除してみる
+				ChangeExt( szBuf, ( char *)szBuf, NULL );
+				
+				// .avs ロード
+				g_Vsd->ConfigLoad( ChangeExt( szBuf2, ( char *)szBuf, CONFIG_EXT ));
+				
+				// .nmea ロード
+				if(
+					g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea.gz" )) ||
+					g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea" ))
+				){
+					// trackbar 設定
+					track_e[ TRACK_GSt ] =
+					track_e[ TRACK_GEd ] = ( g_Vsd->m_GPSLog->m_iCnt + 99 ) / 100;
+				}
+				
+				// .log ロード
+				if(
+					g_Vsd->ReadLog( ChangeExt( szBuf2, ( char *)szBuf, "log.gz" )) ||
+					g_Vsd->ReadLog( ChangeExt( szBuf2, ( char *)szBuf, "log" ))
+				){
+					// trackbar 設定
+					track_e[ TRACK_LSt ] =
+					track_e[ TRACK_LEd ] = ( g_Vsd->m_VsdLog->m_iCnt + 99 ) / 100;
+				}
+			#endif
 			
 			// 設定再描画
 			filter->exfunc->filter_window_update( filter );
 			
-			// log pos 更新
-			func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
+			#ifndef GPS_ONLY
+				// log pos 更新
+				func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
+			#endif
 		}
 		return TRUE;
 		
@@ -439,18 +464,20 @@ BOOL func_update( FILTER *fp, int status ){
 	
 	bReEnter = TRUE;
 	
-	if(
-		status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS ) &&
-		fp->check[ CHECK_LOGPOS ]
-	){
-		fp->track[ TRACK_LSt  ] = g_Vsd->m_iLogStart / 100;
-		fp->track[ TRACK_LSt2 ] = g_Vsd->m_iLogStart % 100;
-		fp->track[ TRACK_LEd  ] = g_Vsd->m_iLogStop  / 100;
-		fp->track[ TRACK_LEd2 ] = g_Vsd->m_iLogStop  % 100;
-		
-		// 設定再描画
-		fp->exfunc->filter_window_update( fp );
-	}
+	#ifndef GPS_ONLY
+		if(
+			status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS ) &&
+			fp->check[ CHECK_LOGPOS ]
+		){
+			fp->track[ TRACK_LSt  ] = g_Vsd->m_iLogStart / 100;
+			fp->track[ TRACK_LSt2 ] = g_Vsd->m_iLogStart % 100;
+			fp->track[ TRACK_LEd  ] = g_Vsd->m_iLogStop  / 100;
+			fp->track[ TRACK_LEd2 ] = g_Vsd->m_iLogStop  % 100;
+			
+			// 設定再描画
+			fp->exfunc->filter_window_update( fp );
+		}
+	#endif
 	
 	// マップ回転
 	if( status == ( FILTER_UPDATE_STATUS_TRACK + TRACK_MapAngle )){

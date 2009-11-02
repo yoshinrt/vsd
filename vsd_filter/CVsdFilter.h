@@ -47,8 +47,6 @@
 #define HIREZO_TH		600			// ハイレゾモード時の横幅スレッショルド
 #define POS_DEFAULT		0x80000000
 
-#define CONFIG_EXT		"avs"
-
 #define BESTLAP_NONE	599999
 
 /*** track / check ID *******************************************************/

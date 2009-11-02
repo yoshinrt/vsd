@@ -38,8 +38,13 @@
 
 #define VideoSt			( m_piParamT[ TRACK_VSt ] * 100 + m_piParamT[ TRACK_VSt2 ] )
 #define VideoEd			( m_piParamT[ TRACK_VEd ] * 100 + m_piParamT[ TRACK_VEd2 ] )
-#define LogSt			( m_piParamT[ TRACK_LSt ] * 100 + m_piParamT[ TRACK_LSt2 ] )
-#define LogEd			( m_piParamT[ TRACK_LEd ] * 100 + m_piParamT[ TRACK_LEd2 ] )
+#ifdef GPS_ONLY
+	#define LogSt		0
+	#define LogEd		0
+#else
+	#define LogSt		( m_piParamT[ TRACK_LSt ] * 100 + m_piParamT[ TRACK_LSt2 ] )
+	#define LogEd		( m_piParamT[ TRACK_LEd ] * 100 + m_piParamT[ TRACK_LEd2 ] )
+#endif
 #define GPSSt			( m_piParamT[ TRACK_GSt ] * 100 + m_piParamT[ TRACK_GSt2 ] )
 #define GPSEd			( m_piParamT[ TRACK_GEd ] * 100 + m_piParamT[ TRACK_GEd2 ] )
 #define LineTrace		m_piParamT[ TRACK_LineTrace ]
@@ -47,7 +52,12 @@
 #define DispLap			m_piParamC[ CHECK_LAP ]
 #define GSnakeLen		m_piParamT[ TRACK_G_Len ]
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] / 1000.0 )
-#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
+
+#ifdef GPS_ONLY
+	#define GPSPriority		FALSE
+#else
+	#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
+#endif
 
 #define MAX_MAP_SIZE	( GetWidth() * m_piParamT[ TRACK_MapSize ] / 1000.0 )
 
@@ -423,7 +433,9 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	
 	fprintf( fp,
 		"DirectShowSource( \"%s\", pixel_type=\"YUY2\", convertfps=true  )\n"
-		"VSDFilter( \\\n\tlog_file=\"%s\"",
+		"VSDFilter( \\\n"
+		"\tlog_file=\"%s\", \\\n\tgps_file=\"%s\""
+		,
 		GetVideoFileName( szBuf ),
 		m_szLogFile ? m_szLogFile : "",
 		m_szGPSLogFile ? m_szGPSLogFile : ""
@@ -486,9 +498,9 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	if(( fp = gzopen(( char *)szFileName, "rb" )) == NULL ) return FALSE;
 	
 #ifndef AVS_PLUGIN
-	if( m_szLogFile ) delete [] m_szLogFile;
-	m_szLogFile = new char[ strlen( szFileName ) + 1 ];
-	strcpy( m_szLogFile, szFileName );
+	if( m_szGPSLogFile ) delete [] m_szGPSLogFile;
+	m_szGPSLogFile = new char[ strlen( szFileName ) + 1 ];
+	strcpy( m_szGPSLogFile, szFileName );
 #endif
 	
 	GPS_LOG_t	*GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG * GPS_FREQ / LOG_FREQ ) ];
@@ -615,9 +627,9 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	if(( fp = gzopen(( char *)szFileName, "rb" )) == NULL ) return FALSE;
 	
 #ifndef AVS_PLUGIN
-	if( m_szGPSLogFile ) delete [] m_szGPSLogFile;
-	m_szGPSLogFile = new char[ strlen( szFileName ) + 1 ];
-	strcpy( m_szGPSLogFile, szFileName );
+	if( m_szLogFile ) delete [] m_szLogFile;
+	m_szLogFile = new char[ strlen( szFileName ) + 1 ];
+	strcpy( m_szLogFile, szFileName );
 #endif
 	
 	// GPS ログ用
@@ -687,6 +699,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 			GPSLog[ uGPSCnt ].fSpeed	= ( float )dSpeed;
 			GPSLog[ uGPSCnt ].fBearing	= ( float )dBearing;
 			
+			// LOG_FREQ は 15Hz だった時代のログでは間違いだが，等比分割だし実害なし?
 			GPSLog[ uGPSCnt++ ].fTime = ( uLogNum - GPS_LOG_OFFS ) / ( float )LOG_FREQ;
 		}
 		
@@ -794,12 +807,14 @@ double CVsdFilter::LapNum2LogNum( CVsdLog *Log, int iLapNum ){
 	if( m_VsdLog ){
 		// 自動計測
 		return
+			LogEd == LogSt ? 0 :
 			( double )( m_Lap[ iLapNum ].iLogNum - LogSt ) / ( LogEd - LogSt )
 			* ( GPSEd - GPSSt ) + GPSSt;
 	}
 	
 	// 手動計測
 	return
+		VideoEd - VideoSt ? 0 :
 		( double )( m_Lap[ iLapNum ].iLogNum - VideoSt ) / ( VideoEd - VideoSt )
 		* ( GPSEd - GPSSt ) + GPSSt;
 }
@@ -887,9 +902,22 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	BOOL	bInLap = FALSE;	// ラップタイム計測中
 	
-	const int	iMeterR			= m_piParamS[ SHADOW_METER_R  ] >= 0 ? m_piParamS[ SHADOW_METER_R  ] : 50 * GetWidth() / 320;
-	const int	iMeterCx		= m_piParamS[ SHADOW_METER_CX ] >= 0 ? m_piParamS[ SHADOW_METER_CX ] : GetWidth()  - iMeterR - 2;
-	const int	iMeterCy		= m_piParamS[ SHADOW_METER_CY ] >= 0 ? m_piParamS[ SHADOW_METER_CY ] : GetHeight() - iMeterR - 2;
+	const int	iMeterR =
+		m_piParamS[ SHADOW_METER_R  ] >= 0 ? m_piParamS[ SHADOW_METER_R  ] :
+		50 * GetWidth() / 320;
+	
+	const int	iMeterCx =
+		m_piParamS[ SHADOW_METER_CX ] >= 0 ? m_piParamS[ SHADOW_METER_CX ] :
+		#ifdef GPS_ONLY
+			m_piParamC[ CHECK_METER_POS ]  ? GetWidth()  - iMeterR - 2 : iMeterR + 1;
+		#else
+			!m_piParamC[ CHECK_METER_POS ] ? GetWidth()  - iMeterR - 2 : iMeterR + 1;
+		#endif
+		
+	const int	iMeterCy =
+		m_piParamS[ SHADOW_METER_CY ] >= 0 ? m_piParamS[ SHADOW_METER_CY ] :
+		GetHeight() - iMeterR - 2;
+	
 	const int	iMeterMinDeg	= 135;
 	const int	iMeterMaxDeg	= 45;
 	const int	iMeterMaxVal	= 7000;
@@ -902,18 +930,24 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	CVsdLog *Log = m_VsdLog;
 	
-	double	dLogFreq;	// 自動計測モード時の，実測 Log Freq
-	
 	// ログ位置の計算
 	if( m_VsdLog ){
 		m_VsdLog->m_dLogNum = ( VideoEd == VideoSt ) ? -1 :
 			( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + LogSt;
 		m_VsdLog->m_iLogNum = ( int )m_VsdLog->m_dLogNum;
+		
+		// 古い log は LOG_FREQ とは限らないので，計算で求める
+		m_VsdLog->m_dFreq =
+			( double )(( m_Lap[ m_iLapIdx + 1 ].iLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 ) /
+			m_Lap[ m_iLapIdx + 1 ].iTime;
 	}
 	if( m_GPSLog ){
 		m_GPSLog->m_dLogNum = ( VideoEd == VideoSt ) ? -1 :
 			( double )( GPSEd - GPSSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + GPSSt;
 		m_GPSLog->m_iLogNum = ( int )m_GPSLog->m_dLogNum;
+		
+		// GPS log は LOG_FREQ でコンバートしている
+		m_GPSLog->m_dFreq = LOG_FREQ;
 	}
 	
 	/*** Lap タイム描画 ***/
@@ -947,11 +981,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 				iTime = ( int )(( GetFrameCnt() - m_Lap[ m_iLapIdx ].iLogNum ) * 1000.0 / m_dVideoFPS );
 			}else{
 				// 自動計測時は，タイム / ログ数 から計算
-				dLogFreq =
-					( double )(( m_Lap[ m_iLapIdx + 1 ].iLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 ) /
-					m_Lap[ m_iLapIdx + 1 ].iTime;
-				
-				iTime = ( int )(( Log->m_dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 / dLogFreq );
+				iTime = ( int )(( Log->m_dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 / m_VsdLog->m_dFreq );
 			}
 			
 			sprintf( szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
@@ -1002,7 +1032,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 					(
 						( Log->m_dLogNum - LapNum2LogNum( Log, m_iLapIdx )) -
 						( dBestLapLogNumRunning - dBestLapLogNumStart )
-					) * 1000.0 / LOG_FREQ
+					) * 1000.0 / Log->m_dFreq
 				);
 				
 				BOOL bSign = iDiffTime <= 0;
@@ -1053,21 +1083,48 @@ BOOL CVsdFilter::DrawVSD( void ){
 	}
 	
 	// フレーム表示
+	
+	#define Float2Time( n )	( int )( n ) / 60, fmod( n, 60 )
+	
 	if( m_piParamC[ CHECK_FRAME ] ){
-		sprintf( szBuf, "V%6d/%6d (%.3f)", GetFrameCnt(), GetFrameMax() - 1, ( VideoEd - VideoSt ) / m_dVideoFPS );
-		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 2 );
+		sprintf(
+			szBuf, "Vid%5d/%5d %2d:%05.2f-%2d:%05.2f(%2d:%05.2f)",
+			GetFrameCnt(), GetFrameMax() - 1,
+			Float2Time( VideoSt / m_dVideoFPS ),
+			Float2Time( VideoEd / m_dVideoFPS ),
+			Float2Time(( VideoEd - VideoSt ) / m_dVideoFPS )
+		);
+		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 3 );
 		
 		if( m_VsdLog ){
-			sprintf( szBuf, "L%6d/%6d (%.3f)", ( int )m_VsdLog->m_dLogNum, m_VsdLog->m_iCnt - 1, ( LogEd - LogSt ) / LOG_FREQ );
+			sprintf(
+			szBuf, "Log%5d/%5d %2d:%05.2f-%2d:%05.2f(%2d:%05.2f)",
+				( int )m_VsdLog->m_dLogNum, m_VsdLog->m_iCnt - 1,
+				Float2Time( LogSt / m_VsdLog->m_dFreq ),
+				Float2Time( LogEd / m_VsdLog->m_dFreq ),
+				Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq )
+			);
 			DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 			DrawSpeedGraph( m_VsdLog, yc_red );
 		}
 		
 		if( m_GPSLog ){
-			sprintf( szBuf, "G%6d/%6d (%.3f)", ( int )m_GPSLog->m_dLogNum, m_GPSLog->m_iCnt - 1, ( GPSEd - GPSSt ) / LOG_FREQ );
+			sprintf( szBuf,
+				"GPS%5d/%5d %2d:%05.2f-%2d:%05.2f(%2d:%05.2f)",
+				( int )m_GPSLog->m_dLogNum, m_GPSLog->m_iCnt - 1,
+				Float2Time( GPSSt / m_GPSLog->m_dFreq ),
+				Float2Time( GPSEd / m_GPSLog->m_dFreq ),
+				Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq )
+			);
 			DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 			DrawSpeedGraph( m_GPSLog, yc_cyan );
 		}
+		
+		DrawLine(
+			GetWidth() / 2, GetHeight() - 20,
+			GetWidth() / 2, GetHeight() - 1,
+			1, yc_cyan, 0
+		);
 	}
 	
 	if( !m_VsdLog && !m_GPSLog ) return TRUE;
@@ -1166,7 +1223,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	// G スネーク
 	int	iGx, iGy;
 	
-	if( GSnakeLen >= 0 && Log->IsDataExist() ){
+	if( GSnakeLen >= 0 && Log->IsDataExist()){
 		if( GSnakeLen > 0 ){
 			
 			int iGxPrev = 0, iGyPrev;
@@ -1202,7 +1259,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	// MAP 表示
 	SelectLogGPS;
 	
-	if( LineTrace && Log->IsDataExist() ){
+	if( LineTrace && Log->IsDataExist()){
 		double dGx, dGy;
 		
 		int iGxPrev = INVALID_POS_I, iGyPrev;
@@ -1218,7 +1275,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 			iLineEd = Log->m_iLogNum + ( int )( LineTrace * LOG_FREQ );
 		
 		for( i = iLineSt; i <= iLineEd ; ++i ){
-			#define GetMapPos( p, a ) ( (( p ) - Log->m_dMapOffs ## a ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 )
+			#define GetMapPos( p, a ) ((( p ) - Log->m_dMapOffs ## a ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 )
 			dGx = GetMapPos( Log->X( i ), X );
 			dGy = GetMapPos( Log->Y( i ), Y );
 			

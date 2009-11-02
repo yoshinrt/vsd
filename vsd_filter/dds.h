@@ -8,6 +8,8 @@
 #ifndef _DDS_H
 #define _DDS_H
 
+#define GPS_ONLY
+
 #define	Case		break; case
 #define Default		break; default
 #define until( x )	while( !( x ))

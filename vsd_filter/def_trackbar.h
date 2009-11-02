@@ -13,10 +13,12 @@ DEF_TRACKBAR(	TRACK_VSt,			0,		0,		9999,	"vidêÊì™",	"video_start"	)
 DEF_TRACKBAR_N(	TRACK_VSt2,			0,		-200,	200,	"",			NULL			)
 DEF_TRACKBAR(	TRACK_VEd,			0,		0,		9999,	"vidç≈å„",	"video_end"		)
 DEF_TRACKBAR_N(	TRACK_VEd2,			0,		-200,	200,	"",			NULL			)
+#ifndef GPS_ONLY
 DEF_TRACKBAR(	TRACK_LSt,			0,		0,		9999,	"logêÊì™",	"log_start"		)
 DEF_TRACKBAR_N(	TRACK_LSt2,			0,		-200,	200,	"",			NULL			)
 DEF_TRACKBAR(	TRACK_LEd,			0,		0,		9999,	"logç≈å„",	"log_end"		)
 DEF_TRACKBAR_N(	TRACK_LEd2,			0,		-200,	200,	"",			NULL			)
+#endif
 DEF_TRACKBAR(	TRACK_GSt,			0,		0,		9999,	"gpsêÊì™",	"gps_start"		)
 DEF_TRACKBAR_N(	TRACK_GSt2,			0,		-200,	200,	"",			NULL			)
 DEF_TRACKBAR(	TRACK_GEd,			0,		0,		9999,	"gpsç≈å„",	"gps_end"		)
