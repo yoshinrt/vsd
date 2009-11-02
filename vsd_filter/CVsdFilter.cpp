@@ -49,6 +49,12 @@
 
 #define MAX_MAP_SIZE	( GetWidth() * m_piParamT[ TRACK_MapSize ] / 1000.0 )
 
+// VSD log を優先，ただしチェックボックスでオーバーライドできる
+#define SelectLogVsd ( Log = ( GPSPriority || !m_VsdLog ) ? m_GPSLog : m_VsdLog )
+
+// GPS log を優先
+#define SelectLogGPS ( Log = m_GPSLog ? m_GPSLog : m_VsdLog )
+
 /*** static member **********************************************************/
 
 const UCHAR CVsdFilter::m_Font9p[] = {
@@ -89,14 +95,14 @@ CVsdFilter::CVsdFilter () {
 	m_Lap[ 0 ].iTime	= 0;			// 番犬
 	
 	m_iBestTime			= BESTLAP_NONE;
-	m_iBestLapLogNum	= 0;
+	m_iBestLap			= 0;
 	
 	m_dVideoFPS			= 30.0;
 	
 	m_iPreW				= 0;
 	
 	m_iLapIdx			= -1;
-	m_iBestLogNum		= 0;
+	m_iBestLogNumRunning		= 0;
 	
 	m_bCalcLapTimeReq	= FALSE;
 	
@@ -606,9 +612,9 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	// 初期化
 	m_iLapNum		= 0;
 	m_iBestTime		= BESTLAP_NONE;
-	m_iBestLapLogNum= 0;
+	m_iBestLap		= 0;
 	m_iLapIdx		= -1;
-	m_iBestLogNum	= 0;
+	m_iBestLogNumRunning	= 0;
 	
 	m_VsdLog = new CVsdLog;
 	
@@ -645,8 +651,8 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 				uReadCnt == 4 &&
 				( m_iBestTime == BESTLAP_NONE || m_iBestTime > iTime )
 			){
-				m_iBestTime			= iTime;
-				m_iBestLapLogNum	= m_Lap[ m_iLapNum - 1 ].iLogNum;
+				m_iBestTime	= iTime;
+				m_iBestLap	= m_iLapNum - 1;
 			}
 			++m_iLapNum;
 		}
@@ -738,7 +744,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	}
 	m_VsdLog->m_iCnt = uLogNum;
 	
-	/*** GPS ログから軌跡を求める ***************************************/
+	/*** GPS ログから軌跡を求める *******************************************/
 	
 	if( uGPSCnt ){
 		m_VsdLog->GPSLogUpConvert( GPSLog, uGPSCnt );
@@ -747,7 +753,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	
 	delete [] GPSLog;
 	
-	/********************************************************************/
+	/************************************************************************/
 	
 	gzclose( fp );
 	
@@ -814,6 +820,7 @@ static const PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
 #define COLOR_DIFF_PLUS		yc_red
 #define COLOR_CURRENT_POS	yc_red
 #define COLOR_FASTEST_POS	yc_green
+#define COLOR_G_SCALE		yc_black
 
 BOOL CVsdFilter::DrawVSD( void ){
 //
@@ -859,6 +866,18 @@ BOOL CVsdFilter::DrawVSD( void ){
 	CVsdLog *Log = m_VsdLog;
 	
 	double	dLogFreq;	// 自動計測モード時の，実測 Log Freq
+	
+	// ログ位置の計算
+	if( m_VsdLog ){
+		m_VsdLog->m_dLogNum = ( VideoEd == VideoSt ) ? -1 :
+			( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + LogSt;
+		m_VsdLog->m_iLogNum = ( int )m_VsdLog->m_dLogNum;
+	}
+	if( m_GPSLog ){
+		m_GPSLog->m_dLogNum = ( VideoEd == VideoSt ) ? -1 :
+			( double )( GPSEd - GPSSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + GPSSt;
+		m_GPSLog->m_iLogNum = ( int )m_GPSLog->m_dLogNum;
+	}
 	
 	/*** Lap タイム描画 ***/
 	
@@ -907,40 +926,46 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 		
 		/*** ベストとの車間距離表示 - ***/
-		if( !IsHandLaptime()){
+		if( !m_VsdLog || !m_GPSLog ){
 			if( bInLap ){
+				
+				SelectLogGPS;
+				
+				// ベストラップ開始の LogNum
+				double dBestLapLogNumStart = LapNum2LogNum( Log, m_iBestLap );
+				
 				// この周の走行距離を求める
-				double dMileage = Log->Mileage() - Log->Mileage( m_Lap[ m_iLapIdx ].iLogNum );
+				double dMileage = Log->Mileage() - Log->Mileage( LapNum2LogNum( Log, m_iLapIdx ));
 				
 				// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
-				// m_iBestLogNum <= 最終的に求める結果 < m_iBestLogNum + 1  となる
-				// m_iBestLogNum がおかしかったら，リセット
+				// m_iBestLogNumRunning <= 最終的に求める結果 < m_iBestLogNumRunning + 1  となる
+				// m_iBestLogNumRunning がおかしかったら，リセット
 				if(
-					m_iBestLogNum < m_iBestLapLogNum ||
-					m_iBestLogNum >= Log->m_iCnt ||
-					( Log->Mileage( m_iBestLogNum ) - Log->Mileage( m_iBestLapLogNum )) > dMileage
-				) m_iBestLogNum = m_iBestLapLogNum;
+					m_iBestLogNumRunning < dBestLapLogNumStart ||
+					m_iBestLogNumRunning >= Log->m_iCnt ||
+					( Log->Mileage( m_iBestLogNumRunning ) - Log->Mileage( dBestLapLogNumStart )) > dMileage
+				) m_iBestLogNumRunning = ( int )dBestLapLogNumStart;
 				
 				for(
 					;
-					( Log->Mileage( m_iBestLogNum + 1 ) - Log->Mileage( m_iBestLapLogNum )) <= dMileage &&
-					m_iBestLogNum < Log->m_iCnt;
-					++m_iBestLogNum
+					( Log->Mileage( m_iBestLogNumRunning + 1 ) - Log->Mileage( dBestLapLogNumStart )) <= dMileage &&
+					m_iBestLogNumRunning < Log->m_iCnt;
+					++m_iBestLogNumRunning
 				);
 				
 				// 最速 Lap の，1/15秒以下の値を求める = A / B
-				double dBestLogNum =
-					( double )m_iBestLogNum +
+				double dBestLapLogNumRunning =
+					( double )m_iBestLogNumRunning +
 					// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
-					( dMileage - ( Log->Mileage( m_iBestLogNum ) - Log->Mileage( m_iBestLapLogNum ))) /
+					( dMileage - ( Log->Mileage( m_iBestLogNumRunning ) - Log->Mileage( dBestLapLogNumStart ))) /
 					// B: 最速ラップは，1/15秒の間にこの距離を走った
-					( Log->Mileage( m_iBestLogNum + 1 ) - Log->Mileage( m_iBestLogNum ));
+					( Log->Mileage( m_iBestLogNumRunning + 1 ) - Log->Mileage( m_iBestLogNumRunning ));
 				
 				int iDiffTime = ( int )(
 					(
-						( Log->m_dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) -
-						( dBestLogNum - m_iBestLapLogNum )
-					) * 1000.0 / dLogFreq
+						( Log->m_dLogNum - LapNum2LogNum( Log, m_iLapIdx )) -
+						( dBestLapLogNumRunning - dBestLapLogNumStart )
+					) * 1000.0 / LOG_FREQ
 				);
 				
 				BOOL bSign = iDiffTime <= 0;
@@ -990,28 +1015,18 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 	}
 	
-	// ログ位置の計算
-	if( m_VsdLog ){
-		m_VsdLog->m_dLogNum = ( VideoEd == VideoSt ) ? -1 :
-			( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + LogSt;
-		m_VsdLog->m_iLogNum = ( int )m_VsdLog->m_dLogNum;
-	}
-	if( m_GPSLog ){
-		m_GPSLog->m_dLogNum = ( VideoEd == VideoSt ) ? -1 :
-			( double )( GPSEd - GPSSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + GPSSt;
-		m_GPSLog->m_iLogNum = ( int )m_GPSLog->m_dLogNum;
-	}
-	
 	// フレーム表示
 	if( m_piParamC[ CHECK_FRAME ] ){
-		sprintf( szBuf, "V%6d/%6d", GetFrameCnt(), GetFrameMax() - 1 );
-		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, GetWidth() / 2, GetHeight() / 2 );
+		sprintf( szBuf, "V%6d/%6d (%.3f)", GetFrameCnt(), GetFrameMax() - 1, ( VideoEd - VideoSt ) / m_dVideoFPS );
+		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 2 );
+		
 		if( m_VsdLog ){
-			sprintf( szBuf, "L%6d/%6d", ( int )m_VsdLog->m_dLogNum, m_VsdLog->m_iCnt - 1 );
+			sprintf( szBuf, "L%6d/%6d (%.3f)", ( int )m_VsdLog->m_dLogNum, m_VsdLog->m_iCnt - 1, ( LogEd - LogSt ) / LOG_FREQ );
 			DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 		}
+		
 		if( m_GPSLog ){
-			sprintf( szBuf, "G%6d/%6d", ( int )m_GPSLog->m_dLogNum, m_GPSLog->m_iCnt - 1 );
+			sprintf( szBuf, "G%6d/%6d (%.3f)", ( int )m_GPSLog->m_dLogNum, m_GPSLog->m_iCnt - 1, ( GPSEd - GPSSt ) / LOG_FREQ );
 			DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 		}
 	}
@@ -1023,6 +1038,27 @@ BOOL CVsdFilter::DrawVSD( void ){
 		iMeterCx, iMeterCy, iMeterR, COLOR_PANEL,
 		CVsdFilter::IMG_ALFA | CVsdFilter::IMG_FILL
 	);
+	
+	/*
+	DrawCircle(
+		iMeterCx, iMeterCy, iMeterR / 3, COLOR_G_SCALE,
+		CVsdFilter::IMG_ALFA
+	);
+	DrawCircle(
+		iMeterCx, iMeterCy, iMeterR * 2 / 3, COLOR_G_SCALE,
+		CVsdFilter::IMG_ALFA
+	);
+	DrawLine(
+		iMeterCx - iMeterR, iMeterCy,
+		iMeterCx + iMeterR, iMeterCy,
+		1, COLOR_G_SCALE, CVsdFilter::IMG_ALFA
+	);
+	DrawLine(
+		iMeterCx, iMeterCy - iMeterR,
+		iMeterCx, iMeterCy + iMeterR,
+		1, COLOR_G_SCALE, CVsdFilter::IMG_ALFA
+	);
+	*/
 	
 	if( GPSPriority && m_GPSLog ){
 		// GPS ログ優先時はスピードメーターパネル
@@ -1085,12 +1121,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 	}
 	
 	/*** メーターデータ描画 ***/
-	
-	// VSD log を優先，ただしチェックボックスでオーバーライドできる
-	#define SelectLogVsd ( Log = ( GPSPriority || !m_VsdLog ) ? m_GPSLog : m_VsdLog )
-	
-	// GPS log を優先
-	#define SelectLogGPS ( Log = m_GPSLog ? m_GPSLog : m_VsdLog )
 	
 	SelectLogVsd;
 	

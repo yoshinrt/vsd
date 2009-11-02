@@ -210,8 +210,8 @@ void CVsdFilterAvs::CalcLapTime( void ){
 			i &&
 			( m_iBestTime == BESTLAP_NONE || m_iBestTime > m_Lap[ i ].iTime )
 		){
-			m_iBestTime			= m_Lap[ i ].iTime;
-			m_iBestLapLogNum	= m_Lap[ i - 1 ].iLogNum;
+			m_iBestTime	= m_Lap[ i ].iTime;
+			m_iBestLap	= i - 1;
 		}
 		
 		iPrevTime = iTime;

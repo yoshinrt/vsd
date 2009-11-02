@@ -250,8 +250,8 @@ void CVsdFilterAvu::CalcLapTime( void ){
 				m_iLapNum &&
 				( m_iBestTime == BESTLAP_NONE || m_iBestTime > m_Lap[ m_iLapNum ].iTime )
 			){
-				m_iBestTime			= m_Lap[ m_iLapNum ].iTime;
-				m_iBestLapLogNum	= m_Lap[ m_iLapNum - 1 ].iLogNum;
+				m_iBestTime	= m_Lap[ m_iLapNum ].iTime;
+				m_iBestLap	= m_iLapNum - 1;
 			}
 			
 			iPrevTime = iTime;
@@ -338,8 +338,14 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			g_Vsd->ConfigLoad( ChangeExt( szBuf2, ( char *)szBuf, CONFIG_EXT ));
 			
 			// .nmea ロード
-			g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea.gz" )) ||
-			g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea" ));
+			if(
+				g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea.gz" )) ||
+				g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea" ))
+			){
+				// trackbar 設定
+				track_e[ TRACK_GSt ] =
+				track_e[ TRACK_GEd ] = ( g_Vsd->m_GPSLog->m_iCnt + 99 ) / 100;
+			}
 			
 			// .log ロード
 			if(

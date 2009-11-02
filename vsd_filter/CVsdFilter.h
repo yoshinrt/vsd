@@ -151,7 +151,7 @@ class CVsdFilter {
 	int	m_iPreW;
 	
 	int	m_iLapIdx;
-	int m_iBestLogNum;
+	int m_iBestLogNumRunning;
 	
 	PolygonData_t	*m_Polygon;
 	
@@ -190,7 +190,7 @@ class CVsdFilter {
 	LAP_t		*m_Lap;
 	int			m_iLapNum;
 	int			m_iBestTime;
-	int			m_iBestLapLogNum;
+	int			m_iBestLap;
 	
 	int			m_iLogStart;
 	int			m_iLogStop;
