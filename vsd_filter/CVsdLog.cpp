@@ -87,6 +87,12 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 			
 			// GPS ログ範囲を超えたので return
 			if( u > uCnt - 2 ) break;
+			
+			// bearing の 360度 wrap around 対策
+			if( GPSLog[ u + 1 ].fBearing - GPSLog[ u ].fBearing > 180 )
+				GPSLog[ u + 1 ].fBearing -= 360;
+			else if( GPSLog[ u + 1 ].fBearing - GPSLog[ u ].fBearing < -180 )
+				GPSLog[ u + 1 ].fBearing += 360;
 		}
 		
 		// 5秒以上 GPS ログがあいていれば，補完情報の計算をしない
@@ -122,11 +128,6 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 				
 				// 横G = vω
 				// 360度の wrap around
-				if( GPSLog[ u + 1 ].fBearing - GPSLog[ u ].fBearing > 180 )
-					GPSLog[ u + 1 ].fBearing -= 360;
-				else if( GPSLog[ u + 1 ].fBearing - GPSLog[ u ].fBearing < -180 )
-					GPSLog[ u + 1 ].fBearing += 360;
-				
 				dBearing = GetLogIntermediateVal( fBearing );
 				
 				dBearingPrev = dBearing - dBearingPrev;

@@ -566,21 +566,19 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	
 	gzclose( fp );
 	
-	/* デバッグ用
-	{
-		FILE *fpp = fopen( "G:\\DDS\\vsd\\vsd_filter\\zGPS", "w" );
+	DebugCmd( {
+		FILE *fpp = fopen( "G:\\DDS\\vsd\\vsd_filter\\z_gps_raw.txt", "w" );
 		for( u = 0; u < uGPSCnt; ++u ){
 			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\n",
 				GPSLog[ u ].fX,
 				GPSLog[ u ].fY,
-				GPSLog[ u ].fVX,
-				GPSLog[ u ].fVY,
+				GPSLog[ u ].fSpeed,
+				GPSLog[ u ].fBearing,
 				GPSLog[ u ].fTime
 			);
 		}
 		fclose( fpp );
-	}
-	*/
+	} )
 	
 	// アップコンバート用バッファ確保・初期化
 	m_GPSLog = new CVsdLog;
