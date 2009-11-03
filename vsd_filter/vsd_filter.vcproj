@@ -74,7 +74,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="zlib\zlib_MD.lib"
+				AdditionalDependencies="zlib\zlib_MD.lib dds_lib\Release\dds_lib.lib"
 				OutputFile="C:\Program Files\AVIUTL\vsd_filter.auf"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -170,7 +170,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="zlib\zlib_MTd.lib"
+				AdditionalDependencies="zlib\zlib_MTd.lib dds_lib\Debug\dds_lib.lib"
 				OutputFile="C:\Program Files\AVIUTL\vsd_filter.auf"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
