@@ -71,7 +71,7 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 	m_Log[ 0 ].fGy		=
 	m_Log[ 0 ].fMileage	= 0;
 	
-	for( ;; ++m_iCnt ){
+	for( ;m_iCnt < MAX_VSD_LOG; ++m_iCnt ){
 		
 		// GPSLog[ u ].fTime <= m_iCnt / LOG_FREQ < GPSLog[ u + 1 ].fTime
 		// ‚Ì”ÍˆÍ‚É‚È‚é‚æ‚¤’²®
