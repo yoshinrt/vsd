@@ -54,6 +54,14 @@
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] / 1000.0 )
 
 #ifdef GPS_ONLY
+	#define Aspect			m_piParamT[ TRACK_Aspect ]
+	#define AspectRatio		(( double )m_piParamT[ TRACK_Aspect ] / 1000 )
+#else
+	#define Aspect			1000
+	#define AspectRatio		1
+#endif
+
+#ifdef GPS_ONLY
 	#define GPSPriority		FALSE
 #else
 	#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
@@ -238,7 +246,9 @@ void CVsdFilter::DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, U
 
 void CVsdFilter::DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFlag ){
 	
-	int			i, j;
+	int	i = r;
+	int j = 0;
+	int f = -2 * r + 3;
 	
 	// Polygon クリア
 	if( uFlag & IMG_FILL ){
@@ -247,14 +257,53 @@ void CVsdFilter::DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFlag
 	}
 	
 	// 円を書く
-	for( i = 0, j = r; i < j; ++i ){
-		
-		j = ( int )( sqrt(( double )( r * r - i * i )) + .5 );
-		
+	while( i >= j ){
 		PutPixel( x + i, y + j, yc, uFlag ); PutPixel( x + i, y - j, yc, uFlag );
 		PutPixel( x - i, y + j, yc, uFlag ); PutPixel( x - i, y - j, yc, uFlag );
 		PutPixel( x + j, y + i, yc, uFlag ); PutPixel( x - j, y + i, yc, uFlag );
 		PutPixel( x + j, y - i, yc, uFlag ); PutPixel( x - j, y - i, yc, uFlag );
+		
+		if( f >= 0 ){
+			--i;
+			f -= 4 * i;
+		}
+		++j;
+		f += 4 * j + 2;
+	}
+	
+	// Polygon 合成
+	if( uFlag & IMG_FILL ) PolygonDraw( yc, uFlag );
+}
+
+void CVsdFilter::DrawCircle( int x, int y, int r, int a, int b, const PIXEL_YC &yc, UINT uFlag ){
+	int		i = ( int )(( double )r / sqrt(( double )a ));
+	int		j = 0;
+	double	d = sqrt(( double )a ) * ( double )r;
+	int		f = ( int )( -2.0 * d ) + a + 2 * b;
+	int		h = ( int )( -4.0 * d ) + 2 * a + b;
+	
+	// Polygon クリア
+	if( uFlag & IMG_FILL ){
+		PolygonClear();
+		uFlag |= IMG_POLYGON;
+	}
+	
+	while( i >= 0 ){
+		PutPixel( x + i, y + j, yc, uFlag );
+		PutPixel( x - i, y + j, yc, uFlag );
+		PutPixel( x + i, y - j, yc, uFlag );
+		PutPixel( x - i, y - j, yc, uFlag );
+		
+		if( f >= 0 ){
+			--i;
+			f -= 4 * a * i;
+			h -= 4 * a * i - 2 * a;
+		}
+		if( h < 0 ){
+			++j;
+			f += 4 * b * j + 2 * b;
+			h += 4 * b * j;
+		}
 	}
 	
 	// Polygon 合成
@@ -904,14 +953,21 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_piParamS[ SHADOW_METER_R  ] >= 0 ? m_piParamS[ SHADOW_METER_R  ] :
 		50 * GetWidth() / 320;
 	
-	const int	iMeterCx =
-		m_piParamS[ SHADOW_METER_CX ] >= 0 ? m_piParamS[ SHADOW_METER_CX ] :
+	int	iMeterCx;
+	if( m_piParamS[ SHADOW_METER_CX ] >= 0 ){
+		iMeterCx = m_piParamS[ SHADOW_METER_CX ];
+	}else if(
 		#ifdef GPS_ONLY
-			m_piParamC[ CHECK_METER_POS ]  ? GetWidth()  - iMeterR - 2 : iMeterR + 1;
+			m_piParamC[ CHECK_METER_POS ]
 		#else
-			!m_piParamC[ CHECK_METER_POS ] ? GetWidth()  - iMeterR - 2 : iMeterR + 1;
+			!m_piParamC[ CHECK_METER_POS ]
 		#endif
-		
+	){
+		iMeterCx = GetWidth() - iMeterR * Aspect / 1000 - 2;
+	}else{
+		iMeterCx = iMeterR * Aspect / 1000 + 1;
+	}
+	
 	const int	iMeterCy =
 		m_piParamS[ SHADOW_METER_CY ] >= 0 ? m_piParamS[ SHADOW_METER_CY ] :
 		GetHeight() - iMeterR - 2;
@@ -1129,8 +1185,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	/*** メーターパネル ***/
 	DrawCircle(
-		iMeterCx, iMeterCy, iMeterR, COLOR_PANEL,
-		CVsdFilter::IMG_ALFA | CVsdFilter::IMG_FILL
+		iMeterCx, iMeterCy, iMeterR * 1000,
+		( 1000 * 1000 / Aspect ) * ( 1000 * 1000 / Aspect ),
+		1000 * 1000,
+		COLOR_PANEL, CVsdFilter::IMG_ALFA | CVsdFilter::IMG_FILL
 	);
 	
 	/*
@@ -1164,9 +1222,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 			// メーターパネル目盛り
 			if( iMeterMaxVal <= 12000 || i % 1000 == 0 ){
 				DrawLine(
-					( int )( cos( iDeg * ToRAD ) * iMeterR ) + iMeterCx,
+					( int )( cos( iDeg * ToRAD ) * iMeterR * AspectRatio ) + iMeterCx,
 					( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
-					( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCx,
+					( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen ) * AspectRatio ) + iMeterCx,
 					( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
 					( iMeterMaxVal <= 12000 && i % 1000 == 0 || i % 2000 == 0 ) ? 2 : 1,
 					COLOR_SCALE, 0
@@ -1178,7 +1236,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 					DrawString(
 						szBuf,
 						COLOR_STR, 0,
-						( int )( cos( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCx - GetFontW() / ( i >= 10000 ? 1 : 2 ),
+						( int )( cos( iDeg * ToRAD ) * iMeterR * .8 * AspectRatio ) + iMeterCx - GetFontW() / ( i >= 10000 ? 1 : 2 ),
 						( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - GetFontH() / 2
 					);
 				}
@@ -1194,9 +1252,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 			// メーターパネル目盛り
 			if( i % iStep == 0 ){
 				DrawLine(
-					( int )( cos( iDeg * ToRAD ) * iMeterR ) + iMeterCx,
+					( int )( cos( iDeg * ToRAD ) * iMeterR * AspectRatio ) + iMeterCx,
 					( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
-					( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCx,
+					( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen ) * AspectRatio ) + iMeterCx,
 					( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
 					( i % ( iStep * 2 ) == 0 ) ? 2 : 1,
 					COLOR_SCALE, 0
@@ -1208,7 +1266,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 					DrawString(
 						szBuf,
 						COLOR_STR, 0,
-						( int )( cos( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCx - GetFontW() * strlen( szBuf ) / 2,
+						( int )( cos( iDeg * ToRAD ) * iMeterR * .75 * AspectRatio ) + iMeterCx - GetFontW() * strlen( szBuf ) / 2,
 						( int )( sin( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCy - GetFontH() / 2
 					);
 				}
@@ -1224,17 +1282,19 @@ BOOL CVsdFilter::DrawVSD( void ){
 	if( GSnakeLen >= 0 && Log->IsDataExist()){
 		if( GSnakeLen > 0 ){
 			
-			int iGxPrev = 0, iGyPrev;
+			int iGxPrev = INVALID_POS_I, iGyPrev;
 			
 			for( i = -GSnakeLen; i <= 1 ; ++i ){
 				
 				if( Log->m_iLogNum + i >= 0 ){
 					// i == 1 時は最後の中途半端な LogNum
-					iGx = iMeterCx + ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGx : Log->Gx()) * iMeterR / GScale );
-					iGy = iMeterCy - ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGy : Log->Gy()) * iMeterR / GScale );
+					iGx = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGx : Log->Gx()) * iMeterR / GScale );
+					iGy = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGy : Log->Gy()) * iMeterR / GScale );
 					
-					if( iGxPrev ) DrawLine(
-						iGx, iGy, iGxPrev, iGyPrev,
+					iGx = ( int )( iGx * AspectRatio );
+					
+					if( iGxPrev != INVALID_POS_I ) DrawLine(
+						iMeterCx + iGx, iMeterCy - iGy, iMeterCx + iGxPrev, iMeterCy - iGyPrev,
 						LINE_WIDTH, COLOR_G_HIST, 0
 					);
 					
@@ -1243,13 +1303,13 @@ BOOL CVsdFilter::DrawVSD( void ){
 				}
 			}
 		}else{
-			iGx = iMeterCx + ( int )( Log->Gx() * iMeterR / GScale );
-			iGy = iMeterCy - ( int )( Log->Gy() * iMeterR / GScale );
+			iGx = ( int )( Log->Gx() * iMeterR / GScale * AspectRatio );
+			iGy = ( int )( Log->Gy() * iMeterR / GScale );
 		}
 		
 		// G インジケータ
 		DrawCircle(
-			iGx, iGy, iMeterR / 20,
+			iMeterCx + iGx, iMeterCy - iGy, iMeterR / 20,
 			COLOR_G_SENSOR, CVsdFilter::IMG_FILL
 		);
 	}
@@ -1312,7 +1372,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 					
 					// Line を引く
 					DrawLine(
-						iGx, iGy, iGxPrev, iGyPrev,
+						( int )( iGx     * AspectRatio ), iGy,
+						( int )( iGxPrev * AspectRatio ), iGyPrev,
 						LINE_WIDTH, yc_line, 0
 					);
 				}
@@ -1329,7 +1390,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		dGy = GetMapPos( Log->Y(), Y );
 		
 		if( !_isnan( dGx )) DrawCircle(
-			( int )dGx, ( int )dGy, iMeterR / 20,
+			( int )( dGx * AspectRatio ), ( int )dGy, iMeterR / 20,
 			COLOR_CURRENT_POS, CVsdFilter::IMG_FILL
 		);
 	}
@@ -1390,7 +1451,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 			
 			DrawLine(
 				iMeterCx, iMeterCy,
-				( int )( cos( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCx,
+				( int )( cos( dTachoNeedle ) * iMeterR * 0.95 * AspectRatio + .5 ) + iMeterCx,
 				( int )( sin( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
 				LINE_WIDTH, COLOR_NEEDLE, 0
 			);
@@ -1405,7 +1466,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 			
 			DrawLine(
 				iMeterCx, iMeterCy,
-				( int )( cos( dSpeedNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCx,
+				( int )( cos( dSpeedNeedle ) * iMeterR * 0.95 * AspectRatio + .5 ) + iMeterCx,
 				( int )( sin( dSpeedNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
 				LINE_WIDTH, COLOR_NEEDLE, 0
 			);

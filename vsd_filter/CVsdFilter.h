@@ -114,8 +114,10 @@ class CVsdFilter {
 	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag );
 	void DrawLine( int x1, int y1, int x2, int y2, int width, const PIXEL_YC &yc, UINT uFlag );
 	void FillLine( int x1, int y1, int x2,         const PIXEL_YC &yc, UINT uFlag );
+	
 	void DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag );
 	void DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFlag );
+	void DrawCircle( int x, int y, int r, int a, int b, const PIXEL_YC &yc, UINT uFlag );
 	
 	void DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, UINT uFlag );
 	void DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag );

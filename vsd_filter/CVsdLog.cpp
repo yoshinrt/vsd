@@ -139,6 +139,11 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 					* ( m_Log[ m_iCnt ].fSpeed / 3.600 )
 				);
 				
+				// Å}5G à»è„ÇÕÅCçÌèú
+				if( m_Log[ m_iCnt ].fGx < -5 || m_Log[ m_iCnt ].fGx > 5 ){
+					m_Log[ m_iCnt ].fGx = m_Log[ m_iCnt - 1 ].fGx;
+				}
+				
 				dBearingPrev = dBearing;
 			}
 			m_Log[ m_iCnt ].fMileage = ( float )dMileage;
@@ -150,14 +155,14 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 	if( bAllParam ){
 		UINT	v = 3;
 		while( v-- ) for( u = 2; u < ( UINT )m_iCnt - 2; ++u ){
-			m_Log[ u - 2 ].fGx = (
+			m_Log[ u ].fGx = (
 				m_Log[ u - 2 ].fGx +
 				m_Log[ u - 1 ].fGx +
 				m_Log[ u + 0 ].fGx +
 				m_Log[ u + 1 ].fGx +
 				m_Log[ u + 2 ].fGx
 			) / 5;
-			m_Log[ u - 2 ].fGy = (
+			m_Log[ u ].fGy = (
 				m_Log[ u - 2 ].fGy +
 				m_Log[ u - 1 ].fGy +
 				m_Log[ u + 0 ].fGy +
