@@ -149,7 +149,7 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 	
 	// スムージング
 	if( bAllParam ){
-		UINT	v = 3;
+		UINT	v = 2;
 		while( v-- ) for( u = 2; u < ( UINT )m_iCnt - 2; ++u ){
 			m_Log[ u ].fGx = (
 				m_Log[ u - 2 ].fGx +

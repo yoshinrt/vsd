@@ -362,7 +362,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				// .nmea ÉçÅ[Éh
 				if(
 					g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea.gz" )) ||
-					g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea" ))
+					g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea" )) ||
+					g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "dp3" ))
 				){
 					// trackbar ê›íË
 					track_e[ TRACK_GSt ] =

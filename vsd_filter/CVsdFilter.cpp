@@ -594,8 +594,8 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 					u / 1000 % 100 * 60 +
 					( u % 1000 ) / 10.0;
 			
-			dLati = BigEndianI( 4 ) / 460800.0;
-			dLong = BigEndianI( 8 ) / 460800.0;
+			dLati = BigEndianI( 8 ) / 460800.0;
+			dLong = BigEndianI( 4 ) / 460800.0;
 			
 			if( dLati0 == 0 ){
 				dLati0 = dLati;
