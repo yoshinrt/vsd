@@ -176,38 +176,48 @@ void CVsdFilter::InitFont( void ){
 
 void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag ){
 	
-	int	i;
+	int i;
+	
 	int	iXdiff = ABS( x1 - x2 );
 	int iYdiff = ABS( y1 - y2 );
 	
-	if( x1 == x2 && y1 == y2 ){
-		PutPixel( x1, y1, yc, uFlag );
-	}else if( iXdiff < MAX_LINE_LEN && iYdiff < MAX_LINE_LEN ){
-		if( iXdiff >= iYdiff ){
-			// x 基準で描画
-			if( x1 > x2 ){
-				SWAP( x1, x2, i );
-				SWAP( y1, y2, i );
-			}
-			
-			int iYDiff = y2 - y1 + (( y2 > y1 ) ? 1 : ( y2 < y1 ) ? -1 : 0 );
-			
-			for( i = x1; i <= x2; ++i ){
-				PutPixel( i, ( int )(( double )iYDiff * ( i - x1 + .5 ) / ( x2 - x1 + 1 ) /*+ .5*/ ) + y1, yc, uFlag );
-			}
-		}else{
-			// y 基準で描画
-			if( y1 > y2 ){
-				SWAP( y1, y2, i );
-				SWAP( x1, x2, i );
-			}
-			
-			int iXDiff = x2 - x1 + (( x2 > x1 ) ? 1 : ( x2 < x1 ) ? -1 : 0 );
-			
-			for( i = y1; i <= y2; ++i ){
-				PutPixel(( int )(( double )iXDiff * ( i - y1 + .5 ) / ( y2 - y1 + 1 ) /*+ .5*/ ) + x1, i, yc, uFlag );
+	int iXsign = ( x2 > x1 ) ? 1 : -1;
+	int iYsign = ( y2 > y1 ) ? 1 : -1;
+	
+	/* 傾きが1より小さい場合 */
+	if( iXdiff > iYdiff ) {
+		int E = -iXdiff;
+		for( i = 0 ; i <= ( iXdiff + 1 ) >> 1 ; i++ ) {
+			PutPixel( x1, y1, yc, uFlag );
+			PutPixel( x2, y2, yc, uFlag );
+			x1 += iXsign;
+			x2 -= iXsign;
+			E += 2 * iYdiff;
+			if( E >= 0 ) {
+				y1 += iYsign;
+				y2 -= iYsign;
+				E -= 2 * iXdiff;
 			}
 		}
+		/* iXdiff + 1 が奇数の場合、残った中央の点を最後に描画 */
+		if(( iXdiff % 2 ) == 0 ) PutPixel( x1, y1, yc, uFlag );
+	/* 傾きが1以上の場合 */
+	} else {
+		int E = -iYdiff;
+		for( i = 0 ; i <= ( iYdiff + 1 ) >> 1 ; i++ ) {
+			PutPixel( x1, y1, yc, uFlag );
+			PutPixel( x2, y2, yc, uFlag );
+			y1 += iYsign;
+			y2 -= iYsign;
+			E += 2 * iXdiff;
+			if( E >= 0 ) {
+				x1 += iXsign;
+				x2 -= iXsign;
+				E -= 2 * iYdiff;
+			}
+		}
+		/* iYdiff + 1 が奇数の場合、残った中央の点を最後に描画 */
+		if(( iYdiff % 2 ) == 0 ) PutPixel( x1, y1, yc, uFlag );
 	}
 }
 
