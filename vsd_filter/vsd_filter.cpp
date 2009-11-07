@@ -23,7 +23,7 @@
 
 #ifdef GPS_ONLY
 	#define CONFIG_EXT		"cfg"
-	#define	FILE_EXT		"log/config file\0*.nme*; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
+	#define	FILE_EXT		"log/config file\0*.nme*; *.dp3; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 #else
 	#define CONFIG_EXT		"avs"
 	#define	FILE_EXT		"log/config file\0*.log; *.nme*; *.gz; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"

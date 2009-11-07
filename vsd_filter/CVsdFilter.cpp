@@ -483,10 +483,15 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	fprintf( fp,
 		"DirectShowSource( \"%s\", pixel_type=\"YUY2\", convertfps=true  )\n"
 		"VSDFilter( \\\n"
-		"\tlog_file=\"%s\", \\\n\tgps_file=\"%s\""
+	#ifndef GPS_ONLY
+		"\tlog_file=\"%s\", \\\n"
+	#endif
+		"\tgps_file=\"%s\""
 		,
 		GetVideoFileName( szBuf ),
+	#ifndef GPS_ONLY
 		m_szLogFile ? m_szLogFile : "",
+	#endif
 		m_szGPSLogFile ? m_szGPSLogFile : ""
 	);
 	
@@ -554,7 +559,76 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	
 	GPS_LOG_t	*GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG * GPS_FREQ / LOG_FREQ ) ];
 	
-	while( gzgets( fp, szBuf, BUF_SIZE ) != Z_NULL ){
+	/*** dp3 ****************************************************************/
+	
+	if( IsExt(( char *)szFileName, "dp3" )){
+		
+		gzseek( fp, 0x100, SEEK_CUR );
+		
+		#define BigEndianI( p )	( \
+			( *(( UCHAR *)szBuf + p + 0 ) << 24 ) | \
+			( *(( UCHAR *)szBuf + p + 1 ) << 16 ) | \
+			( *(( UCHAR *)szBuf + p + 2 ) <<  8 ) | \
+			( *(( UCHAR *)szBuf + p + 3 )       ))
+		
+		#define BigEndianS( p )	( \
+			( *(( UCHAR *)szBuf + p + 0 ) <<  8 ) | \
+			( *(( UCHAR *)szBuf + p + 1 )       ))
+		
+		while( gzread( fp, szBuf, 16 )){
+			
+			u = BigEndianI( 0 );
+			// 値補正
+			// 2254460 → 22:54:46.0
+			dTime =	u / 100000 * 3600 +
+					u / 1000 % 100 * 60 +
+					( u % 1000 ) / 10.0;
+			
+			dLati = BigEndianI( 4 ) / 460800.0;
+			dLong = BigEndianI( 8 ) / 460800.0;
+			
+			if( dLati0 == 0 ){
+				dLati0 = dLati;
+				dLong0 = dLong;
+				dTime0 = dTime;
+			}
+			
+			if( dTime < dTime0 ) dTime += 24 * 3600;
+			dTime -= dTime0;
+			
+			// 単位を補正
+			// 緯度・経度→メートル
+			GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * LAT_M_DEG * cos( dLati * ToRAD ));
+			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * LNG_M_DEG );
+			
+			// 速度・向き→ベクトル座標
+			GPSLog[ uGPSCnt ].fSpeed	= ( float )( BigEndianS( 12 ) / 10.0 );
+			GPSLog[ uGPSCnt ].fBearing	= ( float )BigEndianS( 14 );
+			GPSLog[ uGPSCnt ].fTime 	= ( float )dTime;
+			
+			if( uGPSCnt >=2 ){
+				if( GPSLog[ uGPSCnt - 1 ].fTime == GPSLog[ uGPSCnt ].fTime ){
+					// 時刻が同じログが続くときそのカウントをする
+					++uSameCnt;
+				}else if( uSameCnt ){
+					// 時刻が同じログが途切れたので，時間を補正する
+					++uSameCnt;
+					
+					for( u = 1; u < uSameCnt; ++ u ){
+						GPSLog[ uGPSCnt - uSameCnt + u ].fTime +=
+							( GPSLog[ uGPSCnt ].fTime - GPSLog[ uGPSCnt - uSameCnt ].fTime )
+							/ uSameCnt * u;
+					}
+					uSameCnt = 0;
+				}
+			}
+			uGPSCnt++;
+		}
+	}
+	
+	/*** nmea ***************************************************************/
+	
+	else while( gzgets( fp, szBuf, BUF_SIZE ) != Z_NULL ){
 		
 		u = sscanf( szBuf,
 			"$GPRMC,%lg%*[^0-9]%lg%*[^0-9]%lg%*[^0-9]%lg%*[^0-9]%lg",
@@ -1184,12 +1258,19 @@ BOOL CVsdFilter::DrawVSD( void ){
 	if( !m_VsdLog && !m_GPSLog ) return TRUE;
 	
 	/*** メーターパネル ***/
-	DrawCircle(
-		iMeterCx, iMeterCy, iMeterR * 1000,
-		( 1000 * 1000 / Aspect ) * ( 1000 * 1000 / Aspect ),
-		1000 * 1000,
-		COLOR_PANEL, CVsdFilter::IMG_ALFA | CVsdFilter::IMG_FILL
-	);
+	#ifdef GPS_ONLY
+		DrawCircle(
+			iMeterCx, iMeterCy, iMeterR * 1000,
+			( 1000 * 1000 / Aspect ) * ( 1000 * 1000 / Aspect ),
+			1000 * 1000,
+			COLOR_PANEL, CVsdFilter::IMG_ALFA | CVsdFilter::IMG_FILL
+		);
+	#else
+		DrawCircle(
+			iMeterCx, iMeterCy, iMeterR,
+			COLOR_PANEL, CVsdFilter::IMG_ALFA | CVsdFilter::IMG_FILL
+		);
+	#endif
 	
 	/*
 	DrawCircle(

@@ -127,12 +127,8 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 				);
 				
 				// ‰¡G = vƒÖ
-				// 360“x‚Ì wrap around
 				dBearing = GetLogIntermediateVal( fBearing );
-				
 				dBearingPrev = dBearing - dBearingPrev;
-				if     ( dBearingPrev >  180 ) dBearingPrev -= 360;
-				else if( dBearingPrev < -180 ) dBearingPrev += 360;
 				
 				m_Log[ m_iCnt ].fGx = INVERT_GPS_ONLY * ( float )(
 					dBearingPrev * ( ToRAD * LOG_FREQ / GRAVITY )
@@ -140,7 +136,7 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 				);
 				
 				// }5G ˆÈã‚ÍCíœ
-				if( m_Log[ m_iCnt ].fGx < -5 || m_Log[ m_iCnt ].fGx > 5 ){
+				if( m_Log[ m_iCnt ].fGx < -3 || m_Log[ m_iCnt ].fGx > 3 ){
 					m_Log[ m_iCnt ].fGx = m_Log[ m_iCnt - 1 ].fGx;
 				}
 				
