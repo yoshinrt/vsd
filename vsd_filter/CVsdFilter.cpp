@@ -587,7 +587,7 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 		
 		while( gzread( fp, szBuf, 16 )){
 			
-			u = BigEndianI( 0 );
+			u = BigEndianI( 0 ) & 0x3FFFFF;
 			// ’l•â³
 			// 2254460 ¨ 22:54:46.0
 			dTime =	u / 100000 * 3600 +
@@ -831,7 +831,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 			GPSLog[ uGPSCnt ].fBearing	= ( float )dBearing;
 			
 			// LOG_FREQ ‚Í 15Hz ‚¾‚Á‚½‘ã‚ÌƒƒO‚Å‚ÍŠÔˆá‚¢‚¾‚ªC“™”ä•ªŠ„‚¾‚µÀŠQ‚È‚µ?
-			GPSLog[ uGPSCnt++ ].fTime = ( uLogNum - GPS_LOG_OFFS ) / ( float )LOG_FREQ;
+			GPSLog[ uGPSCnt++ ].fTime = (( int )uLogNum - GPS_LOG_OFFS ) / ( float )LOG_FREQ;
 		}
 		
 		// •’Ê‚Ì log
