@@ -854,9 +854,6 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 					dGy =  dGy / ACC_1G_Z;
 				}
 				
-				dGx = -dGx;
-				dGy = -dGy;
-				
 				if( uLogNum == 0 ){
 					// G センターの初期値
 					dGcx = dGx;
@@ -906,24 +903,6 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	}
 	m_VsdLog->m_iCnt = uLogNum;
 	
-	int j = 3;
-	while( --j ) for( UINT u = 2; u < uLogNum - 2; ++u ){
-		m_VsdLog->m_Log[ u ].fGx = (
-			m_VsdLog->m_Log[ u - 2 ].fGx +
-			m_VsdLog->m_Log[ u - 1 ].fGx +
-			m_VsdLog->m_Log[ u + 0 ].fGx +
-			m_VsdLog->m_Log[ u + 1 ].fGx +
-			m_VsdLog->m_Log[ u + 2 ].fGx
-		) / 5;
-		
-		m_VsdLog->m_Log[ u ].fGy = (
-			m_VsdLog->m_Log[ u - 2 ].fGy +
-			m_VsdLog->m_Log[ u - 1 ].fGy +
-			m_VsdLog->m_Log[ u + 0 ].fGy +
-			m_VsdLog->m_Log[ u + 1 ].fGy +
-			m_VsdLog->m_Log[ u + 2 ].fGy
-		) / 5;
-	}
 	/*** GPS ログから軌跡を求める *******************************************/
 	
 	if( uGPSCnt ){
@@ -1326,7 +1305,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	SelectLogVsd;
 	
-	if( 0 && Log == m_VsdLog ){
+	if( Log == m_VsdLog ){
 		// VSD ログがあるときはタコメータ
 		for( i = 0; i <= iMeterMaxVal; i += 500 ){
 			int iDeg = iMeterDegRange * i / iMeterMaxVal + iMeterMinDeg;
@@ -1508,7 +1487,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	}
 	
 	// ギア表示 - VsdLog しか使用しない
-	if( 0 && m_VsdLog && m_VsdLog->IsDataExist() ){
+	if( m_VsdLog && m_VsdLog->IsDataExist() ){
 		
 		UINT uGear = 0;
 		
@@ -1555,7 +1534,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		);
 	}
 	
-	if( 0&&Log == m_VsdLog ){
+	if( Log == m_VsdLog ){
 		if( m_VsdLog->IsDataExist()){
 			// Tacho の針 - VsdLog しか使用しない
 			double dTachoNeedle = iMeterDegRange / ( double )iMeterMaxVal * m_VsdLog->Tacho() + iMeterMinDeg;
@@ -1569,10 +1548,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 			);
 		}
 	}else{
-		if( m_VsdLog->IsDataExist()){
+		if( m_GPSLog->IsDataExist()){
 			// Speed の針
 			double dSpeedNeedle =
-				iMeterDegRange / ( double )iMeterSMaxVal * m_VsdLog->Speed() + iMeterMinDeg;
+				iMeterDegRange / ( double )iMeterSMaxVal * m_GPSLog->Speed() + iMeterMinDeg;
 			
 			dSpeedNeedle = dSpeedNeedle * ToRAD;
 			
