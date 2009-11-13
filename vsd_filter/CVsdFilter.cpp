@@ -408,7 +408,7 @@ inline void CVsdFilter::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
 	}
 }
 
-/*** 設定ロード・セーブ *****************************************************/
+/*** 設定ロード *************************************************************/
 
 char *CVsdFilter::IsConfigParam( const char *szParamName, char *szBuf, int &iVal ){
 	
@@ -490,62 +490,6 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 	}
 	return TRUE;
 }
-
-#ifndef AVS_PLUGIN
-BOOL CVsdFilter::ConfigSave( const char *szFileName ){
-	FILE	*fp;
-	int		i;
-	
-	if(( fp = fopen( szFileName, "w" )) == NULL ) return FALSE;
-	
-	char szBuf[ BUF_SIZE ];
-	
-	fprintf( fp,
-		"DirectShowSource( \"%s\", pixel_type=\"YUY2\", convertfps=true )\n"
-		"VSDFilter( \\\n"
-	#ifndef GPS_ONLY
-		"\tlog_file=\"%s\", \\\n"
-	#endif
-		"\tgps_file=\"%s\""
-		,
-		GetVideoFileName( szBuf ),
-	#ifndef GPS_ONLY
-		m_szLogFile ? m_szLogFile : "",
-	#endif
-		m_szGPSLogFile ? m_szGPSLogFile : ""
-	);
-	
-	for( i = 0; i < TRACK_N; ++i ){
-		if( m_szTrackbarName[ i ] == NULL ) continue;
-		
-		fprintf( fp, ", \\\n\t%s=%d", m_szTrackbarName[ i ],
-			( i <= TRACK_GEd ) ? m_piParamT[ i ] * 100 + m_piParamT[ i + 1 ] :
-			m_piParamT[ i ]
-		);
-	}
-	
-	for( i = 0; i < CHECK_N; ++i ){
-		if( m_szCheckboxName[ i ] == NULL ) continue;
-		
-		fprintf(
-			fp, ", \\\n\t%s=%d", m_szCheckboxName[ i ], m_piParamC[ i ]
-		);
-	}
-	
-	// 手動ラップ計測マーク出力
-	if( m_iLapMode == LAPMODE_HAND && m_iLapNum ){
-		for( i = 0; i < m_iLapNum; ++i ){
-			fprintf( fp, "%s%u", i ? "," : ", \\\n\tmark=\"", m_Lap[ i ].iLogNum );
-		}
-		fputc( '"', fp );
-	}
-	
-	fprintf( fp, " \\\n)\n" );
-	
-	fclose( fp );
-	return TRUE;
-}
-#endif
 
 /*** GPS ログリード ********************************************************/
 
@@ -973,7 +917,7 @@ double CVsdFilter::LapNum2LogNum( CVsdLog *Log, int iLapNum ){
 	}
 	
 	// 手動計測
-	return Log == m_GPSLog ?
+	return Log == m_VsdLog ?
 		// 手動計測の VSD ログ#
 		ConvParam( m_Lap[ iLapNum ].iLogNum, Video, Log ) :
 		// 手動計測の GSP ログ#
@@ -1222,7 +1166,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	// ラップインデックスを求める
 	if( m_iLapNum ){
 		// VSD/GPS 両方のログがなければ，手動計測での m_Lap[].iLogNum はフレーム# なので
-		int iLogNum = Log ?	Log->m_iLogNum : GetFrameCnt();
+		int iLogNum = m_iLapMode != LAPMODE_HAND ? Log->m_iLogNum : GetFrameCnt();
 		
 		// カレントポインタがおかしいときは，-1 にリセット
 		if(
@@ -1239,7 +1183,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		// 時間表示
 		if( m_iLapIdx >= 0 && m_Lap[ m_iLapIdx + 1 ].iTime != 0 ){
 			int iTime;
-			if( Log ){
+			if( m_iLapMode != LAPMODE_HAND ){
 				// 自動計測時は，タイム / ログ数 から計算
 				iTime = ( int )(( Log->m_dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 / Log->m_dFreq );
 			}else{

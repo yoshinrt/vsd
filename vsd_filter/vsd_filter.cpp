@@ -167,6 +167,7 @@ class CVsdFilterAvu : public CVsdFilter {
 	FILTER_PROC_INFO *fpip;
 	
 	int GetIndex( int x, int y ){ return fpip->max_w * y + x; }
+	BOOL ConfigSave( const char *szFileName );
 	
 	// 仮想関数
 	virtual void PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag );
@@ -244,7 +245,7 @@ void CVsdFilterAvu::CalcLapTime( void ){
 	m_iBestTime	= BESTLAP_NONE;
 	
 	for( i = 0; i < GetFrameMax(); ++i ){
-		( filter )->exfunc->get_frame_status( editp, i, &fsp );
+		filter->exfunc->get_frame_status( editp, i, &fsp );
 		
 		if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
 			// ラップ検出
@@ -283,7 +284,7 @@ void CVsdFilterAvu::CalcLapTimeAuto( void ){
 	
 	// 最初のマークされているフレーム# を求める
 	for( i = 0; i < GetFrameMax(); ++i ){
-		( filter )->exfunc->get_frame_status( editp, i, &fsp );
+		filter->exfunc->get_frame_status( editp, i, &fsp );
 		if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
 			(( CVsdFilter *)this )->CalcLapTimeAuto( i );
 			break;
@@ -309,9 +310,76 @@ char *CVsdFilterAvu::GetVideoFileName( char *szFileName ){
 	return strcpy( szFileName, fi.name );
 }
 
+/*** config セーブ **********************************************************/
+
+BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
+	FILE	*fp;
+	int		i;
+	
+	if(( fp = fopen( szFileName, "w" )) == NULL ) return FALSE;
+	
+	char szBuf[ BUF_SIZE ];
+	
+	fprintf( fp,
+		"DirectShowSource( \"%s\", pixel_type=\"YUY2\", convertfps=true )\n"
+		"VSDFilter( \\\n"
+	#ifndef GPS_ONLY
+		"\tlog_file=\"%s\", \\\n"
+	#endif
+		"\tgps_file=\"%s\""
+		,
+		GetVideoFileName( szBuf ),
+	#ifndef GPS_ONLY
+		m_szLogFile ? m_szLogFile : "",
+	#endif
+		m_szGPSLogFile ? m_szGPSLogFile : ""
+	);
+	
+	for( i = 0; i < TRACK_N; ++i ){
+		if( m_szTrackbarName[ i ] == NULL ) continue;
+		
+		fprintf( fp, ", \\\n\t%s=%d", m_szTrackbarName[ i ],
+			( i <= TRACK_GEd ) ? m_piParamT[ i ] * 100 + m_piParamT[ i + 1 ] :
+			m_piParamT[ i ]
+		);
+	}
+	
+	for( i = 0; i < CHECK_N; ++i ){
+		if( m_szCheckboxName[ i ] == NULL ) continue;
+		
+		fprintf(
+			fp, ", \\\n\t%s=%d", m_szCheckboxName[ i ], m_piParamC[ i ]
+		);
+	}
+	
+	// 手動ラップ計測マーク出力
+	if( m_iLapMode != LAPMODE_MAGNET && m_iLapNum ){
+		FRAME_STATUS	fsp;
+		FILE_INFO		fip;
+		BOOL			bFirst = TRUE;
+		
+		filter->exfunc->get_file_info( editp, &fip );
+		
+		// マークされているフレーム# を求める  GetFrameMax() はなぜか×
+		for( i = 0; i < fip.frame_n; ++i ){
+			filter->exfunc->get_frame_status( editp, i, &fsp );
+			if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
+				fprintf( fp, "%s%u", bFirst ? ", \\\n\tmark=\"" : ",", i );
+				bFirst = FALSE;
+			}
+		}
+		fputc( '"', fp );
+	}
+	
+	fprintf( fp, " \\\n)\n" );
+	
+	fclose( fp );
+	return TRUE;
+}
+
 /*** func_proc **************************************************************/
 
-BOOL func_proc( FILTER *fp,FILTER_PROC_INFO *fpip ){
+BOOL func_proc( FILTER *fp, FILTER_PROC_INFO *fpip ){
 //
 //	fp->track[n]			: トラックバーの数値
 //	fp->check[n]			: チェックボックスの数値

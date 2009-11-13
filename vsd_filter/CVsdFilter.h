@@ -180,10 +180,7 @@ class CVsdFilter {
 	BOOL ConfigLoad( const char *szFileName );
 	BOOL ParseMarkStr( const char *szMark );
 	BOOL GPSLogLoad( const char *szFileName );
-
-#ifndef AVS_PLUGIN
-	BOOL ConfigSave( const char *szFileName );
-#endif
+	
 	BOOL ReadLog( const char *szFileName );
 	
 	double LapNum2LogNum( CVsdLog *Log, int iLapNum );

@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------
-//	フィルタプラグイン ヘッダーファイル for AviUtl version 0.99f 以降
+//	フィルタプラグイン ヘッダーファイル for AviUtl version 0.99i 以降
 //	By ＫＥＮくん
 //----------------------------------------------------------------------------------
 
@@ -558,12 +558,39 @@ typedef struct {
 								//	buf		: データを読み込むバッファへのポインタ
 								//  戻り値	: 読み込んだサンプル数
 	int			(*avi_file_set_audio_sample_rate)( AVI_FILE_HANDLE afh,int audio_rate,int audio_ch );
-								//	avi_file_read_audio_sample()で読み込む音声のサンプリングレート等を変更します。
+								//	avi_file_read_audio_sample()で読み込む音声のサンプリングレート等を変更します
 								//	afh		: AVIファイルハンドル
 								//	audio_rate	: 音声サンプリングレート
 								//	audio_ch	: 音声チャンネル数
 								//  戻り値	: 変更したサンプリングレートでの総サンプル数
-	int			reserve[14];
+	BYTE		*(*get_frame_status_table)( void *editp,int type );
+								//	フレームのステータスが格納されているバッファへのポインタを取得します
+								//	editp 	: エディットハンドル
+								//  type	: ステータスの種類
+								//	FARME_STATUS_TYPE_EDIT_FLAG	: 編集フラグ
+								//	FARME_STATUS_TYPE_INTER		: インターレース
+								//  戻り値	: バッファへのポインタ
+								//			  バッファへのポインタの内容は編集ファイルがクローズされるまで有効
+	BOOL		(*set_undo)( void *editp );
+								//	現在の編集状況をアンドゥバッファに設定します
+								//	editp 	: エディットハンドル
+								//  戻り値	: TRUEなら成功
+	BOOL		(*add_menu_item)( void *fp,LPSTR name,HWND hwnd,int id,int def_key,int flag );
+								//	メインウィンドウの設定メニュー項目を追加します
+								//	メニューが選択された時にhwndで指定したウィンドウに
+								//	WM_FILTER_COMMANDのメッセージを送ります
+								//	※必ずfunc_init()かWM_FILTER_INITから呼び出すようにしてください。
+								//	fp	 	: フィルタ構造体のポインタ
+								//	name 	: メニューの名前
+								//	hwnd 	: WM_FILTER_COMMANDを送るウィンドウハンドル
+								//	id	 	: WM_FILTER_COMMANDのWPARAM
+								//	def_key	: 標準のショートカットキーの仮想キーコード (NULLなら無し)
+								//	flag	: フラグ
+								//	ADD_MENU_ITEM_FLAG_KEY_SHIFT	: 標準のショートカットキーをSHIFT+キーにする
+								//	ADD_MENU_ITEM_FLAG_KEY_CTRL		: 標準のショートカットキーをCTRL+キーにする
+								//	ADD_MENU_ITEM_FLAG_KEY_ALT		: 標準のショートカットキーをALT+キーにする
+								//  戻り値	: TRUEなら成功
+	int			reserve[11];
 } EXFUNC;
 #define	AVI_FILE_OPEN_FLAG_VIDEO_ONLY		16
 #define	AVI_FILE_OPEN_FLAG_AUDIO_ONLY		32
@@ -572,6 +599,11 @@ typedef struct {
 #define	AVI_FILE_OPEN_FLAG_ONLY_RGB32		0x40000
 #define	GET_AVI_FILE_FILTER_TYPE_VIDEO		0
 #define	GET_AVI_FILE_FILTER_TYPE_AUDIO		1
+#define FARME_STATUS_TYPE_EDIT_FLAG			0
+#define FARME_STATUS_TYPE_INTER				1
+#define ADD_MENU_ITEM_FLAG_KEY_SHIFT		1
+#define ADD_MENU_ITEM_FLAG_KEY_CTRL			2
+#define ADD_MENU_ITEM_FLAG_KEY_ALT			4
 
 //	フィルタ構造体
 typedef struct {
@@ -683,7 +715,8 @@ typedef struct {
 								//  戻り値	: 成功ならTRUE
 	BOOL	(*func_project_save)( void *fp,void *editp,void *data,int *size );
 								//	プロジェクトファイルをセーブしている時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
-								//	プロジェクトにフィルタのデータを保存します
+								//	プロジェクトファイルにフィルタのデータを保存します
+								//	※AviUtlからは始めに保存サイズ取得の為にdataがNULLで呼び出され、続けて実際のデータを取得する為に呼び出されます。
 								//	data 	: プロジェクトに書き込むデータを格納するバッファへのポインタ (NULLの場合はデータのバイト数のみ返す)
 								//	size 	: プロジェクトに書き込むデータのバイト数を返すポインタ
 								//  戻り値	: 保存するデータがあるならTRUE
@@ -735,6 +768,7 @@ typedef struct {
 #define WM_FILTER_CHANGE_WINDOW			(WM_USER+110)
 #define WM_FILTER_CHANGE_PARAM			(WM_USER+111)
 #define WM_FILTER_CHANGE_EDIT			(WM_USER+112)
+#define WM_FILTER_COMMAND				(WM_USER+113)
 #define	WM_FILTER_MAIN_MOUSE_DOWN		(WM_USER+120)
 #define	WM_FILTER_MAIN_MOUSE_UP			(WM_USER+121)
 #define	WM_FILTER_MAIN_MOUSE_MOVE		(WM_USER+122)
