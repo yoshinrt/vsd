@@ -207,6 +207,12 @@ class CVsdFilter {
 	
 	BOOL		m_bCalcLapTimeReq;
 	
+	// スタートライン@GPS 計測モード
+	double	m_dStartLineX1;
+	double	m_dStartLineY1;
+	double	m_dStartLineX2;
+	double	m_dStartLineY2;
+	
 	static const char *m_szTrackbarName[];
 	static const char *m_szCheckboxName[];
 	static const char *m_szShadowParamName[];

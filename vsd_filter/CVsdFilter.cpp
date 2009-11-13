@@ -54,6 +54,12 @@
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] / 1000.0 )
 #define SLineWidth		( m_piParamT[ TRACK_SLineWidth ] / 10.0 )
 
+#ifdef AVS_PLUGIN
+	#define DispFrameInfo	0
+#else
+	#define DispFrameInfo	m_piParamC[ CHECK_FRAME ]
+#endif
+
 #ifdef GPS_ONLY
 	#define Aspect			m_piParamT[ TRACK_Aspect ]
 	#define AspectRatio		(( double )m_piParamT[ TRACK_Aspect ] / 1000 )
@@ -963,8 +969,16 @@ void CVsdFilter::CalcLapTimeAuto( int iFrame ){
 		( m_GPSLog->m_Log[ iLogNum + 1 ].fX0 - m_GPSLog->m_Log[ iLogNum ].fX0 )
 	);
 	
+	#define x1 m_dStartLineX1
+	#define y1 m_dStartLineY1
+	#define x2 m_dStartLineX2
+	#define y2 m_dStartLineY2
+	#define x3 m_GPSLog->m_Log[ i ].fX0
+	#define y3 m_GPSLog->m_Log[ i ].fY0
+	#define x4 m_GPSLog->m_Log[ i + 1 ].fX0
+	#define y4 m_GPSLog->m_Log[ i + 1 ].fY0
+	
 	// 仮想光電管の位置を求める
-	double x1, y1, x2, y2;
 	x2 = m_GPSLog->X0( dLogNum );	// スタート地点
 	y2 = m_GPSLog->Y0( dLogNum );
 	
@@ -981,11 +995,6 @@ void CVsdFilter::CalcLapTimeAuto( int iFrame ){
 	int iTime, iPrevTime;
 	
 	for( int i = 0; i < m_GPSLog->m_iCnt - 1; ++i ){
-		
-		#define x3 m_GPSLog->m_Log[ i ].fX0
-		#define y3 m_GPSLog->m_Log[ i ].fY0
-		#define x4 m_GPSLog->m_Log[ i + 1 ].fX0
-		#define y4 m_GPSLog->m_Log[ i + 1 ].fY0
 		
 		/*** 交差判定，交点判定 ***/
 		double s1, s2, a;
@@ -1011,6 +1020,10 @@ void CVsdFilter::CalcLapTimeAuto( int iFrame ){
 		else if( dAngle2 >  180 * ToRAD ) dAngle2 -= 360 * ToRAD;
 		if( dAngle2 < -45 * ToRAD || dAngle2 > 45 * ToRAD ) continue;
 		
+		#undef x1
+		#undef y1
+		#undef x2
+		#undef y2
 		#undef x3
 		#undef y3
 		#undef x4
@@ -1293,7 +1306,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	#define Float2Time( n )	( int )( n ) / 60, fmod( n, 60 )
 	
-	if( m_piParamC[ CHECK_FRAME ] ){
+	if( DispFrameInfo ){
 		sprintf(
 			szBuf, "Vid%5d/%5d %2d:%05.2f-%2d:%05.2f(%2d:%05.2f)",
 			GetFrameCnt(), GetFrameMax() - 1,
@@ -1553,6 +1566,18 @@ BOOL CVsdFilter::DrawVSD( void ){
 			( int )( dGx * AspectRatio ), ( int )dGy, iMeterR / 20,
 			COLOR_CURRENT_POS, CVsdFilter::IMG_FILL
 		);
+		
+		// スタートライン表示
+		if( DispFrameInfo && m_iLapMode == LAPMODE_GPS ){
+			double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
+			
+			int x1 = ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsX ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
+			int y1 = ( int )(( -sin( dAngle ) * m_dStartLineX1 + cos( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsY ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
+			int x2 = ( int )((  cos( dAngle ) * m_dStartLineX2 + sin( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsX ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
+			int y2 = ( int )(( -sin( dAngle ) * m_dStartLineX2 + cos( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsY ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
+			
+			DrawLine( x1, y1, x2, y2, yc_blue, 0 );
+		}
 	}
 	
 	// ギア表示 - VsdLog しか使用しない
