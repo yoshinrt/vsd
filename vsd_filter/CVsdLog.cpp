@@ -32,6 +32,7 @@
 CVsdLog::CVsdLog(){
 	m_iCnt	= 0;
 	m_Log	= new VSD_LOG_t[ MAX_VSD_LOG ];
+	m_dFreq	= LOG_FREQ;
 	
 	float	NaN = sqrt( -1.0f );
 	

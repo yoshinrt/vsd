@@ -76,6 +76,14 @@
 // GPS log を優先
 #define SelectLogGPS ( Log = m_GPSLog ? m_GPSLog : m_VsdLog )
 
+// パラメータを変換
+#define ConvParam( p, from, to ) ( \
+	from##Ed == from##St ? 0 : \
+	( to##Ed - to##St )	* (( p ) - from##St ) \
+	/ ( double )( from##Ed - from##St ) \
+	+ to##St \
+)
+
 /*** static member **********************************************************/
 
 const UCHAR CVsdFilter::m_Font9p[] = {
@@ -123,7 +131,7 @@ CVsdFilter::CVsdFilter () {
 	m_iPreW				= 0;
 	
 	m_iLapIdx			= -1;
-	m_iBestLogNumRunning		= 0;
+	m_iBestLogNumRunning= 0;
 	
 	m_bCalcLapTimeReq	= FALSE;
 	
@@ -796,6 +804,9 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	
 	TCHAR	*p;
 	
+	int	iLogFreqLog		= 0;
+	int	iLogFreqTime	= 0;
+	
 	while( gzgets( fp, szBuf, BUF_SIZE ) != Z_NULL ){
 		if(( p = strstr( szBuf, "LAP" )) != NULL ){ // ラップタイム記録を見つけた
 			uReadCnt = sscanf( p, "LAP%d%d:%d.%d", &uLap, &uMin, &uSec, &uMSec );
@@ -812,6 +823,9 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 			){
 				m_iBestTime	= iTime;
 				m_iBestLap	= m_iLapNum - 1;
+				
+				iLogFreqLog	 += uLogNum - m_Lap[ m_iLapNum - 1 ].iLogNum;
+				iLogFreqTime += iTime;
 			}
 			++m_iLapNum;
 		}
@@ -904,6 +918,11 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	}
 	m_VsdLog->m_iCnt = uLogNum;
 	
+	// 古い log は LOG_FREQ とは限らないので，計算で求める
+	if( iLogFreqTime ){
+		m_VsdLog->m_dFreq = iLogFreqLog / ( iLogFreqTime / 1000.0 );
+	}
+	
 	/*** GPS ログから軌跡を求める *******************************************/
 	
 	if( uGPSCnt ){
@@ -938,17 +957,11 @@ double CVsdFilter::LapNum2LogNum( CVsdLog *Log, int iLapNum ){
 	// GPS のログ番号に要変換
 	if( m_VsdLog ){
 		// 自動計測
-		return
-			LogEd == LogSt ? 0 :
-			( double )( m_Lap[ iLapNum ].iLogNum - LogSt ) / ( LogEd - LogSt )
-			* ( GPSEd - GPSSt ) + GPSSt;
+		return ConvParam( m_Lap[ iLapNum ].iLogNum, Log, GPS );
 	}
 	
 	// 手動計測
-	return
-		VideoEd == VideoSt ? 0 :
-		( double )( m_Lap[ iLapNum ].iLogNum - VideoSt ) / ( VideoEd - VideoSt )
-		* ( GPSEd - GPSSt ) + GPSSt;
+	return ConvParam( m_Lap[ iLapNum ].iLogNum, Video, GPS );
 }
 
 /*** パラメータ調整用スピードグラフ *****************************************/
@@ -979,8 +992,7 @@ void CVsdFilter::CalcLapTimeAuto( int iFrame ){
 	
 	/*** スタートラインの位置を取得 ***/
 	// iFrame に対応する GPS ログ番号取得
-	double dLogNum = VideoEd == VideoSt ? 0 :
-		( GPSEd - GPSSt ) * ( iFrame - VideoSt ) / ( double )( VideoEd - VideoSt ) + GPSSt;
+	double dLogNum = ConvParam( iFrame, Video, GPS );
 	
 	int iLogNum = ( int )dLogNum;
 	
@@ -1050,12 +1062,7 @@ void CVsdFilter::CalcLapTimeAuto( int iFrame ){
 		iPrevTime;
 		
 		m_Lap[ m_iLapNum ].uLap		= m_iLapNum;
-		m_Lap[ m_iLapNum ].iLogNum	=	// 処理の都合上，フレーム番号
-			( GPSEd == GPSSt ) ? 0 :
-			( int )(
-				( VideoEd - VideoSt ) * ( dLogNum - GPSSt ) / ( GPSEd - GPSSt )
-			) + VideoSt;
-		
+		m_Lap[ m_iLapNum ].iLogNum	= ( int )ConvParam( dLogNum, GPS, Video );	// 処理の都合上，フレーム番号
 		m_Lap[ m_iLapNum ].iTime	= m_iLapNum ? iTime - iPrevTime : 0;
 		
 		if(
@@ -1171,26 +1178,17 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	// ログ位置の計算
 	if( m_VsdLog ){
-		m_VsdLog->m_dLogNum = ( VideoEd == VideoSt ) ? -1 :
-			( double )( LogEd - LogSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + LogSt;
+		m_VsdLog->m_dLogNum = ConvParam( GetFrameCnt(), Video, Log );
 		m_VsdLog->m_iLogNum = ( int )m_VsdLog->m_dLogNum;
-		
-		// 古い log は LOG_FREQ とは限らないので，計算で求める
-		m_VsdLog->m_dFreq =
-			( double )(( m_Lap[ m_iLapIdx + 1 ].iLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 ) /
-			m_Lap[ m_iLapIdx + 1 ].iTime;
 	}
 	if( m_GPSLog ){
-		m_GPSLog->m_dLogNum = ( VideoEd == VideoSt ) ? -1 :
-			( double )( GPSEd - GPSSt ) / ( VideoEd - VideoSt ) * ( GetFrameCnt() - VideoSt ) + GPSSt;
+		m_GPSLog->m_dLogNum = ConvParam( GetFrameCnt(), Video, GPS );
 		m_GPSLog->m_iLogNum = ( int )m_GPSLog->m_dLogNum;
-		
-		// GPS log は LOG_FREQ でコンバートしている
-		m_GPSLog->m_dFreq = LOG_FREQ;
 	}
 	
 	/*** Lap タイム描画 ***/
 	
+	// ラップタイムの再計算
 	if( IsHandLaptime() && DispLap && m_bCalcLapTimeReq && m_Lap ){
 		m_bCalcLapTimeReq = FALSE;
 		
