@@ -125,6 +125,7 @@ CVsdFilter::CVsdFilter () {
 	
 	m_iBestTime			= BESTLAP_NONE;
 	m_iBestLap			= 0;
+	m_iLapMode			= LAPMODE_HAND;
 	
 	m_dVideoFPS			= 30.0;
 	
@@ -500,7 +501,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	char szBuf[ BUF_SIZE ];
 	
 	fprintf( fp,
-		"DirectShowSource( \"%s\", pixel_type=\"YUY2\", convertfps=true  )\n"
+		"DirectShowSource( \"%s\", pixel_type=\"YUY2\", convertfps=true )\n"
 		"VSDFilter( \\\n"
 	#ifndef GPS_ONLY
 		"\tlog_file=\"%s\", \\\n"
@@ -532,7 +533,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	}
 	
 	// 手動ラップ計測マーク出力
-	if( IsHandLaptime() && m_iLapNum ){
+	if( m_iLapMode == LAPMODE_HAND && m_iLapNum ){
 		for( i = 0; i < m_iLapNum; ++i ){
 			fprintf( fp, "%s%u", i ? "," : ", \\\n\tmark=\"", m_Lap[ i ].iLogNum );
 		}
@@ -809,6 +810,8 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	
 	while( gzgets( fp, szBuf, BUF_SIZE ) != Z_NULL ){
 		if(( p = strstr( szBuf, "LAP" )) != NULL ){ // ラップタイム記録を見つけた
+			m_iLapMode = LAPMODE_MAGNET;
+			
 			uReadCnt = sscanf( p, "LAP%d%d:%d.%d", &uLap, &uMin, &uSec, &uMSec );
 			
 			int iTime = ( uMin * 60 + uSec ) * 1000 + uMSec;
@@ -951,17 +954,30 @@ double CVsdFilter::LapNum2LogNum( CVsdLog *Log, int iLapNum ){
 	// iLapNum がおかしいときは 0 を返しとく
 	if( iLapNum < 0 ) return 0;
 	
-	// 自動ラップ計測なら，Lap 構造体のログ番号は信用できる
-	if( Log == m_VsdLog ) return m_Lap[ iLapNum ].iLogNum;
+	// 磁気自動ラップ計測
+	if( m_iLapMode == LAPMODE_MAGNET ){
+		return Log == m_VsdLog ?
+			// 磁気計測の VSD ログ#
+			m_Lap[ iLapNum ].iLogNum :
+			// 磁気計測の GPS ログ#
+			ConvParam( m_Lap[ iLapNum ].iLogNum, Log, GPS );
+	}
 	
-	// GPS のログ番号に要変換
-	if( m_VsdLog ){
-		// 自動計測
-		return ConvParam( m_Lap[ iLapNum ].iLogNum, Log, GPS );
+	// GPS 計測
+	if( m_iLapMode == LAPMODE_GPS ){
+		return Log == m_GPSLog ?
+			// GPS 計測の GPS ログ#
+			m_Lap[ iLapNum ].iLogNum :
+			// GPS 計測の VSD ログ#
+			ConvParam( m_Lap[ iLapNum ].iLogNum, GPS, Log );
 	}
 	
 	// 手動計測
-	return ConvParam( m_Lap[ iLapNum ].iLogNum, Video, GPS );
+	return Log == m_GPSLog ?
+		// 手動計測の VSD ログ#
+		ConvParam( m_Lap[ iLapNum ].iLogNum, Video, Log ) :
+		// 手動計測の GSP ログ#
+		ConvParam( m_Lap[ iLapNum ].iLogNum, Video, GPS );
 }
 
 /*** パラメータ調整用スピードグラフ *****************************************/
@@ -1062,7 +1078,7 @@ void CVsdFilter::CalcLapTimeAuto( int iFrame ){
 		iPrevTime;
 		
 		m_Lap[ m_iLapNum ].uLap		= m_iLapNum;
-		m_Lap[ m_iLapNum ].iLogNum	= ( int )ConvParam( dLogNum, GPS, Video );	// 処理の都合上，フレーム番号
+		m_Lap[ m_iLapNum ].iLogNum	= i;
 		m_Lap[ m_iLapNum ].iTime	= m_iLapNum ? iTime - iPrevTime : 0;
 		
 		if(
@@ -1174,7 +1190,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	// フォントサイズ初期化
 	InitFont();
 	
-	CVsdLog *Log = m_VsdLog;
+	CVsdLog *Log;
 	
 	// ログ位置の計算
 	if( m_VsdLog ){
@@ -1189,18 +1205,24 @@ BOOL CVsdFilter::DrawVSD( void ){
 	/*** Lap タイム描画 ***/
 	
 	// ラップタイムの再計算
-	if( IsHandLaptime() && DispLap && m_bCalcLapTimeReq && m_Lap ){
+	if( m_iLapMode != LAPMODE_MAGNET && DispLap && m_bCalcLapTimeReq && m_Lap ){
 		m_bCalcLapTimeReq = FALSE;
 		
-		if( m_GPSLog && SLineWidth )	CalcLapTimeAuto();
-		else							CalcLapTime();
+		if( m_GPSLog && SLineWidth ){
+			m_iLapMode = LAPMODE_GPS;
+			CalcLapTimeAuto();
+		}else{
+			m_iLapMode = LAPMODE_HAND;
+			CalcLapTime();
+		}
 	}
+	
+	SelectLogVsd;
 	
 	// ラップインデックスを求める
 	if( m_iLapNum ){
-		int iLogNum = IsHandLaptime() ?
-			GetFrameCnt() :		// 手動計測での m_Lap[].iLogNum はフレーム# なので
-			Log->m_iLogNum;
+		// VSD/GPS 両方のログがなければ，手動計測での m_Lap[].iLogNum はフレーム# なので
+		int iLogNum = Log ?	Log->m_iLogNum : GetFrameCnt();
 		
 		// カレントポインタがおかしいときは，-1 にリセット
 		if(
@@ -1217,12 +1239,12 @@ BOOL CVsdFilter::DrawVSD( void ){
 		// 時間表示
 		if( m_iLapIdx >= 0 && m_Lap[ m_iLapIdx + 1 ].iTime != 0 ){
 			int iTime;
-			if( IsHandLaptime()){
+			if( Log ){
+				// 自動計測時は，タイム / ログ数 から計算
+				iTime = ( int )(( Log->m_dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 / Log->m_dFreq );
+			}else{
 				// 手動計測モードのときは，フレーム数から計算
 				iTime = ( int )(( GetFrameCnt() - m_Lap[ m_iLapIdx ].iLogNum ) * 1000.0 / m_dVideoFPS );
-			}else{
-				// 自動計測時は，タイム / ログ数 から計算
-				iTime = ( int )(( Log->m_dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 / m_VsdLog->m_dFreq );
 			}
 			
 			sprintf( szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );

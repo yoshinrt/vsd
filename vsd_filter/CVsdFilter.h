@@ -69,6 +69,12 @@ enum {
 	SHADOW_N
 };
 
+enum {
+	LAPMODE_HAND,	// 手動計測モード
+	LAPMODE_GPS,	// GPS 自動計測モード
+	LAPMODE_MAGNET,	// 磁気センサー自動計測モード
+};
+
 /*** new type ***************************************************************/
 
 typedef struct {
@@ -180,8 +186,6 @@ class CVsdFilter {
 #endif
 	BOOL ReadLog( const char *szFileName );
 	
-	// 手動ラップタイム計測モードかどうか
-	BOOL IsHandLaptime( void ){ return m_VsdLog == NULL; }
 	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
 	
 	void DrawSpeedGraph( CVsdLog *Log, const PIXEL_YC &yc );
@@ -190,6 +194,7 @@ class CVsdFilter {
 	CVsdLog		*m_GPSLog;
 	
 	LAP_t		*m_Lap;
+	int			m_iLapMode;
 	int			m_iLapNum;
 	int			m_iBestTime;
 	int			m_iBestLap;
