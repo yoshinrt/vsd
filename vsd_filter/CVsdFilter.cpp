@@ -52,6 +52,7 @@
 #define DispLap			m_piParamC[ CHECK_LAP ]
 #define GSnakeLen		m_piParamT[ TRACK_G_Len ]
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] / 1000.0 )
+#define SLineWidth		( m_piParamT[ TRACK_SLineWidth ] / 10.0 )
 
 #ifdef GPS_ONLY
 	#define Aspect			m_piParamT[ TRACK_Aspect ]
@@ -972,6 +973,106 @@ void CVsdFilter::DrawSpeedGraph( CVsdLog *Log, const PIXEL_YC &yc ){
 	}
 }
 
+/*** ラップタイム再計算 *****************************************************/
+
+void CVsdFilter::CalcLapTimeAuto( int iFrame ){
+	
+	/*** スタートラインの位置を取得 ***/
+	// iFrame に対応する GPS ログ番号取得
+	double dLogNum = VideoEd == VideoSt ? 0 :
+		( GPSEd - GPSSt ) * ( iFrame - VideoSt ) / ( double )( VideoEd - VideoSt ) + GPSSt;
+	
+	int iLogNum = ( int )dLogNum;
+	
+	// iLogNum ～ iLogNum + 1 の方位を算出
+	
+	double dAngle = atan2(
+		( m_GPSLog->m_Log[ iLogNum + 1 ].fY0 - m_GPSLog->m_Log[ iLogNum ].fY0 ),
+		( m_GPSLog->m_Log[ iLogNum + 1 ].fX0 - m_GPSLog->m_Log[ iLogNum ].fX0 )
+	);
+	
+	// 仮想光電管の位置を求める
+	double x1, y1, x2, y2;
+	x2 = m_GPSLog->X0( dLogNum );	// スタート地点
+	y2 = m_GPSLog->Y0( dLogNum );
+	
+	x1 = x2 + cos( dAngle + 90 * ToRAD ) * SLineWidth / 2;
+	y1 = y2 + sin( dAngle + 90 * ToRAD ) * SLineWidth / 2;
+	x2 = x2 + cos( dAngle - 90 * ToRAD ) * SLineWidth / 2;
+	y2 = y2 + sin( dAngle - 90 * ToRAD ) * SLineWidth / 2;
+	
+	/*****/
+	
+	m_iLapNum	= 0;
+	m_iBestTime	= BESTLAP_NONE;
+	
+	int iTime, iPrevTime;
+	
+	for( int i = 0; i < m_GPSLog->m_iCnt - 1; ++i ){
+		
+		#define x3 m_GPSLog->m_Log[ i ].fX0
+		#define y3 m_GPSLog->m_Log[ i ].fY0
+		#define x4 m_GPSLog->m_Log[ i + 1 ].fX0
+		#define y4 m_GPSLog->m_Log[ i + 1 ].fY0
+		
+		/*** 交差判定，交点判定 ***/
+		double s1, s2, a;
+		
+		// 交点がスタートライン線分上かの判定
+		s1 = ( x4 - x3 ) * ( y1 - y3 ) - ( x1 - x3 ) * ( y4 - y3 );
+		s2 = ( x4 - x3 ) * ( y3 - y2 ) - ( x3 - x2 ) * ( y4 - y3 );
+		a = ( s1 + s2 == 0 ) ? -1 : s1 / ( s1 + s2 );
+		if( !( 0 <= a && a <= 1 )) continue;
+		
+		// 交点が iLogNum ～ +1 線分上かの判定
+		s1 = ( x2 - x1 ) * ( y3 - y1 ) - ( y2 - y1 ) * ( x3 - x1 );
+		s2 = ( x2 - x1 ) * ( y1 - y4 ) - ( y2 - y1 ) * ( x1 - x4 );
+		a = ( s1 + s2 == 0 ) ? -1 : s1 / ( s1 + s2 );
+		if( !( 0 <= a && a < 1 )) continue;
+		
+		// 進行方向の判定，dAngle ±45度
+		double dAngle2 = dAngle - atan2(
+			( m_GPSLog->m_Log[ i + 1 ].fY0 - m_GPSLog->m_Log[ i ].fY0 ),
+			( m_GPSLog->m_Log[ i + 1 ].fX0 - m_GPSLog->m_Log[ i ].fX0 )
+		);
+		if     ( dAngle2 < -180 * ToRAD ) dAngle2 += 360 * ToRAD;
+		else if( dAngle2 >  180 * ToRAD ) dAngle2 -= 360 * ToRAD;
+		if( dAngle2 < -45 * ToRAD || dAngle2 > 45 * ToRAD ) continue;
+		
+		#undef x3
+		#undef y3
+		#undef x4
+		#undef y4
+		
+		// 半端な LogNum
+		dLogNum = i + a;
+		iTime = ( int )( dLogNum / LOG_FREQ * 1000 );
+		iPrevTime;
+		
+		m_Lap[ m_iLapNum ].uLap		= m_iLapNum;
+		m_Lap[ m_iLapNum ].iLogNum	=	// 処理の都合上，フレーム番号
+			( GPSEd == GPSSt ) ? 0 :
+			( int )(
+				( VideoEd - VideoSt ) * ( dLogNum - GPSSt ) / ( GPSEd - GPSSt )
+			) + VideoSt;
+		
+		m_Lap[ m_iLapNum ].iTime	= m_iLapNum ? iTime - iPrevTime : 0;
+		
+		if(
+			m_iLapNum &&
+			( m_iBestTime == BESTLAP_NONE || m_iBestTime > m_Lap[ m_iLapNum ].iTime )
+		){
+			m_iBestTime	= m_Lap[ m_iLapNum ].iTime;
+			m_iBestLap	= m_iLapNum - 1;
+		}
+		
+		iPrevTime = iTime;
+		++m_iLapNum;
+	}
+	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
+	m_Lap[ m_iLapNum ].iTime	= 0;			// 番犬
+}
+
 /****************************************************************************/
 /*** メーター描画 ***********************************************************/
 /****************************************************************************/
@@ -1092,7 +1193,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	if( IsHandLaptime() && DispLap && m_bCalcLapTimeReq && m_Lap ){
 		m_bCalcLapTimeReq = FALSE;
-		CalcLapTime();
+		
+		if( m_GPSLog && SLineWidth )	CalcLapTimeAuto();
+		else							CalcLapTime();
 	}
 	
 	// ラップインデックスを求める
@@ -1108,6 +1211,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 		) m_iLapIdx = -1;
 		
 		for( ; m_Lap[ m_iLapIdx + 1 ].iLogNum <= iLogNum; ++m_iLapIdx );
+	}else{
+		m_iLapIdx = -1;
 	}
 	
 	if( DispLap && m_iLapNum ){

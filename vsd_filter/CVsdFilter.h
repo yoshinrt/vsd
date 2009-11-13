@@ -216,6 +216,10 @@ class CVsdFilter {
 	virtual void SetFrameMark( int iFrame ) = 0;
 	virtual void CalcLapTime( void ) = 0;
 	
+	// ƒtƒŒ[ƒ€”Ô†‚ğ‹‚ß‚Ä CalcLaptimeAuto( int ) ‚ğŒÄ‚Ô
+	virtual void CalcLapTimeAuto( void ) = 0;
+	void CalcLapTimeAuto( int iFrame );
+	
 	virtual char *GetVideoFileName( char *szFileName ){ return ""; }
   private:
 };

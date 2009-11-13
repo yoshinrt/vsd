@@ -63,6 +63,7 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	
 	virtual void SetFrameMark( int iFrame );
 	virtual void CalcLapTime( void );
+	virtual void CalcLapTimeAuto( void );
 	
 	// パラメータ
 	int	m_iWidth, m_iHeight, m_iFrameCnt, m_iFrameMax;
@@ -220,6 +221,15 @@ void CVsdFilterAvs::CalcLapTime( void ){
 	}
 	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
 	m_Lap[ m_iLapNum ].iTime	= 0;			// 番犬
+}
+
+/*** ラップタイム再計算 ( 自動モード ) **************************************/
+
+void CVsdFilterAvs::CalcLapTimeAuto( void ){
+	
+	if( m_iLapNum ){
+		(( CVsdFilter *)this )->CalcLapTimeAuto( m_Lap[ 0 ].iLogNum );
+	}
 }
 
 /****************************************************************************/

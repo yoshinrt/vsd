@@ -61,9 +61,13 @@ class CVsdLog {
 		return 0 <= m_dLogNum && m_dLogNum < m_iCnt - 1;
 	}
 	
-	#define VsdLogGetData( p, n ) (( float )( \
-		m_Log[ ( UINT )( n )     ].p * ( 1 - (( n ) - ( UINT )( n ))) + \
-		m_Log[ ( UINT )( n ) + 1 ].p * (      ( n ) - ( UINT )( n ))))
+	#define VsdLogGetData( p, n ) (\
+		( 0 <= ( n ) && ( n ) < m_iCnt ) ? \
+			( float )( \
+				m_Log[ ( UINT )( n )     ].p * ( 1 - (( n ) - ( UINT )( n ))) + \
+				m_Log[ ( UINT )( n ) + 1 ].p * (      ( n ) - ( UINT )( n )) \
+			) : 0 \
+		)
 	
 	float Speed		( void ){ return VsdLogGetData( fSpeed,		m_dLogNum ); }
 	float Tacho		( void ){ return VsdLogGetData( fTacho,		m_dLogNum ); }

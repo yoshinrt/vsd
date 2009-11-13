@@ -178,6 +178,7 @@ class CVsdFilterAvu : public CVsdFilter {
 	
 	virtual void SetFrameMark( int iFrame );
 	virtual void CalcLapTime( void );
+	virtual void CalcLapTimeAuto( void );
 	
 	virtual char *GetVideoFileName( char *szFileName );
 };
@@ -267,6 +268,27 @@ void CVsdFilterAvu::CalcLapTime( void ){
 	}
 	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
 	m_Lap[ m_iLapNum ].iTime	= 0;			// 番犬
+}
+
+/*** ラップタイム再計算 ( 自動モード ) **************************************/
+
+void CVsdFilterAvu::CalcLapTimeAuto( void ){
+	
+	FRAME_STATUS	fsp;
+	int				i;
+	
+	m_iLapNum = 0;
+	m_Lap[ 0 ].iLogNum	= 0x7FFFFFFF;	// 番犬
+	m_Lap[ 0 ].iTime	= 0;			// 番犬
+	
+	// 最初のマークされているフレーム# を求める
+	for( i = 0; i < GetFrameMax(); ++i ){
+		( filter )->exfunc->get_frame_status( editp, i, &fsp );
+		if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
+			(( CVsdFilter *)this )->CalcLapTimeAuto( i );
+			break;
+		}
+	}
 }
 
 /*** フレームをマーク *******************************************************/
@@ -464,6 +486,16 @@ BOOL func_update( FILTER *fp, int status ){
 	if( bReEnter ) return TRUE;
 	
 	bReEnter = TRUE;
+	
+	if(
+		g_Vsd && (
+			status >= FILTER_UPDATE_STATUS_TRACK + TRACK_VSt  &&
+			status <= FILTER_UPDATE_STATUS_TRACK + TRACK_VEd2 ||
+			status >= FILTER_UPDATE_STATUS_TRACK + TRACK_GSt  &&
+			status >= FILTER_UPDATE_STATUS_TRACK + TRACK_GSt  ||
+			status == FILTER_UPDATE_STATUS_TRACK + TRACK_SLineWidth
+		)
+	) g_Vsd->m_bCalcLapTimeReq = TRUE;
 	
 	#ifndef GPS_ONLY
 		if(

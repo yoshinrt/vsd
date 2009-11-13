@@ -10,6 +10,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 
 #include "dds.h"
 #include "../vsd/main.h"
@@ -32,8 +33,7 @@ CVsdLog::CVsdLog(){
 	m_iCnt	= 0;
 	m_Log	= new VSD_LOG_t[ MAX_VSD_LOG ];
 	
-	float	NaN = 0;
-	NaN /= *( volatile float *)&NaN;
+	float	NaN = sqrt( -1.0f );
 	
 	// 初期化
 	for( UINT u = 0; u < MAX_VSD_LOG; ++u ){
@@ -57,8 +57,8 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 	
 	m_iCnt = 0;
 	
-	if( uCnt < 2 ) return 0;						// 2個データがなければ終了
-	GPSLog[ uCnt ].fTime = ( float )999999999.9;	// 番犬
+	if( uCnt < 2 ) return 0;			// 2個データがなければ終了
+	GPSLog[ uCnt ].fTime = FLT_MAX;		// 番犬
 	
 	double	t;
 	double	dMileage = 0;
@@ -180,13 +180,18 @@ void CVsdLog::RotateMap( double dAngle ){
 	dMaxX = dMinX = dMaxY = dMinY = 0;
 	
 	for( i = 0; i < m_iCnt; ++i ){
-		m_Log[ i ].fX = ( float )(  cos( dAngle ) * m_Log[ i ].fX0 + sin( dAngle ) * m_Log[ i ].fY0 );
-		m_Log[ i ].fY = ( float )( -sin( dAngle ) * m_Log[ i ].fX0 + cos( dAngle ) * m_Log[ i ].fY0 );
-		
-		if     ( dMaxX < m_Log[ i ].fX ) dMaxX = m_Log[ i ].fX;
-		else if( dMinX > m_Log[ i ].fX ) dMinX = m_Log[ i ].fX;
-		if     ( dMaxY < m_Log[ i ].fY ) dMaxY = m_Log[ i ].fY;
-		else if( dMinY > m_Log[ i ].fY ) dMinY = m_Log[ i ].fY;
+		if( _isnan( m_Log[ i ].fX0 )){
+			m_Log[ i ].fX = m_Log[ i ].fX0;
+			m_Log[ i ].fY = m_Log[ i ].fY0;
+		}else{
+			m_Log[ i ].fX = ( float )(  cos( dAngle ) * m_Log[ i ].fX0 + sin( dAngle ) * m_Log[ i ].fY0 );
+			m_Log[ i ].fY = ( float )( -sin( dAngle ) * m_Log[ i ].fX0 + cos( dAngle ) * m_Log[ i ].fY0 );
+			
+			if     ( dMaxX < m_Log[ i ].fX ) dMaxX = m_Log[ i ].fX;
+			else if( dMinX > m_Log[ i ].fX ) dMinX = m_Log[ i ].fX;
+			if     ( dMaxY < m_Log[ i ].fY ) dMaxY = m_Log[ i ].fY;
+			else if( dMinY > m_Log[ i ].fY ) dMinY = m_Log[ i ].fY;
+		}
 	}
 	
 	dMaxX -= dMinX;
