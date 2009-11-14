@@ -70,9 +70,11 @@ enum {
 };
 
 enum {
-	LAPMODE_HAND,	// 手動計測モード
-	LAPMODE_GPS,	// GPS 自動計測モード
-	LAPMODE_MAGNET,	// 磁気センサー自動計測モード
+	LAPMODE_HAND_VIDEO,		// 手動計測モード・Video フレーム
+	LAPMODE_HAND_GPS,		// 手動計測モード・GPS ログ時計
+	LAPMODE_HAND_MAGNET,	// 手動計測モード・磁気センサー時計
+	LAPMODE_GPS,			// GPS 自動計測モード
+	LAPMODE_MAGNET,			// 磁気センサー自動計測モード
 };
 
 /*** new type ***************************************************************/
@@ -220,13 +222,10 @@ class CVsdFilter {
 	char	*m_szLogFile;
 	char	*m_szGPSLogFile;
 	
-	// 仮想関数
 	virtual void SetFrameMark( int iFrame ) = 0;
-	virtual void CalcLapTime( void ) = 0;
-	
-	// フレーム番号を求めて CalcLaptimeAuto( int ) を呼ぶ
-	virtual void CalcLapTimeAuto( void ) = 0;
-	void CalcLapTimeAuto( int iFrame );
+	virtual int  GetFrameMark( int iFrame ) = 0;
+	void CalcLapTime( void );
+	void CalcLapTimeAuto( void );
 	
 	virtual char *GetVideoFileName( char *szFileName ){ return ""; }
   private:

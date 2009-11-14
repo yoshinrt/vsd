@@ -58,7 +58,7 @@ class CVsdLog {
 	void RotateMap( double dAngle );
 	
 	BOOL IsDataExist( void ){
-		return 0 <= m_dLogNum && m_dLogNum < m_iCnt - 1;
+		return 0 <= m_iLogNum && m_iLogNum < m_iCnt - 1;
 	}
 	
 	#define VsdLogGetData( p, n ) (\

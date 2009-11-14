@@ -178,8 +178,7 @@ class CVsdFilterAvu : public CVsdFilter {
 	virtual int	GetFrameCnt( void ){ return fpip->frame ; }
 	
 	virtual void SetFrameMark( int iFrame );
-	virtual void CalcLapTime( void );
-	virtual void CalcLapTimeAuto( void );
+	virtual int  GetFrameMark( int iFrame );
 	
 	virtual char *GetVideoFileName( char *szFileName );
 };
@@ -233,65 +232,6 @@ void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
 	}
 }
 
-/*** ラップタイム再計算 *****************************************************/
-
-void CVsdFilterAvu::CalcLapTime( void ){
-	
-	FRAME_STATUS	fsp;
-	int				i;
-	int				iTime, iPrevTime;
-	
-	m_iLapNum	= 0;
-	m_iBestTime	= BESTLAP_NONE;
-	
-	for( i = 0; i < GetFrameMax(); ++i ){
-		filter->exfunc->get_frame_status( editp, i, &fsp );
-		
-		if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
-			// ラップ検出
-			iTime = ( int )( i * 1000.0 / m_dVideoFPS );
-			
-			m_Lap[ m_iLapNum ].uLap		= m_iLapNum;
-			m_Lap[ m_iLapNum ].iLogNum	= i;
-			m_Lap[ m_iLapNum ].iTime	= m_iLapNum ? iTime - iPrevTime : 0;
-			
-			if(
-				m_iLapNum &&
-				( m_iBestTime == BESTLAP_NONE || m_iBestTime > m_Lap[ m_iLapNum ].iTime )
-			){
-				m_iBestTime	= m_Lap[ m_iLapNum ].iTime;
-				m_iBestLap	= m_iLapNum - 1;
-			}
-			
-			iPrevTime = iTime;
-			++m_iLapNum;
-		}
-	}
-	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
-	m_Lap[ m_iLapNum ].iTime	= 0;			// 番犬
-}
-
-/*** ラップタイム再計算 ( 自動モード ) **************************************/
-
-void CVsdFilterAvu::CalcLapTimeAuto( void ){
-	
-	FRAME_STATUS	fsp;
-	int				i;
-	
-	m_iLapNum = 0;
-	m_Lap[ 0 ].iLogNum	= 0x7FFFFFFF;	// 番犬
-	m_Lap[ 0 ].iTime	= 0;			// 番犬
-	
-	// 最初のマークされているフレーム# を求める
-	for( i = 0; i < GetFrameMax(); ++i ){
-		filter->exfunc->get_frame_status( editp, i, &fsp );
-		if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
-			(( CVsdFilter *)this )->CalcLapTimeAuto( i );
-			break;
-		}
-	}
-}
-
 /*** フレームをマーク *******************************************************/
 
 void CVsdFilterAvu::SetFrameMark( int iFrame ){
@@ -300,6 +240,20 @@ void CVsdFilterAvu::SetFrameMark( int iFrame ){
 	filter->exfunc->get_frame_status( editp, iFrame, &fsp );
 	fsp.edit_flag |= EDIT_FRAME_EDIT_FLAG_MARKFRAME;
 	filter->exfunc->set_frame_status( editp, iFrame, &fsp );
+}
+
+int CVsdFilterAvu::GetFrameMark( int iFrame ){
+	
+	FRAME_STATUS	fsp;
+	
+	for( ; iFrame < GetFrameMax(); ++iFrame ){
+		filter->exfunc->get_frame_status( editp, iFrame, &fsp );
+		
+		if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
+			return iFrame;
+		}
+	}
+	return -1;
 }
 
 /*** 編集ビデオファイル名取得 ***********************************************/
@@ -532,10 +486,10 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			// フレーム数セット
 			iFrame = filter->exfunc->get_frame( editp );
 			
-			filter->track[ TRACK_VSt ]	= filter->track[ TRACK_VEd ];
+			filter->track[ TRACK_VSt  ]	= filter->track[ TRACK_VEd  ];
 			filter->track[ TRACK_VSt2 ]	= filter->track[ TRACK_VEd2 ];
 			
-			filter->track[ TRACK_VEd ]	= iFrame / 100;
+			filter->track[ TRACK_VEd  ]	= iFrame / 100;
 			filter->track[ TRACK_VEd2 ]	= iFrame % 100;
 			
 			// 設定再描画
@@ -558,9 +512,7 @@ BOOL func_update( FILTER *fp, int status ){
 	if(
 		g_Vsd && (
 			status >= FILTER_UPDATE_STATUS_TRACK + TRACK_VSt  &&
-			status <= FILTER_UPDATE_STATUS_TRACK + TRACK_VEd2 ||
-			status >= FILTER_UPDATE_STATUS_TRACK + TRACK_GSt  &&
-			status >= FILTER_UPDATE_STATUS_TRACK + TRACK_GSt  ||
+			status <= FILTER_UPDATE_STATUS_TRACK + TRACK_GSt2 ||
 			status == FILTER_UPDATE_STATUS_TRACK + TRACK_SLineWidth
 		)
 	) g_Vsd->m_bCalcLapTimeReq = TRUE;

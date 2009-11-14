@@ -36,17 +36,24 @@
 
 #define MAX_LINE_LEN	2000
 
-#define VideoSt			( m_piParamT[ TRACK_VSt ] * 100 + m_piParamT[ TRACK_VSt2 ] )
-#define VideoEd			( m_piParamT[ TRACK_VEd ] * 100 + m_piParamT[ TRACK_VEd2 ] )
+#ifdef AVS_PLUGIN
+	#define DoubleTrack( p )	m_piParamT[ TRACK_ ## p ]
+#else
+	#define DoubleTrack( p )	( m_piParamT[ TRACK_ ## p ] * 100 + m_piParamT[ TRACK_ ## p ## 2 ] )
+#endif
+
+#define VideoSt			DoubleTrack( VSt )
+#define VideoEd			DoubleTrack( VEd )
 #ifdef GPS_ONLY
 	#define LogSt		0
 	#define LogEd		0
 #else
-	#define LogSt		( m_piParamT[ TRACK_LSt ] * 100 + m_piParamT[ TRACK_LSt2 ] )
-	#define LogEd		( m_piParamT[ TRACK_LEd ] * 100 + m_piParamT[ TRACK_LEd2 ] )
+	#define LogSt		DoubleTrack( LSt )
+	#define LogEd		DoubleTrack( LEd )
 #endif
-#define GPSSt			( m_piParamT[ TRACK_GSt ] * 100 + m_piParamT[ TRACK_GSt2 ] )
-#define GPSEd			( m_piParamT[ TRACK_GEd ] * 100 + m_piParamT[ TRACK_GEd2 ] )
+#define GPSSt			DoubleTrack( GSt )
+#define GPSEd			DoubleTrack( GEd )
+
 #define LineTrace		m_piParamT[ TRACK_LineTrace ]
 
 #define DispLap			m_piParamC[ CHECK_LAP ]
@@ -85,8 +92,8 @@
 // パラメータを変換
 #define ConvParam( p, from, to ) ( \
 	from##Ed == from##St ? 0 : \
-	( to##Ed - to##St )	* (( p ) - from##St ) \
-	/ ( double )( from##Ed - from##St ) \
+	( double )( to##Ed - to##St ) * (( p ) - from##St ) \
+	/ ( from##Ed - from##St ) \
 	+ to##St \
 )
 
@@ -131,7 +138,7 @@ CVsdFilter::CVsdFilter () {
 	
 	m_iBestTime			= BESTLAP_NONE;
 	m_iBestLap			= 0;
-	m_iLapMode			= LAPMODE_HAND;
+	m_iLapMode			= LAPMODE_HAND_VIDEO;
 	
 	m_dVideoFPS			= 30.0;
 	
@@ -146,21 +153,18 @@ CVsdFilter::CVsdFilter () {
 	m_szGPSLogFile		= NULL;
 	
 	// DrawPolygon 用バッファ
-	m_Polygon = new PolygonData_t[ MAX_POLY_HEIGHT ];
+	m_Polygon			= new PolygonData_t[ MAX_POLY_HEIGHT ];
 }
 
 /*** デストラクタ ***********************************************************/
 
 CVsdFilter::~CVsdFilter () {
-	delete m_VsdLog; m_VsdLog = NULL;
-	delete m_GPSLog; m_GPSLog = NULL;
-	
-	delete m_Lap;
-	m_Lap		= NULL;
-	m_iLapNum	= 0;
-	
+	delete m_VsdLog;
+	delete m_GPSLog;
+	delete [] m_Lap;
 	delete [] m_szLogFile;
 	delete [] m_szGPSLogFile;
+	delete [] m_Polygon;
 }
 
 /*** フォントデータ初期化 ***************************************************/
@@ -897,65 +901,123 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	return TRUE;
 }
 
-/*** ラップタイムログ → ログ番号 変換 **************************************/
+/*** ラップ番号 → ログ番号 変換 ********************************************/
 
 double CVsdFilter::LapNum2LogNum( CVsdLog *Log, int iLapNum ){
+	
+	double a;
 	
 	// iLapNum がおかしいときは 0 を返しとく
 	if( iLapNum < 0 ) return 0;
 	
-	// 磁気自動ラップ計測
-	if( m_iLapMode == LAPMODE_MAGNET ){
-		return Log == m_VsdLog ?
-			// 磁気計測の VSD ログ#
-			m_Lap[ iLapNum ].iLogNum :
-			// 磁気計測の GPS ログ#
-			ConvParam( m_Lap[ iLapNum ].iLogNum, Log, GPS );
+	if( m_iLapMode == LAPMODE_MAGNET || m_iLapMode == LAPMODE_HAND_MAGNET ){
+		// iLogNum は VSD ログ番号
+		if( Log == m_VsdLog ) return m_Lap[ iLapNum ].iLogNum;
+		if( LogSt == LogEd ) return 0;
+		a = ( m_Lap[ iLapNum ].iLogNum - LogSt ) / ( LogEd - LogSt );
+		
+	}else if( m_iLapMode == LAPMODE_GPS || m_iLapMode == LAPMODE_HAND_GPS ){
+		// iLogNum は GPS ログ番号
+		if( Log == m_GPSLog ) return m_Lap[ iLapNum ].iLogNum;
+		if( GPSSt == GPSEd ) return 0;
+		a = ( m_Lap[ iLapNum ].iLogNum - GPSSt ) / ( GPSEd - GPSSt );
+		
+	}else{
+		// iLogNum はビデオフレーム番号
+		if( VideoSt == VideoEd ) return 0;
+		a = ( m_Lap[ iLapNum ].iLogNum - VideoSt ) / ( VideoEd - VideoSt );
 	}
 	
-	// GPS 計測
-	if( m_iLapMode == LAPMODE_GPS ){
-		return Log == m_GPSLog ?
-			// GPS 計測の GPS ログ#
-			m_Lap[ iLapNum ].iLogNum :
-			// GPS 計測の VSD ログ#
-			ConvParam( m_Lap[ iLapNum ].iLogNum, GPS, Log );
-	}
-	
-	// 手動計測
 	return Log == m_VsdLog ?
-		// 手動計測の VSD ログ#
-		ConvParam( m_Lap[ iLapNum ].iLogNum, Video, Log ) :
-		// 手動計測の GSP ログ#
-		ConvParam( m_Lap[ iLapNum ].iLogNum, Video, GPS );
+		a * ( LogEd - LogSt ) + LogSt :
+		a * ( GPSEd - GPSSt ) + GPSSt;
 }
 
 /*** パラメータ調整用スピードグラフ *****************************************/
+
+#define SPEED_GRAPH_SCALE	2
 
 void CVsdFilter::DrawSpeedGraph( CVsdLog *Log, const PIXEL_YC &yc ){
 	
 	int	iLogNum;
 	int	x = 0;
 	
-	iLogNum = Log->m_iLogNum - GetWidth() / 2;
+	iLogNum = Log->m_iLogNum - GetWidth() * SPEED_GRAPH_SCALE / 2;
 	if( iLogNum < 0 ){
-		x = -iLogNum;
+		x = -iLogNum / SPEED_GRAPH_SCALE;
 		iLogNum = 0;
 	}
 	
-	for( ; x < GetWidth() - 1 && iLogNum < Log->m_iCnt - 1; ++x, ++iLogNum ){
+	for( ; x < GetWidth() - 1 && iLogNum < Log->m_iCnt - 1; ++x, iLogNum += SPEED_GRAPH_SCALE ){
 		DrawLine(
 			x,     GetHeight() - 1 - ( int )Log->Speed( iLogNum ),
-			x + 1, GetHeight() - 1 - ( int )Log->Speed( iLogNum + 1 ),
+			x + 1, GetHeight() - 1 - ( int )Log->Speed( iLogNum + SPEED_GRAPH_SCALE ),
 			1, yc, 0
 		);
 	}
 }
 
-/*** ラップタイム再計算 *****************************************************/
+/*** ラップタイム再計算 (手動) **********************************************/
 
-void CVsdFilter::CalcLapTimeAuto( int iFrame ){
+void CVsdFilter::CalcLapTime( void ){
 	
+	int		iTime, iPrevTime;
+	int		iFrame = 0;
+	double	dLogNum;
+	
+	m_iLapNum	= 0;
+	m_iBestTime	= BESTLAP_NONE;
+	
+	if( m_VsdLog ){
+		m_iLapMode = LAPMODE_HAND_MAGNET;
+	}else if( m_GPSLog ){
+		m_iLapMode = LAPMODE_HAND_GPS;
+	}else{
+		m_iLapMode = LAPMODE_HAND_VIDEO;
+	}
+	
+	while(( iFrame = GetFrameMark( iFrame )) >= 0 ){
+		
+		if( m_iLapMode == LAPMODE_HAND_MAGNET ){
+			dLogNum	= ConvParam( iFrame, Video, Log );
+			iTime	= ( int )( dLogNum / m_VsdLog->m_dFreq * 1000 );
+		}else if( m_iLapMode == LAPMODE_HAND_GPS ){
+			dLogNum	= ConvParam( iFrame, Video, GPS );
+			iTime	= ( int )( dLogNum / LOG_FREQ * 1000 );
+		}else{
+			iTime	= ( int )( iFrame * 1000.0 / m_dVideoFPS );
+		}
+		
+		m_Lap[ m_iLapNum ].uLap		= m_iLapNum;
+		m_Lap[ m_iLapNum ].iLogNum	= m_iLapMode == LAPMODE_HAND_VIDEO ? iFrame : ( int )dLogNum;
+		m_Lap[ m_iLapNum ].iTime	= m_iLapNum ? iTime - iPrevTime : 0;
+		
+		if(
+			m_iLapNum &&
+			( m_iBestTime == BESTLAP_NONE || m_iBestTime > m_Lap[ m_iLapNum ].iTime )
+		){
+			m_iBestTime	= m_Lap[ m_iLapNum ].iTime;
+			m_iBestLap	= m_iLapNum - 1;
+		}
+		
+		iPrevTime = iTime;
+		++m_iLapNum;
+		++iFrame;
+	}
+	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
+	m_Lap[ m_iLapNum ].iTime	= 0;			// 番犬
+}
+
+/*** ラップタイム再計算 (GPS auto) ******************************************/
+
+void CVsdFilter::CalcLapTimeAuto( void ){
+	
+	int iFrame;
+	
+	if(( iFrame = GetFrameMark( 0 )) < 0 ) return;
+	
+	m_iLapMode = LAPMODE_GPS;
+
 	/*** スタートラインの位置を取得 ***/
 	// iFrame に対応する GPS ログ番号取得
 	double dLogNum = ConvParam( iFrame, Video, GPS );
@@ -1161,25 +1223,25 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	/*** Lap タイム描画 ***/
 	
+	SelectLogVsd;	// VSD ログ優先で選択
+	
 	// ラップタイムの再計算
-	if( m_iLapMode != LAPMODE_MAGNET && DispLap && m_bCalcLapTimeReq && m_Lap ){
-		m_bCalcLapTimeReq = FALSE;
+	if( m_iLapMode != LAPMODE_MAGNET && DispLap && m_bCalcLapTimeReq ){
+		m_bCalcLapTimeReq	= FALSE;
+		m_iLapMode			= LAPMODE_HAND_VIDEO;
 		
 		if( m_GPSLog && SLineWidth ){
-			m_iLapMode = LAPMODE_GPS;
 			CalcLapTimeAuto();
-		}else{
-			m_iLapMode = LAPMODE_HAND;
+		}
+		if( m_iLapMode != LAPMODE_GPS ){
 			CalcLapTime();
 		}
 	}
 	
-	SelectLogVsd;
-	
 	// ラップインデックスを求める
 	if( m_iLapNum ){
 		// VSD/GPS 両方のログがなければ，手動計測での m_Lap[].iLogNum はフレーム# なので
-		int iLogNum = m_iLapMode != LAPMODE_HAND ? Log->m_iLogNum : GetFrameCnt();
+		int iLogNum = m_iLapMode != LAPMODE_HAND_VIDEO ? Log->m_iLogNum : GetFrameCnt();
 		
 		// カレントポインタがおかしいときは，-1 にリセット
 		if(
@@ -1196,7 +1258,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		// 時間表示
 		if( m_iLapIdx >= 0 && m_Lap[ m_iLapIdx + 1 ].iTime != 0 ){
 			int iTime;
-			if( m_iLapMode != LAPMODE_HAND ){
+			if( m_iLapMode != LAPMODE_HAND_VIDEO ){
 				// 自動計測時は，タイム / ログ数 から計算
 				iTime = ( int )(( Log->m_dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 / Log->m_dFreq );
 			}else{
@@ -1306,46 +1368,48 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	#define Float2Time( n )	( int )( n ) / 60, fmod( n, 60 )
 	
-	if( DispFrameInfo ){
-		sprintf(
-			szBuf, "Vid%5d/%5d %2d:%05.2f-%2d:%05.2f(%2d:%05.2f)",
-			GetFrameCnt(), GetFrameMax() - 1,
-			Float2Time( VideoSt / m_dVideoFPS ),
-			Float2Time( VideoEd / m_dVideoFPS ),
-			Float2Time(( VideoEd - VideoSt ) / m_dVideoFPS )
-		);
-		DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 3 );
-		
-		if( m_VsdLog ){
+	#ifndef AVS_PLUGIN
+		if( DispFrameInfo ){
 			sprintf(
-			szBuf, "Log%5d/%5d %2d:%05.2f-%2d:%05.2f(%2d:%05.2f)",
-				( int )m_VsdLog->m_dLogNum, m_VsdLog->m_iCnt - 1,
-				Float2Time( LogSt / m_VsdLog->m_dFreq ),
-				Float2Time( LogEd / m_VsdLog->m_dFreq ),
-				Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq )
+				szBuf, "Vid%5d/%5d %2d:%05.2f-%2d:%05.2f(%2d:%05.2f)",
+				GetFrameCnt(), GetFrameMax() - 1,
+				Float2Time( VideoSt / m_dVideoFPS ),
+				Float2Time( VideoEd / m_dVideoFPS ),
+				Float2Time(( VideoEd - VideoSt ) / m_dVideoFPS )
 			);
-			DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
-			DrawSpeedGraph( m_VsdLog, yc_red );
-		}
-		
-		if( m_GPSLog ){
-			sprintf( szBuf,
-				"GPS%5d/%5d %2d:%05.2f-%2d:%05.2f(%2d:%05.2f)",
-				( int )m_GPSLog->m_dLogNum, m_GPSLog->m_iCnt - 1,
-				Float2Time( GPSSt / m_GPSLog->m_dFreq ),
-				Float2Time( GPSEd / m_GPSLog->m_dFreq ),
-				Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq )
+			DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 3 );
+			
+			if( m_VsdLog ){
+				sprintf(
+				szBuf, "Log%5d/%5d %2d:%05.2f-%2d:%05.2f(%2d:%05.2f)",
+					( int )m_VsdLog->m_dLogNum, m_VsdLog->m_iCnt - 1,
+					Float2Time( LogSt / m_VsdLog->m_dFreq ),
+					Float2Time( LogEd / m_VsdLog->m_dFreq ),
+					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq )
+				);
+				DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+				DrawSpeedGraph( m_VsdLog, yc_red );
+			}
+			
+			if( m_GPSLog ){
+				sprintf( szBuf,
+					"GPS%5d/%5d %2d:%05.2f-%2d:%05.2f(%2d:%05.2f)",
+					( int )m_GPSLog->m_dLogNum, m_GPSLog->m_iCnt - 1,
+					Float2Time( GPSSt / m_GPSLog->m_dFreq ),
+					Float2Time( GPSEd / m_GPSLog->m_dFreq ),
+					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq )
+				);
+				DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+				DrawSpeedGraph( m_GPSLog, yc_cyan );
+			}
+			
+			DrawLine(
+				GetWidth() / 2, GetHeight() - 20,
+				GetWidth() / 2, GetHeight() - 1,
+				1, yc_cyan, 0
 			);
-			DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
-			DrawSpeedGraph( m_GPSLog, yc_cyan );
 		}
-		
-		DrawLine(
-			GetWidth() / 2, GetHeight() - 20,
-			GetWidth() / 2, GetHeight() - 1,
-			1, yc_cyan, 0
-		);
-	}
+	#endif // !AVS_PLUGIN
 	
 	if( !m_VsdLog && !m_GPSLog ) return TRUE;
 	
@@ -1568,16 +1632,18 @@ BOOL CVsdFilter::DrawVSD( void ){
 		);
 		
 		// スタートライン表示
-		if( DispFrameInfo && m_iLapMode == LAPMODE_GPS ){
-			double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
-			
-			int x1 = ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsX ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
-			int y1 = ( int )(( -sin( dAngle ) * m_dStartLineX1 + cos( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsY ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
-			int x2 = ( int )((  cos( dAngle ) * m_dStartLineX2 + sin( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsX ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
-			int y2 = ( int )(( -sin( dAngle ) * m_dStartLineX2 + cos( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsY ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
-			
-			DrawLine( x1, y1, x2, y2, yc_blue, 0 );
-		}
+		#ifndef AVS_PLUGIN
+			if( DispFrameInfo && m_iLapMode == LAPMODE_GPS ){
+				double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
+				
+				int x1 = ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsX ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
+				int y1 = ( int )(( -sin( dAngle ) * m_dStartLineX1 + cos( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsY ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
+				int x2 = ( int )((  cos( dAngle ) * m_dStartLineX2 + sin( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsX ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
+				int y2 = ( int )(( -sin( dAngle ) * m_dStartLineX2 + cos( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsY ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
+				
+				DrawLine( x1, y1, x2, y2, yc_blue, 0 );
+			}
+		#endif
 	}
 	
 	// ギア表示 - VsdLog しか使用しない

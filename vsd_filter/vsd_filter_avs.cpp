@@ -62,12 +62,12 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	virtual int	GetFrameCnt( void )	{ return m_iFrameCnt; }
 	
 	virtual void SetFrameMark( int iFrame );
-	virtual void CalcLapTime( void );
-	virtual void CalcLapTimeAuto( void );
+	virtual int  GetFrameMark( int iFrame );
 	
 	// パラメータ
 	int	m_iWidth, m_iHeight, m_iFrameCnt, m_iFrameMax;
 	int m_iBytesPerLine;
+	int *m_piMark;
 	
 	BYTE	*m_pPlane;
 	const char *m_szMark;
@@ -90,6 +90,7 @@ CVsdFilterAvs::CVsdFilterAvs(
 	m_piParamT	= new int[ TRACK_N ];
 	m_piParamC	= new int[ CHECK_N ];
 	m_piParamS	= new int[ SHADOW_N ];
+	m_piMark	= new int[ MAX_LAP ];
 	m_dVideoFPS = ( double )vi.fps_numerator / vi.fps_denominator;
 	
 	// パラメータ初期値
@@ -120,21 +121,6 @@ CVsdFilterAvs::CVsdFilterAvs(
 	#define DEF_SHADOW( id, init, conf_name ) \
 		if( args[ ARGID_ ## id ].Defined()) m_piParamS[ id ] = args[ ARGID_ ## id ].AsInt();
 	#include "def_shadow.h"
-	
-	m_piParamT[ TRACK_VSt2 ] = m_piParamT[ TRACK_VSt ] % 100;
-	m_piParamT[ TRACK_VSt  ] /= 100;
-	m_piParamT[ TRACK_VEd2 ] = m_piParamT[ TRACK_VEd ] % 100;
-	m_piParamT[ TRACK_VEd  ] /= 100;
-#ifndef GPS_ONLY
-	m_piParamT[ TRACK_LSt2 ] = m_piParamT[ TRACK_LSt ] % 100;
-	m_piParamT[ TRACK_LSt  ] /= 100;
-	m_piParamT[ TRACK_LEd2 ] = m_piParamT[ TRACK_LEd ] % 100;
-	m_piParamT[ TRACK_LEd  ] /= 100;
-#endif
-	m_piParamT[ TRACK_GSt2 ] = m_piParamT[ TRACK_GSt ] % 100;
-	m_piParamT[ TRACK_GSt  ] /= 100;
-	m_piParamT[ TRACK_GEd2 ] = m_piParamT[ TRACK_GEd ] % 100;
-	m_piParamT[ TRACK_GEd  ] /= 100;
 	
 	// mark= 引数処理
 	if( p = args[ ARGID_MARK ].AsString( NULL )) ParseMarkStr( p );
@@ -190,46 +176,18 @@ void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
 /*** フレームをマーク *******************************************************/
 
 void CVsdFilterAvs::SetFrameMark( int iFrame ){
-	m_Lap[ m_iLapNum++ ].iLogNum = iFrame;
+	static int iCnt = 0;
+	m_piMark[ iCnt++ ] = iFrame;
+	m_piMark[ iCnt   ] = -1;
 };
 
-/*** ラップタイム再計算 *****************************************************/
-
-void CVsdFilterAvs::CalcLapTime( void ){
+int CVsdFilterAvs::GetFrameMark( int iFrame ){
 	
 	int	i;
-	int	iTime, iPrevTime;
 	
-	m_iBestTime	= BESTLAP_NONE;
+	for( i = 0; m_piMark[ i ] < iFrame && m_piMark[ i ] >= 0; ++i );
 	
-	for( i = 0; i < m_iLapNum; ++i ){
-		// ラップ検出
-		iTime = ( int )( m_Lap[ i ].iLogNum * 1000.0 / m_dVideoFPS );
-		
-		m_Lap[ i ].uLap		= i;
-		m_Lap[ i ].iTime	= i ? iTime - iPrevTime : 0;
-		
-		if(
-			i &&
-			( m_iBestTime == BESTLAP_NONE || m_iBestTime > m_Lap[ i ].iTime )
-		){
-			m_iBestTime	= m_Lap[ i ].iTime;
-			m_iBestLap	= i - 1;
-		}
-		
-		iPrevTime = iTime;
-	}
-	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
-	m_Lap[ m_iLapNum ].iTime	= 0;			// 番犬
-}
-
-/*** ラップタイム再計算 ( 自動モード ) **************************************/
-
-void CVsdFilterAvs::CalcLapTimeAuto( void ){
-	
-	if( m_iLapNum ){
-		(( CVsdFilter *)this )->CalcLapTimeAuto( m_Lap[ 0 ].iLogNum );
-	}
+	return m_piMark[ i ];
 }
 
 /****************************************************************************/
