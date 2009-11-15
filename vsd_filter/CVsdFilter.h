@@ -81,7 +81,7 @@ enum {
 
 typedef struct {
 	USHORT	uLap;
-	int		iLogNum;
+	float	fLogNum;
 	int		iTime;
 } LAP_t;
 

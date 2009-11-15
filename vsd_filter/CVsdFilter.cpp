@@ -133,8 +133,8 @@ CVsdFilter::CVsdFilter () {
 	
 	m_Lap	 			= new LAP_t[ MAX_LAP ];
 	m_iLapNum			= 0;
-	m_Lap[ 0 ].iLogNum	= 0x7FFFFFFF;	// 番犬
-	m_Lap[ 0 ].iTime	= 0;			// 番犬
+	m_Lap[ 0 ].fLogNum	= FLT_MAX;	// 番犬
+	m_Lap[ 0 ].iTime	= 0;		// 番犬
 	
 	m_iBestTime			= BESTLAP_NONE;
 	m_iBestLap			= 0;
@@ -771,7 +771,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 			int iTime = ( uMin * 60 + uSec ) * 1000 + uMSec;
 			
 			m_Lap[ m_iLapNum ].uLap		= uLap;
-			m_Lap[ m_iLapNum ].iLogNum	= uLogNum;
+			m_Lap[ m_iLapNum ].fLogNum	= ( float )uLogNum;
 			m_Lap[ m_iLapNum ].iTime	= ( uReadCnt == 4 ) ? iTime : 0;
 			
 			if(
@@ -781,7 +781,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 				m_iBestTime	= iTime;
 				m_iBestLap	= m_iLapNum - 1;
 				
-				iLogFreqLog	 += uLogNum - m_Lap[ m_iLapNum - 1 ].iLogNum;
+				iLogFreqLog	 += uLogNum - ( int )m_Lap[ m_iLapNum - 1 ].fLogNum;
 				iLogFreqTime += iTime;
 			}
 			++m_iLapNum;
@@ -893,8 +893,8 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	
 	gzclose( fp );
 	
-	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
-	m_Lap[ m_iLapNum ].iTime	= 0;			// 番犬
+	m_Lap[ m_iLapNum ].fLogNum	= FLT_MAX;	// 番犬
+	m_Lap[ m_iLapNum ].iTime	= 0;		// 番犬
 	
 	DeleteIfZero( m_VsdLog );
 	
@@ -912,20 +912,20 @@ double CVsdFilter::LapNum2LogNum( CVsdLog *Log, int iLapNum ){
 	
 	if( m_iLapMode == LAPMODE_MAGNET || m_iLapMode == LAPMODE_HAND_MAGNET ){
 		// iLogNum は VSD ログ番号
-		if( Log == m_VsdLog ) return m_Lap[ iLapNum ].iLogNum;
-		if( LogSt == LogEd ) return 0;
-		a = ( m_Lap[ iLapNum ].iLogNum - LogSt ) / ( LogEd - LogSt );
+		if( Log == m_VsdLog ) return m_Lap[ iLapNum ].fLogNum;
+		if( LogSt == LogEd )  return 0;
+		a = ( m_Lap[ iLapNum ].fLogNum - LogSt ) / ( LogEd - LogSt );
 		
 	}else if( m_iLapMode == LAPMODE_GPS || m_iLapMode == LAPMODE_HAND_GPS ){
 		// iLogNum は GPS ログ番号
-		if( Log == m_GPSLog ) return m_Lap[ iLapNum ].iLogNum;
-		if( GPSSt == GPSEd ) return 0;
-		a = ( m_Lap[ iLapNum ].iLogNum - GPSSt ) / ( GPSEd - GPSSt );
+		if( Log == m_GPSLog ) return m_Lap[ iLapNum ].fLogNum;
+		if( GPSSt == GPSEd )  return 0;
+		a = ( m_Lap[ iLapNum ].fLogNum - GPSSt ) / ( GPSEd - GPSSt );
 		
 	}else{
 		// iLogNum はビデオフレーム番号
 		if( VideoSt == VideoEd ) return 0;
-		a = ( m_Lap[ iLapNum ].iLogNum - VideoSt ) / ( VideoEd - VideoSt );
+		a = ( m_Lap[ iLapNum ].fLogNum - VideoSt ) / ( VideoEd - VideoSt );
 	}
 	
 	return Log == m_VsdLog ?
@@ -989,7 +989,7 @@ void CVsdFilter::CalcLapTime( void ){
 		}
 		
 		m_Lap[ m_iLapNum ].uLap		= m_iLapNum;
-		m_Lap[ m_iLapNum ].iLogNum	= m_iLapMode == LAPMODE_HAND_VIDEO ? iFrame : ( int )dLogNum;
+		m_Lap[ m_iLapNum ].fLogNum	= m_iLapMode == LAPMODE_HAND_VIDEO ? iFrame : ( float )dLogNum;
 		m_Lap[ m_iLapNum ].iTime	= m_iLapNum ? iTime - iPrevTime : 0;
 		
 		if(
@@ -1004,8 +1004,8 @@ void CVsdFilter::CalcLapTime( void ){
 		++m_iLapNum;
 		++iFrame;
 	}
-	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
-	m_Lap[ m_iLapNum ].iTime	= 0;			// 番犬
+	m_Lap[ m_iLapNum ].fLogNum	= FLT_MAX;	// 番犬
+	m_Lap[ m_iLapNum ].iTime	= 0;		// 番犬
 }
 
 /*** ラップタイム再計算 (GPS auto) ******************************************/
@@ -1017,7 +1017,7 @@ void CVsdFilter::CalcLapTimeAuto( void ){
 	if(( iFrame = GetFrameMark( 0 )) < 0 ) return;
 	
 	m_iLapMode = LAPMODE_GPS;
-
+	
 	/*** スタートラインの位置を取得 ***/
 	// iFrame に対応する GPS ログ番号取得
 	double dLogNum = ConvParam( iFrame, Video, GPS );
@@ -1097,7 +1097,7 @@ void CVsdFilter::CalcLapTimeAuto( void ){
 		iPrevTime;
 		
 		m_Lap[ m_iLapNum ].uLap		= m_iLapNum;
-		m_Lap[ m_iLapNum ].iLogNum	= i;
+		m_Lap[ m_iLapNum ].fLogNum	= ( float )dLogNum;
 		m_Lap[ m_iLapNum ].iTime	= m_iLapNum ? iTime - iPrevTime : 0;
 		
 		if(
@@ -1111,8 +1111,8 @@ void CVsdFilter::CalcLapTimeAuto( void ){
 		iPrevTime = iTime;
 		++m_iLapNum;
 	}
-	m_Lap[ m_iLapNum ].iLogNum	= 0x7FFFFFFF;	// 番犬
-	m_Lap[ m_iLapNum ].iTime	= 0;			// 番犬
+	m_Lap[ m_iLapNum ].fLogNum	= FLT_MAX;	// 番犬
+	m_Lap[ m_iLapNum ].iTime	= 0;		// 番犬
 }
 
 /****************************************************************************/
@@ -1240,16 +1240,17 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	// ラップインデックスを求める
 	if( m_iLapNum ){
-		// VSD/GPS 両方のログがなければ，手動計測での m_Lap[].iLogNum はフレーム# なので
-		int iLogNum = m_iLapMode != LAPMODE_HAND_VIDEO ? Log->m_iLogNum : GetFrameCnt();
+		// VSD/GPS 両方のログがなければ，手動計測での m_Lap[].fLogNum はフレーム# なので
+		// m_Lap[].fLogNum と精度をあわせるため，m_dLogNum はいったん float に落とす
+		float fLogNum = m_iLapMode != LAPMODE_HAND_VIDEO ? ( float )Log->m_dLogNum : GetFrameCnt();
 		
 		// カレントポインタがおかしいときは，-1 にリセット
 		if(
 			m_iLapIdx >= m_iLapNum ||
-			m_iLapIdx >= 0 && m_Lap[ m_iLapIdx ].iLogNum > iLogNum
+			m_iLapIdx >= 0 && m_Lap[ m_iLapIdx ].fLogNum > fLogNum
 		) m_iLapIdx = -1;
 		
-		for( ; m_Lap[ m_iLapIdx + 1 ].iLogNum <= iLogNum; ++m_iLapIdx );
+		for( ; m_Lap[ m_iLapIdx + 1 ].fLogNum <= fLogNum; ++m_iLapIdx );
 	}else{
 		m_iLapIdx = -1;
 	}
@@ -1260,10 +1261,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 			int iTime;
 			if( m_iLapMode != LAPMODE_HAND_VIDEO ){
 				// 自動計測時は，タイム / ログ数 から計算
-				iTime = ( int )(( Log->m_dLogNum - m_Lap[ m_iLapIdx ].iLogNum ) * 1000 / Log->m_dFreq );
+				iTime = ( int )(( Log->m_dLogNum - m_Lap[ m_iLapIdx ].fLogNum ) * 1000 / Log->m_dFreq );
 			}else{
 				// 手動計測モードのときは，フレーム数から計算
-				iTime = ( int )(( GetFrameCnt() - m_Lap[ m_iLapIdx ].iLogNum ) * 1000.0 / m_dVideoFPS );
+				iTime = ( int )(( GetFrameCnt() - m_Lap[ m_iLapIdx ].fLogNum ) * 1000.0 / m_dVideoFPS );
 			}
 			
 			sprintf( szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
@@ -1346,12 +1347,15 @@ BOOL CVsdFilter::DrawVSD( void ){
 		
 		// Lapタイム表示
 		i = 0;
-		for( int iLapIdxTmp = m_iLapIdx + 1; iLapIdxTmp >= 0 && i < 3; --iLapIdxTmp ){
+		int iLapIdxTmp = ( m_iLapIdx == m_iLapNum - 1 ) ? m_iLapIdx - 2 : m_iLapIdx - 1;
+		if( iLapIdxTmp < 1 ) iLapIdxTmp = 1;
+		
+		for( ; iLapIdxTmp <= m_iLapIdx + 1 && i < 3; ++iLapIdxTmp ){
 			if( m_Lap[ iLapIdxTmp ].iTime != 0 ){
 				sprintf(
 					szBuf, "%3d%c%2d'%02d.%03d",
 					m_Lap[ iLapIdxTmp ].uLap,
-					( i == 0 && bInLap ) ? '*' : ' ',
+					( iLapIdxTmp == m_iLapIdx + 1 && bInLap ) ? '*' : ' ',
 					m_Lap[ iLapIdxTmp ].iTime / 60000,
 					m_Lap[ iLapIdxTmp ].iTime / 1000 % 60,
 					m_Lap[ iLapIdxTmp ].iTime % 1000
