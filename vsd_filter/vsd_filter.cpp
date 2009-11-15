@@ -274,28 +274,35 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	
 	char szBuf[ BUF_SIZE ];
 	
+	FILE_INFO fi;
+	filter->exfunc->get_file_info( editp, &fi );
+	
 	fprintf( fp,
-		"DirectShowSource( \"%s\", pixel_type=\"YUY2\", convertfps=true )\n"
-		"VSDFilter( \\\n"
-	#ifndef GPS_ONLY
-		"\tlog_file=\"%s\", \\\n"
-	#endif
-		"\tgps_file=\"%s\""
-		,
+		"DirectShowSource( \"%s\", pixel_type=\"YUY2\", fps=%d.0/%d )\n"
+		"VSDFilter",
 		GetVideoFileName( szBuf ),
-	#ifndef GPS_ONLY
-		m_szLogFile ? m_szLogFile : "",
-	#endif
-		m_szGPSLogFile ? m_szGPSLogFile : ""
+		fi.video_rate, fi.video_scale
 	);
+	
+	char cSep = '(';
+	if( m_szLogFile ){
+		fprintf( fp, "%c \\\n\tlog_file=\"%s\"", cSep, m_szLogFile );
+		cSep = ',';
+	}
+	
+	if( m_szGPSLogFile ){
+		fprintf( fp, "%c \\\n\tgps_file=\"%s\"", cSep, m_szGPSLogFile );
+		cSep = ',';
+	}
 	
 	for( i = 0; i < TRACK_N; ++i ){
 		if( m_szTrackbarName[ i ] == NULL ) continue;
 		
-		fprintf( fp, ", \\\n\t%s=%d", m_szTrackbarName[ i ],
+		fprintf( fp, "%c \\\n\t%s=%d", cSep, m_szTrackbarName[ i ],
 			( i <= TRACK_GEd ) ? m_piParamT[ i ] * 100 + m_piParamT[ i + 1 ] :
 			m_piParamT[ i ]
 		);
+		cSep = ',';
 	}
 	
 	for( i = 0; i < CHECK_N; ++i ){

@@ -126,7 +126,7 @@ const char *CVsdFilter::m_szShadowParamName[] = {
 
 /*** コンストラクタ *********************************************************/
 
-CVsdFilter::CVsdFilter () {
+CVsdFilter::CVsdFilter (){
 	
 	m_VsdLog 			= NULL;
 	m_GPSLog 			= NULL;
@@ -158,7 +158,7 @@ CVsdFilter::CVsdFilter () {
 
 /*** デストラクタ ***********************************************************/
 
-CVsdFilter::~CVsdFilter () {
+CVsdFilter::~CVsdFilter (){
 	delete m_VsdLog;
 	delete m_GPSLog;
 	delete [] m_Lap;
@@ -198,46 +198,36 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, U
 	
 	int i;
 	
-	int	iXdiff = ABS( x1 - x2 );
-	int iYdiff = ABS( y1 - y2 );
+	int	iXdiff = ABS( x1 - x2 ) + 1;
+	int iYdiff = ABS( y1 - y2 ) + 1;
 	
 	int iXsign = ( x2 > x1 ) ? 1 : -1;
 	int iYsign = ( y2 > y1 ) ? 1 : -1;
 	
 	/* 傾きが1より小さい場合 */
-	if( iXdiff > iYdiff ) {
-		int E = -iXdiff;
-		for( i = 0 ; i <= ( iXdiff + 1 ) >> 1 ; i++ ) {
+	if( iXdiff > iYdiff ){
+		int E = iYdiff - 2 * iXdiff;
+		for( i = 0; i < iXdiff; i++ ){
 			PutPixel( x1, y1, yc, uFlag );
-			PutPixel( x2, y2, yc, uFlag );
 			x1 += iXsign;
-			x2 -= iXsign;
 			E += 2 * iYdiff;
-			if( E >= 0 ) {
+			if( E > 0 ){
 				y1 += iYsign;
-				y2 -= iYsign;
 				E -= 2 * iXdiff;
 			}
 		}
-		/* iXdiff + 1 が奇数の場合、残った中央の点を最後に描画 */
-		if(( iXdiff % 2 ) == 0 ) PutPixel( x1, y1, yc, uFlag );
 	/* 傾きが1以上の場合 */
 	} else {
-		int E = -iYdiff;
-		for( i = 0 ; i <= ( iYdiff + 1 ) >> 1 ; i++ ) {
+		int E = iXdiff - 2 * iYdiff;
+		for( i = 0; i < iYdiff; i++ ){
 			PutPixel( x1, y1, yc, uFlag );
-			PutPixel( x2, y2, yc, uFlag );
 			y1 += iYsign;
-			y2 -= iYsign;
 			E += 2 * iXdiff;
-			if( E >= 0 ) {
+			if( E > 0 ){
 				x1 += iXsign;
-				x2 -= iXsign;
 				E -= 2 * iYdiff;
 			}
 		}
-		/* iYdiff + 1 が奇数の場合、残った中央の点を最後に描画 */
-		if(( iYdiff % 2 ) == 0 ) PutPixel( x1, y1, yc, uFlag );
 	}
 }
 
