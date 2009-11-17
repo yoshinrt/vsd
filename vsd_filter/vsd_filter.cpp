@@ -298,9 +298,8 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	for( i = 0; i < TRACK_N; ++i ){
 		if( m_szTrackbarName[ i ] == NULL ) continue;
 		
-		fprintf( fp, "%c \\\n\t%s=%d", cSep, m_szTrackbarName[ i ],
-			( i <= TRACK_GEd ) ? m_piParamT[ i ] * 100 + m_piParamT[ i + 1 ] :
-			m_piParamT[ i ]
+		fprintf(
+			fp, "%c \\\n\t%s=%d", cSep, m_szTrackbarName[ i ], m_piParamT[ i ]
 		);
 		cSep = ',';
 	}
@@ -400,7 +399,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				if( g_Vsd->GPSLogLoad( szBuf )){
 					// trackbar 設定
 					track_e[ TRACK_GSt ] =
-					track_e[ TRACK_GEd ] = ( g_Vsd->m_GPSLog->m_iCnt + 99 ) / 100;
+					track_e[ TRACK_GEd ] = g_Vsd->m_GPSLog->m_iCnt;
 				}
 			#else
 				// config ロード
@@ -418,7 +417,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				){
 					// trackbar 設定
 					track_e[ TRACK_GSt ] =
-					track_e[ TRACK_GEd ] = ( g_Vsd->m_GPSLog->m_iCnt + 99 ) / 100;
+					track_e[ TRACK_GEd ] = g_Vsd->m_GPSLog->m_iCnt;
 				}
 				
 				// .log ロード
@@ -428,7 +427,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				){
 					// trackbar 設定
 					track_e[ TRACK_LSt ] =
-					track_e[ TRACK_LEd ] = ( g_Vsd->m_VsdLog->m_iCnt + 99 ) / 100;
+					track_e[ TRACK_LEd ] = g_Vsd->m_VsdLog->m_iCnt;
 				}
 			#endif
 			
@@ -465,7 +464,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 		// trackbar 設定
 		track_e[ TRACK_VSt ] =
-		track_e[ TRACK_VEd ] = ( filter->exfunc->get_frame_n( editp ) + 99 ) / 100;
+		track_e[ TRACK_VEd ] = filter->exfunc->get_frame_n( editp );
 		
 		// 設定再描画
 		filter->exfunc->filter_window_update( filter );
@@ -493,11 +492,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			// フレーム数セット
 			iFrame = filter->exfunc->get_frame( editp );
 			
-			filter->track[ TRACK_VSt  ]	= filter->track[ TRACK_VEd  ];
-			filter->track[ TRACK_VSt2 ]	= filter->track[ TRACK_VEd2 ];
-			
-			filter->track[ TRACK_VEd  ]	= iFrame / 100;
-			filter->track[ TRACK_VEd2 ]	= iFrame % 100;
+			filter->track[ TRACK_VSt ]	= filter->track[ TRACK_VEd ];
+			filter->track[ TRACK_VEd ]	= iFrame;
 			
 			// 設定再描画
 			filter->exfunc->filter_window_update( filter );
@@ -518,8 +514,8 @@ BOOL func_update( FILTER *fp, int status ){
 	
 	if(
 		g_Vsd && (
-			status >= FILTER_UPDATE_STATUS_TRACK + TRACK_VSt  &&
-			status <= FILTER_UPDATE_STATUS_TRACK + TRACK_GSt2 ||
+			status >= FILTER_UPDATE_STATUS_TRACK + TRACK_VSt &&
+			status <= FILTER_UPDATE_STATUS_TRACK + TRACK_GSt ||
 			status == FILTER_UPDATE_STATUS_TRACK + TRACK_SLineWidth
 		)
 	) g_Vsd->m_bCalcLapTimeReq = TRUE;
@@ -529,10 +525,8 @@ BOOL func_update( FILTER *fp, int status ){
 			status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS ) &&
 			fp->check[ CHECK_LOGPOS ]
 		){
-			fp->track[ TRACK_LSt  ] = g_Vsd->m_iLogStart / 100;
-			fp->track[ TRACK_LSt2 ] = g_Vsd->m_iLogStart % 100;
-			fp->track[ TRACK_LEd  ] = g_Vsd->m_iLogStop  / 100;
-			fp->track[ TRACK_LEd2 ] = g_Vsd->m_iLogStop  % 100;
+			fp->track[ TRACK_LSt ] = g_Vsd->m_iLogStart;
+			fp->track[ TRACK_LEd ] = g_Vsd->m_iLogStop;
 			
 			// 設定再描画
 			fp->exfunc->filter_window_update( fp );

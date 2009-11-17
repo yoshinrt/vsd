@@ -109,6 +109,23 @@ typedef struct {
 } PIXEL_YC;
 #endif
 
+class CVsdFont {
+  public:
+	CVsdFont( const UCHAR *pFontData );
+	
+	int GetW( void ){ return m_iFontW; }
+	int GetH( void ){ return m_iFontH; }
+	
+	int	m_iFontW, m_iFontH, m_iBMP_H, m_iBMP_BytesPerLine;
+	
+	const UCHAR *m_pFontData;
+	
+	// フォント
+	UCHAR GetPix( int x, int y ){
+		return m_pFontData[ ( m_iBMP_H - y - 1 ) * m_iBMP_BytesPerLine + ( x >> 3 ) ] & ( 1 << ( 7 - ( x & 0x7 )));
+	}
+};
+
 class CVsdFilter {
 	
   public:
@@ -136,15 +153,6 @@ class CVsdFilter {
 	void PolygonClear( void );
 	void PolygonDraw( const PIXEL_YC &yc, UINT uFlag );
 	
-	// フォント
-	UCHAR GetBMPPix( int x, int y ){
-		return m_pFontData[ ( m_iBMP_H - y - 1 ) * m_iBMP_BytesPerLine + ( x >> 3 ) ] & ( 1 << ( 7 - ( x & 0x7 )));
-	}
-	
-	int GetFontW( void ){ return m_iFontW; }
-	int GetFontH( void ){ return m_iFontH; }
-	void InitFont( void );
-	
 	BOOL DrawVSD( void );
 	
 	enum {
@@ -154,26 +162,22 @@ class CVsdFilter {
 	};
 	
 	int m_iPosX, m_iPosY;
-	int	m_iFontW, m_iFontH, m_iBMP_H, m_iBMP_BytesPerLine;
-	
-	int	m_iPreW;
 	
 	int	m_iLapIdx;
 	int m_iBestLogNumRunning;
 	
 	PolygonData_t	*m_Polygon;
 	
+	// フォント
+	CVsdFont *m_pFont18p;
+	CVsdFont *m_pFont9p;
+	CVsdFont *m_pCurFont;
+	
 	// 仮想関数
 	virtual int	GetWidth( void )	= 0;
 	virtual int	GetHeight( void )	= 0;
 	virtual int	GetFrameMax( void )	= 0;
 	virtual int	GetFrameCnt( void )	= 0;
-	
-  private:
-	static const UCHAR m_Font9p[];
-	static const UCHAR m_Font18p[];
-	
-	const UCHAR *m_pFontData;
 	
 	/*** ログオペレーション *************************************************/
 	
