@@ -78,7 +78,7 @@
 #define MAX_MAP_SIZE	( GetWidth() * m_piParamT[ TRACK_MapSize ] / 1000.0 )
 
 // VSD log を優先，ただしチェックボックスでオーバーライドできる
-#define SelectLogVsd ( Log = ( GPSPriority || !m_VsdLog ) ? m_GPSLog : m_VsdLog )
+#define SelectLogVsd ( Log = ( GPSPriority && m_GPSLog || !m_VsdLog ) ? m_GPSLog : m_VsdLog )
 
 // GPS log を優先
 #define SelectLogGPS ( Log = m_GPSLog ? m_GPSLog : m_VsdLog )
@@ -1199,8 +1199,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	/*** Lap タイム描画 ***/
 	
-	SelectLogVsd;	// VSD ログ優先で選択
-	
 	// ラップタイムの再計算
 	if( m_iLapMode != LAPMODE_MAGNET && DispLap && m_bCalcLapTimeReq ){
 		m_bCalcLapTimeReq	= FALSE;
@@ -1213,6 +1211,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 			CalcLapTime();
 		}
 	}
+	
+	Log = m_iLapMode == LAPMODE_MAGNET || m_iLapMode == LAPMODE_HAND_MAGNET ? m_VsdLog : m_GPSLog;
 	
 	// ラップインデックスを求める
 	if( m_iLapNum ){
