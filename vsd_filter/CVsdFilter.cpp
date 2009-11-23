@@ -1350,26 +1350,27 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	#ifndef AVS_PLUGIN
 		if( DispFrameInfo ){
-			m_pCurFont = m_pFont9p;
+			//m_pCurFont = m_pFont9p;
+			m_pCurFont = m_pFont18p;
 			
-			DrawString( "     start     time    end     time    range current total", COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 3 );
+			DrawString( "     start     time    end     time    range cur.pos", COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 3 );
 			
 			sprintf(
-				szBuf, "Vid%7d%3d:%05.2f%7d%3d:%05.2f%3d:%05.2f%7d%7d",
+				szBuf, "Vid%7d%3d:%05.2f%7d%3d:%05.2f%3d:%05.2f%7d",
 				VideoSt, Float2Time( VideoSt / m_dVideoFPS ),
 				VideoEd, Float2Time( VideoEd / m_dVideoFPS ),
 				Float2Time(( VideoEd - VideoSt ) / m_dVideoFPS ),
-				GetFrameCnt(), GetFrameMax() - 1
+				GetFrameCnt()
 			);
 			DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );
 			
 			if( m_VsdLog ){
 				sprintf(
-					szBuf, "Log%7d%3d:%05.2f%7d%3d:%05.2f%3d:%05.2f%7d%7d",
+					szBuf, "Log%7d%3d:%05.2f%7d%3d:%05.2f%3d:%05.2f%7d",
 					LogSt, Float2Time( LogSt / m_VsdLog->m_dFreq ),
 					LogEd, Float2Time( LogEd / m_VsdLog->m_dFreq ),
 					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
-					m_VsdLog->m_iLogNum, m_VsdLog->m_iCnt - 1
+					m_VsdLog->m_iLogNum
 				);
 				DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 				DrawSpeedGraph( m_VsdLog, yc_red );
@@ -1377,11 +1378,11 @@ BOOL CVsdFilter::DrawVSD( void ){
 			
 			if( m_GPSLog ){
 				sprintf(
-					szBuf, "GPS%7d%3d:%05.2f%7d%3d:%05.2f%3d:%05.2f%7d%7d",
+					szBuf, "GPS%7d%3d:%05.2f%7d%3d:%05.2f%3d:%05.2f%7d",
 					GPSSt, Float2Time( GPSSt / m_GPSLog->m_dFreq ),
 					GPSEd, Float2Time( GPSEd / m_GPSLog->m_dFreq ),
 					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),
-					m_GPSLog->m_iLogNum, m_GPSLog->m_iCnt - 1
+					m_GPSLog->m_iLogNum
 				);
 				DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 				DrawSpeedGraph( m_GPSLog, yc_cyan );
