@@ -68,6 +68,7 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	int	m_iWidth, m_iHeight, m_iFrameCnt, m_iFrameMax;
 	int m_iBytesPerLine;
 	int *m_piMark;
+	int m_iMarkCnt;
 	
 	BYTE	*m_pPlane;
 	const char *m_szMark;
@@ -92,6 +93,7 @@ CVsdFilterAvs::CVsdFilterAvs(
 	m_piParamS	= new int[ SHADOW_N ];
 	m_piMark	= new int[ MAX_LAP ];
 	m_dVideoFPS = ( double )vi.fps_numerator / vi.fps_denominator;
+	m_iMarkCnt	= 0;
 	
 	// パラメータ初期値
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	m_piParamT[ id ] = init;
@@ -138,6 +140,7 @@ CVsdFilterAvs::~CVsdFilterAvs(){
 	delete [] m_piParamT;
 	delete [] m_piParamC;
 	delete [] m_piParamS;
+	delete [] m_piMark;
 }
 
 /*** PutPixel ***************************************************************/
@@ -176,9 +179,8 @@ void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
 /*** フレームをマーク *******************************************************/
 
 void CVsdFilterAvs::SetFrameMark( int iFrame ){
-	static int iCnt = 0;
-	m_piMark[ iCnt++ ] = iFrame;
-	m_piMark[ iCnt   ] = -1;
+	m_piMark[ m_iMarkCnt++ ] = iFrame;
+	m_piMark[ m_iMarkCnt   ] = -1;
 };
 
 int CVsdFilterAvs::GetFrameMark( int iFrame ){
