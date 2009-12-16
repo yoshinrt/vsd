@@ -1154,7 +1154,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	const int	iMeterR =
 		m_piParamS[ SHADOW_METER_R  ] >= 0 ? m_piParamS[ SHADOW_METER_R  ] :
-		50 * GetWidth() / 320;
+		50 * GetHeight() / 240;
 	
 	int	iMeterCx;
 	if( m_piParamS[ SHADOW_METER_CX ] >= 0 ){
@@ -1350,8 +1350,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	#ifndef AVS_PLUGIN
 		if( DispFrameInfo ){
-			//m_pCurFont = m_pFont9p;
-			m_pCurFont = m_pFont18p;
 			
 			DrawString( "     start     time    end     time    range cur.pos", COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 3 );
 			
