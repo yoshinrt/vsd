@@ -65,8 +65,8 @@ foreach ( @Data ){
 		$End   = shift( @SplitTbl ) + $TimeTh;
 		
 		printf( "%s - %s\n",
-			GetDate( $Start ),
-			GetDate( $End )
+			GetDate( $Start + 9 * 3600 ),
+			GetDate( $End   + 9 * 3600 )
 		);
 		
 		# ファイル名を作る
