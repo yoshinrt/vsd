@@ -109,23 +109,6 @@ typedef struct {
 } PIXEL_YC;
 #endif
 
-class CVsdFont {
-  public:
-	CVsdFont( const UCHAR *pFontData );
-	
-	int GetW( void ){ return m_iFontW; }
-	int GetH( void ){ return m_iFontH; }
-	
-	int	m_iFontW, m_iFontH, m_iBMP_H, m_iBMP_BytesPerLine;
-	
-	const UCHAR *m_pFontData;
-	
-	// フォント
-	UCHAR GetPix( int x, int y ){
-		return m_pFontData[ ( m_iBMP_H - y - 1 ) * m_iBMP_BytesPerLine + ( x >> 3 ) ] & ( 1 << ( 7 - ( x & 0x7 )));
-	}
-};
-
 class CVsdFilter {
 	
   public:
@@ -169,9 +152,9 @@ class CVsdFilter {
 	PolygonData_t	*m_Polygon;
 	
 	// フォント
-	CVsdFont *m_pFont18p;
-	CVsdFont *m_pFont9p;
-	CVsdFont *m_pCurFont;
+	CVsdFont	*m_pFont;
+	int			m_iFontSize;
+	char		m_szFontName[ 256 ];
 	
 	// 仮想関数
 	virtual int	GetWidth( void )	= 0;

@@ -25,6 +25,7 @@
 	#include "filter.h"
 #endif
 #include "CVsdLog.h"
+#include "CVsdFont.h"
 #include "CVsdFilter.h"
 
 /*** macros *****************************************************************/
@@ -93,14 +94,6 @@
 
 /*** static member **********************************************************/
 
-const UCHAR pcFont9p[] = {
-	#include "font_9p.h"
-};
-
-const UCHAR pcFont18p[] = {
-	#include "font_18p.h"
-};
-
 /*** tarckbar / checkbox conf_name 名 ***/
 
 const char *CVsdFilter::m_szTrackbarName[] = {
@@ -147,8 +140,14 @@ CVsdFilter::CVsdFilter (){
 	// DrawPolygon 用バッファ
 	m_Polygon			= new PolygonData_t[ MAX_POLY_HEIGHT ];
 	
-	m_pFont18p			= new CVsdFont( pcFont18p );
-	m_pFont9p			= new CVsdFont( pcFont9p );
+	m_pFont				= NULL;
+	m_iFontSize			= 0;
+#ifdef GPS_ONLY
+	strcpy( m_szFontName, "ＭＳ　ゴシック" );
+#else
+	//strcpy( m_szFontName, "SimHei" );
+	strcpy( m_szFontName, "Impact" );
+#endif
 }
 
 /*** デストラクタ ***********************************************************/
@@ -160,24 +159,7 @@ CVsdFilter::~CVsdFilter (){
 	delete [] m_szLogFile;
 	delete [] m_szGPSLogFile;
 	delete [] m_Polygon;
-	delete m_pFont18p;
-	delete m_pFont9p;
-}
-
-/*** フォントデータ初期化 ***************************************************/
-
-CVsdFont::CVsdFont( const UCHAR *pFontData ) : m_pFontData( pFontData ){
-	
-	m_iBMP_H = *( int *)( pFontData + 0x16 );
-	m_iFontW = *( int *)( pFontData + 0x12 ) / 16;
-	m_iFontH = m_iBMP_H / 7;
-	
-	m_pFontData = pFontData +
-		0x36 +	// パレットデータ先頭 addr
-		( 1 << *( USHORT *)( pFontData + 0x1A )) *	// color depth
-		4; // 1色あたりのバイト数
-	
-	m_iBMP_BytesPerLine = *( int *)( pFontData + 0x12 ) / 8;
+	delete m_pFont;
 }
 
 /*** DrawLine ***************************************************************/
@@ -327,11 +309,8 @@ void CVsdFilter::DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, UINT uFlag
 	
 	int	i, j;
 	
-	if( c -= ' ' ) for( j = 0; j < m_pCurFont->GetH(); ++j ) for( i = 0; i < m_pCurFont->GetW(); ++i ){
-		if( m_pCurFont->GetPix(
-			( c % 16 ) * m_pCurFont->GetW() + i,
-			( c / 16 ) * m_pCurFont->GetH() + j
-		) == 0 ) PutPixel( x + i, y + j, yc, uFlag );
+	if( c != ' ' ) for( j = 0; j < m_pFont->GetH(); ++j ) for( i = 0; i < m_pFont->GetW(); ++i ){
+		if( m_pFont->GetPix( c, i, j ) == 0 ) PutPixel( x + i, y + j, yc, uFlag );
 	}
 }
 
@@ -339,15 +318,10 @@ void CVsdFilter::DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, const PIXE
 	
 	int	i, j;
 	
-	UCHAR cc = c - ' ';
+	if( c == ' ' ) return;
 	
-	if( !cc ) return;
-	
-	for( j = 0; j < m_pCurFont->GetH(); ++j ) for( i = 0; i < m_pCurFont->GetW(); ++i ){
-		if( m_pCurFont->GetPix(
-			( cc % 16 ) * m_pCurFont->GetW() + i,
-			( cc / 16 ) * m_pCurFont->GetH() + j
-		) == 0 ){
+	for( j = 0; j < m_pFont->GetH(); ++j ) for( i = 0; i < m_pFont->GetW(); ++i ){
+		if( m_pFont->GetPix( c, i, j ) == 0 ){
 			PutPixel( x + i - 1, y + j,		ycEdge, uFlag );
 			PutPixel( x + i + 1, y + j,		ycEdge, uFlag );
 			PutPixel( x + i,	 y + j - 1, ycEdge, uFlag );
@@ -366,10 +340,10 @@ void CVsdFilter::DrawString( char *szMsg, const PIXEL_YC &yc, UINT uFlag, int x,
 	if( y != POS_DEFAULT ) m_iPosY = y;
 	
 	for( int i = 0; szMsg[ i ]; ++i ){
-		DrawFont( m_iPosX + i * m_pCurFont->GetW(), m_iPosY, szMsg[ i ], yc, uFlag );
+		DrawFont( m_iPosX + i * m_pFont->GetW(), m_iPosY, szMsg[ i ], yc, uFlag );
 	}
 	
-	m_iPosY += m_pCurFont->GetH();
+	m_iPosY += m_pFont->GetH();
 }
 
 void CVsdFilter::DrawString( char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag, int x, int y ){
@@ -378,10 +352,10 @@ void CVsdFilter::DrawString( char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &yc
 	if( y != POS_DEFAULT ) m_iPosY = y;
 	
 	for( int i = 0; szMsg[ i ]; ++i ){
-		DrawFont( m_iPosX + i * m_pCurFont->GetW(), m_iPosY, szMsg[ i ], yc, ycEdge, uFlag );
+		DrawFont( m_iPosX + i * m_pFont->GetW(), m_iPosY, szMsg[ i ], yc, ycEdge, uFlag );
 	}
 	
-	m_iPosY += m_pCurFont->GetH();
+	m_iPosY += m_pFont->GetH();
 }
 
 /*** ポリゴン描画 ***********************************************************/
@@ -441,6 +415,16 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 			if( char *p = IsConfigParam( "mark", szBuf, iVal )){
 				// ラップタイムマーク
 				ParseMarkStr( p + 1 );
+			}else if( char *p = IsConfigParam( "font", szBuf, iVal )){
+				// フォント名
+				if( p = strchr( p, '"' )){
+					strcpy( m_szFontName, ++p );
+					if( p = strchr( m_szFontName, '"' )){
+						*p = '\0';
+					}
+					delete m_pFont;
+					m_pFont = NULL;
+				}
 			}else{
 				// Mark 以外のパラメータ
 				for( i = 0; i < TRACK_N; ++i ){
@@ -1183,7 +1167,12 @@ BOOL CVsdFilter::DrawVSD( void ){
 	const int	iMeterSMaxVal	= m_piParamT[ TRACK_SPEED ];
 	
 	// フォントサイズ初期化
-	m_pCurFont = GetWidth() >= HIREZO_TH ? m_pFont18p : m_pFont9p;
+	int iFontSize = iMeterR * 24 / 100;
+	if( m_pFont == NULL || iFontSize != m_iFontSize ){
+		m_iFontSize = iFontSize;
+		if( m_pFont ) delete m_pFont;
+		m_pFont = new CVsdFont( m_szFontName, m_iFontSize );
+	}
 	
 	CVsdLog *Log;
 	
@@ -1244,11 +1233,11 @@ BOOL CVsdFilter::DrawVSD( void ){
 			}
 			
 			sprintf( szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
-			DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - m_pCurFont->GetW() * 13, 1 );
+			DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - m_pFont->GetW() * 13, 1 );
 			bInLap = TRUE;
 		}else{
 			// まだ開始していない
-			DrawString( "Time -'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - m_pCurFont->GetW() * 13, 1 );
+			DrawString( "Time -'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - m_pFont->GetW() * 13, 1 );
 		}
 		
 		/*** ベストとの車間距離表示 - ***/
@@ -1306,11 +1295,11 @@ BOOL CVsdFilter::DrawVSD( void ){
 				);
 				DrawString( szBuf, bSign ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
 			}else{
-				m_iPosY += m_pCurFont->GetH();
+				m_iPosY += m_pFont->GetH();
 			}
 		}
 		
-		m_iPosY += m_pCurFont->GetH() / 4;
+		m_iPosY += m_pFont->GetH() / 4;
 		
 		// Best 表示
 		sprintf(
@@ -1391,8 +1380,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 				GetWidth() / 2, GetHeight() - 1,
 				1, yc_cyan, 0
 			);
-			
-			m_pCurFont = GetWidth() >= HIREZO_TH ? m_pFont18p : m_pFont9p;
 		}
 	#endif // !AVS_PLUGIN
 	
@@ -1458,15 +1445,15 @@ BOOL CVsdFilter::DrawVSD( void ){
 					DrawString(
 						szBuf,
 						COLOR_STR, 0,
-						( int )( cos( iDeg * ToRAD ) * iMeterR * .8 * AspectRatio ) + iMeterCx - m_pCurFont->GetW() / ( i >= 10000 ? 1 : 2 ),
-						( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - m_pCurFont->GetH() / 2
+						( int )( cos( iDeg * ToRAD ) * iMeterR * .8 * AspectRatio ) + iMeterCx - m_pFont->GetW() / ( i >= 10000 ? 1 : 2 ),
+						( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - m_pFont->GetH() / 2
 					);
 				}
 			}
 		}
 	}else{
 		// GPS ログ優先時はスピードメーターパネル
-		int	iStep = (( iMeterSMaxVal / 20 ) + 4 ) / 5 * 5;
+		int	iStep = (( iMeterSMaxVal / 18 ) + 4 ) / 5 * 5;
 		
 		for( i = 0; i <= iMeterSMaxVal; i += iStep ){
 			int iDeg = iMeterDegRange * i / iMeterSMaxVal + iMeterMinDeg;
@@ -1488,8 +1475,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 					DrawString(
 						szBuf,
 						COLOR_STR, 0,
-						( int )( cos( iDeg * ToRAD ) * iMeterR * .75 * AspectRatio ) + iMeterCx - m_pCurFont->GetW() * strlen( szBuf ) / 2,
-						( int )( sin( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCy - m_pCurFont->GetH() / 2
+						( int )( cos( iDeg * ToRAD ) * iMeterR * .75 * AspectRatio ) + iMeterCx - m_pFont->GetW() * strlen( szBuf ) / 2,
+						( int )( sin( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCy - m_pFont->GetH() / 2
 					);
 				}
 			}
@@ -1646,11 +1633,11 @@ BOOL CVsdFilter::DrawVSD( void ){
 			else								uGear = 5;
 		}
 		
-		sprintf( szBuf, "%d\x7F", uGear );
+		sprintf( szBuf, "%d", uGear );
 		DrawString(
 			szBuf,
 			COLOR_STR, 0,
-			iMeterCx - 1 * m_pCurFont->GetW(), iMeterCy - iMeterR / 2
+			iMeterCx - m_pFont->GetW() / 2, iMeterCy - iMeterR / 2
 		);
 	}
 	
@@ -1658,11 +1645,11 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	if( Log->IsDataExist()){
 		// スピード表示
-		sprintf( szBuf, "%3d\x80\x81", ( int )Log->Speed() );
+		sprintf( szBuf, "%3d", ( int )Log->Speed() );
 		DrawString(
 			szBuf,
 			COLOR_STR, 0,
-			iMeterCx - 3 * m_pCurFont->GetW(), iMeterCy + iMeterR / 2
+			iMeterCx - 3 * m_pFont->GetW() / 2, iMeterCy + iMeterR / 2
 		);
 		
 		// G 数値
@@ -1670,11 +1657,14 @@ BOOL CVsdFilter::DrawVSD( void ){
 		DrawString(
 			szBuf,
 			COLOR_STR, 0,
-			iMeterCx - 2 * m_pCurFont->GetW(), iMeterCy + iMeterR / 2 - m_pCurFont->GetH()
+			iMeterCx - 3 * m_pFont->GetW() / 2, iMeterCy + iMeterR / 2 - m_pFont->GetH()
 		);
+		
+		int iDotSize = m_iFontSize * 2 / 20 - 1;
+		
 		DrawRect(
-			m_iPosX + m_pCurFont->GetW() - 1, m_iPosY - 4,
-			m_iPosX + m_pCurFont->GetW()    , m_iPosY - 3,
+			m_iPosX + m_pFont->GetW(),            m_iPosY - ( int )( m_pFont->GetH() * 0.15 ),
+			m_iPosX + m_pFont->GetW() + iDotSize, m_iPosY - ( int )( m_pFont->GetH() * 0.15 ) + iDotSize,
 			COLOR_STR, 0
 		);
 	}

@@ -13,6 +13,7 @@
 #include "dds.h"
 #include "dds_lib/dds_lib.h"
 #include "CVsdLog.h"
+#include "CVsdFont.h"
 #include "CVsdFilter.h"
 
 #define PROG_NAME	"VSDFilter"
@@ -33,6 +34,7 @@ enum {
 	#define DEF_SHADOW( id, init, conf_name )					ARGID_ ## id,
 	#include "def_shadow.h"
 	ARGID_MARK,
+	ARGID_FONT,
 	ARGID_NUM
 };
 
@@ -126,6 +128,9 @@ CVsdFilterAvs::CVsdFilterAvs(
 	
 	// mark= 引数処理
 	if( p = args[ ARGID_MARK ].AsString( NULL )) ParseMarkStr( p );
+	
+	// FONT 指定
+	if( p = args[ ARGID_FONT ].AsString( NULL )) strcpy( m_szFontName, p );
 	
 	// ログリード
 	if( p = args[ ARGID_LOG_FILE ].AsString( NULL )) if( !ReadLog( p ))
@@ -230,7 +235,8 @@ extern "C" __declspec( dllexport ) const char* __stdcall AvisynthPluginInit2( IS
 		#include "def_checkbox.h"
 		#define DEF_SHADOW( id, init, conf_name )					"[" conf_name "]i"
 		#include "def_shadow.h"
-		"[mark]s",
+		"[mark]s"
+		"[font]s",
 		Create_VSDFilter, 0
 	);
 	

@@ -219,6 +219,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CVsdFont.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\CVsdLog.cpp"
 				>
 			</File>
@@ -240,6 +244,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CVsdFont.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CVsdLog.h"
 				>
 			</File>
@@ -257,14 +265,6 @@
 			</File>
 			<File
 				RelativePath=".\filter.h"
-				>
-			</File>
-			<File
-				RelativePath=".\font_18p.h"
-				>
-			</File>
-			<File
-				RelativePath=".\font_9p.h"
 				>
 			</File>
 			<File
