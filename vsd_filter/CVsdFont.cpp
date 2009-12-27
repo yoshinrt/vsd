@@ -70,7 +70,7 @@ CVsdFont::CVsdFont( const char *szFontName, int iFontHeight ){
 	
 	// フォントサイズ情報初期化
 	SIZE size;
-	GetTextExtentPoint32( m_hdcBMP, "B", 1, &size );
+	GetTextExtentPoint32( m_hdcBMP, "B", 1, &size );	// W が一番幅が広い
 	
 	m_iFontH = size.cy;
 	m_iFontW = size.cx;

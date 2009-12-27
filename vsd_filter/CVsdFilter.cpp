@@ -143,7 +143,7 @@ CVsdFilter::CVsdFilter (){
 	m_pFont				= NULL;
 	m_iFontSize			= 0;
 #ifdef GPS_ONLY
-	strcpy( m_szFontName, "ÇlÇrÅ@ÉSÉVÉbÉN" );
+	strcpy( m_szFontName, "MS Gothic" );
 #else
 	//strcpy( m_szFontName, "SimHei" );
 	strcpy( m_szFontName, "Impact" );
