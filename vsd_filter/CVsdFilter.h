@@ -49,6 +49,12 @@
 
 #define BESTLAP_NONE	599999
 
+#ifdef GPS_ONLY
+	#define DEFAULT_FONT	"ÇlÇr ÉSÉVÉbÉN"
+#else
+	#define DEFAULT_FONT	"Impact"
+#endif
+
 /*** track / check ID *******************************************************/
 
 enum {
@@ -166,6 +172,7 @@ class CVsdFilter {
 	
   public:
 	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
+	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *szDst );
 	BOOL ConfigLoad( const char *szFileName );
 	BOOL ParseMarkStr( const char *szMark );
 	BOOL GPSLogLoad( const char *szFileName );

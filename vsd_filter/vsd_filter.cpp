@@ -24,15 +24,57 @@
 
 #ifdef GPS_ONLY
 	#define CONFIG_EXT		"cfg"
-	#define	FILE_EXT		"log/config file\0*.nme*; *.dp3; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 #else
 	#define CONFIG_EXT		"avs"
-	#define	FILE_EXT		"log/config file\0*.log; *.nme*; *.gz; *." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 #endif
 
+#define	FILE_LOG_EXT	"log file\0*.log; *.gz\0AllFile (*.*)\0*.*\0"
+#define	FILE_GPS_EXT	"GPS file\0*.nme*; *.gz\0AllFile (*.*)\0*.*\0"
 #define	FILE_CFG_EXT	"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 
 /*** new type ***************************************************************/
+
+/*** const ******************************************************************/
+
+enum {
+	ID_BUTT_SET_VSt = 0xFF00,
+	ID_BUTT_SET_VEd,
+#ifndef GPS_ONLY
+	ID_BUTT_SET_LSt,
+	ID_BUTT_SET_LEd,
+#endif
+	ID_BUTT_SET_GSt,
+	ID_BUTT_SET_GEd,
+#ifndef GPS_ONLY
+	ID_EDIT_LOAD_LOG,
+	ID_BUTT_LOAD_LOG,
+#endif
+	ID_EDIT_LOAD_GPS,
+	ID_BUTT_LOAD_GPS,
+	ID_EDIT_SEL_FONT,
+	ID_BUTT_SEL_FONT,
+	ID_BUTT_LOAD_CFG,
+	ID_BUTT_SAVE_CFG,
+};
+
+#define POS_TH_SLIDER			220
+#define POS_TH_EDIT				299
+#define POS_ADD_SLIDER			300
+#define POS_ADD_EDIT			16
+#define POS_SET_BUTT_SIZE		30
+
+#define POS_FILE_CAPTION_SIZE	55
+#define POS_FILE_NAME_SIZE		350
+#define POS_FILE_BUTT_SIZE		40
+#define POS_FILE_CAPTION_POS	( rectClient.right - ( POS_FILE_NAME_SIZE + POS_FILE_BUTT_SIZE + POS_FILE_CAPTION_SIZE ))
+#define POS_FILE_HEIGHT			18
+#define POS_FILE_HEIGHT_MARGIN	2
+
+#ifdef GPS_ONLY
+	#define POS_FILE_NUM	3
+#else
+	#define POS_FILE_NUM	4
+#endif
 
 /*** gloval var *************************************************************/
 
@@ -83,7 +125,7 @@ int		shadow_default[] = {
 };
 
 FILTER_DLL filter = {
-	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_IMPORT | FILTER_FLAG_EXPORT | FILTER_FLAG_MAIN_MESSAGE,
+	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_MAIN_MESSAGE,
 								//	フィルタのフラグ
 								//	FILTER_FLAG_ALWAYS_ACTIVE		: フィルタを常にアクティブにします
 								//	FILTER_FLAG_CONFIG_POPUP		: 設定をポップアップメニューにします
@@ -169,6 +211,11 @@ class CVsdFilterAvu : public CVsdFilter {
 	
 	int GetIndex( int x, int y ){ return fpip->max_w * y + x; }
 	BOOL ConfigSave( const char *szFileName );
+	
+#ifndef GPS_ONLY
+	BOOL ReadLog( const char *szFileName, HWND hwnd );
+#endif
+	BOOL GPSLogLoad( const char *szFileName, HWND hwnd );
 	
 	// 仮想関数
 	virtual void PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag );
@@ -286,15 +333,14 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	);
 	
 	char cSep = '(';
-	if( m_szLogFile ){
-		fprintf( fp, "%c \\\n\tlog_file=\"%s\"", cSep, m_szLogFile );
-		cSep = ',';
-	}
 	
-	if( m_szGPSLogFile ){
-		fprintf( fp, "%c \\\n\tgps_file=\"%s\"", cSep, m_szGPSLogFile );
-		cSep = ',';
-	}
+	// str param に初期値設定
+	#define DEF_STR_PARAM( id, var, init, conf_name ) \
+		if( strcmp( var, init ) != 0 ){ \
+			fprintf( fp, "%c \\\n\t" conf_name "=\"%s\"", cSep, var ); \
+			cSep = ','; \
+		}
+	#include "def_str_param.h"
 	
 	for( i = 0; i < TRACK_N; ++i ){
 		if( m_szTrackbarName[ i ] == NULL ) continue;
@@ -338,6 +384,58 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	return TRUE;
 }
 
+/*** ログリード *************************************************************/
+
+#ifndef GPS_ONLY
+BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
+	
+	if( !CVsdFilter::ReadLog( szFileName )){
+		sprintf( szMsg, "ファイルがロードできません\n%s", szFileName );
+		MessageBox( NULL,
+			szMsg,
+			"VSD",
+			MB_OK | MB_ICONWARNING
+		);
+		return FALSE;
+	}
+	
+	strcpy( m_szLogFile, szFileName );
+	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_LOG ), szFileName );
+	
+	// trackbar 設定
+	track_e[ TRACK_LSt ] =
+	track_e[ TRACK_LEd ] = g_Vsd->m_VsdLog->m_iCnt;
+	
+	return TRUE;
+}
+#endif
+
+/*** GPS ログリード ********************************************************/
+
+BOOL CVsdFilterAvu::GPSLogLoad( const char *szFileName, HWND hwnd ){
+	
+	char szMsg[ BUF_SIZE ];
+	
+	if( !CVsdFilter::GPSLogLoad( szFileName )){
+		sprintf( szMsg, "ファイルがロードできません\n%s", szFileName );
+		MessageBox( NULL,
+			szMsg,
+			"VSD",
+			MB_OK | MB_ICONWARNING
+		);
+		return FALSE;
+	}
+	
+	strcpy( m_szGPSLogFile, szFileName );
+	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_GPS ), szFileName );
+	
+	// trackbar 設定
+	track_e[ TRACK_GSt ] =
+	track_e[ TRACK_GEd ] = g_Vsd->m_GPSLog->m_iCnt;
+	
+	return TRUE;
+}
+
 /*** func_proc **************************************************************/
 
 BOOL func_proc( FILTER *fp, FILTER_PROC_INFO *fpip ){
@@ -371,6 +469,144 @@ BOOL func_proc( FILTER *fp, FILTER_PROC_INFO *fpip ){
 	return g_Vsd->DrawVSD();
 }
 
+/*** ダイアログサイズ拡張とパーツ追加 ***************************************/
+
+void CreateSubControl(
+	HWND hwnd, int &iID, HFONT hfont, int iX, int &iY,
+	char *szCap, char *szEdit, char *szButt
+) {
+	
+	HWND hwndChild;
+	
+	hwndChild = CreateWindow(
+		"STATIC", szCap, WS_CHILD | WS_VISIBLE,
+		iX, iY,
+		POS_FILE_CAPTION_SIZE, POS_FILE_HEIGHT,
+		hwnd, 0, 0, NULL
+	);
+	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
+	
+	hwndChild = CreateWindowEx(
+		WS_EX_CLIENTEDGE,
+		"EDIT", szEdit, WS_CHILD | WS_VISIBLE | ES_READONLY,
+		iX + POS_FILE_CAPTION_SIZE, iY,
+		POS_FILE_NAME_SIZE, POS_FILE_HEIGHT,
+		hwnd, ( HMENU )iID, 0, NULL
+	);
+	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
+	
+	hwndChild = CreateWindow(
+		"BUTTON", szButt, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		iX + POS_FILE_CAPTION_SIZE + POS_FILE_NAME_SIZE, iY,
+		POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT,
+		hwnd, ( HMENU )( iID + 1 ), 0, NULL
+	);
+	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
+	
+	iID += 2;
+	iY += POS_FILE_HEIGHT + POS_FILE_HEIGHT_MARGIN;
+}
+
+void ExtendDialog( HWND hwnd ){
+	
+	union {
+		struct {
+			POINT	topleft, bottomright;
+		} points;
+		RECT	rect;
+	} rect;
+	RECT	rectClient;
+	
+	HWND	hwndChild	= NULL;
+	HFONT	hfont		= NULL;
+	
+	// クライアント領域のサイズ get 後にリサイズ
+	GetWindowRect( hwnd, &rectClient );
+	MoveWindow( hwnd,
+		rectClient.left, rectClient.top,
+		rectClient.right  - rectClient.left + POS_ADD_SLIDER + POS_ADD_EDIT + POS_SET_BUTT_SIZE,
+		rectClient.bottom - rectClient.top,
+		TRUE
+	);
+	
+	GetClientRect( hwnd, &rectClient );
+	
+	while( 1 ){
+		/*** 子パーツのサイズ変更 ***/
+		hwndChild = FindWindowEx( hwnd, hwndChild, NULL, NULL );
+		if( !hwndChild ) break;
+		
+		// screen -> client 座標に変換
+		GetWindowRect( hwndChild, &rect.rect );
+		ScreenToClient( hwnd, &rect.points.topleft );
+		ScreenToClient( hwnd, &rect.points.bottomright );
+		
+		// ダイアログ左側を延ばす，EDIT ボックスのサイズを伸ばす
+		if( rect.rect.right >= POS_TH_EDIT   ) rect.rect.right += POS_ADD_EDIT;
+		if( rect.rect.left  >= POS_TH_SLIDER ) rect.rect.left  += POS_ADD_SLIDER;
+		if( rect.rect.right >= POS_TH_SLIDER ) rect.rect.right += POS_ADD_SLIDER;
+		
+		// 実際にリサイズ
+		MoveWindow( hwndChild,
+			rect.rect.left,
+			rect.rect.top,
+			rect.rect.right  - rect.rect.left,
+			rect.rect.bottom - rect.rect.top,
+			TRUE
+		);
+		
+		if( !hfont ) hfont = ( HFONT )SendMessage( hwndChild, WM_GETFONT, 0, 0 );
+	}
+	
+	// 位置取得ボタン
+	int i;
+	for( i = 0; i <= ( ID_BUTT_SET_GEd - ID_BUTT_SET_VSt ); ++i ){
+		hwndChild = CreateWindow(
+			"BUTTON", "set", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+			rectClient.right - POS_SET_BUTT_SIZE, 14 + i * 24,
+			POS_SET_BUTT_SIZE, 16,
+			hwnd, ( HMENU )( ID_BUTT_SET_VSt + i ), 0, NULL
+		);
+		SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
+	}
+	
+	// ログ名・フォント名
+	i += ID_BUTT_SET_VSt;
+	int y = rectClient.bottom - ( POS_FILE_HEIGHT + POS_FILE_HEIGHT_MARGIN ) * POS_FILE_NUM + POS_FILE_HEIGHT_MARGIN;
+	
+#ifndef GPS_ONLY
+	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y,	"VSDログ",	"",				"開く" );
+#endif
+	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y,	"GPSログ",	"",				"開く" );
+	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y,	"フォント",	DEFAULT_FONT,	"選択" );
+	
+	// cfg load/save ボタン
+	hwndChild = CreateWindow(
+		"STATIC", "cfgファイル", WS_CHILD | WS_VISIBLE,
+		rectClient.right - ( POS_FILE_BUTT_SIZE * 2 + POS_FILE_CAPTION_SIZE ), y,
+		POS_FILE_CAPTION_SIZE, POS_FILE_HEIGHT,
+		hwnd, 0, 0, NULL
+	);
+	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
+	
+	hwndChild = CreateWindow(
+		"BUTTON", "開く", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		rectClient.right - ( POS_FILE_BUTT_SIZE * 2 ), y,
+		POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT,
+		hwnd, ( HMENU )( i++ ), 0, NULL
+	);
+	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
+	
+	hwndChild = CreateWindow(
+		"BUTTON", "保存", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		rectClient.right - POS_FILE_BUTT_SIZE, y,
+		POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT,
+		hwnd, ( HMENU )( i++ ), 0, NULL
+	);
+	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
+	
+}
+
 /*** WndProc ****************************************************************/
 
 BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
@@ -381,72 +617,13 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	
 	//	TRUEを返すと全体が再描画される
 	
+	if( message == WM_FILTER_INIT ) ExtendDialog( hwnd );
+	
 	//	編集中でなければ何もしない
 	if( filter->exfunc->is_editing( editp ) != TRUE ) return FALSE;
 	
 	switch( message ) {
-	  case WM_FILTER_IMPORT:
-		if( filter->exfunc->dlg_get_load_name( szBuf, FILE_EXT, NULL )){
-			
-			#ifdef GPS_ONLY
-				// config ロード
-				// .log.gz かもしれないので，拡張子を削除してみる
-				ChangeExt( szBuf2, ( char *)szBuf, NULL );
-				
-				// .avs ロード
-				g_Vsd->ConfigLoad( ChangeExt( szBuf2, ( char *)szBuf2, CONFIG_EXT ));
-				
-				// .nmea ロード
-				if( g_Vsd->GPSLogLoad( szBuf )){
-					// trackbar 設定
-					track_e[ TRACK_GSt ] =
-					track_e[ TRACK_GEd ] = g_Vsd->m_GPSLog->m_iCnt;
-				}
-			#else
-				// config ロード
-				// .log.gz かもしれないので，拡張子を削除してみる
-				ChangeExt( szBuf, ( char *)szBuf, NULL );
-				
-				// .avs ロード
-				g_Vsd->ConfigLoad( ChangeExt( szBuf2, ( char *)szBuf, CONFIG_EXT ));
-				
-				// .nmea ロード
-				if(
-					g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea.gz" )) ||
-					g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "nmea" )) ||
-					g_Vsd->GPSLogLoad( ChangeExt( szBuf2, ( char *)szBuf, "dp3" ))
-				){
-					// trackbar 設定
-					track_e[ TRACK_GSt ] =
-					track_e[ TRACK_GEd ] = g_Vsd->m_GPSLog->m_iCnt;
-				}
-				
-				// .log ロード
-				if(
-					g_Vsd->ReadLog( ChangeExt( szBuf2, ( char *)szBuf, "log.gz" )) ||
-					g_Vsd->ReadLog( ChangeExt( szBuf2, ( char *)szBuf, "log" ))
-				){
-					// trackbar 設定
-					track_e[ TRACK_LSt ] =
-					track_e[ TRACK_LEd ] = g_Vsd->m_VsdLog->m_iCnt;
-				}
-			#endif
-			
-			// 設定再描画
-			filter->exfunc->filter_window_update( filter );
-			
-			#ifndef GPS_ONLY
-				// log pos 更新
-				func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
-			#endif
-		}
-		return TRUE;
-		
-	  Case WM_FILTER_EXPORT:
-		if( filter->exfunc->dlg_get_save_name( szBuf, FILE_CFG_EXT, NULL ))
-			return g_Vsd->ConfigSave( szBuf );
-		
-	  Case WM_FILTER_FILE_OPEN:
+	  case WM_FILTER_FILE_OPEN:
 		
 		g_Vsd = new CVsdFilterAvu;
 		
@@ -488,17 +665,94 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			
 			g_Vsd->m_bCalcLapTimeReq = TRUE;
 			return TRUE;
-			
-		  Case 'S':
+		}
+		
+	  Case WM_COMMAND:
+		if( ID_BUTT_SET_VSt <= wparam && wparam <= ID_BUTT_SET_GEd ){
 			// フレーム数セット
-			iFrame = filter->exfunc->get_frame( editp );
-			
-			filter->track[ TRACK_VSt ]	= filter->track[ TRACK_VEd ];
-			filter->track[ TRACK_VEd ]	= iFrame;
-			
+			switch( wparam ){
+				case ID_BUTT_SET_VSt:	filter->track[ TRACK_VSt ] = filter->exfunc->get_frame( editp );
+				Case ID_BUTT_SET_VEd:	filter->track[ TRACK_VEd ] = filter->exfunc->get_frame( editp );
+			#ifndef GPS_ONLY
+				Case ID_BUTT_SET_LSt:	if( g_Vsd->m_VsdLog ) filter->track[ TRACK_LSt ] = g_Vsd->m_VsdLog->m_iLogNum;
+				Case ID_BUTT_SET_LEd:	if( g_Vsd->m_VsdLog ) filter->track[ TRACK_LEd ] = g_Vsd->m_VsdLog->m_iLogNum;
+			#endif
+				Case ID_BUTT_SET_GSt:	if( g_Vsd->m_GPSLog ) filter->track[ TRACK_GSt ] = g_Vsd->m_GPSLog->m_iLogNum;
+				Case ID_BUTT_SET_GEd:	if( g_Vsd->m_GPSLog ) filter->track[ TRACK_GEd ] = g_Vsd->m_GPSLog->m_iLogNum;
+			}
 			// 設定再描画
 			filter->exfunc->filter_window_update( filter );
+			
+		}else switch( wparam ){
+		  case ID_BUTT_LOAD_CFG:	// .avs ロード
+			if(
+				filter->exfunc->dlg_get_load_name( szBuf, FILE_CFG_EXT, NULL ) &&
+				g_Vsd->ConfigLoad( szBuf )
+			){
+				// ログリード
+			#ifndef GPS_ONLY
+				g_Vsd->ReadLog(
+					GetFullPathWithCDir( szBuf2, g_Vsd->m_szLogFile, szBuf ),
+					hwnd
+				);
+			#endif
+				g_Vsd->GPSLogLoad(
+					GetFullPathWithCDir( szBuf2, g_Vsd->m_szGPSLogFile, szBuf ),
+					hwnd
+				);
+				
+				// 設定再描画
+				filter->exfunc->filter_window_update( filter );
+				
+				#ifndef GPS_ONLY
+					// log pos 自動認識の更新
+					func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
+				#endif
+			}
+			
+		  Case ID_BUTT_SAVE_CFG:
+			if( filter->exfunc->dlg_get_save_name( szBuf, FILE_CFG_EXT, NULL ))
+				return g_Vsd->ConfigSave( szBuf );
+			
+		#ifndef GPS_ONLY // {
+		  Case ID_BUTT_LOAD_LOG:	// .log ロード
+			if(
+				filter->exfunc->dlg_get_load_name( szBuf, FILE_LOG_EXT, NULL ) &&
+				g_Vsd->ReadLog( szBuf, hwnd )
+			){
+				// 設定再描画
+				filter->exfunc->filter_window_update( filter );
+				
+				#ifndef GPS_ONLY
+					// log pos 自動認識の更新
+					func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
+				#endif
+			}
+		#endif // }
+			
+		  Case ID_BUTT_LOAD_GPS:	// GPS ログロード
+			if(
+				filter->exfunc->dlg_get_load_name( szBuf, FILE_GPS_EXT, NULL ) &&
+				g_Vsd->GPSLogLoad( szBuf, hwnd )
+			){
+				// 設定再描画
+				filter->exfunc->filter_window_update( filter );
+			}
+			
+		  Case ID_BUTT_SEL_FONT:	// フォント選択
+			LOGFONT		lf;
+			CHOOSEFONT	cf;
+			cf.lStructSize = sizeof( CHOOSEFONT );
+			cf.hwndOwner = hwnd;
+			cf.lpLogFont = &lf;
+			cf.Flags = CF_SCREENFONTS | CF_NOVERTFONTS;
+			if( ChooseFont( &cf )){
+				strcpy( g_Vsd->m_szFontName, lf.lfFaceName );
+				SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_FONT ), g_Vsd->m_szFontName );
+				g_Vsd->m_iFontSize = 0;
+			}
 		}
+		return TRUE;
 	}
 	
 	return FALSE;

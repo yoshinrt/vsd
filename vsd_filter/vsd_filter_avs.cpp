@@ -22,8 +22,8 @@
 
 enum {
 	ARGID_CLIP,
-	ARGID_LOG_FILE,
-	ARGID_GPS_FILE,
+	#define DEF_STR_PARAM( id, var, init, conf_name )			ARGID_ ## id,
+	#include "def_str_param.h"
 	ARGID_PARAM_FILE,
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	ARGID_ ## id,
 	#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
@@ -34,7 +34,6 @@ enum {
 	#define DEF_SHADOW( id, init, conf_name )					ARGID_ ## id,
 	#include "def_shadow.h"
 	ARGID_MARK,
-	ARGID_FONT,
 	ARGID_NUM
 };
 
@@ -130,14 +129,14 @@ CVsdFilterAvs::CVsdFilterAvs(
 	if( p = args[ ARGID_MARK ].AsString( NULL )) ParseMarkStr( p );
 	
 	// FONT 指定
-	if( p = args[ ARGID_FONT ].AsString( NULL )) strcpy( m_szFontName, p );
+	if( p = args[ ARGID_STRPARAM_FONT ].AsString( NULL )) strcpy( m_szFontName, p );
 	
 	// ログリード
-	if( p = args[ ARGID_LOG_FILE ].AsString( NULL )) if( !ReadLog( p ))
+	if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )) if( !ReadLog( p ))
 		env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
 	
 	// ログリード
-	if( p = args[ ARGID_GPS_FILE ].AsString( NULL )) if( !GPSLogLoad( p ))
+	if( p = args[ ARGID_STRPARAM_GPSFILE ].AsString( NULL )) if( !GPSLogLoad( p ))
 		env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
 }
 
@@ -226,7 +225,10 @@ AVSValue __cdecl Create_VSDFilter( AVSValue args, void* user_data, IScriptEnviro
 extern "C" __declspec( dllexport ) const char* __stdcall AvisynthPluginInit2( IScriptEnvironment* env ){
 	
 	env->AddFunction( "VSDFilter",
-		"c[log_file]s[gps_file]s[param_file]s"
+		"c"
+		#define DEF_STR_PARAM( id, var, init, conf_name )			"[" conf_name "]s"
+		#include "def_str_param.h"
+		"[param_file]s"
 		#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	"[" conf_name "]i"
 		#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
 		#include "def_trackbar.h"
@@ -235,8 +237,7 @@ extern "C" __declspec( dllexport ) const char* __stdcall AvisynthPluginInit2( IS
 		#include "def_checkbox.h"
 		#define DEF_SHADOW( id, init, conf_name )					"[" conf_name "]i"
 		#include "def_shadow.h"
-		"[mark]s"
-		"[font]s",
+		"[mark]s",
 		Create_VSDFilter, 0
 	);
 	

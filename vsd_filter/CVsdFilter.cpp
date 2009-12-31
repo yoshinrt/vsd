@@ -134,20 +134,18 @@ CVsdFilter::CVsdFilter (){
 	
 	m_bCalcLapTimeReq	= FALSE;
 	
-	m_szLogFile			= NULL;
-	m_szGPSLogFile		= NULL;
+	m_szLogFile			= new char[ MAX_PATH + 1 ];
+	m_szGPSLogFile		= new char[ MAX_PATH + 1 ];
 	
 	// DrawPolygon 用バッファ
 	m_Polygon			= new PolygonData_t[ MAX_POLY_HEIGHT ];
 	
 	m_pFont				= NULL;
 	m_iFontSize			= 0;
-#ifdef GPS_ONLY
-	strcpy( m_szFontName, "MS Gothic" );
-#else
-	//strcpy( m_szFontName, "SimHei" );
-	strcpy( m_szFontName, "Impact" );
-#endif
+	
+	// str param に初期値設定
+	#define DEF_STR_PARAM( id, var, init, conf_name ) strcpy( var, init );
+	#include "def_str_param.h"
 }
 
 /*** デストラクタ ***********************************************************/
@@ -392,6 +390,37 @@ char *CVsdFilter::IsConfigParam( const char *szParamName, char *szBuf, int &iVal
 	return NULL;
 }
 
+char *CVsdFilter::IsConfigParamStr( const char *szParamName, char *szBuf, char *szDst ){
+	
+	int		iLen;
+	char	*p;
+	
+	while( isspace( *szBuf )) ++szBuf;
+	
+	if(
+		strncmp( szBuf, szParamName, iLen = strlen( szParamName )) == 0 &&
+		szBuf[ iLen ] == '='
+	){
+		szBuf += iLen + 1;	// " を挿しているはず
+		
+		// 文字列先頭
+		if( p = strchr( szBuf, '"' )){
+			szBuf = p + 1;
+		}
+		
+		strcpy( szDst, szBuf );
+		
+		// 文字列終端
+		if(( p = strchr( szDst, '"' )) || ( p = strchr( szDst, ',' ))){
+			*p = '\0';
+		}
+		
+		return szDst;
+	}
+	
+	return NULL;
+}
+
 BOOL CVsdFilter::ParseMarkStr( const char *szMark ){
 	
 	while( szMark && *szMark ){
@@ -415,17 +444,13 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 			if( char *p = IsConfigParam( "mark", szBuf, iVal )){
 				// ラップタイムマーク
 				ParseMarkStr( p + 1 );
-			}else if( char *p = IsConfigParam( "font", szBuf, iVal )){
-				// フォント名
-				if( p = strchr( p, '"' )){
-					strcpy( m_szFontName, ++p );
-					if( p = strchr( m_szFontName, '"' )){
-						*p = '\0';
-					}
-					delete m_pFont;
-					m_pFont = NULL;
-				}
-			}else{
+			}
+			
+			// str param のリード
+			#define DEF_STR_PARAM( id, var, init, conf_name ) else if( IsConfigParamStr( conf_name, szBuf, var ));
+			#include "def_str_param.h"
+			
+			else{
 				// Mark 以外のパラメータ
 				for( i = 0; i < TRACK_N; ++i ){
 					if(
@@ -457,6 +482,8 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 		  Next: ;
 		}
 		fclose( fp );
+		
+		m_iFontSize = 0;	// フォント再設定
 	}
 	return TRUE;
 }
@@ -484,12 +511,6 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	}
 	
 	if(( fp = gzopen(( char *)szFileName, "rb" )) == NULL ) return FALSE;
-	
-#ifndef AVS_PLUGIN
-	if( m_szGPSLogFile ) delete [] m_szGPSLogFile;
-	m_szGPSLogFile = new char[ strlen( szFileName ) + 1 ];
-	strcpy( m_szGPSLogFile, szFileName );
-#endif
 	
 	GPS_LOG_t	*GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG * GPS_FREQ / LOG_FREQ ) ];
 	
@@ -680,12 +701,6 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	}
 	
 	if(( fp = gzopen(( char *)szFileName, "rb" )) == NULL ) return FALSE;
-	
-#ifndef AVS_PLUGIN
-	if( m_szLogFile ) delete [] m_szLogFile;
-	m_szLogFile = new char[ strlen( szFileName ) + 1 ];
-	strcpy( m_szLogFile, szFileName );
-#endif
 	
 	// GPS ログ用
 	UINT		uGPSCnt = 0;
@@ -1340,12 +1355,12 @@ BOOL CVsdFilter::DrawVSD( void ){
 	#ifndef AVS_PLUGIN
 		if( DispFrameInfo ){
 			
-			DrawString( "     start     time    end     time    range cur.pos", COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 3 );
+			DrawString( "        start       end     range cur.pos", COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 3 );
 			
 			sprintf(
-				szBuf, "Vid%7d%3d:%05.2f%7d%3d:%05.2f%3d:%05.2f%7d",
-				VideoSt, Float2Time( VideoSt / m_dVideoFPS ),
-				VideoEd, Float2Time( VideoEd / m_dVideoFPS ),
+				szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+				Float2Time( VideoSt / m_dVideoFPS ),
+				Float2Time( VideoEd / m_dVideoFPS ),
 				Float2Time(( VideoEd - VideoSt ) / m_dVideoFPS ),
 				GetFrameCnt()
 			);
@@ -1353,9 +1368,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 			
 			if( m_VsdLog ){
 				sprintf(
-					szBuf, "Log%7d%3d:%05.2f%7d%3d:%05.2f%3d:%05.2f%7d",
-					LogSt, Float2Time( LogSt / m_VsdLog->m_dFreq ),
-					LogEd, Float2Time( LogEd / m_VsdLog->m_dFreq ),
+					szBuf, "Log%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+					Float2Time( LogSt / m_VsdLog->m_dFreq ),
+					Float2Time( LogEd / m_VsdLog->m_dFreq ),
 					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
 					m_VsdLog->m_iLogNum
 				);
@@ -1365,9 +1380,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 			
 			if( m_GPSLog ){
 				sprintf(
-					szBuf, "GPS%7d%3d:%05.2f%7d%3d:%05.2f%3d:%05.2f%7d",
-					GPSSt, Float2Time( GPSSt / m_GPSLog->m_dFreq ),
-					GPSEd, Float2Time( GPSEd / m_GPSLog->m_dFreq ),
+					szBuf, "GPS%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+					Float2Time( GPSSt / m_GPSLog->m_dFreq ),
+					Float2Time( GPSEd / m_GPSLog->m_dFreq ),
 					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),
 					m_GPSLog->m_iLogNum
 				);
