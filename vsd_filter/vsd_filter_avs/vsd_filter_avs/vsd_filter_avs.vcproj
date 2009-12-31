@@ -229,6 +229,14 @@
 				>
 			</File>
 			<File
+				RelativePath="C:\DDS\vsd\vsd_filter\def_shadow.h"
+				>
+			</File>
+			<File
+				RelativePath="C:\DDS\vsd\vsd_filter\def_str_param.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\def_trackbar.h"
 				>
 			</File>

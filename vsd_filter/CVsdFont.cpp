@@ -17,7 +17,7 @@
 
 /*** コンストラクタ *********************************************************/
 
-CVsdFont::CVsdFont( const char *szFontName, int iFontHeight ){
+CVsdFont::CVsdFont( LOGFONT &logfont ){
 	
 	BITMAPINFO	biBMP;
 	HDC			hdc;
@@ -49,22 +49,7 @@ CVsdFont::CVsdFont( const char *szFontName, int iFontHeight ){
 	/* DIBSectionのHBITMAPをメモリデバイスコンテキストに選択 */
 	m_hbmpOld = ( HBITMAP )SelectObject( m_hdcBMP, hbmpTemp );
 	
-	hFont = CreateFont(
-		iFontHeight,				// フォント高さ
-		0,							// 文字幅
-		0,							// テキストの角度
-		0,							// ベースラインとｘ軸との角度
-		FW_REGULAR,					// フォントの重さ（太さ）
-		FALSE,						// イタリック体
-		FALSE,						// アンダーライン
-		FALSE,						// 打ち消し線
-		DEFAULT_CHARSET,			// 文字セット
-		OUT_DEFAULT_PRECIS,			// 出力精度
-		CLIP_DEFAULT_PRECIS,		// クリッピング精度
-		PROOF_QUALITY,				// 出力品質
-		FIXED_PITCH | FF_DONTCARE,	// ピッチとファミリー
-		( LPCTSTR )szFontName		// 書体名
-	);
+	hFont = CreateFontIndirect( &logfont );
 	
 	hFontOld = ( HFONT )SelectObject( m_hdcBMP, hFont );
 	

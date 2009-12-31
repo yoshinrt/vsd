@@ -14,7 +14,7 @@
 
 class CVsdFont {
   public:
-	CVsdFont( const char *szFontName, int iFontHeight );
+	CVsdFont( LOGFONT &logfont );
 	~CVsdFont();
 	
 	int GetW( void ){ return m_iFontW; }

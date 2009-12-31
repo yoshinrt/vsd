@@ -29,7 +29,7 @@
 #endif
 
 #define	FILE_LOG_EXT	"log file\0*.log; *.gz\0AllFile (*.*)\0*.*\0"
-#define	FILE_GPS_EXT	"GPS file\0*.nme*; *.gz\0AllFile (*.*)\0*.*\0"
+#define	FILE_GPS_EXT	"GPS file\0*.nme*; *.dp3; *.gz\0AllFile (*.*)\0*.*\0"
 #define	FILE_CFG_EXT	"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 
 /*** new type ***************************************************************/
@@ -118,8 +118,13 @@ int		check_default[] = {
 	#include "def_checkbox.h"
 };
 
-// トラックバーの初期値
+// シャドゥの初期値
 int		shadow_default[] = {
+	#define DEF_SHADOW( id, init, conf_name )	init,
+	#include "def_shadow.h"
+};
+
+int		shadow_param[] = {
 	#define DEF_SHADOW( id, init, conf_name )	init,
 	#include "def_shadow.h"
 };
@@ -343,7 +348,10 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	#include "def_str_param.h"
 	
 	for( i = 0; i < TRACK_N; ++i ){
-		if( m_szTrackbarName[ i ] == NULL ) continue;
+		if(
+			m_szTrackbarName[ i ] == NULL ||
+			i > TRACK_GEd && m_piParamT[ i ] == track_default[ i ]
+		) continue;
 		
 		fprintf(
 			fp, "%c \\\n\t%s=%d", cSep, m_szTrackbarName[ i ], m_piParamT[ i ]
@@ -352,10 +360,23 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	}
 	
 	for( i = 0; i < CHECK_N; ++i ){
-		if( m_szCheckboxName[ i ] == NULL ) continue;
+		if(
+			m_szCheckboxName[ i ] == NULL ||
+			m_piParamC[ i ] == check_default[ i ]
+		) continue;
 		
 		fprintf(
 			fp, ", \\\n\t%s=%d", m_szCheckboxName[ i ], m_piParamC[ i ]
+		);
+	}
+	
+	for( i = 0; i < SHADOW_N; ++i ){
+		if(
+			m_piParamS[ i ] == shadow_default[ i ]
+		) continue;
+		
+		fprintf(
+			fp, ", \\\n\t%s=%d", m_szShadowParamName[ i ], m_piParamS[ i ]
 		);
 	}
 	
@@ -388,6 +409,8 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 
 #ifndef GPS_ONLY
 BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
+	
+	char szMsg[ BUF_SIZE ];
 	
 	if( !CVsdFilter::ReadLog( szFileName )){
 		sprintf( szMsg, "ファイルがロードできません\n%s", szFileName );
@@ -578,7 +601,7 @@ void ExtendDialog( HWND hwnd ){
 	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y,	"VSDログ",	"",				"開く" );
 #endif
 	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y,	"GPSログ",	"",				"開く" );
-	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y,	"フォント",	DEFAULT_FONT,	"選択" );
+	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y,	"フォント",	"(default)",	"選択" );
 	
 	// cfg load/save ボタン
 	hwndChild = CreateWindow(
@@ -629,7 +652,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 		g_Vsd->m_piParamT	= filter->track;
 		g_Vsd->m_piParamC	= filter->check;
-		g_Vsd->m_piParamS	= shadow_default;
+		g_Vsd->m_piParamS	= shadow_param;
 		g_Vsd->filter		= filter;
 		g_Vsd->editp		= editp;
 		
@@ -691,15 +714,19 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			){
 				// ログリード
 			#ifndef GPS_ONLY
-				g_Vsd->ReadLog(
-					GetFullPathWithCDir( szBuf2, g_Vsd->m_szLogFile, szBuf ),
-					hwnd
-				);
+				if( *g_Vsd->m_szLogFile ){
+					g_Vsd->ReadLog(
+						GetFullPathWithCDir( szBuf2, g_Vsd->m_szLogFile, szBuf ),
+						hwnd
+					);
+				}
 			#endif
-				g_Vsd->GPSLogLoad(
-					GetFullPathWithCDir( szBuf2, g_Vsd->m_szGPSLogFile, szBuf ),
-					hwnd
-				);
+				if( *g_Vsd->m_szGPSLogFile ){
+					g_Vsd->GPSLogLoad(
+						GetFullPathWithCDir( szBuf2, g_Vsd->m_szGPSLogFile, szBuf ),
+						hwnd
+					);
+				}
 				
 				// 設定再描画
 				filter->exfunc->filter_window_update( filter );
@@ -740,16 +767,18 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			}
 			
 		  Case ID_BUTT_SEL_FONT:	// フォント選択
-			LOGFONT		lf;
 			CHOOSEFONT	cf;
 			cf.lStructSize = sizeof( CHOOSEFONT );
 			cf.hwndOwner = hwnd;
-			cf.lpLogFont = &lf;
-			cf.Flags = CF_SCREENFONTS | CF_NOVERTFONTS;
+			cf.lpLogFont = &( g_Vsd->m_logfont );
+			cf.Flags = CF_SCREENFONTS | CF_NOVERTFONTS | CF_INITTOLOGFONTSTRUCT;
 			if( ChooseFont( &cf )){
-				strcpy( g_Vsd->m_szFontName, lf.lfFaceName );
-				SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_FONT ), g_Vsd->m_szFontName );
-				g_Vsd->m_iFontSize = 0;
+				// フォント強制更新
+				g_Vsd->m_piParamS[ SHADOW_FONT_SIZE ] = -g_Vsd->m_logfont.lfHeight;
+				delete g_Vsd->m_pFont;
+				g_Vsd->m_pFont = NULL;
+				
+				SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_FONT ), g_Vsd->m_logfont.lfFaceName );
 			}
 		}
 		return TRUE;

@@ -141,7 +141,21 @@ CVsdFilter::CVsdFilter (){
 	m_Polygon			= new PolygonData_t[ MAX_POLY_HEIGHT ];
 	
 	m_pFont				= NULL;
-	m_iFontSize			= 0;
+	
+	m_logfont.lfHeight			= 0;							// 文字セルまたは文字の高さ
+	m_logfont.lfWidth			= 0;							// 平均文字幅
+	m_logfont.lfEscapement		= 0;							// 文字送りの方向とX軸との角度
+	m_logfont.lfOrientation		= 0;							// ベースラインとX軸との角度
+	m_logfont.lfWeight			= FW_REGULAR;					// フォントの太さ
+	m_logfont.lfItalic			= FALSE;						// イタリック体指定
+	m_logfont.lfUnderline		= FALSE;						// 下線付き指定
+	m_logfont.lfStrikeOut		= FALSE;						// 打ち消し線付き指定
+	m_logfont.lfCharSet			= DEFAULT_CHARSET;				// キャラクタセット
+	m_logfont.lfOutPrecision	= OUT_DEFAULT_PRECIS;			// 出力精度
+	m_logfont.lfClipPrecision	= CLIP_DEFAULT_PRECIS;			// クリッピングの精度
+	m_logfont.lfQuality			= PROOF_QUALITY;				// 出力品質
+	m_logfont.lfPitchAndFamily	= FIXED_PITCH | FF_DONTCARE;	// ピッチとファミリ
+	//m_logfont.lfFaceName[LF_FACESIZE];   						// フォント名
 	
 	// str param に初期値設定
 	#define DEF_STR_PARAM( id, var, init, conf_name ) strcpy( var, init );
@@ -483,7 +497,8 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 		}
 		fclose( fp );
 		
-		m_iFontSize = 0;	// フォント再設定
+		// フォント再設定
+		delete m_pFont; m_pFont = NULL;
 	}
 	return TRUE;
 }
@@ -1182,11 +1197,14 @@ BOOL CVsdFilter::DrawVSD( void ){
 	const int	iMeterSMaxVal	= m_piParamT[ TRACK_SPEED ];
 	
 	// フォントサイズ初期化
-	int iFontSize = iMeterR * 24 / 100;
-	if( m_pFont == NULL || iFontSize != m_iFontSize ){
-		m_iFontSize = iFontSize;
+	int iFontSize = m_piParamS[ SHADOW_FONT_SIZE ] > 0 ?
+		m_piParamS[ SHADOW_FONT_SIZE ] :
+		iMeterR * 23 / 100;
+	
+	if( m_pFont == NULL || iFontSize != -m_logfont.lfHeight ){
+		m_logfont.lfHeight = -iFontSize;
 		if( m_pFont ) delete m_pFont;
-		m_pFont = new CVsdFont( m_szFontName, m_iFontSize );
+		m_pFont = new CVsdFont( m_logfont );
 	}
 	
 	CVsdLog *Log;
@@ -1675,7 +1693,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 			iMeterCx - 3 * m_pFont->GetW() / 2, iMeterCy + iMeterR / 2 - m_pFont->GetH()
 		);
 		
-		int iDotSize = m_iFontSize * 2 / 20 - 1;
+		int iDotSize = -m_logfont.lfHeight * 2 / 20 - 1;
 		
 		DrawRect(
 			m_iPosX + m_pFont->GetW(),            m_iPosY - ( int )( m_pFont->GetH() * 0.15 ),
