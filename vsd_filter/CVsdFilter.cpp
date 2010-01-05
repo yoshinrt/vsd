@@ -1199,7 +1199,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	// フォントサイズ初期化
 	int iFontSize = m_piParamS[ SHADOW_FONT_SIZE ] > 0 ?
 		m_piParamS[ SHADOW_FONT_SIZE ] :
-		iMeterR * 23 / 100;
+		iMeterR * 21 / 100;
 	
 	if( m_pFont == NULL || iFontSize != -m_logfont.lfHeight ){
 		m_logfont.lfHeight = -iFontSize;

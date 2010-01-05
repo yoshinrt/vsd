@@ -50,7 +50,7 @@
 #define BESTLAP_NONE	599999
 
 #ifdef GPS_ONLY
-	#define DEFAULT_FONT	"ÇlÇr ÉSÉVÉbÉN"
+	#define DEFAULT_FONT	"Arial"
 #else
 	#define DEFAULT_FONT	"Impact"
 #endif
