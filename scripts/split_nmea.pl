@@ -79,7 +79,7 @@ foreach ( @Data ){
 		}
 		
 		( $Sec, $Min, $Hour, $Day, $Mon, $Year ) =
-			localtime( ${ $_ }[ 0 ] + 9 * 3600 );
+			localtime( $Start + 9 * 3600 );
 		
 		$Year += 1900;
 		$Mon  += 1;
