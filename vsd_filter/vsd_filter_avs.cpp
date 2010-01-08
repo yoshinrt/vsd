@@ -24,7 +24,6 @@ enum {
 	ARGID_CLIP,
 	#define DEF_STR_PARAM( id, var, init, conf_name )			ARGID_ ## id,
 	#include "def_str_param.h"
-	ARGID_PARAM_FILE,
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	ARGID_ ## id,
 	#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
 	#include "def_trackbar.h"
@@ -105,10 +104,6 @@ CVsdFilterAvs::CVsdFilterAvs(
 	
 	#define DEF_SHADOW( id, init, conf_name )	m_piParamS[ id ] = init;
 	#include "def_shadow.h"
-	
-	// パラメータファイルにより初期化
-	if( p = args[ ARGID_PARAM_FILE ].AsString( NULL )) if( !ConfigLoad( p ))
-		env->ThrowError( PROG_NAME ": read cfg \"%s\" failed.", p );
 	
 	// 引数指定により初期化
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name ) \
@@ -228,7 +223,6 @@ extern "C" __declspec( dllexport ) const char* __stdcall AvisynthPluginInit2( IS
 		"c"
 		#define DEF_STR_PARAM( id, var, init, conf_name )			"[" conf_name "]s"
 		#include "def_str_param.h"
-		"[param_file]s"
 		#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	"[" conf_name "]i"
 		#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
 		#include "def_trackbar.h"
