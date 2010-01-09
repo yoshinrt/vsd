@@ -1285,6 +1285,12 @@ BOOL CVsdFilter::DrawVSD( void ){
 				// この周の走行距離を求める
 				double dMileage = Log->Mileage() - Log->Mileage( LapNum2LogNum( Log, m_iLapIdx ));
 				
+				// この周の 1周の走行距離から，現在の走行距離を補正する
+				dMileage =
+					dMileage
+					* ( Log->Mileage( LapNum2LogNum( Log, m_iBestLap + 1 )) - Log->Mileage( dBestLapLogNumStart ))
+					/ ( Log->Mileage( LapNum2LogNum( Log, m_iLapIdx  + 1 )) - Log->Mileage( LapNum2LogNum( Log, m_iLapIdx )));
+				
 				// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
 				// m_iBestLogNumRunning <= 最終的に求める結果 < m_iBestLogNumRunning + 1  となる
 				// m_iBestLogNumRunning がおかしかったら，リセット
