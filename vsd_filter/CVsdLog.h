@@ -35,6 +35,7 @@ typedef struct {
 	float	fY;
 	float	fSpeed;
 	float	fBearing;
+	float	fGx, fGy;
 	float	fTime;
 } GPS_LOG_t;
 

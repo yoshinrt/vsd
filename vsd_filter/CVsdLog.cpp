@@ -22,9 +22,9 @@
 #define GRAVITY			9.80665
 
 #ifdef GPS_ONLY
-	#define INVERT_GPS_ONLY	(-1)
+	#define INVERT_G	(-1)
 #else
-	#define INVERT_GPS_ONLY	1
+	#define INVERT_G	1
 #endif
 
 /*** コンストラクタ *********************************************************/
@@ -54,7 +54,7 @@ CVsdLog::~CVsdLog(){
 
 UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 	
-	UINT	u		= 0;
+	UINT	u;
 	
 	m_iCnt = 0;
 	
@@ -64,7 +64,6 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 	double	t;
 	double	dMileage = 0;
 	double	dBearing;
-	double	dBearingPrev = GPSLog[ 0 ].fBearing;
 	
 	m_Log[ 0 ].fSpeed	=
 	m_Log[ 0 ].fTacho	=
@@ -72,7 +71,72 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 	m_Log[ 0 ].fGy		=
 	m_Log[ 0 ].fMileage	= 0;
 	
-	for( ;m_iCnt < MAX_VSD_LOG; ++m_iCnt ){
+	/*** GPS_LOG_t の方を走査して，いろいろ補正 *****************************/
+	
+	for( u = 1; u < uCnt - 1; ++u ){
+		// speed がない場合の補正
+		if( GPSLog[ u ].fSpeed == FLT_MAX ){
+			GPSLog[ u ].fSpeed = ( float )(
+				sqrt(
+					pow( GPSLog[ u + 1 ].fX - GPSLog[ u - 1 ].fX, 2 ) +
+					pow( GPSLog[ u + 1 ].fY - GPSLog[ u - 1 ].fY, 2 )
+				) / ( GPSLog[ u + 1 ].fTime - GPSLog[ u - 1 ].fTime )
+				* ( 3600.0 / 1000 )
+			);
+		}
+		
+		// bearing がない場合の補正
+		if( GPSLog[ u ].fBearing == FLT_MAX ){
+			GPSLog[ u ].fBearing = ( float )(
+				fmod(
+					atan2(
+						GPSLog[ u + 1 ].fY - GPSLog[ u - 1 ].fY,
+						GPSLog[ u + 1 ].fX - GPSLog[ u - 1 ].fX
+					) / ToRAD + 360 * 2 + 90,
+					360
+				)
+			);
+		}
+	}
+	
+	GPSLog[ 0 ].fSpeed				= GPSLog[ 1 ].fSpeed;
+	GPSLog[ 0 ].fBearing			= GPSLog[ 1 ].fBearing;
+	GPSLog[ uCnt - 1 ].fSpeed		= GPSLog[ uCnt - 2 ].fSpeed;
+	GPSLog[ uCnt - 1 ].fBearing		= GPSLog[ uCnt - 2 ].fBearing;
+	
+	for( u = 1; u < uCnt - 1; ++u ){
+		// Gx / Gy を作る
+		GPSLog[ u ].fGy = ( float )(
+			( GPSLog[ u + 1 ].fSpeed - GPSLog[ u - 1 ].fSpeed )
+			* ( INVERT_G / 3.600 / GRAVITY )
+			/ ( GPSLog[ u + 1 ].fTime - GPSLog[ u - 1 ].fTime )
+		);
+		
+		// 横G = vω
+		dBearing = GPSLog[ u + 1 ].fBearing - GPSLog[ u - 1 ].fBearing;
+		if     ( dBearing >  180 ) dBearing -= 360;
+		else if( dBearing < -180 ) dBearing += 360;
+		
+		GPSLog[ u ].fGx = ( float )(
+			dBearing * ( INVERT_G * ToRAD / GRAVITY )
+			/ ( GPSLog[ u + 1 ].fTime - GPSLog[ u - 1 ].fTime )
+			* ( GPSLog[ u ].fSpeed / 3.600 )
+		);
+		
+		// ±5G 以上は，削除
+		if( GPSLog[ u ].fGx < -3 || GPSLog[ u ].fGx > 3 ){
+			GPSLog[ u ].fGx = GPSLog[ u - 1 ].fGx;
+		}
+	}
+	
+	GPSLog[ 0 ].fGx					= GPSLog[ 1 ].fGx;
+	GPSLog[ 0 ].fGy					= GPSLog[ 1 ].fGy;
+	GPSLog[ uCnt - 1 ].fGx			= GPSLog[ uCnt - 2 ].fGx;
+	GPSLog[ uCnt - 1 ].fGy			= GPSLog[ uCnt - 2 ].fGy;
+	
+	/************************************************************************/
+	
+	for( m_iCnt = 0, u = 0;m_iCnt < MAX_VSD_LOG; ++m_iCnt ){
 		
 		// GPSLog[ u ].fTime <= m_iCnt / LOG_FREQ < GPSLog[ u + 1 ].fTime
 		// の範囲になるよう調整
@@ -88,12 +152,6 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 			
 			// GPS ログ範囲を超えたので return
 			if( u > uCnt - 2 ) break;
-			
-			// bearing の 360度 wrap around 対策
-			if( GPSLog[ u + 1 ].fBearing - GPSLog[ u ].fBearing > 180 )
-				GPSLog[ u + 1 ].fBearing -= 360;
-			else if( GPSLog[ u + 1 ].fBearing - GPSLog[ u ].fBearing < -180 )
-				GPSLog[ u + 1 ].fBearing += 360;
 		}
 		
 		// 5秒以上 GPS ログがあいていれば，補完情報の計算をしない
@@ -107,6 +165,8 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 		
 		m_Log[ m_iCnt ].fX0 = ( float )GetLogIntermediateVal( fX );
 		m_Log[ m_iCnt ].fY0 = ( float )GetLogIntermediateVal( fY );
+		m_Log[ m_iCnt ].fGx = ( float )GetLogIntermediateVal( fGx );
+		m_Log[ m_iCnt ].fGy = ( float )GetLogIntermediateVal( fGy );
 		
 		if( bAllParam ){
 			// 1秒以上あいていて，5km/h 以下なら 0km/h ログが削られていると判断
@@ -121,27 +181,6 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 					pow( m_Log[ m_iCnt - 1 ].fX0 - m_Log[ m_iCnt ].fX0, 2 ) +
 					pow( m_Log[ m_iCnt - 1 ].fY0 - m_Log[ m_iCnt ].fY0, 2 )
 				);
-				
-				m_Log[ m_iCnt ].fGy = INVERT_GPS_ONLY * ( float )(
-					( m_Log[ m_iCnt ].fSpeed - m_Log[ m_iCnt - 1 ].fSpeed )
-					* ( LOG_FREQ / 3.600 / GRAVITY )
-				);
-				
-				// 横G = vω
-				dBearing = GetLogIntermediateVal( fBearing );
-				dBearingPrev = dBearing - dBearingPrev;
-				
-				m_Log[ m_iCnt ].fGx = INVERT_GPS_ONLY * ( float )(
-					dBearingPrev * ( ToRAD * LOG_FREQ / GRAVITY )
-					* ( m_Log[ m_iCnt ].fSpeed / 3.600 )
-				);
-				
-				// ±5G 以上は，削除
-				if( m_Log[ m_iCnt ].fGx < -3 || m_Log[ m_iCnt ].fGx > 3 ){
-					m_Log[ m_iCnt ].fGx = m_Log[ m_iCnt - 1 ].fGx;
-				}
-				
-				dBearingPrev = dBearing;
 			}
 			m_Log[ m_iCnt ].fMileage = ( float )dMileage;
 			m_Log[ m_iCnt ].fTacho = 0;

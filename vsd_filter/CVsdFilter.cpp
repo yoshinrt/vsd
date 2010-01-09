@@ -600,13 +600,26 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	
 	else while( gzgets( fp, szBuf, BUF_SIZE ) != Z_NULL ){
 		
-		u = sscanf( szBuf,
-			"$GPRMC,%lg%*[^0-9]%lg%*[^0-9]%lg%*[^0-9]%lg%*[^0-9]%lg",
-			&dTime, &dLati, &dLong, &dSpeed, &dBearing
+		char	cNorthSouth;
+		char	cEastWest;
+		UINT	uParamCnt;
+		
+		uParamCnt = sscanf( szBuf,
+			"$GPRMC,"
+			"%lg,%*c,"	// time
+			"%lg,%c,"	// lat
+			"%lg,%c,"	// long
+			"%lg,%lg,",	// speed, bearing
+			// 1	2		3				4		5			6		7
+			&dTime, &dLati, &cNorthSouth, &dLong, &cEastWest, &dSpeed, &dBearing
 		);
 		
 		// $GPRMC センテンス以外はスキップ
-		if( u < 5 ) continue;
+		if( uParamCnt < 5 ) continue;
+		
+		// 海外対応w
+		if( cNorthSouth == 'S' ) dLati = -dLati;
+		if( cEastWest   == 'W' ) dLong = -dLong;
 		
 		// 値補正
 		// 225446.00 → 22:54:46.00
@@ -633,10 +646,9 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 		GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * LNG_M_DEG );
 		
 		// 速度・向き→ベクトル座標
-		dSpeed	 *= 1.852;	// knot/h → km/h
-		GPSLog[ uGPSCnt ].fSpeed	= ( float )dSpeed;
-		GPSLog[ uGPSCnt ].fBearing	= ( float )dBearing;
-		GPSLog[ uGPSCnt ].fTime 	= ( float )dTime;
+		GPSLog[ uGPSCnt ].fSpeed	= uParamCnt < 6 ? FLT_MAX : ( float )( dSpeed * 1.852 ); // knot/h → km/h
+		GPSLog[ uGPSCnt ].fBearing	= uParamCnt < 7 ? FLT_MAX : ( float )dBearing;
+		GPSLog[ uGPSCnt ].fTime		= ( float )dTime;
 		
 		if( uGPSCnt >=2 ){
 			if( GPSLog[ uGPSCnt - 1 ].fTime == GPSLog[ uGPSCnt ].fTime ){
@@ -659,24 +671,26 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	
 	gzclose( fp );
 	
+	// アップコンバート用バッファ確保・初期化
+	m_GPSLog = new CVsdLog;
+	m_GPSLog->GPSLogUpConvert( GPSLog, uGPSCnt, TRUE );
+	m_GPSLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
+	
 	DebugCmd( {
 		FILE *fpp = fopen( "G:\\DDS\\vsd\\vsd_filter\\z_gps_raw.txt", "w" );
 		for( u = 0; u < uGPSCnt; ++u ){
-			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\n",
+			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 				GPSLog[ u ].fX,
 				GPSLog[ u ].fY,
 				GPSLog[ u ].fSpeed,
 				GPSLog[ u ].fBearing,
+				GPSLog[ u ].fGx,
+				GPSLog[ u ].fGy,
 				GPSLog[ u ].fTime
 			);
 		}
 		fclose( fpp );
 	} )
-	
-	// アップコンバート用バッファ確保・初期化
-	m_GPSLog = new CVsdLog;
-	m_GPSLog->GPSLogUpConvert( GPSLog, uGPSCnt, TRUE );
-	m_GPSLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	
 	delete [] GPSLog;
 	

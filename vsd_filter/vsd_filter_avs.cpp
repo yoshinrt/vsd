@@ -127,12 +127,14 @@ CVsdFilterAvs::CVsdFilterAvs(
 	if( p = args[ ARGID_STRPARAM_FONT ].AsString( NULL )) strcpy( m_szFontName, p );
 	
 	// ログリード
-	if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )) if( !ReadLog( p ))
-		env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
+	#ifndef GPS_ONLY
+		if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )) if( !ReadLog( p ))
+			env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
+	#endif
 	
-	// ログリード
+	// GPS ログリード
 	if( p = args[ ARGID_STRPARAM_GPSFILE ].AsString( NULL )) if( !GPSLogLoad( p ))
-		env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
+		env->ThrowError( PROG_NAME ": read GPS log \"%s\" failed.", p );
 }
 
 CVsdFilterAvs::~CVsdFilterAvs(){
