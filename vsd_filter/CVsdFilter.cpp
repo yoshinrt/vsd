@@ -1059,6 +1059,7 @@ void CVsdFilter::CalcLapTimeAuto( void ){
 	m_iBestTime	= BESTLAP_NONE;
 	
 	int iTime, iPrevTime;
+	int	iLapNum = 0;
 	
 	for( int i = 0; i < m_GPSLog->m_iCnt - 1; ++i ){
 		
@@ -1100,20 +1101,23 @@ void CVsdFilter::CalcLapTimeAuto( void ){
 		iTime = ( int )( dLogNum / LOG_FREQ * 1000 );
 		iPrevTime;
 		
-		m_Lap[ m_iLapNum ].uLap		= m_iLapNum;
-		m_Lap[ m_iLapNum ].fLogNum	= ( float )dLogNum;
-		m_Lap[ m_iLapNum ].iTime	= m_iLapNum ? iTime - iPrevTime : 0;
-		
-		if(
-			m_iLapNum &&
-			( m_iBestTime == BESTLAP_NONE || m_iBestTime > m_Lap[ m_iLapNum ].iTime )
-		){
-			m_iBestTime	= m_Lap[ m_iLapNum ].iTime;
-			m_iBestLap	= m_iLapNum - 1;
+		if( m_piParamS[ SHADOW_LAP_START ] - 1 <= iLapNum && iLapNum <= m_piParamS[ SHADOW_LAP_END ] ){
+			m_Lap[ m_iLapNum ].uLap		= m_iLapNum;
+			m_Lap[ m_iLapNum ].fLogNum	= ( float )dLogNum;
+			m_Lap[ m_iLapNum ].iTime	= m_iLapNum ? iTime - iPrevTime : 0;
+			
+			if(
+				m_iLapNum &&
+				( m_iBestTime == BESTLAP_NONE || m_iBestTime > m_Lap[ m_iLapNum ].iTime )
+			){
+				m_iBestTime	= m_Lap[ m_iLapNum ].iTime;
+				m_iBestLap	= m_iLapNum - 1;
+			}
+			
+			iPrevTime = iTime;
+			++m_iLapNum;
 		}
-		
-		iPrevTime = iTime;
-		++m_iLapNum;
+		++iLapNum;
 	}
 	m_Lap[ m_iLapNum ].fLogNum	= FLT_MAX;	// ”ÔŒ¢
 	m_Lap[ m_iLapNum ].iTime	= 0;		// ”ÔŒ¢
