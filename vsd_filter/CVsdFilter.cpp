@@ -1511,6 +1511,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	}else{
 		// GPS ログ優先時はスピードメーターパネル
 		int	iStep = (( iMeterSMaxVal / 18 ) + 4 ) / 5 * 5;
+		if( iStep == 0 ) iStep = 5;
 		
 		for( i = 0; i <= iMeterSMaxVal; i += iStep ){
 			int iDeg = iMeterDegRange * i / iMeterSMaxVal + iMeterMinDeg;
@@ -1550,7 +1551,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 			
 			int iGxPrev = INVALID_POS_I, iGyPrev;
 			
-			for( i = -GSnakeLen; i <= 1 ; ++i ){
+			for( i = -( int )( GSnakeLen * LOG_FREQ / 10.0 ) ; i <= 1 ; ++i ){
 				
 				if( Log->m_iLogNum + i >= 0 ){
 					// i == 1 時は最後の中途半端な LogNum
@@ -1710,20 +1711,22 @@ BOOL CVsdFilter::DrawVSD( void ){
 		);
 		
 		// G 数値
-		sprintf( szBuf, "%02dG", ( int )( sqrt( Log->Gx() * Log->Gx() + Log->Gy() * Log->Gy()) * 10 ));
-		DrawString(
-			szBuf,
-			COLOR_STR, 0,
-			iMeterCx - 3 * m_pFont->GetW() / 2, iMeterCy + iMeterR / 2 - m_pFont->GetH()
-		);
-		
-		int iDotSize = -m_logfont.lfHeight * 2 / 20 - 1;
-		
-		DrawRect(
-			m_iPosX + m_pFont->GetW(),            m_iPosY - ( int )( m_pFont->GetH() * 0.15 ),
-			m_iPosX + m_pFont->GetW() + iDotSize, m_iPosY - ( int )( m_pFont->GetH() * 0.15 ) + iDotSize,
-			COLOR_STR, 0
-		);
+		if( GSnakeLen > 0 ){
+			sprintf( szBuf, "%02dG", ( int )( sqrt( Log->Gx() * Log->Gx() + Log->Gy() * Log->Gy()) * 10 ));
+			DrawString(
+				szBuf,
+				COLOR_STR, 0,
+				iMeterCx - 3 * m_pFont->GetW() / 2, iMeterCy + iMeterR / 2 - m_pFont->GetH()
+			);
+			
+			int iDotSize = -m_logfont.lfHeight * 2 / 20 - 1;
+			
+			DrawRect(
+				m_iPosX + m_pFont->GetW(),            m_iPosY - ( int )( m_pFont->GetH() * 0.15 ),
+				m_iPosX + m_pFont->GetW() + iDotSize, m_iPosY - ( int )( m_pFont->GetH() * 0.15 ) + iDotSize,
+				COLOR_STR, 0
+			);
+		}
 	}
 	
 	if( Log == m_VsdLog ){

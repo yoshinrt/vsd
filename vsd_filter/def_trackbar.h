@@ -21,7 +21,7 @@ DEF_TRACKBAR(	TRACK_SPEED,		180,	50,		400,	"スピード",		"speed_meter"	)
 DEF_TRACKBAR(	TRACK_LineTrace,	240,	0,		1000,	"Map秒",		"map_length"	)
 DEF_TRACKBAR(	TRACK_MapSize,		400,	0,		1000,	"Mapサイズ",	"map_size"		)
 DEF_TRACKBAR(	TRACK_MapAngle,		0,		0,		3600,	"Map回転",		"map_angle"		)
-DEF_TRACKBAR(	TRACK_G_Len,		48,		-1,		200,	"G長さ",		"g_length"		)
+DEF_TRACKBAR(	TRACK_G_Len,		30,		-1,		300,	"G長さ",		"g_length"		)
 DEF_TRACKBAR(	TRACK_SLineWidth,	0,		0,		1000,	"Start幅",		"start_width"	)
 #ifdef GPS_ONLY
 DEF_TRACKBAR(	TRACK_Aspect,		1000,	500,	2000,	"Aspect比",		"aspect_ratio"	)
