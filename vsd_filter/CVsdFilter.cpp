@@ -437,10 +437,14 @@ char *CVsdFilter::IsConfigParamStr( const char *szParamName, char *szBuf, char *
 
 BOOL CVsdFilter::ParseMarkStr( const char *szMark ){
 	
-	while( szMark && *szMark ){
+	do{
+		while( *szMark && !isdigit( *szMark )) ++szMark;	// 数字までスキップ
+		if( !*szMark ) break;
+		
 		SetFrameMark( atoi( szMark ));
 		if( szMark = strchr( szMark, ',' )) ++szMark;	// 次のパラメータ
-	}
+	}while( szMark );
+	
 	m_bCalcLapTimeReq = TRUE;
 	return TRUE;
 }
