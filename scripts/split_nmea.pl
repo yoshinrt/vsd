@@ -85,7 +85,8 @@ foreach ( @Data ){
 		$Mon  += 1;
 		
 		$FileName = sprintf(
-			"${Base}_%4d%02d%02d_%02d%02d%02d$Ext",
+		#	"${Base}_%4d%02d%02d_%02d%02d%02d$Ext",
+			"%4d%02d%02d_%02d%02d%02d$Ext",
 			$Year, $Mon, $Day, $Hour, $Min, $Sec
 		);
 		

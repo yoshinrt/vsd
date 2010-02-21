@@ -86,7 +86,8 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 		}
 		
 		// bearing Ç™Ç»Ç¢èÍçáÇÃï‚ê≥
-		if( GPSLog[ u ].fBearing == FLT_MAX ){
+		//if( GPSLog[ u ].fBearing == FLT_MAX ){
+		if( 1 ){	// GPS ÉfÅ[É^ÇÃ bearing ÇÕñ≥éã
 			GPSLog[ u ].fBearing = ( float )(
 				fmod(
 					atan2(
