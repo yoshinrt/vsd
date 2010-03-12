@@ -167,6 +167,7 @@ class CVsdFilter {
 	virtual int	GetHeight( void )	= 0;
 	virtual int	GetFrameMax( void )	= 0;
 	virtual int	GetFrameCnt( void )	= 0;
+	virtual double	GetFPS( void )		= 0;
 	
 	/*** ログオペレーション *************************************************/
 	
@@ -195,8 +196,6 @@ class CVsdFilter {
 	int			m_iLogStart;
 	int			m_iLogStop;
 	
-	double		m_dVideoFPS;
-	
 	int			*m_piParamT;
 	int			*m_piParamC;
 	int			*m_piParamS;
@@ -220,8 +219,6 @@ class CVsdFilter {
 	virtual int  GetFrameMark( int iFrame ) = 0;
 	void CalcLapTime( void );
 	void CalcLapTimeAuto( void );
-	
-	virtual char *GetVideoFileName( char *szFileName ){ return ""; }
   private:
 };
 #endif

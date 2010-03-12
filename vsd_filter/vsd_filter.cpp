@@ -210,9 +210,13 @@ BOOL func_exit( FILTER *fp ){
 class CVsdFilterAvu : public CVsdFilter {
 	
   public:
-	void	*editp;
-	FILTER	*filter;
-	FILTER_PROC_INFO *fpip;
+	void				*editp;
+	FILTER				*filter;
+	FILE_INFO			*fileinfo;
+	FILTER_PROC_INFO	*fpip;
+	
+	CVsdFilterAvu( FILTER *filter, void *editp );
+	~CVsdFilterAvu();
 	
 	int GetIndex( int x, int y ){ return fpip->max_w * y + x; }
 	BOOL ConfigSave( const char *szFileName );
@@ -225,18 +229,34 @@ class CVsdFilterAvu : public CVsdFilter {
 	// 仮想関数
 	virtual void PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag );
 	
-	virtual int	GetWidth( void ){ return fpip->w ; }
-	virtual int	GetHeight( void ){ return fpip->h ; }
-	virtual int	GetFrameMax( void ){ return fpip->frame_n ; }
-	virtual int	GetFrameCnt( void ){ return fpip->frame ; }
+	virtual int	GetWidth( void ){ return fileinfo->w; }
+	virtual int	GetHeight( void ){ return fileinfo->h; }
+	virtual int	GetFrameMax( void ){ return fileinfo->frame_n; }
+	virtual int	GetFrameCnt( void ){ return fpip->frame; }
+	virtual double	GetFPS( void ){ return ( double )fileinfo->video_rate / fileinfo->video_scale; }
 	
 	virtual void SetFrameMark( int iFrame );
 	virtual int  GetFrameMark( int iFrame );
-	
-	virtual char *GetVideoFileName( char *szFileName );
 };
 
 CVsdFilterAvu	*g_Vsd;
+
+/*** コンストラクタ／デストラクタ *******************************************/
+
+CVsdFilterAvu::CVsdFilterAvu( FILTER *filter, void *editp ) :
+	filter( filter ), editp( editp )
+{
+	fileinfo = new FILE_INFO;
+	filter->exfunc->get_file_info( editp, fileinfo );
+	
+	m_piParamT	= filter->track;
+	m_piParamC	= filter->check;
+	m_piParamS	= shadow_param;
+}
+
+CVsdFilterAvu::~CVsdFilterAvu(){
+	delete fileinfo;
+}
 
 /*** PutPixel ***************************************************************/
 
@@ -309,14 +329,6 @@ int CVsdFilterAvu::GetFrameMark( int iFrame ){
 	return -1;
 }
 
-/*** 編集ビデオファイル名取得 ***********************************************/
-
-char *CVsdFilterAvu::GetVideoFileName( char *szFileName ){
-	FILE_INFO	fi;
-	filter->exfunc->get_file_info( editp, &fi );
-	return strcpy( szFileName, fi.name );
-}
-
 /*** config セーブ **********************************************************/
 
 BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
@@ -325,16 +337,11 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	
 	if(( fp = fopen( szFileName, "w" )) == NULL ) return FALSE;
 	
-	char szBuf[ BUF_SIZE ];
-	
-	FILE_INFO fi;
-	filter->exfunc->get_file_info( editp, &fi );
-	
 	fprintf( fp,
 		"DirectShowSource( \"%s\", pixel_type=\"YUY2\", fps=%d.0/%d )\n"
 		"VSDFilter",
-		GetVideoFileName( szBuf ),
-		fi.video_rate, fi.video_scale
+		fileinfo->name,
+		fileinfo->video_rate, fileinfo->video_scale
 	);
 	
 	char cSep = '(';
@@ -383,13 +390,10 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	// 手動ラップ計測マーク出力
 	if( m_iLapMode != LAPMODE_MAGNET && m_iLapNum ){
 		FRAME_STATUS	fsp;
-		FILE_INFO		fip;
 		BOOL			bFirst = TRUE;
 		
-		filter->exfunc->get_file_info( editp, &fip );
-		
-		// マークされているフレーム# を求める  GetFrameMax() はなぜか×
-		for( i = 0; i < fip.frame_n; ++i ){
+		// マークされているフレーム# を求める
+		for( i = 0; i < GetFrameMax(); ++i ){
 			filter->exfunc->get_frame_status( editp, i, &fsp );
 			if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
 				fprintf( fp, "%s%u", bFirst ? ", \\\n\tmark=\"" : ",", i );
@@ -486,7 +490,6 @@ BOOL func_proc( FILTER *fp, FILTER_PROC_INFO *fpip ){
 	
 	if( !g_Vsd ) return 0;
 	// クラスに変換
-	g_Vsd->filter	= fp;
 	g_Vsd->fpip		= fpip;
 	
 	return g_Vsd->DrawVSD();
@@ -627,7 +630,6 @@ void ExtendDialog( HWND hwnd ){
 		hwnd, ( HMENU )( i++ ), 0, NULL
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
-	
 }
 
 /*** WndProc ****************************************************************/
@@ -648,20 +650,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	switch( message ) {
 	  case WM_FILTER_FILE_OPEN:
 		
-		g_Vsd = new CVsdFilterAvu;
-		
-		g_Vsd->m_piParamT	= filter->track;
-		g_Vsd->m_piParamC	= filter->check;
-		g_Vsd->m_piParamS	= shadow_param;
-		g_Vsd->filter		= filter;
-		g_Vsd->editp		= editp;
-		
-		// fps 取得
-		FILE_INFO fi;
-		filter->exfunc->get_file_info( editp, &fi );
-		g_Vsd->m_dVideoFPS  = ( double )fi.video_rate / fi.video_scale;
-		
-		g_Vsd->m_bCalcLapTimeReq = TRUE;
+		g_Vsd = new CVsdFilterAvu( filter, editp );
 		
 		// trackbar 設定
 		track_e[ TRACK_VSt ] =

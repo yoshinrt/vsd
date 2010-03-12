@@ -127,8 +127,6 @@ CVsdFilter::CVsdFilter (){
 	m_iBestLap			= 0;
 	m_iLapMode			= LAPMODE_HAND_VIDEO;
 	
-	m_dVideoFPS			= 30.0;
-	
 	m_iLapIdx			= -1;
 	m_iBestLogNumRunning= 0;
 	
@@ -993,7 +991,7 @@ void CVsdFilter::CalcLapTime( void ){
 			dLogNum	= ConvParam( iFrame, Video, GPS );
 			iTime	= ( int )( dLogNum / LOG_FREQ * 1000 );
 		}else{
-			iTime	= ( int )( iFrame * 1000.0 / m_dVideoFPS );
+			iTime	= ( int )( iFrame * 1000.0 / GetFPS());
 		}
 		
 		m_Lap[ m_iLapNum ].uLap		= m_iLapNum;
@@ -1284,7 +1282,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 				iTime = ( int )(( Log->m_dLogNum - m_Lap[ m_iLapIdx ].fLogNum ) * 1000 / Log->m_dFreq );
 			}else{
 				// 手動計測モードのときは，フレーム数から計算
-				iTime = ( int )(( GetFrameCnt() - m_Lap[ m_iLapIdx ].fLogNum ) * 1000.0 / m_dVideoFPS );
+				iTime = ( int )(( GetFrameCnt() - m_Lap[ m_iLapIdx ].fLogNum ) * 1000.0 / GetFPS());
 			}
 			
 			sprintf( szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
@@ -1405,9 +1403,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 			
 			sprintf(
 				szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
-				Float2Time( VideoSt / m_dVideoFPS ),
-				Float2Time( VideoEd / m_dVideoFPS ),
-				Float2Time(( VideoEd - VideoSt ) / m_dVideoFPS ),
+				Float2Time( VideoSt / GetFPS()),
+				Float2Time( VideoEd / GetFPS()),
+				Float2Time(( VideoEd - VideoSt ) / GetFPS()),
 				GetFrameCnt()
 			);
 			DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );

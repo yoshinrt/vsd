@@ -60,6 +60,7 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	virtual int	GetHeight( void )	{ return m_iHeight; }
 	virtual int	GetFrameMax( void )	{ return vi.num_frames; }
 	virtual int	GetFrameCnt( void )	{ return m_iFrameCnt; }
+	virtual double	GetFPS( void )	{ return ( double )vi.fps_numerator / vi.fps_denominator; }
 	
 	virtual void SetFrameMark( int iFrame );
 	virtual int  GetFrameMark( int iFrame );
@@ -92,7 +93,6 @@ CVsdFilterAvs::CVsdFilterAvs(
 	m_piParamC	= new int[ CHECK_N ];
 	m_piParamS	= new int[ SHADOW_N ];
 	m_piMark	= new int[ MAX_LAP ];
-	m_dVideoFPS = ( double )vi.fps_numerator / vi.fps_denominator;
 	m_iMarkCnt	= 0;
 	
 	// パラメータ初期値

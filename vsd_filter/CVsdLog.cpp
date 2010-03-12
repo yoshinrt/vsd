@@ -14,7 +14,6 @@
 
 #include "dds.h"
 #include "../vsd/main.h"
-
 #include "CVsdLog.h"
 
 /*** macros *****************************************************************/

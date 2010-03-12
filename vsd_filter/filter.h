@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------
-//	フィルタプラグイン ヘッダーファイル for AviUtl version 0.99i 以降
+//	フィルタプラグイン ヘッダーファイル for AviUtl version 0.99i4 以降
 //	By ＫＥＮくん
 //----------------------------------------------------------------------------------
 
@@ -56,7 +56,7 @@ typedef struct {
 							//	FRAME_STATUS_INTER_MIX		: 二重化
 							//	FRAME_STATUS_INTER_AUTO		: 自動
 	int		index24fps;		//	現在は使用されていません
-	int		config;			//	フレームの設定環境の番号
+	int		config;			//	フレームのプロファイル環境の番号
 	int		vcm;			//	フレームの圧縮設定の番号
 	int		edit_flag;		//	編集フラグ
 							//	EDIT_FRAME_EDIT_FLAG_KEYFRAME	: キーフレーム
@@ -268,10 +268,10 @@ typedef struct {
 								//  fip		: ファイルインフォメーション構造体へのポインタ
 								//  戻り値	: TRUEなら成功
 	LPSTR		(*get_config_name)( void *editp,int n );
-								//	設定環境の名前を取得します
+								//	現在のプロファイルの名前を取得します
 								//	editp 	: エディットハンドル
-								//  n		: 設定環境の番号
-								//  戻り値	: 設定環境の名前へのポインタ
+								//  n		: プロファイル環境の番号
+								//  戻り値	: プロファイルの名前へのポインタ (NULLなら失敗)
 	BOOL		(*is_filter_active)( void *fp );
 								//	フィルタが有効になっているか調べます
 								//	fp	 	: フィルタ構造体のポインタ
@@ -590,7 +590,37 @@ typedef struct {
 								//	ADD_MENU_ITEM_FLAG_KEY_CTRL		: 標準のショートカットキーをCTRL+キーにする
 								//	ADD_MENU_ITEM_FLAG_KEY_ALT		: 標準のショートカットキーをALT+キーにする
 								//  戻り値	: TRUEなら成功
-	int			reserve[11];
+	BOOL 		(*edit_open)( void *editp,LPSTR file,int flag );
+								//	編集ファイルを開きます
+								//	editp 	: エディットハンドル
+								//	file 	: ファイル名
+								//	flag 	: フラグ
+								//	EDIT_OPEN_FLAG_ADD			: 追加読み込みをします
+								//	EDIT_OPEN_FLAG_AUDIO		: 音声読み込みをします
+								//	EDIT_OPEN_FLAG_PROJECT		: プロジェクトファイルを開きます
+								//	EDIT_OPEN_FLAG_DIALOG		: 読み込みダイアログを表示します
+								//  戻り値	: TRUEなら成功
+	BOOL 		(*edit_close)( void *editp );
+								//	編集ファイルを閉じます
+								//	editp 	: エディットハンドル
+								//  戻り値	: TRUEなら成功
+	BOOL 		(*edit_output)( void *editp,LPSTR file,int flag,LPSTR type );
+								//	編集データをAVI出力します
+								//	WAV出力やプラグイン出力も出来ます
+								//	editp 	: エディットハンドル
+								//	file 	: 出力ファイル名
+								//	flag	: フラグ
+								//	EDIT_OUTPUT_FLAG_NO_DIALOG	: 出力ダイアログを表示しません
+								//	EDIT_OUTPUT_FLAG_WAV		: WAV出力をします
+								//	type	: 出力プラグインの名前 (NULLならAVI/WAV出力)
+								//  戻り値	: TRUEなら成功
+	BOOL 		(*set_config)( void *editp,int n,LPSTR name );
+								//	プロファイルを設定します
+								//	editp 	: エディットハンドル
+								//  n		: プロファイル環境の番号
+								//  name	: プロファイルの名前
+								//  戻り値	: TRUEなら成功
+	int			reserve[7];
 } EXFUNC;
 #define	AVI_FILE_OPEN_FLAG_VIDEO_ONLY		16
 #define	AVI_FILE_OPEN_FLAG_AUDIO_ONLY		32
@@ -604,6 +634,12 @@ typedef struct {
 #define ADD_MENU_ITEM_FLAG_KEY_SHIFT		1
 #define ADD_MENU_ITEM_FLAG_KEY_CTRL			2
 #define ADD_MENU_ITEM_FLAG_KEY_ALT			4
+#define	EDIT_OPEN_FLAG_ADD					2
+#define	EDIT_OPEN_FLAG_AUDIO				16
+#define	EDIT_OPEN_FLAG_PROJECT				512
+#define	EDIT_OPEN_FLAG_DIALOG				65536
+#define	EDIT_OUTPUT_FLAG_NO_DIALOG			2
+#define	EDIT_OUTPUT_FLAG_WAV				4
 
 //	フィルタ構造体
 typedef struct {
@@ -660,6 +696,7 @@ typedef struct {
 								//	通常のメッセージ以外に以下の拡張メッセージが送られます
 								//	WM_FILTER_UPDATE		: 各フィルタ設定や編集内容が変更された直後に送られます
 								//	WM_FILTER_FILE_OPEN		: 編集ファイルがオープンされた直後に送られます
+								//	WM_FILTER_FILE_UPDATE	: 編集ファイルの更新(追加や音声読み込み等)があった直後に送られます
 								//	WM_FILTER_FILE_CLOSE	: 編集ファイルがクローズされる直前に送られます
 								//	WM_FILTER_INIT			: 開始直後に送られます
 								//	WM_FILTER_EXIT			: 終了直前に送られます
@@ -769,6 +806,7 @@ typedef struct {
 #define WM_FILTER_CHANGE_PARAM			(WM_USER+111)
 #define WM_FILTER_CHANGE_EDIT			(WM_USER+112)
 #define WM_FILTER_COMMAND				(WM_USER+113)
+#define	WM_FILTER_FILE_UPDATE			(WM_USER+114)
 #define	WM_FILTER_MAIN_MOUSE_DOWN		(WM_USER+120)
 #define	WM_FILTER_MAIN_MOUSE_UP			(WM_USER+121)
 #define	WM_FILTER_MAIN_MOUSE_MOVE		(WM_USER+122)
@@ -776,6 +814,7 @@ typedef struct {
 #define	WM_FILTER_MAIN_KEY_UP			(WM_USER+124)
 #define	WM_FILTER_MAIN_MOVESIZE			(WM_USER+125)
 #define	WM_FILTER_MAIN_MOUSE_DBLCLK		(WM_USER+126)
+
 #define FILTER_UPDATE_STATUS_ALL		0
 #define FILTER_UPDATE_STATUS_TRACK		0x10000
 #define FILTER_UPDATE_STATUS_CHECK		0x20000
