@@ -431,7 +431,7 @@ BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
 	
 	// trackbar Ý’è
 	track_e[ TRACK_LSt ] =
-	track_e[ TRACK_LEd ] = g_Vsd->m_VsdLog->m_iCnt;
+	track_e[ TRACK_LEd ] = m_VsdLog->m_iCnt;
 	
 	return TRUE;
 }
@@ -458,7 +458,7 @@ BOOL CVsdFilterAvu::GPSLogLoad( const char *szFileName, HWND hwnd ){
 	
 	// trackbar Ý’è
 	track_e[ TRACK_GSt ] =
-	track_e[ TRACK_GEd ] = g_Vsd->m_GPSLog->m_iCnt;
+	track_e[ TRACK_GEd ] = m_GPSLog->m_iCnt;
 	
 	return TRUE;
 }
