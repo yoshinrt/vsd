@@ -947,6 +947,7 @@ void CVsdFilter::DrawSpeedGraph( CVsdLog *Log, const PIXEL_YC &yc ){
 	
 	int	iLogNum;
 	int	x = 0;
+	int iCursor = GetHeight() - 1;
 	
 	iLogNum = Log->m_iLogNum - GetWidth() * SPEED_GRAPH_SCALE / 2;
 	if( iLogNum < 0 ){
@@ -960,7 +961,15 @@ void CVsdFilter::DrawSpeedGraph( CVsdLog *Log, const PIXEL_YC &yc ){
 			x + 1, GetHeight() - 1 - ( int )Log->Speed( iLogNum + SPEED_GRAPH_SCALE ),
 			1, yc, 0
 		);
+		
+		if( x == GetWidth() / 2 ) iCursor = GetHeight() - 1 - ( int )Log->Speed( iLogNum );
 	}
+	
+	DrawLine(
+		GetWidth() / 2, iCursor - 10,
+		GetWidth() / 2, iCursor + 10,
+		1, yc, 0
+	);
 }
 
 /*** ラップタイム再計算 (手動) **********************************************/
@@ -1433,12 +1442,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 				DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 				DrawSpeedGraph( m_GPSLog, yc_cyan );
 			}
-			
-			DrawLine(
-				GetWidth() / 2, GetHeight() - 20,
-				GetWidth() / 2, GetHeight() - 1,
-				1, yc_cyan, 0
-			);
 		}
 	#endif // !AVS_PLUGIN
 	
@@ -1713,7 +1716,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		);
 		
 		// G 数値
-		if( GSnakeLen > 0 ){
+		if( GSnakeLen >= 0 ){
 			sprintf( szBuf, "%02dG", ( int )( sqrt( Log->Gx() * Log->Gx() + Log->Gy() * Log->Gy()) * 10 ));
 			DrawString(
 				szBuf,
