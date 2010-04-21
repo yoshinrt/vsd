@@ -672,6 +672,23 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			iFrame = filter->exfunc->get_frame( editp );
 			
 			filter->exfunc->get_frame_status( editp, iFrame, &fsp );
+			
+			// 自動ラップ計測モードのとき，他のマークをすべて解除する
+			if(
+				g_Vsd->m_piParamC[ CHECK_LAP ] &&
+				g_Vsd->m_piParamT[ TRACK_SLineWidth ] &&
+				!( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME )
+			){
+				for( int i = 0; i < g_Vsd->GetFrameMax(); ++i ){
+					filter->exfunc->get_frame_status( editp, i, &fsp );
+					if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
+						fsp.edit_flag &= ~EDIT_FRAME_EDIT_FLAG_MARKFRAME;
+						filter->exfunc->set_frame_status( editp, i, &fsp );
+					}
+				}
+				filter->exfunc->get_frame_status( editp, iFrame, &fsp );
+			}
+			
 			fsp.edit_flag ^= EDIT_FRAME_EDIT_FLAG_MARKFRAME;
 			filter->exfunc->set_frame_status( editp, iFrame, &fsp );
 			
