@@ -383,10 +383,10 @@ inline void CVsdFilter::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
 	}
 }
 
-/*** 設定ロード *************************************************************/
+/*** カラーを混ぜる *********************************************************/
 
 inline PIXEL_YC *CVsdFilter::BlendColor(
-	PIXEL_YC	&ycDst,
+	PIXEL_YC		&ycDst,
 	const PIXEL_YC	&ycColor0,
 	const PIXEL_YC	&ycColor1,
 	double	dAlfa
@@ -433,7 +433,7 @@ char *CVsdFilter::IsConfigParamStr( const char *szParamName, char *szBuf, char *
 		strncmp( szBuf, szParamName, iLen = strlen( szParamName )) == 0 &&
 		szBuf[ iLen ] == '='
 	){
-		szBuf += iLen + 1;	// " を挿しているはず
+		szBuf += iLen + 1;	// " を指しているはず
 		
 		// 文字列先頭
 		if( p = strchr( szBuf, '"' )){
@@ -1635,19 +1635,14 @@ BOOL CVsdFilter::DrawVSD( void ){
 				
 				if( iGxPrev != INVALID_POS_I ){
 					// Line の色用に G を求める
-					double dG = sqrt(
-						Log->Gx( i ) * Log->Gx( i ) +
-						Log->Gy( i ) * Log->Gy( i )
-					) / MAP_G_MAX;
+					double dG = Log->Gy( i ) * 1.5;
 					
 					PIXEL_YC yc_line;
 					
-					if( dG < 0.5 ){
-						BlendColor( yc_line, MAP_LINE1, MAP_LINE2, dG * 2 );
-					}else if( dG < 1.0 ){
-						BlendColor( yc_line, MAP_LINE2, MAP_LINE3, ( dG - 0.5 ) * 2 );
+					if( dG >= 0.0 ){
+						BlendColor( yc_line, yc_yellow, yc_green, dG / Log->m_dMaxG );
 					}else{
-						yc_line = MAP_LINE3;
+						BlendColor( yc_line, yc_yellow, yc_red, dG / Log->m_dMinG );
 					}
 					
 					// Line を引く

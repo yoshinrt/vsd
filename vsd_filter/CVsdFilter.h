@@ -42,7 +42,6 @@
 #define MAP_LINE1		yc_green
 #define MAP_LINE2		yc_yellow
 #define MAP_LINE3		yc_red
-#define MAP_G_MAX		1.2
 
 #define HIREZO_TH		600			// ハイレゾモード時の横幅スレッショルド
 #define POS_DEFAULT		0x80000000

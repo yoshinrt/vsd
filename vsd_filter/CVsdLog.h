@@ -53,6 +53,9 @@ class CVsdLog {
 	double		m_dMapOffsY;
 	double		m_dFreq;
 	
+	double		m_dMaxG;	// ‰Á‘¬ G
+	double		m_dMinG;	// Œ¸‘¬ G
+	
 	CVsdLog();
 	~CVsdLog();
 	UINT GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam = FALSE );

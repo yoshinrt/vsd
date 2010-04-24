@@ -39,6 +39,9 @@ CVsdLog::CVsdLog(){
 	for( UINT u = 0; u < MAX_VSD_LOG; ++u ){
 		m_Log[ u ].fX0 = m_Log[ u ].fY0 = NaN;
 	}
+	
+	m_dMaxG = 0;
+	m_dMinG = 0;
 }
 
 /*** デストラクタ ***********************************************************/
@@ -191,6 +194,8 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 	// スムージング
 	if( bAllParam ){
 		UINT	v = 2;
+		double	d;
+		
 		while( v-- ) for( u = 2; u < ( UINT )m_iCnt - 2; ++u ){
 			m_Log[ u ].fGx = (
 				m_Log[ u - 2 ].fGx +
@@ -199,13 +204,16 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 				m_Log[ u + 1 ].fGx +
 				m_Log[ u + 2 ].fGx
 			) / 5;
-			m_Log[ u ].fGy = (
+			d = m_Log[ u ].fGy = (
 				m_Log[ u - 2 ].fGy +
 				m_Log[ u - 1 ].fGy +
 				m_Log[ u + 0 ].fGy +
 				m_Log[ u + 1 ].fGy +
 				m_Log[ u + 2 ].fGy
 			) / 5;
+			
+			if( m_dMaxG < d ) m_dMaxG = d;
+			if( m_dMinG > d ) m_dMinG = d;
 		}
 	}
 	return m_iCnt;
