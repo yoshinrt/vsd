@@ -142,6 +142,13 @@ class CVsdFilter {
 	void PolygonClear( void );
 	void PolygonDraw( const PIXEL_YC &yc, UINT uFlag );
 	
+	PIXEL_YC *BlendColor(
+		PIXEL_YC	&ycDst,
+		const PIXEL_YC	&ycColor0,
+		const PIXEL_YC	&ycColor1,
+		double	dAlfa
+	);
+	
 	BOOL DrawVSD( void );
 	
 	enum {
@@ -167,7 +174,7 @@ class CVsdFilter {
 	virtual int	GetHeight( void )	= 0;
 	virtual int	GetFrameMax( void )	= 0;
 	virtual int	GetFrameCnt( void )	= 0;
-	virtual double	GetFPS( void )		= 0;
+	virtual double	GetFPS( void )	= 0;
 	
 	/*** ログオペレーション *************************************************/
 	

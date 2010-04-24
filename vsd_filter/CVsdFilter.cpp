@@ -385,6 +385,26 @@ inline void CVsdFilter::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
 
 /*** 設定ロード *************************************************************/
 
+inline PIXEL_YC *CVsdFilter::BlendColor(
+	PIXEL_YC	&ycDst,
+	const PIXEL_YC	&ycColor0,
+	const PIXEL_YC	&ycColor1,
+	double	dAlfa
+){
+	if     ( dAlfa < 0.0 ) dAlfa = 0.0;
+	else if( dAlfa > 1.0 ) dAlfa = 1.0;
+	
+	ycDst.y  = ( PIXEL_t )( ycColor1.y  * dAlfa + ycColor0.y  * ( 1 - dAlfa ));
+	ycDst.cb = ( PIXEL_t )( ycColor1.cb * dAlfa + ycColor0.cb * ( 1 - dAlfa ));
+	ycDst.cr = ( PIXEL_t )( ycColor1.cr * dAlfa + ycColor0.cr * ( 1 - dAlfa ));
+#ifdef AVS_PLUGIN
+	ycDst.y1 = ycDst.y;
+#endif
+	return &ycDst;
+}
+
+/*** 設定ロード *************************************************************/
+
 char *CVsdFilter::IsConfigParam( const char *szParamName, char *szBuf, int &iVal ){
 	
 	int	iLen;
@@ -1623,21 +1643,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 					PIXEL_YC yc_line;
 					
 					if( dG < 0.5 ){
-						dG *= 2;
-						yc_line.y  = ( PIXEL_t )( MAP_LINE2.y  * dG + MAP_LINE1.y  * ( 1 - dG ));
-						yc_line.cb = ( PIXEL_t )( MAP_LINE2.cb * dG + MAP_LINE1.cb * ( 1 - dG ));
-						yc_line.cr = ( PIXEL_t )( MAP_LINE2.cr * dG + MAP_LINE1.cr * ( 1 - dG ));
-					#ifdef AVS_PLUGIN
-						yc_line.y1 = yc_line.y;
-					#endif
+						BlendColor( yc_line, MAP_LINE1, MAP_LINE2, dG * 2 );
 					}else if( dG < 1.0 ){
-						dG = ( dG - 0.5 ) * 2;
-						yc_line.y  = ( PIXEL_t )( MAP_LINE3.y  * dG + MAP_LINE2.y  * ( 1 - dG ));
-						yc_line.cb = ( PIXEL_t )( MAP_LINE3.cb * dG + MAP_LINE2.cb * ( 1 - dG ));
-						yc_line.cr = ( PIXEL_t )( MAP_LINE3.cr * dG + MAP_LINE2.cr * ( 1 - dG ));
-					#ifdef AVS_PLUGIN
-						yc_line.y1 = yc_line.y;
-					#endif
+						BlendColor( yc_line, MAP_LINE2, MAP_LINE3, ( dG - 0.5 ) * 2 );
 					}else{
 						yc_line = MAP_LINE3;
 					}
