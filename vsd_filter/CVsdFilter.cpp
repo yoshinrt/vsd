@@ -1635,7 +1635,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 				
 				if( iGxPrev != INVALID_POS_I ){
 					// Line ‚ÌF—p‚É G ‚ð‹‚ß‚é
-					double dG = Log->Gy( i ) * 1.5;
+					double dG = Log->Gy( i ) * ( INVERT_G * 1.5 );
 					
 					PIXEL_YC yc_line;
 					

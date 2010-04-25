@@ -19,6 +19,12 @@
 #define PI			3.14159265358979323
 #define ToRAD		( PI / 180 )
 
+#ifdef GPS_ONLY
+	#define INVERT_G	(-1)
+#else
+	#define INVERT_G	1
+#endif
+
 /*** new type ***************************************************************/
 
 typedef struct {

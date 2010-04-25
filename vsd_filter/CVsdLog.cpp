@@ -20,12 +20,6 @@
 
 #define GRAVITY			9.80665
 
-#ifdef GPS_ONLY
-	#define INVERT_G	(-1)
-#else
-	#define INVERT_G	1
-#endif
-
 /*** コンストラクタ *********************************************************/
 
 CVsdLog::CVsdLog(){
