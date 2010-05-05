@@ -105,7 +105,7 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 		// Gx / Gy ÇçÏÇÈ
 		GPSLog[ u ].fGy = ( float )(
 			( GPSLog[ u + 1 ].fSpeed - GPSLog[ u - 1 ].fSpeed )
-			* ( INVERT_G / 3.600 / GRAVITY )
+			* ( 1 / 3.600 / GRAVITY )
 			/ ( GPSLog[ u + 1 ].fTime - GPSLog[ u - 1 ].fTime )
 		);
 		
@@ -115,7 +115,7 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 		else if( dBearing < -180 ) dBearing += 360;
 		
 		GPSLog[ u ].fGx = ( float )(
-			dBearing * ( INVERT_G * ToRAD / GRAVITY )
+			dBearing * ( ToRAD / GRAVITY )
 			/ ( GPSLog[ u + 1 ].fTime - GPSLog[ u - 1 ].fTime )
 			* ( GPSLog[ u ].fSpeed / 3.600 )
 		);

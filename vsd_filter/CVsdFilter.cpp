@@ -53,7 +53,7 @@
 
 #define DispLap			m_piParamC[ CHECK_LAP ]
 #define GSnakeLen		m_piParamT[ TRACK_G_Len ]
-#define GScale			( m_piParamS[ SHADOW_G_SCALE ] / 1000.0 )
+#define GScale			( m_piParamS[ SHADOW_G_SCALE ] * ( INVERT_G / 1000.0 ))
 #define SLineWidth		( m_piParamT[ TRACK_SLineWidth ] / 10.0 )
 
 #ifdef AVS_PLUGIN
@@ -1635,7 +1635,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 				
 				if( iGxPrev != INVALID_POS_I ){
 					// Line ‚ÌF—p‚É G ‚ð‹‚ß‚é
-					double dG = Log->Gy( i ) * ( INVERT_G * 1.5 );
+					double dG = Log->Gy( i ) * 1.5;
 					
 					PIXEL_YC yc_line;
 					
