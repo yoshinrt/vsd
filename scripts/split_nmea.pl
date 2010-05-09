@@ -3,7 +3,7 @@
 use Time::Local;
 
 $SpeedTh = 10;
-$TimeTh  = 60;
+$TimeTh  = 60 * 5;
 
 $Line = '';
 
@@ -29,7 +29,7 @@ while( <> ){
 		$Speed = $_[ 7 ] * 1.85200;
 		
 		if( $Speed >= $SpeedTh ){
-			if( $Time - $LastMoved >= $TimeTh * 2 ){
+			if( $Time - $LastMoved >= $TimeTh ){
 				# 最後に動いてから TimeTh 以上空いた場合，
 				# そこが split 開始点になる．
 				
@@ -54,12 +54,17 @@ exit( 0 ) if( !$LastMoved );
 push( @SplitTbl, $LastMoved );
 
 $End = 0;
+$bOutput = 0;
 
-foreach ( @Data ){
+for( $i = 0; $i <= $#Data; ++$i ){
+	
+	$_ = $Data[ $i ];
 	
 	if( ${ $_ }[ 0 ] > $End ){
-		
 		last if( $#SplitTbl < 0 );
+		
+		# 分割した nmea の最後に TimeTh 分のダミーデータをつける
+		AddDummyRMC( ${ $Data[ $i - 1 ] }[ 1 ], $End ) if( $End != 0 );
 		
 		$Start = shift( @SplitTbl ) - $TimeTh;
 		$End   = shift( @SplitTbl ) + $TimeTh;
@@ -90,13 +95,24 @@ foreach ( @Data ){
 			$Year, $Mon, $Day, $Hour, $Min, $Sec
 		);
 		
-		open( fpOut, ">$FileName" );
+		open( fpOut, "| gzip > $FileName.gz" );
+		#open( fpOut, "> $FileName" );
+		$bOutput = 0;
 	}
 	
 	if( $Start <= ${ $_ }[ 0 ] && ${ $_ }[ 0 ] <= $End ){
+		# 分割した nmea の先頭に TimeTh 分のダミーデータをつける
+		if( $bOutput == 0 ){
+			AddDummyRMC( ${ $_ }[ 1 ], $Start );
+			$bOutput = 1;
+		}
+		
 		print( fpOut ${ $_ }[ 1 ] );
 	}
 }
+
+# 最後に分割した nmea の最後に TimeTh 分のダミーデータをつける
+AddDummyRMC( ${ $Data[ $i - 1 ] }[ 1 ], $End );
 
 sub GetDate {
 	my( $Sec, $Min, $Hour, $Day, $Mon, $Year ) = localtime( $_[ 0 ] );
@@ -105,4 +121,34 @@ sub GetDate {
 		"%4d/%02d/%02d %02d:%02d:%02d",
 		$Year + 1900, $Mon + 1, $Day, $Hour, $Min, $Sec
 	);
+}
+
+sub AddDummyRMC {
+	my( $Data, $Time ) = @_;
+	my( $Sec, $Min, $Hour, $Day, $Mon, $Year );
+	my( $i, $Sum );
+	
+	local( $_ );
+	
+	$_ = $Data;
+	/(\$GPRMC.*)/; $_ = $1;
+	
+	@_ = split( /,/, $_ );
+	
+	( $Sec, $Min, $Hour, $Day, $Mon, $Year ) = localtime( $Time );
+	
+	$_[ 1 ] = sprintf( '%02d%02d%02d', $Hour, $Min, $Sec );
+	$_[ 9 ] = sprintf( '%02d%02d%02d', $Day, $Mon + 1, $Year % 100 );
+	
+	$_[ 7 ] = 0;
+	
+	$_ = join( ',', @_ );
+	s/\*.*//s;
+	
+	$Sum = 0;
+	for( $i = 1; $i < length( $_ ); ++$i ){
+		$Sum ^= ord( substr( $_, $i, 1 ));
+	}
+	
+	printf( fpOut "$_*%02X\n", $Sum );
 }
