@@ -96,10 +96,10 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 		}
 	}
 	
-	GPSLog[ 0 ].fSpeed				= GPSLog[ 1 ].fSpeed;
-	GPSLog[ 0 ].fBearing			= GPSLog[ 1 ].fBearing;
-	GPSLog[ uCnt - 1 ].fSpeed		= GPSLog[ uCnt - 2 ].fSpeed;
-	GPSLog[ uCnt - 1 ].fBearing		= GPSLog[ uCnt - 2 ].fBearing;
+	GPSLog[ 0 ].fSpeed			= GPSLog[ 1 ].fSpeed;
+	GPSLog[ 0 ].fBearing		= GPSLog[ 1 ].fBearing;
+	GPSLog[ uCnt - 1 ].fSpeed	= GPSLog[ uCnt - 2 ].fSpeed;
+	GPSLog[ uCnt - 1 ].fBearing	= GPSLog[ uCnt - 2 ].fBearing;
 	
 	for( u = 1; u < uCnt - 1; ++u ){
 		// Gx / Gy を作る
@@ -126,10 +126,10 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 		}
 	}
 	
-	GPSLog[ 0 ].fGx					= GPSLog[ 1 ].fGx;
-	GPSLog[ 0 ].fGy					= GPSLog[ 1 ].fGy;
-	GPSLog[ uCnt - 1 ].fGx			= GPSLog[ uCnt - 2 ].fGx;
-	GPSLog[ uCnt - 1 ].fGy			= GPSLog[ uCnt - 2 ].fGy;
+	GPSLog[ 0 ].fGx			= GPSLog[ 1 ].fGx;
+	GPSLog[ 0 ].fGy			= GPSLog[ 1 ].fGy;
+	GPSLog[ uCnt - 1 ].fGx	= GPSLog[ uCnt - 2 ].fGx;
+	GPSLog[ uCnt - 1 ].fGy	= GPSLog[ uCnt - 2 ].fGy;
 	
 	/************************************************************************/
 	
@@ -182,6 +182,10 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 			
 			m_Log[ m_iCnt ].fGx = ( float )GetLogIntermediateVal( fGx );
 			m_Log[ m_iCnt ].fGy = ( float )GetLogIntermediateVal( fGy );
+		}else{
+			// PSP GPS log のときは，G の MAX 値のみをチェック
+			if( m_dMaxG < m_Log[ m_iCnt ].fGy ) m_dMaxG = m_Log[ m_iCnt ].fGy;
+			if( m_dMinG > m_Log[ m_iCnt ].fGy ) m_dMinG = m_Log[ m_iCnt ].fGy;
 		}
 	}
 	
