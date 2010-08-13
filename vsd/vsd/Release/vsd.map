@@ -1,4 +1,4 @@
-Optimizing Linkage Editor (V.9.00.02.000)         31-Aug-2009 21:52:13
+Optimizing Linkage Editor (V.9.00.02.000)         13-Aug-2010 19:59:33
 
 *** Options ***
 
@@ -9,7 +9,7 @@ Optimizing Linkage Editor (V.9.00.02.000)         31-Aug-2009 21:52:13
 -list="G:\DDS\vsd\vsd\vsd\release\vsd.map"
 -show=symbol
 -optimize=safe
--start=P,C,D,B/0F780,S/0FED2
+-start=P,C,D,B/0F780,S/0FED6
 -nologo
 -input="G:\DDS\vsd\vsd\vsd\release\main.obj"
 -input="G:\DDS\vsd\vsd\vsd\release\rom_entry.obj"
@@ -19,7 +19,7 @@ Optimizing Linkage Editor (V.9.00.02.000)         31-Aug-2009 21:52:13
 
 *** Error information ***
 
-** L1100 (W) Cannot find "C" specified in option "start"
+** L1100 (W) Cannot find "D" specified in option "start"
 
 *** Mapping List ***
 
@@ -28,13 +28,13 @@ SECTION                            START      END         SIZE   ALIGN
 $VECT0
                                   00000000  00000001         2   2
 P
-                                  0000f780  0000fad5       356   2
-D
-                                  0000fad6  0000fad7         2   2
+                                  0000f780  0000f9bf       240   2
+C
+                                  0000f9c0  0000fa27        68   2
 B
-                                  0000fad8  0000fad8         0   2
+                                  0000fa28  0000fa28         0   2
 S
-                                  0000fed2  0000fed2         0   2
+                                  0000fed6  0000fed6         0   2
 
 *** Symbol List ***
 
@@ -48,17 +48,31 @@ FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
 
 SECTION=P
 FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
-                                  0000f780  0000fad5       356
+                                  0000f780  0000f957       1d8
   _ProcessUIO
-                                  0000f780        2c   func ,g         * 
+                                  0000f780       1a4   func ,g         * 
   _main
-                                  0000f7ac       32a   entry,g         * 
+                                  0000f924        34   entry,g         * 
+FILE=bfincr3
+                                  0000f958  0000f989        32
+  $BFINCR$3
+                                  0000f958         0   none ,g         * 
+  
+                                  0000f976         0   none ,l         * 
+  
+                                  0000f97e         0   none ,l         * 
+FILE=spregsv3
+                                  0000f98a  0000f9a9        20
+  $sp_regsv$3
+                                  0000f98a         0   none ,g         * 
+FILE=sprgld23
+                                  0000f9aa  0000f9bf        16
+  $spregld2$3
+                                  0000f9aa         0   none ,g         * 
 
-SECTION=D
+SECTION=C
 FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
-                                  0000fad6  0000fad7         2
-  _g_uSpeedCalcConst
-                                  0000fad6         2   data ,g         * 
+                                  0000f9c0  0000fa27        68
 
 Absolute value symbols
 FILE=G:\DDS\vsd\vsd\vsd\release\rom_entry.obj
@@ -67,11 +81,11 @@ FILE=G:\DDS\vsd\vsd\vsd\release\rom_entry.obj
   $STACK
                                   0000fef4         0   none ,g         * 
   $DIVL$3
-                                  00003208         0   none ,g         * 
+                                  00003dac         0   none ,g         * 
   $MULL$3
-                                  0000326a         0   none ,g         * 
+                                  00003e0e         0   none ,g         * 
   $DIVUL$3
-                                  0000322e         0   none ,g         * 
+                                  00003dd2         0   none ,g         * 
 
 *** Delete Symbols ***
 

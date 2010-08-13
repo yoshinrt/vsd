@@ -954,6 +954,8 @@ INLINE void DoInputSerial( char c ){
 		g_lParam = ( g_lParam << 4 ) + c - 'A' + 10;
 	}else if( '0' <= c && c <= '9' ){
 		g_lParam = ( g_lParam << 4 ) + c - '0';
+	}else if( !g_Flags.bOpenCmd ){
+		if( c == '*' && g_lParam == 0xF15EF117 ) g_Flags.bOpenCmd = 1;
 	}else{
 		switch( c ){
 		  case 's':	DispMsgStart( g_szMsgSpeed );		g_Flags.uDispModeNext = DISPMODE_SPEED;
@@ -981,6 +983,7 @@ INLINE void DoInputSerial( char c ){
 		  Case 'N': g_Flags.uDispMode = g_Flags.uDispModeNext;
 		  Case 'z': GoMonitor();
 			
+		  Case 'S':	g_Flags.bOutputSerial = g_lParam;
 		  Case 'P':	g_cLEDBar = g_lParam;
 		}
 		g_lParam = 0;
@@ -1228,7 +1231,7 @@ INLINE void InitSector( UINT *uBStart, UINT *uBEnd ){
 void ProcessUIO( void ){
 	UCHAR c;
 	while( sci_read( &c, 1 )) DoInputSerial( c );	// serial 入力
-	OutputSerial();									// serial 出力
+	if( g_Flags.bOutputSerial )	OutputSerial();		// serial 出力
 	ProcessPushSW();								// sw 入力
 }
 

@@ -160,6 +160,8 @@ typedef struct {
 	
 	BOOL	bBeep			:1;
 	BOOL	bNewLap			:1;
+	BOOL	bOpenCmd		:1;
+	BOOL	bOutputSerial	:1;
 } Flags_t;
 
 typedef struct {
