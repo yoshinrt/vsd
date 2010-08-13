@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/select.h>
+#include <signal.h>
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -95,14 +96,14 @@ int main( void ){
 			break;
 		}
 		
+		DebugMsg( "start session\n" );
+		
 		// シリアルポート open・設定
 		fdSeri = open( "/dev/ttyS0", O_RDWR | O_NOCTTY );
 		if( fdSock < 0 ){
 			perror( "tty" );
-			break;
+			return 1;
 		}
-		
-		DebugMsg( "start session\n" );
 		
 		tcgetattr( fdSeri, &ioOld ); /* 現在のポート設定を待避 */
 		
@@ -114,7 +115,7 @@ int main( void ){
 		/* set input mode (non-canonical, no echo,...) */
 		ioNew.c_lflag = 0;
 		ioNew.c_cc[ VTIME ]	= 0;	/* キャラクタ間タイマは未使用 */
-		ioNew.c_cc[ VMIN  ]	= 0;	/* 5文字受け取るまでブロックする */
+		ioNew.c_cc[ VMIN  ]	= 0;	/* n文字受け取るまでブロックする */
 		
 		tcflush( fdSeri, TCIFLUSH );
 		i = tcsetattr( fdSeri, TCSANOW, &ioNew );
@@ -141,10 +142,9 @@ int main( void ){
 		
 	  EndSession:
 		DebugMsg( "end session\n" );
-		close( fdSock );
-		
-		tcsetattr( fdSeri, TCSANOW, &ioOld );
+		//tcsetattr( fdSeri, TCSANOW, &ioOld );
 		close( fdSeri );
+		close( fdSock );
 	}
 	
 	close( fdSockListen );
