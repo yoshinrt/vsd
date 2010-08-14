@@ -1,4 +1,4 @@
-Optimizing Linkage Editor (V.9.00.02.000)         14-Aug-2010 10:14:20
+Optimizing Linkage Editor (V.9.00.02.000)         14-Aug-2010 10:56:04
 
 *** Options ***
 
@@ -29,9 +29,9 @@ SECTION                            START      END         SIZE   ALIGN
 $VECT0
                                   00000000  00000001         2   2
 P
-                                  0000f780  0000f7c3        44   2
+                                  0000f780  0000f7db        5c   2
 B
-                                  0000f7c4  0000f7c4         0   2
+                                  0000f7dc  0000f7dc         0   2
 S
                                   0000fed6  0000fed6         0   2
 
@@ -47,11 +47,9 @@ FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
 
 SECTION=P
 FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
-                                  0000f780  0000f7c3        44
-  _SciErr
-                                  0000f780         8   func ,g         * 
+                                  0000f780  0000f7db        5c
   _main
-                                  0000f788        3c   entry,g         * 
+                                  0000f780        5c   entry,g         * 
 
 Absolute value symbols
 FILE=G:\DDS\vsd\vsd\vsd\release\rom_entry.obj
@@ -60,11 +58,11 @@ FILE=G:\DDS\vsd\vsd\vsd\release\rom_entry.obj
   $STACK
                                   0000fef4         0   none ,g         * 
   $DIVL$3
-                                  00003ce6         0   none ,g         * 
+                                  00003cb4         0   none ,g         * 
   $MULL$3
-                                  00003d48         0   none ,g         * 
+                                  00003d16         0   none ,g         * 
   $DIVUL$3
-                                  00003d0c         0   none ,g         * 
+                                  00003cda         0   none ,g         * 
 
 *** Delete Symbols ***
 

@@ -31,6 +31,16 @@
 /*** extern *****************************************************************/
 /*** gloval vars ************************************************************/
 
+/*** スピード・タコのみ出力 *************************************************/
+
+INLINE void OutputSerialS( void ){
+	UCHAR c = 0xFF;
+	
+	SerialPack( g_Tacho.uVal );
+	SerialPack( g_Speed.uVal );
+	sci_write( &c, 1 );
+}
+
 /*** main *******************************************************************/
 
 #ifdef MONITOR_ROM
@@ -71,9 +81,12 @@ int main( void ){
 		ProcessAutoMode();		// オートモード
 		
 		/*** シリアル出力処理 ***/
+		// SIO, sw 等の UserIO 処理
 		if( bProcessUIOFlag = ~bProcessUIOFlag ){
-			// SIO, sw 等の UserIO 処理
 			ProcessUIO();
+		}else{
+			// スピード・タコ only 出力
+			if( g_Flags.bOutputSerial )	OutputSerialS();
 		}
 	}
 }
