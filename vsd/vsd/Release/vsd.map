@@ -1,4 +1,4 @@
-Optimizing Linkage Editor (V.9.00.02.000)         13-Aug-2010 19:59:33
+Optimizing Linkage Editor (V.9.00.02.000)         14-Aug-2010 10:14:20
 
 *** Options ***
 
@@ -19,6 +19,7 @@ Optimizing Linkage Editor (V.9.00.02.000)         13-Aug-2010 19:59:33
 
 *** Error information ***
 
+** L1100 (W) Cannot find "C" specified in option "start"
 ** L1100 (W) Cannot find "D" specified in option "start"
 
 *** Mapping List ***
@@ -28,11 +29,9 @@ SECTION                            START      END         SIZE   ALIGN
 $VECT0
                                   00000000  00000001         2   2
 P
-                                  0000f780  0000f9bf       240   2
-C
-                                  0000f9c0  0000fa27        68   2
+                                  0000f780  0000f7c3        44   2
 B
-                                  0000fa28  0000fa28         0   2
+                                  0000f7c4  0000f7c4         0   2
 S
                                   0000fed6  0000fed6         0   2
 
@@ -48,31 +47,11 @@ FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
 
 SECTION=P
 FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
-                                  0000f780  0000f957       1d8
-  _ProcessUIO
-                                  0000f780       1a4   func ,g         * 
+                                  0000f780  0000f7c3        44
+  _SciErr
+                                  0000f780         8   func ,g         * 
   _main
-                                  0000f924        34   entry,g         * 
-FILE=bfincr3
-                                  0000f958  0000f989        32
-  $BFINCR$3
-                                  0000f958         0   none ,g         * 
-  
-                                  0000f976         0   none ,l         * 
-  
-                                  0000f97e         0   none ,l         * 
-FILE=spregsv3
-                                  0000f98a  0000f9a9        20
-  $sp_regsv$3
-                                  0000f98a         0   none ,g         * 
-FILE=sprgld23
-                                  0000f9aa  0000f9bf        16
-  $spregld2$3
-                                  0000f9aa         0   none ,g         * 
-
-SECTION=C
-FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
-                                  0000f9c0  0000fa27        68
+                                  0000f788        3c   entry,g         * 
 
 Absolute value symbols
 FILE=G:\DDS\vsd\vsd\vsd\release\rom_entry.obj
@@ -81,11 +60,11 @@ FILE=G:\DDS\vsd\vsd\vsd\release\rom_entry.obj
   $STACK
                                   0000fef4         0   none ,g         * 
   $DIVL$3
-                                  00003dac         0   none ,g         * 
+                                  00003ce6         0   none ,g         * 
   $MULL$3
-                                  00003e0e         0   none ,g         * 
+                                  00003d48         0   none ,g         * 
   $DIVUL$3
-                                  00003dd2         0   none ,g         * 
+                                  00003d0c         0   none ,g         * 
 
 *** Delete Symbols ***
 

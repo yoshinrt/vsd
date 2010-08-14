@@ -58,8 +58,8 @@ void sci_init(VP_INT exinf)
 	sci_flush_rx();
 	sci_flush_tx();
 
-	SCI3.SCR3.BIT.TE = 0;    /* 送受信Off */
-	SCI3.SCR3.BIT.RE = 0;
+	//SCI3.SCR3.BIT.TE = 0;    /* 送受信Off */
+	//SCI3.SCR3.BIT.RE = 0;
 	
 	SCI3.SCR3.BYTE=0;         /*すべてのflag clear*/
 	SCI3.SMR.BYTE=0;          /*Ascnc, 8bit , NoParity, stop1, 1/1*/
@@ -126,12 +126,17 @@ size_t sci_write(UB* data, size_t n)
 
 void sci_int_handler(VP_INT exinf)
 {
+	/* オーバラン フレーム パリティ エラー */
+	if(SCI3.SSR.BYTE & 0x38 ){
+		if(error_handler)error_handler();
+		SCI3.SSR.BYTE &= ~0x38;
+	}
 	/* 受信データフル */
 	if(SCI3.SSR.BIT.RDRF){
 		rx_buffer[ rx_idx_tail++ ] = SCI3.RDR;	/* 読むことでフラグをクリアする */
 		if(rx_idx_tail == rx_buffer_end)
 			rx_idx_tail = 0;
-		return;
+		//return;
 	}
 	/* 送信データエンプティ */
 	if(SCI3.SSR.BIT.TDRE){
@@ -148,24 +153,6 @@ void sci_int_handler(VP_INT exinf)
 			if(tx_idx_head == tx_buffer_end)
 				tx_idx_head = 0;
 		}
-		return;
-	}
-	/* オーバランエラー */
-	if(SCI3.SSR.BIT.OER){
-		SCI3.SSR.BIT.OER = 0;
-		if(error_handler)error_handler();
-		return;
-	}
-	/* フレームエラー */
-	if(SCI3.SSR.BIT.FER){
-		SCI3.SSR.BIT.FER = 0;
-		if(error_handler)error_handler();
-		return;
-	}
-	/* パリティエラー */
-	if(SCI3.SSR.BIT.PER){
-		SCI3.SSR.BIT.PER = 0;
-		if(error_handler)error_handler();
-		return;
+		//return;
 	}
 }
