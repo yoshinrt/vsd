@@ -64,10 +64,17 @@ public class Vsdroid extends Activity {
 	int iMainMode		= MODE_LAPTIME;
 
 	final String VSD_ROOT = "/sdcard/vsd";
+	final String VSD_LOG  = VSD_ROOT + "/log";
+
+	enum LAP_STATE {
+		NONE,
+		START,
+		UPDATE,
+		SECTOR,
+	};
 
 	// VSD コミュニケーション
-	VsdInterface/*Emulation*/ Vsd = null;
-	//VsdInterface Vsd;
+	VsdInterfaceEmulation Vsd = null;
 	Thread VsdThread = null;
 
 	VsdSurfaceView	VsdScreen = null;
@@ -106,9 +113,13 @@ public class Vsdroid extends Activity {
 		int		iTSCRaw			= 0;
 		int 	iSectorCnt		= 0;
 		int 	iSectorCntMax	= 1;
-		boolean	bUpdateLap		= false;
-		boolean	bUpdateSector	= false;
 		double	dGx, dGy;
+		double	dGcx, dGcy;
+
+		LAP_STATE	LapState	= LAP_STATE.NONE;
+
+		final int	iGCaribCntMax	= 30;
+		int			iGCaribCnt		= iGCaribCntMax;
 
 		// レコード
 		int 	iLapNum			= 0;
@@ -122,6 +133,7 @@ public class Vsdroid extends Activity {
 
 		FileWriter		fsLog		= null;
 		OutputStream	fsBinLog	= null;
+		boolean			bLogStart	= false;
 		Socket			Sock		= null;
 
 		boolean bKillThread = false;
@@ -137,8 +149,7 @@ public class Vsdroid extends Activity {
 			iTSCRaw			= 0;
 			iSectorCnt		= 0;
 			iSectorCntMax	= 1;	// ★あやしい
-			bUpdateLap		= false;
-			bUpdateSector	= false;
+			LapState		= LAP_STATE.NONE;
 
 			// レコード
 			iLapNum			= 0;
@@ -152,7 +163,11 @@ public class Vsdroid extends Activity {
 
 			fsLog			= null;
 			fsBinLog		= null;
+			bLogStart		= false;
 			Sock			= null;
+
+			dGcx = dGcy		= 0;
+			iGCaribCnt		= iGCaribCntMax;
 		}
 
 		// 2byte を 16bit int にアンパックする
@@ -188,8 +203,8 @@ public class Vsdroid extends Activity {
 
 			// ログファイルオープン
 			try {
-				fsLog    = new FileWriter( VSD_ROOT + s + ".log" );
-				fsBinLog = new FileOutputStream( VSD_ROOT + s + "bin.log" );
+				fsLog    = new FileWriter( VSD_LOG + s + ".log" );
+				fsBinLog = new FileOutputStream( VSD_LOG + s + "bin.log" );
 			} catch (FileNotFoundException e) {
 				strMessage = "Log file open failed";
 				return -1;
@@ -273,8 +288,25 @@ public class Vsdroid extends Activity {
 			if( iBufPtr < iEOLPos ){
 				iMileage16	= Unpack();
 				iTSCRaw		= Unpack();
+
 				dGx			= Unpack();
 				dGy			= Unpack();
+				if( iGCaribCnt-- > 0 ){
+					// G センサーキャリブレーション中
+					dGcx += dGx;
+					dGcy += dGy;
+
+					if( iGCaribCnt == 0 ){
+						dGcx /= iGCaribCntMax;
+						dGcy /= iGCaribCntMax;
+					}
+
+					dGx	= 0;
+					dGy	= 0;
+				}else{
+					dGx	= -( dGx - dGcx ) / ACC_1G_Y;
+					dGy	=  ( dGy - dGcy ) / ACC_1G_Z;
+				}
 
 				// mileage 補正
 				if(( iMileageRaw & 0xFFFF ) > iMileage16 ) iMileageRaw += 0x10000;
@@ -282,7 +314,8 @@ public class Vsdroid extends Activity {
 				iMileageRaw |= iMileage16;
 
 				// LapTime が見つかった
-				bUpdateSector = bUpdateLap	= false;
+				LapState = LAP_STATE.NONE;
+
 				if( iBufPtr < iEOLPos ){
 					iRtcRaw = Unpack() + ( Unpack() << 16 );
 
@@ -290,18 +323,22 @@ public class Vsdroid extends Activity {
 						// 規定のセクタを通過したので，NewLap
 						if( iRtcPrevRaw != 0 ){
 							// 1周回った
+							LapState = LAP_STATE.UPDATE;
+
 							++iLapNum;
 							iTimeLastRaw = iRtcRaw - iRtcPrevRaw;
 							if( iTimeBestRaw == 0 || iTimeLastRaw < iTimeBestRaw ){
 								iTimeBestRaw = iTimeLastRaw;
 							}
+						}else{
+							// ラップスタート
+							LapState = LAP_STATE.START;
 						}
 						iRtcPrevRaw	= iRtcRaw;
 						iSectorCnt	= 0;
-						bUpdateLap	= true;
 					}else{
 						// 中間セクタ通過
-						bUpdateSector = true;
+						LapState = LAP_STATE.SECTOR;
 					}
 				}
 			}else{
@@ -327,6 +364,9 @@ public class Vsdroid extends Activity {
 		public void WriteLog(){
 			String s;
 
+			if( iSpeedRaw > 0 ) bLogStart = true;
+			if( !bLogStart ) return;
+
 			// 基本データ
 			s = String.format(
 				"%d\t%.2f\t%.2f\t%.4f\t%.4f\t%d",
@@ -336,14 +376,17 @@ public class Vsdroid extends Activity {
 			);
 
 			// ラップタイム
-			if( bUpdateSector ){
+			switch( LapState ){
+			  case UPDATE:
+				s += String.format( "\tLAP%d\t", iLapNum ) + FormatTime2( iTimeLastRaw );
+				break;
+
+			  case START:
+				s += String.format( "\tLAP%d start", iLapNum + 1 );
+				break;
+
+			  case SECTOR:
 				s += String.format( "\tSector%d\t", iSectorCnt ) + FormatTime2( iRtcPrevRaw - iRtcRaw );
-			}else if( bUpdateLap ){
-				if( iRtcPrevRaw != 0 ){
-					s += String.format( "\tLAP%d\t", iLapNum ) + FormatTime2( iTimeLastRaw );
-				}else{
-					s += String.format( "\tLAP%d start", iLapNum + 1 );
-				}
 			}
 
 			try {
@@ -411,10 +454,10 @@ public class Vsdroid extends Activity {
 			try {
 				SendCmd( "F15EF117*\rz\r" );
 
-				WaitChar( ':' ); SendCmd( "l\r" );
-
 				try {
-					fsFirm = new FileInputStream( VSD_ROOT + "/vsd_rom.mot" );
+					fsFirm = new FileInputStream( VSD_ROOT + "/vsd.mot" );
+
+					WaitChar( ':' ); SendCmd( "l\r" );	// FW があったときだけ l コマンド
 
 					// FW の \n を削除しつつ送信
 					while(( iReadSize = fsFirm.read( Buf, 0, iBufSize )) > 0 ){
@@ -430,7 +473,8 @@ public class Vsdroid extends Activity {
 				WaitChar( ':' ); SendCmd( "g\r" );
 
 				try { Thread.sleep( 100 ); } catch (InterruptedException e) {}
-				SendCmd( "F15EF117*1S" );
+				// 1S: Serial out on  s: speed  1a: auto mode
+				SendCmd( "F15EF117*1Ss1a" );
 
 				// 最初の 0xFF までスキップ
 				int iRetryCnt = 100;
@@ -694,26 +738,6 @@ public class Vsdroid extends Activity {
 			VsdScreen = null;
 		}
 
-		//*** GUI ***********************************************************
-
-		@Override
-		public boolean onKeyDown( int keyCode, KeyEvent event ){
-			if( bDebug ) Log.d( "VSDroid", "onKeyDown" );
-			switch( keyCode ){
-			  case KeyEvent.KEYCODE_DPAD_CENTER:
-				Vsd.RestartLap();
-				break;
-			  case KeyEvent.KEYCODE_MENU:
-				strMessage = "Normal";
-				Config();
-				break;
-
-			  default:
-				return false;
-			}
-			return true;
-		}
-
 		//*** 描画 ***********************************************************
 
 		final int iMeterCx = 399;
@@ -725,6 +749,10 @@ public class Vsdroid extends Activity {
 		private void Draw(){
 
 			if( Vsd == null ) return;
+
+			//★デバッグ用 2倍
+			//Vsd.iSpeedRaw *= 2;
+			//Vsd.iTacho    *= 2;
 
 			Canvas canvas = getHolder().lockCanvas();
 
@@ -803,7 +831,7 @@ public class Vsdroid extends Activity {
 			if( Vsd.iRtcPrevRaw == 0 ){
 				// まだスタートしてない
 				s += " ready";
-			}else if( Vsd.bUpdateLap && iMainMode != MODE_LAPTIME ){
+			}else if( Vsd.LapState == LAP_STATE.UPDATE && iMainMode != MODE_LAPTIME ){
 				// Laptime モード以外でゴールしたら，Ready 状態に戻す
 				Vsd.iRtcPrevRaw = 0;
 			}
@@ -859,6 +887,29 @@ public class Vsdroid extends Activity {
 	//************************************************************************
 
 	@Override
+	public boolean onKeyDown( int keyCode, KeyEvent event ){
+		if( bDebug ) Log.d( "VSDroid", "onKeyDown" );
+		switch( keyCode ){
+		  case KeyEvent.KEYCODE_DPAD_CENTER:
+			if( Vsd != null ) Vsd.RestartLap();
+			break;
+
+		  case KeyEvent.KEYCODE_MENU:
+			strMessage = "Normal";
+			Config();
+			break;
+
+		  case KeyEvent.KEYCODE_BACK:
+			finish();
+			break;
+
+		  default:
+			return false;
+		}
+		return true;
+	}
+
+	@Override
 	protected void onCreate( final Bundle savedInstanceState ){
 		super.onCreate( savedInstanceState );
 
@@ -868,11 +919,12 @@ public class Vsdroid extends Activity {
 		setContentView( new VsdSurfaceView( this ));
 
 		// log dir 作成
-		File dir = new File( VSD_ROOT );
-		dir.mkdir();
+		File dir;
+		dir = new File( VSD_ROOT ); dir.mkdir();
+		dir = new File( VSD_LOG  ); dir.mkdir();
 
 		// VSD コネクション
-		Vsd = new VsdInterface/*Emulation*/();
+		Vsd = new VsdInterfaceEmulation();
 		// VSD スレッド起動
 		VsdThread = new Thread( Vsd );
 		VsdThread.start();
