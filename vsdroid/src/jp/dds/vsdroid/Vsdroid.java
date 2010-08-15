@@ -31,7 +31,6 @@ import java.util.*;
 public class Vsdroid extends Activity {
 
 	final boolean	bDebug		= false;
-	final boolean	bEmulation	= false;
 
 	// 定数
 	final int MODE_LAPTIME	= 0;
@@ -64,7 +63,8 @@ public class Vsdroid extends Activity {
 	final int iRevLimit = 6500;
 
 	// モード・config
-	int iMainMode		= MODE_LAPTIME;
+	int		iMainMode	= MODE_LAPTIME;
+	boolean	bReplayLog	= false;
 
 	final String VSD_ROOT = "/sdcard/vsd";
 	final String VSD_LOG  = VSD_ROOT + "/log";
@@ -201,6 +201,10 @@ public class Vsdroid extends Activity {
 		}
 
 		public int OpenLog(){
+
+			// 非デバッグモードかつ Log リプレイモードなら，ログは作らない
+			if( !bDebug && bReplayLog ) return 0;
+
 			// 日付
 			Calendar Now = Calendar.getInstance();
 			String s = String.format( "/vsd%04d%02d%02d_%02d%02d%02d",
@@ -1016,7 +1020,8 @@ public class Vsdroid extends Activity {
 		Pref = PreferenceManager.getDefaultSharedPreferences( this );
 
 		// VSD コネクション
-		Vsd = bEmulation ? new VsdInterfaceEmulation() : new VsdInterface();
+		bReplayLog = Pref.getBoolean( "key_replay_log", false );
+		Vsd = bReplayLog ? new VsdInterfaceEmulation() : new VsdInterface();
 
 		// VSD スレッド起動
 		VsdThread = new Thread( Vsd );
