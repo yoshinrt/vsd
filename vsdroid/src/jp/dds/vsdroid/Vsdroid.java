@@ -265,6 +265,7 @@ public class Vsdroid extends Activity {
 			try {
 				iReadSize = Sock.getInputStream().read( Buf, iStart, iLen );
 			} catch (IOException e) {
+				strMessage = "Socket read IOException";
 				return -1;
 			}
 			return iReadSize;
@@ -602,6 +603,9 @@ public class Vsdroid extends Activity {
 					if(( i = Read()) > 0 ){
 						if( VsdScreen != null ) VsdScreen.Draw();
 						if( i == 1 ) WriteLog();		// テキストログライト
+					}else if( i < 0 ){
+						Config();
+						break;
 					}
 				}
 			}
@@ -673,7 +677,10 @@ public class Vsdroid extends Activity {
 			//if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::RawRead" );
 
 			try {
-				strBuf = brEmuLog.readLine();
+				if(( strBuf = brEmuLog.readLine()) == null ){
+					strMessage = "Replay log finished";
+					return -1;
+				}
 
 				StringTokenizer Token = new StringTokenizer( strBuf );
 
@@ -737,6 +744,7 @@ public class Vsdroid extends Activity {
 				}
 
 			} catch ( IOException e ){
+				strMessage = "Replay log IOException";
 				return -1;
 			}
 
@@ -825,12 +833,10 @@ public class Vsdroid extends Activity {
 
 			if( Vsd == null ) return;
 
-			//★デバッグ用 2倍
-			//Vsd.iSpeedRaw *= 2;
-			//Vsd.iTacho    *= 2;
-
 			Canvas canvas = getHolder().lockCanvas();
-
+			
+			int iTacho = Vsd.bEcoMode ? Vsd.iTacho * 2 : Vsd.iTacho;
+			
 			// ギアを求める
 			double dGearRatio = ( double )Vsd.iSpeedRaw / Vsd.iTacho;
 			int	iGear;
@@ -846,11 +852,11 @@ public class Vsdroid extends Activity {
 			if(( Vsd.iSpeedRaw >= 30000 ) && ( Vsd.iTacho == 0 )){
 				// キャリブレーション表示
 				iBarLv = 4;
-			}else if( Vsd.iTacho >= iRevLimit ){
+			}else if( iTacho >= iRevLimit ){
 				iBarLv = 5;
 			}else{
 				// LED の表示 LV を求める
-				iBarLv = 3 - ( iRevLimit - Vsd.iTacho ) / iTachoBar[ iGear - 1 ];
+				iBarLv = 3 - ( iRevLimit - iTacho ) / iTachoBar[ iGear - 1 ];
 				if( iBarLv < 0 ) iBarLv = 0;
 			}
 
@@ -866,7 +872,7 @@ public class Vsdroid extends Activity {
 
 			// Vsd.iTacho 針
 			paint.setColor( Color.RED );
-			double dTachoAngle = ( 210 - ( 240 * Vsd.iTacho / 8000.0 )) * Math.PI / 180;
+			double dTachoAngle = ( 210 - ( 240 * iTacho / 8000.0 )) * Math.PI / 180;
 			canvas.drawLine(
 				iMeterCx, iMeterCy,
 				iMeterCx + ( int )( Math.cos( dTachoAngle ) * iMeterR ),
