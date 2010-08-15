@@ -4,17 +4,20 @@ import java.util.Calendar;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.KeyEvent;
 import android.content.Intent;
+import android.content.SharedPreferences.Editor;
 import android.view.WindowManager;
 
 import java.net.InetSocketAddress;
@@ -27,8 +30,8 @@ import java.util.*;
 
 public class Vsdroid extends Activity {
 
-	final int		iScreenWidth = 800;
-	final boolean	bDebug	= true;
+	final boolean	bDebug		= false;
+	final boolean	bEmulation	= false;
 
 	// 定数
 	final int MODE_LAPTIME	= 0;
@@ -74,13 +77,16 @@ public class Vsdroid extends Activity {
 	};
 
 	// VSD コミュニケーション
-	VsdInterfaceEmulation Vsd = null;
+	VsdInterface Vsd = null;
 	Thread VsdThread = null;
 
 	VsdSurfaceView	VsdScreen = null;
 
 	// ステータスメッセージ
 	String strMessage = "Normal";
+
+	// config
+	SharedPreferences Pref;
 
 	//*** utils **************************************************************
 
@@ -115,6 +121,9 @@ public class Vsdroid extends Activity {
 		int 	iSectorCntMax	= 1;
 		double	dGx, dGy;
 		double	dGcx, dGcy;
+		double	dGymkhaStart	= 1;
+		final int	iStartGThrethold	= 500;
+		boolean	bEcoMode		= false;
 
 		LAP_STATE	LapState	= LAP_STATE.NONE;
 
@@ -148,7 +157,9 @@ public class Vsdroid extends Activity {
 			iMileageRaw		= 0;
 			iTSCRaw			= 0;
 			iSectorCnt		= 0;
-			iSectorCntMax	= 1;	// ★あやしい
+			iSectorCntMax	= 1;
+			dGymkhaStart	= 1;
+
 			LapState		= LAP_STATE.NONE;
 
 			// レコード
@@ -221,7 +232,7 @@ public class Vsdroid extends Activity {
 			try {
 				// ソケットの作成
 				Sock = new Socket();
-				SocketAddress adr = new InetSocketAddress( "192.168.0.1", 12345 );
+				SocketAddress adr = new InetSocketAddress( Pref.getString( "key_ip_addr", "192.168.0.1" ), 12345 );
 				Sock.connect( adr, 5000 );
 				if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:connected" );
 			}catch( SocketTimeoutException e ){
@@ -269,7 +280,7 @@ public class Vsdroid extends Activity {
 			if( iReadSize < 0 ) return -1;
 
 			try {
-				fsBinLog.write( Buf, iBufLen, iReadSize );
+				if( fsBinLog != null ) fsBinLog.write( Buf, iBufLen, iReadSize );
 			} catch (IOException e) {}
 
 			iBufLen += iReadSize;
@@ -390,14 +401,20 @@ public class Vsdroid extends Activity {
 			}
 
 			try {
-				fsLog.write( s + "\r\n" );
+				if( fsLog != null ) fsLog.write( s + "\r\n" );
 			} catch (IOException e) {}
 		}
 
 		public int CloseLog(){
 			try {
-				if( fsLog	 != null ) fsLog.close();
-				if( fsBinLog != null ) fsBinLog.close();
+				if( fsLog	 != null ){
+					fsLog.close();
+					fsLog = null;
+				}
+				if( fsBinLog != null ){
+					fsBinLog.close();
+					fsBinLog = null;
+				}
 			} catch (IOException e) {}
 			return 0;
 		}
@@ -411,10 +428,7 @@ public class Vsdroid extends Activity {
 			return 0;
 		}
 
-		public void RestartLap(){
-			iRtcPrevRaw		= 0;
-			iSectorCnt		= 0;
-		}
+		//*** sio コマンド関係 ***********************************************
 
 		public void SendCmd( String s ) throws IOException {
 			byte[] Buf;
@@ -444,6 +458,8 @@ public class Vsdroid extends Activity {
 			}
 			return -1;
 		}
+
+		//*** FW ロード ******************************************************
 
 		public int LoadFirmWare(){
 			InputStream	fsFirm = null;
@@ -511,6 +527,57 @@ public class Vsdroid extends Activity {
 			return 0;
 		}
 
+		//*** config に従って設定 ********************************************
+
+		public void SetupMode(){
+
+			// セクタ数
+			try{
+				iSectorCntMax = Integer.parseInt( Pref.getString( "key_sectors", "1" ));
+			}catch( NumberFormatException e ){
+				iSectorCntMax = 1;
+			}
+
+			// ジムカスタート距離
+			try{
+				dGymkhaStart = Double.parseDouble( Pref.getString( "key_gymkha_start", "1" ));
+			}catch( NumberFormatException e ){
+				dGymkhaStart = 1.0;
+			}
+
+			// エコモードw
+			bEcoMode = Pref.getBoolean( "key_eco_mode", false );
+
+			// メインモード
+			try{
+				iMainMode = Integer.parseInt( Pref.getString( "key_vsd_mode", "0" ));
+				if( iMainMode < 0 || MODE_NUM <= iMainMode ) iMainMode = MODE_LAPTIME;
+			}catch( NumberFormatException e ){}
+
+			try {
+				switch( iMainMode ){
+				  case MODE_LAPTIME:
+					SendCmd( "l" );
+					break;
+
+				  case MODE_GYMKHANA:
+					// * は g_lParam をいったんクリアする意図
+					SendCmd( String.format( "*%Xg", ( int )( dGymkhaStart * PULSE_PER_1KM / 1000 + 0.5 )));
+					break;
+
+				  case MODE_ZERO_FOUR:
+					SendCmd( String.format( "*%Xf", iStartGThrethold ));
+					break;
+
+				  case MODE_ZERO_ONE:
+					SendCmd( String.format( "*%Xo", iStartGThrethold ));
+				}
+			} catch (IOException e) {}
+
+			iRtcPrevRaw		= 0;
+			iSectorCnt		= 0;
+		}
+
 		//*** データ処理スレッド *********************************************
 
 		public void run(){
@@ -524,10 +591,14 @@ public class Vsdroid extends Activity {
 				// エラーが起きたので，config を出して thread 終了
 				if( !isFinishing()) Config();
 
-			}else while( !bKillThread ){
-				if(( i = Read()) > 0 ){
-					if( VsdScreen != null ) VsdScreen.Draw();
-					if( i == 1 ) WriteLog();		// テキストログライト
+			}else{
+				Vsd.SetupMode();
+
+				while( !bKillThread ){
+					if(( i = Read()) > 0 ){
+						if( VsdScreen != null ) VsdScreen.Draw();
+						if( i == 1 ) WriteLog();		// テキストログライト
+					}
 				}
 			}
 			bKillThread	= false;
@@ -545,7 +616,6 @@ public class Vsdroid extends Activity {
 
 			VsdThread = null;
 		}
-
 	}
 
 	//*** エミュレーションモード *********************************************
@@ -740,6 +810,7 @@ public class Vsdroid extends Activity {
 
 		//*** 描画 ***********************************************************
 
+		final int iScreenWidth = 800;
 		final int iMeterCx = 399;
 		final int iMeterCy = 310;
 		final int iMeterR  = 292;
@@ -856,10 +927,22 @@ public class Vsdroid extends Activity {
 
 	//*** config メニュー ****************************************************
 
+	boolean bConfigOpened = false;
+
 	// config を開く
 	public void Config(){
 		if( bDebug ) Log.d( "VSDroid", "Config" );
-		Intent intent = new Intent( Vsdroid.this, Config.class );
+
+		if( bConfigOpened ) return;
+		bConfigOpened = true;
+
+
+		Editor ed = Pref.edit();
+		ed.putBoolean( "key_reopen_log",  false );
+		ed.putBoolean( "key_caribration", false );
+		ed.commit();
+
+		Intent intent = new Intent( Vsdroid.this, Preference.class );
 		intent.putExtra( "Message", strMessage );
 
 		startActivityForResult( intent, 0 /*SHOW_EDITOR*/ );
@@ -868,20 +951,26 @@ public class Vsdroid extends Activity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if( bDebug ) Log.d( "VSDroid", "ConfigResult" );
+		bConfigOpened = false;
 
 		if( VsdThread == null ){
 			// スレッド再起動
 			VsdThread = new Thread( Vsd );
 			VsdThread.start();
-		}
-		/*
-		if (requestCode == SHOW_EDITOR) {
-			if (resultCode == RESULT_OK) {
-				TextView textView = (TextView)findViewById(R.id.TextView01);
-			   	textView.setText(data.getCharSequenceExtra("TEXT"));
+		}else if( Vsd != null ){
+			Vsd.SetupMode();
+
+			if( Pref.getBoolean( "key_reopen_log", false )){
+				Vsd.CloseLog();
+				Vsd.OpenLog();
+			}
+
+			if( Pref.getBoolean( "key_caribration", false )){
+				try {
+					Vsd.SendCmd( "c" );
+				} catch (IOException e) {}
 			}
 		}
-		*/
 	}
 
 	//************************************************************************
@@ -891,7 +980,7 @@ public class Vsdroid extends Activity {
 		if( bDebug ) Log.d( "VSDroid", "onKeyDown" );
 		switch( keyCode ){
 		  case KeyEvent.KEYCODE_DPAD_CENTER:
-			if( Vsd != null ) Vsd.RestartLap();
+			if( Vsd != null ) Vsd.SetupMode();
 			break;
 
 		  case KeyEvent.KEYCODE_MENU:
@@ -923,8 +1012,12 @@ public class Vsdroid extends Activity {
 		dir = new File( VSD_ROOT ); dir.mkdir();
 		dir = new File( VSD_LOG  ); dir.mkdir();
 
+		// preference 参照
+		Pref = PreferenceManager.getDefaultSharedPreferences( this );
+
 		// VSD コネクション
-		Vsd = new VsdInterfaceEmulation();
+		Vsd = bEmulation ? new VsdInterfaceEmulation() : new VsdInterface();
+
 		// VSD スレッド起動
 		VsdThread = new Thread( Vsd );
 		VsdThread.start();

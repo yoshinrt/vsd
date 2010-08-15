@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string-array name="list_entries">
+	<item>Lap time</item>
+	<item>Gymkhana</item>
+	<item>0-400m</item>
+	<item>0-100km/h</item>
+</string-array>
+	<string-array name="list_entryvalues">
+	<item>0</item>
+	<item>1</item>
+	<item>2</item>
+	<item>3</item>
+</string-array>
+</resources>

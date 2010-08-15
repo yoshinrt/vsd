@@ -14,7 +14,8 @@
             </intent-filter>
         </activity>
 
-    <activity android:name="Config"></activity>
+    
+<activity android:name="Preference"></activity>
 </application>
 
 

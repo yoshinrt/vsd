@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<Preference android:title="Status" android:key="key_status" android:summary="Current status" android:selectable="false"></Preference>
+	<CheckBoxPreference android:key="key_reopen_log" android:title="Re-open log"></CheckBoxPreference><CheckBoxPreference android:key="key_caribration" android:title="Caribration"></CheckBoxPreference><ListPreference
+		android:entries="@array/list_entries"
+		android:entryValues="@array/list_entryvalues" android:title="Mode" android:summary="VSD mode" android:dialogTitle="Mode" android:key="key_vsd_mode" android:defaultValue="0"/>
+	<EditTextPreference android:key="key_sectors" android:summary="Numbers of Sectors" android:title="Numbers of Sectors" android:dialogTitle="Numbers of Sectors" android:defaultValue="1"></EditTextPreference>
+	<EditTextPreference android:key="key_gymkha_start" android:title="Gymkhana start length" android:dialogTitle="Gymkhana start length" android:summary="Gymkhana start length" android:defaultValue="1.0"></EditTextPreference>
+	<EditTextPreference android:summary="IP address of fon" android:key="key_ip_addr" android:title="IP address" android:dialogTitle="IP address" android:defaultValue="192.168.0.1"></EditTextPreference>
+
+
+<CheckBoxPreference android:key="key_eco_mode" android:title="Eco mode"></CheckBoxPreference>
+</PreferenceScreen>
