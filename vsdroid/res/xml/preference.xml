@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
-	<Preference android:title="Status" android:key="key_status" android:summary="Current status" android:selectable="false"></Preference>
-	<CheckBoxPreference android:key="key_reopen_log" android:title="Re-open log"></CheckBoxPreference><CheckBoxPreference android:key="key_caribration" android:title="Caribration"></CheckBoxPreference><ListPreference
+	<Preference android:title="Status" android:key="key_status" android:selectable="false" android:summary="@string/pref_summery_status"></Preference>
+	<CheckBoxPreference android:key="key_reopen_log" android:title="@string/pref_reopen_log"></CheckBoxPreference><CheckBoxPreference android:key="key_caribration" android:title="@string/pref_caribration"></CheckBoxPreference><ListPreference
 		android:entries="@array/list_entries"
-		android:entryValues="@array/list_entryvalues" android:title="Mode" android:summary="VSD mode" android:dialogTitle="Mode" android:key="key_vsd_mode" android:defaultValue="0"/>
-	<EditTextPreference android:key="key_sectors" android:summary="Numbers of Sectors" android:title="Numbers of Sectors" android:dialogTitle="Numbers of Sectors" android:defaultValue="1"></EditTextPreference>
-	<EditTextPreference android:key="key_gymkha_start" android:title="Gymkhana start length" android:dialogTitle="Gymkhana start length" android:summary="Gymkhana start length" android:defaultValue="1.0"></EditTextPreference>
-	<EditTextPreference android:summary="IP address of fon" android:key="key_ip_addr" android:title="IP address" android:dialogTitle="IP address" android:defaultValue="192.168.0.1"></EditTextPreference>
-<CheckBoxPreference android:key="key_eco_mode" android:title="Eco mode"></CheckBoxPreference>
-<CheckBoxPreference android:key="key_replay_log" android:title="Replay log" android:summary="Replay vsd/vsd.log (need reboot)"></CheckBoxPreference>
+		android:entryValues="@array/list_entryvalues" android:key="key_vsd_mode" android:defaultValue="0" android:dialogTitle="@string/pref_vsd_mode" android:title="@string/pref_vsd_mode"/>
+	<EditTextPreference android:key="key_sectors" android:defaultValue="1" android:title="@string/pref_sectors" android:dialogTitle="@string/pref_sectors"></EditTextPreference>
+	<EditTextPreference android:key="key_gymkha_start" android:defaultValue="1.0" android:title="@string/pref_gymkhana_start" android:dialogTitle="@string/pref_gymkhana_start"></EditTextPreference>
+	<EditTextPreference android:key="key_ip_addr" android:defaultValue="192.168.0.1" android:title="@string/pref_ip_addr" android:dialogTitle="@string/pref_ip_addr"></EditTextPreference>
+<CheckBoxPreference android:key="key_eco_mode" android:summary="@string/pref_summery_eco_mode" android:title="@string/pref_eco_mode"></CheckBoxPreference>
+<CheckBoxPreference android:key="key_replay_log" android:summary="@string/pref_summery_replay_log" android:title="@string/pref_replay_log"></CheckBoxPreference>
 </PreferenceScreen>

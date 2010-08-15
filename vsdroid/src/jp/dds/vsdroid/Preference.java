@@ -70,8 +70,8 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 			EditSectors.setSummary( s );
 		}
 
-		if( key == null || key.equals( "key_gymhka_start" )){
-			String s = sharedPreferences.getString( "key_gymhka_start", "1.0" );
+		if( key == null || key.equals( "key_gymkha_start" )){
+			String s = sharedPreferences.getString( "key_gymkha_start", "1.0" );
 			try{
 				Double.parseDouble( s );
 			}catch( NumberFormatException e ){

@@ -2,4 +2,15 @@
 <resources>
     
     <string name="app_name">VSDroid</string>
+<string name="pref_summery_status">動作状態</string>
+<string name="pref_reopen_log">ログファイル再作成</string><string name="pref_caribration">キャリブレーション</string>
+<string name="pref_vsd_mode">VSD動作モード</string>
+<string name="pref_sectors">セクター数</string>
+<string name="pref_gymkhana_start">ジムカーナ スタート距離</string>
+<string name="pref_ip_addr">IPアドレス</string>
+<string name="pref_eco_mode">エコモード</string>
+<string name="pref_summery_eco_mode">エコ運転を促す</string><string name="pref_replay_log">ログ再生モード</string>
+<string name="pref_summery_replay_log">vsd/vsd.logを再生する (再起動が必要)</string>
+
+
 </resources>
