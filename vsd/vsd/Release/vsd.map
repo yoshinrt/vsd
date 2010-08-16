@@ -1,4 +1,4 @@
-Optimizing Linkage Editor (V.9.00.02.000)         14-Aug-2010 10:56:04
+Optimizing Linkage Editor (V.9.00.02.000)         14-Aug-2010 23:14:34
 
 *** Options ***
 
@@ -21,6 +21,7 @@ Optimizing Linkage Editor (V.9.00.02.000)         14-Aug-2010 10:56:04
 
 ** L1100 (W) Cannot find "C" specified in option "start"
 ** L1100 (W) Cannot find "D" specified in option "start"
+** L1100 (W) Cannot find "B" specified in option "start"
 
 *** Mapping List ***
 
@@ -29,9 +30,7 @@ SECTION                            START      END         SIZE   ALIGN
 $VECT0
                                   00000000  00000001         2   2
 P
-                                  0000f780  0000f7db        5c   2
-B
-                                  0000f7dc  0000f7dc         0   2
+                                  0000f780  0000f787         8   2
 S
                                   0000fed6  0000fed6         0   2
 
@@ -47,9 +46,9 @@ FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
 
 SECTION=P
 FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
-                                  0000f780  0000f7db        5c
+                                  0000f780  0000f787         8
   _main
-                                  0000f780        5c   entry,g         * 
+                                  0000f780         8   entry,g         * 
 
 Absolute value symbols
 FILE=G:\DDS\vsd\vsd\vsd\release\rom_entry.obj

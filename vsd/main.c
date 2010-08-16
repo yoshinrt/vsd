@@ -20,7 +20,7 @@
  #include "main2.c"
 #else
  #include "rom_entry.h"
- //#define MINIMIZE	// 最小 FIRMWARE
+ #define MINIMIZE	// 最小 FIRMWARE
 #endif
 
 #ifndef MINIMIZE
@@ -84,9 +84,9 @@ int main( void ){
 		// SIO, sw 等の UserIO 処理
 		if( bProcessUIOFlag = ~bProcessUIOFlag ){
 			ProcessUIO();
-		}else{
-			// スピード・タコ only 出力
-			if( g_Flags.bOutputSerial )	OutputSerialS();
+		//}else{
+		//	// スピード・タコ only 出力
+		//	if( g_Flags.bOutputSerial )	OutputSerialS();
 		}
 	}
 }
