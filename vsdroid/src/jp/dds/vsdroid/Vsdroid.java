@@ -83,7 +83,7 @@ public class Vsdroid extends Activity {
 	VsdSurfaceView	VsdScreen = null;
 
 	// ステータスメッセージ
-	String strMessage = "Normal";
+	int iMessage = R.string.statmsg_normal;
 
 	// config
 	SharedPreferences Pref;
@@ -221,10 +221,10 @@ public class Vsdroid extends Activity {
 				fsLog    = new FileWriter( VSD_LOG + s + ".log" );
 				fsBinLog = new FileOutputStream( VSD_LOG + s + "bin.log" );
 			} catch (FileNotFoundException e) {
-				strMessage = "Log file open failed";
+				iMessage = R.string.statmsg_log_open_failed;
 				return -1;
 			} catch (IOException e) {
-				strMessage = "Log file open IOException";
+				iMessage = R.string.statmsg_log_open_failed;
 				return -1;
 			}
 
@@ -241,7 +241,7 @@ public class Vsdroid extends Activity {
 				if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:connected" );
 			}catch( SocketTimeoutException e ){
 				if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:timeout" );
-				strMessage = "Socket connection timed out";
+				iMessage = R.string.statmsg_socket_open_failed;
 				if( Sock != null ) try {
 					Sock.close();
 				} catch (IOException e1) {}
@@ -249,7 +249,7 @@ public class Vsdroid extends Activity {
 				return -1;
 			} catch (IOException e) {
 				if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:IOException" );
-				strMessage = "Socket IOException";
+				iMessage = R.string.statmsg_socket_open_failed;
 				if( Sock != null ) try {
 					Sock.close();
 				} catch (IOException e1) {}
@@ -265,7 +265,7 @@ public class Vsdroid extends Activity {
 			try {
 				iReadSize = Sock.getInputStream().read( Buf, iStart, iLen );
 			} catch (IOException e) {
-				strMessage = "Socket read IOException";
+				iMessage = R.string.statmsg_socket_rw_failed;
 				return -1;
 			}
 			return iReadSize;
@@ -521,11 +521,11 @@ public class Vsdroid extends Activity {
 					}
 				}else{
 					// タイムアウト
-					strMessage = "VSD data waiting timed out";
+					iMessage = R.string.statmsg_vsd_initialize_failed;
 					return -1;
 				}
 			} catch (IOException e) {
-				strMessage = "LoadFirmWare() IOException";
+				iMessage = R.string.statmsg_socket_rw_failed;
 				return -1;
 			}
 
@@ -659,7 +659,7 @@ public class Vsdroid extends Activity {
 			try {
 				brEmuLog = new BufferedReader( new FileReader( VSD_ROOT + "/vsd.log" ));
 			} catch ( FileNotFoundException e ){
-				strMessage = "Emulation log open failed";
+				iMessage = R.string.statmsg_emulog_open_failed;
 				return -1;
 			}
 			return 0;
@@ -678,7 +678,7 @@ public class Vsdroid extends Activity {
 
 			try {
 				if(( strBuf = brEmuLog.readLine()) == null ){
-					strMessage = "Replay log finished";
+					iMessage = R.string.statmsg_log_replay_finished;
 					return -1;
 				}
 
@@ -744,7 +744,7 @@ public class Vsdroid extends Activity {
 				}
 
 			} catch ( IOException e ){
-				strMessage = "Replay log IOException";
+				iMessage = R.string.statmsg_log_replay_failed;
 				return -1;
 			}
 
@@ -953,7 +953,7 @@ public class Vsdroid extends Activity {
 		ed.commit();
 
 		Intent intent = new Intent( Vsdroid.this, Preference.class );
-		intent.putExtra( "Message", strMessage );
+		intent.putExtra( "Message", getString( iMessage ));
 
 		startActivityForResult( intent, 0 /*SHOW_EDITOR*/ );
 	}
@@ -994,7 +994,7 @@ public class Vsdroid extends Activity {
 			break;
 
 		  case KeyEvent.KEYCODE_MENU:
-			strMessage = "Normal";
+			iMessage = R.string.statmsg_normal;
 			Config();
 			break;
 

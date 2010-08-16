@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string-array name="list_entries">
-	<item>ラップタイム</item>
-	<item>ジムカーナ</item>
-	<item>0-400m</item>
-	<item>0-100km/h</item>
+	<item>@string/mode_laptime</item>
+	<item>@string/mode_gymkhana</item>
+	<item>@string/mode_0_400</item>
+	<item>@string/mode_0_100</item>
 </string-array>
 	<string-array name="list_entryvalues">
 	<item>0</item>

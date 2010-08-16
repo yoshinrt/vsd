@@ -53,10 +53,12 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 			String s = sharedPreferences.getString( "key_vsd_mode", "LAPTIME" );
 
 			ListMode.setSummary(
-				s.equals( "0" ) ? "Lap time"	:
-				s.equals( "1" ) ? "Gymkhana"	:
-				s.equals( "2" ) ? "0-400m"		:
-								  "0-100km/h"
+				getString(
+					s.equals( "0" ) ? R.string.mode_laptime	:
+					s.equals( "1" ) ? R.string.mode_gymkhana:
+					s.equals( "2" ) ? R.string.mode_0_400	:
+									  R.string.mode_0_100
+				)
 			);
 		}
 

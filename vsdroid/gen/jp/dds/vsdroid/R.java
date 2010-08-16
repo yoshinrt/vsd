@@ -24,6 +24,10 @@ public final class R {
     }
     public static final class string {
         public static final int app_name=0x7f050000;
+        public static final int mode_0_100=0x7f05000f;
+        public static final int mode_0_400=0x7f05000e;
+        public static final int mode_gymkhana=0x7f05000d;
+        public static final int mode_laptime=0x7f05000c;
         public static final int pref_caribration=0x7f050003;
         public static final int pref_eco_mode=0x7f050008;
         public static final int pref_gymkhana_start=0x7f050006;
@@ -35,6 +39,14 @@ public final class R {
         public static final int pref_summery_replay_log=0x7f05000b;
         public static final int pref_summery_status=0x7f050001;
         public static final int pref_vsd_mode=0x7f050004;
+        public static final int statmsg_emulog_open_failed=0x7f050015;
+        public static final int statmsg_log_open_failed=0x7f050011;
+        public static final int statmsg_log_replay_failed=0x7f050016;
+        public static final int statmsg_log_replay_finished=0x7f050017;
+        public static final int statmsg_normal=0x7f050010;
+        public static final int statmsg_socket_open_failed=0x7f050012;
+        public static final int statmsg_socket_rw_failed=0x7f050013;
+        public static final int statmsg_vsd_initialize_failed=0x7f050014;
     }
     public static final class xml {
         public static final int preference=0x7f030000;
