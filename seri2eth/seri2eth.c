@@ -15,8 +15,10 @@ char szBuf[ BUF_SIZE ];
 
 #define max( a, b ) (( a ) > ( b ) ? ( a ) : ( b ))
 
+//#define DEBUG
+
 #ifdef DEBUG
-	#define DebugMsg( fmt, ... )	printf( fmt, ... )
+	#define DebugMsg( fmt, ... )	printf( fmt, ##__VA_ARGS__ )
 #else
 	#define DebugMsg( fmt, ... )
 #endif
@@ -37,6 +39,18 @@ int Repeater( int fdOut, int fdIn ){
 		return -1;
 	}
 	if( iReadSize == 0 ) return 0;
+	
+	// dump
+	#ifdef DEBUG
+		int i;
+		for( i = 0; i < iReadSize; ++i ){
+			if( ' ' <= szBuf[ i ] && szBuf[ i ] <= 0x7E ){
+				printf( "%c", szBuf[ i ] );
+			}else{
+				printf( "\\x%02X ", szBuf[ i ] );
+			}
+		}
+	#endif
 	
 	// write
 	iWriteSize	= 0;
