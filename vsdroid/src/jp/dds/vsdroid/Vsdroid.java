@@ -274,10 +274,10 @@ public class Vsdroid extends Activity {
 		// 2:スピード，タコのみ 1:データ更新  0:新データなし -1:エラー
 		public int Read(){
 			int	iReadSize;
-			int iEOLPos;
 			int	iMileage16;
+			int	iRet	= 0;
+			int	iEOLPos	= 0;
 			int i;
-			int	iRet = 1;
 
 			//if( bDebug ) Log.d( "VSDroid", "VsdInterface::Read" );
 
@@ -289,86 +289,97 @@ public class Vsdroid extends Activity {
 			} catch (IOException e) {}
 
 			iBufLen += iReadSize;
-
-			// 0xFF をサーチ
-			for( iEOLPos = 0; iEOLPos < iBufLen; ++iEOLPos ){
-				if( Buf[ iEOLPos ] == ( byte )0xFF ) break;
-			}
-			if( iEOLPos == iBufLen ) return 0;
-
-			// 0xFF が見つかったので，データ変換
 			iBufPtr = 0;
-			iTacho		= Unpack();
-			iSpeedRaw	= Unpack();
 
-			if( iBufPtr < iEOLPos ){
-				iMileage16	= Unpack();
-				iTSCRaw		= Unpack();
-
-				dGx			= Unpack();
-				dGy			= Unpack();
-				if( iGCaribCnt-- > 0 ){
-					// G センサーキャリブレーション中
-					dGcx += dGx;
-					dGcy += dGy;
-
-					if( iGCaribCnt == 0 ){
-						dGcx /= iGCaribCntMax;
-						dGcy /= iGCaribCntMax;
-					}
-
-					dGx	= 0;
-					dGy	= 0;
-				}else{
-					dGx	= -( dGx - dGcx ) / ACC_1G_Y;
-					dGy	=  ( dGy - dGcy ) / ACC_1G_Z;
+			while( true ){
+				// 0xFF をサーチ
+				for( ; iEOLPos < iBufLen; ++iEOLPos ){
+					if( Buf[ iEOLPos ] == ( byte )0xFF ) break;
 				}
+				if( iEOLPos == iBufLen ) break;
 
-				// mileage 補正
-				if(( iMileageRaw & 0xFFFF ) > iMileage16 ) iMileageRaw += 0x10000;
-				iMileageRaw &= 0xFFFF0000;
-				iMileageRaw |= iMileage16;
-
-				// LapTime が見つかった
-				LapState = LAP_STATE.NONE;
+				++iRet;
+				// 0xFF が見つかったので，データ変換
+				iTacho		= Unpack();
+				iSpeedRaw	= Unpack();
 
 				if( iBufPtr < iEOLPos ){
-					iRtcRaw = Unpack() + ( Unpack() << 16 );
+					iMileage16	= Unpack();
+					iTSCRaw		= Unpack();
 
-					if( ++iSectorCnt >= iSectorCntMax ){
-						// 規定のセクタを通過したので，NewLap
-						if( iRtcPrevRaw != 0 ){
-							// 1周回った
-							LapState = LAP_STATE.UPDATE;
+					dGx			= Unpack();
+					dGy			= Unpack();
+					if( iGCaribCnt-- > 0 ){
+						// G センサーキャリブレーション中
+						dGcx += dGx;
+						dGcy += dGy;
 
-							++iLapNum;
-							iTimeLastRaw = iRtcRaw - iRtcPrevRaw;
-							if( iTimeBestRaw == 0 || iTimeLastRaw < iTimeBestRaw ){
-								iTimeBestRaw = iTimeLastRaw;
-							}
-						}else{
-							// ラップスタート
-							LapState = LAP_STATE.START;
+						if( iGCaribCnt == 0 ){
+							dGcx /= iGCaribCntMax;
+							dGcy /= iGCaribCntMax;
 						}
-						iRtcPrevRaw	= iRtcRaw;
-						iSectorCnt	= 0;
-					}else{
-						// 中間セクタ通過
-						LapState = LAP_STATE.SECTOR;
-					}
-				}
-			}else{
-				iRet = 2;
-			}
 
-			// デバッグ用: 複数の 0xFF を破棄する
-			if( bDebug ){
-				for( i = iBufLen - 1; i >= 0; --i ) if( Buf[ i ] == ( byte )0xFF ) break;
-				if( i >= 0 ) iEOLPos = i;
+						dGx	= 0;
+						dGy	= 0;
+					}else{
+						dGx	= -( dGx - dGcx ) / ACC_1G_Y;
+						dGy	=  ( dGy - dGcy ) / ACC_1G_Z;
+					}
+
+					// mileage 補正
+					if(( iMileageRaw & 0xFFFF ) > iMileage16 ) iMileageRaw += 0x10000;
+					iMileageRaw &= 0xFFFF0000;
+					iMileageRaw |= iMileage16;
+
+					// LapTime が見つかった
+					LapState = LAP_STATE.NONE;
+
+					if( iBufPtr < iEOLPos ){
+						iRtcRaw = Unpack() + ( Unpack() << 16 );
+
+						if( ++iSectorCnt >= iSectorCntMax ){
+							// 規定のセクタを通過したので，NewLap
+							if( iRtcPrevRaw != 0 ){
+								// 1周回った
+								LapState = LAP_STATE.UPDATE;
+
+								++iLapNum;
+								iTimeLastRaw = iRtcRaw - iRtcPrevRaw;
+								if( iTimeBestRaw == 0 || iTimeLastRaw < iTimeBestRaw ){
+									iTimeBestRaw = iTimeLastRaw;
+								}
+								
+								if( iMainMode != MODE_LAPTIME ){
+									// Laptime モード以外でゴールしたら，Ready 状態に戻す
+									Vsd.iRtcPrevRaw = 0;
+								}
+							}else{
+								// ラップスタート
+								LapState = LAP_STATE.START;
+							}
+							iRtcPrevRaw	= iRtcRaw;
+							iSectorCnt	= 0;
+						}else{
+							// 中間セクタ通過
+							LapState = LAP_STATE.SECTOR;
+						}
+					}
+					
+					WriteLog();		// テキストログライト
+				}
+
+				// デバッグ用: 複数の 0xFF を破棄する
+				/*
+				if( bDebug ){
+					for( i = iBufLen - 1; i >= 0; --i ) if( Buf[ i ] == ( byte )0xFF ) break;
+					if( i >= 0 ) iEOLPos = i;
+				}
+				*/
+				iBufPtr = ++iEOLPos;
 			}
 
 			// 使用したデータを Buf から削除
-			iBufPtr = ++iEOLPos;
+			iBufPtr = iEOLPos;
 			for( i = 0; iBufPtr < iBufLen; ){
 				Buf[ i++ ] = Buf[ iBufPtr++ ];
 			}
@@ -586,7 +597,7 @@ public class Vsdroid extends Activity {
 		//*** データ処理スレッド *********************************************
 
 		public void run(){
-			int i;
+			int iRet;
 
 			if(
 				Vsd.Open()			< 0 ||
@@ -600,10 +611,9 @@ public class Vsdroid extends Activity {
 				Vsd.SetupMode();
 
 				while( !bKillThread ){
-					if(( i = Read()) > 0 ){
+					if(( iRet = Read()) > 0 ){
 						if( VsdScreen != null ) VsdScreen.Draw();
-						if( i == 1 ) WriteLog();		// テキストログライト
-					}else if( i < 0 ){
+					}else if( iRet < 0 ){
 						Config();
 						break;
 					}
@@ -834,9 +844,9 @@ public class Vsdroid extends Activity {
 			if( Vsd == null ) return;
 
 			Canvas canvas = getHolder().lockCanvas();
-			
+
 			int iTacho = Vsd.bEcoMode ? Vsd.iTacho * 2 : Vsd.iTacho;
-			
+
 			// ギアを求める
 			double dGearRatio = ( double )Vsd.iSpeedRaw / Vsd.iTacho;
 			int	iGear;
@@ -912,9 +922,6 @@ public class Vsdroid extends Activity {
 			if( Vsd.iRtcPrevRaw == 0 ){
 				// まだスタートしてない
 				s += " ready";
-			}else if( Vsd.LapState == LAP_STATE.UPDATE && iMainMode != MODE_LAPTIME ){
-				// Laptime モード以外でゴールしたら，Ready 状態に戻す
-				Vsd.iRtcPrevRaw = 0;
 			}
 
 			paint.setTextSize( 32 );
