@@ -33,8 +33,10 @@ select( $SockClient );
 $| = 1;
 select( STDOUT );
 
-GetData(); SendData( ':' );	# z
-GetData(); SendData( ':' );	# l
+$Buf = '';
+
+WaitCmd( 'z' ); SendData( ':' );
+WaitCmd( 'S90' ); SendData( ':' );	# l
 GetData();
 
 $PULSE_PER_1KM	= 15473.76689;	# ELISE(CE28N)
@@ -108,4 +110,14 @@ sub SendData {
 	
 	s/([\x00-\x1F\[\x7E\-\xFF])/sprintf( '[%02X]', ord( $1 ))/ge;
 	print "Send:$_\n";
+}
+
+sub WaitCmd {
+	local( $_ ) = @_;
+	
+	while( $Buf !~ /$_/ ){
+		$Buf .= GetData();
+	}
+	
+	$Buf = defined( $' ) ? $' : '';
 }
