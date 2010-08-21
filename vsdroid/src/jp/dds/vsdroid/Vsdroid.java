@@ -207,7 +207,8 @@ public class Vsdroid extends Activity {
 
 			// 日付
 			Calendar Now = Calendar.getInstance();
-			String s = String.format( "/vsd%04d%02d%02d_%02d%02d%02d",
+			String s = String.format(
+				"/vsd%04d%02d%02d_%02d%02d%02d",
 				Now.get( Calendar.YEAR ),
 				Now.get( Calendar.MONTH ) + 1,
 				Now.get( Calendar.DAY_OF_MONTH ),
@@ -233,30 +234,30 @@ public class Vsdroid extends Activity {
 
 		public int Open(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open" );
-			try {
-				// ソケットの作成
-				Sock = new Socket();
-				SocketAddress adr = new InetSocketAddress( Pref.getString( "key_ip_addr", "192.168.0.1" ), 12345 );
-				Sock.connect( adr, 5000 );
-				if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:connected" );
-			}catch( SocketTimeoutException e ){
-				if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:timeout" );
-				iMessage = R.string.statmsg_socket_open_failed;
+
+			while( !bKillThread ){
+				try {
+					// ソケットの作成
+					Sock = new Socket();
+					SocketAddress adr = new InetSocketAddress( Pref.getString( "key_ip_addr", "192.168.0.1" ), 12345 );
+					Sock.connect( adr, 1000 );
+					if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:connected" );
+					return 0;
+				}catch( SocketTimeoutException e ){
+					if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:timeout" );
+				} catch (IOException e) {
+					if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:IOException" );
+				}
+
 				if( Sock != null ) try {
 					Sock.close();
-				} catch (IOException e1) {}
+				} catch (IOException e) {}
 				Sock = null;
-				return -1;
-			} catch (IOException e) {
-				if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:IOException" );
-				iMessage = R.string.statmsg_socket_open_failed;
-				if( Sock != null ) try {
-					Sock.close();
-				} catch (IOException e1) {}
-				Sock = null;
-				return -1;
+
+				try { Thread.sleep( 1000 ); } catch (InterruptedException e) {}
 			}
-			return 0;
+			iMessage = R.string.statmsg_socket_open_failed;
+			return -1;
 		}
 
 		public int RawRead( int iStart, int iLen ){
@@ -348,7 +349,7 @@ public class Vsdroid extends Activity {
 								if( iTimeBestRaw == 0 || iTimeLastRaw < iTimeBestRaw ){
 									iTimeBestRaw = iTimeLastRaw;
 								}
-								
+
 								if( iMainMode != MODE_LAPTIME ){
 									// Laptime モード以外でゴールしたら，Ready 状態に戻す
 									Vsd.iRtcPrevRaw = 0;
@@ -364,7 +365,7 @@ public class Vsdroid extends Activity {
 							LapState = LAP_STATE.SECTOR;
 						}
 					}
-					
+
 					WriteLog();		// テキストログライト
 				}
 
@@ -546,6 +547,7 @@ public class Vsdroid extends Activity {
 		//*** config に従って設定 ********************************************
 
 		public void SetupMode(){
+			int i;
 
 			// セクタ数
 			try{
@@ -578,7 +580,9 @@ public class Vsdroid extends Activity {
 
 				  case MODE_GYMKHANA:
 					// * は g_lParam をいったんクリアする意図
-					SendCmd( String.format( "*%Xg", ( int )( dGymkhaStart * PULSE_PER_1KM / 1000 + 0.5 )));
+					i = ( int )( dGymkhaStart * PULSE_PER_1KM / 1000 + 0.5 );
+					if( i < 1 ) i = 1;
+					SendCmd( String.format( "*%Xg", i ));
 					break;
 
 				  case MODE_ZERO_FOUR:
