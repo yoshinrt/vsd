@@ -272,7 +272,7 @@ public class Vsdroid extends Activity {
 			return iReadSize;
 		}
 
-		// 2:スピード，タコのみ 1:データ更新  0:新データなし -1:エラー
+		// 1 <= :受信したレコード数  0:新データなし -1:エラー
 		public int Read(){
 			int	iReadSize;
 			int	iMileage16;
@@ -290,11 +290,10 @@ public class Vsdroid extends Activity {
 			} catch (IOException e) {}
 
 			iBufLen += iReadSize;
-			iBufPtr = 0;
 
 			while( true ){
 				// 0xFF をサーチ
-				for( ; iEOLPos < iBufLen; ++iEOLPos ){
+				for( iBufPtr = iEOLPos; iEOLPos < iBufLen; ++iEOLPos ){
 					if( Buf[ iEOLPos ] == ( byte )0xFF ) break;
 				}
 				if( iEOLPos == iBufLen ) break;
@@ -376,15 +375,16 @@ public class Vsdroid extends Activity {
 					if( i >= 0 ) iEOLPos = i;
 				}
 				*/
-				iBufPtr = ++iEOLPos;
+				++iEOLPos;
 			}
 
 			// 使用したデータを Buf から削除
-			iBufPtr = iEOLPos;
-			for( i = 0; iBufPtr < iBufLen; ){
-				Buf[ i++ ] = Buf[ iBufPtr++ ];
+			if( iBufPtr != 0 ){
+				for( i = 0; iBufPtr < iBufLen; ){
+					Buf[ i++ ] = Buf[ iBufPtr++ ];
+				}
+				iBufLen = i;
 			}
-			iBufLen = i;
 
 			return iRet;
 		}
