@@ -524,7 +524,7 @@ function LoadFirmware()
 		if( fpFirm ) then
 			Console:DbgPrint( ".Transferring firmware" )
 			
-			System.sioWrite( "z\r" )
+			System.sioWrite( "F15EF117*z\r" )
 			screen.waitVblankStart( 6 )
 			System.sioWrite( "l\r" )
 			
@@ -534,6 +534,8 @@ function LoadFirmware()
 		
 		screen.waitVblankStart( 6 )
 		System.sioWrite( "g\r" )
+		screen.waitVblankStart( 6 )
+		System.sioWrite( "F15EF117*1S" )
 		
 		-- バッファクリア
 		System.sioRead()
