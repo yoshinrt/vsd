@@ -76,6 +76,13 @@ public class Vsdroid extends Activity {
 		SECTOR,
 	};
 
+	// スレッドステート
+	enum THREAD_STATE {
+		STOP,
+		INIT,
+		NORMAL,
+	};
+
 	// VSD コミュニケーション
 	VsdInterface Vsd = null;
 	Thread VsdThread = null;
@@ -147,6 +154,8 @@ public class Vsdroid extends Activity {
 
 		boolean bKillThread = false;
 
+		THREAD_STATE	ThreadState;
+
 		// コンストラクタ - 変数の初期化だけやってる
 		public VsdInterface(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::constructor" );
@@ -179,6 +188,8 @@ public class Vsdroid extends Activity {
 
 			dGcx = dGcy		= 0;
 			iGCaribCnt		= iGCaribCntMax;
+
+			ThreadState		= THREAD_STATE.STOP;
 		}
 
 		// 2byte を 16bit int にアンパックする
@@ -449,6 +460,9 @@ public class Vsdroid extends Activity {
 
 		public void SendCmd( String s ) throws IOException {
 			byte[] Buf;
+			
+			if( Sock == null ) return;
+			
 			try {
 				Buf = s.getBytes( "US-ASCII" );
 				Sock.getOutputStream().write( Buf, 0, Buf.length );
@@ -460,7 +474,7 @@ public class Vsdroid extends Activity {
 			int iRetryCnt = 100;
 			int i;
 
-			while( iRetryCnt-- != 0 ){
+			while( iRetryCnt-- != 0 && !bKillThread ){
 				if( Sock.getInputStream().available() > 0 ){
 					iReadSize = Sock.getInputStream().read( Buf, 0, iBufSize );
 					for( i = 0; i < iReadSize; ++i ){
@@ -511,7 +525,7 @@ public class Vsdroid extends Activity {
 
 				// 最初の 0xFF までスキップ
 				int iRetryCnt = 100;
-				while( iRetryCnt-- != 0 ){
+				while( iRetryCnt-- != 0 && !bKillThread ){
 					if( Sock.getInputStream().available() > 0 ){
 						iReadSize = Sock.getInputStream().read( Buf, 0, iBufSize );
 						for( i = 0; i < iReadSize; ++i ){
@@ -603,6 +617,8 @@ public class Vsdroid extends Activity {
 		public void run(){
 			int iRet;
 
+			ThreadState	= THREAD_STATE.INIT;
+
 			if(
 				Vsd.Open()			< 0 ||
 				Vsd.LoadFirmWare()	< 0 ||
@@ -610,8 +626,8 @@ public class Vsdroid extends Activity {
 			){
 				// エラーが起きたので，config を出して thread 終了
 				if( !isFinishing()) Config();
-
 			}else{
+				ThreadState = THREAD_STATE.NORMAL;
 				Vsd.SetupMode();
 
 				while( !bKillThread ){
@@ -625,6 +641,8 @@ public class Vsdroid extends Activity {
 			}
 			bKillThread	= false;
 			VsdThread	= null;
+			ThreadState	= THREAD_STATE.STOP;
+
 			if( bDebug ) Log.d( "VSDroid", "exit_run()" );
 		}
 
@@ -956,7 +974,7 @@ public class Vsdroid extends Activity {
 
 		if( bConfigOpened ) return;
 		bConfigOpened = true;
-
+		if( Vsd.ThreadState == THREAD_STATE.INIT ) Vsd.bKillThread = true;
 
 		Editor ed = Pref.edit();
 		ed.putBoolean( "key_reopen_log",  false );
@@ -976,9 +994,11 @@ public class Vsdroid extends Activity {
 
 		if( VsdThread == null ){
 			// スレッド再起動
-			VsdThread = new Thread( Vsd );
-			VsdThread.start();
-		}else if( Vsd != null ){
+			VsdThread = new Thread( Vsd ); VsdThread.start();
+		}else if( Vsd.ThreadState == THREAD_STATE.INIT ){
+			Vsd.KillThread();
+			VsdThread = new Thread( Vsd ); VsdThread.start();
+		}else{
 			Vsd.SetupMode();
 
 			if( Pref.getBoolean( "key_reopen_log", false )){
@@ -1001,7 +1021,7 @@ public class Vsdroid extends Activity {
 		if( bDebug ) Log.d( "VSDroid", "onKeyDown" );
 		switch( keyCode ){
 		  case KeyEvent.KEYCODE_DPAD_CENTER:
-			if( Vsd != null ) Vsd.SetupMode();
+			Vsd.SetupMode();
 			break;
 
 		  case KeyEvent.KEYCODE_MENU:
@@ -1041,8 +1061,7 @@ public class Vsdroid extends Activity {
 		Vsd = bReplayLog ? new VsdInterfaceEmulation() : new VsdInterface();
 
 		// VSD スレッド起動
-		VsdThread = new Thread( Vsd );
-		VsdThread.start();
+		VsdThread = new Thread( Vsd ); VsdThread.start();
 	}
 
 	@Override
