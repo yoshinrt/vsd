@@ -355,10 +355,11 @@ public class Vsdroid extends Activity {
 								LapState = LAP_STATE.UPDATE;
 
 								++iLapNum;
-								iTimeLastRaw = iRtcRaw - iRtcPrevRaw;
-								if( iTimeBestRaw == 0 || iTimeLastRaw < iTimeBestRaw ){
+								if( iTimeLastRaw < iTimeBestRaw ){
 									iTimeBestRaw = iTimeLastRaw;
 								}
+								iTimeLastRaw = iRtcRaw - iRtcPrevRaw;
+								if( iTimeBestRaw == 0 ) iTimeBestRaw = iTimeLastRaw;
 
 								if( iMainMode != MODE_LAPTIME ){
 									// Laptime モード以外でゴールしたら，Ready 状態に戻す
@@ -952,8 +953,8 @@ public class Vsdroid extends Activity {
 			canvas.drawText( String.format( "%02d", Vsd.iLapNum ), 220, 410, paint );
 
 			paint.setColor(
-				Vsd.iTimeBestRaw == 0					? Color.GRAY :
-				Vsd.iTimeBestRaw == Vsd.iTimeLastRaw	? Color.CYAN :
+				Vsd.iTimeLastRaw == 0					? Color.GRAY :
+				Vsd.iTimeLastRaw <= Vsd.iTimeBestRaw	? Color.CYAN :
 														  Color.RED
 			);
 			canvas.drawText( FormatTime( Vsd.iTimeLastRaw ), 340, 410, paint );
