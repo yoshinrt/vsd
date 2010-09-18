@@ -61,10 +61,14 @@ enum {
 #define POS_TH_EDIT				299
 #define POS_ADD_SLIDER			300
 #define POS_ADD_EDIT			16
-#define POS_SET_BUTT_SIZE		30
+#ifdef GPS_ONLY
+	#define POS_SET_BUTT_SIZE		0
+#else
+	#define POS_SET_BUTT_SIZE		30
+#endif
 
 #define POS_FILE_CAPTION_SIZE	55
-#define POS_FILE_NAME_SIZE		350
+#define POS_FILE_NAME_SIZE		320
 #define POS_FILE_BUTT_SIZE		40
 #define POS_FILE_CAPTION_POS	( rectClient.right - ( POS_FILE_NAME_SIZE + POS_FILE_BUTT_SIZE + POS_FILE_CAPTION_SIZE ))
 #define POS_FILE_HEIGHT			18
@@ -75,6 +79,8 @@ enum {
 #else
 	#define POS_FILE_NUM	4
 #endif
+
+#define INVALID_INT		0x80000000
 
 /*** gloval var *************************************************************/
 
@@ -229,14 +235,19 @@ class CVsdFilterAvu : public CVsdFilter {
 	// 仮想関数
 	virtual void PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag );
 	
-	virtual int	GetWidth( void ){ return fileinfo->w; }
-	virtual int	GetHeight( void ){ return fileinfo->h; }
-	virtual int	GetFrameMax( void ){ return fileinfo->frame_n; }
+	virtual int	GetWidth( void ){ return fpip->w; }
+	virtual int	GetHeight( void ){ return fpip->h; }
+	virtual int	GetFrameMax( void ){ return fpip->frame_n; }
 	virtual int	GetFrameCnt( void ){ return fpip->frame; }
 	virtual double	GetFPS( void ){ return ( double )fileinfo->video_rate / fileinfo->video_scale; }
 	
 	virtual void SetFrameMark( int iFrame );
 	virtual int  GetFrameMark( int iFrame );
+	
+	// 1スライダ調整用パラメータ
+	int	m_iAdjustPointNum;
+	int	m_iAdjustPointVid[ 2 ];
+	int	m_iAdjustPointGPS[ 2 ];
 };
 
 CVsdFilterAvu	*g_Vsd;
@@ -252,6 +263,13 @@ CVsdFilterAvu::CVsdFilterAvu( FILTER *filter, void *editp ) :
 	m_piParamT	= filter->track;
 	m_piParamC	= filter->check;
 	m_piParamS	= shadow_param;
+	
+#ifdef GPS_ONLY
+	VideoSt = VideoEd = VideoSt = VideoEd =
+#endif
+	m_iAdjustPointNum = 0;
+	m_iAdjustPointVid[ 0 ] =
+	m_iAdjustPointVid[ 1 ] = INVALID_INT;
 }
 
 CVsdFilterAvu::~CVsdFilterAvu(){
@@ -357,7 +375,7 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	for( i = 0; i < TRACK_N; ++i ){
 		if(
 			m_szTrackbarName[ i ] == NULL ||
-			i > TRACK_GEd && m_piParamT[ i ] == track_default[ i ]
+			i >= TRACK_SPEED && m_piParamT[ i ] == track_default[ i ]
 		) continue;
 		
 		fprintf(
@@ -430,8 +448,8 @@ BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
 	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_LOG ), szFileName );
 	
 	// trackbar 設定
-	track_e[ TRACK_LSt ] =
-	track_e[ TRACK_LEd ] = m_VsdLog->m_iCnt;
+	track_e[ PARAM_LSt ] =
+	track_e[ PARAM_LEd ] = m_VsdLog->m_iCnt;
 	
 	return TRUE;
 }
@@ -457,9 +475,16 @@ BOOL CVsdFilterAvu::GPSLogLoad( const char *szFileName, HWND hwnd ){
 	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_GPS ), szFileName );
 	
 	// trackbar 設定
-	track_e[ TRACK_GSt ] =
-	track_e[ TRACK_GEd ] = m_GPSLog->m_iCnt;
-	
+	#ifdef GPS_ONLY
+		if( GPSSt == INVALID_INT ){
+			GPSSt	= 0;
+			GPSEd	= m_GPSLog->m_iCnt;
+		}
+	#else
+		track_e[ PARAM_GSt ] =
+		track_e[ PARAM_GEd ] = m_GPSLog->m_iCnt;
+	#endif
+
 	return TRUE;
 }
 
@@ -586,18 +611,20 @@ void ExtendDialog( HWND hwnd ){
 	
 	// 位置取得ボタン
 	int i;
-	for( i = 0; i <= ( ID_BUTT_SET_GEd - ID_BUTT_SET_VSt ); ++i ){
-		hwndChild = CreateWindow(
-			"BUTTON", "set", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-			rectClient.right - POS_SET_BUTT_SIZE, 14 + i * 24,
-			POS_SET_BUTT_SIZE, 16,
-			hwnd, ( HMENU )( ID_BUTT_SET_VSt + i ), 0, NULL
-		);
-		SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
-	}
+	#ifndef GPS_ONLY
+		for( i = 0; i <= ( ID_BUTT_SET_GEd - ID_BUTT_SET_VSt ); ++i ){
+			hwndChild = CreateWindow(
+				"BUTTON", "set", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+				rectClient.right - POS_SET_BUTT_SIZE, 14 + i * 24,
+				POS_SET_BUTT_SIZE, 16,
+				hwnd, ( HMENU )( ID_BUTT_SET_VSt + i ), 0, NULL
+			);
+			SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
+		}
+	#endif
 	
 	// ログ名・フォント名
-	i += ID_BUTT_SET_VSt;
+	i = ID_BUTT_SET_GEd + 1;
 	int y = rectClient.bottom - ( POS_FILE_HEIGHT + POS_FILE_HEIGHT_MARGIN ) * POS_FILE_NUM + POS_FILE_HEIGHT_MARGIN;
 	
 #ifndef GPS_ONLY
@@ -653,8 +680,15 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		g_Vsd = new CVsdFilterAvu( filter, editp );
 		
 		// trackbar 設定
-		track_e[ TRACK_VSt ] =
-		track_e[ TRACK_VEd ] = filter->exfunc->get_frame_n( editp );
+		#ifdef GPS_ONLY
+			if( g_Vsd->VideoSt == INVALID_INT ){
+				g_Vsd->VideoSt	= 0;
+				g_Vsd->VideoEd	= filter->exfunc->get_frame_n( editp );
+			}
+		#else
+			track_e[ PARAM_VSt ] =
+			track_e[ PARAM_VEd ] = filter->exfunc->get_frame_n( editp );
+		#endif
 		
 		// 設定再描画
 		filter->exfunc->filter_window_update( filter );
@@ -696,21 +730,32 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			return TRUE;
 		}
 		
+	  Case WM_FILTER_UPDATE:
+		iFrame = filter->exfunc->get_frame( editp );
+		if(
+			g_Vsd->m_iAdjustPointNum == 0 ||
+			g_Vsd->m_iAdjustPointNum == 1 && g_Vsd->m_iAdjustPointVid[ 0 ] != iFrame ||
+			g_Vsd->m_iAdjustPointNum == 2 && g_Vsd->m_iAdjustPointVid[ 0 ] != iFrame && g_Vsd->m_iAdjustPointVid[ 1 ] != iFrame
+		){
+			g_Vsd->m_piParamT[ TRACK_LogOffset ] = 0;
+			filter->exfunc->filter_window_update( filter );
+		}
+		
 	  Case WM_COMMAND:
 		if( ID_BUTT_SET_VSt <= wparam && wparam <= ID_BUTT_SET_GEd ){
+		#ifndef GPS_ONLY
 			// フレーム数セット
 			switch( wparam ){
-				case ID_BUTT_SET_VSt:	filter->track[ TRACK_VSt ] = filter->exfunc->get_frame( editp );
-				Case ID_BUTT_SET_VEd:	filter->track[ TRACK_VEd ] = filter->exfunc->get_frame( editp );
-			#ifndef GPS_ONLY
-				Case ID_BUTT_SET_LSt:	if( g_Vsd->m_VsdLog ) filter->track[ TRACK_LSt ] = g_Vsd->m_VsdLog->m_iLogNum;
-				Case ID_BUTT_SET_LEd:	if( g_Vsd->m_VsdLog ) filter->track[ TRACK_LEd ] = g_Vsd->m_VsdLog->m_iLogNum;
-			#endif
-				Case ID_BUTT_SET_GSt:	if( g_Vsd->m_GPSLog ) filter->track[ TRACK_GSt ] = g_Vsd->m_GPSLog->m_iLogNum;
-				Case ID_BUTT_SET_GEd:	if( g_Vsd->m_GPSLog ) filter->track[ TRACK_GEd ] = g_Vsd->m_GPSLog->m_iLogNum;
+				case ID_BUTT_SET_VSt:	filter->track[ PARAM_VSt ] = filter->exfunc->get_frame( editp );
+				Case ID_BUTT_SET_VEd:	filter->track[ PARAM_VEd ] = filter->exfunc->get_frame( editp );
+				Case ID_BUTT_SET_LSt:	if( g_Vsd->m_VsdLog ) filter->track[ PARAM_LSt ] = g_Vsd->m_VsdLog->m_iLogNum;
+				Case ID_BUTT_SET_LEd:	if( g_Vsd->m_VsdLog ) filter->track[ PARAM_LEd ] = g_Vsd->m_VsdLog->m_iLogNum;
+				Case ID_BUTT_SET_GSt:	if( g_Vsd->m_GPSLog ) filter->track[ PARAM_GSt ] = g_Vsd->m_GPSLog->m_iLogNum;
+				Case ID_BUTT_SET_GEd:	if( g_Vsd->m_GPSLog ) filter->track[ PARAM_GEd ] = g_Vsd->m_GPSLog->m_iLogNum;
 			}
 			// 設定再描画
 			filter->exfunc->filter_window_update( filter );
+		#endif
 			
 		}else switch( wparam ){
 		  case ID_BUTT_LOAD_CFG:	// .avs ロード
@@ -796,9 +841,73 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	return FALSE;
 }
 
+/*** 1スライダバー調整 ******************************************************/
+
+void SetupLogOffset( FILTER *filter ){
+	
+	int	iFrame = filter->exfunc->get_frame( g_Vsd->editp );
+	int	iPoint;
+	
+	// 調整ポイントを判断する
+	switch( g_Vsd->m_iAdjustPointNum ){
+	  case 0:
+		iPoint = 0;
+		g_Vsd->m_iAdjustPointNum = 1;
+		
+	  Case 1:
+		if( abs( g_Vsd->m_iAdjustPointVid[ 0 ] - iFrame ) <= ( int )( g_Vsd->GetFPS() * 60 )){
+			// フレーム位置が前回と 1分以内なら，前回と同じ場所を使用する
+			iPoint = 0;
+		}else{
+			iPoint = 1;
+			g_Vsd->m_iAdjustPointNum = 2;
+		}
+		
+	  Default: //Case 2:
+		// 2ポイントのうち，近いほうを採用する
+		iPoint = (
+			abs( g_Vsd->m_iAdjustPointVid[ 0 ] - iFrame ) >
+			abs( g_Vsd->m_iAdjustPointVid[ 1 ] - iFrame )
+		) ? 1 : 0;
+	}
+	
+	// フレーム位置が前回と違っていれば，GPS ログ位置再取得
+	if( g_Vsd->m_iAdjustPointVid[ iPoint ] != iFrame ){
+		g_Vsd->m_iAdjustPointGPS[ iPoint ] =
+			g_Vsd->VideoEd == g_Vsd->VideoSt ? 0
+			: ( int )(( double )
+				( g_Vsd->GPSEd - g_Vsd->GPSSt )
+				* ( iFrame - g_Vsd->VideoSt ) 
+				/ ( g_Vsd->VideoEd - g_Vsd->VideoSt )
+				+ g_Vsd->GPSSt
+			);
+		
+		g_Vsd->m_iAdjustPointVid[ iPoint ] =
+		( iPoint ? g_Vsd->VideoEd : g_Vsd->VideoSt ) = iFrame;
+		g_Vsd->m_piParamT[ TRACK_LogOffset ] = 0;
+	}
+	
+	// 対象調整ポイントの設定
+	( iPoint ? g_Vsd->GPSEd : g_Vsd->GPSSt ) =
+		g_Vsd->m_iAdjustPointGPS[ iPoint ] - g_Vsd->m_piParamT[ TRACK_LogOffset ];
+	
+	// iPoint == 1 時は，後ろの調整点を FPS に応じて自動調整
+	if( g_Vsd->m_iAdjustPointNum == 1 ){
+		#define ADJUST_WIDTH	( 60 * 10 )	// 10分
+		
+		g_Vsd->VideoEd =
+			g_Vsd->VideoSt + ( int )( g_Vsd->GetFPS() * ADJUST_WIDTH );
+		
+		g_Vsd->GPSEd =
+			g_Vsd->GPSSt + ( int )( LOG_FREQ * ADJUST_WIDTH );
+	}
+	
+	filter->exfunc->filter_window_update( filter );
+}
+
 /*** スライダバー連動 *******************************************************/
 
-BOOL func_update( FILTER *fp, int status ){
+BOOL func_update( FILTER *filter, int status ){
 	static	BOOL	bReEnter = FALSE;
 	
 	if( bReEnter ) return TRUE;
@@ -807,8 +916,11 @@ BOOL func_update( FILTER *fp, int status ){
 	
 	if(
 		g_Vsd && (
-			status >= FILTER_UPDATE_STATUS_TRACK + TRACK_VSt &&
-			status <= FILTER_UPDATE_STATUS_TRACK + TRACK_GSt ||
+			#ifndef GPS_ONLY
+				status >= FILTER_UPDATE_STATUS_TRACK + PARAM_VSt &&
+				status <= FILTER_UPDATE_STATUS_TRACK + PARAM_GSt ||
+			#endif
+			status == FILTER_UPDATE_STATUS_TRACK + TRACK_LogOffset ||
 			status == FILTER_UPDATE_STATUS_TRACK + TRACK_SLineWidth
 		)
 	) g_Vsd->m_bCalcLapTimeReq = TRUE;
@@ -816,22 +928,26 @@ BOOL func_update( FILTER *fp, int status ){
 	#ifndef GPS_ONLY
 		if(
 			status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS ) &&
-			fp->check[ CHECK_LOGPOS ]
+			filter->check[ CHECK_LOGPOS ]
 		){
-			fp->track[ TRACK_LSt ] = g_Vsd->m_iLogStart;
-			fp->track[ TRACK_LEd ] = g_Vsd->m_iLogStop;
+			filter->track[ PARAM_LSt ] = g_Vsd->m_iLogStart;
+			filter->track[ PARAM_LEd ] = g_Vsd->m_iLogStop;
 			
 			// 設定再描画
-			fp->exfunc->filter_window_update( fp );
+			filter->exfunc->filter_window_update( filter );
 		}
 	#endif
 	
 	// マップ回転
 	if( status == ( FILTER_UPDATE_STATUS_TRACK + TRACK_MapAngle )){
 		if( g_Vsd->m_VsdLog )
-			g_Vsd->m_VsdLog->RotateMap( fp->track[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
+			g_Vsd->m_VsdLog->RotateMap( filter->track[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 		if( g_Vsd->m_GPSLog )
-			g_Vsd->m_GPSLog->RotateMap( fp->track[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
+			g_Vsd->m_GPSLog->RotateMap( filter->track[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
+	}
+	
+	if( status == FILTER_UPDATE_STATUS_TRACK + TRACK_LogOffset ){
+		SetupLogOffset( filter );
 	}
 	
 	bReEnter = FALSE;

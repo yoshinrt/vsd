@@ -193,6 +193,7 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 	if( bAllParam ){
 		UINT	v = 2;
 		double	d;
+		double	d2 = 0;
 		
 		while( v-- ) for( u = 2; u < ( UINT )m_iCnt - 2; ++u ){
 			m_Log[ u ].fGx = (
@@ -210,8 +211,9 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 				m_Log[ u + 2 ].fGy
 			) / 5;
 			
-			if( m_dMaxG < d ) m_dMaxG = d;
-			if( m_dMinG > d ) m_dMinG = d;
+			d2 = d2 * 0.9 + d * 0.1;
+			if( m_dMaxG < d2 ) m_dMaxG = d2;
+			if( m_dMinG > d2 ) m_dMinG = d2;
 		}
 	}
 	return m_iCnt;

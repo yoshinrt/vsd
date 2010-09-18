@@ -54,6 +54,22 @@
 	#define DEFAULT_FONT	"Impact"
 #endif
 
+#ifdef GPS_ONLY
+	#define VideoSt			m_piParamS[ PARAM_VSt ]
+	#define VideoEd			m_piParamS[ PARAM_VEd ]
+	#define LogSt			0
+	#define LogEd			0
+	#define GPSSt			m_piParamS[ PARAM_GSt ]
+	#define GPSEd			m_piParamS[ PARAM_GEd ]
+#else
+	#define VideoSt			m_piParamT[ PARAM_VSt ]
+	#define VideoEd			m_piParamT[ PARAM_VEd ]
+	#define LogSt			m_piParamT[ PARAM_LSt ]
+	#define LogEd			m_piParamT[ PARAM_LEd ]
+	#define GPSSt			m_piParamT[ PARAM_GSt ]
+	#define GPSEd			m_piParamT[ PARAM_GEd ]
+#endif
+
 /*** track / check ID *******************************************************/
 
 enum {

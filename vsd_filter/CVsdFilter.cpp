@@ -37,18 +37,6 @@
 
 #define MAX_LINE_LEN	2000
 
-#define VideoSt			m_piParamT[ TRACK_VSt ]
-#define VideoEd			m_piParamT[ TRACK_VEd ]
-#ifdef GPS_ONLY
-	#define LogSt		0
-	#define LogEd		0
-#else
-	#define LogSt		m_piParamT[ TRACK_LSt ]
-	#define LogEd		m_piParamT[ TRACK_LEd ]
-#endif
-#define GPSSt			m_piParamT[ TRACK_GSt ]
-#define GPSEd			m_piParamT[ TRACK_GEd ]
-
 #define LineTrace		m_piParamT[ TRACK_LineTrace ]
 
 #define DispLap			m_piParamC[ CHECK_LAP ]
@@ -1428,38 +1416,43 @@ BOOL CVsdFilter::DrawVSD( void ){
 	#ifndef AVS_PLUGIN
 		if( DispFrameInfo ){
 			
-			DrawString( "        start       end     range cur.pos", COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 3 );
-			
-			sprintf(
-				szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
-				Float2Time( VideoSt / GetFPS()),
-				Float2Time( VideoEd / GetFPS()),
-				Float2Time(( VideoEd - VideoSt ) / GetFPS()),
-				GetFrameCnt()
-			);
-			DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );
-			
-			if( m_VsdLog ){
+			#ifndef GPS_ONLY
+				DrawString( "        start       end     range cur.pos", COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 3 );
+				
 				sprintf(
-					szBuf, "Log%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
-					Float2Time( LogSt / m_VsdLog->m_dFreq ),
-					Float2Time( LogEd / m_VsdLog->m_dFreq ),
-					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
-					m_VsdLog->m_iLogNum
+					szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+					Float2Time( VideoSt / GetFPS()),
+					Float2Time( VideoEd / GetFPS()),
+					Float2Time(( VideoEd - VideoSt ) / GetFPS()),
+					GetFrameCnt()
 				);
-				DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
-				DrawSpeedGraph( m_VsdLog, yc_red );
-			}
+				DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );
+				
+				if( m_VsdLog ){
+					sprintf(
+						szBuf, "Log%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+						Float2Time( LogSt / m_VsdLog->m_dFreq ),
+						Float2Time( LogEd / m_VsdLog->m_dFreq ),
+						Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
+						m_VsdLog->m_iLogNum
+					);
+					DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+					DrawSpeedGraph( m_VsdLog, yc_red );
+				}
+				
+				if( m_GPSLog ){
+					sprintf(
+						szBuf, "GPS%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+						Float2Time( GPSSt / m_GPSLog->m_dFreq ),
+						Float2Time( GPSEd / m_GPSLog->m_dFreq ),
+						Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),
+						m_GPSLog->m_iLogNum
+					);
+					DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+				}
+			#endif	// !GPS_ONLY
 			
 			if( m_GPSLog ){
-				sprintf(
-					szBuf, "GPS%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
-					Float2Time( GPSSt / m_GPSLog->m_dFreq ),
-					Float2Time( GPSEd / m_GPSLog->m_dFreq ),
-					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),
-					m_GPSLog->m_iLogNum
-				);
-				DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
 				DrawSpeedGraph( m_GPSLog, yc_cyan );
 			}
 		}
@@ -1635,7 +1628,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 				
 				if( iGxPrev != INVALID_POS_I ){
 					// Line ‚ÌF—p‚É G ‚ð‹‚ß‚é
-					double dG = Log->Gy( i ) * 1.5;
+					double dG = Log->Gy( i );
 					
 					PIXEL_YC yc_line;
 					
