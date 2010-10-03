@@ -237,7 +237,7 @@ class CVsdFilterAvu : public CVsdFilter {
 	
 	virtual int	GetWidth( void ){ return fpip->w; }
 	virtual int	GetHeight( void ){ return fpip->h; }
-	virtual int	GetFrameMax( void ){ return fpip->frame_n; }
+	virtual int	GetFrameMax( void ){ return fileinfo->frame_n; }
 	virtual int	GetFrameCnt( void ){ return fpip->frame; }
 	virtual double	GetFPS( void ){ return ( double )fileinfo->video_rate / fileinfo->video_scale; }
 	
@@ -615,7 +615,7 @@ void ExtendDialog( HWND hwnd ){
 		for( i = 0; i <= ( ID_BUTT_SET_GEd - ID_BUTT_SET_VSt ); ++i ){
 			hwndChild = CreateWindow(
 				"BUTTON", "set", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-				rectClient.right - POS_SET_BUTT_SIZE, 14 + i * 24,
+				rectClient.right - POS_SET_BUTT_SIZE, 14 + ( i + 1 ) * 24,
 				POS_SET_BUTT_SIZE, 16,
 				hwnd, ( HMENU )( ID_BUTT_SET_VSt + i ), 0, NULL
 			);
