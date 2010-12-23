@@ -36,8 +36,8 @@ select( STDOUT );
 $Buf = '';
 
 WaitCmd( 'z' ); SendData( ':' );
-WaitCmd( 'S90' ); SendData( ':' );	# l
-GetData();
+WaitCmd( 'Ss1a' ); SendData( ':' );	# l
+# GetData();
 
 $PULSE_PER_1KM	= 15473.76689;	# ELISE(CE28N)
 
@@ -83,6 +83,7 @@ while( <> ){
 	last if( !defined( send( $SockClient, $_ . "\xFF", 0 )));
 	
 	sleep( 1 / 16 );
+#	sleep( 1 / 10 );
 	
 	#GetData( MSG_DONTWAIT );
 }
@@ -115,9 +116,12 @@ sub SendData {
 sub WaitCmd {
 	local( $_ ) = @_;
 	
+	print( "Waiting $_\n" );
+	
 	while( $Buf !~ /$_/ ){
 		$Buf .= GetData();
 	}
+	print( "OK\n" );
 	
 	$Buf = defined( $' ) ? $' : '';
 }
