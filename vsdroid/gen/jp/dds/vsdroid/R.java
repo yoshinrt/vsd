@@ -9,8 +9,9 @@ package jp.dds.vsdroid;
 
 public final class R {
     public static final class array {
-        public static final int list_entries=0x7f040000;
-        public static final int list_entryvalues=0x7f040001;
+        public static final int list_sectors=0x7f040002;
+        public static final int list_vsd_mode=0x7f040000;
+        public static final int list_vsd_mode_values=0x7f040001;
     }
     public static final class attr {
     }

@@ -8,7 +8,7 @@ import android.preference.*;
 public class Preference extends PreferenceActivity implements OnSharedPreferenceChangeListener {
 
 	private ListPreference		ListMode;
-	private EditTextPreference	EditSectors;
+	private ListPreference		ListSectors;
 	private EditTextPreference	EditGymkhaStart;
 	private EditTextPreference	EditIPAddr;
 
@@ -19,7 +19,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		addPreferencesFromResource( R.xml.preference );
 
 		ListMode		= ( ListPreference     )getPreferenceScreen().findPreference( "key_vsd_mode" );
-		EditSectors		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_sectors" );
+		ListSectors		= ( ListPreference     )getPreferenceScreen().findPreference( "key_sectors" );
 		EditGymkhaStart	= ( EditTextPreference )getPreferenceScreen().findPreference( "key_gymkha_start" );
 		EditIPAddr		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_ip_addr" );
 
@@ -69,7 +69,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 			}catch( NumberFormatException e ){
 				s = "1";
 			}
-			EditSectors.setSummary( s );
+			ListSectors.setSummary( s );
 		}
 
 		if( key == null || key.equals( "key_gymkha_start" )){
