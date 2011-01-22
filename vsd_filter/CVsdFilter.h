@@ -17,21 +17,24 @@
 #ifdef AVS_PLUGIN
 	typedef UCHAR	PIXEL_t;
 	
-	#define RGB2YC( r, g, b ) { \
-		(( int )( 0.299 * r + 0.587 * g + 0.114 * b ) >> 4 ), \
-		(( int )(-0.169 * r - 0.331 * g + 0.500 * b ) >> 4 ) + 0x80, \
-		(( int )( 0.299 * r + 0.587 * g + 0.114 * b ) >> 4 ), \
-		(( int )( 0.500 * r - 0.419 * g - 0.081 * b ) >> 4 ) + 0x80 \
+	#define RGB2YCA( r, g, b, a ) { \
+		(( int )( 0.299 * ( r ) + 0.587 * ( g ) + 0.114 * ( b )) >> 4 ), \
+		(( int )(-0.169 * ( r ) - 0.331 * ( g ) + 0.500 * ( b )) >> 4 ) + 0x80, \
+		(( int )( 0.299 * ( r ) + 0.587 * ( g ) + 0.114 * ( b )) >> 4 ), \
+		(( int )( 0.500 * ( r ) - 0.419 * ( g ) - 0.081 * ( b )) >> 4 ) + 0x80, \
+		( a ) \
 	}
 #else
 	typedef short	PIXEL_t;
 	
-	#define RGB2YC( r, g, b ) { \
-		( int )( 0.299 * r + 0.587 * g + 0.114 * b ), \
-		( int )(-0.169 * r - 0.331 * g + 0.500 * b ), \
-		( int )( 0.500 * r - 0.419 * g - 0.081 * b ) \
+	#define RGB2YCA( r, g, b, a ) { \
+		( int )( 0.299 * ( r ) + 0.587 * ( g ) + 0.114 * ( b )), \
+		( int )(-0.169 * ( r ) - 0.331 * ( g ) + 0.500 * ( b )), \
+		( int )( 0.500 * ( r ) - 0.419 * ( g ) - 0.081 * ( b )), \
+		( a ) \
 	}
 #endif
+#define RGB2YC( r, g, b )	RGB2YCA(( r ), ( g ), ( b ), 0 )
 
 #define G_CX_CNT		30
 
@@ -127,7 +130,17 @@ typedef struct {
 			USHORT	ycr;
 		};
 	};
-} PIXEL_YC;
+	USHORT	alfa;
+} PIXEL_YCA;
+#else
+typedef	struct {
+	short	y;					//	画素(輝度    )データ (     0 ～ 4096 )
+	short	cb;					//	画素(色差(青))データ ( -2048 ～ 2048 )
+	short	cr;					//	画素(色差(赤))データ ( -2048 ～ 2048 )
+								//	画素データは範囲外に出ていることがあります
+								//	また範囲内に収めなくてもかまいません
+	USHORT	alfa;
+} PIXEL_YCA;
 #endif
 
 class CVsdFilter {
@@ -138,38 +151,37 @@ class CVsdFilter {
 	
 	/*** 画像オペレーション *************************************************/
 	
-	virtual void PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ) = 0;
+	virtual void PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag ) = 0;
 	
-	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag );
-	void DrawLine( int x1, int y1, int x2, int y2, int width, const PIXEL_YC &yc, UINT uFlag );
-	void FillLine( int x1, int y1, int x2,         const PIXEL_YC &yc, UINT uFlag );
+	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA &yc, UINT uFlag );
+	void DrawLine( int x1, int y1, int x2, int y2, int width, const PIXEL_YCA &yc, UINT uFlag );
+	void FillLine( int x1, int y1, int x2,         const PIXEL_YCA &yc, UINT uFlag );
 	
-	void DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag );
-	void DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFlag );
-	void DrawCircle( int x, int y, int r, int a, int b, const PIXEL_YC &yc, UINT uFlag );
+	void DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YCA &yc, UINT uFlag );
+	void DrawCircle( int x, int y, int r, const PIXEL_YCA &yc, UINT uFlag );
+	void DrawCircle( int x, int y, int r, int a, int b, const PIXEL_YCA &yc, UINT uFlag );
 	
-	void DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, UINT uFlag );
-	void DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag );
-	void DrawString( char *szMsg, const PIXEL_YC &yc, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
-	void DrawString( char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
+	void DrawFont( int x, int y, UCHAR c, const PIXEL_YCA &yc, UINT uFlag );
+	void DrawFont( int x, int y, UCHAR c, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag );
+	void DrawString( char *szMsg, const PIXEL_YCA &yc, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
+	void DrawString( char *szMsg, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
 	
 	// ポリゴン描写
 	void PolygonClear( void );
-	void PolygonDraw( const PIXEL_YC &yc, UINT uFlag );
+	void PolygonDraw( const PIXEL_YCA &yc, UINT uFlag );
 	
-	PIXEL_YC *BlendColor(
-		PIXEL_YC	&ycDst,
-		const PIXEL_YC	&ycColor0,
-		const PIXEL_YC	&ycColor1,
+	PIXEL_YCA *BlendColor(
+		PIXEL_YCA	&ycDst,
+		const PIXEL_YCA	&ycColor0,
+		const PIXEL_YCA	&ycColor1,
 		double	dAlfa
 	);
 	
 	BOOL DrawVSD( void );
 	
 	enum {
-		IMG_ALFA	= ( 1 << 0 ),
-		IMG_FILL	= ( 1 << 1 ),
-		IMG_POLYGON	= ( 1 << 2 ),
+		IMG_FILL	= ( 1 << 0 ),
+		IMG_POLYGON	= ( 1 << 1 ),
 	};
 	
 	int m_iPosX, m_iPosY;
@@ -204,7 +216,7 @@ class CVsdFilter {
 	
 	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
 	
-	void DrawSpeedGraph( CVsdLog *Log, const PIXEL_YC &yc );
+	void DrawSpeedGraph( CVsdLog *Log, const PIXEL_YCA &yc );
 	
 	CVsdLog		*m_VsdLog;
 	CVsdLog		*m_GPSLog;

@@ -233,7 +233,7 @@ class CVsdFilterAvu : public CVsdFilter {
 	BOOL GPSLogLoad( const char *szFileName, HWND hwnd );
 	
 	// ‰¼‘zŠÖ”
-	virtual void PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag );
+	virtual void PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag );
 	
 	virtual int	GetWidth( void ){ return fpip->w; }
 	virtual int	GetHeight( void ){ return fpip->h; }
@@ -298,7 +298,7 @@ inline void CVsdFilter::PutPixel( int x, int y, short iY, short iCr, short iCb )
 }
 */
 
-void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
+void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
 	
 	if( uFlag & IMG_POLYGON ){
 		// ƒ|ƒŠƒSƒ“•`‰æ
@@ -307,17 +307,18 @@ void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
 	}else{
 		PIXEL_YC	*ycp = fpip->ycp_edit;
 		
-		if( uFlag & IMG_ALFA && yc.y == -1 ) return;
-		
 		if( 0 <= x && x < fpip->max_w && 0 <= y && y < fpip->max_h ){
-			if( uFlag & IMG_ALFA ){
+			if( yc.alfa ){
 				int	iIndex = GetIndex( x, y );
+				int iAlfa = ( int )yc.alfa;
 				
-				ycp[ iIndex ].y  = ( yc.y  + ycp[ iIndex ].y  ) / 2;
-				ycp[ iIndex ].cr = ( yc.cr + ycp[ iIndex ].cr ) / 2;
-				ycp[ iIndex ].cb = ( yc.cb + ycp[ iIndex ].cb ) / 2;
+				ycp[ iIndex ].y  = ( PIXEL_t )(( yc.y  * ( 255 - iAlfa ) + ycp[ iIndex ].y  * iAlfa ) / 255 );
+				ycp[ iIndex ].cr = ( PIXEL_t )(( yc.cr * ( 255 - iAlfa ) + ycp[ iIndex ].cr * iAlfa ) / 255 );
+				ycp[ iIndex ].cb = ( PIXEL_t )(( yc.cb * ( 255 - iAlfa ) + ycp[ iIndex ].cb * iAlfa ) / 255 );
 			}else{
-				ycp[ GetIndex( x, y ) ] = yc;
+				ycp[ GetIndex( x, y ) ].y  = yc.y;
+				ycp[ GetIndex( x, y ) ].cr = yc.cr;
+				ycp[ GetIndex( x, y ) ].cb = yc.cb;
 			}
 		}
 	}
@@ -421,7 +422,11 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 		fputc( '"', fp );
 	}
 	
-	fprintf( fp, " \\\n)\n" );
+	fprintf( fp, " \\\n)\n"
+	#ifndef GPS_ONLY
+		"Amplify( 0.2 )\n"
+	#endif
+	);
 	
 	fclose( fp );
 	return TRUE;

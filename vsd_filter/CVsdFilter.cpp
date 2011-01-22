@@ -140,6 +140,8 @@ CVsdFilter::CVsdFilter (){
 	m_logfont.lfOutPrecision	= OUT_DEFAULT_PRECIS;			// 出力精度
 	m_logfont.lfClipPrecision	= CLIP_DEFAULT_PRECIS;			// クリッピングの精度
 	m_logfont.lfQuality			= PROOF_QUALITY;				// 出力品質
+	//m_logfont.lfQuality			= NONANTIALIASED_QUALITY;		// 出力品質
+	m_logfont.lfQuality			= ANTIALIASED_QUALITY;		// 出力品質
 	m_logfont.lfPitchAndFamily	= FIXED_PITCH | FF_DONTCARE;	// ピッチとファミリ
 	//m_logfont.lfFaceName[LF_FACESIZE];   						// フォント名
 	
@@ -165,7 +167,7 @@ CVsdFilter::~CVsdFilter (){
 #define ABS( x )			(( x ) < 0 ? -( x ) : ( x ))
 #define SWAP( x, y, tmp )	( tmp = x, x = y, y = tmp )
 
-void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag ){
+void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA &yc, UINT uFlag ){
 	
 	int i;
 	
@@ -202,7 +204,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, U
 	}
 }
 
-void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, const PIXEL_YC &yc, UINT uFlag ){
+void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, const PIXEL_YCA &yc, UINT uFlag ){
 	for( int y = 0; y < width; ++y ) for( int x = 0; x < width; ++x ){
 		DrawLine(
 			x1 + x - width / 2, y1 + y - width / 2,
@@ -212,7 +214,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, const PIXE
 	}
 }
 
-inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YC &yc, UINT uFlag ){
+inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ){
 	
 	int	i;
 	
@@ -222,7 +224,7 @@ inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YC &yc, UI
 
 /*** DrawRect ***************************************************************/
 
-void CVsdFilter::DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, UINT uFlag ){
+void CVsdFilter::DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YCA &yc, UINT uFlag ){
 	int	y;
 	
 	if( y1 > y2 ) SWAP( y1, y2, y );
@@ -235,7 +237,7 @@ void CVsdFilter::DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YC &yc, U
 
 /*** DrawCircle *************************************************************/
 
-void CVsdFilter::DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFlag ){
+void CVsdFilter::DrawCircle( int x, int y, int r, const PIXEL_YCA &yc, UINT uFlag ){
 	
 	int	i = r;
 	int j = 0;
@@ -266,7 +268,7 @@ void CVsdFilter::DrawCircle( int x, int y, int r, const PIXEL_YC &yc, UINT uFlag
 	if( uFlag & IMG_FILL ) PolygonDraw( yc, uFlag );
 }
 
-void CVsdFilter::DrawCircle( int x, int y, int r, int a, int b, const PIXEL_YC &yc, UINT uFlag ){
+void CVsdFilter::DrawCircle( int x, int y, int r, int a, int b, const PIXEL_YCA &yc, UINT uFlag ){
 	int		i = ( int )(( double )r / sqrt(( double )a ));
 	int		j = 0;
 	double	d = sqrt(( double )a ) * ( double )r;
@@ -303,36 +305,38 @@ void CVsdFilter::DrawCircle( int x, int y, int r, int a, int b, const PIXEL_YC &
 
 /*** DrawFont ***************************************************************/
 
-void CVsdFilter::DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, UINT uFlag ){
+void CVsdFilter::DrawFont( int x, int y, UCHAR c, const PIXEL_YCA &yc, UINT uFlag ){
 	
 	int	i, j;
+	PIXEL_YCA	yca;
 	
 	if( c != ' ' ) for( j = 0; j < m_pFont->GetH(); ++j ) for( i = 0; i < m_pFont->GetW(); ++i ){
-		if( m_pFont->GetPix( c, i, j ) == 0 ) PutPixel( x + i, y + j, yc, uFlag );
+		int iAlfa = m_pFont->GetPix( c, i, j ) & 0xFF;
+		
+		if( iAlfa ){
+			yca 		= yc;
+			yca.alfa	= iAlfa;
+			PutPixel( x + i, y + j, yca, uFlag );
+		}else{
+			PutPixel( x + i, y + j, yc, uFlag );
+		}
 	}
 }
 
-void CVsdFilter::DrawFont( int x, int y, UCHAR c, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag ){
-	
-	int	i, j;
+void CVsdFilter::DrawFont( int x, int y, UCHAR c, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag ){
 	
 	if( c == ' ' ) return;
 	
-	for( j = 0; j < m_pFont->GetH(); ++j ) for( i = 0; i < m_pFont->GetW(); ++i ){
-		if( m_pFont->GetPix( c, i, j ) == 0 ){
-			PutPixel( x + i - 1, y + j,		ycEdge, uFlag );
-			PutPixel( x + i + 1, y + j,		ycEdge, uFlag );
-			PutPixel( x + i,	 y + j - 1, ycEdge, uFlag );
-			PutPixel( x + i,	 y + j + 1, ycEdge, uFlag );
-		}
-	}
-	
-	DrawFont( x, y, c, yc, uFlag );
+	DrawFont( x + 1, y + 0, c, ycEdge, uFlag );
+	DrawFont( x - 1, y + 0, c, ycEdge, uFlag );
+	DrawFont( x + 0, y + 1, c, ycEdge, uFlag );
+	DrawFont( x + 0, y - 1, c, ycEdge, uFlag );
+	DrawFont( x + 0, y + 0, c, yc,     uFlag );
 }
 
 /*** DrawString *************************************************************/
 
-void CVsdFilter::DrawString( char *szMsg, const PIXEL_YC &yc, UINT uFlag, int x, int y ){
+void CVsdFilter::DrawString( char *szMsg, const PIXEL_YCA &yc, UINT uFlag, int x, int y ){
 	
 	if( x != POS_DEFAULT ) m_iPosX = x;
 	if( y != POS_DEFAULT ) m_iPosY = y;
@@ -344,7 +348,7 @@ void CVsdFilter::DrawString( char *szMsg, const PIXEL_YC &yc, UINT uFlag, int x,
 	m_iPosY += m_pFont->GetH();
 }
 
-void CVsdFilter::DrawString( char *szMsg, const PIXEL_YC &yc, const PIXEL_YC &ycEdge, UINT uFlag, int x, int y ){
+void CVsdFilter::DrawString( char *szMsg, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag, int x, int y ){
 	
 	if( x != POS_DEFAULT ) m_iPosX = x;
 	if( y != POS_DEFAULT ) m_iPosY = y;
@@ -365,7 +369,7 @@ inline void CVsdFilter::PolygonClear( void ){
 	}
 }
 
-inline void CVsdFilter::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
+inline void CVsdFilter::PolygonDraw( const PIXEL_YCA &yc, UINT uFlag ){
 	for( int y = 0; y < GetHeight(); ++y ) if( m_Polygon[ y ].iLeft <= m_Polygon[ y ].iRight ){
 		FillLine( m_Polygon[ y ].iLeft, y, m_Polygon[ y ].iRight, yc, uFlag & ~IMG_POLYGON );
 	}
@@ -373,10 +377,10 @@ inline void CVsdFilter::PolygonDraw( const PIXEL_YC &yc, UINT uFlag ){
 
 /*** カラーを混ぜる *********************************************************/
 
-inline PIXEL_YC *CVsdFilter::BlendColor(
-	PIXEL_YC		&ycDst,
-	const PIXEL_YC	&ycColor0,
-	const PIXEL_YC	&ycColor1,
+inline PIXEL_YCA *CVsdFilter::BlendColor(
+	PIXEL_YCA		&ycDst,
+	const PIXEL_YCA	&ycColor0,
+	const PIXEL_YCA	&ycColor1,
 	double	dAlfa
 ){
 	if     ( dAlfa < 0.0 ) dAlfa = 0.0;
@@ -388,6 +392,7 @@ inline PIXEL_YC *CVsdFilter::BlendColor(
 #ifdef AVS_PLUGIN
 	ycDst.y1 = ycDst.y;
 #endif
+	ycDst.alfa = 0;
 	return &ycDst;
 }
 
@@ -951,7 +956,7 @@ double CVsdFilter::LapNum2LogNum( CVsdLog *Log, int iLapNum ){
 
 #define SPEED_GRAPH_SCALE	2
 
-void CVsdFilter::DrawSpeedGraph( CVsdLog *Log, const PIXEL_YC &yc ){
+void CVsdFilter::DrawSpeedGraph( CVsdLog *Log, const PIXEL_YCA &yc ){
 	
 	int	iLogNum;
 	int	x = 0;
@@ -1148,19 +1153,20 @@ void CVsdFilter::CalcLapTimeAuto( void ){
 
 /*** メーター等描画 *********************************************************/
 
-static const PIXEL_YC	yc_black		= RGB2YC(    0,    0,    0 );
-static const PIXEL_YC	yc_white		= RGB2YC( 4095, 4095, 4095 );
-static const PIXEL_YC	yc_gray			= RGB2YC( 2048, 2048, 2048 );
-static const PIXEL_YC	yc_red			= RGB2YC( 4095,    0,    0 );
-static const PIXEL_YC	yc_green		= RGB2YC(    0, 4095,    0 );
-static const PIXEL_YC	yc_yellow		= RGB2YC( 4095, 4095,    0 );
-static const PIXEL_YC	yc_dark_green	= RGB2YC(    0, 2048,    0 );
-static const PIXEL_YC	yc_blue			= RGB2YC(    0,    0, 4095 );
-static const PIXEL_YC	yc_cyan			= RGB2YC(    0, 4095, 4095 );
-static const PIXEL_YC	yc_dark_blue	= RGB2YC(    0,    0, 2048 );
-static const PIXEL_YC	yc_orange		= RGB2YC( 4095, 1024,    0 );
+static const PIXEL_YCA	yc_black		= RGB2YC(    0,    0,    0 );
+static const PIXEL_YCA	yc_white		= RGB2YC( 4095, 4095, 4095 );
+static const PIXEL_YCA	yc_gray			= RGB2YC( 2048, 2048, 2048 );
+static const PIXEL_YCA	yc_red			= RGB2YC( 4095,    0,    0 );
+static const PIXEL_YCA	yc_green		= RGB2YC(    0, 4095,    0 );
+static const PIXEL_YCA	yc_yellow		= RGB2YC( 4095, 4095,    0 );
+static const PIXEL_YCA	yc_dark_green	= RGB2YC(    0, 2048,    0 );
+static const PIXEL_YCA	yc_blue			= RGB2YC(    0,    0, 4095 );
+static const PIXEL_YCA	yc_cyan			= RGB2YC(    0, 4095, 4095 );
+static const PIXEL_YCA	yc_dark_blue	= RGB2YC(    0,    0, 2048 );
+static const PIXEL_YCA	yc_orange		= RGB2YC( 4095, 1024,    0 );
+static const PIXEL_YCA	yc_gray_a		= RGB2YCA( 2048, 2048, 2048, 0x80 );
 
-#define COLOR_PANEL			yc_gray
+#define COLOR_PANEL			yc_gray_a
 #define COLOR_NEEDLE		yc_red
 #define COLOR_SCALE			yc_white
 #define COLOR_STR			COLOR_SCALE
@@ -1466,12 +1472,12 @@ BOOL CVsdFilter::DrawVSD( void ){
 			iMeterCx, iMeterCy, iMeterR * 1000,
 			( 1000 * 1000 / Aspect ) * ( 1000 * 1000 / Aspect ),
 			1000 * 1000,
-			COLOR_PANEL, CVsdFilter::IMG_ALFA | CVsdFilter::IMG_FILL
+			COLOR_PANEL, CVsdFilter::IMG_FILL
 		);
 	#else
 		DrawCircle(
 			iMeterCx, iMeterCy, iMeterR,
-			COLOR_PANEL, CVsdFilter::IMG_ALFA | CVsdFilter::IMG_FILL
+			COLOR_PANEL, CVsdFilter::IMG_FILL
 		);
 	#endif
 	
@@ -1630,7 +1636,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 					// Line の色用に G を求める
 					double dG = Log->Gy( i );
 					
-					PIXEL_YC yc_line;
+					PIXEL_YCA yc_line;
 					
 					if( dG >= 0.0 ){
 						BlendColor( yc_line, yc_yellow, yc_green, dG / Log->m_dMaxG );

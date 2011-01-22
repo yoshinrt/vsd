@@ -54,7 +54,7 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	int GetIndex( int x, int y ){ return m_iBytesPerLine * y + x * 2; }
 	
 	// âºëzä÷êî
-	virtual void PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag );
+	virtual void PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag );
 	
 	virtual int	GetWidth( void )	{ return m_iWidth; }
 	virtual int	GetHeight( void )	{ return m_iHeight; }
@@ -156,7 +156,7 @@ G = Y-0.714Cr-0.344Cb
 B = Y+1.772Cb 
 */
 
-void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
+void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
 	
 	if( uFlag & IMG_POLYGON ){
 		// É|ÉäÉSÉìï`âÊ
@@ -166,9 +166,17 @@ void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YC &yc, UINT uFlag ){
 		if( 0 <= x && x < GetWidth() && 0 <= y && y < GetHeight() ){
 			int	iIndex	= GetIndex( x, y );
 			
-			if( uFlag & IMG_ALFA ){
-				m_pPlane[ iIndex + 0 ] = ( yc.y + m_pPlane[ iIndex + 0 ] ) / 2;
-				m_pPlane[ iIndex + 1 ] = ((( x & 1 )? yc.cr : yc.cb ) + m_pPlane[ iIndex + 1 ] ) / 2;
+			if( yc.alfa ){
+				int iAlfa = ( int )yc.alfa;
+				
+				m_pPlane[ iIndex + 0 ] = ( PIXEL_t )(
+					( yc.y * ( 255 - iAlfa ) + m_pPlane[ iIndex + 0 ] * iAlfa ) / 255
+				);
+				m_pPlane[ iIndex + 1 ] = ( PIXEL_t )(
+					(
+						(( x & 1 )? yc.cr : yc.cb ) * ( 255 - iAlfa ) + m_pPlane[ iIndex + 1 ] * iAlfa
+					) / 255
+				);
 			}else{
 				*( USHORT *)( m_pPlane + iIndex ) = ( x & 1 ) ? yc.ycr : yc.ycb;
 				m_pPlane[ iIndex ] = yc.y;

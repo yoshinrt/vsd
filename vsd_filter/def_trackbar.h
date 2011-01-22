@@ -23,7 +23,7 @@ DEF_TRACKBAR(	TRACK_LineTrace,	240,	0,		1000,	"Mapïb",		"map_length"	)
 DEF_TRACKBAR(	TRACK_MapSize,		400,	0,		1000,	"MapÉTÉCÉY",	"map_size"		)
 DEF_TRACKBAR(	TRACK_MapAngle,		0,		0,		3600,	"MapâÒì]",		"map_angle"		)
 DEF_TRACKBAR(	TRACK_G_Len,		30,		-1,		300,	"Gí∑Ç≥",		"g_length"		)
-DEF_TRACKBAR(	TRACK_SLineWidth,	0,		0,		1000,	"Startïù",		"start_width"	)
+DEF_TRACKBAR(	TRACK_SLineWidth,	200,	0,		1000,	"Startïù",		"start_width"	)
 #ifdef GPS_ONLY
 DEF_TRACKBAR(	TRACK_Aspect,		1000,	500,	2000,	"Aspectî‰",		"aspect_ratio"	)
 #endif
