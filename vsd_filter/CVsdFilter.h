@@ -194,7 +194,6 @@ class CVsdFilter {
 	// フォント
 	CVsdFont	*m_pFont;
 	LOGFONT		m_logfont;
-	char		*m_szFontName;
 	
 	// 仮想関数
 	virtual int	GetWidth( void )	= 0;

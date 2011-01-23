@@ -517,6 +517,9 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 		fclose( fp );
 		
 		// フォント再設定
+		m_logfont.lfWeight	= m_piParamS[ SHADOW_FONT_ATTR ] & 0x1 ? FW_BOLD : FW_REGULAR;
+		m_logfont.lfItalic	= m_piParamS[ SHADOW_FONT_ATTR ] & 0x2 ? 1 : 0;
+		
 		delete m_pFont; m_pFont = NULL;
 	}
 	return TRUE;
@@ -1732,10 +1735,19 @@ BOOL CVsdFilter::DrawVSD( void ){
 			
 			int iDotSize = -m_logfont.lfHeight * 2 / 20 - 1;
 			
+			// 小数点
+			/*
 			DrawRect(
 				m_iPosX + m_pFont->GetW(),            m_iPosY - ( int )( m_pFont->GetH() * 0.15 ),
 				m_iPosX + m_pFont->GetW() + iDotSize, m_iPosY - ( int )( m_pFont->GetH() * 0.15 ) + iDotSize,
 				COLOR_STR, 0
+			);
+			*/
+			DrawString(
+				".",
+				COLOR_STR, 0,
+				iMeterCx - m_pFont->GetW(),
+				iMeterCy + iMeterR / 2 - m_pFont->GetH()
 			);
 		}
 	}

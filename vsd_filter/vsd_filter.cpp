@@ -793,6 +793,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				#endif
 			}
 			
+			// フォント名をダイアログに設定
+			SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_FONT ), g_Vsd->m_logfont.lfFaceName );
+			
 		  Case ID_BUTT_SAVE_CFG:
 			if( filter->exfunc->dlg_get_save_name( szBuf, FILE_CFG_EXT, NULL ))
 				return g_Vsd->ConfigSave( szBuf );
@@ -831,6 +834,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			if( ChooseFont( &cf )){
 				// フォント強制更新
 				g_Vsd->m_piParamS[ SHADOW_FONT_SIZE ] = -g_Vsd->m_logfont.lfHeight;
+				g_Vsd->m_piParamS[ SHADOW_FONT_ATTR ] =
+					( g_Vsd->m_logfont.lfWeight > FW_REGULAR ? 1 : 0 ) |
+					( g_Vsd->m_logfont.lfItalic ? 2 : 0 );
 				delete g_Vsd->m_pFont;
 				g_Vsd->m_pFont = NULL;
 				
