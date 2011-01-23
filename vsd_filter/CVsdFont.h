@@ -12,6 +12,12 @@
 
 /*** new type ***************************************************************/
 
+typedef struct {
+	BYTE	*pBuf;
+	int		iW, iH;
+	int		iOrgY;
+} tFontGlyph;
+
 class CVsdFont {
   public:
 	CVsdFont( LOGFONT &logfont );
@@ -20,20 +26,14 @@ class CVsdFont {
 	int GetW( void ){ return m_iFontW; }
 	int GetH( void ){ return m_iFontH; }
 	
-	int	m_iFontW, m_iFontH, m_iBMP_W;
+	int	m_iFontW, m_iFontH;
 	
-	LPDWORD m_pFontData;
-	HDC		m_hdcBMP;
-	HBITMAP	m_hbmpBMP, m_hbmpOld;
+	tFontGlyph *m_FontGlyph;
 	
 	// ƒtƒHƒ“ƒg
 	DWORD GetPix( UCHAR c, int x, int y ){
-		c -= ' ';
-		
-		return m_pFontData[
-			( y + c / 16 * m_iFontH ) * m_iBMP_W +
-			( x + c % 16 * m_iFontW * 2 + m_iFontW / 2 )
-		];
+		int	i = c - ' ';
+		return 0;
 	}
 };
 #endif

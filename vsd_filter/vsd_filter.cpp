@@ -312,9 +312,9 @@ void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
 				int	iIndex = GetIndex( x, y );
 				int iAlfa = ( int )yc.alfa;
 				
-				ycp[ iIndex ].y  = ( PIXEL_t )(( yc.y  * ( 255 - iAlfa ) + ycp[ iIndex ].y  * iAlfa ) / 255 );
-				ycp[ iIndex ].cr = ( PIXEL_t )(( yc.cr * ( 255 - iAlfa ) + ycp[ iIndex ].cr * iAlfa ) / 255 );
-				ycp[ iIndex ].cb = ( PIXEL_t )(( yc.cb * ( 255 - iAlfa ) + ycp[ iIndex ].cb * iAlfa ) / 255 );
+				ycp[ iIndex ].y  = ( PIXEL_t )(( yc.y  * ( 256 - iAlfa ) + ycp[ iIndex ].y  * iAlfa ) >> 8 );
+				ycp[ iIndex ].cr = ( PIXEL_t )(( yc.cr * ( 256 - iAlfa ) + ycp[ iIndex ].cr * iAlfa ) >> 8 );
+				ycp[ iIndex ].cb = ( PIXEL_t )(( yc.cb * ( 256 - iAlfa ) + ycp[ iIndex ].cb * iAlfa ) >> 8 );
 			}else{
 				ycp[ GetIndex( x, y ) ].y  = yc.y;
 				ycp[ GetIndex( x, y ) ].cr = yc.cr;
@@ -827,7 +827,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			cf.lStructSize = sizeof( CHOOSEFONT );
 			cf.hwndOwner = hwnd;
 			cf.lpLogFont = &( g_Vsd->m_logfont );
-			cf.Flags = CF_SCREENFONTS | CF_NOVERTFONTS | CF_INITTOLOGFONTSTRUCT;
+			cf.Flags = CF_SCREENFONTS | CF_NOVERTFONTS | CF_INITTOLOGFONTSTRUCT | CF_TTONLY;
 			if( ChooseFont( &cf )){
 				// フォント強制更新
 				g_Vsd->m_piParamS[ SHADOW_FONT_SIZE ] = -g_Vsd->m_logfont.lfHeight;

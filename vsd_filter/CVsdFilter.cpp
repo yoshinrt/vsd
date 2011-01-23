@@ -140,8 +140,6 @@ CVsdFilter::CVsdFilter (){
 	m_logfont.lfOutPrecision	= OUT_DEFAULT_PRECIS;			// 出力精度
 	m_logfont.lfClipPrecision	= CLIP_DEFAULT_PRECIS;			// クリッピングの精度
 	m_logfont.lfQuality			= PROOF_QUALITY;				// 出力品質
-	//m_logfont.lfQuality			= NONANTIALIASED_QUALITY;		// 出力品質
-	m_logfont.lfQuality			= ANTIALIASED_QUALITY;		// 出力品質
 	m_logfont.lfPitchAndFamily	= FIXED_PITCH | FF_DONTCARE;	// ピッチとファミリ
 	//m_logfont.lfFaceName[LF_FACESIZE];   						// フォント名
 	
@@ -310,15 +308,21 @@ void CVsdFilter::DrawFont( int x, int y, UCHAR c, const PIXEL_YCA &yc, UINT uFla
 	int	i, j;
 	PIXEL_YCA	yca;
 	
-	if( c != ' ' ) for( j = 0; j < m_pFont->GetH(); ++j ) for( i = 0; i < m_pFont->GetW(); ++i ){
-		int iAlfa = m_pFont->GetPix( c, i, j ) & 0xFF;
+	if( c < '!' || '~' < c ) return;
+	
+	tFontGlyph *pFont = &m_pFont->m_FontGlyph[ c - '!' ];
+	int iBmpW = ( pFont->iW + 3 ) & ~3;
+	int iOrgX = ( m_pFont->m_iFontW - pFont->iW ) / 2;
+	
+	for( j = 0; j < pFont->iH; ++j ) for( i = 0; i < pFont->iW; ++i ){
+		int iAlfa = 256 - ( pFont->pBuf[ iBmpW * j + i ] << 2 );
 		
 		if( iAlfa ){
 			yca 		= yc;
 			yca.alfa	= iAlfa;
-			PutPixel( x + i, y + j, yca, uFlag );
+			PutPixel( x + iOrgX + i, y + pFont->iOrgY + j, yca, uFlag );
 		}else{
-			PutPixel( x + i, y + j, yc, uFlag );
+			PutPixel( x + iOrgX + i, y + pFont->iOrgY + j, yc, uFlag );
 		}
 	}
 }

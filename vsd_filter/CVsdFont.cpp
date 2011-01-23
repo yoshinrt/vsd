@@ -19,93 +19,60 @@
 
 CVsdFont::CVsdFont( LOGFONT &logfont ){
 	
-	BITMAPINFO	biBMP;
-	HDC			hdc;
-    HFONT		hFont, hFontOld;
-    int			i;
+	const MAT2		mat = {{ 0, 1 }, { 0, 0 }, { 0, 0 }, { 0, 1 }};
+    GLYPHMETRICS	gm;
+    int	i;
 	
-	ZeroMemory( &biBMP, sizeof( biBMP ));
+	// DC, FONT ハンドル取得
+	HDC		hdc			= GetDC( NULL );
+	HFONT	hFont		= CreateFontIndirect( &logfont );
+	HFONT	hFontOld	= ( HFONT )SelectObject( hdc, hFont );
 	
-	/* 256*256ピクセル、32ビットDIB用BITMAPINFO設定 */
-	biBMP.bmiHeader.biSize		= sizeof( BITMAPINFOHEADER );
-	biBMP.bmiHeader.biBitCount	= 32;
-	biBMP.bmiHeader.biPlanes	= 1;
-	biBMP.bmiHeader.biWidth		= 8;
-	biBMP.bmiHeader.biHeight	= -8;
+	// tmAscent 取得
+	TEXTMETRIC tm;
+	GetTextMetrics( hdc, &tm );
 	
-	/* 仮DIBSection作成 */
-	HBITMAP hbmpTemp = CreateDIBSection( NULL, &biBMP, DIB_RGB_COLORS, ( void ** )( &m_pFontData ), NULL, 0 );
+	int iSize;
+	m_FontGlyph = new tFontGlyph[ '~' - '!' + 1 ];
 	
-	/* ウインドウのHDC取得 */
-	HWND hwnd = GetDesktopWindow();	// AviSynth で hwnd が無いので，てきとう (^^;
-	hdc = GetDC( hwnd );
-	
-	/* DIBSection用メモリデバイスコンテキスト作成 */
-	m_hdcBMP = CreateCompatibleDC( hdc );
-	
-	/* ウインドウのHDC解放 */
-	ReleaseDC( hwnd, hdc );
-	
-	/* DIBSectionのHBITMAPをメモリデバイスコンテキストに選択 */
-	m_hbmpOld = ( HBITMAP )SelectObject( m_hdcBMP, hbmpTemp );
-	
-	hFont = CreateFontIndirect( &logfont );
-	
-	hFontOld = ( HFONT )SelectObject( m_hdcBMP, hFont );
-	
-	// フォントサイズ情報初期化
-	SIZE size;
-	GetTextExtentPoint32( m_hdcBMP, "B", 1, &size );	// W が一番幅が広い
-	
-	m_iFontH = size.cy;
-	m_iFontW = size.cx;
-	m_iBMP_W = m_iFontW * 16 * 2;
-	
-	/* 256*256ピクセル、32ビットDIB用BITMAPINFO設定 */
-	biBMP.bmiHeader.biWidth		= m_iBMP_W;
-	biBMP.bmiHeader.biHeight	= -m_iFontH * 7;
-	
-	/* DIBSection作成 */
-	m_hbmpBMP = CreateDIBSection( NULL, &biBMP, DIB_RGB_COLORS, ( void ** )( &m_pFontData ), NULL, 0 );
-	
-	/* DIBSectionのHBITMAPをメモリデバイスコンテキストに選択 */
-	SelectObject( m_hdcBMP, m_hbmpBMP );
-	
-	/* 仮DIBSectionを削除 */
-	DeleteObject( hbmpTemp );
-	
-	// BMP を白に初期化
-	for( i = 0; i < m_iBMP_W * m_iFontH * 7; ++i ){
-		m_pFontData[ i ] = 0xFFFFFF;
+	for( i = 0; i <= '~' - '!'; ++i ){
+		// 必要配列サイズ取得
+		iSize = GetGlyphOutline( hdc, '!' + i, GGO_GRAY8_BITMAP, &gm, 0, NULL, &mat );
+		if( iSize > 0 ){
+			m_FontGlyph[ i ].pBuf = new BYTE[ iSize ];
+			
+			// フォントデータ取得
+			GetGlyphOutline( hdc, '!' + i, GGO_GRAY8_BITMAP, &gm, iSize, m_FontGlyph[ i ].pBuf, &mat );
+			m_FontGlyph[ i ].iW		= gm.gmBlackBoxX;
+			m_FontGlyph[ i ].iH		= gm.gmBlackBoxY;
+			m_FontGlyph[ i ].iOrgY	= tm.tmAscent - gm.gmptGlyphOrigin.y;
+			
+			if( i == 'B' - '!' ){	// 'W' が一番幅が広い
+				m_iFontW = gm.gmCellIncX;
+			}
+		}else{
+			m_FontGlyph[ i ].pBuf	= NULL;
+			m_FontGlyph[ i ].iW		=
+			m_FontGlyph[ i ].iH		=
+			m_FontGlyph[ i ].iOrgY	= 0;
+		}
 	}
 	
-	// 文字を並べる
-	char szChar[ 1 ];
+	m_iFontH = tm.tmHeight;
 	
-	for( i = 0x20; i < 0x80; ++i ){
-		*szChar = i;
-		GetTextExtentPoint32( m_hdcBMP, szChar, 1, &size );
-		
-		TextOut(
-			m_hdcBMP,
-			( i % 16 ) * m_iFontW * 2 + ( m_iFontW * 2 - size.cx ) / 2,
-			(( i - 0x20 ) / 16 ) * m_iFontH, szChar, 1
-		);
-	}
-	
-	SelectObject( m_hdcBMP, hFontOld );
+	SelectObject( hdc, hFontOld );
 	DeleteObject( hFont );
+	ReleaseDC( NULL, hdc );			/* ウインドウのHDC解放 */
 }
 
 /*** デストラクタ ***********************************************************/
 
 CVsdFont::~CVsdFont(){
-	/* DIBSectionをメモリデバイスコンテキストの選択から外す */
-	SelectObject( m_hdcBMP, m_hbmpOld );
-	
-	/* DIBSectionを削除 */
-	DeleteObject( m_hbmpBMP );
-	
-	/* メモリデバイスコンテキストを削除 */
-	DeleteDC( m_hdcBMP );
+	int i;
+
+	for( i = 0; i <= '~' - '!'; ++i ){
+		delete [] m_FontGlyph[ i ].pBuf;
+	}
+	delete [] m_FontGlyph;
+	m_FontGlyph = NULL;
 }
