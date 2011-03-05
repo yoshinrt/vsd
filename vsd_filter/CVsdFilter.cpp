@@ -688,6 +688,36 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 				uSameCnt = 0;
 			}
 		}
+		
+		// 20km/h 以下で 3秒以上 log の間隔が開くとき，0km/h の log を補完する
+		if(
+			uGPSCnt >= 2 &&
+			GPSLog[ uGPSCnt ].fTime - GPSLog[ uGPSCnt - 1 ].fTime >= 3 &&
+			GPSLog[ uGPSCnt ].fSpeed <= 20
+		){
+			// -1 +0 +1 +2
+			// A  B
+			//  ↓
+			// A  A' B' B
+			
+			// データ B のコピー
+			GPSLog[ uGPSCnt + 1 ] =
+			GPSLog[ uGPSCnt + 2 ] = GPSLog[ uGPSCnt ];
+			
+			// データ A のコピー
+			GPSLog[ uGPSCnt ] = GPSLog[ uGPSCnt - 1 ];
+			
+			// スピードを 0 に
+			GPSLog[ uGPSCnt ].fSpeed = GPSLog[ uGPSCnt + 1 ].fSpeed = 0;
+			
+			// 時間調整
+			float fDiff = GPSLog[ uGPSCnt - 1 ].fTime - GPSLog[ uGPSCnt - 2 ].fTime;
+			GPSLog[ uGPSCnt     ].fTime += fDiff;
+			GPSLog[ uGPSCnt + 1 ].fTime -= fDiff;
+			
+			uGPSCnt += 2;
+		}
+		
 		uGPSCnt++;
 	}
 	

@@ -164,12 +164,7 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 		m_Log[ m_iCnt ].fY0 = ( float )GetLogIntermediateVal( fY );
 		
 		if( bAllParam ){
-			// 1•bˆÈã‚ ‚¢‚Ä‚¢‚ÄC5km/h ˆÈ‰º‚È‚ç 0km/h ƒƒO‚ªí‚ç‚ê‚Ä‚¢‚é‚Æ”»’f
 			m_Log[ m_iCnt ].fSpeed = ( float )GetLogIntermediateVal( fSpeed );
-			if(
-				GPSLog[ u + 1 ].fTime - GPSLog[ u ].fTime >= 1 &&
-				m_Log[ m_iCnt ].fSpeed < 5
-			) m_Log[ m_iCnt ].fSpeed = 0;
 			
 			if( m_iCnt ){
 				dMileage += sqrt(
@@ -177,6 +172,7 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 					pow( m_Log[ m_iCnt - 1 ].fY0 - m_Log[ m_iCnt ].fY0, 2 )
 				);
 			}
+			
 			m_Log[ m_iCnt ].fMileage = ( float )dMileage;
 			m_Log[ m_iCnt ].fTacho = 0;
 			
