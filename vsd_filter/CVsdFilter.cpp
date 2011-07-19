@@ -590,8 +590,8 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 			
 			// 単位を補正
 			// 緯度・経度→メートル
-			GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * LAT_M_DEG * cos( dLati * ToRAD ));
-			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * LNG_M_DEG );
+			GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * LNG_M_DEG * cos( dLati * ToRAD ));
+			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * LAT_M_DEG );
 			
 			// 速度・向き→ベクトル座標
 			GPSLog[ uGPSCnt ].fSpeed	= ( float )( BigEndianS( 12 ) / 10.0 );
