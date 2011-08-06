@@ -57,21 +57,26 @@ enum {
 	ID_BUTT_SAVE_CFG,
 };
 
+#define POS_TH_LABEL			30
 #define POS_TH_SLIDER			220
-#define POS_TH_EDIT				299
+#define POS_TH_EDIT				294
+#define POS_ADD_LABEL			50
 #define POS_ADD_SLIDER			300
 #define POS_ADD_EDIT			16
+#define POS_CHK_LABEL_L			36
+#define POS_CHK_LABEL_R			186
+
 #ifdef GPS_ONLY
 	#define POS_SET_BUTT_SIZE		0
 #else
 	#define POS_SET_BUTT_SIZE		30
 #endif
 
-#define POS_FILE_CAPTION_SIZE	55
-#define POS_FILE_NAME_SIZE		320
+#define POS_FILE_CAPTION_SIZE	70
+#define POS_FILE_NAME_SIZE		( rectClient.right - ( POS_FILE_CAPTION_POS + POS_FILE_CAPTION_SIZE + POS_FILE_BUTT_SIZE ))
 #define POS_FILE_BUTT_SIZE		40
-#define POS_FILE_CAPTION_POS	( rectClient.right - ( POS_FILE_NAME_SIZE + POS_FILE_BUTT_SIZE + POS_FILE_CAPTION_SIZE ))
-#define POS_FILE_HEIGHT			18
+#define POS_FILE_CAPTION_POS	150
+#define POS_FILE_HEIGHT			21
 #define POS_FILE_HEIGHT_MARGIN	2
 
 #ifdef GPS_ONLY
@@ -528,7 +533,7 @@ BOOL func_proc( FILTER *fp, FILTER_PROC_INFO *fpip ){
 /*** ダイアログサイズ拡張とパーツ追加 ***************************************/
 
 void CreateSubControl(
-	HWND hwnd, int &iID, HFONT hfont, int iX, int &iY,
+	HWND hwnd, int &iID, HFONT hfont, int iX, int &iY, RECT rectClient,
 	char *szCap, char *szEdit, char *szButt
 ) {
 	
@@ -580,7 +585,7 @@ void ExtendDialog( HWND hwnd ){
 	GetWindowRect( hwnd, &rectClient );
 	MoveWindow( hwnd,
 		rectClient.left, rectClient.top,
-		rectClient.right  - rectClient.left + POS_ADD_SLIDER + POS_ADD_EDIT + POS_SET_BUTT_SIZE,
+		rectClient.right  - rectClient.left + POS_ADD_LABEL + POS_ADD_SLIDER + POS_ADD_EDIT + POS_SET_BUTT_SIZE,
 		rectClient.bottom - rectClient.top,
 		TRUE
 	);
@@ -598,9 +603,20 @@ void ExtendDialog( HWND hwnd ){
 		ScreenToClient( hwnd, &rect.points.bottomright );
 		
 		// ダイアログ左側を延ばす，EDIT ボックスのサイズを伸ばす
-		if( rect.rect.right >= POS_TH_EDIT   ) rect.rect.right += POS_ADD_EDIT;
-		if( rect.rect.left  >= POS_TH_SLIDER ) rect.rect.left  += POS_ADD_SLIDER;
-		if( rect.rect.right >= POS_TH_SLIDER ) rect.rect.right += POS_ADD_SLIDER;
+		#define ResizeControl( name ) { \
+			if( rect.rect.right >= POS_TH_ ## name ) rect.rect.right += POS_ADD_ ## name; \
+			if( rect.rect.left  >= POS_TH_ ## name ) rect.rect.left  += POS_ADD_ ## name; \
+		}
+		
+		// 右から順番に書くこと
+		ResizeControl( EDIT );
+		ResizeControl( SLIDER );
+		// チェックボックスのラベル判定
+		if( rect.rect.left < POS_CHK_LABEL_L && POS_CHK_LABEL_R < rect.rect.right ){
+			rect.rect.right = POS_FILE_CAPTION_POS;
+		}else{
+			ResizeControl( LABEL );
+		}
 		
 		// 実際にリサイズ
 		MoveWindow( hwndChild,
@@ -633,10 +649,10 @@ void ExtendDialog( HWND hwnd ){
 	int y = rectClient.bottom - ( POS_FILE_HEIGHT + POS_FILE_HEIGHT_MARGIN ) * POS_FILE_NUM + POS_FILE_HEIGHT_MARGIN;
 	
 #ifndef GPS_ONLY
-	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y,	"VSDログ",	"",				"開く" );
+	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "VSDログ",	"",				"開く" );
 #endif
-	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y,	"GPSログ",	"",				"開く" );
-	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y,	"フォント",	"(default)",	"選択" );
+	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "GPSログ",	"",				"開く" );
+	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "フォント",	"(default)",	"選択" );
 	
 	// cfg load/save ボタン
 	hwndChild = CreateWindow(
