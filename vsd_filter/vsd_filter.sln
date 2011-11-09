@@ -1,17 +1,11 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dds_lib", "dds_lib\dds_lib.vcproj", "{32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dds_lib", "dds_lib\dds_lib.vcxproj", "{32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsd_filter", "vsd_filter.vcproj", "{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}"
-	ProjectSection(ProjectDependencies) = postProject
-		{32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD} = {32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsd_filter", "vsd_filter.vcxproj", "{59D219EE-170F-4A74-8EC9-D7EC6503AFB4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsd_filter_avs", "vsd_filter_avs\vsd_filter_avs\vsd_filter_avs.vcproj", "{41F84FCE-9EAA-491D-818B-D3AD73C8AD12}"
-	ProjectSection(ProjectDependencies) = postProject
-		{32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD} = {32D48DCD-C7EF-466E-B48C-5CECC5F9C7AD}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsd_filter_avs", "vsd_filter_avs\vsd_filter_avs\vsd_filter_avs.vcxproj", "{41F84FCE-9EAA-491D-818B-D3AD73C8AD12}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
