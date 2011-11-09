@@ -1,7 +1,23 @@
 #!/usr/bin/perl -w
 
-$Mod = 50;	# 0.1…√√±∞Ã
+$Diff = 5.0;
+if( $ARGV[ 0 ] =~ /^-(\d.*)/ ){
+	$Diff = $1;
+	shift( @ARGV );
+}
+
+$PrevTime = -1000;
 
 while( <> ){
-	print if( /([\d+]+.\d)/ && (( $1 * 10 ) % $Mod ) == 0 );
+	if( /(\d\d)(\d\d)(\d+\.?\d*)/ ){
+		$Time = $1 * 3600 + $2 * 60 + $3;
+		
+		if(
+			$PrevTime == $Time ||
+			( $Time < $PrevTime ? ( $Time + 24 * 3600 ) : $Time ) - $PrevTime >= $Diff
+		){
+			print;
+			$PrevTime = $Time;
+		}
+	}
 }
