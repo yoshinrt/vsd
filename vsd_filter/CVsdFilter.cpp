@@ -1053,12 +1053,20 @@ void CVsdFilter::CalcLapTime( void ){
 			iTime	= ( int )( iFrame * 1000.0 / GetFPS());
 		}
 		
-		m_Lap[ m_iLapNum ].uLap		= m_iLapNum;
 		m_Lap[ m_iLapNum ].fLogNum	= m_iLapMode == LAPMODE_HAND_VIDEO ? iFrame : ( float )dLogNum;
-		m_Lap[ m_iLapNum ].iTime	= m_iLapNum ? iTime - iPrevTime : 0;
+		
+		if( m_piParamC[ CHECK_Gymkha ] ){
+			// ジムカーナモード
+			m_Lap[ m_iLapNum ].uLap		= ( m_iLapNum / 2 ) + 1;
+			m_Lap[ m_iLapNum ].iTime	= ( m_iLapNum & 1 ) ? iTime - iPrevTime : 0;
+		}else{
+			m_Lap[ m_iLapNum ].uLap		= m_iLapNum;
+			m_Lap[ m_iLapNum ].iTime	= m_iLapNum ? iTime - iPrevTime : 0;
+		}
 		
 		if(
 			m_iLapNum &&
+			m_Lap[ m_iLapNum ].iTime &&
 			( m_iBestTime == BESTLAP_NONE || m_iBestTime > m_Lap[ m_iLapNum ].iTime )
 		){
 			m_iBestTime	= m_Lap[ m_iLapNum ].iTime;
@@ -1306,7 +1314,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_bCalcLapTimeReq	= FALSE;
 		m_iLapMode			= LAPMODE_HAND_VIDEO;
 		
-		if( m_GPSLog && SLineWidth ){
+		if( m_GPSLog && m_piParamT[ TRACK_SLineWidth ] && !m_piParamC[ CHECK_Gymkha ] ){
 			CalcLapTimeAuto();
 		}
 		if( m_iLapMode != LAPMODE_GPS ){
@@ -1430,24 +1438,36 @@ BOOL CVsdFilter::DrawVSD( void ){
 		DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
 		
 		// Lapタイム表示
-		i = 0;
-		int iLapIdxTmp = ( m_iLapIdx == m_iLapNum - 1 ) ? m_iLapIdx - 2 : m_iLapIdx - 1;
-		if( iLapIdxTmp < 1 ) iLapIdxTmp = 1;
+		// 3つタイム表示する分の，最後の LapIdx を求める．
+		// 通常は m_iLapIdx そのものだが，m_Lap[ iLapIdxEnd ].iTime == 0 の時は
+		// 周回モードでは最後のラップを走り終えた
+		// ジムカモードでは 1周走り終えたことを示しているので
+		// LapIdx を -1 する
+		int iLapIdxEnd = m_iLapIdx + 1;
+		if( m_Lap[ iLapIdxEnd ].iTime == 0 ) --iLapIdxEnd;
 		
-		for( ; iLapIdxTmp <= m_iLapIdx + 1 && i < 3; ++iLapIdxTmp ){
-			if( m_Lap[ iLapIdxTmp ].iTime != 0 ){
-				sprintf(
-					szBuf, "%3d%c%2d'%02d.%03d",
-					m_Lap[ iLapIdxTmp ].uLap,
-					( iLapIdxTmp == m_iLapIdx + 1 && bInLap ) ? '*' : ' ',
-					m_Lap[ iLapIdxTmp ].iTime / 60000,
-					m_Lap[ iLapIdxTmp ].iTime / 1000 % 60,
-					m_Lap[ iLapIdxTmp ].iTime % 1000
-				);
-				DrawString( szBuf,
-					m_iBestTime == m_Lap[ iLapIdxTmp ].iTime ? COLOR_BEST_LAP : COLOR_TIME,
-					COLOR_TIME_EDGE, 0 );
-				++i;
+		// iLapIdxEnd から有効なラップタイムが 2個見つかるまで遡る
+		int iLapIdxStart = iLapIdxEnd - 1;
+		for( i = 0; i < 2 && iLapIdxStart > 0; --iLapIdxStart ){
+			if( m_Lap[ iLapIdxStart ].iTime ) ++i;
+		}
+		
+		if( iLapIdxStart >= 0 ){
+			for( ; iLapIdxStart <= iLapIdxEnd; ++iLapIdxStart ){
+				if( m_Lap[ iLapIdxStart ].iTime != 0 ){
+					sprintf(
+						szBuf, "%3d%c%2d'%02d.%03d",
+						m_Lap[ iLapIdxStart ].uLap,
+						( iLapIdxStart == m_iLapIdx + 1 && bInLap ) ? '*' : ' ',
+						m_Lap[ iLapIdxStart ].iTime / 60000,
+						m_Lap[ iLapIdxStart ].iTime / 1000 % 60,
+						m_Lap[ iLapIdxStart ].iTime % 1000
+					);
+					DrawString( szBuf,
+						m_iBestTime == m_Lap[ iLapIdxStart ].iTime ? COLOR_BEST_LAP : COLOR_TIME,
+						COLOR_TIME_EDGE, 0 );
+					++i;
+				}
 			}
 		}
 	}

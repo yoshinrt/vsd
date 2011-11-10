@@ -1,0 +1,570 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja">
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=EUC-JP">
+<TITLE>VSD for GPS</TITLE>
+<style type="text/css">
+A:link		{ color: #8800FF; }
+A:visit		{ color: #8000C0; }
+A:hover		{ color: red; }
+A:active	{ color: red; }
+
+BODY {
+	color: #440088;
+	background-color: #E0D0FF;
+	/*background-image: url( naruto_back.png );*/
+}
+
+H1.Title {
+	color: #8800FF;
+	font-size: 300%;
+	text-align: center;
+	border: 0;
+	width: 100%;
+	/*filter: glow( color=#FFFFFF, strength=15 );*/
+}
+
+H1 {
+	letter-spacing: 0.2em;
+	border-width: 0 0 3px 12px;
+	border-color: #8800FF;
+	border-style: solid;
+	padding:0.1em 0 0.1em 0.2em;
+}
+
+H2 {
+	letter-spacing: 0.2em;
+	border-width: 0 0 3px 8px;
+	border-color: #8800FF;
+	border-style: solid;
+	padding:0.1em 0 0.1em 0.2em;
+}
+
+HR {
+	height: 3px;
+	color: #8800FF;
+	background-color: #8800FF;
+}
+
+TR.Color {
+	background-color: #C0B0F0;
+}
+
+TH.Color {
+	color: white;
+	background-color: #7000E0;
+}
+
+PRE {
+	margin: 0 0 0 0;
+}
+
+PRE.Console {
+	color: white;
+	background-color: #000000;
+	padding: 0.5em 0.5em 0.5em 0.5em;
+	margin: 0.5em 0 0.5em 0;
+//	width: 50em;
+}
+
+PRE.Color {
+	color: white;
+	background-color: #7000E0;
+	padding: 0.5em 0.5em 0.5em 0.5em;
+	margin: 0.5em 0 0.5em 0;
+//	width: 90%;
+}
+
+LI {
+	padding-top: 0.25em;
+	padding-bottom: 0.25em;
+}
+
+LI.Default {
+	padding: 0;
+}
+
+DT.Spacing {
+	padding-top: 1em;
+}
+
+B.ConsoleEm {
+	color: red;
+	font-weight: bolder;
+}
+</style>
+</HEAD>
+<BODY>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-16497494-2']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+<H1 class="Title">VSD for GPS</H1>
+
+<H2>目次</H2>
+<ol>
+	<li><a href="#Download">ダウンロード</a>
+	<li><a href="#Overview">概要</a>
+	<li><a href="#Install">インストール</a>
+	<li><a href="#Synchoronize">使用方法</a>
+	<li><a href="#ScreenExplanation">画面表示説明</a>
+	<li><a href="#LapTime">簡易ラップタイム計測</a>
+	<li><a href="#AviSynth">AviSynth 用プラグイン</a>
+	<li><a href="#KnownBug">既知のバグ</a>
+	<li><a href="#Reference">参考</a>
+	<li><a href="#QandA">Q&A</a>
+	<li><a href="#ChangeLog">変更履歴</a>
+</ol>
+
+<a name="Download"></a>
+<H2>ダウンロード</H2>
+<a href="vsd_filter_gps106p.lzh">vsd_filter_gps106p.lzh</a> (2011/08/06 更新)<br>
+<!--過去バージョンは<a href="#OldVersion">こちら</a> (変更履歴にリンクがあります)-->
+
+<a name="Overview"></a>
+<H2>概要</H2>
+<H3>機能概要</H3>
+<object width="425" height="344"><param name="movie" value="http://www.youtube.com/v/IfNSfZBD0gk&hl=ja&fs=1&"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://www.youtube.com/v/IfNSfZBD0gk&hl=ja&fs=1&" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="425" height="344"></embed></object>　<img src="vsd_gps_img/vsd.jpg"><br>
+VSD for GPS (以下，VSD) は，GPS データロガーで記録したログファイルと，車載ビデオカメラの映像を合成してメーターを合成表示 (スーパーインポーズ) するソフトです．主に以下のような機能があります．<br>
+<UL>
+	<LI>スピードメーター・加速度の合成表示
+	<LI>走行ラインの表示
+	<LI>簡易ラップタイム計測・表示
+</UL>
+
+読み込み可能な GPS ログファイル形式は，以下のとおりです．
+<ul>
+	<li>NMEA-0183 フォーマット<br>
+		GPS ログファイルとしては最も汎用的な形式です．$GPRMC センテンスが含まれている必要があります．GPS ログ記録周期はどんなものでも読み込めますが，記録周期が短いほどより正確な情報を表示できます．
+	<li><a href="http://dp3.jp/dp3/LAP+/index.html" target="_blank">LAP+</a> 用ログファイル *.dp3 形式
+</ul>
+
+<p>
+VSD は，フリーの動画編集ソフトとして有名な AviUtl のプラグインモジュールとして動作しますので，別途 AviUtl が必要です．
+
+<H3>動作確認環境</H3>
+<ul>
+	<li>WindowsXP SP3
+	<li>AviUtl v0.99i8
+	<li>GPS機器: PhotoMate887 (ログ記録周期: 5Hz・10Hz)
+</ul>
+
+<H3>アーカイブ内容</H3>
+
+<table>
+	<tr class="Color"><td>vsd_filter_gps.auf</td><td>AviUtl 用プラグイン本体です</td></tr>
+	<tr class="Color"><td>manual.url</td><td>今ごらんのマニュアルです</td></tr>
+	<tr class="Color"><td>avisynth\vsd_filter_gps.dll</td><td>AviSynth 用プラグイン DLL です．AviSynth を使用しない場合は必要ありません．</td></tr>
+</table>
+
+<a name="Install"></a>
+<H2>インストール</H2>
+<ol>
+	<li>まずはじめに <a href="http://www.google.co.jp/search?as_q=AviUtl&hl=ja&c2coff=1&btnG=Google+%E6%A4%9C%E7%B4%A2&as_epq=&as_oq=&as_eq=&lr=lang_ja&as_ft=i&as_filetype=&as_qdr=all&as_occt=any&as_dt=i&as_sitesearch=&as_rights=" target="_blank">AviUtl</a> をインストールします．
+	<li>ダウンロードした vsd_filter_gps???.lzh を解凍し，vsd_filter_gps.auf を AviUtl.exe と同じ場所にコピーしてください．
+	<p>
+	最低限のインストールは以上ですが，AviUtl でさまざまな動画ファイルをオープンするために，必要に応じて以下をインストールしてください．(これ以下は VSD というより AviUtl の設定になりますので，より詳細な説明は他の解説サイトを参照してください)
+	<li>ほぼ必須：ffdshow をインストールします．→<a href="http://www.losttechnology.jp/Movie/ffdshowsetup.html" target="_blank">参考リンク</a>
+	<li>*.mp4 を読み込む場合：mp4input.aui をインストールします．<a href="http://www.ttm123.com/net/AviUtl.html" target="_blank">こちらのリンク先</a>の「AviUtlを使ってMP4のファイルを無圧縮でカットする」の項を参考にしてください．
+	<li>MPEG-2 を読み込む場合：m2v.vfp をインストールします．→<a href="http://mbsupport.dip.jp/mb/video_2.htm" target="_blank">こちらのリンク先</a>の「MPEG-2 VIDEO VFAPI Plug-In」の項を参考にしてください．
+	<li>*.avi *.mp4 MPEG-2 以外を読み込む場合：DirectShow File Reader プラグイン for AviUtl をインストールします．→<a href="http://www.tenchi.ne.jp/~yoko/aviutl/index.php?DirectShow%20File%20Reader%20%A5%D7%A5%E9%A5%B0%A5%A4%A5%F3%20for%20AviUtl" target="_blank">参考リンク</a><br>
+	その後，AviUtl メニューの ファイル→環境設定→入力プラグイン優先度の設定 を選択し，「入力プラグインの優先度」ダイアログを表示します．そこで DirectShow File Reader を選択し，「下に移動」ボタンを押し一番下にした後，OK ボタンを押します．<br>
+	<img src="vsd_gps_img/install1.png">　
+	<img src="vsd_gps_img/install2.png"><br>
+	※DirectShow File Reader で読み込んだファイルは，正しくシークできないことがあり，同期作業に支障が出ます．このような場合，いったん AviUtl で *.avi に変換・保存した後，その動画に対して VSD 同期処理を行ってください．
+</ol>
+
+<a name="Synchoronize"></a>
+<H2>使用方法</H2>
+VSD 使用の流れは，主に以下のようになっています．
+
+<ol>
+	<li><a href="#TutorialOpen">動画と GPS ログを開き，VSD の設定を行う</a>
+	<li><a href="#TutorialSynchoronize">動画と GPS ログの同期を取る</a>
+	<li><a href="#TutorialLaptime">(任意で) ラップタイムを計測・表示する</a>
+	<li><a href="#Compressor">(任意で) メーター合成した動画を保存する</a>
+</ol>
+以下で，各項目についての説明をします．
+
+<a name="TutorialOpen">
+<H3>動画と GPS ログを開き，VSD の設定を行う</H3>
+<ol>
+	<li>AviUtl を起動して，適当な動画を開きます．
+	<li>メニューの フィルタ→VSDメーター合成 にチェックを入れます．<br>
+		<img src="vsd_gps_img/menu_filter.jpg">
+	<li>メニューの 設定→VSDメーター合成の設定 を選ぶと，「VSDメーター合成」ダイアログが表示されます．<br>
+		<img src="vsd_gps_img/menu_setting.jpg">
+	<li>設定ダイアログの GPS ログオープンボタンを押すと，ファイル選択ダイアログが表示されるので，そこで GPS で記録したログファイル (*.nmea *.dp3) を選択してリードします．<br>
+		<img src="vsd_gps_img/dialog2.png">
+	<li>「VSDメーター合成」ダイアログの「スピードグラフ表示」を ON に設定します．
+</ol>
+
+<a name="TutorialSynchoronize">
+<H3>動画と GPS ログの同期を取る</H3>
+動画と GPS ログの同期を取るには，動画と GPS ログのオフセットを「ログ位置調整」スライダで設定します．
+<p>
+以下では，設定のコツを説明します．
+
+<ol>
+	<li>動画とログを読み込んだだけの状態では，下の図のように動画とログがずれている状態です．<br>
+	<img src="vsd_gps_img/sync1.png">
+	<li>AviUtl のメインスライダ・カーソルキーなどを使って，走行を開始したとき (車が動き出した瞬間) や加速→減速した瞬間などの，車速が変化しやすい (スピードグラフの形に特徴が出やすい) 瞬間の映像を表示させます．<br>
+	<img src="vsd_gps_img/main_setting2.jpg">
+	<li>「ログ位置調整」スライダを調整して，先ほどの映像に対応する箇所のスピードグラフを表示させます．縦棒の箇所がスピードグラフに重なるよう，「ログ位置調整」スライダを調整します．
+	<li>この状態で，ほとんどの場合は同期が完了しています．ただし動画によっては，動画の前半だけ同期を取った場合，まれに動画の後半の同期が取れていない場合があります．<br>
+	<img src="vsd_gps_img/sync2.png">
+	<li>この場合，動画の後半でもう一度「ログ位置調整」スライダを調整し，同期を取る必要があります．<br>
+	メインウィンドウで動画の後半を表示させ，先ほどと同じ要領で「ログ位置調整」スライダを調整してください．<br>
+	2回目の同期では，1回目の同期を保ったまま (ログの再生速度を変えることで) 動画全体の同期を取ることができます．<br>
+	<img src="vsd_gps_img/sync3.png">
+	
+	<li>以上で同期作業は終わりです．<br>
+	AviUtl メニューの表示→再生ウィンドウの表示 で実際に再生してみて，同期にずれがないか確認してください．ずれがある場合は，再び「ログ位置調整」スライダを調整してください．
+	<p>
+	「ログ位置調整」スライダを調整する場合は<b>必ずメインスライダなどを使ってずれがあるシーンを表示させてから，「ログ位置調整」スライダを調整してください．</b><br>
+	再生ウィンドウの映像とログ位置調整スライダは連動していませんので，(メインウィンドウで違うシーンを表示させたまま) 再生ウィンドウでずれがあるシーンを表示しつつログ位置調整スライダを調整しても，望む結果は得られません．
+	<p>
+	※「ログ位置調整」スライダは一度に約±10分しかずらせません．それ以上ずらしたいときは，メインスライダで 1フレーム分映像を進めると，「ログ位置調整」スライダが 0 に戻ります．
+	<li>同期作業が終わったら，「VSDメーター合成」ダイアログの「スピードグラフ表示」を OFF にしてください．
+</ol>
+
+<a name="TutorialLaptime">
+<H3>ラップタイムを計測する</H3>
+ラップタイム計測・表示機能の詳細は「<a href="#LapTime">簡易ラップタイム計測</a>」を参照してください．<br>
+ここではごく簡単に自動ラップタイム計測機能を使用してみます．
+
+<ol>
+	<li>「VSDメーター合成」ダイアログの「ラップタイム表示」チェックボックスにチェックを入れます．
+	<li>「VSDメーター合成」ダイアログの「計測地点幅」スライダに 150 を設定します．
+	<li>AviUtl のスライダバーを使うなどして，コントロールラインなどの目印になる場所を通過する瞬間の映像を表示させます．
+	<li>「M」キーを押します．するとラップタイムが計測されて表示されます．
+</ol>
+
+<a name="Compressor">
+<H3>メーター合成した動画を保存する</H3>
+メーター合成後の動画は，AviUtl の機能を使用して *.avi ファイルに保存することができます．<br>
+ここでは簡単に動画の保存方法について説明します．すでに AviUtl を使いこなしている方は，ここは読まなくてけっこうです．
+
+<ol>
+	<li>範囲指定して保存したい場合，キーボードの [ キーで開始点，] キーで終了点を指定します．
+	<li>AviUtl メニューの ファイル→AVI 出力 を選びます．
+	<li>AVI 出力場所を指定するダイアログボックスが開きます．
+	<li>動画の圧縮 Codec を選びます．好みの Codec を使ってください．よくわからない方はひとまず以下のように設定してみることをお勧めします．<br>
+	<img src="vsd_gps_img/save1.jpg">
+	<img src="vsd_gps_img/save2.jpg">
+	<img src="vsd_gps_img/save3.jpg">
+	<ol>
+		<li>「ビデオ圧縮」ボタンをクリック
+		<li>圧縮プログラムのリストから「ffdshow Video Codec」を選びます
+		<li>「設定」をクリック
+		<li>「Encoder」をタブをクリックします
+		<li>「エンコーダ」「モード」「品質」を図のとおりに設定．「品質」の数値は，ファイルサイズと画質のトレードオフになりますので，いろいろ試してみてください．数値が高いほど画質がよいですが，ファイルサイズが大きくなります．
+		<li>OK をクリック
+		<li>OK をクリック
+	</ol>
+	<li>保存する場所を選んだ後，「保存」をクリックします．
+</ol>
+
+<a name="ScreenExplanation"></a>
+<H2>画面表示説明</H2>
+<img src="vsd_gps_img/screen_shot.jpg"><br>
+<ul>
+	<li>メーターパネル<br>
+		スピードメーターと加速度の複合表示メーターです．<br>
+		加速度は，緑丸で現在の加速度が，過去 3秒間 (設定可能) の軌跡が緑のラインで表示されます．また前後左右あわせた加速度の値が数値で表示されます．
+	<li>走行軌跡<br>
+		走行軌跡が表示され，また現在の自車位置が赤丸で表示されます．走行軌跡は，縦加速度に応じて 緑(加速)〜黄〜赤(減速) で表示されます．
+	<li>ラップタイム<br>
+		上から，現在ラップの経過時間・ベストラップとの時間差・ベストラップ・過去 3ラップ分のタイムが表示されます．<br>
+		「ベストラップとの時間差」は，現在ラップとベストラップのタイム差がリアルタイムで表示されます．タイム差は走行距離から算出しているので，走行ラインが大幅に違っていたりすると不正確な値になります．<br>
+		「過去 3ラップ分のタイム」は，現在走行中のタイムが「*」印で示されます．一般的なレース放送やゲームなどと違い，<b>現在ラップがゴールする前にそのタイムが表示されています．</b>またベストラップは水色で表示されます．
+	<li>スピードグラフ<br>
+		設定ダイアログの「スピードグラフ表示」を ON にしたときのみ表示されます．スピードがグラフで表示されます．
+</ul>
+
+メニューの 設定→VSDメーター合成の設定 を選ぶと，「VSDメーター合成」ダイアログが表示されます．設定ダイアログの各設定項目の意味は以下のとおりです．<br>
+<img src="vsd_gps_img/dialog1.png">
+<ul>
+	<li>設定スライダ・チェックボックス
+		<ul>
+			<li>ログ位置調整<br>
+				動画と GPS ログのタイミング合わせに使用します．
+			<li>最大スピード<br>
+				スピードメーターの最大値を設定します．
+			<li>走行軌跡長さ<br>
+				走行軌跡の長さを秒単位で設定します．ただし簡易ラップタイム計測を行っているときは，現在走行中のラップの軌跡のみが表示されます．<br>
+				0 に設定すると，走行軌跡は表示されません．
+			<li>走行軌跡サイズ<br>
+				走行軌跡の表示サイズを変更します．
+			<li>走行軌跡回転<br>
+				走行軌跡を回転させて表示します．
+			<li>G軌跡表示長さ<br>
+				G軌跡の表示長さを設定します．表示秒数×10 の値を設定します．<br>
+				0 を設定すると G軌跡は表示されません．<br>
+				-1 を設定すると，G ボールも表示されません．
+			<li>計測地点幅<br>
+				ラップタイム自動計測モード時のコントロールラインの幅を設定します．幅[m]×10 の値を設定します．<br>
+				0 を指定すると手動計測モードになります．<br>
+				詳細は<a href="#LapTime">簡易ラップタイム計測</a>を参照してください．
+			<li>アスペクト比<br>
+				メーターパネル表示の縦横比を変更します．動画出力後にメーターが楕円になっている場合は，調整してみてください．
+			<li>ラップタイム表示<br>
+				簡易ラップタイム計測を行う場合，ON に設定します．
+			<li>メーター位置変更<br>
+				メーターを右に表示する場合，ON に設定します．
+			<li>スピードグラフ表示<br>
+				同期設定に使用する情報を表示する場合，ON に設定します．
+		</ul>
+	<li>GPS ログオープンボタン<br>
+		読み込むGPSログを選択します．
+	<li>フォント選択ボタン<br>
+		VSD の表示に使用するフォント・フォントサイズを選択します．<br>
+		※プロポーショナルフォントも固定幅として扱いますので，フォントによっては表示が乱れます．
+	<li>*.cfg ロード・セーブボタン<br>
+		このダイアログの設定内容を *.cfg にセーブするとき，または *.cfg の内容をロードするときに使用します．
+</ul>
+
+<a name="LapTime"></a>
+<H2>簡易ラップタイム計測</H2>
+　VSD では，簡易的にラップタイムを計測し，画面に表示することができます．2種類の計測モードがあります．
+<ul>
+	<li>自動計測モード<br>
+		コントロールラインの位置と幅を (一箇所だけ) 指定することで，そこを通過する時間を自動認識し自動的にラップタイムを計測するモードです．サーキット走行など，同一コースを何度も周回する場合は手軽にラップタイムを計測できます．<br>
+		計測タイム精度は <a href="#Reference">GPS 測位精度に左右されます</a>．またジムカーナ等スタート・ゴール地点が違う場合にはこのモードは使用できません．また GPS ログを読み込まない場合，このモードは使用できません．
+	<li>手動計測モード<br>
+		コントロールラインなどを通過した瞬間の映像に手動でマークをつけ，そのマークとマークの間の時間を計ることで，ラップタイムを計測するモードです．<br>
+		複数周のラップタイムを計測する場合は，すべての周回のコントロールライン(等)を手動でマークする必要がありますが，計測タイム精度は GPS の精度に影響されず，動画の fps (例: 30fps の動画なら 1/30秒) の精度で計測できます．また GPS ログを読み込まなくても，このモードは使用できます．
+</ul>
+
+<h3>自動計測モード</h3>
+<ol>
+	<li>「VSDメーター合成」ダイアログの「ラップタイム表示」チェックボックスにチェックを入れます．
+	<li>「VSDメーター合成」ダイアログの「計測地点幅」スライダでコントロールラインの幅を設定します．幅[m]×10 の値を設定します．(必ず 0 以外の値を設定してください)
+	<li>AviUtl のスライダバーを使うなどして，コントロールラインなどの目印になる場所を通過する瞬間のフレームを表示させます．
+	<li>「M」キーを押します．タイトルバーに [mark] と表示され，またラップタイム表示が更新されるのを確認してください．マークを解除するには，もう一度「M」キーを押します．<br>
+	<img src="vsd_gps_img/menu_mark.jpg"><br>
+	※「M」キーを AviUtl のショートカットキーに割り当てている場合は，別のキーに割り当てなおしてください．
+	<li>コントロールラインを通過し損ねている，または間違って通過したと認識されたラップがないか確認します．必要であれば「計測地点幅」を調整したり，マークするフレームを別のラップに変えてみてください．<br>
+	また「スピードグラフ表示」ON 時は，走行軌跡にコントロールラインが表示されますので，調整の目安にしてください．<br>
+	ちなみに，自車方位が ±45度以上ずれているときは，コントロールラインを通過しても新しいラップとは認識されません．
+</ol>
+
+<h3>手動計測モード</h3>
+<ol>
+	<li>「VSDメーター合成」ダイアログの「ラップタイム表示」チェックボックスにチェックを入れます．
+	<li>「VSDメーター合成」ダイアログの「計測地点幅」スライダを 0 に設定します．
+	<li>AviUtl のスライダバーを使うなどして，コントロールラインなどの目印になる場所を通過する瞬間のフレームを表示させます．
+	<li>「M」キーを押します．タイトルバーに [mark] と表示され，またラップタイム表示が更新されるのを確認してください．マークを解除するには，もう一度「M」キーを押します．<br>
+	※「M」キーを AviUtl のショートカットキーに割り当てている場合は，別のキーに割り当てなおしてください．
+	<li>次にコントロールラインを通過するフレームを表示させ，マークをつけます．動画のコントロールラインを通過するフレームごとに，この作業を繰り返します．
+</ol>
+
+<a name="AviSynth"></a>
+<H2>AviSynth 用プラグイン</H2>
+<H3>概要</H3>
+　vsd_filter_avs.dll は，AviSynth 用プラグイン DLL です．AviSynth の概要については<a href="http://www.avisynth.info/?AviSynth" target="_blank">こちら</a>などを参照してください．<br>
+AviSynth を使うメリットを簡単に紹介すると，動画の範囲指定・子画面合成・モザイク処理等の強力な編集機能を使用でき，また MediaPlayerClassic 等の *.avs (AviSynth スクリプト) を直接再生できるプレイヤーを使うと，AviUtl で再エンコード出力せずにメーター合成後の動画を再生できます．
+
+<H3>インストール</H3>
+<ol>
+	<li>AviSynth をインストールします→<a href="http://www.avisynth.info/?%A5%A4%A5%F3%A5%B9%A5%C8%A1%BC%A5%EB" target="_blank">参考</a>
+	<li>AviSynthインストールディレクトリ\plugins ( 通常は C:\Program Files\AviSynth 2.5\plugins ) に vsd_filter<b>_avs</b>.dll をコピーします．
+	<li><a href="http://www.avisynth.info/?AviSynth" target="_blank">こちら</a>でも解説されているとおり，AviSynth 自体は完結したアプリケーションではなく，他のアプリケーションから呼び出されて動作します．VirtualDub や MediaPlayerClassic 等が有名です．とりあえず手軽に AviSynth を試したい場合は <a href="http://ringonoki.net/tool/movie-p/mpc.php" target="_blank">MediaPlayerClassic</a> をインストールしてみてください．
+</ol>
+
+<H3>簡単な使用法</H3>
+大まかな流れは，AviSynth スクリプトを作成し，AviSynth を呼び出すアプリケーションにそのスクリプトを読み込ませます．<br>
+スクリプト作成は煩雑な作業ですが，(AviUtl 用の) VSD にはスクリプト作成を大幅に簡略化する機能があります．<br>
+ここでは MediaPlayerClassic で AviSynth スクリプトを直接再生する例を挙げます．
+<ol>
+	<li>AviUtl の VSD を使って同期作業を行った後，「*.cfg ロード・セーブボタン」で *.cfg を保存します．*.cfg はほぼそのまま AviSynth スクリプトとして使用できるようになっていますので，*.cfg の拡張子を *.avs に変更します．
+	<li>MediaPlayerClassic を立ち上げ，MediaPlayerClassic に *.avs をドラッグ & ドロップすると，再生が始まります．
+	<li>AviSynth の機能を使って，子画面合成をしてみます．*.avs をメモ帳などで開き，ファイルの最後に次の 3行を追加後に保存・終了して，再び MediaPlayerClassic で再生してみてください．同じ動画が子画面合成されて再生されると思います．<pre class="Color">
+c1 = last
+BilinearResize( last.width / 3 / 8 * 8, last.height / 3 / 8 * 8 )
+Overlay( c1, last, 0, 0 )
+</pre>
+	ここでは簡単に説明するため同じ動画を入れましたが，もちろん別の動画を入れることもできます．
+</ol>
+
+<H3>フィルタ解説</H3>
+　vsd_filter_avs.dll がサポートするフィルタは VSDFilter だけです．ここでは VSDFilter の引数を説明します．<br>
+ほとんどは AviUtl 用 VSD の設定ダイアログで設定できるパラメータと同じですが，lap_start 等 AviSynth 版にしかないパラメータもあります．
+
+<pre class="Color">
+VSDFilter (clip, string "gps_file", string "font",
+	int "video_start", int "video_end", int "gps_start", int "gps_end",
+	int "speed_meter", int "map_length", int "map_size", int "map_angle",
+	int "g_length", int "start_width", int "aspect_ratio", int "lap_time",
+	int "meter_pos", int "meter_cx", int "meter_cy", int "meter_r",
+	int "g_scale", int "meter_adjust", int "font_size",
+	int "lap_start", int "lap_end", string "mark")
+</pre>
+
+<a name="AviSynthParam"></a>
+<table>
+	<tr class="Color"><th class="Color">パラメータ名</th><th class="Color">説明</th></tr>
+	<tr class="Color"><td>string "gps_file"	</td><td>読み込む GPS ログファイル名 (*.nmea *.dp3) を指定します．</td></tr>
+	<tr class="Color"><td>string "font"		</td><td>表示に使用するフォント名を指定します．</td></tr>
+	<tr class="Color"><td>int "video_start"	<br>
+							int "video_end"	<br>
+							int "gps_start"	<br>
+							int "gps_end"	</td><td>動画とログの同期情報です．<br>
+													video_start の時刻の映像が gps_start の時刻のログに，<br>
+													video_end の時刻の映像が gps_end の時刻のログに対応することを示します．</td></tr>
+	<tr class="Color"><td>int "speed_meter"	</td><td>設定スライダの「最大スピード」と同じ値・意味です．</td></tr>
+	<tr class="Color"><td>int "map_length"	</td><td>設定スライダの「走行軌跡長さ」と同じ値・意味です．</td></tr>
+	<tr class="Color"><td>int "map_size"	</td><td>設定スライダの「走行軌跡サイズ」と同じ値・意味です．</td></tr>
+	<tr class="Color"><td>int "map_angle"	</td><td>設定スライダの「走行軌跡回転」と同じ値・意味です．</td></tr>
+	<tr class="Color"><td>int "g_length"	</td><td>設定スライダの「G軌跡表示長さ」と同じ値・意味です．</td></tr>
+	<tr class="Color"><td>int "start_width"	</td><td>設定スライダの「計測地点幅」と同じ値・意味です．</td></tr>
+	<tr class="Color"><td>int "aspect_ratio"</td><td>設定スライダの「アスペクト比」と同じ値・意味です．</td></tr>
+	<tr class="Color"><td>int "lap_time"	</td><td>1を指定すると，ラップタイムが表示されます．</td></tr>
+	<tr class="Color"><td>int "meter_pos"	</td><td>1を指定すると，メーターパネルが右に表示されます．</td></tr>
+	<tr class="Color"><td>int "meter_cx"	</td><td>メーターパネル中心の x 座標を指定します．</td></tr>
+	<tr class="Color"><td>int "meter_cy"	</td><td>メーターパネル中心の y 座標を指定します．</td></tr>
+	<tr class="Color"><td>int "meter_r"		</td><td>メーターパネルの半径を指定します．</td></tr>
+	<tr class="Color"><td>int "g_scale"		</td><td>G ボールがメーターパネル外周にあるときの G の値 * 1000 を指定します．<br>例えば 1500 を設定した場合，1.5G のときに G ボールがメーター外周に位置します．</td></tr>
+	<tr class="Color"><td>int "font_size"	</td><td>フォントサイズをピクセル数で指定します．</td></tr>
+	<tr class="Color"><td>int "font_attr"	</td><td>1: 太字 2:斜体 3:太字+斜体 を指定します．</td></tr>
+	<tr class="Color"><td>int "lap_start"	</td><td>ラップタイム表示の開始ラップ数を指定します．</td></tr>
+	<tr class="Color"><td>int "lap_end"		</td><td>ラップタイム表示の終了ラップ数を指定します．</td></tr>
+	<tr class="Color"><td>string "mark"		</td><td>簡易ラップタイム計測で，マークしたフレーム番号を「,」で区切ってつなげた文字列を指定します．</td></tr>
+</table>
+
+<a name="KnownBug"></a>
+<H2>既知のバグ</H2>
+<ul>
+	<li>VSD は 2時間分の GPS ログしか読み込めないようになっています．これを超えるログは 2時間以内に収まるよう，*.nmea を編集する必要があります．GPS ロガーの中には，数日分のログを一つの *.nmea に出力するものがありますので，このようなログを VSD に読み込ませるときは注意が必要です．
+	<li><strike>16:9 の動画にメーターを合成した場合，メーターが楕円形になる場合があります．</strike> v0.92 にて調整機能を入れました．
+	<li><strike>必要な DLL が不足すると，AviUtil メニューの 設定→VSDメーター合成の設定 が現れません．</strike> v1.06g で改善しました．
+	<li><strike>フォントが判読できないほど乱れる現象が報告されていますが，今のところ再現・解決できていません．その場合は，フォント選択ボタンで他のフォント・サイズを試してみてください．</strike> v1.06l で改善しました．
+	<li>AviSynth で DirectShowSource() でオープンした動画に対し VSDFilter() を適用した場合，AviUtl で調整したパラメータを適用しても同期がずれる場合があります．これは DirectShowSource() が動画の FPS を変更するためで，これを回避するためには，DirectShowSource() の fps パラメータを正確に指定する必要があります．
+	<li>タイム計測の表示は 1/1000秒ですが当然<a href="#Reference">そんなに精度はありません</a>．1/1000桁は所詮飾りです．偉い人にはそれがわからn(ry
+</ul>
+
+<a name="Reference"></a>
+<H2>参考</H2>
+とあるサーキットで，コース公式計測器の記録と，自動計測モードでのタイム差は以下のようになりました．<br>
+<img src="vsd_gps_img/time_diff.png"><br>
+　コース公式のラップタイム計測地点と自動計測モードの計測地点には位置のズレがあると思われることから，ラップタイムの遅い (コントロールライン通過速度が遅い) 周とその前後の周は計測誤差が大きくなります．<br>
+　それ以外の周では，おおむね ±0.03秒以内の誤差といえます．
+
+<a name="QandA"></a>
+<H2>Q&A</H2>
+<UL>
+	<LI>動画保存すると，動画ファイルサイズが巨大になる<br>
+		動画保存時に<a href="#Compressor">圧縮コーデックの設定</a>をしてください．
+	<LI>動画の音声が消える<br>
+		基本的に AviUtl が扱える動画は *.avi 型式のみです．その他の型式はプラグインという形で読み込めることがありますが，音声が出なかったり等様々な弊害が出ることがあります．<br>
+		その場合は，他のフォーマット変換ソフトでいったん *.avi 型式に変換してください．
+	<LI>同期合わせにくいんだけど<br>
+		慣れです (^^;
+		<ul>
+			<li>メインウィンドウでカーソルキーの→を押し続けるとスロー再生のようになるので，車が動き出した瞬間などは特定しやすくなります．
+			<li>メインウィンドウと再生ウィンドウのタイトルバーには，それぞれのウィンドウに表示中のフレーム番号が表示されています．再生ウィンドウで再生しながら同期に適したシーンを発見したら，そのフレーム番号を参考にメインウィンドウにそのシーンを表示させるとよいです．
+			<li>再生ウィンドウで同期ずれを発見した場合，ログ位置調整スライダを調整する前にメインウィンドウでそのシーンを表示させるのを忘れないでください．
+			<li>*.avi 以外のファイルを読み込んでいる場合，うまく同期がとれない場合がありますので，いったん *.avi に再エンコードしてから同期してみてください．
+		</ul>
+	<LI>GPS ログは *.nmea と *.dp3 以外読み込めないの?<br>
+		<a href="http://www.google.co.jp/search?ie=UTF-8&q=GPS+Babel">GPS Babel</a> を使えば，かなり多くのフォーマットから NMEA に変換できます．がヘタすると変換時にスピード情報が欠落したりするので，過度な期待はしないでください．またモータースポーツ専用 GPS ロガーのファイルには，GPS Babel でも対応していないと思います．
+	<LI>なんか使いにくい<br>
+		仕様です（；´д⊂）
+</UL>
+
+
+<a name="ChangeLog"></a>
+<H2>変更履歴</H2>
+<a name="OldVersion"></a>
+<table>
+	<tr class="Color"><td>v1.06p</td>
+		<td>・Windows7 での設定ダイアログ表示を調整</td></tr>
+	<tr class="Color"><td>v1.06o</td>
+		<td>・1Hz 等周期が長い GPS ログで，停車中もスピードが 0km/h にならないことがあるのを修正</td></tr>
+	<tr class="Color"><td>v1.06n</td>
+		<td>・フォント選択ダイアログで，TrueType フォント以外を選択できないようにした<br>
+			・太字・斜体を正式サポートし，*.cfg に font_attr パラメータ追加</td></tr>
+	<tr class="Color"><td>v1.06m</td>
+		<td>・フォントアンチエイリアスを有効にし，特に解像度が低い動画でのフォントの見栄えを改善した<br>
+			※フォント・環境によっては見栄えが変わらない場合もあります</td></tr>
+	<tr class="Color"><td>v1.06l</td>
+		<td>・Windows7 等でデフォルトのフォント表示が乱れるのを修正</td></tr>
+	<tr class="Color"><td>v1.06k</td>
+		<td>・ラップタイム自動計測モードで不正終了する場合があるのを修正</td></tr>
+	<tr class="Color"><td>v1.06j</td>
+		<td>・同期作業を簡略化した<br>
+			・いつからか，AviUtl のサイズ変更フィルタが効かなくなっていたのを修正</td></tr>
+	<tr class="Color"><td>v1.06i</td>
+		<td>・走行軌跡の G 色分けが緑になりにくいので，そのログの最大加速／減速 G のときに緑／赤になるようにした</td></tr>
+	<tr class="Color"><td>v1.06h</td>
+		<td>・走行軌跡の G 色分けが逆になってた</td></tr>
+	<tr class="Color"><td>v1.06g</td>
+		<td>・走行軌跡の G 色分けを縦 G のみで色分け (ブレーキングポイントがわかりやすいかと思って)</td></tr>
+	<tr class="Color"><td>v1.06f</td>
+		<td>・自動計測モードで M キーを押したとき，他のマークを全部解除するようにした</td></tr>
+	<tr class="Color"><td>v1.06e</td>
+		<td>・G 長さ = 0 のとき G 数値が出てなかったのを修正<br>
+			・その他細かい bux fix</td></tr>
+	<tr class="Color"><td>v1.06d</td>
+		<td>・横 G の演算に GPS の方位データを使用しないようにすることで，横 G の乱れを改善した(?)<br>
+			　→Photomate887 は，進行方向が真北のときに正しくない方位を記録するようです．</td></tr>
+	<tr class="Color"><td>v1.06c</td>
+		<td>・*.cfg ロード時に不正終了する場合があるのを修正</td></tr>
+	<tr class="Color"><td>v1.06b</td>
+		<td>・速度・方位が記録されていない NMEA ファイルに対応<br>
+			・タイム差分表示の精度を改善</td></tr>
+	<tr class="Color"><td>v1.06a</td>
+		<td>・細かいバグ修正<br>
+			・default フォントを Arial にしてみた</td></tr>
+	<tr class="Color"><td>v1.06</td>
+		<td>・設定ダイアログを見直し</td></tr>
+	<tr class="Color"><td>v1.05</td>
+		<td>・解像度によってフォントの大きさを変え，高解像度の動画でのメーターパネルの見栄えを改善した．<br>
+			・フォントを変更可能にした (方法わっかりにくいけど)<br>
+			・[AviSynth] font パラメータ追加</td></tr>
+	<tr class="Color"><td>v1.04c</td>
+		<td>・解像度の小さい動画で同期情報のフォントサイズが小さくならないバグ修正</td></tr>
+	<tr class="Color"><td>v1.04b</td>
+		<td>・2本に分かれているスライダバーを 1本にした<br>
+			・同期情報の表示を変更</td></tr>
+	<tr class="Color"><td>v1.04a</td>
+		<td>・タイム計測の精度をちょびっと向上<br>
+			・ラップタイム履歴の表示順序をまともにした<br>
+			・直線描画ルーチンの微妙なバグを修正</td></tr>
+	<tr class="Color"><td>v1.04</td>
+		<td>・長い動画を扱えないことがあったので修正</td></tr>
+	<tr class="Color"><td>v1.03</td>
+		<td>・ラップタイム自動計測モードを追加</td></tr>
+	<tr class="Color"><td>v1.02</td>
+		<td>・*.dp3 で時刻を読み誤る可能性があったのを修正</td></tr>
+	<tr class="Color"><td>v1.01</td>
+		<td>・*.dp3 で走行軌跡の縦横比がおかしかったのを修正</td></tr>
+	<tr class="Color"><td>v1.00</td>
+		<td>・*.dp3 (LAP+ 用ログファイル) をリードできるようにした<br>
+			・AviSynth 用プラグイン追加</td></tr>
+	<tr class="Color"><td>βv0.92</td>
+		<td>・メーターパネルのアスペクト比変更設定を追加<br>
+			・4G 以上の横 G は異常なデータとみなし描画対象から外した</td></tr>
+	<tr class="Color"><td>βv0.91</td>
+		<td>・横G の動きが変になる場合があるのを修正<br>
+			・スピードメーターに対して G ボールの動きが進んでいたのを修正</td></tr>
+	<tr class="Color"><td>βv0.90</td>
+		<td>最初のバージョン公開</td></tr>
+</table>
+Special thanks: ふくながさん，373@dp3さん
+
+<p>
+<a href="./index.html">戻る</a>
+</BODY>
+</HTML>
