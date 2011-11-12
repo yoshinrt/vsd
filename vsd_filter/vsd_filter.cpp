@@ -731,8 +731,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			// 自動ラップ計測モードのとき，他のマークをすべて解除する
 			if(
 				g_Vsd->m_piParamC[ CHECK_LAP ] &&
-				!g_Vsd->m_piParamC[ CHECK_Gymkha ] &&
-				g_Vsd->m_piParamT[ TRACK_SLineWidth ] &&
+				g_Vsd->m_piParamT[ TRACK_SLineWidth ] > 0 &&
 				!( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME )
 			){
 				for( int i = 0; i < g_Vsd->GetFrameMax(); ++i ){
@@ -949,8 +948,7 @@ BOOL func_update( FILTER *filter, int status ){
 				status <= FILTER_UPDATE_STATUS_TRACK + PARAM_GSt ||
 			#endif
 			status == FILTER_UPDATE_STATUS_TRACK + TRACK_LogOffset ||
-			status == FILTER_UPDATE_STATUS_TRACK + TRACK_SLineWidth ||
-			status == FILTER_UPDATE_STATUS_CHECK + CHECK_Gymkha
+			status == FILTER_UPDATE_STATUS_TRACK + TRACK_SLineWidth
 		)
 	) g_Vsd->m_bCalcLapTimeReq = TRUE;
 	

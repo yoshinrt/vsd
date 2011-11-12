@@ -1055,7 +1055,7 @@ void CVsdFilter::CalcLapTime( void ){
 		
 		m_Lap[ m_iLapNum ].fLogNum	= m_iLapMode == LAPMODE_HAND_VIDEO ? iFrame : ( float )dLogNum;
 		
-		if( m_piParamC[ CHECK_Gymkha ] ){
+		if( m_piParamT[ TRACK_SLineWidth ] < 0 ){
 			// ジムカーナモード
 			m_Lap[ m_iLapNum ].uLap		= ( m_iLapNum / 2 ) + 1;
 			m_Lap[ m_iLapNum ].iTime	= ( m_iLapNum & 1 ) ? iTime - iPrevTime : 0;
@@ -1314,7 +1314,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_bCalcLapTimeReq	= FALSE;
 		m_iLapMode			= LAPMODE_HAND_VIDEO;
 		
-		if( m_GPSLog && m_piParamT[ TRACK_SLineWidth ] && !m_piParamC[ CHECK_Gymkha ] ){
+		if( m_GPSLog && m_piParamT[ TRACK_SLineWidth ] > 0 ){
 			CalcLapTimeAuto();
 		}
 		if( m_iLapMode != LAPMODE_GPS ){
@@ -1439,7 +1439,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		
 		// Lapタイム表示
 		// 3つタイム表示する分の，最後の LapIdx を求める．
-		// 通常は m_iLapIdx そのものだが，m_Lap[ iLapIdxEnd ].iTime == 0 の時は
+		// 通常は m_iLapIdx + 1 だが，m_Lap[ iLapIdxEnd ].iTime == 0 の時は
 		// 周回モードでは最後のラップを走り終えた
 		// ジムカモードでは 1周走り終えたことを示しているので
 		// LapIdx を -1 する

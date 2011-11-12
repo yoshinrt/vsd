@@ -14,7 +14,6 @@ DEF_CHECKBOX_N(	CHECK_GPS_PRIO,	0,	"GPSログ優先",			NULL		)
 DEF_CHECKBOX_N(	CHECK_LOGPOS,	0,	"ログ位置自動認識",		NULL		)
 #endif
 DEF_CHECKBOX_N(	CHECK_FRAME,	0,	"スピードグラフ表示",	NULL		)
-DEF_CHECKBOX(	CHECK_Gymkha,	0,	"Start/Goal指定",		"gymkha_mode" )
 
 #undef DEF_CHECKBOX
 #undef DEF_CHECKBOX_N
