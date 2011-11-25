@@ -1448,8 +1448,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 		
 		// iLapIdxEnd から有効なラップタイムが 2個見つかるまで遡る
 		int iLapIdxStart = iLapIdxEnd - 1;
-		for( i = 0; i < 2 && iLapIdxStart > 0; --iLapIdxStart ){
-			if( m_Lap[ iLapIdxStart ].iTime ) ++i;
+		for( i = 0; iLapIdxStart > 0; --iLapIdxStart ){
+			if( m_Lap[ iLapIdxStart ].iTime ){
+				if( ++i >= 2 ) break;
+			}
 		}
 		
 		if( iLapIdxStart >= 0 ){
