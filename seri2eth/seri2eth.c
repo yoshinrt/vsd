@@ -71,13 +71,40 @@ int Repeater( int fdOut, int fdIn ){
 
 /*** main *******************************************************************/
 
-int main( void ){
+int main( int argc, char **argv ){
 	int fdSockListen, fdSock, fdSeri;
 	struct sockaddr_in addr, client;
 	int iLen;
 	int i;
 	fd_set rfds;
 	struct termios ioOld, ioNew;
+	
+	int	iBaud = B9600;
+	if( argc >= 2 ){
+		iBaud = atoi( argv[ 1 ] );
+		DebugMsg( "baud late = %d\n", iBaud );
+		iBaud =
+			iBaud == 0 ? B0 :
+			iBaud == 50 ? B50 :
+			iBaud == 75 ? B75 :
+			iBaud == 110 ? B110 :
+			iBaud == 134 ? B134 :
+			iBaud == 150 ? B150 :
+			iBaud == 200 ? B200 :
+			iBaud == 300 ? B300 :
+			iBaud == 600 ? B600 :
+			iBaud == 1200 ? B1200 :
+			iBaud == 1800 ? B1800 :
+			iBaud == 2400 ? B2400 :
+			iBaud == 4800 ? B4800 :
+			iBaud == 9600 ? B9600 :
+			iBaud == 19200 ? B19200 :
+			iBaud == 38400 ? B38400 :
+			iBaud == 57600 ? B57600 :
+			iBaud == 115200 ? B115200 :
+			iBaud == 230400 ? B230400 :
+			B9600;
+	}
 	
 	signal( SIGPIPE, SIG_IGN );	/* シグナルを無視する */
 	
@@ -122,7 +149,7 @@ int main( void ){
 		tcgetattr( fdSeri, &ioOld ); /* 現在のポート設定を待避 */
 		
 		bzero( &ioNew, sizeof( ioNew ));
-		ioNew.c_cflag = B38400 | CS8 | CLOCAL | CREAD;
+		ioNew.c_cflag = iBaud | CS8 | CLOCAL | CREAD;
 		ioNew.c_iflag = IGNPAR;
 		ioNew.c_oflag = 0;
 		
