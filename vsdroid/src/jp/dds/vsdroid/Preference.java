@@ -1,15 +1,22 @@
 package jp.dds.vsdroid;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.*;
+import java.lang.CharSequence;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Set;
 
 public class Preference extends PreferenceActivity implements OnSharedPreferenceChangeListener {
 
 	private ListPreference		ListMode;
 	private ListPreference		ListSectors;
 	private ListPreference		ListConnMode;
+	private ListPreference		ListBTDevices;
 	private EditTextPreference	EditGymkhaStart;
 	private EditTextPreference	EditIPAddr;
 
@@ -19,9 +26,10 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource( R.xml.preference );
 
-		ListMode		= ( ListPreference     )getPreferenceScreen().findPreference( "key_vsd_mode" );
-		ListSectors		= ( ListPreference     )getPreferenceScreen().findPreference( "key_sectors" );
-		ListConnMode	= ( ListPreference     )getPreferenceScreen().findPreference( "key_connection_mode" );
+		ListMode		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_vsd_mode" );
+		ListSectors		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_sectors" );
+		ListConnMode	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_connection_mode" );
+		ListBTDevices	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_bt_devices" );
 		EditGymkhaStart	= ( EditTextPreference )getPreferenceScreen().findPreference( "key_gymkha_start" );
 		EditIPAddr		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_ip_addr" );
 
@@ -30,6 +38,36 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 			getPreferenceScreen().findPreference( "key_status" ).
 				setTitle( extras.getCharSequence( "Message" ));
 		}
+
+		//////////////////////////////////////////////////////////////////////
+		// BT デバイスリストの作成
+		// http://web.dimension-maker.info/archives/2010/11/22163814.html
+		//////////////////////////////////////////////////////////////////////
+		
+		// 項目の取得。 ArrayList と Arrayの変換
+		ArrayList<CharSequence> entriesList = new ArrayList<CharSequence> ();
+		ArrayList<CharSequence> entryValuesList = new ArrayList<CharSequence> ();
+
+		// Get the local Bluetooth adapter
+		BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+
+		// Get a set of currently paired devices
+		Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
+
+		// If there are paired devices, add each one to the ArrayAdapter
+		String s;
+		for (BluetoothDevice device : pairedDevices) {
+			s = device.getName() + " / " + device.getAddress();
+			entriesList.add( s );
+			entryValuesList.add( s );
+		}
+
+		// 各配列を再度当てはめる。
+		CharSequence entries[]		= entriesList.toArray( new CharSequence[]{} );
+		CharSequence entryValues[]	= entryValuesList.toArray( new CharSequence[]{} );
+
+		ListBTDevices.setEntries( entries );
+		ListBTDevices.setEntryValues( entryValues );
 	}
 
 	// callback 登録・解除
@@ -98,6 +136,10 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 
 		if( key == null || key.equals( "key_ip_addr" )){
 			EditIPAddr.setSummary( sharedPreferences.getString( "key_ip_addr", "192.168.0.1" ));
+		}
+
+		if( key == null || key.equals( "key_bt_devices" )){
+			ListBTDevices.setSummary( sharedPreferences.getString( "key_bt_devices", "Not selected" ));
 		}
 	}
 

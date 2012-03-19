@@ -1,33 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-<string name="app_name">VSDroid</string>
-<string name="pref_summery_status">動作状態</string>
-<string name="pref_reopen_log">ログファイル再作成</string><string name="pref_caribration">キャリブレーション</string>
-<string name="pref_vsd_mode">VSD動作モード</string>
-<string name="pref_sectors">セクター数</string>
-<string name="pref_gymkhana_start">ジムカーナ スタート距離</string>
-<string name="pref_connection_mode">接続モード (要再起動)</string>
-<string name="pref_ip_addr">IPアドレス</string>
-<string name="pref_eco_mode">エコモード</string>
-<string name="pref_summery_eco_mode">エコ運転を促す</string><string name="pref_replay_log">ログ再生モード</string>
-
-<string name="mode_laptime">ラップタイム</string>
-<string name="mode_gymkhana">ジムカーナ</string>
-<string name="mode_0_400">0-400m</string>
-<string name="mode_0_100">0-100km/h</string>
-
-<string name="conn_mode_ether">無線LAN</string>
-<string name="conn_mode_bluetooth">Bluetooth</string>
-<string name="conn_mode_logreplay">ログ再生</string>
-
-<string name="statmsg_normal">正常動作中</string>
-<string name="statmsg_log_open_failed">ログファイルが開けません</string><string name="statmsg_socket_open_failed">ネットワーク接続に失敗</string>
-<string name="statmsg_socket_rw_failed">ネットワークアクセス中のエラー</string>
-<string name="statmsg_vsd_initialize_failed">VSDの初期化失敗</string>
-<string name="statmsg_emulog_open_failed">vsd/vsd.logが見つかりません</string>
-<string name="statmsg_log_replay_failed">ログ再生中にエラー発生</string>
-<string name="statmsg_log_replay_finished">ログ再生終了</string>
-<string name="statmsg_bluetooth_not_available">Bluetooth が無効です</string>
-<string name="statmsg_bluetooth_server_error">Bluetooth サーバーエラー</string>
+	<string name="app_name">VSDroid</string>
+	<string name="pref_summery_status">動作状態</string>
+	<string name="pref_reopen_log">ログファイル再作成</string><string name="pref_caribration">キャリブレーション</string>
+	<string name="pref_vsd_mode">VSD動作モード</string>
+	<string name="pref_sectors">セクター数</string>
+	<string name="pref_gymkhana_start">ジムカーナ スタート距離</string>
+	<string name="pref_connection_mode">接続モード (要再起動)</string>
+	<string name="pref_ip_addr">IPアドレス</string>
+	<string name="pref_bt_devices">Bluetoothデバイス</string>
+	<string name="pref_eco_mode">エコモード</string>
+	<string name="pref_summery_eco_mode">エコ運転を促す</string><string name="pref_replay_log">ログ再生モード</string>
+	
+	<string name="mode_laptime">ラップタイム</string>
+	<string name="mode_gymkhana">ジムカーナ</string>
+	<string name="mode_0_400">0-400m</string>
+	<string name="mode_0_100">0-100km/h</string>
+	
+	<string name="conn_mode_ether">無線LAN</string>
+	<string name="conn_mode_bluetooth">Bluetooth</string>
+	<string name="conn_mode_logreplay">ログ再生</string>
+	
+	<string name="statmsg_normal">正常動作中</string>
+	<string name="statmsg_log_open_failed">ログファイルが開けません</string><string name="statmsg_socket_open_failed">ネットワーク接続に失敗</string>
+	<string name="statmsg_socket_rw_failed">ネットワークアクセス中のエラー</string>
+	<string name="statmsg_vsd_initialize_failed">VSDの初期化失敗</string>
+	<string name="statmsg_emulog_open_failed">vsd/vsd.logが見つかりません</string>
+	<string name="statmsg_log_replay_failed">ログ再生中にエラー発生</string>
+	<string name="statmsg_log_replay_finished">ログ再生終了</string>
+	<string name="statmsg_bluetooth_not_available">Bluetooth が無効です</string>
+	<string name="statmsg_bluetooth_server_error">Bluetooth サーバーエラー</string>
+	<string name="statmsg_bluetooth_device_not_selected">Bluetoothデバイスを選択して下さい</string>
+	<string name="statmsg_bluetooth_connection_failed">Bluetooth接続エラー</string>
 </resources>

@@ -21,7 +21,7 @@ import android.content.SharedPreferences.Editor;
 import android.view.WindowManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-//import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 
 import java.net.InetSocketAddress;
@@ -35,7 +35,7 @@ import java.util.*;
 
 public class Vsdroid extends Activity {
 
-	final boolean	bDebug		= true; //false;
+	final boolean	bDebug		= false;
 
 	// 定数
 	final int MODE_LAPTIME	= 0;
@@ -43,11 +43,11 @@ public class Vsdroid extends Activity {
 	final int MODE_ZERO_FOUR= 2;
 	final int MODE_ZERO_ONE	= 3;
 	final int MODE_NUM		= 4;
-	
+
 	final int CONN_MODE_ETHER		= 0;
 	final int CONN_MODE_BLUETOOTH	= 1;
 	final int CONN_MODE_LOGREPLAY	= 2;
-	
+
 	final double H8HZ			= 16030000;
 	final double SERIAL_DIVCNT	= 16;		// シリアル出力を行う周期
 	final double LOG_FREQ		= 16;
@@ -79,6 +79,7 @@ public class Vsdroid extends Activity {
 	final String VSD_LOG  = VSD_ROOT + "/log";
 
 	private static final UUID BT_UUID = UUID.fromString( "00001101-0000-1000-8000-00805F9B34FB" );
+	private static final int REQUEST_ENABLE_BT = 2;
 
 	enum LAP_STATE {
 		NONE,
@@ -248,7 +249,7 @@ public class Vsdroid extends Activity {
 			// ログファイルオープン
 			try {
 				fsLog    = new FileWriter( VSD_LOG + s + ".log" );
-				fsBinLog = new FileOutputStream( VSD_LOG + s + "bin.log" );
+				//fsBinLog = new FileOutputStream( VSD_LOG + s + "bin.log" );
 			} catch (FileNotFoundException e) {
 				iMessage = R.string.statmsg_log_open_failed;
 				return -1;
@@ -717,11 +718,19 @@ public class Vsdroid extends Activity {
 			// BT ON でなければエラー (手抜き)
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Enable" );
 			if( !mBluetoothAdapter.isEnabled()){
-				iMessage = R.string.statmsg_bluetooth_not_available;
-				return -1;
+				//iMessage = R.string.statmsg_bluetooth_not_available;
+				//return -1;
+				Intent enableIntent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE );
+				startActivityForResult( enableIntent, REQUEST_ENABLE_BT );
 			}
 
-			device = mBluetoothAdapter.getRemoteDevice( "00:12:02:10:01:76" );
+			// BT の MAC アドレスを求める
+			String s = Pref.getString( "key_bt_devices", null );
+			if( s == null ){
+				iMessage = R.string.statmsg_bluetooth_device_not_selected;
+				return -1;
+			}
+			device = mBluetoothAdapter.getRemoteDevice( s.substring( s.length() - 17 ));
 
 			// Get a BluetoothSocket for a connection with the
 			// given BluetoothDevice
@@ -732,7 +741,7 @@ public class Vsdroid extends Activity {
 				if( BTSock != null ) try {
 					BTSock.close();
 				} catch (IOException e1) {}
-				
+
 				BTSock = null;
 				iMessage = R.string.statmsg_bluetooth_server_error;
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket:Failed" );
@@ -756,13 +765,17 @@ public class Vsdroid extends Activity {
 
 				try { Thread.sleep( 1000 ); } catch (InterruptedException e) {}
 			}
-			iMessage = R.string.statmsg_socket_open_failed;
+			iMessage = R.string.statmsg_bluetooth_connection_failed;
 			return -1;
 		}
 
 		@Override
 		public int Close(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Close" );
+			
+			// 念のためログ出力停止，* は g_lParam をいったんクリアする意図
+			try{ SendCmd( "*0S" ); }catch( IOException e ){}
+			
 			try {
 				if( BTSock != null ) BTSock.close();
 			} catch (IOException e) {
