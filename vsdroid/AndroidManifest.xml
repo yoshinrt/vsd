@@ -3,7 +3,9 @@
       package="jp.dds.vsdroid"
       android:versionCode="1"
       android:versionName="1.0">
-    <application android:icon="@drawable/icon" android:label="@string/app_name">
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true">
         <activity android:name=".Vsdroid"
                   android:label="@string/app_name"
                   android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"

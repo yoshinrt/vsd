@@ -9,6 +9,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 
 	private ListPreference		ListMode;
 	private ListPreference		ListSectors;
+	private ListPreference		ListConnMode;
 	private EditTextPreference	EditGymkhaStart;
 	private EditTextPreference	EditIPAddr;
 
@@ -20,6 +21,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 
 		ListMode		= ( ListPreference     )getPreferenceScreen().findPreference( "key_vsd_mode" );
 		ListSectors		= ( ListPreference     )getPreferenceScreen().findPreference( "key_sectors" );
+		ListConnMode	= ( ListPreference     )getPreferenceScreen().findPreference( "key_connection_mode" );
 		EditGymkhaStart	= ( EditTextPreference )getPreferenceScreen().findPreference( "key_gymkha_start" );
 		EditIPAddr		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_ip_addr" );
 
@@ -30,7 +32,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		}
 	}
 
-	// callback ìoò^ÅEâèú
+	// callback ÁôªÈå≤„ÉªËß£Èô§
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -47,10 +49,10 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener( this );
 	}
 
-	// ê›íËïœçXéû
+	// Ë®≠ÂÆöÂ§âÊõ¥ÊôÇ
 	private void SetupSummery( SharedPreferences sharedPreferences, String key ){
 		if( key == null || key.equals( "key_vsd_mode" )){
-			String s = sharedPreferences.getString( "key_vsd_mode", "LAPTIME" );
+			String s = sharedPreferences.getString( "key_vsd_mode", "0" );
 
 			ListMode.setSummary(
 				getString(
@@ -80,6 +82,18 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 				s = "1.0";
 			}
 			EditGymkhaStart.setSummary( s );
+		}
+
+		if( key == null || key.equals( "key_connection_mode" )){
+			String s = sharedPreferences.getString( "key_connection_mode", "0" );
+
+			ListConnMode.setSummary(
+				getString(
+					s.equals( "0" ) ? R.string.conn_mode_ether		:
+					s.equals( "1" ) ? R.string.conn_mode_bluetooth	:
+									  R.string.conn_mode_logreplay
+				)
+			);
 		}
 
 		if( key == null || key.equals( "key_ip_addr" )){

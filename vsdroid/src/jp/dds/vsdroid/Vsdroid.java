@@ -19,55 +19,66 @@ import android.view.KeyEvent;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.view.WindowManager;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+//import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
+import java.util.UUID;
 
 import java.io.*;
 import java.util.*;
 
 public class Vsdroid extends Activity {
 
-	final boolean	bDebug		= false;
+	final boolean	bDebug		= true; //false;
 
-	// ’è”
+	// å®šæ•°
 	final int MODE_LAPTIME	= 0;
 	final int MODE_GYMKHANA	= 1;
 	final int MODE_ZERO_FOUR= 2;
 	final int MODE_ZERO_ONE	= 3;
 	final int MODE_NUM		= 4;
-
+	
+	final int CONN_MODE_ETHER		= 0;
+	final int CONN_MODE_BLUETOOTH	= 1;
+	final int CONN_MODE_LOGREPLAY	= 2;
+	
 	final double H8HZ			= 16030000;
-	final double SERIAL_DIVCNT	= 16;		// ƒVƒŠƒAƒ‹o—Í‚ğs‚¤üŠú
+	final double SERIAL_DIVCNT	= 16;		// ã‚·ãƒªã‚¢ãƒ«å‡ºåŠ›ã‚’è¡Œã†å‘¨æœŸ
 	final double LOG_FREQ		= 16;
 
-	// ƒXƒs[ƒh * 100/Taco ”ä
+	// ã‚¹ãƒ”ãƒ¼ãƒ‰ * 100/Taco æ¯”
 	// ELISE
-	// ƒMƒA”ä * ƒ}[ƒWƒ“‚¶‚á‚È‚­‚ÄCave( ƒMƒAn, ƒMƒAn+1 ) ‚É•ÏX
+	// ã‚®ã‚¢æ¯” * ãƒãƒ¼ã‚¸ãƒ³ã˜ã‚ƒãªãã¦ï¼Œave( ã‚®ã‚¢n, ã‚®ã‚¢n+1 ) ã«å¤‰æ›´
 	final double GEAR_RATIO1 = 1.2381712993947;
 	final double GEAR_RATIO2 = 1.82350889069989;
 	final double GEAR_RATIO3 = 2.37581451065366;
 	final double GEAR_RATIO4 = 2.95059529470571;
 
-	// ‚½‚Ô‚ñCƒzƒCƒ‹ˆêü‚ª30ƒpƒ‹ƒX
+	// ãŸã¶ã‚“ï¼Œãƒ›ã‚¤ãƒ«ä¸€å‘¨ãŒ30ãƒ‘ãƒ«ã‚¹
 	final double PULSE_PER_1KM	= 15473.76689;	// ELISE(CE28N)
 
 	final double ACC_1G_X	= 6762.594337;
 	final double ACC_1G_Y	= 6667.738702;
 	final double ACC_1G_Z	= 6842.591839;
 
-	// ƒVƒtƒgƒCƒ“ƒWƒP[ƒ^‚Ì•\¦
+	// ã‚·ãƒ•ãƒˆã‚¤ãƒ³ã‚¸ã‚±ãƒ¼ã‚¿ã®è¡¨ç¤º
 	final int iTachoBar[] = { 334, 200, 150, 118, 97 };
 	final int iRevLimit = 6500;
 
-	// ƒ‚[ƒhEconfig
+	// ãƒ¢ãƒ¼ãƒ‰ãƒ»config
 	int		iMainMode	= MODE_LAPTIME;
-	boolean	bReplayLog	= false;
+	int		iConnMode	= CONN_MODE_ETHER;
 
 	final String VSD_ROOT = "/sdcard/vsd";
 	final String VSD_LOG  = VSD_ROOT + "/log";
+
+	private static final UUID BT_UUID = UUID.fromString( "00001101-0000-1000-8000-00805F9B34FB" );
 
 	enum LAP_STATE {
 		NONE,
@@ -76,20 +87,20 @@ public class Vsdroid extends Activity {
 		SECTOR,
 	};
 
-	// ƒXƒŒƒbƒhƒXƒe[ƒg
+	// ã‚¹ãƒ¬ãƒƒãƒ‰ã‚¹ãƒ†ãƒ¼ãƒˆ
 	enum THREAD_STATE {
 		STOP,
 		INIT,
 		NORMAL,
 	};
 
-	// VSD ƒRƒ~ƒ…ƒjƒP[ƒVƒ‡ƒ“
+	// VSD ã‚³ãƒŸãƒ¥ãƒ‹ã‚±ãƒ¼ã‚·ãƒ§ãƒ³
 	VsdInterface Vsd = null;
 	Thread VsdThread = null;
 
 	VsdSurfaceView	VsdScreen = null;
 
-	// ƒXƒe[ƒ^ƒXƒƒbƒZ[ƒW
+	// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
 	int iMessage = R.string.statmsg_normal;
 
 	// config
@@ -113,11 +124,11 @@ public class Vsdroid extends Activity {
 		);
 	}
 
-	//*** VSD ƒAƒNƒZƒX *******************************************************
+	//*** VSD ã‚¢ã‚¯ã‚»ã‚¹ *******************************************************
 
 	class VsdInterface implements Runnable {
 
-		// VSD ƒŠƒ“ƒN‚ÌƒŠ[ƒhƒf[ƒ^
+		// VSD ãƒªãƒ³ã‚¯ã®ãƒªãƒ¼ãƒ‰ãƒ‡ãƒ¼ã‚¿
 		int		iTacho			= 0;
 		int		iSpeedRaw		= 0;
 		int		iRtcRaw			= 0;
@@ -137,7 +148,7 @@ public class Vsdroid extends Activity {
 		final int	iGCaribCntMax	= 30;
 		int			iGCaribCnt		= iGCaribCntMax;
 
-		// ƒŒƒR[ƒh
+		// ãƒ¬ã‚³ãƒ¼ãƒ‰
 		int 	iLapNum			= 0;
 		int 	iTimeLastRaw	= 0;
 		int 	iTimeBestRaw	= 0;
@@ -152,11 +163,14 @@ public class Vsdroid extends Activity {
 		boolean			bLogStart	= false;
 		Socket			Sock		= null;
 
+		InputStream		InStream	= null;
+		OutputStream	OutStream	= null;
+
 		boolean bKillThread = false;
 
 		THREAD_STATE	ThreadState;
 
-		// ƒRƒ“ƒXƒgƒ‰ƒNƒ^ - •Ï”‚Ì‰Šú‰»‚¾‚¯‚â‚Á‚Ä‚é
+		// ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ - å¤‰æ•°ã®åˆæœŸåŒ–ã ã‘ã‚„ã£ã¦ã‚‹
 		public VsdInterface(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::constructor" );
 			iTacho			= 0;
@@ -171,7 +185,7 @@ public class Vsdroid extends Activity {
 
 			LapState		= LAP_STATE.NONE;
 
-			// ƒŒƒR[ƒh
+			// ãƒ¬ã‚³ãƒ¼ãƒ‰
 			iLapNum			= 0;
 			iTimeLastRaw	= 0;
 			iTimeBestRaw	= 0;
@@ -190,9 +204,12 @@ public class Vsdroid extends Activity {
 			iGCaribCnt		= iGCaribCntMax;
 
 			ThreadState		= THREAD_STATE.STOP;
+
+			InStream		= null;
+			OutStream		= null;
 		}
 
-		// 2byte ‚ğ 16bit int ‚ÉƒAƒ“ƒpƒbƒN‚·‚é
+		// 2byte ã‚’ 16bit int ã«ã‚¢ãƒ³ãƒ‘ãƒƒã‚¯ã™ã‚‹
 		private int Unpack(){
 			int iRet;
 
@@ -213,10 +230,10 @@ public class Vsdroid extends Activity {
 
 		public int OpenLog(){
 
-			// ”ñƒfƒoƒbƒOƒ‚[ƒh‚©‚Â Log ƒŠƒvƒŒƒCƒ‚[ƒh‚È‚çCƒƒO‚Íì‚ç‚È‚¢
-			if( !bDebug && bReplayLog ) return 0;
+			// éãƒ‡ãƒãƒƒã‚°ãƒ¢ãƒ¼ãƒ‰ã‹ã¤ Log ãƒªãƒ—ãƒ¬ã‚¤ãƒ¢ãƒ¼ãƒ‰ãªã‚‰ï¼Œãƒ­ã‚°ã¯ä½œã‚‰ãªã„
+			if( !bDebug && iConnMode == CONN_MODE_LOGREPLAY ) return 0;
 
-			// “ú•t
+			// æ—¥ä»˜
 			Calendar Now = Calendar.getInstance();
 			String s = String.format(
 				"/vsd%04d%02d%02d_%02d%02d%02d",
@@ -228,7 +245,7 @@ public class Vsdroid extends Activity {
 				Now.get( Calendar.SECOND )
 			);
 
-			// ƒƒOƒtƒ@ƒCƒ‹ƒI[ƒvƒ“
+			// ãƒ­ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã‚ªãƒ¼ãƒ—ãƒ³
 			try {
 				fsLog    = new FileWriter( VSD_LOG + s + ".log" );
 				fsBinLog = new FileOutputStream( VSD_LOG + s + "bin.log" );
@@ -248,11 +265,13 @@ public class Vsdroid extends Activity {
 
 			while( !bKillThread ){
 				try {
-					// ƒ\ƒPƒbƒg‚Ìì¬
+					// ã‚½ã‚±ãƒƒãƒˆã®ä½œæˆ
 					Sock = new Socket();
 					SocketAddress adr = new InetSocketAddress( Pref.getString( "key_ip_addr", "192.168.0.1" ), 12345 );
 					Sock.connect( adr, 1000 );
 					if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:connected" );
+					InStream	= Sock.getInputStream();
+					OutStream	= Sock.getOutputStream();
 					return 0;
 				}catch( SocketTimeoutException e ){
 					if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:timeout" );
@@ -275,7 +294,7 @@ public class Vsdroid extends Activity {
 			//if( bDebug ) Log.d( "VSDroid", "VsdInterface::RawRead" );
 			int iReadSize = 0;
 			try {
-				iReadSize = Sock.getInputStream().read( Buf, iStart, iLen );
+				iReadSize = InStream.read( Buf, iStart, iLen );
 			} catch (IOException e) {
 				iMessage = R.string.statmsg_socket_rw_failed;
 				return -1;
@@ -283,7 +302,7 @@ public class Vsdroid extends Activity {
 			return iReadSize;
 		}
 
-		// 1 <= :óM‚µ‚½ƒŒƒR[ƒh”  0:Vƒf[ƒ^‚È‚µ -1:ƒGƒ‰[
+		// 1 <= :å—ä¿¡ã—ãŸãƒ¬ã‚³ãƒ¼ãƒ‰æ•°  0:æ–°ãƒ‡ãƒ¼ã‚¿ãªã— -1:ã‚¨ãƒ©ãƒ¼
 		public int Read(){
 			int	iReadSize;
 			int	iMileage16;
@@ -303,14 +322,14 @@ public class Vsdroid extends Activity {
 			iBufLen += iReadSize;
 
 			while( true ){
-				// 0xFF ‚ğƒT[ƒ`
+				// 0xFF ã‚’ã‚µãƒ¼ãƒ
 				for( iBufPtr = iEOLPos; iEOLPos < iBufLen; ++iEOLPos ){
 					if( Buf[ iEOLPos ] == ( byte )0xFF ) break;
 				}
 				if( iEOLPos == iBufLen ) break;
 
 				++iRet;
-				// 0xFF ‚ªŒ©‚Â‚©‚Á‚½‚Ì‚ÅCƒf[ƒ^•ÏŠ·
+				// 0xFF ãŒè¦‹ã¤ã‹ã£ãŸã®ã§ï¼Œãƒ‡ãƒ¼ã‚¿å¤‰æ›
 				iTacho		= Unpack();
 				iSpeedRaw	= Unpack();
 
@@ -321,7 +340,7 @@ public class Vsdroid extends Activity {
 					dGx			= Unpack();
 					dGy			= Unpack();
 					if( iGCaribCnt-- > 0 ){
-						// G ƒZƒ“ƒT[ƒLƒƒƒŠƒuƒŒ[ƒVƒ‡ƒ“’†
+						// G ã‚»ãƒ³ã‚µãƒ¼ã‚­ãƒ£ãƒªãƒ–ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ä¸­
 						dGcx += dGx;
 						dGcy += dGy;
 
@@ -337,21 +356,21 @@ public class Vsdroid extends Activity {
 						dGy	=  ( dGy - dGcy ) / ACC_1G_Z;
 					}
 
-					// mileage •â³
+					// mileage è£œæ­£
 					if(( iMileageRaw & 0xFFFF ) > iMileage16 ) iMileageRaw += 0x10000;
 					iMileageRaw &= 0xFFFF0000;
 					iMileageRaw |= iMileage16;
 
-					// LapTime ‚ªŒ©‚Â‚©‚Á‚½
+					// LapTime ãŒè¦‹ã¤ã‹ã£ãŸ
 					LapState = LAP_STATE.NONE;
 
 					if( iBufPtr < iEOLPos ){
 						iRtcRaw = Unpack() + ( Unpack() << 16 );
 
 						if( ++iSectorCnt >= iSectorCntMax ){
-							// ‹K’è‚ÌƒZƒNƒ^‚ğ’Ê‰ß‚µ‚½‚Ì‚ÅCNewLap
+							// è¦å®šã®ã‚»ã‚¯ã‚¿ã‚’é€šéã—ãŸã®ã§ï¼ŒNewLap
 							if( iRtcPrevRaw != 0 ){
-								// 1ü‰ñ‚Á‚½
+								// 1å‘¨å›ã£ãŸ
 								LapState = LAP_STATE.UPDATE;
 
 								++iLapNum;
@@ -362,25 +381,25 @@ public class Vsdroid extends Activity {
 								if( iTimeBestRaw == 0 ) iTimeBestRaw = iTimeLastRaw;
 
 								if( iMainMode != MODE_LAPTIME ){
-									// Laptime ƒ‚[ƒhˆÈŠO‚ÅƒS[ƒ‹‚µ‚½‚çCReady ó‘Ô‚É–ß‚·
+									// Laptime ãƒ¢ãƒ¼ãƒ‰ä»¥å¤–ã§ã‚´ãƒ¼ãƒ«ã—ãŸã‚‰ï¼ŒReady çŠ¶æ…‹ã«æˆ»ã™
 									Vsd.iRtcPrevRaw = 0;
 								}
 							}else{
-								// ƒ‰ƒbƒvƒXƒ^[ƒg
+								// ãƒ©ãƒƒãƒ—ã‚¹ã‚¿ãƒ¼ãƒˆ
 								LapState = LAP_STATE.START;
 							}
 							iRtcPrevRaw	= iRtcRaw;
 							iSectorCnt	= 0;
 						}else{
-							// ’†ŠÔƒZƒNƒ^’Ê‰ß
+							// ä¸­é–“ã‚»ã‚¯ã‚¿é€šé
 							LapState = LAP_STATE.SECTOR;
 						}
 					}
 
-					WriteLog();		// ƒeƒLƒXƒgƒƒOƒ‰ƒCƒg
+					WriteLog();		// ãƒ†ã‚­ã‚¹ãƒˆãƒ­ã‚°ãƒ©ã‚¤ãƒˆ
 				}
 
-				// ƒfƒoƒbƒO—p: •¡”‚Ì 0xFF ‚ğ”jŠü‚·‚é
+				// ãƒ‡ãƒãƒƒã‚°ç”¨: è¤‡æ•°ã® 0xFF ã‚’ç ´æ£„ã™ã‚‹
 				/*
 				if( bDebug ){
 					for( i = iBufLen - 1; i >= 0; --i ) if( Buf[ i ] == ( byte )0xFF ) break;
@@ -390,7 +409,7 @@ public class Vsdroid extends Activity {
 				++iEOLPos;
 			}
 
-			// g—p‚µ‚½ƒf[ƒ^‚ğ Buf ‚©‚çíœ
+			// ä½¿ç”¨ã—ãŸãƒ‡ãƒ¼ã‚¿ã‚’ Buf ã‹ã‚‰å‰Šé™¤
 			if( iBufPtr != 0 ){
 				for( i = 0; iBufPtr < iBufLen; ){
 					Buf[ i++ ] = Buf[ iBufPtr++ ];
@@ -407,7 +426,7 @@ public class Vsdroid extends Activity {
 			if( iSpeedRaw > 0 ) bLogStart = true;
 			if( !bLogStart ) return;
 
-			// Šî–{ƒf[ƒ^
+			// åŸºæœ¬ãƒ‡ãƒ¼ã‚¿
 			s = String.format(
 				"%d\t%.2f\t%.2f\t%.4f\t%.4f\t%d",
 				iTacho, ( double )iSpeedRaw / 100,
@@ -415,7 +434,7 @@ public class Vsdroid extends Activity {
 				dGy, dGx, iTSCRaw
 			);
 
-			// ƒ‰ƒbƒvƒ^ƒCƒ€
+			// ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ 
 			switch( LapState ){
 			  case UPDATE:
 				s += String.format( "\tLAP%d\t", iLapNum ) + FormatTime2( iTimeLastRaw );
@@ -457,16 +476,16 @@ public class Vsdroid extends Activity {
 			return 0;
 		}
 
-		//*** sio ƒRƒ}ƒ“ƒhŠÖŒW ***********************************************
+		//*** sio ã‚³ãƒãƒ³ãƒ‰é–¢ä¿‚ ***********************************************
 
 		public void SendCmd( String s ) throws IOException {
 			byte[] Buf;
-			
-			if( Sock == null ) return;
-			
+
+			if( OutStream == null ) return;
+
 			try {
 				Buf = s.getBytes( "US-ASCII" );
-				Sock.getOutputStream().write( Buf, 0, Buf.length );
+				OutStream.write( Buf, 0, Buf.length );
 			} catch (UnsupportedEncodingException e) {}
 		}
 
@@ -476,8 +495,8 @@ public class Vsdroid extends Activity {
 			int i;
 
 			while( iRetryCnt-- != 0 && !bKillThread ){
-				if( Sock.getInputStream().available() > 0 ){
-					iReadSize = Sock.getInputStream().read( Buf, 0, iBufSize );
+				if( InStream.available() > 0 ){
+					iReadSize = InStream.read( Buf, 0, iBufSize );
 					for( i = 0; i < iReadSize; ++i ){
 						if( Buf[ i ] == ( byte )ch ){
 							iRetryCnt = 0;
@@ -491,7 +510,7 @@ public class Vsdroid extends Activity {
 			return -1;
 		}
 
-		//*** FW ƒ[ƒh ******************************************************
+		//*** FW ãƒ­ãƒ¼ãƒ‰ ******************************************************
 
 		public int LoadFirmWare(){
 			InputStream	fsFirm = null;
@@ -500,35 +519,43 @@ public class Vsdroid extends Activity {
 			int iPtr, i = 0;
 
 			try {
+				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending magic code" );
 				SendCmd( "F15EF117*\rz\r" );
 
+				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware" );
 				try {
 					fsFirm = new FileInputStream( VSD_ROOT + "/vsd.mot" );
 
-					WaitChar( ':' ); SendCmd( "l\r" );	// FW ‚ª‚ ‚Á‚½‚Æ‚«‚¾‚¯ l ƒRƒ}ƒ“ƒh
+					WaitChar( ':' ); SendCmd( "l\r" );	// FW ãŒã‚ã£ãŸã¨ãã ã‘ l ã‚³ãƒãƒ³ãƒ‰
 
-					// FW ‚Ì \n ‚ğíœ‚µ‚Â‚Â‘—M
+					// FW ã® \n ã‚’å‰Šé™¤ã—ã¤ã¤é€ä¿¡
 					while(( iReadSize = fsFirm.read( Buf, 0, iBufSize )) > 0 ){
 						for( iPtr = i = 0; i < iReadSize; ++i ){
 							if( Buf[ i ] != ( byte )0x0A ) Buf[ iPtr++ ] = Buf[ i ];
 						}
-						Sock.getOutputStream().write( Buf, 0, iPtr );
+						OutStream.write( Buf, 0, iPtr );
 					}
-				} catch ( FileNotFoundException e ){}
+				} catch ( FileNotFoundException e ){
+					if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware canceled" );
+				}
 
 				if( fsFirm != null ) fsFirm.close();
 
+				if( bDebug ) Log.d( "VSDroid", "LoadFirm::go" );
 				WaitChar( ':' ); SendCmd( "g\r" );
 
+				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending log output request" );
 				try { Thread.sleep( 100 ); } catch (InterruptedException e) {}
 				// 1S: Serial out on  s: speed  1a: auto mode
 				SendCmd( "F15EF117*1Ss1a" );
 
-				// Å‰‚Ì 0xFF ‚Ü‚ÅƒXƒLƒbƒv
+				// æœ€åˆã® 0xFF ã¾ã§ã‚¹ã‚­ãƒƒãƒ—
+				if( bDebug ) Log.d( "VSDroid", "LoadFirm::waiting first log record" );
+
 				int iRetryCnt = 100;
 				while( iRetryCnt-- != 0 && !bKillThread ){
-					if( Sock.getInputStream().available() > 0 ){
-						iReadSize = Sock.getInputStream().read( Buf, 0, iBufSize );
+					if( InStream.available() > 0 ){
+						iReadSize = InStream.read( Buf, 0, iBufSize );
 						for( i = 0; i < iReadSize; ++i ){
 							if( Buf[ i ] == ( byte )0xFF ){
 								iRetryCnt = 0;
@@ -540,14 +567,14 @@ public class Vsdroid extends Activity {
 					}
 				}
 
-				// 0xFF ‚ğŒ©‚Â‚¯‚½
+				// 0xFF ã‚’è¦‹ã¤ã‘ãŸ
 				if( i < iReadSize ){
 					++i;
 					for( iBufLen = 0; i < iReadSize; ++i, ++iBufLen ){
 						Buf[ iBufLen ] = Buf[ i ];
 					}
 				}else{
-					// ƒ^ƒCƒ€ƒAƒEƒg
+					// ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆ
 					iMessage = R.string.statmsg_vsd_initialize_failed;
 					return -1;
 				}
@@ -556,32 +583,33 @@ public class Vsdroid extends Activity {
 				return -1;
 			}
 
+			if( bDebug ) Log.d( "VSDroid", "LoadFirm::completed." );
 			return 0;
 		}
 
-		//*** config ‚É]‚Á‚Äİ’è ********************************************
+		//*** config ã«å¾“ã£ã¦è¨­å®š ********************************************
 
 		public void SetupMode(){
 			int i;
 
-			// ƒZƒNƒ^”
+			// ã‚»ã‚¯ã‚¿æ•°
 			try{
 				iSectorCntMax = Integer.parseInt( Pref.getString( "key_sectors", "1" ));
 			}catch( NumberFormatException e ){
 				iSectorCntMax = 1;
 			}
 
-			// ƒWƒ€ƒJƒXƒ^[ƒg‹——£
+			// ã‚¸ãƒ ã‚«ã‚¹ã‚¿ãƒ¼ãƒˆè·é›¢
 			try{
 				dGymkhaStart = Double.parseDouble( Pref.getString( "key_gymkha_start", "1" ));
 			}catch( NumberFormatException e ){
 				dGymkhaStart = 1.0;
 			}
 
-			// ƒGƒRƒ‚[ƒhw
+			// ã‚¨ã‚³ãƒ¢ãƒ¼ãƒ‰w
 			bEcoMode = Pref.getBoolean( "key_eco_mode", false );
 
-			// ƒƒCƒ“ƒ‚[ƒh
+			// ãƒ¡ã‚¤ãƒ³ãƒ¢ãƒ¼ãƒ‰
 			try{
 				iMainMode = Integer.parseInt( Pref.getString( "key_vsd_mode", "0" ));
 				if( iMainMode < 0 || MODE_NUM <= iMainMode ) iMainMode = MODE_LAPTIME;
@@ -594,7 +622,7 @@ public class Vsdroid extends Activity {
 					break;
 
 				  case MODE_GYMKHANA:
-					// * ‚Í g_lParam ‚ğ‚¢‚Á‚½‚ñƒNƒŠƒA‚·‚éˆÓ}
+					// * ã¯ g_lParam ã‚’ã„ã£ãŸã‚“ã‚¯ãƒªã‚¢ã™ã‚‹æ„å›³
 					i = ( int )( dGymkhaStart * PULSE_PER_1KM / 1000 + 0.5 );
 					if( i < 1 ) i = 1;
 					SendCmd( String.format( "*%Xg", i ));
@@ -613,7 +641,7 @@ public class Vsdroid extends Activity {
 			iSectorCnt		= 0;
 		}
 
-		//*** ƒf[ƒ^ˆ—ƒXƒŒƒbƒh *********************************************
+		//*** ãƒ‡ãƒ¼ã‚¿å‡¦ç†ã‚¹ãƒ¬ãƒƒãƒ‰ *********************************************
 
 		public void run(){
 			int iRet;
@@ -625,8 +653,11 @@ public class Vsdroid extends Activity {
 				Vsd.LoadFirmWare()	< 0 ||
 				Vsd.OpenLog()		< 0
 			){
-				// ƒGƒ‰[‚ª‹N‚«‚½‚Ì‚ÅCconfig ‚ğo‚µ‚Ä thread I—¹
-				if( !isFinishing()) Config();
+				// ã‚¨ãƒ©ãƒ¼ãŒèµ·ããŸã®ã§ï¼Œconfig ã‚’å‡ºã—ã¦ thread çµ‚äº†
+				if( !isFinishing()){
+					Vsd.Close();
+					Config();
+				}
 			}else{
 				ThreadState = THREAD_STATE.NORMAL;
 				Vsd.SetupMode();
@@ -659,13 +690,94 @@ public class Vsdroid extends Activity {
 		}
 	}
 
-	//*** ƒGƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ƒ‚[ƒh *********************************************
+	//*** Bluetooth æ¥ç¶š *****************************************************
+
+	class VsdInterfaceBluetooth extends VsdInterface {
+
+		BluetoothDevice device;
+		BluetoothSocket BTSock = null;
+		BluetoothAdapter mBluetoothAdapter = null;
+
+		public VsdInterfaceBluetooth(){
+			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::new" );
+			// Get local Bluetooth adapter
+			mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+		}
+
+		@Override
+		public int Open(){
+
+			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open" );
+			// If the adapter is null, then Bluetooth is not supported
+			if( mBluetoothAdapter == null ){
+				iMessage = R.string.statmsg_bluetooth_not_available;
+				return -1;
+			}
+
+			// BT ON ã§ãªã‘ã‚Œã°ã‚¨ãƒ©ãƒ¼ (æ‰‹æŠœã)
+			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Enable" );
+			if( !mBluetoothAdapter.isEnabled()){
+				iMessage = R.string.statmsg_bluetooth_not_available;
+				return -1;
+			}
+
+			device = mBluetoothAdapter.getRemoteDevice( "00:12:02:10:01:76" );
+
+			// Get a BluetoothSocket for a connection with the
+			// given BluetoothDevice
+			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket" );
+			try {
+				BTSock = device.createRfcommSocketToServiceRecord( BT_UUID );
+			} catch (IOException e) {
+				if( BTSock != null ) try {
+					BTSock.close();
+				} catch (IOException e1) {}
+				
+				BTSock = null;
+				iMessage = R.string.statmsg_bluetooth_server_error;
+				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket:Failed" );
+				return -1;
+			}
+
+			while( !bKillThread ){
+				try {
+					// ã‚½ã‚±ãƒƒãƒˆã®ä½œæˆ 12ç§’ã§ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆã‚‰ã—ã„
+					if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connecting..." );
+					BTSock.connect();
+					InStream	= BTSock.getInputStream();
+					OutStream	= BTSock.getOutputStream();
+					if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connected" );
+					return 0;
+				}catch( SocketTimeoutException e ){
+					if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:timeout" );
+				}catch( IOException e ){
+					if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:IOException" );
+				}
+
+				try { Thread.sleep( 1000 ); } catch (InterruptedException e) {}
+			}
+			iMessage = R.string.statmsg_socket_open_failed;
+			return -1;
+		}
+
+		@Override
+		public int Close(){
+			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Close" );
+			try {
+				if( BTSock != null ) BTSock.close();
+			} catch (IOException e) {
+			}
+			return 0;
+		}
+	}
+
+	//*** ã‚¨ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ãƒ¢ãƒ¼ãƒ‰ *********************************************
 
 	class VsdInterfaceEmulation extends VsdInterface {
 		BufferedReader brEmuLog;
 		double	dOutputWaitTime = 0;
 
-		// 16bit int ‚ğ 2byte ‚ÉƒpƒbƒN‚·‚é
+		// 16bit int ã‚’ 2byte ã«ãƒ‘ãƒƒã‚¯ã™ã‚‹
 		private int Pack( int iIdx, int iVal ){
 			int lo = iVal & 0xFF;
 			int hi = ( iVal >> 8 ) & 0xFF;
@@ -737,15 +849,15 @@ public class Vsdroid extends Activity {
 				iIdx = Pack( iIdx, ( int )( -Double.parseDouble( strToken[ 4 ] ) * ACC_1G_Y ) + 32000 );
 				iIdx = Pack( iIdx, ( int )(  Double.parseDouble( strToken[ 3 ] ) * ACC_1G_Z ) + 32000 );
 
-				// ƒ‰ƒbƒvƒ^ƒCƒ€
+				// ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ 
 				if( iTokCnt >= 8 && strToken[ 6 ].startsWith( "LAP" )){
 					if( strToken[ 7 ].equals( "start" )){
-						// LAP start ‚È‚Ì‚ÅC‚Æ‚è‚ ‚¦‚¸ RTC ‚ğƒNƒŠƒA
+						// LAP start ãªã®ã§ï¼Œã¨ã‚Šã‚ãˆãš RTC ã‚’ã‚¯ãƒªã‚¢
 						i = 1;
 						iIdx = Pack( iIdx, i );
 						iIdx = Pack( iIdx, i >> 16 );
 					}else{
-						// ƒ‰ƒbƒvƒ^ƒCƒ€‹L˜^”­Œ©
+						// ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ è¨˜éŒ²ç™ºè¦‹
 						i = strToken[ 7 ].indexOf( ':' );
 						j = iRtcPrevRaw + ( int )(
 							(
@@ -759,7 +871,7 @@ public class Vsdroid extends Activity {
 					}
 				}
 
-				// ‘Ò‚Â
+				// å¾…ã¤
 				Calendar Now = Calendar.getInstance();
 				int NowMs =
 					Now.get( Calendar.HOUR_OF_DAY ) * 3600 * 1000 +
@@ -781,7 +893,7 @@ public class Vsdroid extends Activity {
 				return -1;
 			}
 
-			// EOL ’Ç‰Á
+			// EOL è¿½åŠ 
 			Buf[ iIdx++ ] = ( byte )0xFF;
 
 			return iIdx - iStart;
@@ -806,7 +918,7 @@ public class Vsdroid extends Activity {
 
 	class VsdSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
 
-		//*** ¶¬E”jŠü ****************************************************
+		//*** ç”Ÿæˆãƒ»ç ´æ£„ ****************************************************
 
 		Bitmap[] bitmap;
 		Paint paint;
@@ -816,10 +928,10 @@ public class Vsdroid extends Activity {
 			if( bDebug ) Log.d( "VSDroid", "VsdSurfaceView::constructor" );
 
 			getHolder().addCallback( this );
-			setFocusable( true ); // ƒL[ƒCƒxƒ“ƒg‚ğg‚¤‚½‚ß‚É•K{
-			requestFocus(); // ƒtƒH[ƒJƒX‚ğ“–‚Ä‚È‚¢‚ÆƒL[ƒCƒxƒ“ƒg‚ğE‚í‚È‚¢
+			setFocusable( true ); // ã‚­ãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆã‚’ä½¿ã†ãŸã‚ã«å¿…é ˆ
+			requestFocus(); // ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã‚’å½“ã¦ãªã„ã¨ã‚­ãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆã‚’æ‹¾ã‚ãªã„
 
-			// Paint æ“¾E‰Šúİ’è
+			// Paint å–å¾—ãƒ»åˆæœŸè¨­å®š
 			paint = new Paint();
 			paint.setStrokeWidth( 10 );
 			//paint.setAntiAlias( true );
@@ -853,7 +965,7 @@ public class Vsdroid extends Activity {
 			VsdScreen = null;
 		}
 
-		//*** •`‰æ ***********************************************************
+		//*** æç”» ***********************************************************
 
 		final int iScreenWidth = 800;
 		final int iMeterCx = 399;
@@ -870,7 +982,7 @@ public class Vsdroid extends Activity {
 
 			int iTacho = Vsd.bEcoMode ? Vsd.iTacho * 2 : Vsd.iTacho;
 
-			// ƒMƒA‚ğ‹‚ß‚é
+			// ã‚®ã‚¢ã‚’æ±‚ã‚ã‚‹
 			double dGearRatio = ( double )Vsd.iSpeedRaw / Vsd.iTacho;
 			int	iGear;
 			if( Vsd.iTacho == 0 )				iGear = 1;
@@ -883,12 +995,12 @@ public class Vsdroid extends Activity {
 			int iBarLv;
 
 			if(( Vsd.iSpeedRaw >= 30000 ) && ( Vsd.iTacho == 0 )){
-				// ƒLƒƒƒŠƒuƒŒ[ƒVƒ‡ƒ“•\¦
+				// ã‚­ãƒ£ãƒªãƒ–ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³è¡¨ç¤º
 				iBarLv = 4;
 			}else if( iTacho >= iRevLimit ){
 				iBarLv = 5;
 			}else{
-				// LED ‚Ì•\¦ LV ‚ğ‹‚ß‚é
+				// LED ã®è¡¨ç¤º LV ã‚’æ±‚ã‚ã‚‹
 				iBarLv = 3 - ( iRevLimit - iTacho ) / iTachoBar[ iGear - 1 ];
 				if( iBarLv < 0 ) iBarLv = 0;
 			}
@@ -900,10 +1012,10 @@ public class Vsdroid extends Activity {
 				bBlink = true;
 			}
 
-			// ƒ[ƒ^[ƒpƒlƒ‹
+			// ãƒ¡ãƒ¼ã‚¿ãƒ¼ãƒ‘ãƒãƒ«
 			canvas.drawBitmap( bitmap[ iBarLv ], 0, 0, null );
 
-			// Vsd.iTacho j
+			// Vsd.iTacho é‡
 			paint.setColor( Color.RED );
 			double dTachoAngle = ( 210 - ( 240 * iTacho / 8000.0 )) * Math.PI / 180;
 			canvas.drawLine(
@@ -915,26 +1027,26 @@ public class Vsdroid extends Activity {
 
 			String s;
 
-			// ƒXƒs[ƒh
+			// ã‚¹ãƒ”ãƒ¼ãƒ‰
 			paint.setColor( Color.WHITE );
 			s = String.format( "%d", Vsd.iSpeedRaw / 100 );
 			paint.setTextSize( 180 );
 			canvas.drawText( s, ( iScreenWidth - paint.measureText( s )) / 2, 270, paint );
 
-			// ƒMƒA
+			// ã‚®ã‚¢
 			paint.setColor( Color.BLACK );
 			paint.setTextSize( 140 );
 			s = String.format( "%d", iGear );
 			canvas.drawText( s, 692, 132, paint );
 
-			// Œv
+			// æ™‚è¨ˆ
 			Calendar cal = Calendar.getInstance();
 			s = String.format( "%02d:%02d", cal.get( Calendar.HOUR_OF_DAY ), cal.get( Calendar.MINUTE ));
 			paint.setColor( Color.GRAY );
 			paint.setTextSize( 64 );
 			canvas.drawText( s, 0, paint.getTextSize(), paint );
 
-			// ƒ^ƒCƒ€
+			// ã‚¿ã‚¤ãƒ 
 			switch( iMainMode ){
 				case MODE_LAPTIME:	s = "Lap";			break;
 				case MODE_GYMKHANA:	s = "Gymkhana"; 	break;
@@ -943,7 +1055,7 @@ public class Vsdroid extends Activity {
 			}
 
 			if( Vsd.iRtcPrevRaw == 0 ){
-				// ‚Ü‚¾ƒXƒ^[ƒg‚µ‚Ä‚È‚¢
+				// ã¾ã ã‚¹ã‚¿ãƒ¼ãƒˆã—ã¦ãªã„
 				s += " ready";
 			}
 
@@ -965,11 +1077,11 @@ public class Vsdroid extends Activity {
 		}
 	}
 
-	//*** config ƒƒjƒ…[ ****************************************************
+	//*** config ãƒ¡ãƒ‹ãƒ¥ãƒ¼ ****************************************************
 
 	boolean bConfigOpened = false;
 
-	// config ‚ğŠJ‚­
+	// config ã‚’é–‹ã
 	public void Config(){
 		if( bDebug ) Log.d( "VSDroid", "Config" );
 
@@ -989,12 +1101,12 @@ public class Vsdroid extends Activity {
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	protected void onActivityResult( int requestCode, int resultCode, Intent data ){
 		if( bDebug ) Log.d( "VSDroid", "ConfigResult" );
 		bConfigOpened = false;
 
 		if( VsdThread == null ){
-			// ƒXƒŒƒbƒhÄ‹N“®
+			// ã‚¹ãƒ¬ãƒƒãƒ‰å†èµ·å‹•
 			VsdThread = new Thread( Vsd ); VsdThread.start();
 		}else if( Vsd.ThreadState == THREAD_STATE.INIT ){
 			Vsd.KillThread();
@@ -1049,19 +1161,21 @@ public class Vsdroid extends Activity {
 
 		setContentView( new VsdSurfaceView( this ));
 
-		// log dir ì¬
+		// log dir ä½œæˆ
 		File dir;
 		dir = new File( VSD_ROOT ); dir.mkdir();
 		dir = new File( VSD_LOG  ); dir.mkdir();
 
-		// preference QÆ
+		// preference å‚ç…§
 		Pref = PreferenceManager.getDefaultSharedPreferences( this );
 
-		// VSD ƒRƒlƒNƒVƒ‡ƒ“
-		bReplayLog = Pref.getBoolean( "key_replay_log", false );
-		Vsd = bReplayLog ? new VsdInterfaceEmulation() : new VsdInterface();
+		// VSD ã‚³ãƒã‚¯ã‚·ãƒ§ãƒ³
+		iConnMode = Integer.parseInt( Pref.getString( "key_connection_mode", "0" ));
+		Vsd =	iConnMode == CONN_MODE_BLUETOOTH	? new VsdInterfaceBluetooth() :
+				iConnMode == CONN_MODE_LOGREPLAY	? new VsdInterfaceEmulation() :
+													  new VsdInterface();
 
-		// VSD ƒXƒŒƒbƒh‹N“®
+		// VSD ã‚¹ãƒ¬ãƒƒãƒ‰èµ·å‹•
 		VsdThread = new Thread( Vsd ); VsdThread.start();
 	}
 

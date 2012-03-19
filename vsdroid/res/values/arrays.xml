@@ -23,4 +23,15 @@
 	<item>8</item>
 	<item>9</item>
 </string-array>
+<string-array name="list_connection_mode">
+	<item>@string/conn_mode_ether</item>
+	<item>@string/conn_mode_bluetooth</item>
+	<item>@string/conn_mode_logreplay</item>
+</string-array>
+<string-array name="list_connection_mode_values">
+	<item>0</item>
+	<item>1</item>
+	<item>2</item>
+</string-array>
+
 </resources>
