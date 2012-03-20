@@ -247,13 +247,13 @@ public class Vsdroid extends Activity {
 			);
 
 			// ログファイルオープン
-			try {
+			try{
 				fsLog    = new FileWriter( VSD_LOG + s + ".log" );
 				//fsBinLog = new FileOutputStream( VSD_LOG + s + "bin.log" );
-			} catch (FileNotFoundException e) {
+			}catch( FileNotFoundException e ){
 				iMessage = R.string.statmsg_log_open_failed;
 				return -1;
-			} catch (IOException e) {
+			}catch( IOException e ){
 				iMessage = R.string.statmsg_log_open_failed;
 				return -1;
 			}
@@ -265,7 +265,7 @@ public class Vsdroid extends Activity {
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open" );
 
 			while( !bKillThread ){
-				try {
+				try{
 					// ソケットの作成
 					Sock = new Socket();
 					SocketAddress adr = new InetSocketAddress( Pref.getString( "key_ip_addr", "192.168.0.1" ), 12345 );
@@ -276,16 +276,16 @@ public class Vsdroid extends Activity {
 					return 0;
 				}catch( SocketTimeoutException e ){
 					if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:timeout" );
-				} catch (IOException e) {
+				}catch( IOException e ){
 					if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:IOException" );
 				}
 
-				if( Sock != null ) try {
+				if( Sock != null ) try{
 					Sock.close();
-				} catch (IOException e) {}
+				}catch( IOException e ){}
 				Sock = null;
 
-				try { Thread.sleep( 1000 ); } catch (InterruptedException e) {}
+				try{ Thread.sleep( 1000 ); }catch( InterruptedException e ){}
 			}
 			iMessage = R.string.statmsg_socket_open_failed;
 			return -1;
@@ -294,9 +294,9 @@ public class Vsdroid extends Activity {
 		public int RawRead( int iStart, int iLen ){
 			//if( bDebug ) Log.d( "VSDroid", "VsdInterface::RawRead" );
 			int iReadSize = 0;
-			try {
+			try{
 				iReadSize = InStream.read( Buf, iStart, iLen );
-			} catch (IOException e) {
+			}catch( IOException e ){
 				iMessage = R.string.statmsg_socket_rw_failed;
 				return -1;
 			}
@@ -316,9 +316,9 @@ public class Vsdroid extends Activity {
 			iReadSize = RawRead( iBufLen, iBufSize - iBufLen );
 			if( iReadSize < 0 ) return -1;
 
-			try {
+			try{
 				if( fsBinLog != null ) fsBinLog.write( Buf, iBufLen, iReadSize );
-			} catch (IOException e) {}
+			}catch( IOException e ){}
 
 			iBufLen += iReadSize;
 
@@ -449,13 +449,13 @@ public class Vsdroid extends Activity {
 				s += String.format( "\tSector%d\t", iSectorCnt ) + FormatTime2( iRtcPrevRaw - iRtcRaw );
 			}
 
-			try {
+			try{
 				if( fsLog != null ) fsLog.write( s + "\r\n" );
-			} catch (IOException e) {}
+			}catch( IOException e ){}
 		}
 
 		public int CloseLog(){
-			try {
+			try{
 				if( fsLog	 != null ){
 					fsLog.close();
 					fsLog = null;
@@ -464,15 +464,15 @@ public class Vsdroid extends Activity {
 					fsBinLog.close();
 					fsBinLog = null;
 				}
-			} catch (IOException e) {}
+			}catch( IOException e ){}
 			return 0;
 		}
 
 		public int Close(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Close" );
-			try {
+			try{
 				if( Sock != null ) Sock.close();
-			} catch (IOException e) {
+			}catch( IOException e ){
 			}
 			return 0;
 		}
@@ -484,10 +484,10 @@ public class Vsdroid extends Activity {
 
 			if( OutStream == null ) return;
 
-			try {
+			try{
 				Buf = s.getBytes( "US-ASCII" );
 				OutStream.write( Buf, 0, Buf.length );
-			} catch (UnsupportedEncodingException e) {}
+			}catch( UnsupportedEncodingException e ){}
 		}
 
 		public int WaitChar( char ch ) throws IOException {
@@ -505,7 +505,7 @@ public class Vsdroid extends Activity {
 						}
 					}
 				}else{
-					try { Thread.sleep( 30 ); } catch (InterruptedException e) {}
+					try{ Thread.sleep( 30 ); }catch( InterruptedException e ){}
 				}
 			}
 			return -1;
@@ -519,12 +519,12 @@ public class Vsdroid extends Activity {
 			int iReadSize = 0;
 			int iPtr, i = 0;
 
-			try {
+			try{
 				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending magic code" );
 				SendCmd( "F15EF117*\rz\r" );
 
 				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware" );
-				try {
+				try{
 					fsFirm = new FileInputStream( VSD_ROOT + "/vsd.mot" );
 
 					WaitChar( ':' ); SendCmd( "l\r" );	// FW があったときだけ l コマンド
@@ -536,7 +536,7 @@ public class Vsdroid extends Activity {
 						}
 						OutStream.write( Buf, 0, iPtr );
 					}
-				} catch ( FileNotFoundException e ){
+				}catch( FileNotFoundException e ){
 					if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware canceled" );
 				}
 
@@ -546,7 +546,7 @@ public class Vsdroid extends Activity {
 				WaitChar( ':' ); SendCmd( "g\r" );
 
 				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending log output request" );
-				try { Thread.sleep( 100 ); } catch (InterruptedException e) {}
+				try{ Thread.sleep( 100 ); }catch( InterruptedException e ){}
 				// 1S: Serial out on  s: speed  1a: auto mode
 				SendCmd( "F15EF117*1Ss1a" );
 
@@ -564,7 +564,7 @@ public class Vsdroid extends Activity {
 							}
 						}
 					}else{
-						try { Thread.sleep( 30 ); } catch (InterruptedException e) {}
+						try{ Thread.sleep( 30 ); }catch( InterruptedException e ){}
 					}
 				}
 
@@ -579,7 +579,7 @@ public class Vsdroid extends Activity {
 					iMessage = R.string.statmsg_vsd_initialize_failed;
 					return -1;
 				}
-			} catch (IOException e) {
+			}catch( IOException e ){
 				iMessage = R.string.statmsg_socket_rw_failed;
 				return -1;
 			}
@@ -616,7 +616,7 @@ public class Vsdroid extends Activity {
 				if( iMainMode < 0 || MODE_NUM <= iMainMode ) iMainMode = MODE_LAPTIME;
 			}catch( NumberFormatException e ){}
 
-			try {
+			try{
 				switch( iMainMode ){
 				  case MODE_LAPTIME:
 					SendCmd( "l" );
@@ -636,7 +636,7 @@ public class Vsdroid extends Activity {
 				  case MODE_ZERO_ONE:
 					SendCmd( String.format( "*%Xo", iStartGThrethold ));
 				}
-			} catch (IOException e) {}
+			}catch( IOException e ){}
 
 			iRtcPrevRaw		= 0;
 			iSectorCnt		= 0;
@@ -681,7 +681,7 @@ public class Vsdroid extends Activity {
 
 		public void KillThread(){
 			bKillThread = true;
-			try {
+			try{
 				while( bKillThread && VsdThread != null && VsdThread.isAlive()){
 					Thread.sleep( 100 );
 				}
@@ -735,12 +735,12 @@ public class Vsdroid extends Activity {
 			// Get a BluetoothSocket for a connection with the
 			// given BluetoothDevice
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket" );
-			try {
+			try{
 				BTSock = device.createRfcommSocketToServiceRecord( BT_UUID );
-			} catch (IOException e) {
-				if( BTSock != null ) try {
+			}catch( IOException e ){
+				if( BTSock != null ) try{
 					BTSock.close();
-				} catch (IOException e1) {}
+				}catch( IOException e1 ){}
 
 				BTSock = null;
 				iMessage = R.string.statmsg_bluetooth_server_error;
@@ -749,7 +749,7 @@ public class Vsdroid extends Activity {
 			}
 
 			while( !bKillThread ){
-				try {
+				try{
 					// ソケットの作成 12秒でタイムアウトらしい
 					if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connecting..." );
 					BTSock.connect();
@@ -763,7 +763,7 @@ public class Vsdroid extends Activity {
 					if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:IOException" );
 				}
 
-				try { Thread.sleep( 1000 ); } catch (InterruptedException e) {}
+				try{ Thread.sleep( 1000 ); }catch( InterruptedException e ){}
 			}
 			iMessage = R.string.statmsg_bluetooth_connection_failed;
 			return -1;
@@ -776,9 +776,9 @@ public class Vsdroid extends Activity {
 			// 念のためログ出力停止，* は g_lParam をいったんクリアする意図
 			try{ SendCmd( "*0S" ); }catch( IOException e ){}
 			
-			try {
+			try{
 				if( BTSock != null ) BTSock.close();
-			} catch (IOException e) {
+			}catch( IOException e ){
 			}
 			return 0;
 		}
@@ -814,9 +814,9 @@ public class Vsdroid extends Activity {
 		public int Open(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::Open" );
 
-			try {
+			try{
 				brEmuLog = new BufferedReader( new FileReader( VSD_ROOT + "/vsd.log" ));
-			} catch ( FileNotFoundException e ){
+			}catch( FileNotFoundException e ){
 				iMessage = R.string.statmsg_emulog_open_failed;
 				return -1;
 			}
@@ -834,7 +834,7 @@ public class Vsdroid extends Activity {
 
 			//if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::RawRead" );
 
-			try {
+			try{
 				if(( strBuf = brEmuLog.readLine()) == null ){
 					iMessage = R.string.statmsg_log_replay_finished;
 					return -1;
@@ -896,12 +896,12 @@ public class Vsdroid extends Activity {
 				dOutputWaitTime += 1000.0 / 16;
 				i = ( int )( dOutputWaitTime - NowMs );
 				if( i > 0 ){
-					try {
+					try{
 						Thread.sleep( i );
-					} catch (InterruptedException e) {}
+					}catch( InterruptedException e ){}
 				}
 
-			} catch ( IOException e ){
+			}catch( IOException e ){
 				iMessage = R.string.statmsg_log_replay_failed;
 				return -1;
 			}
@@ -916,9 +916,9 @@ public class Vsdroid extends Activity {
 		public int Close(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::Close" );
 
-			try {
+			try{
 				brEmuLog.close();
-			} catch ( IOException e ) {}
+			}catch( IOException e ){}
 
 			return 0;
 		}
@@ -1133,9 +1133,9 @@ public class Vsdroid extends Activity {
 			}
 
 			if( Pref.getBoolean( "key_caribration", false )){
-				try {
+				try{
 					Vsd.SendCmd( "c" );
-				} catch (IOException e) {}
+				}catch( IOException e ){}
 			}
 		}
 	}
