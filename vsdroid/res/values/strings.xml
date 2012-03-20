@@ -6,7 +6,7 @@
 	<string name="pref_vsd_mode">VSD動作モード</string>
 	<string name="pref_sectors">セクター数</string>
 	<string name="pref_gymkhana_start">ジムカーナ スタート距離</string>
-	<string name="pref_connection_mode">接続モード (要再起動)</string>
+	<string name="pref_connection_mode">接続モード</string>
 	<string name="pref_ip_addr">IPアドレス</string>
 	<string name="pref_bt_devices">Bluetoothデバイス</string>
 	<string name="pref_eco_mode">エコモード</string>

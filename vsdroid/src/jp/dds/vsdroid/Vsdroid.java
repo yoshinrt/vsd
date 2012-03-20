@@ -35,7 +35,7 @@ import java.util.*;
 
 public class Vsdroid extends Activity {
 
-	final boolean	bDebug		= true; //false;
+	final boolean	bDebug		= false;
 
 	// 定数
 	final int MODE_LAPTIME	= 0;
@@ -47,6 +47,7 @@ public class Vsdroid extends Activity {
 	final int CONN_MODE_ETHER		= 0;
 	final int CONN_MODE_BLUETOOTH	= 1;
 	final int CONN_MODE_LOGREPLAY	= 2;
+	final int CONN_MODE_NONE		= -1;
 
 	final double H8HZ			= 16030000;
 	final double SERIAL_DIVCNT	= 16;		// シリアル出力を行う周期
@@ -645,7 +646,6 @@ public class Vsdroid extends Activity {
 				if( bDebug ) Log.d( "VSDroid", "run_loop()" );
 
 				if(
-					true ||
 					Vsd.Open()			< 0 ||
 					Vsd.LoadFirmWare()	< 0 ||
 					Vsd.OpenLog()		< 0
@@ -669,7 +669,7 @@ public class Vsdroid extends Activity {
 			Vsd.Close();
 			Vsd.CloseLog();
 			if( !bKillThread ) Config();
-			
+
 			bKillThread	= false;
 			if( bDebug ) Log.d( "VSDroid", "exit_run()" );
 		}
@@ -1122,10 +1122,17 @@ public class Vsdroid extends Activity {
 	protected void onActivityResult( int requestCode, int resultCode, Intent data ){
 		if( bDebug ) Log.d( "VSDroid", "ConfigResult" );
 		bConfigOpened = false;
-		
-		if( VsdThread.isAlive()){
+
+		int iNewMode = Integer.parseInt( Pref.getString( "key_connection_mode", "0" ));
+
+		if( iNewMode != iConnMode ){
+			// 接続モードが変更されたので，VsdThread を停止後，
+			// VsdInterface を再構築する
+			Vsd.KillThread();
+			CreateVsdInterface( iNewMode );
+		}else if( VsdThread.isAlive()){
 			Vsd.SetupMode();
-			
+
 			if( Pref.getBoolean( "key_reopen_log", false )){
 				Vsd.CloseLog();
 				Vsd.OpenLog();
@@ -1136,16 +1143,16 @@ public class Vsdroid extends Activity {
 			VsdThread = new Thread( Vsd );
 			VsdThread.start();
 		}
-		
+
 		if( Pref.getBoolean( "key_caribration", false )){
 			try{
 				Vsd.SendCmd( "c" );
 			}catch( IOException e ){}
 		}
 	}
-	
+
 	//************************************************************************
-	
+
 	@Override
 	public boolean onKeyDown( int keyCode, KeyEvent event ){
 		if( bDebug ) Log.d( "VSDroid", "onKeyDown" );
@@ -1186,15 +1193,20 @@ public class Vsdroid extends Activity {
 		// preference 参照
 		Pref = PreferenceManager.getDefaultSharedPreferences( this );
 
-		// VSD コネクション
 		iConnMode = Integer.parseInt( Pref.getString( "key_connection_mode", "0" ));
-		Vsd =	iConnMode == CONN_MODE_BLUETOOTH	? new VsdInterfaceBluetooth() :
-				iConnMode == CONN_MODE_LOGREPLAY	? new VsdInterfaceEmulation() :
-													  new VsdInterface();
+		CreateVsdInterface( iConnMode );
+	}
+
+	void CreateVsdInterface( int iNewMode ){
+		// VSD コネクション
+		Vsd =	iNewMode == CONN_MODE_BLUETOOTH	? new VsdInterfaceBluetooth() :
+				iNewMode == CONN_MODE_LOGREPLAY	? new VsdInterfaceEmulation() :
+												  new VsdInterface();
 
 		// VSD スレッド起動
 		VsdThread = new Thread( Vsd );
 		VsdThread.start();
+		iConnMode = iNewMode;
 	}
 
 	@Override
