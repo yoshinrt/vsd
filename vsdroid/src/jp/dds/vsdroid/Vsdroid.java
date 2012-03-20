@@ -35,7 +35,7 @@ import java.util.*;
 
 public class Vsdroid extends Activity {
 
-	final boolean	bDebug		= false;
+	final boolean	bDebug		= true; //false;
 
 	// 定数
 	final int MODE_LAPTIME	= 0;
@@ -86,13 +86,6 @@ public class Vsdroid extends Activity {
 		START,
 		UPDATE,
 		SECTOR,
-	};
-
-	// スレッドステート
-	enum THREAD_STATE {
-		STOP,
-		INIT,
-		NORMAL,
 	};
 
 	// VSD コミュニケーション
@@ -169,8 +162,6 @@ public class Vsdroid extends Activity {
 
 		boolean bKillThread = false;
 
-		THREAD_STATE	ThreadState;
-
 		// コンストラクタ - 変数の初期化だけやってる
 		public VsdInterface(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::constructor" );
@@ -203,8 +194,6 @@ public class Vsdroid extends Activity {
 
 			dGcx = dGcy		= 0;
 			iGCaribCnt		= iGCaribCntMax;
-
-			ThreadState		= THREAD_STATE.STOP;
 
 			InStream		= null;
 			OutStream		= null;
@@ -282,8 +271,8 @@ public class Vsdroid extends Activity {
 
 				if( Sock != null ) try{
 					Sock.close();
+					Sock = null;
 				}catch( IOException e ){}
-				Sock = null;
 
 				try{ Thread.sleep( 1000 ); }catch( InterruptedException e ){}
 			}
@@ -471,7 +460,10 @@ public class Vsdroid extends Activity {
 		public int Close(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Close" );
 			try{
-				if( Sock != null ) Sock.close();
+				if( Sock != null ){
+					Sock.close();
+					Sock = null;
+				}
 			}catch( IOException e ){
 			}
 			return 0;
@@ -646,36 +638,39 @@ public class Vsdroid extends Activity {
 
 		public void run(){
 			int iRet;
+			bKillThread = false;
 
-			ThreadState	= THREAD_STATE.INIT;
+		  BreakThread:
+			while( !bKillThread ){
+				if( bDebug ) Log.d( "VSDroid", "run_loop()" );
 
-			if(
-				Vsd.Open()			< 0 ||
-				Vsd.LoadFirmWare()	< 0 ||
-				Vsd.OpenLog()		< 0
-			){
-				// エラーが起きたので，config を出して thread 終了
-				if( !isFinishing()){
-					Vsd.Close();
-					Config();
+				if(
+					true ||
+					Vsd.Open()			< 0 ||
+					Vsd.LoadFirmWare()	< 0 ||
+					Vsd.OpenLog()		< 0
+				){
+					// エラーが起きたので，config を出して thread 終了
+					break BreakThread;
 				}
-			}else{
-				ThreadState = THREAD_STATE.NORMAL;
+
 				Vsd.SetupMode();
 
 				while( !bKillThread ){
 					if(( iRet = Read()) > 0 ){
 						if( VsdScreen != null ) VsdScreen.Draw();
 					}else if( iRet < 0 ){
-						Config();
-						break;
+						// Read() の IO エラー
+						break BreakThread;
 					}
 				}
 			}
-			bKillThread	= false;
-			VsdThread	= null;
-			ThreadState	= THREAD_STATE.STOP;
 
+			Vsd.Close();
+			Vsd.CloseLog();
+			if( !bKillThread ) Config();
+			
+			bKillThread	= false;
 			if( bDebug ) Log.d( "VSDroid", "exit_run()" );
 		}
 
@@ -740,9 +735,9 @@ public class Vsdroid extends Activity {
 			}catch( IOException e ){
 				if( BTSock != null ) try{
 					BTSock.close();
+					BTSock = null;
 				}catch( IOException e1 ){}
 
-				BTSock = null;
 				iMessage = R.string.statmsg_bluetooth_server_error;
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket:Failed" );
 				return -1;
@@ -765,6 +760,12 @@ public class Vsdroid extends Activity {
 
 				try{ Thread.sleep( 1000 ); }catch( InterruptedException e ){}
 			}
+
+			if( BTSock != null ) try{
+				BTSock.close();
+				BTSock = null;
+			}catch( IOException e ){}
+
 			iMessage = R.string.statmsg_bluetooth_connection_failed;
 			return -1;
 		}
@@ -772,14 +773,16 @@ public class Vsdroid extends Activity {
 		@Override
 		public int Close(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Close" );
-			
+
 			// 念のためログ出力停止，* は g_lParam をいったんクリアする意図
 			try{ SendCmd( "*0S" ); }catch( IOException e ){}
-			
+
 			try{
-				if( BTSock != null ) BTSock.close();
-			}catch( IOException e ){
-			}
+				if( BTSock != null ){
+					BTSock.close();
+					BTSock = null;
+				}
+			}catch( IOException e ){}
 			return 0;
 		}
 	}
@@ -787,7 +790,7 @@ public class Vsdroid extends Activity {
 	//*** エミュレーションモード *********************************************
 
 	class VsdInterfaceEmulation extends VsdInterface {
-		BufferedReader brEmuLog;
+		BufferedReader brEmuLog = null;
 		double	dOutputWaitTime = 0;
 
 		// 16bit int を 2byte にパックする
@@ -916,9 +919,12 @@ public class Vsdroid extends Activity {
 		public int Close(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::Close" );
 
-			try{
-				brEmuLog.close();
-			}catch( IOException e ){}
+			if( brEmuLog != null ){
+				try{
+					brEmuLog.close();
+				}catch( IOException e ){}
+				brEmuLog = null;
+			}
 
 			return 0;
 		}
@@ -1100,7 +1106,6 @@ public class Vsdroid extends Activity {
 
 		if( bConfigOpened ) return;
 		bConfigOpened = true;
-		if( Vsd.ThreadState == THREAD_STATE.INIT ) Vsd.bKillThread = true;
 
 		Editor ed = Pref.edit();
 		ed.putBoolean( "key_reopen_log",  false );
@@ -1117,31 +1122,30 @@ public class Vsdroid extends Activity {
 	protected void onActivityResult( int requestCode, int resultCode, Intent data ){
 		if( bDebug ) Log.d( "VSDroid", "ConfigResult" );
 		bConfigOpened = false;
-
-		if( VsdThread == null ){
-			// スレッド再起動
-			VsdThread = new Thread( Vsd ); VsdThread.start();
-		}else if( Vsd.ThreadState == THREAD_STATE.INIT ){
-			Vsd.KillThread();
-			VsdThread = new Thread( Vsd ); VsdThread.start();
-		}else{
+		
+		if( VsdThread.isAlive()){
 			Vsd.SetupMode();
-
+			
 			if( Pref.getBoolean( "key_reopen_log", false )){
 				Vsd.CloseLog();
 				Vsd.OpenLog();
 			}
-
-			if( Pref.getBoolean( "key_caribration", false )){
-				try{
-					Vsd.SendCmd( "c" );
-				}catch( IOException e ){}
-			}
+		}else{
+			// スレッドが死んでいるなら，再スタートすることで
+			// 上の処理は実行される．
+			VsdThread = new Thread( Vsd );
+			VsdThread.start();
+		}
+		
+		if( Pref.getBoolean( "key_caribration", false )){
+			try{
+				Vsd.SendCmd( "c" );
+			}catch( IOException e ){}
 		}
 	}
-
+	
 	//************************************************************************
-
+	
 	@Override
 	public boolean onKeyDown( int keyCode, KeyEvent event ){
 		if( bDebug ) Log.d( "VSDroid", "onKeyDown" );
@@ -1189,17 +1193,14 @@ public class Vsdroid extends Activity {
 													  new VsdInterface();
 
 		// VSD スレッド起動
-		VsdThread = new Thread( Vsd ); VsdThread.start();
+		VsdThread = new Thread( Vsd );
+		VsdThread.start();
 	}
 
 	@Override
 	protected void onDestroy(){
 		super.onDestroy();
-
 		Vsd.KillThread();
-		Vsd.Close();
-		Vsd.CloseLog();
-
 		if( bDebug ) Log.d( "VSDroid", "Activity::onDestroy finished" );
 	}
 }
