@@ -80,7 +80,9 @@ public class Vsdroid extends Activity {
 	final String VSD_LOG  = VSD_ROOT + "/log";
 
 	private static final UUID BT_UUID = UUID.fromString( "00001101-0000-1000-8000-00805F9B34FB" );
-	private static final int REQUEST_ENABLE_BT = 2;
+	
+	private static final int SHOW_CONFIG		= 0;
+	private static final int REQUEST_ENABLE_BT	= 1;
 
 	enum LAP_STATE {
 		NONE,
@@ -710,13 +712,14 @@ public class Vsdroid extends Activity {
 				return -1;
 			}
 
-			// BT ON でなければエラー (手抜き)
+			// BT ON でなければエラーで帰るが，
+			// bKillThread = true にすることで，config を出さずにスレッドを抜ける
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Enable" );
 			if( !mBluetoothAdapter.isEnabled()){
-				//iMessage = R.string.statmsg_bluetooth_not_available;
-				//return -1;
 				Intent enableIntent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE );
 				startActivityForResult( enableIntent, REQUEST_ENABLE_BT );
+				bKillThread = true;
+				return -1;
 			}
 
 			// BT の MAC アドレスを求める
@@ -1115,7 +1118,7 @@ public class Vsdroid extends Activity {
 		Intent intent = new Intent( Vsdroid.this, Preference.class );
 		intent.putExtra( "Message", getString( iMessage ));
 
-		startActivityForResult( intent, 0 /*SHOW_EDITOR*/ );
+		startActivityForResult( intent, SHOW_CONFIG );
 	}
 
 	@Override
@@ -1125,9 +1128,13 @@ public class Vsdroid extends Activity {
 
 		int iNewMode = Integer.parseInt( Pref.getString( "key_connection_mode", "0" ));
 
-		if( iNewMode != iConnMode ){
-			// 接続モードが変更されたので，VsdThread を停止後，
-			// VsdInterface を再構築する
+		if(
+			requestCode == REQUEST_ENABLE_BT ||
+			iNewMode != iConnMode
+		){
+			// BT イネーブルダイアログから帰ってきたか，
+			// 接続モードが変更されたので，
+			// VsdThread を停止後，VsdInterface を再構築する
 			Vsd.KillThread();
 			CreateVsdInterface( iNewMode );
 		}else if( VsdThread.isAlive()){
