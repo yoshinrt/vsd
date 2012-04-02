@@ -1,22 +1,23 @@
 [HIMDBVersion]
 2.0
 [DATABASE_VERSION]
-"10.0" 
+"11.0" 
 [WORKSPACE_DETAILS]
-"vsd" "G:\DDS\vsd\vsd" "G:\DDS\vsd\vsd\vsd.hws" "H8S,H8/300" "Hitachi H8S,H8/300 Standard" 
+"vsd" "Z:\vsd" "Z:\vsd\vsd.hws" "H8S,H8/300" "Hitachi H8S,H8/300 Standard" 
 [SHARED_WORKSPACE_CONTROL_STATUS]
 "" "" "" 
 "" "" "" 
 [PROJECTS]
-"monitor" "G:\DDS\vsd\vsd\300thew3\monitor" "G:\DDS\vsd\vsd\300thew3\monitor\monitor.hwp" 0 
-"vsd" "G:\DDS\vsd\vsd\vsd" "G:\DDS\vsd\vsd\vsd\vsd.hwp" 0 
+"monitor" "Z:\vsd\300thew3\monitor" "Z:\vsd\300thew3\monitor\monitor.hwp" 0 
+"vsd" "Z:\vsd\vsd" "Z:\vsd\vsd\vsd.hwp" 0 
 [INFORMATION]
 "ワークスペース情報がありません" 
 [SCRAP]
 [PROJECT_DEPENDENCY]
 [WORKSPACE_PROPERTIES]
 [HELP_FILES]
-"c:\program files\renesas\hew\tools\renesas\h8\6_1_0\hew\Stdlib.hlp" "C/C++ Standard Library Help" 1 
+"c:\program files\renesas\hew\tools\renesas\h8\6_1_0\hew\Stdlib.hlp" "C/C++ Standard Library Help" 0 
+"c:\program files\renesas\hew\tools\renesas\h8\7_0_0\hew\Stdlib.chm" "C/C++ Standard Library Help" 1 
 [GENERAL_DATA_PROJECT]
 [USERMENUTOOLS]
 [CUSTOMPLACEHOLDERS]
@@ -30,7 +31,7 @@
 "2" "Default3" "0" 
 "3" "Default4" "0" 
 [OPTIONS_DEBUG_TAB]
-0 0 0 0 
+0 0 0 0 0 
 [VCS]
 "" "" "" 0 
 [VCS_PROJECT]

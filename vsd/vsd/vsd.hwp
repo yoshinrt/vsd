@@ -3,19 +3,19 @@
 [DATABASE_VERSION]
 "2.8" 
 [PROJECT_DETAILS]
-"vsd" "G:\DDS\vsd\vsd\vsd" "G:\DDS\vsd\vsd\vsd\vsd.hwp" "H8S,H8/300" "Hitachi H8S,H8/300 Standard" "Application" "" "" 
+"vsd" "Z:\vsd\vsd" "Z:\vsd\vsd\vsd.hwp" "H8S,H8/300" "Renesas H8S,H8/300 Standard" "Application" "" "" 
 [INFORMATION]
 "プロジェクト情報がありません" 
 [TOOL_CHAIN]
-"Hitachi H8S,H8/300 Standard Toolchain" "6.1.0.0" 
+"Renesas H8S,H8/300 Standard Toolchain" "7.0.0.0" 
 [CONFIGURATIONS]
-"Debug" "G:\DDS\vsd\vsd\vsd\debug" 
-"Release" "G:\DDS\vsd\vsd\vsd\release" 
+"Debug" "Z:\vsd\vsd\debug" 
+"Release" "Z:\vsd\vsd\release" 
 [BUILD_PHASES]
-"Hitachi H8S,H8/300 Assembler" 1 
-"Hitachi H8S,H8/300 C/C++ Compiler" 1 
-"Hitachi H8S,H8/300 C/C++ Library Generator" 1 
-"Hitachi OptLinker" 1 
+"Renesas H8S,H8/300 Assembler" 1 
+"Renesas H8S,H8/300 C/C++ Compiler" 1 
+"Renesas H8S,H8/300 C/C++ Library Generator" 1 
+"Renesas OptLinker" 1 
 [TOOL_ENVIRONMENT]
 [EXTENSIONS]
 "Absolute file" "ABS" 
@@ -75,42 +75,42 @@
 "Stack information file" "BIN" "NONE" "" 
 [ASSOCIATED_APPLICATIONS]
 [TOOLCHAIN_PHASE]
-"Hitachi H8S,H8/300 Assembler" 
-"Hitachi H8S,H8/300 C/C++ Compiler" 
-"Hitachi H8S,H8/300 C/C++ Library Generator" 
-"Hitachi OptLinker" 
+"Renesas H8S,H8/300 Assembler" 
+"Renesas H8S,H8/300 C/C++ Compiler" 
+"Renesas H8S,H8/300 C/C++ Library Generator" 
+"Renesas OptLinker" 
 [UTILITY_PHASE]
 [CUSTOM_PHASES]
 [CUSTOM_PHASE_INPUT_GROUP]
 [CUSTOM_PHASE_OUTPUT_SYNTAX]
 [BUILD_ORDER]
-"Hitachi H8S,H8/300 C/C++ Library Generator" 1 
-"Hitachi H8S,H8/300 C/C++ Compiler" 1 
-"Hitachi H8S,H8/300 Assembler" 1 
-"Hitachi OptLinker" 1 
+"Renesas H8S,H8/300 C/C++ Library Generator" 1 
+"Renesas H8S,H8/300 C/C++ Compiler" 1 
+"Renesas H8S,H8/300 Assembler" 1 
+"Renesas OptLinker" 1 
 [BUILD_PHASE_DETAILS]
-"Hitachi H8S,H8/300 Assembler" "Assembly source file|Linkage symbol file" 1 
-"Hitachi H8S,H8/300 C/C++ Compiler" "C source file|C++ source file" 1 
-"Hitachi H8S,H8/300 C/C++ Library Generator" "" 0 
-"Hitachi OptLinker" "Object file|Library file|Relocatable file" 0 
+"Renesas H8S,H8/300 Assembler" "Assembly source file|Linkage symbol file" 1 
+"Renesas H8S,H8/300 C/C++ Compiler" "C source file|C++ source file" 1 
+"Renesas H8S,H8/300 C/C++ Library Generator" "" 0 
+"Renesas OptLinker" "Object file|Library file|Relocatable file" 0 
 [BUILD_FILE_ORDER_Assembly source file]
-"Hitachi H8S,H8/300 Assembler" 1 
+"Renesas H8S,H8/300 Assembler" 1 
 [BUILD_FILE_ORDER_C source file]
-"Hitachi H8S,H8/300 C/C++ Compiler" 1 
+"Renesas H8S,H8/300 C/C++ Compiler" 1 
 [BUILD_FILE_ORDER_C++ source file]
-"Hitachi H8S,H8/300 C/C++ Compiler" 1 
+"Renesas H8S,H8/300 C/C++ Compiler" 1 
 [BUILD_FILE_ORDER_Linkage symbol file]
-"Hitachi H8S,H8/300 Assembler" 1 
+"Renesas H8S,H8/300 Assembler" 1 
 [SCRAP]
 "Project Generator Setup File" "$(PROJDIR)\vsd.pgs" 
 [MAPPINGS]
-"Assembly source file" "Hitachi H8S,H8/300 Assembler" "Hitachi H8S,H8/300 C/C++ Compiler" 
-"Library file" "Hitachi OptLinker" "Hitachi H8S,H8/300 C/C++ Library Generator" 
-"Object file" "Hitachi OptLinker" "Hitachi H8S,H8/300 Assembler" 
-"Object file" "Hitachi OptLinker" "Hitachi H8S,H8/300 C/C++ Compiler" 
+"Assembly source file" "Renesas H8S,H8/300 Assembler" "Renesas H8S,H8/300 C/C++ Compiler" 
+"Library file" "Renesas OptLinker" "Renesas H8S,H8/300 C/C++ Library Generator" 
+"Object file" "Renesas OptLinker" "Renesas H8S,H8/300 Assembler" 
+"Object file" "Renesas OptLinker" "Renesas H8S,H8/300 C/C++ Compiler" 
 [PROJECT_FILES]
-"G:\DDS\vsd\vsd\main.c" "User" "C source file" 2 
-"G:\DDS\vsd\vsd\rom_entry.src" "User" "Assembly source file" 2 
+"Z:\vsd\main.c" "User" "C source file" 2 
+"Z:\vsd\rom_entry.src" "User" "Assembly source file" 2 
 [FOLDER]
 "Assembly source file" "Assembly source file" 
 "C source file" "C source file" 
@@ -119,44 +119,44 @@
 [ON_DEMAND_COMPONENTS_LOADED]
 [SYNC_SESSION_NAMES]
 [SESSIONS]
-"DefaultSession" "G:\DDS\vsd\vsd\vsd\defaultsession.hsf" 0 
+"DefaultSession" "Z:\vsd\vsd\defaultsession.hsf" 0 
 [GENERAL_DATA_SESSION_DefaultSession]
-[OPTIONS_Debug_Hitachi H8S,H8/300 Assembler]
-"Assembly source file" "0971aa847cc75c10" 3 
-"G:\DDS\vsd\vsd\rom_entry.src" "004ac5504a5d9c10" 3 
-"Linkage symbol file" "0971aa847cc75c10" 3 
-[OPTIONS_Debug_Hitachi H8S,H8/300 C/C++ Compiler]
-"C source file" "0971aa847cc75c10" 2 
-"C++ source file" "0971aa847cc75c10" 2 
-"G:\DDS\vsd\vsd\main.c" "03a4b5ba7cc75c10" 2 
-[OPTIONS_Debug_Hitachi H8S,H8/300 C/C++ Library Generator]
-"Single Shot" "0971aa847cc75c10" 1 
-[OPTIONS_Debug_Hitachi OptLinker]
-"Single Shot" "004ac5504a5d9c10" 4 
+[OPTIONS_Debug_Renesas H8S,H8/300 Assembler]
+"Assembly source file" "0b33994d3211dc10" 3 
+"Linkage symbol file" "0b33994d3211dc10" 3 
+"Z:\vsd\rom_entry.src" "0b33994d3211dc10" 3 
+[OPTIONS_Debug_Renesas H8S,H8/300 C/C++ Compiler]
+"C source file" "0b33994d3211dc10" 2 
+"C++ source file" "0b33994d3211dc10" 2 
+"Z:\vsd\main.c" "0b33994d3211dc10" 2 
+[OPTIONS_Debug_Renesas H8S,H8/300 C/C++ Library Generator]
+"Single Shot" "0b33994d3211dc10" 1 
+[OPTIONS_Debug_Renesas OptLinker]
+"Single Shot" "0b33994d3211dc10" 4 
 [OPTIONS_Debug]
 "" 0 
-"[S|OUTPUTPATH|^"$(CONFIGDIR)\$(PROJECTNAME).lib^"] [V|VERSION|1] [B|RUNTIME|1] [B|NEW|1] [B|CTYPE|0] [B|MATH|0] [B|MATHF|0] [B|STDARG|0] [B|STDIO|0] [B|STDLIB|0] [B|STRING|0] [B|IOS|0] [B|COMPLEX|0] [B|CPPSTRING|0] [B|SPEED|0] [S|MODE|BUILD/CHANGED] [S|CPU|300HN] [S|STACK|MEDIUM] [I|REGPARAM|2] [B|LONGREG|0] [B|STRUCTREG|0] [B|RTTI|0] [S|BIT_ORDER|LEFT] [B|PACK|0] [B|EXCEPTION|0]" 1 
+"[B|CTYPE|0] [B|MATH|0] [B|PACK|0] [B|EXCEPTION|0] [B|IOS|0] [B|NEW|1] [B|CPPSTRING|0] [S|STACK|MEDIUM] [B|STRUCTREG|0] [B|COMPLEX|0] [V|VERSION|1] [S|BIT_ORDER|LEFT] [B|SPEED|0] [I|REGPARAM|2] [B|STDIO|0] [B|LONGREG|0] [S|OUTPUTPATH|^"$(CONFIGDIR)\$(PROJECTNAME).lib^"] [B|RUNTIME|1] [B|STDLIB|0] [B|STRING|0] [S|CPU|300HN] [B|RTTI|0] [B|MATHF|0] [B|STDARG|0] " 1 
 "[V|VERSION|1] [B|DEBUG|1] [S|OUTPUTPATH|^"$(CONFIGDIR)\$(FILELEAF).obj^"] [B|LIST|0] [B|CHGINCPATH|1] [B|ERRORPATH|1] [S|CPU|300HN]" 3 
 "[V|VERSION|1] [B|DEBUG|1] [S|OUTPUTPATH|^"$(CONFIGDIR)\$(FILELEAF).obj^"] [B|LIST|0] [B|CHGINCPATH|1] [S|CPU|300HN] [S|STACK|MEDIUM] [I|REGPARAM|2] [B|LONGREG|0] [B|STRUCTREG|0] [B|RTTI|0] [S|BIT_ORDER|LEFT] [B|PACK|0] [B|EXCEPTION|0]" 2 
 "[V|VERSION|1] [B|OPTIMIZE|0] [B|DEBUG|1] [S|OUTPUT|^"$(CONFIGDIR)\$(PROJECTNAME).abs^"] [B|LIST|1] [S|LIST|^"$(CONFIGDIR)\$(PROJECTNAME).map^"] [S|ROM|(D,R)] [S|FORM|STYPE] [S|OUTPUT|^"$(CONFIGDIR)\$(PROJECTNAME).mot^"] [S|START|PResetPRG,PIntPRG(000000400)|P,C,C$DSEC,C$BSEC,D(000000800)|B,R(00000FB80)|S(00000FD2A)]" 4 
 [EXCLUDED_FILES_Debug]
 [LINKAGE_ORDER_Debug]
 [GENERAL_DATA_CONFIGURATION_Debug]
-[OPTIONS_Release_Hitachi H8S,H8/300 Assembler]
-"Assembly source file" "0971aa847cc75c10" 3 
-"G:\DDS\vsd\vsd\rom_entry.src" "004ac5504a5d9c10" 3 
-"Linkage symbol file" "0971aa847cc75c10" 3 
-[OPTIONS_Release_Hitachi H8S,H8/300 C/C++ Compiler]
-"C source file" "079141e45a5d9c10" 2 
-"C++ source file" "079141e45a5d9c10" 2 
-"G:\DDS\vsd\vsd\main.c" "079141e45a5d9c10" 2 
-[OPTIONS_Release_Hitachi H8S,H8/300 C/C++ Library Generator]
-"Single Shot" "0971aa847cc75c10" 1 
-[OPTIONS_Release_Hitachi OptLinker]
-"Single Shot" "056d2ac26033ac10" 4 
+[OPTIONS_Release_Renesas H8S,H8/300 Assembler]
+"Assembly source file" "026bc94d3211dc10" 3 
+"Linkage symbol file" "026bc94d3211dc10" 3 
+"Z:\vsd\rom_entry.src" "026bc94d3211dc10" 3 
+[OPTIONS_Release_Renesas H8S,H8/300 C/C++ Compiler]
+"C source file" "026bc94d3211dc10" 2 
+"C++ source file" "026bc94d3211dc10" 2 
+"Z:\vsd\main.c" "026bc94d3211dc10" 2 
+[OPTIONS_Release_Renesas H8S,H8/300 C/C++ Library Generator]
+"Single Shot" "026bc94d3211dc10" 1 
+[OPTIONS_Release_Renesas OptLinker]
+"Single Shot" "026bc94d3211dc10" 4 
 [OPTIONS_Release]
 "" 0 
-"[S|OUTPUTPATH|^"$(CONFIGDIR)\$(PROJECTNAME).lib^"] [V|VERSION|1] [B|RUNTIME|1] [B|NEW|1] [B|CTYPE|0] [B|MATH|0] [B|MATHF|0] [B|STDARG|0] [B|STDIO|0] [B|STDLIB|0] [B|STRING|0] [B|IOS|0] [B|COMPLEX|0] [B|CPPSTRING|0] [B|SPEED|0] [S|MODE|BUILD/CHANGED] [S|CPU|300HN] [S|STACK|MEDIUM] [I|REGPARAM|2] [B|LONGREG|0] [B|STRUCTREG|0] [B|RTTI|0] [S|BIT_ORDER|LEFT] [B|PACK|0] [B|EXCEPTION|0]" 1 
+"[B|CTYPE|0] [B|MATH|0] [B|PACK|0] [B|EXCEPTION|0] [B|IOS|0] [B|NEW|1] [B|CPPSTRING|0] [S|STACK|MEDIUM] [B|STRUCTREG|0] [B|COMPLEX|0] [V|VERSION|1] [S|BIT_ORDER|LEFT] [B|SPEED|0] [I|REGPARAM|2] [B|STDIO|0] [B|LONGREG|0] [S|OUTPUTPATH|^"$(CONFIGDIR)\$(PROJECTNAME).lib^"] [B|RUNTIME|1] [B|STDLIB|0] [B|STRING|0] [S|CPU|300HN] [B|RTTI|0] [B|MATHF|0] [B|STDARG|0] " 1 
 "[V|VERSION|1] [B|DEBUG|0] [S|OUTPUTPATH|^"$(CONFIGDIR)\$(FILELEAF).obj^"] [B|LIST|0] [B|CHGINCPATH|1] [B|ERRORPATH|1] [S|CPU|300HN]" 3 
 "[V|VERSION|6] [I|SBR|0] [S|FORM|STYPE] [B|DEBUG|0] [B|LIST|1] [S|LIST|^"$(CONFIGDIR)\$(PROJECTNAME).map^"] [S|SHOW|SYMBOL] [S|OUTPUT|^"$(CONFIGDIR)\$(PROJECTNAME).mot^"] [I|SPACE|^"FF^"] [S|OPTIMIZEITEMS|SAFE] [I|CACHESIZE|000000008] [I|CACHELINE|000000020] [S|START|P,C,D,B(0F780)|S(0FED6)]
 " 4 
