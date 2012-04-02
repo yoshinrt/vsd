@@ -1,27 +1,24 @@
-Optimizing Linkage Editor (V.9.00.02.000)         14-Aug-2010 23:14:34
+Optimizing Linkage Editor (V.9.05.01.000)         03-Apr-2012 00:47:01
 
 *** Options ***
 
--subcommand=G:\DDS\vsd\vsd\vsd\release\vsd.hlk
+-subcommand=Z:\vsd\vsd\release\vsd.hlk
 -noprelink
 -nodebug
 -nomessage
--list="G:\DDS\vsd\vsd\vsd\release\vsd.map"
--show=symbol
+-list="Z:\vsd\vsd\release\vsd.map"
 -optimize=safe
 -start=P,C,D,B/0F780,S/0FED6
 -nologo
--input="G:\DDS\vsd\vsd\vsd\release\main.obj"
--input="G:\DDS\vsd\vsd\vsd\release\rom_entry.obj"
--library="G:\DDS\vsd\vsd\vsd\release\vsd.lib"
--output="G:\DDS\vsd\vsd\vsd\release\vsd.abs"
+-input="Z:\vsd\vsd\release\main.obj"
+-input="Z:\vsd\vsd\release\rom_entry.obj"
+-library="Z:\vsd\vsd\release\vsd.lib"
+-output="Z:\vsd\vsd\release\vsd.abs"
 -end
 
 *** Error information ***
 
-** L1100 (W) Cannot find "C" specified in option "start"
 ** L1100 (W) Cannot find "D" specified in option "start"
-** L1100 (W) Cannot find "B" specified in option "start"
 
 *** Mapping List ***
 
@@ -30,51 +27,10 @@ SECTION                            START      END         SIZE   ALIGN
 $VECT0
                                   00000000  00000001         2   2
 P
-                                  0000f780  0000f787         8   2
+                                  0000f780  0000f98b       20c   2
+C
+                                  0000f98c  0000f9cb        40   2
+B
+                                  0000f9cc  0000f9cc         0   2
 S
                                   0000fed6  0000fed6         0   2
-
-*** Symbol List ***
-
-SECTION=
-FILE=                               START        END    SIZE
-  SYMBOL                            ADDR        SIZE    INFO      COUNTS  OPT
-
-SECTION=$VECT0
-FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
-                                  00000000  00000001         2
-
-SECTION=P
-FILE=G:\DDS\vsd\vsd\vsd\release\main.obj
-                                  0000f780  0000f787         8
-  _main
-                                  0000f780         8   entry,g         * 
-
-Absolute value symbols
-FILE=G:\DDS\vsd\vsd\vsd\release\rom_entry.obj
-  $BRR
-                                  0000000c         0   none ,g         * 
-  $STACK
-                                  0000fef4         0   none ,g         * 
-  $DIVL$3
-                                  00003cb4         0   none ,g         * 
-  $MULL$3
-                                  00003d16         0   none ,g         * 
-  $DIVUL$3
-                                  00003cda         0   none ,g         * 
-
-*** Delete Symbols ***
-
-SYMBOL                                SIZE    INFO
-
-*** Variable Accessible with Abs8 ***
-
-SYMBOL                                SIZE    COUNTS  OPTIMIZE
-
-*** Variable Accessible with Abs16 ***
-
-SYMBOL                                SIZE    COUNTS  OPTIMIZE
-
-*** Function Call ***
-
-SYMBOL                              COUNTS  OPTIMIZE

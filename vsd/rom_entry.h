@@ -1,5 +1,5 @@
 #define _INITSCT	((void (*)( void ))0x00003d36)
-#define VectorTblPtr	(*(extern void *(*))0x0000ff7e)
+#define VectorTblPtr	(*(void *(*))0x0000ff7e)
 #define g_VRAM	(*(VRAM (*))0x0000ff76)
 #define g_Tacho	(*(PULSE (*))0x0000ff2c)
 #define g_Speed	(*(PULSE (*))0x0000ff38)
@@ -90,10 +90,12 @@
 #define sci_flush_tx	((void (*)(void))0x00000212)
 #define sci_read	((size_t (*)(UB* data, size_t n))0x000002bc)
 #define sci_write	((size_t (*)(UB* data, size_t n))0x00000322)
-// warning: not found: static UB rx_buffer[32]
-// warning: not found: static UB tx_buffer[48]
-#define rx_idx_head#0000ff28#, #rx_idx_tail	(*(UCHAR (*))0x0000ff29)
-#define tx_idx_head#0000ff2a#, #tx_idx_tail	(*(UCHAR (*))0x0000ff2b)
+#define rx_buffer	(*(UB (*)[32])0x0000fed8)
+#define tx_buffer	(*(UB (*)[48])0x0000fef8)
+#define rx_idx_head	(*(UCHAR (*))0x0000ff28)
+#define rx_idx_tail	(*(UCHAR (*))0x0000ff29)
+#define tx_idx_head	(*(UCHAR (*))0x0000ff2a)
+#define tx_idx_tail	(*(UCHAR (*))0x0000ff2b)
 #define error_handler	((void (*(*))(void))0x0000fed6)
 #define sci_wait_tx_empty	((void (*)(void))0x0000021e)
 #define sci_wait_rx_full	((BOOL (*)(void))0x00000224)

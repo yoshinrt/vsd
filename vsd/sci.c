@@ -8,11 +8,13 @@
 #define tx_buffer_end	TX_BUFFER_LENGTH
 
 /* 受信/送信バッファ */
-static UB rx_buffer[RX_BUFFER_LENGTH] /*, *rx_buffer_end, *rx_idx_head, *rx_idx_tail*/;
-static UB tx_buffer[TX_BUFFER_LENGTH] /*, *tx_buffer_end, *tx_idx_head, *tx_idx_tail*/;
+static UB rx_buffer[RX_BUFFER_LENGTH];
+static UB tx_buffer[TX_BUFFER_LENGTH];
 
-UCHAR	rx_idx_head, rx_idx_tail;
-UCHAR	tx_idx_head, tx_idx_tail;
+UCHAR	rx_idx_head;
+UCHAR	rx_idx_tail;
+UCHAR	tx_idx_head;
+UCHAR	tx_idx_tail;
 
 /* 受信エラー処理関数 */
 void (*error_handler)(void);

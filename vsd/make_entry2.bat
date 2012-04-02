@@ -30,6 +30,7 @@ my( %Vars );
 while( <fpIn> ){
 	if( /^  _?([\w\d_\$]+)[\n\r]*$/ ){
 		$VarName = $1;
+		$VarName =~ s/^_\$//;
 		$_ = <fpIn>;
 		/^\s+(\S+)/;
 		$Vars{ $VarName } = $1;
@@ -56,8 +57,7 @@ s/\b(?:typedef|struct|union|enum)\b[^;]*;/ /gs;
 s/=[^;]*;/;/gs;
 s/\n/ /g;
 s/\s*[;#]\s*/\n/g;
-s/\b__inline\s+//g;
-s/\bINLINE\s+//g;
+s/\b(?:INLINE|__inline|static|extern)\s+//g;
 
 # functions to be deleted
 s/^.*\b(?:main)\b.*$//gm;
