@@ -6,6 +6,9 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.*;
+
+import java.io.File;
+import java.io.FilenameFilter;
 import java.lang.CharSequence;
 import java.util.ArrayList;
 import java.util.Set;
@@ -16,9 +19,13 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 	private ListPreference		ListSectors;
 	private ListPreference		ListConnMode;
 	private ListPreference		ListBTDevices;
+	private ListPreference		ListRoms;
 	private EditTextPreference	EditGymkhaStart;
 	private EditTextPreference	EditIPAddr;
-
+	
+	static final int	RESULT_OK		= 0;
+	static final int	RESULT_RENEW	= 1;
+	
 	// create
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -29,6 +36,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		ListSectors		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_sectors" );
 		ListConnMode	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_connection_mode" );
 		ListBTDevices	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_bt_devices" );
+		ListRoms		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_roms" );
 		EditGymkhaStart	= ( EditTextPreference )getPreferenceScreen().findPreference( "key_gymkha_start" );
 		EditIPAddr		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_ip_addr" );
 
@@ -38,6 +46,8 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 				setTitle( extras.getCharSequence( "Message" ));
 		}
 
+		setResult( RESULT_OK );
+		
 		//////////////////////////////////////////////////////////////////////
 		// BT デバイスリストの作成
 		// http://web.dimension-maker.info/archives/2010/11/22163814.html
@@ -45,28 +55,39 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 
 		// 項目の取得。 ArrayList と Arrayの変換
 		ArrayList<CharSequence> entriesList = new ArrayList<CharSequence> ();
-		ArrayList<CharSequence> entryValuesList = new ArrayList<CharSequence> ();
-
-		// Get the local Bluetooth adapter
-		BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
 
 		// Get a set of currently paired devices
-		Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
+		Set<BluetoothDevice> pairedDevices = BluetoothAdapter.getDefaultAdapter().getBondedDevices();
 
 		// If there are paired devices, add each one to the ArrayAdapter
 		String s;
-		for (BluetoothDevice device : pairedDevices) {
+		for( BluetoothDevice device : pairedDevices ){
 			s = device.getName() + " / " + device.getAddress();
 			entriesList.add( s );
-			entryValuesList.add( s );
 		}
 
 		// 各配列を再度当てはめる。
 		CharSequence entries[]		= entriesList.toArray( new CharSequence[]{} );
-		CharSequence entryValues[]	= entryValuesList.toArray( new CharSequence[]{} );
 
 		ListBTDevices.setEntries( entries );
-		ListBTDevices.setEntryValues( entryValues );
+		ListBTDevices.setEntryValues( entries );
+
+		/*** ROM リストの作成 ***********************************************/
+
+		File file = new File( Vsdroid.VSD_ROOT );
+		String[] RomFiles = file.list( getFileExtensionFilter( ".mot" ));
+		ListRoms.setEntries( RomFiles );
+		ListRoms.setEntryValues( RomFiles );
+	}
+
+	static FilenameFilter getFileExtensionFilter( String extension ){
+		final String _extension = extension;
+		return new FilenameFilter(){
+			@Override
+			public boolean accept( File file, String name ){
+				return name.endsWith( _extension );
+			}
+		};
 	}
 
 	// callback 登録・解除
@@ -121,6 +142,10 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 			EditGymkhaStart.setSummary( s );
 		}
 
+		if( key == null || key.equals( "key_roms" )){
+			ListRoms.setSummary( sharedPreferences.getString( "key_roms", "Not selected" ));
+		}
+
 		if( key == null || key.equals( "key_connection_mode" )){
 			String s = sharedPreferences.getString( "key_connection_mode", "0" );
 
@@ -152,5 +177,9 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 			return;
 		}
 		SetupSummery( sharedPreferences, key );
+		
+		if( key.equals( "key_connection_mode" ) || key.equals( "key_roms" )){
+			setResult( RESULT_RENEW );
+		}
 	}
 }

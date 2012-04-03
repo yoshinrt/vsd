@@ -11,6 +11,8 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -75,7 +77,7 @@ public class Vsdroid extends Activity {
 	int		iMainMode	= MODE_LAPTIME;
 	int		iConnMode	= CONN_MODE_ETHER;
 
-	private static final String VSD_ROOT = "/sdcard/vsd";
+	static final String VSD_ROOT = "/sdcard/vsd";
 	private static final String VSD_LOG  = VSD_ROOT + "/log";
 
 	private static final UUID BT_UUID = UUID.fromString( "00001101-0000-1000-8000-00805F9B34FB" );
@@ -165,6 +167,8 @@ public class Vsdroid extends Activity {
 		OutputStream	OutStream	= null;
 
 		volatile boolean bKillThread = false;
+		
+		Handler	DrawHandler;
 
 		// コンストラクタ - 変数の初期化だけやってる
 		public VsdInterface(){
@@ -201,6 +205,12 @@ public class Vsdroid extends Activity {
 
 			InStream		= null;
 			OutStream		= null;
+			
+			DrawHandler = new Handler(){
+				public void handleMessage( Message Msg ){
+					if( VsdScreen != null ) VsdScreen.Draw();
+				}
+			};
 		}
 
 		// 2byte を 16bit int にアンパックする
@@ -326,6 +336,9 @@ public class Vsdroid extends Activity {
 				// 0xFF が見つかったので，データ変換
 				iTacho		= Unpack();
 				iSpeedRaw	= Unpack();
+				
+				// ここで描画要求
+				DrawHandler.sendEmptyMessage( 0 );
 
 				if( iBufPtr < iEOLPos ){
 					iMileage16	= Unpack();
@@ -521,7 +534,7 @@ public class Vsdroid extends Activity {
 
 				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware" );
 				try{
-					fsFirm = new FileInputStream( VSD_ROOT + "/vsd.mot" );
+					fsFirm = new FileInputStream( VSD_ROOT + "/" + Pref.getString( "key_roms", "vsd.mot" ));
 
 					WaitChar( ':' ); SendCmd( "l\r" );	// FW があったときだけ l コマンド
 
@@ -660,9 +673,7 @@ public class Vsdroid extends Activity {
 				Vsd.SetupMode();
 
 				while( !bKillThread ){
-					if(( iRet = Read()) > 0 ){
-						if( VsdScreen != null ) VsdScreen.Draw();
-					}else if( iRet < 0 ){
+					if(( iRet = Read()) < 0 ){
 						// Read() の IO エラー
 						break BreakThread;
 					}
@@ -1127,17 +1138,15 @@ public class Vsdroid extends Activity {
 		if( bDebug ) Log.d( "VSDroid", "ConfigResult" );
 		bConfigOpened = false;
 
-		int iNewMode = Integer.parseInt( Pref.getString( "key_connection_mode", "0" ));
-
 		if(
 			requestCode == REQUEST_ENABLE_BT ||
-			iNewMode != iConnMode
+			resultCode == Preference.RESULT_RENEW
 		){
 			// BT イネーブルダイアログから帰ってきたか，
 			// 接続モードが変更されたので，
 			// VsdThread を停止後，VsdInterface を再構築する
 			Vsd.KillThread();
-			CreateVsdInterface( iNewMode );
+			CreateVsdInterface( Integer.parseInt( Pref.getString( "key_connection_mode", "0" )));
 		}else if( VsdThread.isAlive()){
 			Vsd.SetupMode();
 

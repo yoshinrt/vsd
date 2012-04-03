@@ -42,6 +42,7 @@ public final class R {
         public static final int pref_ip_addr=0x7f050008;
         public static final int pref_reopen_log=0x7f050002;
         public static final int pref_replay_log=0x7f05000c;
+        public static final int pref_roms=0x7f050020;
         public static final int pref_sectors=0x7f050005;
         public static final int pref_summery_eco_mode=0x7f05000b;
         public static final int pref_summery_status=0x7f050001;

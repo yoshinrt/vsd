@@ -32,4 +32,5 @@
 	<string name="statmsg_bluetooth_server_error">Bluetooth サーバーエラー</string>
 	<string name="statmsg_bluetooth_device_not_selected">Bluetoothデバイスを選択して下さい</string>
 	<string name="statmsg_bluetooth_connection_failed">Bluetooth接続エラー</string>
+	<string name="pref_roms">VSDファームウェア</string>
 </resources>
