@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.preference.*;
 import java.lang.CharSequence;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Set;
 
 public class Preference extends PreferenceActivity implements OnSharedPreferenceChangeListener {
@@ -43,7 +42,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		// BT デバイスリストの作成
 		// http://web.dimension-maker.info/archives/2010/11/22163814.html
 		//////////////////////////////////////////////////////////////////////
-		
+
 		// 項目の取得。 ArrayList と Arrayの変換
 		ArrayList<CharSequence> entriesList = new ArrayList<CharSequence> ();
 		ArrayList<CharSequence> entryValuesList = new ArrayList<CharSequence> ();

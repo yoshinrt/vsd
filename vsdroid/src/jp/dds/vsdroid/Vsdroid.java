@@ -21,7 +21,6 @@ import android.content.SharedPreferences.Editor;
 import android.view.WindowManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 
 import java.net.InetSocketAddress;
@@ -35,52 +34,52 @@ import java.util.*;
 
 public class Vsdroid extends Activity {
 
-	final boolean	bDebug		= false;
+	private static final boolean	bDebug		= false;
 
 	// 定数
-	final int MODE_LAPTIME	= 0;
-	final int MODE_GYMKHANA	= 1;
-	final int MODE_ZERO_FOUR= 2;
-	final int MODE_ZERO_ONE	= 3;
-	final int MODE_NUM		= 4;
+	private static final int MODE_LAPTIME	= 0;
+	private static final int MODE_GYMKHANA	= 1;
+	private static final int MODE_ZERO_FOUR= 2;
+	private static final int MODE_ZERO_ONE	= 3;
+	private static final int MODE_NUM		= 4;
 
-	final int CONN_MODE_ETHER		= 0;
-	final int CONN_MODE_BLUETOOTH	= 1;
-	final int CONN_MODE_LOGREPLAY	= 2;
-	final int CONN_MODE_NONE		= -1;
+	private static final int CONN_MODE_ETHER		= 0;
+	private static final int CONN_MODE_BLUETOOTH	= 1;
+	private static final int CONN_MODE_LOGREPLAY	= 2;
+	private static final int CONN_MODE_NONE		= -1;
 
-	final double H8HZ			= 16030000;
-	final double SERIAL_DIVCNT	= 16;		// シリアル出力を行う周期
-	final double LOG_FREQ		= 16;
+	private static final double H8HZ			= 16030000;
+	private static final double SERIAL_DIVCNT	= 16;		// シリアル出力を行う周期
+	private static final double LOG_FREQ		= 16;
 
 	// スピード * 100/Taco 比
 	// ELISE
 	// ギア比 * マージンじゃなくて，ave( ギアn, ギアn+1 ) に変更
-	final double GEAR_RATIO1 = 1.2381712993947;
-	final double GEAR_RATIO2 = 1.82350889069989;
-	final double GEAR_RATIO3 = 2.37581451065366;
-	final double GEAR_RATIO4 = 2.95059529470571;
+	private static final double GEAR_RATIO1 = 1.2381712993947;
+	private static final double GEAR_RATIO2 = 1.82350889069989;
+	private static final double GEAR_RATIO3 = 2.37581451065366;
+	private static final double GEAR_RATIO4 = 2.95059529470571;
 
 	// たぶん，ホイル一周が30パルス
-	final double PULSE_PER_1KM	= 15473.76689;	// ELISE(CE28N)
+	private static final double PULSE_PER_1KM	= 15473.76689;	// ELISE(CE28N)
 
-	final double ACC_1G_X	= 6762.594337;
-	final double ACC_1G_Y	= 6667.738702;
-	final double ACC_1G_Z	= 6842.591839;
+	private static final double ACC_1G_X	= 6762.594337;
+	private static final double ACC_1G_Y	= 6667.738702;
+	private static final double ACC_1G_Z	= 6842.591839;
 
 	// シフトインジケータの表示
-	final int iTachoBar[] = { 334, 200, 150, 118, 97 };
-	final int iRevLimit = 6500;
+	private static final int iTachoBar[] = { 334, 200, 150, 118, 97 };
+	private static final int iRevLimit = 6500;
 
 	// モード・config
 	int		iMainMode	= MODE_LAPTIME;
 	int		iConnMode	= CONN_MODE_ETHER;
 
-	final String VSD_ROOT = "/sdcard/vsd";
-	final String VSD_LOG  = VSD_ROOT + "/log";
+	private static final String VSD_ROOT = "/sdcard/vsd";
+	private static final String VSD_LOG  = VSD_ROOT + "/log";
 
 	private static final UUID BT_UUID = UUID.fromString( "00001101-0000-1000-8000-00805F9B34FB" );
-	
+
 	private static final int SHOW_CONFIG		= 0;
 	private static final int REQUEST_ENABLE_BT	= 1;
 
@@ -137,33 +136,35 @@ public class Vsdroid extends Activity {
 		double	dGx, dGy;
 		double	dGcx, dGcy;
 		double	dGymkhaStart	= 1;
-		final int	iStartGThrethold	= 500;
 		boolean	bEcoMode		= false;
 
 		LAP_STATE	LapState	= LAP_STATE.NONE;
+		int		iGCaribCnt		= iGCaribCntMax;
 
-		final int	iGCaribCntMax	= 30;
-		int			iGCaribCnt		= iGCaribCntMax;
+		private static final int	iStartGThrethold	= 500;
+		private static final int	iGCaribCntMax		= 30;
 
 		// レコード
 		int 	iLapNum			= 0;
 		int 	iTimeLastRaw	= 0;
 		int 	iTimeBestRaw	= 0;
 
-		public final int iBufSize = 256;
+		private static final int iBufSize = 256;
+
 		byte	Buf[] = new byte[ iBufSize ];
 		int		iBufLen = 0;
 		int		iBufPtr = 0;
 
-		FileWriter		fsLog		= null;
-		OutputStream	fsBinLog	= null;
+		BufferedWriter			fsLog		= null;
+		BufferedOutputStream	fsBinLog	= null;
+
 		boolean			bLogStart	= false;
 		Socket			Sock		= null;
 
 		InputStream		InStream	= null;
 		OutputStream	OutStream	= null;
 
-		boolean bKillThread = false;
+		volatile boolean bKillThread = false;
 
 		// コンストラクタ - 変数の初期化だけやってる
 		public VsdInterface(){
@@ -240,8 +241,8 @@ public class Vsdroid extends Activity {
 
 			// ログファイルオープン
 			try{
-				fsLog    = new FileWriter( VSD_LOG + s + ".log" );
-				//fsBinLog = new FileOutputStream( VSD_LOG + s + "bin.log" );
+				fsLog    = new BufferedWriter( new FileWriter( VSD_LOG + s + ".log" ));
+				//fsBinLog = new BufferedOutputStream( new FileOutputStream( VSD_LOG + s + "bin.log" ));
 			}catch( FileNotFoundException e ){
 				iMessage = R.string.statmsg_log_open_failed;
 				return -1;
@@ -989,10 +990,10 @@ public class Vsdroid extends Activity {
 
 		//*** 描画 ***********************************************************
 
-		final int iScreenWidth = 800;
-		final int iMeterCx = 399;
-		final int iMeterCy = 310;
-		final int iMeterR  = 292;
+		private static final int iScreenWidth = 800;
+		private static final int iMeterCx = 399;
+		private static final int iMeterCy = 310;
+		private static final int iMeterR  = 292;
 
 		boolean bBlink = false;
 
