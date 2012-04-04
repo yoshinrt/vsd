@@ -1043,14 +1043,14 @@ public class Vsdroid extends Activity {
 
 			// スピード
 			paint.setColor( Color.WHITE );
-			s = String.toString( Vsd.iSpeedRaw / 100 );
+			s = Integer.toString( Vsd.iSpeedRaw / 100 );
 			paint.setTextSize( 180 );
 			canvas.drawText( s, ( iScreenWidth - paint.measureText( s )) / 2, 270, paint );
 
 			// ギア
 			paint.setColor( Color.BLACK );
 			paint.setTextSize( 140 );
-			s = String.toString( iGear );
+			s = Integer.toString( iGear );
 			canvas.drawText( s, 692, 132, paint );
 
 			// 時計
