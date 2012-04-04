@@ -121,7 +121,11 @@ public class Vsdroid extends Activity {
 			1000 * ( iTime & 0xFF ) / 256
 		);
 	}
-
+	
+	void Sleep( int ms ){
+		try{ Thread.sleep( ms ); }catch( InterruptedException e ){}
+	}
+	
 	//*** VSD アクセス *******************************************************
 
 	class VsdInterface implements Runnable {
@@ -253,10 +257,7 @@ public class Vsdroid extends Activity {
 			try{
 				fsLog    = new BufferedWriter( new FileWriter( VSD_LOG + s + ".log" ));
 				//fsBinLog = new BufferedOutputStream( new FileOutputStream( VSD_LOG + s + "bin.log" ));
-			}catch( FileNotFoundException e ){
-				iMessage = R.string.statmsg_log_open_failed;
-				return -1;
-			}catch( IOException e ){
+			}catch( Exception e ){
 				iMessage = R.string.statmsg_log_open_failed;
 				return -1;
 			}
@@ -288,7 +289,7 @@ public class Vsdroid extends Activity {
 					Sock = null;
 				}catch( IOException e ){}
 
-				try{ Thread.sleep( 1000 ); }catch( InterruptedException e ){}
+				Sleep( 1000 );
 			}
 			iMessage = R.string.statmsg_socket_open_failed;
 			return -1;
@@ -481,8 +482,7 @@ public class Vsdroid extends Activity {
 					Sock.close();
 					Sock = null;
 				}
-			}catch( IOException e ){
-			}
+			}catch( IOException e ){}
 			return 0;
 		}
 
@@ -514,7 +514,7 @@ public class Vsdroid extends Activity {
 						}
 					}
 				}else{
-					try{ Thread.sleep( 30 ); }catch( InterruptedException e ){}
+					Sleep( 30 );
 				}
 			}
 			return -1;
@@ -555,8 +555,8 @@ public class Vsdroid extends Activity {
 				WaitChar( ':' ); SendCmd( "g\r" );
 
 				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending log output request" );
-				try{ Thread.sleep( 100 ); }catch( InterruptedException e ){}
-				// 1S: Serial out on  s: speed  1a: auto mode
+				Sleep( 100 );
+				// 1S: Serial output ON  s: speed  1a: auto mode
 				SendCmd( "F15EF117*1Ss1a" );
 
 				// 最初の 0xFF までスキップ
@@ -573,7 +573,7 @@ public class Vsdroid extends Activity {
 							}
 						}
 					}else{
-						try{ Thread.sleep( 30 ); }catch( InterruptedException e ){}
+						Sleep( 30 );
 					}
 				}
 
@@ -654,34 +654,21 @@ public class Vsdroid extends Activity {
 		//*** データ処理スレッド *********************************************
 
 		public void run(){
-			int iRet;
 			bKillThread = false;
 
-		  BreakThread:
-			while( !bKillThread ){
-				if( bDebug ) Log.d( "VSDroid", "run_loop()" );
+			if( bDebug ) Log.d( "VSDroid", "run_loop()" );
 
-				if(
-					Vsd.Open()			< 0 ||
-					Vsd.LoadFirmWare()	< 0 ||
-					Vsd.OpenLog()		< 0
-				){
-					// エラーが起きたので，config を出して thread 終了
-					break BreakThread;
-				}
-
-				Vsd.SetupMode();
-
-				while( !bKillThread ){
-					if(( iRet = Read()) < 0 ){
-						// Read() の IO エラー
-						break BreakThread;
-					}
-				}
+			if(
+				Open()			>= 0 &&
+				LoadFirmWare()	>= 0 &&
+				OpenLog()		>= 0
+			){
+				SetupMode();
+				while( !bKillThread && Read() >= 0 );
 			}
 
-			Vsd.Close();
-			Vsd.CloseLog();
+			Close();
+			CloseLog();
 			if( !bKillThread ) Config();
 
 			bKillThread	= false;
@@ -692,6 +679,7 @@ public class Vsdroid extends Activity {
 			bKillThread = true;
 			try{
 				while( bKillThread && VsdThread != null && VsdThread.isAlive()){
+					Close();
 					Thread.sleep( 100 );
 				}
 			}catch( InterruptedException e ){}
@@ -758,22 +746,18 @@ public class Vsdroid extends Activity {
 				return -1;
 			}
 
-			while( !bKillThread ){
-				try{
-					// ソケットの作成 12秒でタイムアウトらしい
-					if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connecting..." );
-					BTSock.connect();
-					InStream	= BTSock.getInputStream();
-					OutStream	= BTSock.getOutputStream();
-					if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connected" );
-					return 0;
-				}catch( SocketTimeoutException e ){
-					if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:timeout" );
-				}catch( IOException e ){
-					if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:IOException" );
-				}
-
-				try{ Thread.sleep( 1000 ); }catch( InterruptedException e ){}
+			try{
+				// ソケットの作成 12秒でタイムアウトらしい
+				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connecting..." );
+				BTSock.connect();
+				InStream	= BTSock.getInputStream();
+				OutStream	= BTSock.getOutputStream();
+				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connected" );
+				return 0;
+			}catch( SocketTimeoutException e ){
+				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:timeout" );
+			}catch( IOException e ){
+				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:IOException" );
 			}
 
 			if( BTSock != null ) try{
@@ -913,11 +897,7 @@ public class Vsdroid extends Activity {
 				if( dOutputWaitTime == 0 ) dOutputWaitTime = NowMs;
 				dOutputWaitTime += 1000.0 / 16;
 				i = ( int )( dOutputWaitTime - NowMs );
-				if( i > 0 ){
-					try{
-						Thread.sleep( i );
-					}catch( InterruptedException e ){}
-				}
+				if( i > 0 ) Sleep( i );
 
 			}catch( IOException e ){
 				iMessage = R.string.statmsg_log_replay_failed;
@@ -1063,14 +1043,14 @@ public class Vsdroid extends Activity {
 
 			// スピード
 			paint.setColor( Color.WHITE );
-			s = String.format( "%d", Vsd.iSpeedRaw / 100 );
+			s = String.toString( Vsd.iSpeedRaw / 100 );
 			paint.setTextSize( 180 );
 			canvas.drawText( s, ( iScreenWidth - paint.measureText( s )) / 2, 270, paint );
 
 			// ギア
 			paint.setColor( Color.BLACK );
 			paint.setTextSize( 140 );
-			s = String.format( "%d", iGear );
+			s = String.toString( iGear );
 			canvas.drawText( s, 692, 132, paint );
 
 			// 時計
