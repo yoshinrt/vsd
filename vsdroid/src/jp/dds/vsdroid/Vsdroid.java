@@ -41,18 +41,17 @@ public class Vsdroid extends Activity {
 	// 定数
 	private static final int MODE_LAPTIME	= 0;
 	private static final int MODE_GYMKHANA	= 1;
-	private static final int MODE_ZERO_FOUR= 2;
+	private static final int MODE_ZERO_FOUR	= 2;
 	private static final int MODE_ZERO_ONE	= 3;
 	private static final int MODE_NUM		= 4;
 
 	private static final int CONN_MODE_ETHER		= 0;
 	private static final int CONN_MODE_BLUETOOTH	= 1;
 	private static final int CONN_MODE_LOGREPLAY	= 2;
-	private static final int CONN_MODE_NONE		= -1;
 
-	private static final double H8HZ			= 16030000;
-	private static final double SERIAL_DIVCNT	= 16;		// シリアル出力を行う周期
-	private static final double LOG_FREQ		= 16;
+	//private static final double H8HZ			= 16030000;
+	//private static final double SERIAL_DIVCNT	= 16;		// シリアル出力を行う周期
+	//private static final double LOG_FREQ		= 16;
 
 	// スピード * 100/Taco 比
 	// ELISE
@@ -65,7 +64,7 @@ public class Vsdroid extends Activity {
 	// たぶん，ホイル一周が30パルス
 	private static final double PULSE_PER_1KM	= 15473.76689;	// ELISE(CE28N)
 
-	private static final double ACC_1G_X	= 6762.594337;
+	//private static final double ACC_1G_X	= 6762.594337;
 	private static final double ACC_1G_Y	= 6667.738702;
 	private static final double ACC_1G_Z	= 6842.591839;
 
@@ -121,11 +120,11 @@ public class Vsdroid extends Activity {
 			1000 * ( iTime & 0xFF ) / 256
 		);
 	}
-	
+
 	void Sleep( int ms ){
 		try{ Thread.sleep( ms ); }catch( InterruptedException e ){}
 	}
-	
+
 	//*** VSD アクセス *******************************************************
 
 	class VsdInterface implements Runnable {
@@ -171,7 +170,7 @@ public class Vsdroid extends Activity {
 		OutputStream	OutStream	= null;
 
 		volatile boolean bKillThread = false;
-		
+
 		Handler	DrawHandler;
 
 		// コンストラクタ - 変数の初期化だけやってる
@@ -209,7 +208,7 @@ public class Vsdroid extends Activity {
 
 			InStream		= null;
 			OutStream		= null;
-			
+
 			DrawHandler = new Handler(){
 				public void handleMessage( Message Msg ){
 					if( VsdScreen != null ) VsdScreen.Draw();
@@ -337,7 +336,7 @@ public class Vsdroid extends Activity {
 				// 0xFF が見つかったので，データ変換
 				iTacho		= Unpack();
 				iSpeedRaw	= Unpack();
-				
+
 				// ここで描画要求
 				DrawHandler.sendEmptyMessage( 0 );
 
