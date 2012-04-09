@@ -3,6 +3,12 @@
 use Socket;
 use Time::HiRes qw(sleep);
 
+if( $ARGV[ 0 ] =~ /\.gz$/ ){
+	open( fpIn, "gunzip -c $ARGV[ 0 ] |" );
+}else{
+	open( fpIn, "< $ARGV[ 0 ]" );
+}
+
 ### サーバ
 
 # 1. 受付用ソケットの作成
@@ -48,7 +54,7 @@ $ACC_1G_Z	= 6842.591839;
 $iCnt = 0;
 $PrevTime = 0;
 
-while( <> ){
+while( <fpIn> ){
 	
 	s/[\x0D\x0A]//g;
 	@_ = split( /\s+/, $_ );
