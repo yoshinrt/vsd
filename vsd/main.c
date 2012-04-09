@@ -58,8 +58,8 @@ size_t sci_write(UB* data, size_t n)
 }
 
 #undef sci_int_handler
-void sci_int_handler(VP_INT exinf)
-{
+#pragma interrupt( sci_int_handler )
+void sci_int_handler( void ){
 	/* 送信データエンプティ */
 	if(SCI3.SSR.BIT.TDRE){
 		/* バッファが空の場合は送信終了 */
@@ -83,13 +83,6 @@ void sci_int_handler(VP_INT exinf)
 //		if(error_handler)error_handler();	// ★RAM 化の際の暫定，後でもどす
 		SCI3.SSR.BYTE &= ~0x38;
 	}
-}
-
-// SCI
-#undef INT_SCI3
-#pragma interrupt( INT_SCI3 )
-/*__interrupt( vect = 23 )*/ void INT_SCI3( void ){
-	sci_int_handler( 0 );
 }
 
 /*** 割り込みベクタテーブル *************************************************/
@@ -119,7 +112,7 @@ void * const VectorTable2[] = {
 	( void *)0x100,	// 20
 	int_timer_w,	// 21
 	int_timer_v_IR,	// 22
-	INT_SCI3,		// 23
+	sci_int_handler,// 23
 	( void *)0x100,	// 24
 	( void *)0x100,	// 25
 	( void *)0x100,	// 26
