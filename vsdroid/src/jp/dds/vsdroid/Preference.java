@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.lang.CharSequence;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Set;
 
 public class Preference extends PreferenceActivity implements OnSharedPreferenceChangeListener {
@@ -68,7 +69,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 
 		// 各配列を再度当てはめる。
 		CharSequence entries[]		= entriesList.toArray( new CharSequence[]{} );
-
+		Arrays.sort( entries );
 		ListBTDevices.setEntries( entries );
 		ListBTDevices.setEntryValues( entries );
 
@@ -76,6 +77,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 
 		File file = new File( Vsdroid.VSD_ROOT );
 		String[] RomFiles = file.list( getFileExtensionFilter( ".mot" ));
+		Arrays.sort( RomFiles );
 		ListRoms.setEntries( RomFiles );
 		ListRoms.setEntryValues( RomFiles );
 	}
