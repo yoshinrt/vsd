@@ -17,10 +17,10 @@
 #include "led_charcode.h"
 
 #ifdef MONITOR_ROM
- #include "main2.c"
+	#include "main2.c"
 #else
- #include "rom_entry.h"
- //#define MINIMIZE	// 最小 FIRMWARE
+	#include "rom_entry.h"
+	//#define MINIMIZE	// 最小 FIRMWARE
 #endif
 
 #ifndef MINIMIZE
@@ -57,9 +57,9 @@ size_t sci_write(UB* data, size_t n)
 	return data - data_begin;
 }
 
-#undef sci_int_handler
-#pragma interrupt( sci_int_handler )
-void sci_int_handler( void ){
+// ★ROM 化の際，関数名修正
+#pragma interrupt( sci_int_handler_new )
+void sci_int_handler_new( void ){
 	/* 送信データエンプティ */
 	if(SCI3.SSR.BIT.TDRE){
 		/* バッファが空の場合は送信終了 */
@@ -112,7 +112,7 @@ void * const VectorTable2[] = {
 	( void *)0x100,	// 20
 	int_timer_w,	// 21
 	int_timer_v_IR,	// 22
-	sci_int_handler,// 23
+	sci_int_handler_new,// 23
 	( void *)0x100,	// 24
 	( void *)0x100,	// 25
 	( void *)0x100,	// 26
@@ -183,14 +183,19 @@ void ProcessUIO( void ){
 	__entry( vect = 0 )
 #endif
 int main( void ){
+	UCHAR	bProcessUIOFlag = 0;
 	
 	#ifdef MONITOR_ROM
 		if( !IO.PDR5.BIT.B4 ) IR_Flasher();
 	#else
+		// RAM 実行のメモリ初期化
 		InitSector( __sectop( "B" ), __secend( "B" ));
 	#endif
 	
 	InitMain();
+	
+	// ★
+	g_uSpeedCalcConst = ( UINT )( 3600.0 * 100.0 / PULSE_PER_1KM * ( 1 << 11 ));
 	VectorTblPtr = ( void *)VectorTable2;
 	
 	// ★ SCI の初期値を変更する
@@ -215,7 +220,11 @@ int main( void ){
 		
 		ComputeMeter();			// speed, tacho, gear 計算
 		DispLED_Carib();		// LED 表示データ生成
-		ProcessUIO();
+		
+		if( bProcessUIOFlag = ~bProcessUIOFlag ){
+			ProcessUIO();		// SIO, sw 等の UserIO 処理
+		}
+		
 		ProcessAutoMode();		// オートモード
 	}
 }

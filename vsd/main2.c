@@ -453,6 +453,7 @@ INLINE void ComputeMeterTacho( void ){
 	}
 }
 
+// ★上に持っていく
 UINT g_uSpeedCalcConst = ( UINT )( 3600.0 * 100.0 / PULSE_PER_1KM * ( 1 << 11 ));
 
 INLINE void ComputeMeterSpeed( void ){

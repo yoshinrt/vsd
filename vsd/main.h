@@ -41,8 +41,8 @@
 
 // たぶん，ホイル一周が30パルス
 // ★これ使っているところを変数で可変にし，シリアル経由で設定可にする必要がある
-//#define PULSE_PER_1KM	(( double )14958.80127 )	// ノーマル
-#define PULSE_PER_1KM	(( double )15473.76689 )	// CE28N
+#define PULSE_PER_1KM_NORMAL	(( double )14958.80127 )	// ノーマル
+#define PULSE_PER_1KM			(( double )15473.76689 )	// CE28N
 
 #define ITOA_RADIX_BIT	7
 #define ITOA_DIGIT_NUM	(( 32 + ITOA_RADIX_BIT - 1 ) / ITOA_RADIX_BIT )
