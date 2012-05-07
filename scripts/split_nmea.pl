@@ -98,10 +98,10 @@ for( $i = 0; $i <= $#Data; ++$i ){
 		open( fpOut, "| gzip -9 > $FileName.gz" );
 		#open( fpOut, "> $FileName" );
 		$bOutput = 0;
+		
+		$Start -= $TimeTh;
+		$End   += $TimeTh;
 	}
-	
-	$Start -= $TimeTh;
-	$End   += $TimeTh;
 	
 	if( $Start <= ${ $_ }[ 0 ] && ${ $_ }[ 0 ] <= $End ){
 		# 分割した nmea の先頭に TimeTh 分のダミーデータをつける
