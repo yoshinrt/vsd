@@ -95,7 +95,7 @@ for( $i = 0; $i <= $#Data; ++$i ){
 			$Year, $Mon, $Day, $Hour, $Min, $Sec
 		);
 		
-		open( fpOut, "| gzip > $FileName.gz" );
+		open( fpOut, "| gzip -9 > $FileName.gz" );
 		#open( fpOut, "> $FileName" );
 		$bOutput = 0;
 	}
