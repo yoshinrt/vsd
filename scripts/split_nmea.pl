@@ -66,8 +66,8 @@ for( $i = 0; $i <= $#Data; ++$i ){
 		# 分割した nmea の最後に TimeTh 分のダミーデータをつける
 		AddDummyRMC( ${ $Data[ $i - 1 ] }[ 1 ], $End ) if( $End != 0 );
 		
-		$Start = shift( @SplitTbl ) - $TimeTh;
-		$End   = shift( @SplitTbl ) + $TimeTh;
+		$Start = shift( @SplitTbl );
+		$End   = shift( @SplitTbl );
 		
 		printf( "%s - %s\n",
 			GetDate( $Start + 9 * 3600 ),
@@ -99,6 +99,9 @@ for( $i = 0; $i <= $#Data; ++$i ){
 		#open( fpOut, "> $FileName" );
 		$bOutput = 0;
 	}
+	
+	$Start -= $TimeTh;
+	$End   += $TimeTh;
 	
 	if( $Start <= ${ $_ }[ 0 ] && ${ $_ }[ 0 ] <= $End ){
 		# 分割した nmea の先頭に TimeTh 分のダミーデータをつける
