@@ -4,7 +4,7 @@
     <LocalDebuggerCommand>D:\Program Files\AVIUTL\aviutl.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommandArguments>D:\Video\Car\ELISE\20090123_SuzukaWest\SANY0002.MP4</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>D:\Video\Car\ELISE\20120514_suzuka\FILE0004.mp4</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerWorkingDirectory>D:\Program Files\AVIUTL\</LocalDebuggerWorkingDirectory>
@@ -14,7 +14,7 @@
     <LocalDebuggerCommand>D:\Program Files\AVIUTL\aviutl.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGPSonly|Win32'">
-    <LocalDebuggerCommandArguments>D:\Video\Car\ELISE\20090123_SuzukaWest\SANY0002.MP4</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>D:\Video\Car\ELISE\20120514_suzuka\FILE0004.mp4</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGPSonly|Win32'">
     <LocalDebuggerWorkingDirectory>D:\Program Files\AVIUTL\</LocalDebuggerWorkingDirectory>
@@ -24,7 +24,7 @@
     <LocalDebuggerCommand>D:\Program Files\AVIUTL\aviutl.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerCommandArguments>D:\Video\Car\ELISE\20090123_SuzukaWest\SANY0002.MP4</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>D:\Video\Car\ELISE\20120514_suzuka\FILE0004.mp4</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerWorkingDirectory>D:\Program Files\AVIUTL\</LocalDebuggerWorkingDirectory>

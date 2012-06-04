@@ -618,6 +618,37 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 		}
 	}
 	
+	/*** dp3x ***************************************************************/
+	
+	if( IsExt(( char *)szFileName, "dp3x" )){
+		
+		// 原点取得
+		gzread( fp, szBuf, 0x78 );
+		dLati0 = *( int *)( szBuf + 0x54 ) / 460800.0;
+		dLong0 = *( int *)( szBuf + 0x50 ) / 460800.0;
+		dTime = 0;
+		
+		while( gzread( fp, szBuf, 18 )){
+			
+			dLati = *( short int *)( szBuf + 0x2 ) / 460800.0 + dLati0;
+			dLong = *( short int *)( szBuf + 0x0 ) / 460800.0 + dLong0;
+			
+			// 単位を補正
+			// 緯度・経度→メートル
+			GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * LNG_M_DEG * cos( dLati * ToRAD ));
+			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * LAT_M_DEG );
+			
+			// 速度・向き→ベクトル座標
+			GPSLog[ uGPSCnt ].fSpeed	= ( float )( *( short int *)( szBuf + 0x4 ) / 10.0 );
+			
+			GPSLog[ uGPSCnt ].fBearing	= FLT_MAX;
+			GPSLog[ uGPSCnt ].fTime 	= ( float )dTime;
+			
+			uGPSCnt++;
+			dTime += 0.2;
+		}
+	}
+	
 	/*** nmea ***************************************************************/
 	
 	else while( gzgets( fp, szBuf, BUF_SIZE ) != Z_NULL ){
@@ -723,13 +754,15 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	
 	gzclose( fp );
 	
+	/************************************************************************/
+	
 	// アップコンバート用バッファ確保・初期化
 	m_GPSLog = new CVsdLog;
 	m_GPSLog->GPSLogUpConvert( GPSLog, uGPSCnt, TRUE );
 	m_GPSLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	
 	DebugCmd( {
-		FILE *fpp = fopen( "G:\\DDS\\vsd\\vsd_filter\\z_gps_raw.txt", "w" );
+		FILE *fpp = fopen( "C:\\DDS\\vsd\\vsd_filter\\z_gps_raw.txt", "w" );
 		for( u = 0; u < uGPSCnt; ++u ){
 			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 				GPSLog[ u ].fX,
@@ -747,7 +780,7 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	delete [] GPSLog;
 	
 	DebugCmd( {
-		FILE *fpp = fopen( "G:\\DDS\\vsd\\vsd_filter\\z_upcon_gps.txt", "w" );
+		FILE *fpp = fopen( "C:\\DDS\\vsd\\vsd_filter\\z_upcon_gps.txt", "w" );
 		for( u = 0; u < ( UINT )m_GPSLog->m_iCnt; ++u ){
 			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 				m_GPSLog->m_Log[ u ].fSpeed,

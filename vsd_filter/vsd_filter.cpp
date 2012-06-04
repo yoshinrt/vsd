@@ -29,7 +29,7 @@
 #endif
 
 #define	FILE_LOG_EXT	"log file (*.log)\0*.log; *.gz\0AllFile (*.*)\0*.*\0"
-#define	FILE_GPS_EXT	"GPS file (*.nme* *.dp3)\0*.nme*; *.dp3; *.gz\0AllFile (*.*)\0*.*\0"
+#define	FILE_GPS_EXT	"GPS file (*.nme* *.dp3*)\0*.nme*; *.dp3*; *.gz\0AllFile (*.*)\0*.*\0"
 #define	FILE_CFG_EXT	"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 
 /*** new type ***************************************************************/
