@@ -210,6 +210,10 @@ class CVsdFilter {
 	BOOL ConfigLoad( const char *szFileName );
 	BOOL ParseMarkStr( const char *szMark );
 	BOOL GPSLogLoad( const char *szFileName );
+	double GPSLogGetLength(
+		double dLong0, double dLati0,
+		double dLong1, double dLati1
+	);
 	
 	BOOL ReadLog( const char *szFileName );
 	

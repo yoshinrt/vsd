@@ -30,8 +30,6 @@
 
 /*** macros *****************************************************************/
 
-#define LAT_M_DEG		110949.769	// 35-36N   の距離 @ 135E
-#define LNG_M_DEG		111441.812	// 135-136E の距離 @ 35N / cos(35度)
 #define INVALID_POS_I	0x7FFFFFFF
 #define MAX_POLY_HEIGHT	2000		// polygon 用ライン数
 
@@ -527,6 +525,25 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 
 /*** GPS ログリード ********************************************************/
 
+double CVsdFilter::GPSLogGetLength(
+	double dLong0, double dLati0,
+	double dLong1, double dLati1
+){
+	// ヒュベニの公式 http://yamadarake.jp/trdi/report000001.html
+	const double a	= 6378137.000;
+	const double b	= 6356752.314245;
+	const double e2	= ( a * a - b * b ) / ( a * a );
+	
+	double dx	= ( dLong1 - dLong0 ) * ToRAD;
+	double dy	= ( dLati1 - dLati0 ) * ToRAD;
+	double uy	= ( dLati0 + dLati1 ) / 2 * ToRAD;
+	double W	= sqrt( 1 - e2 * sin( uy ) * sin( uy ));
+	double M	= a * ( 1 - e2 ) / pow( W, 3 );
+	double N	= a / W;
+	
+	return	sqrt( dy * dy * M * M + pow( dx * N * cos( uy ), 2 ));
+}
+
 BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	
 	UINT	uGPSCnt = 0;
@@ -534,6 +551,7 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	
 	double	dLati, dLati0 = 0;
 	double	dLong, dLong0 = 0;
+	double	dLati2Meter, dLong2Meter;
 	double	dSpeed;
 	double	dBearing;
 	double	dTime, dTime0;
@@ -579,10 +597,13 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 			dLati = BigEndianI( 8 ) / 460800.0;
 			dLong = BigEndianI( 4 ) / 460800.0;
 			
-			if( dLati0 == 0 ){
+			if( uGPSCnt == 0 ){
 				dLati0 = dLati;
 				dLong0 = dLong;
 				dTime0 = dTime;
+				
+				dLong2Meter = GPSLogGetLength( dLong, dLati, dLong + 1.0 / 3600, dLati ) * 3600;
+				dLati2Meter = GPSLogGetLength( dLong, dLati, dLong, dLati + 1.0 / 3600 ) * 3600;
 			}
 			
 			if( dTime < dTime0 ) dTime += 24 * 3600;
@@ -590,8 +611,8 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 			
 			// 単位を補正
 			// 緯度・経度→メートル
-			GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * LNG_M_DEG * cos( dLati * ToRAD ));
-			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * LAT_M_DEG );
+			GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * dLong2Meter );
+			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * dLati2Meter );
 			
 			// 速度・向き→ベクトル座標
 			GPSLog[ uGPSCnt ].fSpeed	= ( float )( BigEndianS( 12 ) / 10.0 );
@@ -633,10 +654,15 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 			dLati = *( short int *)( szBuf + 0x2 ) / 460800.0 + dLati0;
 			dLong = *( short int *)( szBuf + 0x0 ) / 460800.0 + dLong0;
 			
+			if( uGPSCnt == 0 ){
+				dLong2Meter = GPSLogGetLength( dLong, dLati, dLong + 1.0 / 3600, dLati ) * 3600;
+				dLati2Meter = GPSLogGetLength( dLong, dLati, dLong, dLati + 1.0 / 3600 ) * 3600;
+			}
+			
 			// 単位を補正
 			// 緯度・経度→メートル
-			GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * LNG_M_DEG * cos( dLati * ToRAD ));
-			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * LAT_M_DEG );
+			GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * dLong2Meter );
+			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * dLati2Meter );
 			
 			// 速度・向き→ベクトル座標
 			GPSLog[ uGPSCnt ].fSpeed	= ( float )( *( short int *)( szBuf + 0x4 ) / 10.0 );
@@ -683,11 +709,14 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 		// 4916.452653 → 49度16.45分
 		dLati =	( int )dLati / 100 + fmod( dLati, 100 ) / 60;
 		dLong =	( int )dLong / 100 + fmod( dLong, 100 ) / 60;
-			
-		if( dLati0 == 0 ){
+		
+		if( uGPSCnt == 0 ){
 			dLati0 = dLati;
 			dLong0 = dLong;
 			dTime0 = dTime;
+			
+			dLong2Meter = GPSLogGetLength( dLong, dLati, dLong + 1.0 / 3600, dLati ) * 3600;
+			dLati2Meter = GPSLogGetLength( dLong, dLati, dLong, dLati + 1.0 / 3600 ) * 3600;
 		}
 		
 		if( dTime < dTime0 ) dTime += 24 * 3600;
@@ -695,8 +724,8 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 		
 		// 単位を補正
 		// 緯度・経度→メートル
-		GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * LAT_M_DEG * cos( dLati * ToRAD ));
-		GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * LNG_M_DEG );
+		GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * dLong2Meter );
+		GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * dLati2Meter );
 		
 		// 速度・向き→ベクトル座標
 		GPSLog[ uGPSCnt ].fSpeed	= uParamCnt < 6 ? FLT_MAX : ( float )( dSpeed * 1.852 ); // knot/h → km/h
@@ -841,6 +870,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	double	dLong;
 	double	dLati0 = 0;
 	double	dLong0 = 0;
+	double	dLati2Meter, dLong2Meter;
 	double	dSpeed;
 	double	dBearing;
 	
@@ -879,15 +909,18 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 		if(( p = strstr( szBuf, "GPS" )) != NULL ){ // GPS記録を見つけた
 			sscanf( p, "GPS%lg%lg%lg%lg", &dLati, &dLong, &dSpeed, &dBearing );
 			
-			if( dLati0 == 0 ){
+			if( uGPSCnt == 0 ){
 				dLati0 = dLati;
 				dLong0 = dLong;
+				
+				dLong2Meter = GPSLogGetLength( dLong, dLati, dLong + 1.0 / 3600, dLati ) * 3600;
+				dLati2Meter = GPSLogGetLength( dLong, dLati, dLong, dLati + 1.0 / 3600 ) * 3600;
 			}
 			
 			// 単位を補正
 			// 緯度・経度→メートル
-			GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * LAT_M_DEG * cos( dLati * ToRAD ));
-			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * LNG_M_DEG );
+			GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * dLong2Meter );
+			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * dLati2Meter );
 			GPSLog[ uGPSCnt ].fSpeed	= ( float )dSpeed;
 			GPSLog[ uGPSCnt ].fBearing	= ( float )dBearing;
 			
