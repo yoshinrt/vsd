@@ -265,12 +265,22 @@ void CVsdFilter::DrawCircle( int x, int y, int r, const PIXEL_YCA &yc, UINT uFla
 	if( uFlag & IMG_FILL ) PolygonDraw( yc, uFlag );
 }
 
-void CVsdFilter::DrawCircle( int x, int y, int r, int a, int b, const PIXEL_YCA &yc, UINT uFlag ){
-	int		i = ( int )(( double )r / sqrt(( double )a ));
-	int		j = 0;
-	double	d = sqrt(( double )a ) * ( double )r;
-	int		f = ( int )( -2.0 * d ) + a + 2 * b;
-	int		h = ( int )( -4.0 * d ) + 2 * a + b;
+// http://fussy.web.fc2.com/algo/algo2-2.htm
+// の，a = r / A, b = r / B と置いて両辺に ( A * B / r )^2 をかける
+void CVsdFilter::DrawCircle( int x, int y, int a, int b, const PIXEL_YCA &yc, UINT uFlag ){
+	
+	if( a == b ){
+		DrawCircle( x, y, a, yc, uFlag );
+		return;
+	}
+	
+	int		i	= a;
+	int		j	= 0;
+	int		a2	= b * b;
+	int		b2	= a * a;
+	int		d	= a * b * b;
+	int		f	= -2 * d + a2 + 2 * b2;
+	int		h	= -4 * d + 2 * a2 + b2;
 	
 	// Polygon クリア
 	if( uFlag & IMG_FILL ){
@@ -286,13 +296,114 @@ void CVsdFilter::DrawCircle( int x, int y, int r, int a, int b, const PIXEL_YCA 
 		
 		if( f >= 0 ){
 			--i;
-			f -= 4 * a * i;
-			h -= 4 * a * i - 2 * a;
+			f -= 4 * a2 * i;
+			h -= 4 * a2 * i - 2 * a2;
 		}
 		if( h < 0 ){
 			++j;
-			f += 4 * b * j + 2 * b;
-			h += 4 * b * j;
+			f += 4 * b2 * j + 2 * b2;
+			h += 4 * b2 * j;
+		}
+	}
+	
+	// Polygon 合成
+	if( uFlag & IMG_FILL ) PolygonDraw( yc, uFlag );
+}
+
+// iStart, iEnd は 1周が 0x10000
+#define DRAWARC_ROUND 0x10000
+void CVsdFilter::DrawArc(
+	int x, int y,
+	int a, int b,
+	int iStart, int iEnd,
+	const PIXEL_YCA &yc, UINT uFlag
+){
+	
+	int		i	= a;
+	int		j	= 0;
+	int		a2	= b * b;
+	int		b2	= a * a;
+	int		d	= a * b * b;
+	int		f	= -2 * d + a2 + 2 * b2;
+	int		h	= -4 * d + 2 * a2 + b2;
+	
+	int		iStX = ( int )( 1024 * a * abs( cos( 2 * M_PI / DRAWARC_ROUND * iStart )));
+	int		iStY = ( int )( 1024 * b * abs( sin( 2 * M_PI / DRAWARC_ROUND * iStart )));
+	int		iEdX = ( int )( 1024 * a * abs( cos( 2 * M_PI / DRAWARC_ROUND * iEnd )));
+	int		iEdY = ( int )( 1024 * b * abs( sin( 2 * M_PI / DRAWARC_ROUND * iEnd )));
+	
+	int		iStArea	= iStart / ( DRAWARC_ROUND / 4 );
+	int		iEdArea	= iEnd   / ( DRAWARC_ROUND / 4 );
+	
+	// Polygon クリア
+	if( uFlag & IMG_FILL ){
+		PolygonClear();
+		uFlag |= IMG_POLYGON;
+	}
+	
+	int	iAreaGeS, iAreaGeE, iAreaLeS, iAreaLeE;
+	
+	while( i >= 0 ){
+		// (i,j) が iStar / iEnd の角度よりも大きい / 小さい を計算しておく
+		iAreaGeS = iStX * j >= iStY * i;
+		iAreaGeE = iEdX * j >= iEdY * i;
+		iAreaLeS = iStX * j <= iStY * i;
+		iAreaLeE = iEdX * j <= iEdY * i;
+		
+		// iStart,iEnd が同一 π/2 領域にあるときに，iStart < iEnd かどうかが問題になる．
+		if( iStart < iEnd ){
+			// st && ed
+			if(
+				( iStArea == 0 ? iAreaGeS : ( iStArea < 0 )) &&
+				( iEdArea == 0 ? iAreaLeE : ( iEdArea > 0 ))
+			) PutPixel( x + i, y + j, yc, uFlag );
+			
+			if(
+				( iStArea == 1 ? iAreaLeS : ( iStArea < 1 )) &&
+				( iEdArea == 1 ? iAreaGeE : ( iEdArea > 1 ))
+			) PutPixel( x - i, y + j, yc, uFlag );
+			
+			if(
+				( iStArea == 2 ? iAreaGeS : ( iStArea < 2 )) &&
+				( iEdArea == 2 ? iAreaLeE : ( iEdArea > 2 ))
+			) PutPixel( x - i, y - j, yc, uFlag );
+			
+			if(
+				( iStArea == 3 ? iAreaLeS : ( iStArea < 3 )) &&
+				( iEdArea == 3 ? iAreaGeE : ( iEdArea > 3 ))
+			) PutPixel( x + i, y - j, yc, uFlag );
+		}else{
+			// st || ed
+			if(
+				( iStArea == 0 ? iAreaGeS : ( iStArea < 0 )) ||
+				( iEdArea == 0 ? iAreaLeE : ( iEdArea > 0 ))
+			) PutPixel( x + i, y + j, yc, uFlag );
+			
+			if(
+				( iStArea == 1 ? iAreaLeS : ( iStArea < 1 )) ||
+				( iEdArea == 1 ? iAreaGeE : ( iEdArea > 1 ))
+			) PutPixel( x - i, y + j, yc, uFlag );
+			
+			if(
+				( iStArea == 2 ? iAreaGeS : ( iStArea < 2 )) ||
+				( iEdArea == 2 ? iAreaLeE : ( iEdArea > 2 ))
+			) PutPixel( x - i, y - j, yc, uFlag );
+			
+			if(
+				( iStArea == 3 ? iAreaLeS : ( iStArea < 3 )) ||
+				( iEdArea == 3 ? iAreaGeE : ( iEdArea > 3 ))
+			) PutPixel( x + i, y - j, yc, uFlag );
+		}
+		
+		if( f >= 0 ){
+			--i;
+			f -= 4 * a2 * i;
+			h -= 4 * a2 * i - 2 * a2;
+		}
+		if( h < 0 ){
+			++j;
+			f += 4 * b2 * j + 2 * b2;
+			h += 4 * b2 * j;
 		}
 	}
 	
@@ -1593,19 +1704,14 @@ BOOL CVsdFilter::DrawVSD( void ){
 	if( !m_VsdLog && !m_GPSLog ) return TRUE;
 	
 	/*** メーターパネル ***/
-	#ifdef GPS_ONLY
-		DrawCircle(
-			iMeterCx, iMeterCy, iMeterR * 1000,
-			( 1000 * 1000 / Aspect ) * ( 1000 * 1000 / Aspect ),
-			1000 * 1000,
-			COLOR_PANEL, CVsdFilter::IMG_FILL
-		);
-	#else
-		DrawCircle(
-			iMeterCx, iMeterCy, iMeterR,
-			COLOR_PANEL, CVsdFilter::IMG_FILL
-		);
-	#endif
+	DrawCircle(
+		iMeterCx, iMeterCy,
+		#ifdef GPS_ONLY
+			iMeterR * Aspect / 1000,
+		#endif
+		iMeterR,
+		COLOR_PANEL, CVsdFilter::IMG_FILL
+	);
 	
 	/*
 	DrawCircle(
@@ -1883,6 +1989,11 @@ BOOL CVsdFilter::DrawVSD( void ){
 				( int )( sin( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
 				LINE_WIDTH, COLOR_NEEDLE, 0
 			);
+			
+			DrawArc(
+				iMeterCx, iMeterCy,
+				iMeterR, iMeterR,
+				0x6000, ( int )( dTachoNeedle / 2 / M_PI * DRAWARC_ROUND ) & 0xFFFF, yc_cyan, 0 );
 		}
 	}else{
 		if( m_GPSLog->IsDataExist()){
