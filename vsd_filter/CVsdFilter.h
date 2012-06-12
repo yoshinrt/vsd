@@ -166,6 +166,13 @@ class CVsdFilter {
 		int iStart, int iEnd,
 		const PIXEL_YCA &yc, UINT uFlag
 	);
+	void DrawArc(
+		int x, int y,
+		int a, int b,
+		int c, int d,
+		int iStart, int iEnd,
+		const PIXEL_YCA &yc, UINT uFlag
+	);
 	
 	void DrawFont( int x, int y, UCHAR c, const PIXEL_YCA &yc, UINT uFlag );
 	void DrawFont( int x, int y, UCHAR c, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag );

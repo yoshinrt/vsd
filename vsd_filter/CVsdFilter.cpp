@@ -318,7 +318,6 @@ void CVsdFilter::DrawArc(
 	int iStart, int iEnd,
 	const PIXEL_YCA &yc, UINT uFlag
 ){
-	
 	int		i	= a;
 	int		j	= 0;
 	int		a2	= b * b;
@@ -332,8 +331,8 @@ void CVsdFilter::DrawArc(
 	int		iEdX = ( int )( 1024 * a * abs( cos( 2 * M_PI / DRAWARC_ROUND * iEnd )));
 	int		iEdY = ( int )( 1024 * b * abs( sin( 2 * M_PI / DRAWARC_ROUND * iEnd )));
 	
-	int		iStArea	= iStart / ( DRAWARC_ROUND / 4 );
-	int		iEdArea	= iEnd   / ( DRAWARC_ROUND / 4 );
+	int		iStArea	= ( iStart / ( DRAWARC_ROUND / 4 )) << 4;
+	int		iEdArea	= ( iEnd   / ( DRAWARC_ROUND / 4 )) << 4;
 	
 	// Polygon クリア
 	if( uFlag & IMG_FILL ){
@@ -341,58 +340,32 @@ void CVsdFilter::DrawArc(
 		uFlag |= IMG_POLYGON;
 	}
 	
-	int	iAreaGeS, iAreaGeE, iAreaLeS, iAreaLeE;
+	int	iAreaCmpS, iAreaCmpE;
 	
 	while( i >= 0 ){
 		// (i,j) が iStar / iEnd の角度よりも大きい / 小さい を計算しておく
-		iAreaGeS = iStX * j >= iStY * i;
-		iAreaGeE = iEdX * j >= iEdY * i;
-		iAreaLeS = iStX * j <= iStY * i;
-		iAreaLeE = iEdX * j <= iEdY * i;
+		iAreaCmpS = iStX * j - iStY * i;
+		iAreaCmpS = iAreaCmpS == 0 ? 0 :
+					iAreaCmpS >= 0 ? 1 : -1;
+		iAreaCmpS = iStArea + (( iStArea & 0x10 ) ? iAreaCmpS : -iAreaCmpS );
 		
-		// iStart,iEnd が同一 π/2 領域にあるときに，iStart < iEnd かどうかが問題になる．
+		iAreaCmpE = iEdX * j - iEdY * i;
+		iAreaCmpE = iAreaCmpE == 0 ? 0 :
+					iAreaCmpE >= 0 ? 1 : -1;
+		iAreaCmpE = iEdArea + (( iEdArea & 0x10 ) ? iAreaCmpE : -iAreaCmpE );
+		
 		if( iStart < iEnd ){
 			// st && ed
-			if(
-				( iStArea == 0 ? iAreaGeS : ( iStArea < 0 )) &&
-				( iEdArea == 0 ? iAreaLeE : ( iEdArea > 0 ))
-			) PutPixel( x + i, y + j, yc, uFlag );
-			
-			if(
-				( iStArea == 1 ? iAreaLeS : ( iStArea < 1 )) &&
-				( iEdArea == 1 ? iAreaGeE : ( iEdArea > 1 ))
-			) PutPixel( x - i, y + j, yc, uFlag );
-			
-			if(
-				( iStArea == 2 ? iAreaGeS : ( iStArea < 2 )) &&
-				( iEdArea == 2 ? iAreaLeE : ( iEdArea > 2 ))
-			) PutPixel( x - i, y - j, yc, uFlag );
-			
-			if(
-				( iStArea == 3 ? iAreaLeS : ( iStArea < 3 )) &&
-				( iEdArea == 3 ? iAreaGeE : ( iEdArea > 3 ))
-			) PutPixel( x + i, y - j, yc, uFlag );
+			if( iAreaCmpS <= 0x00 && 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, uFlag );
+			if( iAreaCmpS <= 0x10 && 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, uFlag );
+			if( iAreaCmpS <= 0x20 && 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, uFlag );
+			if( iAreaCmpS <= 0x30 && 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, uFlag );
 		}else{
 			// st || ed
-			if(
-				( iStArea == 0 ? iAreaGeS : ( iStArea < 0 )) ||
-				( iEdArea == 0 ? iAreaLeE : ( iEdArea > 0 ))
-			) PutPixel( x + i, y + j, yc, uFlag );
-			
-			if(
-				( iStArea == 1 ? iAreaLeS : ( iStArea < 1 )) ||
-				( iEdArea == 1 ? iAreaGeE : ( iEdArea > 1 ))
-			) PutPixel( x - i, y + j, yc, uFlag );
-			
-			if(
-				( iStArea == 2 ? iAreaGeS : ( iStArea < 2 )) ||
-				( iEdArea == 2 ? iAreaLeE : ( iEdArea > 2 ))
-			) PutPixel( x - i, y - j, yc, uFlag );
-			
-			if(
-				( iStArea == 3 ? iAreaLeS : ( iStArea < 3 )) ||
-				( iEdArea == 3 ? iAreaGeE : ( iEdArea > 3 ))
-			) PutPixel( x + i, y - j, yc, uFlag );
+			if( iAreaCmpS <= 0x00 || 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, uFlag );
+			if( iAreaCmpS <= 0x10 || 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, uFlag );
+			if( iAreaCmpS <= 0x20 || 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, uFlag );
+			if( iAreaCmpS <= 0x30 || 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, uFlag );
 		}
 		
 		if( f >= 0 ){
@@ -409,6 +382,62 @@ void CVsdFilter::DrawArc(
 	
 	// Polygon 合成
 	if( uFlag & IMG_FILL ) PolygonDraw( yc, uFlag );
+}
+
+void CVsdFilter::DrawArc(
+	int x, int y,
+	int a, int b,
+	int c, int d,
+	int iStart, int iEnd,
+	const PIXEL_YCA &yc, UINT uFlag
+){
+	int		iStX = ( int )( 1024 * a * abs( cos( 2 * M_PI / DRAWARC_ROUND * iStart )));
+	int		iStY = ( int )( 1024 * b * abs( sin( 2 * M_PI / DRAWARC_ROUND * iStart )));
+	int		iEdX = ( int )( 1024 * a * abs( cos( 2 * M_PI / DRAWARC_ROUND * iEnd )));
+	int		iEdY = ( int )( 1024 * b * abs( sin( 2 * M_PI / DRAWARC_ROUND * iEnd )));
+	
+	int		iStArea	= ( iStart / ( DRAWARC_ROUND / 4 )) << 4;
+	int		iEdArea	= ( iEnd   / ( DRAWARC_ROUND / 4 )) << 4;
+	
+	int	iAreaCmpS, iAreaCmpE;
+	
+	double		a2		= pow( a + 0.5, 2 );
+	double		a2_b2	= a2 / pow( b + 0.5, 2 );
+	double		c2		= pow( c + 0.5, 2 );
+	double		c2_d2	= c2 / pow( d + 0.5, 2 );
+	
+	for( int j = 0; j <= b; ++j ){
+		int iScanS = ( j <= d ) ? ( int )sqrt( c2 - c2_d2 * ( j * j )) : 0;
+		int iScanE = ( int )sqrt( a2 - a2_b2 * ( j * j ));
+		
+		for( int i = iScanS; i <= iScanE; ++i ){
+			
+			// (i,j) が iStar / iEnd の角度よりも大きい / 小さい を計算しておく
+			iAreaCmpS = iStX * j - iStY * i;
+			iAreaCmpS = iAreaCmpS == 0 ? 0 :
+						iAreaCmpS >= 0 ? 1 : -1;
+			iAreaCmpS = iStArea + (( iStArea & 0x10 ) ? iAreaCmpS : -iAreaCmpS );
+			
+			iAreaCmpE = iEdX * j - iEdY * i;
+			iAreaCmpE = iAreaCmpE == 0 ? 0 :
+						iAreaCmpE >= 0 ? 1 : -1;
+			iAreaCmpE = iEdArea + (( iEdArea & 0x10 ) ? iAreaCmpE : -iAreaCmpE );
+			
+			if( iStart < iEnd ){
+				// st && ed
+				if( iAreaCmpS <= 0x00 && 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, uFlag );
+				if( iAreaCmpS <= 0x10 && 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, uFlag );
+				if( iAreaCmpS <= 0x20 && 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, uFlag );
+				if( iAreaCmpS <= 0x30 && 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, uFlag );
+			}else{
+				// st || ed
+				if( iAreaCmpS <= 0x00 || 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, uFlag );
+				if( iAreaCmpS <= 0x10 || 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, uFlag );
+				if( iAreaCmpS <= 0x20 || 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, uFlag );
+				if( iAreaCmpS <= 0x30 || 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, uFlag );
+			}
+		}
+	}
 }
 
 /*** DrawFont ***************************************************************/
@@ -1983,17 +2012,21 @@ BOOL CVsdFilter::DrawVSD( void ){
 			double dTachoNeedle = iMeterDegRange / ( double )iMeterMaxVal * m_VsdLog->Tacho() + iMeterMinDeg;
 			dTachoNeedle = dTachoNeedle * ToRAD;
 			
+			/*
 			DrawLine(
 				iMeterCx, iMeterCy,
 				( int )( cos( dTachoNeedle ) * iMeterR * 0.95 * AspectRatio + .5 ) + iMeterCx,
 				( int )( sin( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
 				LINE_WIDTH, COLOR_NEEDLE, 0
 			);
+			*/
 			
 			DrawArc(
 				iMeterCx, iMeterCy,
 				iMeterR, iMeterR,
-				0x6000, ( int )( dTachoNeedle / 2 / M_PI * DRAWARC_ROUND ) & 0xFFFF, yc_cyan, 0 );
+				( int )( iMeterR * 0.8 ), ( int )( iMeterR * 0.8 ),
+				0x6000, ( int )( dTachoNeedle / 2 / M_PI * DRAWARC_ROUND ) & 0xFFFF, yc_cyan, 0
+			);
 		}
 	}else{
 		if( m_GPSLog->IsDataExist()){
