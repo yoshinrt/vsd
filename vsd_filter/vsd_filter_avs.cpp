@@ -55,6 +55,7 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	
 	// 仮想関数
 	virtual void PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag );
+	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag );
 	
 	virtual int	GetWidth( void )	{ return m_iWidth; }
 	virtual int	GetHeight( void )	{ return m_iHeight; }
@@ -182,6 +183,54 @@ void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
 			}else{
 				*( USHORT *)( m_pPlane + iIndex ) = ( x & 1 ) ? yc.ycr : yc.ycb;
 				m_pPlane[ iIndex ] = yc.y;
+			}
+		}
+	}
+}
+
+void CVsdFilterAvs::FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ){
+	
+	if( uFlag & IMG_POLYGON ){
+		// ポリゴン描画
+		if( x1 > x2 ){
+			if( x1 > m_Polygon[ y1 ].iRight ) m_Polygon[ y1 ].iRight = x1;
+			if( x2 < m_Polygon[ y1 ].iLeft  ) m_Polygon[ y1 ].iLeft  = x2;
+		}else{
+			if( x2 > m_Polygon[ y1 ].iRight ) m_Polygon[ y1 ].iRight = x2;
+			if( x1 < m_Polygon[ y1 ].iLeft  ) m_Polygon[ y1 ].iLeft  = x1;
+		}
+	}else if( 0 <= y1 && y1 < GetHeight()){
+		if( x1 < 0 )         x1 = 0;
+		if( x2 > GetWidth()) x2 = GetWidth();
+		
+		int iIndex = GetIndex( x1, y1 );
+		
+		if( yc.alfa ){
+			int iAlfa = ( int )yc.alfa;
+			
+			for( int x = x1; x <= x2; ++x, iIndex += 2 ){
+				m_pPlane[ iIndex + 0 ] = ( PIXEL_t )(
+					( yc.y * ( 256 - iAlfa ) + m_pPlane[ iIndex + 0 ] * iAlfa ) >> 8
+				);
+				m_pPlane[ iIndex + 1 ] = ( PIXEL_t )(
+					(
+						(( x & 1 )? yc.cr : yc.cb ) * ( 256 - iAlfa ) + m_pPlane[ iIndex + 1 ] * iAlfa
+					) >> 8
+				);
+			}
+		}else{
+			// x1, x2 が半端な pixel なら，それだけ先に処理
+			if( x1 & 1 ){
+				*( USHORT *)( m_pPlane + iIndex ) = yc.ycr;
+				++x1;
+				iIndex += 2;
+			}
+			if( !( x2 & 1 )){
+				*( USHORT *)( m_pPlane + GetIndex( x2, y1 )) = yc.ycb;
+				--x2;
+			}
+			for( int x = x1; x <= x2; x += 2, iIndex += 4 ){
+				*( UINT *)( m_pPlane + iIndex ) = yc.ycbcr;
 			}
 		}
 	}

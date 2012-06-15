@@ -168,6 +168,12 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA &yc, 
 	
 	int i;
 	
+	if( y1 == y2 ){
+		if( x1 > x2 ) SWAP( x1, x2, i );
+		FillLine( x1, y1, x2, yc, uFlag );
+		return;
+	}
+	
 	int	iXdiff = ABS( x1 - x2 ) + 1;
 	int iYdiff = ABS( y1 - y2 ) + 1;
 	
@@ -209,14 +215,6 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, const PIXE
 			yc, uFlag
 		);
 	}
-}
-
-inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ){
-	
-	int	i;
-	
-	// x äÓèÄÇ≈ï`âÊ
-	for( i = x1; i <= x2; ++i ) PutPixel( i, y1, yc, uFlag );
 }
 
 /*** DrawRect ***************************************************************/
@@ -2012,21 +2010,21 @@ BOOL CVsdFilter::DrawVSD( void ){
 			double dTachoNeedle = iMeterDegRange / ( double )iMeterMaxVal * m_VsdLog->Tacho() + iMeterMinDeg;
 			dTachoNeedle = dTachoNeedle * ToRAD;
 			
-			/*
 			DrawLine(
 				iMeterCx, iMeterCy,
 				( int )( cos( dTachoNeedle ) * iMeterR * 0.95 * AspectRatio + .5 ) + iMeterCx,
 				( int )( sin( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
 				LINE_WIDTH, COLOR_NEEDLE, 0
 			);
-			*/
 			
+			/*
 			DrawArc(
 				iMeterCx, iMeterCy,
 				iMeterR, iMeterR,
 				( int )( iMeterR * 0.8 ), ( int )( iMeterR * 0.8 ),
 				0x6000, ( int )( dTachoNeedle / 2 / M_PI * DRAWARC_ROUND ) & 0xFFFF, yc_cyan, 0
 			);
+			*/
 		}
 	}else{
 		if( m_GPSLog->IsDataExist()){
