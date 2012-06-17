@@ -272,6 +272,7 @@ class CVsdFilter {
 	virtual int  GetFrameMark( int iFrame ) = 0;
 	void CalcLapTime( void );
 	void CalcLapTimeAuto( void );
+	
   private:
 };
 #endif
