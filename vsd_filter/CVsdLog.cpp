@@ -37,6 +37,8 @@ CVsdLog::CVsdLog(){
 	
 	m_dMaxG = 0;
 	m_dMinG = 0;
+	
+	m_iMaxSpeed	= 0;
 }
 
 /*** デストラクタ ***********************************************************/
@@ -166,6 +168,9 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 		
 		if( bAllParam ){
 			m_Log[ m_iCnt ].fSpeed = ( float )GetLogIntermediateVal( fSpeed );
+			
+			if( m_iMaxSpeed < m_Log[ m_iCnt ].fSpeed )
+				m_iMaxSpeed = ( int )ceil( m_Log[ m_iCnt ].fSpeed / 10 ) * 10;
 			
 			if( m_iCnt ){
 				dMileage += sqrt(

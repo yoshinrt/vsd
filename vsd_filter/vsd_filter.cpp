@@ -422,7 +422,7 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	for( i = 0; i < TRACK_N; ++i ){
 		if(
 			m_szTrackbarName[ i ] == NULL ||
-			i >= TRACK_SPEED && m_piParamT[ i ] == track_default[ i ]
+			i >= TRACK_LineTrace && m_piParamT[ i ] == track_default[ i ]
 		) continue;
 		
 		fprintf(

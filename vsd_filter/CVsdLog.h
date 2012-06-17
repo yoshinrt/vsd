@@ -61,6 +61,8 @@ class CVsdLog {
 	double		m_dMaxG;	// ‰Á‘¬ G
 	double		m_dMinG;	// Œ¸‘¬ G
 	
+	int			m_iMaxSpeed;
+	
 	CVsdLog();
 	~CVsdLog();
 	UINT GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam = FALSE );

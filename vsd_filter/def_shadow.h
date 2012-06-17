@@ -21,5 +21,6 @@ DEF_SHADOW(	SHADOW_FONT_ATTR,	0,		"font_attr"		)	// +1: 太字 +2:斜体
 DEF_SHADOW(	SHADOW_LAP_START,	0,		"lap_start"		)	// ラップ開始
 DEF_SHADOW(	SHADOW_LAP_END,		INT_MAX,"lap_end"		)	// ラップ終了
 
+DEF_SHADOW(	SHADOW_SPEED,		0,		"speed_meter"	)	// 最大スピード
 
 #undef DEF_SHADOW

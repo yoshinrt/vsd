@@ -1127,6 +1127,9 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 				}
 			}else{
 				bCalibrating = FALSE;
+				
+				if( m_VsdLog->m_iMaxSpeed < m_VsdLog->m_Log[ uLogNum ].fSpeed )
+					m_VsdLog->m_iMaxSpeed = ( int )ceil( m_VsdLog->m_Log[ uLogNum ].fSpeed / 10 ) * 10;
 			}
 			
 			// メーター補正
@@ -1873,7 +1876,7 @@ void CVsdFilter::DrawMeterPanel0( void ){
 	const int	iMeterMaxVal	= 7000;
 	const int	iMeterDegRange	= ( iMeterMaxDeg + 360 - iMeterMinDeg ) % 360;
 	const int	iMeterScaleLen	= iMeterR / 8;
-	const int	iMeterSMaxVal	= m_piParamT[ TRACK_SPEED ];
+	int	iMeterSMaxVal	= m_piParamS[ SHADOW_SPEED ];
 	
 	/*** メーターパネル ***/
 	DrawCircle(
@@ -1917,6 +1920,8 @@ void CVsdFilter::DrawMeterPanel0( void ){
 		}
 	}else{
 		// GPS ログ優先時はスピードメーターパネル
+		if( !iMeterSMaxVal ) iMeterSMaxVal = Log->m_iMaxSpeed;
+		
 		int	iStep = (( iMeterSMaxVal / 18 ) + 4 ) / 5 * 5;
 		if( iStep == 0 ) iStep = 5;
 		
@@ -2074,7 +2079,7 @@ void CVsdFilter::DrawMeterPanel1( void ){
 	const int	iMeterRedZone	= 6500;
 	const int	iMeterDegRange	= ( iMeterMaxDeg - iMeterMinDeg + 360 ) % 360;
 	const int	iMeterRedZoneDeg= ( iMeterDegRange * iMeterRedZone / iMeterMaxVal + iMeterMinDeg ) % 360;
-	const int	iMeterSMaxVal	= m_piParamT[ TRACK_SPEED ];
+	int	iMeterSMaxVal	= m_piParamS[ SHADOW_SPEED ];
 	
 	/*** メーターパネル ***/
 	/*
@@ -2164,6 +2169,8 @@ void CVsdFilter::DrawMeterPanel1( void ){
 		}
 	}else{
 		// GPS ログ優先時はスピードメーターパネル
+		if( !iMeterSMaxVal ) iMeterSMaxVal = Log->m_iMaxSpeed;
+		
 		int	iStep = (( iMeterSMaxVal / 26 ) + 4 ) / 5 * 5;
 		if( iStep == 0 ) iStep = 5;
 		
@@ -2224,7 +2231,7 @@ void CVsdFilter::DrawMeterPanel1( void ){
 		*/
 		
 		DrawCircle(
-			( int )(( iMeterCx + iMeterR * 55 / 100 ) * AspectRatio ),
+			iMeterCx + ( int )(( iMeterR * 55 / 100 ) * AspectRatio ),
 			iMeterCy + iMeterR * 55 / 100,
 			#ifdef GPS_ONLY
 				iMeterR * 45 / 100 * Aspect / 1000,
@@ -2234,23 +2241,23 @@ void CVsdFilter::DrawMeterPanel1( void ){
 		);
 		
 		DrawLine(
-			( int )(( iMeterCx + iMeterR * 10 / 100 ) * AspectRatio ),
+			iMeterCx + ( int )(( iMeterR * 10 / 100 ) * AspectRatio ),
 			iMeterCy + iMeterR * 55 / 100,
-			( int )(( iMeterCx + iMeterR ) * AspectRatio ),
+			iMeterCx + ( int )(( iMeterR ) * AspectRatio ),
 			iMeterCy + iMeterR * 55 / 100,
 			1, yc_gray, 0
 		);
 		
 		DrawLine(
-			( int )(( iMeterCx + iMeterR * 55 / 100 ) * AspectRatio ),
+			iMeterCx + ( int )(( iMeterR * 55 / 100 ) * AspectRatio ),
 			iMeterCy + iMeterR * 10 / 100,
-			( int )(( iMeterCx + iMeterR * 55 / 100 ) * AspectRatio ),
+			iMeterCx + ( int )(( iMeterR * 55 / 100 ) * AspectRatio ),
 			iMeterCy + iMeterR,
 			1, yc_gray, 0
 		);
 		
 		DrawGSnake(
-			( int )(( iMeterCx + iMeterR * 55 / 100 ) * AspectRatio ),
+			iMeterCx + ( int )(( iMeterR * 55 / 100 ) * AspectRatio ),
 			iMeterCy + iMeterR * 55 / 100,
 			iMeterR * 45 / 100
 		);
@@ -2258,7 +2265,7 @@ void CVsdFilter::DrawMeterPanel1( void ){
 	
 	/*** メーターデータ描画 ***/
 	// ギア表示 - VsdLog しか使用しない
-	if( 0 && m_VsdLog && m_VsdLog->IsDataExist() ){
+	if( m_VsdLog && m_VsdLog->IsDataExist() ){
 		int iGear = 0;
 		
 		if( m_VsdLog->Tacho() != 0 ){
@@ -2271,11 +2278,20 @@ void CVsdFilter::DrawMeterPanel1( void ){
 			else								iGear = 5;
 		}
 		
+		DrawRect(
+			iMeterCx - m_pFontM->GetW() * 3 / 4,
+			iMeterCy + iMeterR * 10 / 100,
+			iMeterCx + m_pFontM->GetW() * 3 / 4,
+			iMeterCy + iMeterR * 10 / 100 + m_pFontM->GetH(),
+			yc_orange, CVsdFilter::IMG_FILL
+		);
+		
 		sprintf( szBuf, "%d", iGear );
 		DrawString(
 			szBuf, m_pFontM,
-			COLOR_STR, 0,
-			iMeterCx - m_pFontM->GetW() / 2, iMeterCy - iMeterR / 2
+			yc_black, 0,
+			iMeterCx - m_pFontM->GetW() / 2,
+			iMeterCy + iMeterR * 10 / 100
 		);
 	}
 	
@@ -2303,7 +2319,7 @@ void CVsdFilter::DrawMeterPanel1( void ){
 			DrawString(
 				szBuf, m_pFontS,
 				COLOR_STR, 0,
-				( int )(( iMeterCx + iMeterR ) * AspectRatio ) - 4 * m_pFontS->GetW(),
+				iMeterCx + ( int )(( iMeterR ) * AspectRatio ) - 4 * m_pFontS->GetW(),
 				iMeterCy + iMeterR - m_pFontS->GetH()
 			);
 		}
