@@ -125,7 +125,9 @@ CVsdFilter::CVsdFilter (){
 	// DrawPolygon 用バッファ
 	m_Polygon			= new PolygonData_t[ MAX_POLY_HEIGHT ];
 	
-	m_pFont				= NULL;
+	m_pFontS				= NULL;
+	m_pFontM				= NULL;
+	m_pFontL				= NULL;
 	
 	m_logfont.lfHeight			= 0;							// 文字セルまたは文字の高さ
 	m_logfont.lfWidth			= 0;							// 平均文字幅
@@ -156,7 +158,9 @@ CVsdFilter::~CVsdFilter (){
 	delete [] m_szLogFile;
 	delete [] m_szGPSLogFile;
 	delete [] m_Polygon;
-	delete m_pFont;
+	delete m_pFontS;
+	delete m_pFontM;
+	delete m_pFontL;
 }
 
 /*** DrawLine ***************************************************************/
@@ -423,16 +427,16 @@ void CVsdFilter::DrawArc(
 			
 			if( iStart < iEnd ){
 				// st && ed
-				if( iAreaCmpS <= 0x00 && 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, uFlag );
-				if( iAreaCmpS <= 0x10 && 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, uFlag );
-				if( iAreaCmpS <= 0x20 && 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, uFlag );
-				if( iAreaCmpS <= 0x30 && 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, uFlag );
+				if(           iAreaCmpS <= 0x00 && 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, uFlag );
+				if( i &&      iAreaCmpS <= 0x10 && 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, uFlag );
+				if( i && j && iAreaCmpS <= 0x20 && 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, uFlag );
+				if(      j && iAreaCmpS <= 0x30 && 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, uFlag );
 			}else{
 				// st || ed
-				if( iAreaCmpS <= 0x00 || 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, uFlag );
-				if( iAreaCmpS <= 0x10 || 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, uFlag );
-				if( iAreaCmpS <= 0x20 || 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, uFlag );
-				if( iAreaCmpS <= 0x30 || 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, uFlag );
+				if(           iAreaCmpS <= 0x00 || 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, uFlag );
+				if( i &&      iAreaCmpS <= 0x10 || 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, uFlag );
+				if( i && j && iAreaCmpS <= 0x20 || 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, uFlag );
+				if(      j && iAreaCmpS <= 0x30 || 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, uFlag );
 			}
 		}
 	}
@@ -440,65 +444,64 @@ void CVsdFilter::DrawArc(
 
 /*** DrawFont ***************************************************************/
 
-void CVsdFilter::DrawFont( int x, int y, UCHAR c, const PIXEL_YCA &yc, UINT uFlag ){
+void CVsdFilter::DrawFont( int x, int y, UCHAR c, CVsdFont *pFont, const PIXEL_YCA &yc, UINT uFlag ){
 	
 	int	i, j;
 	PIXEL_YCA	yca;
 	
 	if( c < '!' || '~' < c ) return;
 	
-	tFontGlyph *pFont = &m_pFont->m_FontGlyph[ c - '!' ];
-	int iBmpW = ( pFont->iW + 3 ) & ~3;
-	int iOrgX = ( m_pFont->m_iFontW - pFont->iW ) / 2;
+	tFontGlyph *pFontGlyph = &pFont->m_FontGlyph[ c - '!' ];
+	int iBmpW = ( pFontGlyph->iW + 3 ) & ~3;
+	int iOrgX = ( pFont->m_iFontW - pFontGlyph->iW ) / 2;
 	
-	for( j = 0; j < pFont->iH; ++j ) for( i = 0; i < pFont->iW; ++i ){
-		int iAlfa = 256 - ( pFont->pBuf[ iBmpW * j + i ] << 2 );
+	for( j = 0; j < pFontGlyph->iH; ++j ) for( i = 0; i < pFontGlyph->iW; ++i ){
+		int iAlfa = 256 - ( pFontGlyph->pBuf[ iBmpW * j + i ] << 2 );
 		
-		if( iAlfa ){
-			yca 		= yc;
-			yca.alfa	= iAlfa;
-			PutPixel( x + iOrgX + i, y + pFont->iOrgY + j, yca, uFlag );
-		}else{
-			PutPixel( x + iOrgX + i, y + pFont->iOrgY + j, yc, uFlag );
-		}
+		yca 		= yc;
+		yca.alfa	= iAlfa;
+		yca.y		= yca.y  * ( 256 - iAlfa ) / 256;
+		yca.cr		= yca.cr * ( 256 - iAlfa ) / 256;
+		yca.cb		= yca.cb * ( 256 - iAlfa ) / 256;
+		PutPixel( x + iOrgX + i, y + pFontGlyph->iOrgY + j, yca, uFlag );
 	}
 }
 
-void CVsdFilter::DrawFont( int x, int y, UCHAR c, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag ){
+void CVsdFilter::DrawFont( int x, int y, UCHAR c, CVsdFont *pFont, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag ){
 	
 	if( c == ' ' ) return;
 	
-	DrawFont( x + 1, y + 0, c, ycEdge, uFlag );
-	DrawFont( x - 1, y + 0, c, ycEdge, uFlag );
-	DrawFont( x + 0, y + 1, c, ycEdge, uFlag );
-	DrawFont( x + 0, y - 1, c, ycEdge, uFlag );
-	DrawFont( x + 0, y + 0, c, yc,     uFlag );
+	DrawFont( x + 1, y + 0, c, pFont, ycEdge, uFlag );
+	DrawFont( x - 1, y + 0, c, pFont, ycEdge, uFlag );
+	DrawFont( x + 0, y + 1, c, pFont, ycEdge, uFlag );
+	DrawFont( x + 0, y - 1, c, pFont, ycEdge, uFlag );
+	DrawFont( x + 0, y + 0, c, pFont, yc,     uFlag );
 }
 
 /*** DrawString *************************************************************/
 
-void CVsdFilter::DrawString( char *szMsg, const PIXEL_YCA &yc, UINT uFlag, int x, int y ){
+void CVsdFilter::DrawString( char *szMsg, CVsdFont *pFont, const PIXEL_YCA &yc, UINT uFlag, int x, int y ){
 	
 	if( x != POS_DEFAULT ) m_iPosX = x;
 	if( y != POS_DEFAULT ) m_iPosY = y;
 	
 	for( int i = 0; szMsg[ i ]; ++i ){
-		DrawFont( m_iPosX + i * m_pFont->GetW(), m_iPosY, szMsg[ i ], yc, uFlag );
+		DrawFont( m_iPosX + i * pFont->GetW(), m_iPosY, szMsg[ i ], pFont, yc, uFlag );
 	}
 	
-	m_iPosY += m_pFont->GetH();
+	m_iPosY += pFont->GetH();
 }
 
-void CVsdFilter::DrawString( char *szMsg, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag, int x, int y ){
+void CVsdFilter::DrawString( char *szMsg, CVsdFont *pFont, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag, int x, int y ){
 	
 	if( x != POS_DEFAULT ) m_iPosX = x;
 	if( y != POS_DEFAULT ) m_iPosY = y;
 	
 	for( int i = 0; szMsg[ i ]; ++i ){
-		DrawFont( m_iPosX + i * m_pFont->GetW(), m_iPosY, szMsg[ i ], yc, ycEdge, uFlag );
+		DrawFont( m_iPosX + i * pFont->GetW(), m_iPosY, szMsg[ i ], pFont, yc, ycEdge, uFlag );
 	}
 	
-	m_iPosY += m_pFont->GetH();
+	m_iPosY += pFont->GetH();
 }
 
 /*** ポリゴン描画 ***********************************************************/
@@ -657,7 +660,9 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 		m_logfont.lfWeight	= m_piParamS[ SHADOW_FONT_ATTR ] & 0x1 ? FW_BOLD : FW_REGULAR;
 		m_logfont.lfItalic	= m_piParamS[ SHADOW_FONT_ATTR ] & 0x2 ? 1 : 0;
 		
-		delete m_pFont; m_pFont = NULL;
+		delete m_pFontS; m_pFontS = NULL;
+		delete m_pFontM; m_pFontM = NULL;
+		delete m_pFontL; m_pFontL = NULL;
 	}
 	return TRUE;
 }
@@ -1413,8 +1418,10 @@ static const PIXEL_YCA	yc_dark_green	= RGB2YC(    0, 2048,    0 );
 static const PIXEL_YCA	yc_blue			= RGB2YC(    0,    0, 4095 );
 static const PIXEL_YCA	yc_cyan			= RGB2YC(    0, 4095, 4095 );
 static const PIXEL_YCA	yc_dark_blue	= RGB2YC(    0,    0, 2048 );
+static const PIXEL_YCA	yc_blue2		= RGB2YCA(1024,    0, 2688, 0x80 );
 static const PIXEL_YCA	yc_orange		= RGB2YC( 4095, 1024,    0 );
-static const PIXEL_YCA	yc_gray_a		= RGB2YCA( 2048, 2048, 2048, 0x80 );
+//static const PIXEL_YCA	yc_gray_a		= RGB2YCA( 2048, 2048, 2048, 0x80 );
+static const PIXEL_YCA	yc_gray_a		= RGB2YCA( 1024, 1024, 1024, 0x80 );
 
 #define COLOR_PANEL			yc_gray_a
 #define COLOR_NEEDLE		yc_red
@@ -1464,10 +1471,18 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_piParamS[ SHADOW_FONT_SIZE ] :
 		GetHeight() * 21 / 480;
 	
-	if( m_pFont == NULL || iFontSize != -m_logfont.lfHeight ){
+	if( m_pFontM == NULL || iFontSize != -m_logfont.lfHeight ){
+		m_logfont.lfHeight = -iFontSize * 2 / 3;
+		if( m_pFontS ) delete m_pFontS;
+		m_pFontS = new CVsdFont( m_logfont )
+		;
+		m_logfont.lfHeight = -iFontSize * 2;
+		if( m_pFontL ) delete m_pFontL;
+		m_pFontL = new CVsdFont( m_logfont );
+		
 		m_logfont.lfHeight = -iFontSize;
-		if( m_pFont ) delete m_pFont;
-		m_pFont = new CVsdFont( m_logfont );
+		if( m_pFontM ) delete m_pFontM;
+		m_pFontM = new CVsdFont( m_logfont );
 	}
 	
 	CVsdLog *Log;
@@ -1529,11 +1544,11 @@ BOOL CVsdFilter::DrawVSD( void ){
 			}
 			
 			sprintf( szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
-			DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - m_pFont->GetW() * 13, 1 );
+			DrawString( szBuf, m_pFontM, COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - m_pFontM->GetW() * 13, 1 );
 			bInLap = TRUE;
 		}else{
 			// まだ開始していない
-			DrawString( "Time -'--.---", COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - m_pFont->GetW() * 13, 1 );
+			DrawString( "Time -'--.---", m_pFontM, COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - m_pFontM->GetW() * 13, 1 );
 		}
 		
 		/*** ベストとの車間距離表示 - ***/
@@ -1595,13 +1610,13 @@ BOOL CVsdFilter::DrawVSD( void ){
 					iDiffTime / 1000 % 60,
 					iDiffTime % 1000
 				);
-				DrawString( szBuf, bSign ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
+				DrawString( szBuf, m_pFontM, bSign ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
 			}else{
-				m_iPosY += m_pFont->GetH();
+				m_iPosY += m_pFontM->GetH();
 			}
 		}
 		
-		m_iPosY += m_pFont->GetH() / 4;
+		m_iPosY += m_pFontM->GetH() / 4;
 		
 		// Best 表示
 		sprintf(
@@ -1610,7 +1625,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 			m_iBestTime / 1000 % 60,
 			m_iBestTime % 1000
 		);
-		DrawString( szBuf, COLOR_TIME, COLOR_TIME_EDGE, 0 );
+		DrawString( szBuf, m_pFontM, COLOR_TIME, COLOR_TIME_EDGE, 0 );
 		
 		// Lapタイム表示
 		// 3つタイム表示する分の，最後の LapIdx を求める．
@@ -1640,7 +1655,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 						m_Lap[ iLapIdxStart ].iTime / 1000 % 60,
 						m_Lap[ iLapIdxStart ].iTime % 1000
 					);
-					DrawString( szBuf,
+					DrawString( szBuf, m_pFontM,
 						m_iBestTime == m_Lap[ iLapIdxStart ].iTime ? COLOR_BEST_LAP : COLOR_TIME,
 						COLOR_TIME_EDGE, 0 );
 					++i;
@@ -1656,7 +1671,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	if( DispFrameInfo ){
 		
 		#ifndef GPS_ONLY
-			DrawString( "        start       end     range cur.pos", COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 3 );
+			DrawString( "        start       end     range cur.pos", m_pFontM, COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 3 );
 			
 			sprintf(
 				szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
@@ -1665,7 +1680,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 				Float2Time(( VideoEd - VideoSt ) / GetFPS()),
 				GetFrameCnt()
 			);
-			DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );
+			DrawString( szBuf, m_pFontM, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );
 			
 			if( m_VsdLog ){
 				sprintf(
@@ -1675,7 +1690,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
 					m_VsdLog->m_iLogNum
 				);
-				DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+				DrawString( szBuf, m_pFontM, COLOR_STR, COLOR_TIME_EDGE, 0 );
 				DrawSpeedGraph( m_VsdLog, yc_red );
 			}
 			
@@ -1687,7 +1702,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),
 					m_GPSLog->m_iLogNum
 				);
-				DrawString( szBuf, COLOR_STR, COLOR_TIME_EDGE, 0 );
+				DrawString( szBuf, m_pFontM, COLOR_STR, COLOR_TIME_EDGE, 0 );
 			}
 		#endif	// !GPS_ONLY
 		
@@ -1695,6 +1710,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 			DrawSpeedGraph( m_GPSLog, yc_cyan );
 		}
 	}
+	
+	if( !m_VsdLog && !m_GPSLog ) return TRUE;
 	
 	// MAP 表示
 	SelectLogGPS;
@@ -1774,7 +1791,59 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 	}
 	
-	if( !m_VsdLog && !m_GPSLog ) return TRUE;
+	DrawMeterPanel1();
+	return TRUE;
+}
+
+/*** G スネーク描画 *********************************************************/
+
+void CVsdFilter::DrawGSnake( int iCx, int iCy, int iR ){
+	int	iGx, iGy;
+	int	i;
+	CVsdLog *Log;
+	
+	SelectLogVsd;
+	
+	if( GSnakeLen > 0 ){
+		
+		int iGxPrev = INVALID_POS_I, iGyPrev;
+		
+		for( i = -( int )( GSnakeLen * LOG_FREQ / 10.0 ) ; i <= 1 ; ++i ){
+			
+			if( Log->m_iLogNum + i >= 0 ){
+				// i == 1 時は最後の中途半端な LogNum
+				iGx = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGx : Log->Gx()) * iR / GScale );
+				iGy = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGy : Log->Gy()) * iR / GScale );
+				
+				iGx = ( int )( iGx * AspectRatio );
+				
+				if( iGxPrev != INVALID_POS_I ) DrawLine(
+					iCx + iGx, iCy - iGy, iCx + iGxPrev, iCy - iGyPrev,
+					LINE_WIDTH, COLOR_G_HIST, 0
+				);
+				
+				iGxPrev = iGx;
+				iGyPrev = iGy;
+			}
+		}
+	}else{
+		iGx = ( int )( Log->Gx() * iR / GScale * AspectRatio );
+		iGy = ( int )( Log->Gy() * iR / GScale );
+	}
+	
+	// G インジケータ
+	DrawCircle(
+		iCx + iGx, iCy - iGy, iR / 20,
+		COLOR_G_SENSOR, CVsdFilter::IMG_FILL
+	);
+}
+
+/*** メーターパネル type 0 **************************************************/
+
+void CVsdFilter::DrawMeterPanel0( void ){
+	char	szBuf[ 128 ];
+	int	i;
+	CVsdLog *Log;
 	
 	const int	iMeterR =
 		m_piParamS[ SHADOW_METER_R  ] >= 0 ? m_piParamS[ SHADOW_METER_R  ] :
@@ -1828,8 +1897,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 				DrawLine(
 					( int )( cos( iDeg * ToRAD ) * iMeterR * AspectRatio ) + iMeterCx,
 					( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
-					( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen ) * AspectRatio ) + iMeterCx,
-					( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
+					( int )( cos( iDeg * ToRAD ) * ( iMeterR * 95 / 100 ) * AspectRatio ) + iMeterCx,
+					( int )( sin( iDeg * ToRAD ) * ( iMeterR * 95 / 100 )) + iMeterCy,
 					( iMeterMaxVal <= 12000 && i % 1000 == 0 || i % 2000 == 0 ) ? 2 : 1,
 					COLOR_SCALE, 0
 				);
@@ -1838,10 +1907,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 				if( iMeterMaxVal <= 12000 && i % 1000 == 0 || i % 2000 == 0 ){
 					sprintf( szBuf, "%d", i / 1000 );
 					DrawString(
-						szBuf,
+						szBuf, m_pFontM,
 						COLOR_STR, 0,
-						( int )( cos( iDeg * ToRAD ) * iMeterR * .8 * AspectRatio ) + iMeterCx - m_pFont->GetW() / ( i >= 10000 ? 1 : 2 ),
-						( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - m_pFont->GetH() / 2
+						( int )( cos( iDeg * ToRAD ) * iMeterR * .8 * AspectRatio ) + iMeterCx - m_pFontM->GetW() / ( i >= 10000 ? 1 : 2 ),
+						( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - m_pFontM->GetH() / 2
 					);
 				}
 			}
@@ -1859,8 +1928,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 				DrawLine(
 					( int )( cos( iDeg * ToRAD ) * iMeterR * AspectRatio ) + iMeterCx,
 					( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
-					( int )( cos( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen ) * AspectRatio ) + iMeterCx,
-					( int )( sin( iDeg * ToRAD ) * ( iMeterR - iMeterScaleLen )) + iMeterCy,
+					( int )( cos( iDeg * ToRAD ) * ( iMeterR * 95 / 100 ) * AspectRatio ) + iMeterCx,
+					( int )( sin( iDeg * ToRAD ) * ( iMeterR * 95 / 100 )) + iMeterCy,
 					( i % ( iStep * 2 ) == 0 ) ? 2 : 1,
 					COLOR_SCALE, 0
 				);
@@ -1869,10 +1938,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 				if( i % ( iStep * 2 ) == 0 ){
 					sprintf( szBuf, "%d", i );
 					DrawString(
-						szBuf,
+						szBuf, m_pFontM,
 						COLOR_STR, 0,
-						( int )( cos( iDeg * ToRAD ) * iMeterR * .75 * AspectRatio ) + iMeterCx - m_pFont->GetW() * strlen( szBuf ) / 2,
-						( int )( sin( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCy - m_pFont->GetH() / 2
+						( int )( cos( iDeg * ToRAD ) * iMeterR * .75 * AspectRatio ) + iMeterCx - m_pFontM->GetW() * strlen( szBuf ) / 2,
+						( int )( sin( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCy - m_pFontM->GetH() / 2
 					);
 				}
 			}
@@ -1881,93 +1950,57 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	/*** メーターデータ描画 ***/
 	
-	// G スネーク
-	
 	if( GSnakeLen >= 0 && Log->IsDataExist()){
-		if( GSnakeLen > 0 ){
-			
-			int iGxPrev = INVALID_POS_I, iGyPrev;
-			
-			for( i = -( int )( GSnakeLen * LOG_FREQ / 10.0 ) ; i <= 1 ; ++i ){
-				
-				if( Log->m_iLogNum + i >= 0 ){
-					// i == 1 時は最後の中途半端な LogNum
-					iGx = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGx : Log->Gx()) * iMeterR / GScale );
-					iGy = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGy : Log->Gy()) * iMeterR / GScale );
-					
-					iGx = ( int )( iGx * AspectRatio );
-					
-					if( iGxPrev != INVALID_POS_I ) DrawLine(
-						iMeterCx + iGx, iMeterCy - iGy, iMeterCx + iGxPrev, iMeterCy - iGyPrev,
-						LINE_WIDTH, COLOR_G_HIST, 0
-					);
-					
-					iGxPrev = iGx;
-					iGyPrev = iGy;
-				}
-			}
-		}else{
-			iGx = ( int )( Log->Gx() * iMeterR / GScale * AspectRatio );
-			iGy = ( int )( Log->Gy() * iMeterR / GScale );
-		}
-		
-		// G インジケータ
-		DrawCircle(
-			iMeterCx + iGx, iMeterCy - iGy, iMeterR / 20,
-			COLOR_G_SENSOR, CVsdFilter::IMG_FILL
-		);
+		DrawGSnake( iMeterCx, iMeterCy, iMeterR );
 	}
 	
 	// ギア表示 - VsdLog しか使用しない
 	if( m_VsdLog && m_VsdLog->IsDataExist() ){
-		
-		UINT uGear = 0;
+		int iGear = 0;
 		
 		if( m_VsdLog->Tacho() != 0 ){
 			UINT uGearRatio = ( int )( m_VsdLog->Speed() * 100 * ( 1 << 8 ) / m_VsdLog->Tacho() );
 			
-			if     ( uGearRatio < GEAR_TH( 1 ))	uGear = 1;
-			else if( uGearRatio < GEAR_TH( 2 ))	uGear = 2;
-			else if( uGearRatio < GEAR_TH( 3 ))	uGear = 3;
-			else if( uGearRatio < GEAR_TH( 4 ))	uGear = 4;
-			else								uGear = 5;
+			if     ( uGearRatio < GEAR_TH( 1 ))	iGear = 1;
+			else if( uGearRatio < GEAR_TH( 2 ))	iGear = 2;
+			else if( uGearRatio < GEAR_TH( 3 ))	iGear = 3;
+			else if( uGearRatio < GEAR_TH( 4 ))	iGear = 4;
+			else								iGear = 5;
 		}
 		
-		sprintf( szBuf, "%d", uGear );
+		sprintf( szBuf, "%d", iGear );
 		DrawString(
-			szBuf,
+			szBuf, m_pFontM,
 			COLOR_STR, 0,
-			iMeterCx - m_pFont->GetW() / 2, iMeterCy - iMeterR / 2
+			iMeterCx - m_pFontM->GetW() / 2, iMeterCy - iMeterR / 2
 		);
 	}
-	
-	SelectLogVsd;
 	
 	if( Log->IsDataExist()){
 		// スピード表示
 		sprintf( szBuf, "%3d", ( int )Log->Speed() );
 		DrawString(
-			szBuf,
+			szBuf, m_pFontM,
 			COLOR_STR, 0,
-			iMeterCx - 3 * m_pFont->GetW() / 2, iMeterCy + iMeterR / 2
+			iMeterCx - 3 * m_pFontM->GetW() / 2, iMeterCy + iMeterR / 2
 		);
 		
 		// G 数値
 		if( GSnakeLen >= 0 ){
 			sprintf( szBuf, "%02dG", ( int )( sqrt( Log->Gx() * Log->Gx() + Log->Gy() * Log->Gy()) * 10 ));
 			DrawString(
-				szBuf,
+				szBuf, m_pFontM,
 				COLOR_STR, 0,
-				iMeterCx - 3 * m_pFont->GetW() / 2, iMeterCy + iMeterR / 2 - m_pFont->GetH()
+				iMeterCx - 3 * m_pFontM->GetW() / 2, iMeterCy + iMeterR / 2 - m_pFontM->GetH()
 			);
 			
 			int iDotSize = -m_logfont.lfHeight * 2 / 20 - 1;
 			
 			DrawString(
-				".",
+				".", m_pFontM,
 				COLOR_STR, 0,
-				iMeterCx - m_pFont->GetW(),
-				iMeterCy + iMeterR / 2 - m_pFont->GetH()
+				iMeterCx - m_pFontM->GetW(),
+				iMeterCy + iMeterR / 2 - m_pFontM->GetH()
 			);
 		}
 	}
@@ -2003,6 +2036,276 @@ BOOL CVsdFilter::DrawVSD( void ){
 	}
 	
 	DrawCircle( iMeterCx, iMeterCy, iMeterR / 25, COLOR_NEEDLE, CVsdFilter::IMG_FILL );
+}
+
+/*** メーターパネル type 1 **************************************************/
+
+void CVsdFilter::DrawMeterPanel1( void ){
+	char	szBuf[ 128 ];
+	int	i;
+	CVsdLog *Log;
 	
-	return TRUE;
+	const int	iMeterR =
+		m_piParamS[ SHADOW_METER_R  ] >= 0 ? m_piParamS[ SHADOW_METER_R  ] :
+		100 * GetHeight() / 480;
+	
+	int	iMeterCx;
+	if( m_piParamS[ SHADOW_METER_CX ] >= 0 ){
+		iMeterCx = m_piParamS[ SHADOW_METER_CX ];
+	}else if(
+		#ifdef GPS_ONLY
+			m_piParamC[ CHECK_METER_POS ]
+		#else
+			!m_piParamC[ CHECK_METER_POS ]
+		#endif
+	){
+		iMeterCx = GetWidth() - iMeterR * Aspect / 1000 - 2;
+	}else{
+		iMeterCx = iMeterR * Aspect / 1000 + 1;
+	}
+	
+	const int	iMeterCy =
+		m_piParamS[ SHADOW_METER_CY ] >= 0 ? m_piParamS[ SHADOW_METER_CY ] :
+		GetHeight() - iMeterR - 2;
+	
+	const int	iMeterMinDeg	= 90;
+	const int	iMeterMaxDeg	= 0;
+	const int	iMeterMaxVal	= 7000;
+	const int	iMeterRedZone	= 6500;
+	const int	iMeterDegRange	= ( iMeterMaxDeg - iMeterMinDeg + 360 ) % 360;
+	const int	iMeterRedZoneDeg= ( iMeterDegRange * iMeterRedZone / iMeterMaxVal + iMeterMinDeg ) % 360;
+	const int	iMeterSMaxVal	= m_piParamT[ TRACK_SPEED ];
+	
+	/*** メーターパネル ***/
+	/*
+	DrawCircle(
+		iMeterCx, iMeterCy,
+		#ifdef GPS_ONLY
+			iMeterR * Aspect / 1000,
+		#endif
+		iMeterR,
+		COLOR_PANEL, CVsdFilter::IMG_FILL
+	);*/
+	
+	DrawArc(
+		iMeterCx, iMeterCy,
+		iMeterR * Aspect * 100 / 100 / 1000, iMeterR * 100 / 100,
+		iMeterR * Aspect *  70 / 100 / 1000, iMeterR *  70 / 100,
+		iMeterMinDeg * DRAWARC_ROUND / 360, iMeterMaxDeg * DRAWARC_ROUND / 360,
+		yc_blue2, CVsdFilter::IMG_FILL
+	);
+	
+	SelectLogVsd;
+	
+	if( Log == m_VsdLog ){
+		
+		/*
+		if( m_VsdLog->IsDataExist()){
+			// Tacho の針 - VsdLog しか使用しない
+			DrawArc(
+				iMeterCx, iMeterCy,
+				iMeterR * Aspect * 95 / 100 / 1000, iMeterR * 95 / 100,
+				iMeterR * Aspect * 70 / 100 / 1000, iMeterR * 70 / 100,
+				iMeterMinDeg * DRAWARC_ROUND / 360,
+				( int )(( iMeterDegRange * m_VsdLog->Tacho() / iMeterMaxVal + iMeterMinDeg ) * DRAWARC_ROUND / 360 ),
+				yc_cyan, CVsdFilter::IMG_FILL
+			);
+		}
+		*/
+		
+		// レッドゾーン
+		DrawArc(
+			iMeterCx, iMeterCy,
+			iMeterR * Aspect * 100 / 100 / 1000, iMeterR * 95 / 100,
+			iMeterR * Aspect *  95 / 100 / 1000, iMeterR * 90 / 100,
+			iMeterRedZoneDeg * DRAWARC_ROUND / 360, iMeterMaxDeg * DRAWARC_ROUND / 360,
+			yc_orange, CVsdFilter::IMG_FILL
+		);
+		
+		// VSD ログがあるときはタコメータ
+		for( i = 0; i <= iMeterMaxVal; i += 500 ){
+			int iDeg = iMeterDegRange * i / iMeterMaxVal + iMeterMinDeg;
+			
+			// メーターパネル目盛り
+			if( iMeterMaxVal <= 12000 || i % 1000 == 0 ){
+				DrawLine(
+					( int )( cos( iDeg * ToRAD ) * ( iMeterR * 100 / 100 ) * AspectRatio ) + iMeterCx,
+					( int )( sin( iDeg * ToRAD ) * ( iMeterR * 100 / 100 )) + iMeterCy,
+					( int )( cos( iDeg * ToRAD ) * ( iMeterR *  95 / 100 ) * AspectRatio ) + iMeterCx,
+					( int )( sin( iDeg * ToRAD ) * ( iMeterR *  95 / 100 )) + iMeterCy,
+					( iMeterMaxVal <= 12000 && i % 1000 == 0 || i % 2000 == 0 ) ? 2 : 1,
+					COLOR_SCALE, 0
+				);
+				
+				// メーターパネル目盛り数値
+				if( iMeterMaxVal <= 12000 && i % 1000 == 0 || i % 2000 == 0 ){
+					sprintf( szBuf, "%d", i / 1000 );
+					DrawString(
+						szBuf, m_pFontM,
+						COLOR_STR, 0,
+						( int )( cos( iDeg * ToRAD ) * iMeterR * .825 * AspectRatio ) + iMeterCx - m_pFontM->GetW() / ( i >= 10000 ? 1 : 2 ),
+						( int )( sin( iDeg * ToRAD ) * iMeterR * .825 ) + iMeterCy - m_pFontM->GetH() / 2
+					);
+				}
+			}
+		}
+		
+		if( m_VsdLog->IsDataExist()){
+			// Tacho の針 - VsdLog しか使用しない
+			double dTachoNeedle = iMeterDegRange / ( double )iMeterMaxVal * m_VsdLog->Tacho() + iMeterMinDeg;
+			dTachoNeedle = dTachoNeedle * ToRAD;
+			
+			DrawLine(
+				iMeterCx, iMeterCy,
+				( int )( cos( dTachoNeedle ) * iMeterR * 0.95 * AspectRatio + .5 ) + iMeterCx,
+				( int )( sin( dTachoNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
+				LINE_WIDTH, COLOR_NEEDLE, 0
+			);
+		}
+	}else{
+		// GPS ログ優先時はスピードメーターパネル
+		int	iStep = (( iMeterSMaxVal / 26 ) + 4 ) / 5 * 5;
+		if( iStep == 0 ) iStep = 5;
+		
+		for( i = 0; i <= iMeterSMaxVal; i += iStep ){
+			int iDeg = iMeterDegRange * i / iMeterSMaxVal + iMeterMinDeg;
+			
+			// メーターパネル目盛り
+			if( i % iStep == 0 ){
+				DrawLine(
+					( int )( cos( iDeg * ToRAD ) * ( iMeterR * 100 / 100 ) * AspectRatio ) + iMeterCx,
+					( int )( sin( iDeg * ToRAD ) * ( iMeterR * 100 / 100 )) + iMeterCy,
+					( int )( cos( iDeg * ToRAD ) * ( iMeterR *  95 / 100 ) * AspectRatio ) + iMeterCx,
+					( int )( sin( iDeg * ToRAD ) * ( iMeterR *  95 / 100 )) + iMeterCy,
+					( i % ( iStep * 2 ) == 0 ) ? 2 : 1,
+					COLOR_SCALE, 0
+				);
+				
+				// メーターパネル目盛り数値
+				if( i % ( iStep * 2 ) == 0 ){
+					sprintf( szBuf, "%d", i );
+					DrawString(
+						szBuf, m_pFontS,
+						COLOR_STR, 0,
+						( int )( cos( iDeg * ToRAD ) * iMeterR * .825 * AspectRatio ) + iMeterCx - m_pFontS->GetW() * strlen( szBuf ) / 2,
+						( int )( sin( iDeg * ToRAD ) * iMeterR * .825 ) + iMeterCy - m_pFontS->GetH() / 2
+					);
+				}
+			}
+		}
+		
+		if( m_GPSLog->IsDataExist()){
+			// Speed の針
+			double dSpeedNeedle =
+				iMeterDegRange / ( double )iMeterSMaxVal * m_GPSLog->Speed() + iMeterMinDeg;
+			
+			dSpeedNeedle = dSpeedNeedle * ToRAD;
+			
+			DrawLine(
+				iMeterCx, iMeterCy,
+				( int )( cos( dSpeedNeedle ) * iMeterR * 0.95 * AspectRatio + .5 ) + iMeterCx,
+				( int )( sin( dSpeedNeedle ) * iMeterR * 0.95 + .5 ) + iMeterCy,
+				LINE_WIDTH, COLOR_NEEDLE, 0
+			);
+		}
+	}
+	
+	/*** G ウィンドウ ***/
+	
+	if( GSnakeLen >= 0 && Log->IsDataExist()){
+		/*
+		DrawRect(
+			( int )(( iMeterCx + iMeterR * 10 / 100 ) * AspectRatio ),
+			iMeterCy + iMeterR * 10 / 100,
+			( int )(( iMeterCx + iMeterR ) * AspectRatio ),
+			iMeterCy + iMeterR,
+			COLOR_PANEL, CVsdFilter::IMG_FILL
+		);
+		*/
+		
+		DrawCircle(
+			( int )(( iMeterCx + iMeterR * 55 / 100 ) * AspectRatio ),
+			iMeterCy + iMeterR * 55 / 100,
+			#ifdef GPS_ONLY
+				iMeterR * 45 / 100 * Aspect / 1000,
+			#endif
+			iMeterR * 45 / 100,
+			COLOR_PANEL, CVsdFilter::IMG_FILL
+		);
+		
+		DrawLine(
+			( int )(( iMeterCx + iMeterR * 10 / 100 ) * AspectRatio ),
+			iMeterCy + iMeterR * 55 / 100,
+			( int )(( iMeterCx + iMeterR ) * AspectRatio ),
+			iMeterCy + iMeterR * 55 / 100,
+			1, yc_gray, 0
+		);
+		
+		DrawLine(
+			( int )(( iMeterCx + iMeterR * 55 / 100 ) * AspectRatio ),
+			iMeterCy + iMeterR * 10 / 100,
+			( int )(( iMeterCx + iMeterR * 55 / 100 ) * AspectRatio ),
+			iMeterCy + iMeterR,
+			1, yc_gray, 0
+		);
+		
+		DrawGSnake(
+			( int )(( iMeterCx + iMeterR * 55 / 100 ) * AspectRatio ),
+			iMeterCy + iMeterR * 55 / 100,
+			iMeterR * 45 / 100
+		);
+	}
+	
+	/*** メーターデータ描画 ***/
+	// ギア表示 - VsdLog しか使用しない
+	if( 0 && m_VsdLog && m_VsdLog->IsDataExist() ){
+		int iGear = 0;
+		
+		if( m_VsdLog->Tacho() != 0 ){
+			UINT uGearRatio = ( int )( m_VsdLog->Speed() * 100 * ( 1 << 8 ) / m_VsdLog->Tacho() );
+			
+			if     ( uGearRatio < GEAR_TH( 1 ))	iGear = 1;
+			else if( uGearRatio < GEAR_TH( 2 ))	iGear = 2;
+			else if( uGearRatio < GEAR_TH( 3 ))	iGear = 3;
+			else if( uGearRatio < GEAR_TH( 4 ))	iGear = 4;
+			else								iGear = 5;
+		}
+		
+		sprintf( szBuf, "%d", iGear );
+		DrawString(
+			szBuf, m_pFontM,
+			COLOR_STR, 0,
+			iMeterCx - m_pFontM->GetW() / 2, iMeterCy - iMeterR / 2
+		);
+	}
+	
+	if( Log->IsDataExist()){
+		// スピード表示
+		i = ( int )Log->Speed();
+		sprintf( szBuf, "%d", i );
+		DrawString(
+			szBuf, m_pFontL,
+			COLOR_STR, 0,
+			iMeterCx - ( i >= 100 ? 3 : i >= 10 ? 2 : 1 ) * m_pFontL->GetW() / 2,
+			iMeterCy - ( iMeterR * 35 / 100 ) - m_pFontL->GetH() / 2
+		);
+		
+		DrawString(
+			"km/h", m_pFontS,
+			COLOR_STR, 0,
+			iMeterCx - m_pFontS->GetW() * 4 / 2,
+			iMeterCy - m_pFontS->GetH()
+		);
+		
+		// G 数値
+		if( GSnakeLen >= 0 ){
+			sprintf( szBuf, "%.1fG", sqrt( Log->Gx() * Log->Gx() + Log->Gy() * Log->Gy()));
+			DrawString(
+				szBuf, m_pFontS,
+				COLOR_STR, 0,
+				( int )(( iMeterCx + iMeterR ) * AspectRatio ) - 4 * m_pFontS->GetW(),
+				iMeterCy + iMeterR - m_pFontS->GetH()
+			);
+		}
+	}
 }

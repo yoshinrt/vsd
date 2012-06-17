@@ -319,9 +319,9 @@ void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
 				int	iIndex = GetIndex( x, y );
 				int iAlfa = ( int )yc.alfa;
 				
-				ycp[ iIndex ].y  = ( PIXEL_t )(( yc.y  * ( 256 - iAlfa ) + ycp[ iIndex ].y  * iAlfa ) >> 8 );
-				ycp[ iIndex ].cr = ( PIXEL_t )(( yc.cr * ( 256 - iAlfa ) + ycp[ iIndex ].cr * iAlfa ) >> 8 );
-				ycp[ iIndex ].cb = ( PIXEL_t )(( yc.cb * ( 256 - iAlfa ) + ycp[ iIndex ].cb * iAlfa ) >> 8 );
+				ycp[ iIndex ].y  = ( PIXEL_t )( yc.y  + (( ycp[ iIndex ].y  * iAlfa ) >> 8 ));
+				ycp[ iIndex ].cr = ( PIXEL_t )( yc.cr + (( ycp[ iIndex ].cr * iAlfa ) >> 8 ));
+				ycp[ iIndex ].cb = ( PIXEL_t )( yc.cb + (( ycp[ iIndex ].cb * iAlfa ) >> 8 ));
 			}else{
 				ycp[ GetIndex( x, y ) ].y  = yc.y;
 				ycp[ GetIndex( x, y ) ].cr = yc.cr;
@@ -356,9 +356,9 @@ void CVsdFilterAvu::FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT 
 			int iAlfa = ( int )yc.alfa;
 			
 			for( iIndex = x1; iIndex <= x2; ++iIndex ){
-				ycp[ iIndex ].y  = ( PIXEL_t )(( yc.y  * ( 256 - iAlfa ) + ycp[ iIndex ].y  * iAlfa ) >> 8 );
-				ycp[ iIndex ].cr = ( PIXEL_t )(( yc.cr * ( 256 - iAlfa ) + ycp[ iIndex ].cr * iAlfa ) >> 8 );
-				ycp[ iIndex ].cb = ( PIXEL_t )(( yc.cb * ( 256 - iAlfa ) + ycp[ iIndex ].cb * iAlfa ) >> 8 );
+				ycp[ iIndex ].y  = ( PIXEL_t )( yc.y  + (( ycp[ iIndex ].y  * iAlfa ) >> 8 ));
+				ycp[ iIndex ].cr = ( PIXEL_t )( yc.cr + (( ycp[ iIndex ].cr * iAlfa ) >> 8 ));
+				ycp[ iIndex ].cb = ( PIXEL_t )( yc.cb + (( ycp[ iIndex ].cb * iAlfa ) >> 8 ));
 			}
 		}else{
 			for( iIndex = x1; iIndex <= x2; ++iIndex ){
@@ -894,8 +894,12 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				g_Vsd->m_piParamS[ SHADOW_FONT_ATTR ] =
 					( g_Vsd->m_logfont.lfWeight > FW_REGULAR ? 1 : 0 ) |
 					( g_Vsd->m_logfont.lfItalic ? 2 : 0 );
-				delete g_Vsd->m_pFont;
-				g_Vsd->m_pFont = NULL;
+				delete g_Vsd->m_pFontS;
+				delete g_Vsd->m_pFontM;
+				delete g_Vsd->m_pFontL;
+				g_Vsd->m_pFontS = NULL;
+				g_Vsd->m_pFontM = NULL;
+				g_Vsd->m_pFontL = NULL;
 				
 				SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_FONT ), g_Vsd->m_logfont.lfFaceName );
 			}

@@ -173,12 +173,10 @@ void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
 				int iAlfa = ( int )yc.alfa;
 				
 				m_pPlane[ iIndex + 0 ] = ( PIXEL_t )(
-					( yc.y * ( 256 - iAlfa ) + m_pPlane[ iIndex + 0 ] * iAlfa ) >> 8
+					yc.y + ((  m_pPlane[ iIndex + 0 ] * iAlfa ) >> 8 )
 				);
 				m_pPlane[ iIndex + 1 ] = ( PIXEL_t )(
-					(
-						(( x & 1 )? yc.cr : yc.cb ) * ( 256 - iAlfa ) + m_pPlane[ iIndex + 1 ] * iAlfa
-					) >> 8
+					(( x & 1 )? yc.cr : yc.cb ) + (( m_pPlane[ iIndex + 1 ] * iAlfa ) >> 8 )
 				);
 			}else{
 				*( USHORT *)( m_pPlane + iIndex ) = ( x & 1 ) ? yc.ycr : yc.ycb;
@@ -210,12 +208,10 @@ void CVsdFilterAvs::FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT 
 			
 			for( int x = x1; x <= x2; ++x, iIndex += 2 ){
 				m_pPlane[ iIndex + 0 ] = ( PIXEL_t )(
-					( yc.y * ( 256 - iAlfa ) + m_pPlane[ iIndex + 0 ] * iAlfa ) >> 8
+					yc.y + ((  m_pPlane[ iIndex + 0 ] * iAlfa ) >> 8 )
 				);
 				m_pPlane[ iIndex + 1 ] = ( PIXEL_t )(
-					(
-						(( x & 1 )? yc.cr : yc.cb ) * ( 256 - iAlfa ) + m_pPlane[ iIndex + 1 ] * iAlfa
-					) >> 8
+					(( x & 1 )? yc.cr : yc.cb ) + (( m_pPlane[ iIndex + 1 ] * iAlfa ) >> 8 )
 				);
 			}
 		}else{

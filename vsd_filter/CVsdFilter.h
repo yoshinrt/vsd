@@ -18,19 +18,19 @@
 	typedef UCHAR	PIXEL_t;
 	
 	#define RGB2YCA( r, g, b, a ) { \
-		(( int )( 0.299 * ( r ) + 0.587 * ( g ) + 0.114 * ( b )) >> 4 ), \
-		(( int )(-0.169 * ( r ) - 0.331 * ( g ) + 0.500 * ( b )) >> 4 ) + 0x80, \
-		(( int )( 0.299 * ( r ) + 0.587 * ( g ) + 0.114 * ( b )) >> 4 ), \
-		(( int )( 0.500 * ( r ) - 0.419 * ( g ) - 0.081 * ( b )) >> 4 ) + 0x80, \
+		( int )(( 0.299 * ( r ) + 0.587 * ( g ) + 0.114 * ( b )        ) / 16 * ( 256 - ( a )) / 256 ), \
+		( int )((-0.169 * ( r ) - 0.331 * ( g ) + 0.500 * ( b ) + 2048 ) / 16 * ( 256 - ( a )) / 256 ), \
+		( int )(( 0.299 * ( r ) + 0.587 * ( g ) + 0.114 * ( b )        ) / 16 * ( 256 - ( a )) / 256 ), \
+		( int )(( 0.500 * ( r ) - 0.419 * ( g ) - 0.081 * ( b ) + 2048 ) / 16 * ( 256 - ( a )) / 256 ), \
 		( a ) \
 	}
 #else
 	typedef short	PIXEL_t;
 	
 	#define RGB2YCA( r, g, b, a ) { \
-		( int )( 0.299 * ( r ) + 0.587 * ( g ) + 0.114 * ( b )), \
-		( int )(-0.169 * ( r ) - 0.331 * ( g ) + 0.500 * ( b )), \
-		( int )( 0.500 * ( r ) - 0.419 * ( g ) - 0.081 * ( b )), \
+		( int )(( 0.299 * ( r ) + 0.587 * ( g ) + 0.114 * ( b )) * ( 256 - ( a )) / 256 ), \
+		( int )((-0.169 * ( r ) - 0.331 * ( g ) + 0.500 * ( b )) * ( 256 - ( a )) / 256 ), \
+		( int )(( 0.500 * ( r ) - 0.419 * ( g ) - 0.081 * ( b )) * ( 256 - ( a )) / 256 ), \
 		( a ) \
 	}
 #endif
@@ -177,10 +177,10 @@ class CVsdFilter {
 		const PIXEL_YCA &yc, UINT uFlag
 	);
 	
-	void DrawFont( int x, int y, UCHAR c, const PIXEL_YCA &yc, UINT uFlag );
-	void DrawFont( int x, int y, UCHAR c, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag );
-	void DrawString( char *szMsg, const PIXEL_YCA &yc, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
-	void DrawString( char *szMsg, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
+	void DrawFont( int x, int y, UCHAR c, CVsdFont *pFont, const PIXEL_YCA &yc, UINT uFlag );
+	void DrawFont( int x, int y, UCHAR c, CVsdFont *pFont, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag );
+	void DrawString( char *szMsg, CVsdFont *pFont, const PIXEL_YCA &yc, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
+	void DrawString( char *szMsg, CVsdFont *pFont, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
 	
 	// ポリゴン描写
 	void PolygonClear( void );
@@ -194,6 +194,9 @@ class CVsdFilter {
 	);
 	
 	BOOL DrawVSD( void );
+	void DrawGSnake( int iCx, int iCy, int iR );
+	void DrawMeterPanel0( void );
+	void DrawMeterPanel1( void );
 	
 	enum {
 		IMG_FILL	= ( 1 << 0 ),
@@ -208,7 +211,9 @@ class CVsdFilter {
 	PolygonData_t	*m_Polygon;
 	
 	// フォント
-	CVsdFont	*m_pFont;
+	CVsdFont	*m_pFontS;
+	CVsdFont	*m_pFontM;
+	CVsdFont	*m_pFontL;
 	LOGFONT		m_logfont;
 	
 	// 仮想関数
