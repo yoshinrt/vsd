@@ -62,6 +62,7 @@ class CVsdLog {
 	double		m_dMinG;	// Œ¸‘¬ G
 	
 	int			m_iMaxSpeed;
+	double		m_dLogStartTime;	// ƒƒOŠJnŠÔ
 	
 	CVsdLog();
 	~CVsdLog();

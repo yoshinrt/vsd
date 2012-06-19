@@ -42,19 +42,22 @@
 #define GSnakeLen		m_piParamT[ TRACK_G_Len ]
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] * ( INVERT_G / 1000.0 ))
 #define SLineWidth		( m_piParamT[ TRACK_SLineWidth ] / 10.0 )
+#define DispGraph		m_piParamC[ CHECK_GRAPH ]
 
 #ifdef AVS_PLUGIN
-	#define DispFrameInfo	0
+	#define DispSyncInfo	0
 #else
-	#define DispFrameInfo	m_piParamC[ CHECK_FRAME ]
+	#define DispSyncInfo	m_piParamC[ CHECK_SYNCINFO ]
 #endif
 
 #ifdef GPS_ONLY
 	#define Aspect			m_piParamT[ TRACK_Aspect ]
 	#define AspectRatio		(( double )m_piParamT[ TRACK_Aspect ] / 1000 )
+	#define MeterPosRight	m_piParamC[ CHECK_METER_POS ]
 #else
 	#define Aspect			1000
 	#define AspectRatio		1
+	#define MeterPosRight	!m_piParamC[ CHECK_METER_POS ]
 #endif
 
 #ifdef GPS_ONLY
@@ -793,6 +796,9 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 		dLong0 = *( int *)( szBuf + 0x50 ) / 460800.0;
 		dTime = 0;
 		
+		// 時間取得 UTC * 1000
+		dTime0 = ( *( long *)( szBuf + 0x48 ) / 100 % ( 3600 * 24 * 10 )) / 10.0;
+		
 		while( gzread( fp, szBuf, 18 )){
 			
 			dLati = *( short int *)( szBuf + 0x2 ) / 460800.0 + dLati0;
@@ -971,6 +977,8 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	} )
 	
 	DeleteIfZero( m_GPSLog );
+	if( m_GPSLog ) m_GPSLog->m_dLogStartTime = dTime0 + 9 * 3600;
+	
 	return m_GPSLog != NULL;
 }
 
@@ -1202,39 +1210,6 @@ double CVsdFilter::LapNum2LogNum( CVsdLog *Log, int iLapNum ){
 		a * ( GPSEd - GPSSt ) + GPSSt;
 }
 
-/*** パラメータ調整用スピードグラフ *****************************************/
-
-#define SPEED_GRAPH_SCALE	2
-
-void CVsdFilter::DrawSpeedGraph( CVsdLog *Log, const PIXEL_YCA &yc ){
-	
-	int	iLogNum;
-	int	x = 0;
-	int iCursor = GetHeight() - 1;
-	
-	iLogNum = Log->m_iLogNum - GetWidth() * SPEED_GRAPH_SCALE / 2;
-	if( iLogNum < 0 ){
-		x = -iLogNum / SPEED_GRAPH_SCALE;
-		iLogNum = 0;
-	}
-	
-	for( ; x < GetWidth() - 1 && iLogNum < Log->m_iCnt - 1; ++x, iLogNum += SPEED_GRAPH_SCALE ){
-		DrawLine(
-			x,     GetHeight() - 1 - ( int )Log->Speed( iLogNum ),
-			x + 1, GetHeight() - 1 - ( int )Log->Speed( iLogNum + SPEED_GRAPH_SCALE ),
-			1, yc, 0
-		);
-		
-		if( x == GetWidth() / 2 ) iCursor = GetHeight() - 1 - ( int )Log->Speed( iLogNum );
-	}
-	
-	DrawLine(
-		GetWidth() / 2, iCursor - 10,
-		GetWidth() / 2, iCursor + 10,
-		1, yc, 0
-	);
-}
-
 /*** ラップタイム再計算 (手動) **********************************************/
 
 void CVsdFilter::CalcLapTime( void ){
@@ -1409,8 +1384,6 @@ void CVsdFilter::CalcLapTimeAuto( void ){
 /*** メーター描画 ***********************************************************/
 /****************************************************************************/
 
-/*** メーター等描画 *********************************************************/
-
 static const PIXEL_YCA	yc_black		= RGB2YC(    0,    0,    0 );
 static const PIXEL_YCA	yc_white		= RGB2YC( 4095, 4095, 4095 );
 static const PIXEL_YCA	yc_gray			= RGB2YC( 2048, 2048, 2048 );
@@ -1440,6 +1413,100 @@ static const PIXEL_YCA	yc_gray_a		= RGB2YCA( 1024, 1024, 1024, 0x80 );
 #define COLOR_CURRENT_POS	yc_red
 #define COLOR_FASTEST_POS	yc_green
 #define COLOR_G_SCALE		yc_black
+
+/*** パラメータ調整用スピードグラフ *****************************************/
+
+#define SPEED_GRAPH_SCALE	2
+
+void CVsdFilter::DrawSpeedGraph(
+	CVsdLog *Log,
+	int iX, int iY, int iW, int iH,
+	const PIXEL_YCA &yc,
+	int iDirection
+){
+	
+	int	iLogNum;
+	int	x = iX;
+	int iCursor = 0;
+	
+	char	szBuf[ 10 ];
+	
+	iLogNum = Log->m_iLogNum - iW * SPEED_GRAPH_SCALE / 2;
+	if( iLogNum < 0 ){
+		x = iX - iLogNum / SPEED_GRAPH_SCALE;
+		iLogNum = 0;
+	}
+	
+	for( ; x < iX + iW - 1 && iLogNum < Log->m_iCnt - 1; ++x, iLogNum += SPEED_GRAPH_SCALE ){
+		DrawLine(
+			x,     iY + iH - 1 - ( int )Log->Speed( iLogNum )                     * iH / Log->m_iMaxSpeed,
+			x + 1, iY + iH - 1 - ( int )Log->Speed( iLogNum + SPEED_GRAPH_SCALE ) * iH / Log->m_iMaxSpeed,
+			1, yc, 0
+		);
+		
+		if( x == iX + iW / 2 ) iCursor = iLogNum;
+	}
+	
+	int	iVal = ( int )Log->Speed( iCursor );
+	iY = iY + iH - 1 - iH * iVal / Log->m_iMaxSpeed;
+	x  = iX + iW / 2;
+	DrawLine(
+		x, iY,
+		x + ( iDirection ? -10 : 10 ), iY - 10,
+		1, yc, 0
+	);
+	
+	sprintf( szBuf, "%d km/h", iVal );
+	DrawString( szBuf, m_pFontS, yc, yc_black, 0,
+		x + ( iDirection ? ( -10 - strlen( szBuf ) * m_pFontS->GetW()): 10 ),
+		iY - 10 - m_pFontS->GetH() );
+}
+
+void CVsdFilter::DrawTachoGraph(
+	CVsdLog *Log,
+	int iX, int iY, int iW, int iH,
+	const PIXEL_YCA &yc,
+	int iDirection
+){
+	
+	int	iLogNum;
+	int	x = iX;
+	int iCursor = 0;
+	
+	char	szBuf[ 10 ];
+	
+	iLogNum = Log->m_iLogNum - iW * SPEED_GRAPH_SCALE / 2;
+	if( iLogNum < 0 ){
+		x = iX - iLogNum / SPEED_GRAPH_SCALE;
+		iLogNum = 0;
+	}
+	
+	for( ; x < iX + iW - 1 && iLogNum < Log->m_iCnt - 1; ++x, iLogNum += SPEED_GRAPH_SCALE ){
+		DrawLine(
+			x,     iY + iH - 1 - ( int )Log->Tacho( iLogNum )                     * iH / 7000,
+			x + 1, iY + iH - 1 - ( int )Log->Tacho( iLogNum + SPEED_GRAPH_SCALE ) * iH / 7000,
+			1, yc, 0
+		);
+		
+		if( x == iX + iW / 2 ) iCursor = iLogNum;
+	}
+	
+	int	iVal = ( int )Log->Tacho( iCursor );
+	iY = iY + iH - 1 - iH * iVal / 7000;
+	x  = iX + iW / 2;
+	DrawLine(
+		x, iY,
+		x + ( iDirection ? -10 : 10 ), iY - 10,
+		1, yc, 0
+	);
+	
+	sprintf( szBuf, "%d rpm", iVal );
+	DrawString( szBuf, m_pFontS, yc, yc_black, 0,
+		x + ( iDirection ? ( -10 - strlen( szBuf ) * m_pFontS->GetW()): 10 ),
+		iY - 10 - m_pFontS->GetH() );
+}
+
+/*** メーター等描画 *********************************************************/
 
 BOOL CVsdFilter::DrawVSD( void ){
 //
@@ -1671,10 +1738,25 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	#define Float2Time( n )	( int )( n ) / 60, fmod( n, 60 )
 	
-	if( DispFrameInfo ){
+	if( DispSyncInfo ){
 		
-		#ifndef GPS_ONLY
-			DrawString( "        start       end     range cur.pos", m_pFontM, COLOR_STR, COLOR_TIME_EDGE, 0, 0, GetHeight() / 3 );
+		m_iPosX = 0;
+		m_iPosY = GetHeight() / 3;
+		
+		#ifdef GPS_ONLY
+			if( m_GPSLog ){
+				i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->m_dLogNum / LOG_FREQ ) * 100 ) % ( 24 * 3600 * 100 );
+				sprintf(
+					szBuf, "GPS time: %02d:%02d:%02d.%02d",
+					i / 360000,
+					i / 6000 % 60,
+					i /  100 % 60,
+					i        % 100
+				);
+				DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );
+			}
+		#else // !GPS_ONLY
+			DrawString( "        start       end     range cur.pos", m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
 			
 			sprintf(
 				szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
@@ -1683,7 +1765,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 				Float2Time(( VideoEd - VideoSt ) / GetFPS()),
 				GetFrameCnt()
 			);
-			DrawString( szBuf, m_pFontM, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );
+			DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
 			
 			if( m_VsdLog ){
 				sprintf(
@@ -1693,8 +1775,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
 					m_VsdLog->m_iLogNum
 				);
-				DrawString( szBuf, m_pFontM, COLOR_STR, COLOR_TIME_EDGE, 0 );
-				DrawSpeedGraph( m_VsdLog, yc_red );
+				DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
 			}
 			
 			if( m_GPSLog ){
@@ -1705,12 +1786,47 @@ BOOL CVsdFilter::DrawVSD( void ){
 					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),
 					m_GPSLog->m_iLogNum
 				);
-				DrawString( szBuf, m_pFontM, COLOR_STR, COLOR_TIME_EDGE, 0 );
+				DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
 			}
 		#endif	// !GPS_ONLY
+	}
+	
+	if( DispGraph || DispSyncInfo ){
+		// グラフ
+		const int iGraphW = GetWidth()  * 66 / 100;
+		const int iGraphH = GetHeight() * 23 / 100;
+		int       iGraphX = GetWidth()  *  2 / 100; if( !MeterPosRight ) iGraphX = GetWidth() - iGraphX - iGraphW;
+		const int iGraphY = GetHeight() * 75 / 100;
 		
-		if( m_GPSLog ){
-			DrawSpeedGraph( m_GPSLog, yc_cyan );
+		DrawRect(
+			iGraphX, iGraphY,
+			iGraphX + iGraphW - 1,
+			iGraphY + iGraphH - 1,
+			COLOR_PANEL, CVsdFilter::IMG_FILL
+		);
+		
+		if( m_VsdLog ){
+			DrawSpeedGraph(
+				m_VsdLog,
+				iGraphX, iGraphY,
+				iGraphW, iGraphH,
+				yc_orange, 1
+			);
+			if( !DispSyncInfo ) DrawTachoGraph(
+				m_VsdLog,
+				iGraphX, iGraphY,
+				iGraphW, iGraphH,
+				yc_cyan, 0
+			);
+		}
+		
+		if(( !m_VsdLog || DispSyncInfo ) && m_GPSLog ){
+			DrawSpeedGraph(
+				m_GPSLog,
+				iGraphX, iGraphY,
+				iGraphW, iGraphH,
+				yc_cyan, 0
+			);
 		}
 	}
 	
@@ -1782,7 +1898,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		);
 		
 		// スタートライン表示
-		if( DispFrameInfo && m_iLapMode == LAPMODE_GPS ){
+		if( DispSyncInfo && m_iLapMode == LAPMODE_GPS ){
 			double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
 			
 			int x1 = ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsX ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
@@ -1855,13 +1971,7 @@ void CVsdFilter::DrawMeterPanel0( void ){
 	int	iMeterCx;
 	if( m_piParamS[ SHADOW_METER_CX ] >= 0 ){
 		iMeterCx = m_piParamS[ SHADOW_METER_CX ];
-	}else if(
-		#ifdef GPS_ONLY
-			m_piParamC[ CHECK_METER_POS ]
-		#else
-			!m_piParamC[ CHECK_METER_POS ]
-		#endif
-	){
+	}else if( MeterPosRight ){
 		iMeterCx = GetWidth() - iMeterR * Aspect / 1000 - 2;
 	}else{
 		iMeterCx = iMeterR * Aspect / 1000 + 1;
@@ -2057,13 +2167,7 @@ void CVsdFilter::DrawMeterPanel1( void ){
 	int	iMeterCx;
 	if( m_piParamS[ SHADOW_METER_CX ] >= 0 ){
 		iMeterCx = m_piParamS[ SHADOW_METER_CX ];
-	}else if(
-		#ifdef GPS_ONLY
-			m_piParamC[ CHECK_METER_POS ]
-		#else
-			!m_piParamC[ CHECK_METER_POS ]
-		#endif
-	){
+	}else if( MeterPosRight ){
 		iMeterCx = GetWidth() - iMeterR * Aspect / 1000 - 2;
 	}else{
 		iMeterCx = iMeterR * Aspect / 1000 + 1;

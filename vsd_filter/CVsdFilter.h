@@ -240,7 +240,18 @@ class CVsdFilter {
 	
 	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
 	
-	void DrawSpeedGraph( CVsdLog *Log, const PIXEL_YCA &yc );
+	void DrawSpeedGraph(
+		CVsdLog *Log,
+		int iX, int iY, int iW, int iH,
+		const PIXEL_YCA &yc,
+		int	iDirection
+	);
+	void DrawTachoGraph(
+		CVsdLog *Log,
+		int iX, int iY, int iW, int iH,
+		const PIXEL_YCA &yc,
+		int	iDirection
+	);
 	
 	CVsdLog		*m_VsdLog;
 	CVsdLog		*m_GPSLog;

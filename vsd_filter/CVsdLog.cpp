@@ -38,7 +38,8 @@ CVsdLog::CVsdLog(){
 	m_dMaxG = 0;
 	m_dMinG = 0;
 	
-	m_iMaxSpeed	= 0;
+	m_iMaxSpeed		= 0;
+	m_dLogStartTime	= -1;
 }
 
 /*** デストラクタ ***********************************************************/
