@@ -180,7 +180,7 @@ FILTER_DLL filter = {
 	NULL,						//  拡張データ領域へのポインタ (FILTER_FLAG_EX_DATAが立っている時に有効)
 	NULL,						//  拡張データサイズ (FILTER_FLAG_EX_DATAが立っている時に有効)
 	NULL,						//  フィルタ情報へのポインタ (FILTER_FLAG_EX_INFORMATIONが立っている時に有効)
-	NULL,						//	セーブが開始される直前に呼ばれる関数へのポインタ (NULLなら呼ばれません)
+	func_save_start,			//	セーブが開始される直前に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 	NULL,						//	セーブが終了した直前に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 };
 
@@ -1024,6 +1024,13 @@ BOOL func_update( FILTER *filter, int status ){
 	
 	bReEnter = FALSE;
 	
+	return TRUE;
+}
+
+/*** save 開始前に同期情報 off **********************************************/
+
+BOOL func_save_start( FILTER *filter,int s,int e,void *editp ){
+	filter->check[ CHECK_SYNCINFO ] = 0;
 	return TRUE;
 }
 
