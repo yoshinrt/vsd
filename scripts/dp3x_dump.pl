@@ -9,7 +9,7 @@ read( fpIn, $_, 0x78, 0 );
 ( $l, $h ) = unpack( 'II', substr( $_, 0x48, 8 ));
 $_ = $h * ( 0xFFFFFFFF + 1 ) + $l;
 ( $Sec, $Min, $Hour, $Day, $Mon, $Year ) =
-	localtime( $_ / 1000 + 9 * 3600 );
+	localtime( $_ / 1000 );
 
 printf( "%X\n", $_ );
 printf(

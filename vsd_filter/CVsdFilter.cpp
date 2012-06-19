@@ -797,7 +797,7 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 		dTime = 0;
 		
 		// ŽžŠÔŽæ“¾ UTC * 1000
-		dTime0 = ( *( long *)( szBuf + 0x48 ) / 100 % ( 3600 * 24 * 10 )) / 10.0;
+		dTime0 = fmod(( double )*( __int64 *)( szBuf + 0x48 ) / 1000, 3600 * 24 );
 		
 		while( gzread( fp, szBuf, 18 )){
 			
@@ -823,6 +823,7 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 			uGPSCnt++;
 			dTime += 0.2;
 		}
+		dTime0 += 9 * 3600; // ‚È‚º‚© UTC-9 ‚ÌŽžŠÔ‚È‚Ì‚ÅC•â³
 	}
 	
 	/*** nmea ***************************************************************/
@@ -1743,19 +1744,19 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_iPosX = 0;
 		m_iPosY = GetHeight() / 3;
 		
-		#ifdef GPS_ONLY
-			if( m_GPSLog ){
-				i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->m_dLogNum / LOG_FREQ ) * 100 ) % ( 24 * 3600 * 100 );
-				sprintf(
-					szBuf, "GPS time: %02d:%02d:%02d.%02d",
-					i / 360000,
-					i / 6000 % 60,
-					i /  100 % 60,
-					i        % 100
-				);
-				DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );
-			}
-		#else // !GPS_ONLY
+		if( m_GPSLog ){
+			i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->m_dLogNum / LOG_FREQ ) * 100 ) % ( 24 * 3600 * 100 );
+			sprintf(
+				szBuf, "GPS time: %02d:%02d:%02d.%02d",
+				i / 360000,
+				i / 6000 % 60,
+				i /  100 % 60,
+				i        % 100
+			);
+			DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );
+		}
+		
+		#ifndef GPS_ONLY
 			DrawString( "        start       end     range cur.pos", m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
 			
 			sprintf(
@@ -1791,7 +1792,13 @@ BOOL CVsdFilter::DrawVSD( void ){
 		#endif	// !GPS_ONLY
 	}
 	
-	if( DispGraph || DispSyncInfo ){
+	if(
+		#ifdef GPS_ONLY
+			DispGraph
+		#else
+			DispGraph || DispSyncInfo
+		#endif
+	){
 		// ƒOƒ‰ƒt
 		const int iGraphW = GetWidth()  * 66 / 100;
 		const int iGraphH = GetHeight() * 23 / 100;
