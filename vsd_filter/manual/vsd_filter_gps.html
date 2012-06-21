@@ -129,7 +129,8 @@ B.ConsoleEm {
 
 <a name="Download"></a>
 <H2>ダウンロード</H2>
-<a href="vsd_filter_gps106q.lzh">vsd_filter_gps106q.lzh</a> (2011/11/12 更新)<br>
+<a href="vsd_filter_gps107beta.lzh">vsd_filter_gps107beta.lzh</a> (2012/06/21 更新)<br>
+<a href="vsd_filter_gps106q.lzh">vsd_filter_gps106q.lzh</a> (旧バージョン)<br>
 <!--過去バージョンは<a href="#OldVersion">こちら</a> (変更履歴にリンクがあります)-->
 
 <a name="Overview"></a>
@@ -147,7 +148,7 @@ VSD for GPS (以下，VSD) は，GPS データロガーで記録したログファイルと，車載ビデオ
 <ul>
 	<li>NMEA-0183 フォーマット<br>
 		GPS ログファイルとしては最も汎用的な形式です．$GPRMC センテンスが含まれている必要があります．GPS ログ記録周期はどんなものでも読み込めますが，記録周期が短いほどより正確な情報を表示できます．
-	<li><a href="http://dp3.jp/dp3/LAP+/index.html" target="_blank">LAP+</a> 用ログファイル *.dp3 形式
+	<li><a href="http://dp3.jp/" target="_blank">LAP+ / Lap+Android</a> 用ログファイル *.dp3 *.dp3x 形式
 </ul>
 
 <p>
@@ -300,8 +301,6 @@ VSD 使用の流れは，主に以下のようになっています．
 		<ul>
 			<li>ログ位置調整<br>
 				動画と GPS ログのタイミング合わせに使用します．
-			<li>最大スピード<br>
-				スピードメーターの最大値を設定します．
 			<li>走行軌跡長さ<br>
 				走行軌跡の長さを秒単位で設定します．ただし簡易ラップタイム計測を行っているときは，現在走行中のラップの軌跡のみが表示されます．<br>
 				0 に設定すると，走行軌跡は表示されません．
@@ -322,9 +321,11 @@ VSD 使用の流れは，主に以下のようになっています．
 			<li>ラップタイム表示<br>
 				簡易ラップタイム計測を行う場合，ON に設定します．
 			<li>メーター位置変更<br>
-				メーターを右に表示する場合，ON に設定します．
-			<li>スピードグラフ表示<br>
-				同期設定に使用する情報を表示する場合，ON に設定します．
+				スピードグラフを表示する場合，ON に設定します．
+			<li>同期情報表示<br>
+				GPS の時刻を表示する場合，ON に設定します．動画保存時は強制的に OFF にされます．
+			<li>新メーターパネル<br>
+				ON にすると，メーターパネルデザインを新しいものに変更します．
 		</ul>
 	<li>GPS ログオープンボタン<br>
 		読み込むGPSログを選択します．
@@ -430,7 +431,7 @@ VSDFilter (clip, string "gps_file", string "font",
 							int "gps_end"	</td><td>動画とログの同期情報です．<br>
 													video_start の時刻の映像が gps_start の時刻のログに，<br>
 													video_end の時刻の映像が gps_end の時刻のログに対応することを示します．</td></tr>
-	<tr class="Color"><td>int "speed_meter"	</td><td>設定スライダの「最大スピード」と同じ値・意味です．</td></tr>
+	<tr class="Color"><td>int "speed_meter"	</td><td>メーターパネルの最大スピードを指定します．</td></tr>
 	<tr class="Color"><td>int "map_length"	</td><td>設定スライダの「走行軌跡長さ」と同じ値・意味です．</td></tr>
 	<tr class="Color"><td>int "map_size"	</td><td>設定スライダの「走行軌跡サイズ」と同じ値・意味です．</td></tr>
 	<tr class="Color"><td>int "map_angle"	</td><td>設定スライダの「走行軌跡回転」と同じ値・意味です．</td></tr>
@@ -439,6 +440,8 @@ VSDFilter (clip, string "gps_file", string "font",
 	<tr class="Color"><td>int "aspect_ratio"</td><td>設定スライダの「アスペクト比」と同じ値・意味です．</td></tr>
 	<tr class="Color"><td>int "lap_time"	</td><td>1を指定すると，ラップタイムが表示されます．</td></tr>
 	<tr class="Color"><td>int "meter_pos"	</td><td>1を指定すると，メーターパネルが右に表示されます．</td></tr>
+	<tr class="Color"><td>int "graph"		</td><td>1を指定すると，スピードグラフが表示されます．</td></tr>
+	<tr class="Color"><td>int "panel_design"</td><td>メーターパネルデザイン変更  0:旧デザイン 1:新デザイン</td></tr>
 	<tr class="Color"><td>int "meter_cx"	</td><td>メーターパネル中心の x 座標を指定します．</td></tr>
 	<tr class="Color"><td>int "meter_cy"	</td><td>メーターパネル中心の y 座標を指定します．</td></tr>
 	<tr class="Color"><td>int "meter_r"		</td><td>メーターパネルの半径を指定します．</td></tr>
@@ -495,6 +498,11 @@ VSDFilter (clip, string "gps_file", string "font",
 <H2>変更履歴</H2>
 <a name="OldVersion"></a>
 <table>
+	<tr class="Color"><td>v1.07β</td>
+		<td>・メーターパネル・スピードグラフのデザイン変更<br>
+			・Lap+Android の *.dp3x 形式に仮対応<br>
+			・同期用に GPS 時間表示<br>
+			・最大スピードを自動認識，スピード設定スライダは削除</td></tr>
 	<tr class="Color"><td>v1.06q</td>
 		<td>・ラップタイム手動計測にジムカーナ用のモードを追加</td></tr>
 	<tr class="Color"><td>v1.06p</td>

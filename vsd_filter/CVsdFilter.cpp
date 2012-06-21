@@ -1917,7 +1917,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 	}
 	
-	DrawMeterPanel1();
+	switch( m_piParamC[ CHECK_PanelDesign ] ){
+		case 0: DrawMeterPanel0(); break;
+		case 1: DrawMeterPanel1(); break;
+	}
 	return TRUE;
 }
 

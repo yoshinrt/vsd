@@ -15,6 +15,7 @@ DEF_CHECKBOX_N(	CHECK_LOGPOS,	0,	"ログ位置自動認識",		NULL		)
 #endif
 DEF_CHECKBOX(	CHECK_GRAPH,	0,	"グラフ表示",			"graph"		)
 DEF_CHECKBOX_N(	CHECK_SYNCINFO,	0,	"同期情報表示",			NULL		)
+DEF_CHECKBOX( CHECK_PanelDesign,1,	"新メーターパネル",		"panel_design"	)
 
 #undef DEF_CHECKBOX
 #undef DEF_CHECKBOX_N
