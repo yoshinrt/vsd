@@ -123,7 +123,7 @@ CVsdFilter::CVsdFilter (){
 	m_bCalcLapTimeReq	= FALSE;
 	
 	m_szLogFile			= new char[ MAX_PATH + 1 ];
-	m_szGPSLogFile		= new char[ MAX_PATH + 1 ];
+	m_szGPSLogFile		= new char[ BUF_SIZE ];
 	
 	// DrawPolygon 用バッファ
 	m_Polygon			= new PolygonData_t[ MAX_POLY_HEIGHT ];
@@ -712,37 +712,166 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 		m_GPSLog = NULL;
 	}
 	
-	if(( fp = gzopen(( char *)szFileName, "rb" )) == NULL ) return FALSE;
-	
 	GPS_LOG_t	*GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG * GPS_FREQ / LOG_FREQ ) ];
 	
-	/*** dp3 ****************************************************************/
-	
-	if( IsExt(( char *)szFileName, "dp3" )){
+	while( *szFileName ){
 		
-		gzseek( fp, 0x100, SEEK_CUR );
+		// ファイル名を / で分解
+		char const *p = szFileName;
+		if( !( p = strchr( szFileName, '/' ))) p = strchr( szFileName, '\0' );
+		strncpy( szBuf, szFileName, p - szFileName );
+		*( szBuf + ( p - szFileName )) = '\0';
+		szFileName = *p ? p + 1 : p;	// p == '/' ならスキップ
 		
-		#define BigEndianI( p )	( \
-			( *(( UCHAR *)szBuf + p + 0 ) << 24 ) | \
-			( *(( UCHAR *)szBuf + p + 1 ) << 16 ) | \
-			( *(( UCHAR *)szBuf + p + 2 ) <<  8 ) | \
-			( *(( UCHAR *)szBuf + p + 3 )       ))
+		if(( fp = gzopen(( char *)szBuf, "rb" )) == NULL ) return FALSE;
 		
-		#define BigEndianS( p )	( \
-			( *(( UCHAR *)szBuf + p + 0 ) <<  8 ) | \
-			( *(( UCHAR *)szBuf + p + 1 )       ))
+		/*** dp3 ****************************************************************/
 		
-		while( gzread( fp, szBuf, 16 )){
+		if( IsExt(( char *)szBuf, "dp3" )){
 			
-			u = BigEndianI( 0 ) & 0x3FFFFF;
+			gzseek( fp, 0x100, SEEK_CUR );
+			
+			#define BigEndianI( p )	( \
+				( *(( UCHAR *)szBuf + p + 0 ) << 24 ) | \
+				( *(( UCHAR *)szBuf + p + 1 ) << 16 ) | \
+				( *(( UCHAR *)szBuf + p + 2 ) <<  8 ) | \
+				( *(( UCHAR *)szBuf + p + 3 )       ))
+			
+			#define BigEndianS( p )	( \
+				( *(( UCHAR *)szBuf + p + 0 ) <<  8 ) | \
+				( *(( UCHAR *)szBuf + p + 1 )       ))
+			
+			while( gzread( fp, szBuf, 16 )){
+				
+				u = BigEndianI( 0 ) & 0x3FFFFF;
+				// 値補正
+				// 2254460 → 22:54:46.0
+				dTime =	u / 100000 * 3600 +
+						u / 1000 % 100 * 60 +
+						( u % 1000 ) / 10.0;
+				
+				dLati = BigEndianI( 8 ) / 460800.0;
+				dLong = BigEndianI( 4 ) / 460800.0;
+				
+				if( uGPSCnt == 0 ){
+					dLati0 = dLati;
+					dLong0 = dLong;
+					dTime0 = dTime;
+					
+					dLong2Meter = GPSLogGetLength( dLong, dLati, dLong + 1.0 / 3600, dLati ) * 3600;
+					dLati2Meter = GPSLogGetLength( dLong, dLati, dLong, dLati + 1.0 / 3600 ) * 3600;
+				}
+				
+				if( dTime < dTime0 ) dTime += 24 * 3600;
+				dTime -= dTime0;
+				
+				// 単位を補正
+				// 緯度・経度→メートル
+				GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * dLong2Meter );
+				GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * dLati2Meter );
+				
+				// 速度・向き→ベクトル座標
+				GPSLog[ uGPSCnt ].fSpeed	= ( float )( BigEndianS( 12 ) / 10.0 );
+				GPSLog[ uGPSCnt ].fBearing	= ( float )BigEndianS( 14 );
+				GPSLog[ uGPSCnt ].fTime 	= ( float )dTime;
+				
+				if( uGPSCnt >=2 ){
+					if( GPSLog[ uGPSCnt - 1 ].fTime == GPSLog[ uGPSCnt ].fTime ){
+						// 時刻が同じログが続くときそのカウントをする
+						++uSameCnt;
+					}else if( uSameCnt ){
+						// 時刻が同じログが途切れたので，時間を補正する
+						++uSameCnt;
+						
+						for( u = 1; u < uSameCnt; ++ u ){
+							GPSLog[ uGPSCnt - uSameCnt + u ].fTime +=
+								( GPSLog[ uGPSCnt ].fTime - GPSLog[ uGPSCnt - uSameCnt ].fTime )
+								/ uSameCnt * u;
+						}
+						uSameCnt = 0;
+					}
+				}
+				uGPSCnt++;
+			}
+		}
+		
+		/*** dp3x ***************************************************************/
+		
+		if( IsExt(( char *)szBuf, "dp3x" )){
+			
+			// 原点取得
+			gzread( fp, szBuf, 0x78 );
+			double dLatiBase = *( int *)( szBuf + 0x54 ) / 460800.0;
+			double dLongBase = *( int *)( szBuf + 0x50 ) / 460800.0;
+			
+			// 時間取得 UTC * 1000
+			dTime = fmod(( double )*( __int64 *)( szBuf + 0x48 ) / 1000, 3600 * 24 )
+				+ 9 * 3600; // なぜか UTC-9 の時間なので，補正
+			
+			while( gzread( fp, szBuf, 18 )){
+				
+				dLati = *( short int *)( szBuf + 0x2 ) / 460800.0 + dLatiBase;
+				dLong = *( short int *)( szBuf + 0x0 ) / 460800.0 + dLongBase;
+				
+				if( uGPSCnt == 0 ){
+					dLati0 = dLati;
+					dLong0 = dLong;
+					dTime0 = dTime;
+					
+					dLong2Meter = GPSLogGetLength( dLong, dLati, dLong + 1.0 / 3600, dLati ) * 3600;
+					dLati2Meter = GPSLogGetLength( dLong, dLati, dLong, dLati + 1.0 / 3600 ) * 3600;
+				}
+				
+				// 単位を補正
+				// 緯度・経度→メートル
+				GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * dLong2Meter );
+				GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * dLati2Meter );
+				
+				// 速度・向き→ベクトル座標
+				GPSLog[ uGPSCnt ].fSpeed	= ( float )( *( short int *)( szBuf + 0x4 ) / 10.0 );
+				
+				GPSLog[ uGPSCnt ].fBearing	= FLT_MAX;
+				GPSLog[ uGPSCnt ].fTime 	= ( float )( dTime - dTime0 );
+				
+				uGPSCnt++;
+				dTime += 0.2;
+			}
+		}
+		
+		/*** nmea ***************************************************************/
+		
+		else while( gzgets( fp, szBuf, BUF_SIZE ) != Z_NULL ){
+			
+			char	cNorthSouth;
+			char	cEastWest;
+			UINT	uParamCnt;
+			
+			uParamCnt = sscanf( szBuf,
+				"$GPRMC,"
+				"%lg,%*c,"	// time
+				"%lg,%c,"	// lat
+				"%lg,%c,"	// long
+				"%lg,%lg,",	// speed, bearing
+				// 1	2		3				4		5			6		7
+				&dTime, &dLati, &cNorthSouth, &dLong, &cEastWest, &dSpeed, &dBearing
+			);
+			
+			// $GPRMC センテンス以外はスキップ
+			if( uParamCnt < 5 ) continue;
+			
+			// 海外対応w
+			if( cNorthSouth == 'S' ) dLati = -dLati;
+			if( cEastWest   == 'W' ) dLong = -dLong;
+			
 			// 値補正
-			// 2254460 → 22:54:46.0
-			dTime =	u / 100000 * 3600 +
-					u / 1000 % 100 * 60 +
-					( u % 1000 ) / 10.0;
+			// 225446.00 → 22:54:46.00
+			dTime =	( int )dTime / 10000 * 3600 +
+					( int )dTime / 100 % 100 * 60 +
+					fmod( dTime, 100 );
 			
-			dLati = BigEndianI( 8 ) / 460800.0;
-			dLong = BigEndianI( 4 ) / 460800.0;
+			// 4916.452653 → 49度16.45分
+			dLati =	( int )dLati / 100 + fmod( dLati, 100 ) / 60;
+			dLong =	( int )dLong / 100 + fmod( dLong, 100 ) / 60;
 			
 			if( uGPSCnt == 0 ){
 				dLati0 = dLati;
@@ -762,9 +891,9 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * dLati2Meter );
 			
 			// 速度・向き→ベクトル座標
-			GPSLog[ uGPSCnt ].fSpeed	= ( float )( BigEndianS( 12 ) / 10.0 );
-			GPSLog[ uGPSCnt ].fBearing	= ( float )BigEndianS( 14 );
-			GPSLog[ uGPSCnt ].fTime 	= ( float )dTime;
+			GPSLog[ uGPSCnt ].fSpeed	= uParamCnt < 6 ? FLT_MAX : ( float )( dSpeed * 1.852 ); // knot/h → km/h
+			GPSLog[ uGPSCnt ].fBearing	= uParamCnt < 7 ? FLT_MAX : ( float )dBearing;
+			GPSLog[ uGPSCnt ].fTime		= ( float )dTime;
 			
 			if( uGPSCnt >=2 ){
 				if( GPSLog[ uGPSCnt - 1 ].fTime == GPSLog[ uGPSCnt ].fTime ){
@@ -782,157 +911,41 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 					uSameCnt = 0;
 				}
 			}
-			uGPSCnt++;
-		}
-	}
-	
-	/*** dp3x ***************************************************************/
-	
-	if( IsExt(( char *)szFileName, "dp3x" )){
-		
-		// 原点取得
-		gzread( fp, szBuf, 0x78 );
-		dLati0 = *( int *)( szBuf + 0x54 ) / 460800.0;
-		dLong0 = *( int *)( szBuf + 0x50 ) / 460800.0;
-		dTime = 0;
-		
-		// 時間取得 UTC * 1000
-		dTime0 = fmod(( double )*( __int64 *)( szBuf + 0x48 ) / 1000, 3600 * 24 );
-		
-		while( gzread( fp, szBuf, 18 )){
 			
-			dLati = *( short int *)( szBuf + 0x2 ) / 460800.0 + dLati0;
-			dLong = *( short int *)( szBuf + 0x0 ) / 460800.0 + dLong0;
-			
-			if( uGPSCnt == 0 ){
-				dLong2Meter = GPSLogGetLength( dLong, dLati, dLong + 1.0 / 3600, dLati ) * 3600;
-				dLati2Meter = GPSLogGetLength( dLong, dLati, dLong, dLati + 1.0 / 3600 ) * 3600;
-			}
-			
-			// 単位を補正
-			// 緯度・経度→メートル
-			GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * dLong2Meter );
-			GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * dLati2Meter );
-			
-			// 速度・向き→ベクトル座標
-			GPSLog[ uGPSCnt ].fSpeed	= ( float )( *( short int *)( szBuf + 0x4 ) / 10.0 );
-			
-			GPSLog[ uGPSCnt ].fBearing	= FLT_MAX;
-			GPSLog[ uGPSCnt ].fTime 	= ( float )dTime;
-			
-			uGPSCnt++;
-			dTime += 0.2;
-		}
-		dTime0 += 9 * 3600; // なぜか UTC-9 の時間なので，補正
-	}
-	
-	/*** nmea ***************************************************************/
-	
-	else while( gzgets( fp, szBuf, BUF_SIZE ) != Z_NULL ){
-		
-		char	cNorthSouth;
-		char	cEastWest;
-		UINT	uParamCnt;
-		
-		uParamCnt = sscanf( szBuf,
-			"$GPRMC,"
-			"%lg,%*c,"	// time
-			"%lg,%c,"	// lat
-			"%lg,%c,"	// long
-			"%lg,%lg,",	// speed, bearing
-			// 1	2		3				4		5			6		7
-			&dTime, &dLati, &cNorthSouth, &dLong, &cEastWest, &dSpeed, &dBearing
-		);
-		
-		// $GPRMC センテンス以外はスキップ
-		if( uParamCnt < 5 ) continue;
-		
-		// 海外対応w
-		if( cNorthSouth == 'S' ) dLati = -dLati;
-		if( cEastWest   == 'W' ) dLong = -dLong;
-		
-		// 値補正
-		// 225446.00 → 22:54:46.00
-		dTime =	( int )dTime / 10000 * 3600 +
-				( int )dTime / 100 % 100 * 60 +
-				fmod( dTime, 100 );
-		
-		// 4916.452653 → 49度16.45分
-		dLati =	( int )dLati / 100 + fmod( dLati, 100 ) / 60;
-		dLong =	( int )dLong / 100 + fmod( dLong, 100 ) / 60;
-		
-		if( uGPSCnt == 0 ){
-			dLati0 = dLati;
-			dLong0 = dLong;
-			dTime0 = dTime;
-			
-			dLong2Meter = GPSLogGetLength( dLong, dLati, dLong + 1.0 / 3600, dLati ) * 3600;
-			dLati2Meter = GPSLogGetLength( dLong, dLati, dLong, dLati + 1.0 / 3600 ) * 3600;
-		}
-		
-		if( dTime < dTime0 ) dTime += 24 * 3600;
-		dTime -= dTime0;
-		
-		// 単位を補正
-		// 緯度・経度→メートル
-		GPSLog[ uGPSCnt ].fX = ( float )(( dLong - dLong0 ) * dLong2Meter );
-		GPSLog[ uGPSCnt ].fY = ( float )(( dLati0 - dLati ) * dLati2Meter );
-		
-		// 速度・向き→ベクトル座標
-		GPSLog[ uGPSCnt ].fSpeed	= uParamCnt < 6 ? FLT_MAX : ( float )( dSpeed * 1.852 ); // knot/h → km/h
-		GPSLog[ uGPSCnt ].fBearing	= uParamCnt < 7 ? FLT_MAX : ( float )dBearing;
-		GPSLog[ uGPSCnt ].fTime		= ( float )dTime;
-		
-		if( uGPSCnt >=2 ){
-			if( GPSLog[ uGPSCnt - 1 ].fTime == GPSLog[ uGPSCnt ].fTime ){
-				// 時刻が同じログが続くときそのカウントをする
-				++uSameCnt;
-			}else if( uSameCnt ){
-				// 時刻が同じログが途切れたので，時間を補正する
-				++uSameCnt;
+			// 20km/h 以下で 3秒以上 log の間隔が開くとき，0km/h の log を補完する
+			if(
+				uGPSCnt >= 2 &&
+				GPSLog[ uGPSCnt ].fTime - GPSLog[ uGPSCnt - 1 ].fTime >= 3 &&
+				GPSLog[ uGPSCnt ].fSpeed <= 20
+			){
+				// -1 +0 +1 +2
+				// A  B
+				//  ↓
+				// A  A' B' B
 				
-				for( u = 1; u < uSameCnt; ++ u ){
-					GPSLog[ uGPSCnt - uSameCnt + u ].fTime +=
-						( GPSLog[ uGPSCnt ].fTime - GPSLog[ uGPSCnt - uSameCnt ].fTime )
-						/ uSameCnt * u;
-				}
-				uSameCnt = 0;
+				// データ B のコピー
+				GPSLog[ uGPSCnt + 1 ] =
+				GPSLog[ uGPSCnt + 2 ] = GPSLog[ uGPSCnt ];
+				
+				// データ A のコピー
+				GPSLog[ uGPSCnt ] = GPSLog[ uGPSCnt - 1 ];
+				
+				// スピードを 0 に
+				GPSLog[ uGPSCnt ].fSpeed = GPSLog[ uGPSCnt + 1 ].fSpeed = 0;
+				
+				// 時間調整
+				float fDiff = GPSLog[ uGPSCnt - 1 ].fTime - GPSLog[ uGPSCnt - 2 ].fTime;
+				GPSLog[ uGPSCnt     ].fTime += fDiff;
+				GPSLog[ uGPSCnt + 1 ].fTime -= fDiff;
+				
+				uGPSCnt += 2;
 			}
+			
+			uGPSCnt++;
 		}
 		
-		// 20km/h 以下で 3秒以上 log の間隔が開くとき，0km/h の log を補完する
-		if(
-			uGPSCnt >= 2 &&
-			GPSLog[ uGPSCnt ].fTime - GPSLog[ uGPSCnt - 1 ].fTime >= 3 &&
-			GPSLog[ uGPSCnt ].fSpeed <= 20
-		){
-			// -1 +0 +1 +2
-			// A  B
-			//  ↓
-			// A  A' B' B
-			
-			// データ B のコピー
-			GPSLog[ uGPSCnt + 1 ] =
-			GPSLog[ uGPSCnt + 2 ] = GPSLog[ uGPSCnt ];
-			
-			// データ A のコピー
-			GPSLog[ uGPSCnt ] = GPSLog[ uGPSCnt - 1 ];
-			
-			// スピードを 0 に
-			GPSLog[ uGPSCnt ].fSpeed = GPSLog[ uGPSCnt + 1 ].fSpeed = 0;
-			
-			// 時間調整
-			float fDiff = GPSLog[ uGPSCnt - 1 ].fTime - GPSLog[ uGPSCnt - 2 ].fTime;
-			GPSLog[ uGPSCnt     ].fTime += fDiff;
-			GPSLog[ uGPSCnt + 1 ].fTime -= fDiff;
-			
-			uGPSCnt += 2;
-		}
-		
-		uGPSCnt++;
+		gzclose( fp );
 	}
-	
-	gzclose( fp );
 	
 	/************************************************************************/
 	
@@ -1735,63 +1748,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 	}
 	
-	// フレーム表示
-	
-	#define Float2Time( n )	( int )( n ) / 60, fmod( n, 60 )
-	
-	if( DispSyncInfo ){
-		
-		m_iPosX = 0;
-		m_iPosY = GetHeight() / 3;
-		
-		if( m_GPSLog ){
-			i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->m_dLogNum / LOG_FREQ ) * 100 ) % ( 24 * 3600 * 100 );
-			sprintf(
-				szBuf, "GPS time: %02d:%02d:%02d.%02d",
-				i / 360000,
-				i / 6000 % 60,
-				i /  100 % 60,
-				i        % 100
-			);
-			DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );
-		}
-		
-		#ifndef GPS_ONLY
-			DrawString( "        start       end     range cur.pos", m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
-			
-			sprintf(
-				szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
-				Float2Time( VideoSt / GetFPS()),
-				Float2Time( VideoEd / GetFPS()),
-				Float2Time(( VideoEd - VideoSt ) / GetFPS()),
-				GetFrameCnt()
-			);
-			DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
-			
-			if( m_VsdLog ){
-				sprintf(
-					szBuf, "Log%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
-					Float2Time( LogSt / m_VsdLog->m_dFreq ),
-					Float2Time( LogEd / m_VsdLog->m_dFreq ),
-					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
-					m_VsdLog->m_iLogNum
-				);
-				DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
-			}
-			
-			if( m_GPSLog ){
-				sprintf(
-					szBuf, "GPS%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
-					Float2Time( GPSSt / m_GPSLog->m_dFreq ),
-					Float2Time( GPSEd / m_GPSLog->m_dFreq ),
-					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),
-					m_GPSLog->m_iLogNum
-				);
-				DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
-			}
-		#endif	// !GPS_ONLY
-	}
-	
 	if(
 		#ifdef GPS_ONLY
 			DispGraph
@@ -1837,14 +1793,12 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 	}
 	
-	if( !m_VsdLog && !m_GPSLog ) return TRUE;
-	
 	// MAP 表示
 	SelectLogGPS;
 	
 	int	iGx, iGy;
 	
-	if( LineTrace && Log->IsDataExist()){
+	if( LineTrace && Log && Log->IsDataExist()){
 		double dGx, dGy;
 		
 		int iGxPrev = INVALID_POS_I, iGyPrev;
@@ -1916,6 +1870,65 @@ BOOL CVsdFilter::DrawVSD( void ){
 			DrawLine( x1, y1, x2, y2, yc_blue, 0 );
 		}
 	}
+	
+	// フレーム表示
+	
+	#define Float2Time( n )	( int )( n ) / 60, fmod( n, 60 )
+	
+	if( DispSyncInfo ){
+		
+		m_iPosX = 0;
+		m_iPosY = GetHeight() / 3;
+		
+		if( m_GPSLog ){
+			i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->m_dLogNum / LOG_FREQ ) * 100 ) % ( 24 * 3600 * 100 );
+			sprintf(
+				szBuf, "GPS time: %02d:%02d:%02d.%02d",
+				i / 360000,
+				i / 6000 % 60,
+				i /  100 % 60,
+				i        % 100
+			);
+			DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );
+		}
+		
+		#ifndef GPS_ONLY
+			DrawString( "        start       end     range cur.pos", m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
+			
+			sprintf(
+				szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+				Float2Time( VideoSt / GetFPS()),
+				Float2Time( VideoEd / GetFPS()),
+				Float2Time(( VideoEd - VideoSt ) / GetFPS()),
+				GetFrameCnt()
+			);
+			DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
+			
+			if( m_VsdLog ){
+				sprintf(
+					szBuf, "Log%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+					Float2Time( LogSt / m_VsdLog->m_dFreq ),
+					Float2Time( LogEd / m_VsdLog->m_dFreq ),
+					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
+					m_VsdLog->m_iLogNum
+				);
+				DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
+			}
+			
+			if( m_GPSLog ){
+				sprintf(
+					szBuf, "GPS%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+					Float2Time( GPSSt / m_GPSLog->m_dFreq ),
+					Float2Time( GPSEd / m_GPSLog->m_dFreq ),
+					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),
+					m_GPSLog->m_iLogNum
+				);
+				DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
+			}
+		#endif	// !GPS_ONLY
+	}
+	
+	if( !Log ) return TRUE;
 	
 	switch( m_piParamC[ CHECK_PanelDesign ] ){
 		case 0: DrawMeterPanel0(); break;

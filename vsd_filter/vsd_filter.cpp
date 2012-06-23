@@ -11,6 +11,7 @@
 #include <stdio.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "dds.h"
@@ -495,7 +496,6 @@ BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
 		return FALSE;
 	}
 	
-	strcpy( m_szLogFile, szFileName );
 	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_LOG ), szFileName );
 	
 	// trackbar 設定
@@ -522,7 +522,6 @@ BOOL CVsdFilterAvu::GPSLogLoad( const char *szFileName, HWND hwnd ){
 		return FALSE;
 	}
 	
-	strcpy( m_szGPSLogFile, szFileName );
 	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_GPS ), szFileName );
 	
 	// trackbar 設定
@@ -721,6 +720,61 @@ void ExtendDialog( HWND hwnd ){
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 }
 
+/*** ログリード複数ファイル対応版 *******************************************/
+
+int StrCmpForQSort( const void *a, const void *b ){
+	return strcmp( *( const char **)a, *( const char **)b );
+}
+
+BOOL FileOpenDialog( char *&szBuf, int iBufSize, char *szExt ){
+	OPENFILENAME	ofn;
+	memset( &ofn, 0, sizeof( ofn ));
+	
+	ofn.lStructSize	= sizeof( ofn );
+	ofn.lpstrFilter	= szExt;
+	ofn.lpstrFile	= szBuf;
+	ofn.nMaxFile	= iBufSize;
+	ofn.Flags		= OFN_EXPLORER | OFN_ALLOWMULTISELECT | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+	*szBuf			= '\0';
+	
+	if( !GetOpenFileName( &ofn )) return FALSE;
+	
+	// ファイル名の配列を作成
+	char *p = strchr( szBuf, '\0' ) + 1;	// 最初の dir 名をスキップ
+	char *szFileNames[ 100 ];
+	int	iFileCnt = 0;
+	
+	// ファイルが 1個しかない場合，そのままリターン
+	if( !*p ) return TRUE;
+	
+	while( *p ){
+		szFileNames[ iFileCnt++ ] = p;
+		p = strchr( p, '\0' ) + 1;
+	}
+	
+	// ソート
+	qsort( szFileNames, iFileCnt, sizeof( char * ), StrCmpForQSort );
+	
+	// ソート結果を元に新配列作成
+	char *szNewBuf = new char [ BUF_SIZE ];
+	p = szNewBuf;
+	
+	for( int i = 0; i < iFileCnt; ++i ){
+		if( i ) *p++ = '/';
+		
+		strcpy( p, szBuf ); p = strchr( p, '\0' );
+		*p++ = '\\';
+		strcpy( p, szFileNames[ i ] ); p = strchr( p, '\0' );
+		DebugMsgD( "%s\n", szFileNames[ i ] );
+	}
+	
+	// szBuf を挿げ替え
+	delete [] szBuf;
+	szBuf = szNewBuf;
+	
+	return TRUE;
+}
+
 /*** WndProc ****************************************************************/
 
 BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
@@ -860,8 +914,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		#ifndef GPS_ONLY // {
 		  Case ID_BUTT_LOAD_LOG:	// .log ロード
 			if(
-				filter->exfunc->dlg_get_load_name( szBuf, FILE_LOG_EXT, NULL ) &&
-				g_Vsd->ReadLog( szBuf, hwnd )
+				filter->exfunc->dlg_get_load_name( g_Vsd->m_szLogFile, FILE_LOG_EXT, NULL ) &&
+				g_Vsd->ReadLog( g_Vsd->m_szLogFile, hwnd )
 			){
 				// 設定再描画
 				filter->exfunc->filter_window_update( filter );
@@ -875,8 +929,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			
 		  Case ID_BUTT_LOAD_GPS:	// GPS ログロード
 			if(
-				filter->exfunc->dlg_get_load_name( szBuf, FILE_GPS_EXT, NULL ) &&
-				g_Vsd->GPSLogLoad( szBuf, hwnd )
+				FileOpenDialog( g_Vsd->m_szGPSLogFile, BUF_SIZE, FILE_GPS_EXT ) &&
+				g_Vsd->GPSLogLoad( g_Vsd->m_szGPSLogFile, hwnd )
 			){
 				// 設定再描画
 				filter->exfunc->filter_window_update( filter );
