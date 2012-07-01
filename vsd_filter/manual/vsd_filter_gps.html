@@ -177,7 +177,7 @@ VSD は，フリーの動画編集ソフトとして有名な AviUtl のプラグインモジュールとして動
 	<p>
 	最低限のインストールは以上ですが，AviUtl でさまざまな動画ファイルをオープンするために，必要に応じて以下をインストールしてください．(これ以下は VSD というより AviUtl の設定になりますので，より詳細な説明は他の解説サイトを参照してください)
 	<li>ほぼ必須：ffdshow をインストールします．→<a href="http://www.losttechnology.jp/Movie/ffdshowsetup.html" target="_blank">参考リンク</a>
-	<li>*.mp4 を読み込む場合：mp4input.aui をインストールします．<a href="http://www.ttm123.com/net/AviUtl.html" target="_blank">こちらのリンク先</a>の「AviUtlを使ってMP4のファイルを無圧縮でカットする」の項を参考にしてください．
+	<li>*.mp4 を読み込む場合：mp4input.aui をインストールします．→<a href="http://xvidcodec.blog24.fc2.com/blog-entry-114.html" target="_blank">参考リンク</a>
 	<li>MPEG-2 を読み込む場合：m2v.vfp をインストールします．→<a href="http://mbsupport.dip.jp/mb/video_2.htm" target="_blank">こちらのリンク先</a>の「MPEG-2 VIDEO VFAPI Plug-In」の項を参考にしてください．
 	<li>*.avi *.mp4 MPEG-2 以外を読み込む場合：DirectShow File Reader プラグイン for AviUtl をインストールします．→<a href="http://www.tenchi.ne.jp/~yoko/aviutl/index.php?DirectShow%20File%20Reader%20%A5%D7%A5%E9%A5%B0%A5%A4%A5%F3%20for%20AviUtl" target="_blank">参考リンク</a><br>
 	その後，AviUtl メニューの ファイル→環境設定→入力プラグイン優先度の設定 を選択し，「入力プラグインの優先度」ダイアログを表示します．そこで DirectShow File Reader を選択し，「下に移動」ボタンを押し一番下にした後，OK ボタンを押します．<br>
@@ -207,6 +207,7 @@ VSD 使用の流れは，主に以下のようになっています．
 	<li>メニューの 設定→VSDメーター合成の設定 を選ぶと，「VSDメーター合成」ダイアログが表示されます．<br>
 		<img src="vsd_gps_img/menu_setting.jpg">
 	<li>設定ダイアログの GPS ログオープンボタンを押すと，ファイル選択ダイアログが表示されるので，そこで GPS で記録したログファイル (*.nmea *.dp3) を選択してリードします．<br>
+		GPS ログファイル選択時に，SHIFT または CTRL を押しながらファイルをクリックすることで，複数の GPS ログを選択・オープンできます．<br>
 		<img src="vsd_gps_img/dialog2.png">
 	<li>「VSDメーター合成」ダイアログの「スピードグラフ表示」を ON に設定します．
 </ol>
@@ -456,7 +457,7 @@ VSDFilter (clip, string "gps_file", string "font",
 <a name="KnownBug"></a>
 <H2>既知のバグ</H2>
 <ul>
-	<li>VSD は 2時間分の GPS ログしか読み込めないようになっています．これを超えるログは 2時間以内に収まるよう，*.nmea を編集する必要があります．GPS ロガーの中には，数日分のログを一つの *.nmea に出力するものがありますので，このようなログを VSD に読み込ませるときは注意が必要です．
+	<li>VSD は 12時間分の GPS ログしか読み込めないようになっています．これを超えるログは 12時間以内に収まるよう，*.nmea を編集する必要があります．GPS ロガーの中には，数日分のログを一つの *.nmea に出力するものがありますので，このようなログを VSD に読み込ませるときは注意が必要です．
 	<li><strike>16:9 の動画にメーターを合成した場合，メーターが楕円形になる場合があります．</strike> v0.92 にて調整機能を入れました．
 	<li><strike>必要な DLL が不足すると，AviUtil メニューの 設定→VSDメーター合成の設定 が現れません．</strike> v1.06g で改善しました．
 	<li><strike>フォントが判読できないほど乱れる現象が報告されていますが，今のところ再現・解決できていません．その場合は，フォント選択ボタンで他のフォント・サイズを試してみてください．</strike> v1.06l で改善しました．
@@ -482,6 +483,7 @@ VSDFilter (clip, string "gps_file", string "font",
 	<LI>同期合わせにくいんだけど<br>
 		慣れです (^^;
 		<ul>
+			<li>動画に正確な時間が映っている場合，「同期情報」を ON にして表示される GPS 時刻と合わせれば同期が取れます．
 			<li>メインウィンドウでカーソルキーの→を押し続けるとスロー再生のようになるので，車が動き出した瞬間などは特定しやすくなります．
 			<li>メインウィンドウと再生ウィンドウのタイトルバーには，それぞれのウィンドウに表示中のフレーム番号が表示されています．再生ウィンドウで再生しながら同期に適したシーンを発見したら，そのフレーム番号を参考にメインウィンドウにそのシーンを表示させるとよいです．
 			<li>再生ウィンドウで同期ずれを発見した場合，ログ位置調整スライダを調整する前にメインウィンドウでそのシーンを表示させるのを忘れないでください．
@@ -498,6 +500,9 @@ VSDFilter (clip, string "gps_file", string "font",
 <H2>変更履歴</H2>
 <a name="OldVersion"></a>
 <table>
+	<tr class="Color"><td>v1.07</td>
+		<td>・GPS ログ複数リードに対応<br>
+			・GPS ログ最大時間を 12時間に拡大</td></tr>
 	<tr class="Color"><td>v1.07β</td>
 		<td>・メーターパネル・スピードグラフのデザイン変更<br>
 			・Lap+Android の *.dp3x 形式に仮対応<br>

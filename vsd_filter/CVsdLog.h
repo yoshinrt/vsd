@@ -10,7 +10,11 @@
 #ifndef _CVsdLog_h_
 #define _CVsdLog_h_
 
-#define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 2 ))
+#ifdef GPS_ONLY
+	#define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 12 ))
+#else
+	#define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 2 ))
+#endif
 
 /*** macros *****************************************************************/
 
