@@ -1,4 +1,0 @@
-LIBRARY vsd_filter
-
-EXPORTS
-	GetFilterTable @1
