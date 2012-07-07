@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------
-//	フィルタプラグイン ヘッダーファイル for AviUtl version 0.99i4 以降
+//	フィルタプラグイン ヘッダーファイル for AviUtl version 0.99k 以降
 //	By ＫＥＮくん
 //----------------------------------------------------------------------------------
 
@@ -709,16 +709,23 @@ typedef struct {
 								//	WM_FILTER_CHANGE_PARAM	: 自分のフィルタの設定が変更された直後に送られます
 								//	WM_FILTER_CHANGE_EDIT	: 編集中/非編集中が変更された直後に送られます
 								//	これ以降のメッセージはFILTER_FLAG_MAIN_MESSAGE設定時のみ送られます
-								//	WM_FILTER_MAIN_MOUSE_DOWN	: メインウィンドウでマウスのボタンが押された時に送られます
+								//	WM_FILTER_MAIN_MOUSE_DOWN	: メインウィンドウでマウスの左ボタンが押された時に送られます
 								//	WM_FILTER_MAIN_MOUSE_UP		: メインウィンドウでマウスが移動した時に送られます
-								//	WM_FILTER_MAIN_MOUSE_MOVE	: メインウィンドウでマウスのボタンが離された時に送られます
-								//	WM_FILTER_MAIN_MOUSE_DBLCLK	: メインウィンドウでマウスのボタンがダブルクリックされた時に送られます
+								//	WM_FILTER_MAIN_MOUSE_MOVE	: メインウィンドウでマウスの左ボタンが離された時に送られます
+								//	WM_FILTER_MAIN_MOUSE_DBLCLK	: メインウィンドウでマウスの左ボタンがダブルクリックされた時に送られます
+								//	WM_FILTER_MAIN_MOUSE_R_DOWN	: メインウィンドウでマウスの右ボタンが押された時に送られます
+								//	WM_FILTER_MAIN_MOUSE_R_UP	: メインウィンドウでマウスの右ボタンが離された時に送られます
+								//	WM_FILTER_MAIN_MOUSE_WHEEL	: メインウィンドウでマウスのホイールが回転した時に送られます
 								//	WM_FILTER_MAIN_KEY_DOWN		: メインウィンドウでキーが押された時に送られます
 								//	WM_FILTER_MAIN_KEY_UP		: メインウィンドウでキーが離された時に送られます
 								//	WM_FILTER_MAIN_MOVESIZE		: メインウィンドウの位置やサイズが変更された時に送られます
+								//	WM_FILTER_MAIN_CONTEXTMENU	: メインウィンドウでコンテキストメニューが表示される時に送られます
 								//	WM_FILTER_MAIN_MOUSE_???のlparamには編集画像上での座標が入ります(編集中以外は0になります)
+								//	WM_FILTER_MAIN_MOUSE_WHEELのwparamの上位ワードにホイールの回転量が入ります
 								//	WM_FILTER_MAIN_KEY_???のwparamには仮想キーコードが入ります
 								//	WM_FILTER_MAIN_MOVESIZEのlparamにはメインウィンドウのウィンドウハンドルが入ります
+								//	WM_FILTER_MAIN_CONTEXTMENUのlparamにはスクリーン座標が入ります
+								//	WM_FILTER_MAIN_CONTEXTMENUでメニューを表示した時は戻り値をTRUEにしてください(再描画はされません)
 								//	戻り値をTRUEにすると編集内容が更新されたとして全体が再描画されます
 	int		*track;				//	トラックバーの設定値郡へのポインタ (AviUtl側で設定されます)
 	int		*check;				//	チェックボックスの設定値郡へのポインタ (AviUtl側で設定されます)
@@ -814,7 +821,10 @@ typedef struct {
 #define	WM_FILTER_MAIN_KEY_UP			(WM_USER+124)
 #define	WM_FILTER_MAIN_MOVESIZE			(WM_USER+125)
 #define	WM_FILTER_MAIN_MOUSE_DBLCLK		(WM_USER+126)
-
+#define	WM_FILTER_MAIN_MOUSE_R_DOWN		(WM_USER+127)
+#define	WM_FILTER_MAIN_MOUSE_R_UP		(WM_USER+128)
+#define	WM_FILTER_MAIN_MOUSE_WHEEL		(WM_USER+129)
+#define	WM_FILTER_MAIN_CONTEXTMENU		(WM_USER+130)
 #define FILTER_UPDATE_STATUS_ALL		0
 #define FILTER_UPDATE_STATUS_TRACK		0x10000
 #define FILTER_UPDATE_STATUS_CHECK		0x20000

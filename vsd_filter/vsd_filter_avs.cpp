@@ -17,6 +17,7 @@
 #include "CVsdFilter.h"
 
 #define PROG_NAME	"VSDFilter"
+#define VERSION		"v1.07É¿2"
 
 /****************************************************************************/
 

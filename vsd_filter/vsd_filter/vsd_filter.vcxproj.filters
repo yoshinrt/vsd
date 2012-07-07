@@ -57,4 +57,9 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\vsd_filter.def">
+      <Filter>ソース ファイル</Filter>
+    </None>
+  </ItemGroup>
 </Project>

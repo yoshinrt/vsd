@@ -14,3 +14,6 @@ d:\dds\bin\lha a -d ..\vsd_filter_gps.lzh *
 popd
 
 rmdir /s/q zrelease
+
+find "#define PROG_VERSION" vsd_filter.cpp
+pause

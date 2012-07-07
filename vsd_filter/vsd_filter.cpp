@@ -34,6 +34,9 @@
 #define	FILE_GPS_EXT	"GPS file (*.nme* *.dp3*)\0*.nme*; *.dp3*; *.gz\0AllFile (*.*)\0*.*\0"
 #define	FILE_CFG_EXT	"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 
+#define PROG_NAME		"VSDメーター合成"
+#define PROG_VERSION	"v1.07beta2"
+
 /*** new type ***************************************************************/
 
 /*** const ******************************************************************/
@@ -142,8 +145,10 @@ int		shadow_param[] = {
 	#include "def_shadow.h"
 };
 
+char g_szDescription[] = PROG_NAME " " PROG_VERSION;
+
 FILTER_DLL filter = {
-	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_MAIN_MESSAGE,
+	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_MAIN_MESSAGE | FILTER_FLAG_EX_INFORMATION,
 								//	フィルタのフラグ
 								//	FILTER_FLAG_ALWAYS_ACTIVE		: フィルタを常にアクティブにします
 								//	FILTER_FLAG_CONFIG_POPUP		: 設定をポップアップメニューにします
@@ -164,7 +169,7 @@ FILTER_DLL filter = {
 								//	FILTER_FLAG_IMPORT				: インポートメニューを作ります
 								//	FILTER_FLAG_EXPORT				: エクスポートメニューを作ります
 	0,0,						//	設定ウインドウのサイズ (FILTER_FLAG_WINDOW_SIZEが立っている時に有効)
-	"VSDメーター合成",			//	フィルタの名前
+	PROG_NAME,					//	フィルタの名前
 	TRACK_N,					//	トラックバーの数 (0なら名前初期値等もNULLでよい)
 	track_name,					//	トラックバーの名前郡へのポインタ
 	track_default,				//	トラックバーの初期値郡へのポインタ
@@ -180,7 +185,7 @@ FILTER_DLL filter = {
 	NULL,NULL,					//	システムで使いますので使用しないでください
 	NULL,						//  拡張データ領域へのポインタ (FILTER_FLAG_EX_DATAが立っている時に有効)
 	NULL,						//  拡張データサイズ (FILTER_FLAG_EX_DATAが立っている時に有効)
-	NULL,						//  フィルタ情報へのポインタ (FILTER_FLAG_EX_INFORMATIONが立っている時に有効)
+	g_szDescription,			//  フィルタ情報へのポインタ (FILTER_FLAG_EX_INFORMATIONが立っている時に有効)
 	func_save_start,			//	セーブが開始される直前に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 	NULL,						//	セーブが終了した直前に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 };
@@ -397,9 +402,15 @@ int CVsdFilterAvu::GetFrameMark( int iFrame ){
 
 /*** config セーブ **********************************************************/
 
+enum {
+	#define DEF_STR_PARAM( id, var, init, conf_name ) id,
+	#include "def_str_param.h"
+};
+
 BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	FILE	*fp;
 	int		i;
+	UINT	uStrParamFlag = 0;
 	
 	if(( fp = fopen( szFileName, "w" )) == NULL ) return FALSE;
 	
@@ -417,13 +428,18 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 		if( strcmp( var, init ) != 0 ){ \
 			fprintf( fp, "%c \\\n\t" conf_name "=\"%s\"", cSep, var ); \
 			cSep = ','; \
+			uStrParamFlag |= 1 << id; \
 		}
 	#include "def_str_param.h"
 	
 	for( i = 0; i < TRACK_N; ++i ){
 		if(
 			m_szTrackbarName[ i ] == NULL ||
-			i >= TRACK_LineTrace && m_piParamT[ i ] == track_default[ i ]
+			i >= TRACK_LineTrace && m_piParamT[ i ] == track_default[ i ] ||
+			#ifndef GPS_ONLY
+				( i == PARAM_LSt || i == PARAM_LEd ) && !( uStrParamFlag & ( 1 << STRPARAM_LOGFILE )) ||
+			#endif
+			( i == PARAM_GSt || i == PARAM_GEd ) && !( uStrParamFlag & ( 1 << STRPARAM_GPSFILE ))
 		) continue;
 		
 		fprintf(
@@ -471,7 +487,7 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	
 	fprintf( fp, " \\\n)\n"
 	#ifndef GPS_ONLY
-		"Amplify( 0.2 )\n"
+		"# Amplify( 0.2 )\n"
 	#endif
 	);
 	

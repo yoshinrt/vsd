@@ -72,6 +72,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>D:\Program Files\AVIUTL\vsd_filter.auf</OutputFile>
       <AdditionalDependencies>../zlib/zlib_MDd.lib;../$(IntDir)/dds_lib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -91,6 +92,7 @@
       <OutputFile>D:\Program Files\AVIUTL\vsd_filter.auf</OutputFile>
       <AdditionalDependencies>../zlib/zlib_MD.lib;../$(IntDir)/dds_lib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
+      <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGPSOnly|Win32'">
@@ -111,6 +113,7 @@
       <OutputFile>D:\Program Files\AVIUTL\vsd_filter.auf</OutputFile>
       <AdditionalDependencies>../zlib/zlib_MT.lib;../$(IntDir)/dds_lib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
+      <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -129,6 +132,9 @@
     <ClCompile Include="..\CVsdFont.cpp" />
     <ClCompile Include="..\CVsdLog.cpp" />
     <ClCompile Include="..\vsd_filter.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\vsd_filter.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
