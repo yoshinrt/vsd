@@ -154,8 +154,10 @@ class CVsdFilter {
 	
 	/*** 画像オペレーション *************************************************/
 	
-	virtual void PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag ) = 0;
-	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ) = 0;
+	void PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag );
+	void FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag );
+	virtual void PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag ) = 0;
+	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ) = 0;
 	
 	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA &yc, UINT uFlag );
 	void DrawLine( int x1, int y1, int x2, int y2, int width, const PIXEL_YCA &yc, UINT uFlag );

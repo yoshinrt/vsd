@@ -509,6 +509,38 @@ void CVsdFilter::DrawString( char *szMsg, CVsdFont *pFont, const PIXEL_YCA &yc, 
 
 /*** ƒ|ƒŠƒSƒ“•`‰æ ***********************************************************/
 
+inline void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
+	
+	if( uFlag & IMG_POLYGON ){
+		// ƒ|ƒŠƒSƒ“•`‰æ
+		if( x > m_Polygon[ y ].iRight ) m_Polygon[ y ].iRight = x;
+		if( x < m_Polygon[ y ].iLeft  ) m_Polygon[ y ].iLeft  = x;
+	}else if( 0 <= x && x < GetWidth() && 0 <= y && y < GetHeight()){
+		PutPixelLow( x, y, yc, uFlag );
+	}
+}
+
+inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ){
+	
+	if( uFlag & IMG_POLYGON ){
+		// ƒ|ƒŠƒSƒ“•`‰æ
+		if( x1 > x2 ){
+			if( x1 > m_Polygon[ y1 ].iRight ) m_Polygon[ y1 ].iRight = x1;
+			if( x2 < m_Polygon[ y1 ].iLeft  ) m_Polygon[ y1 ].iLeft  = x2;
+		}else{
+			if( x2 > m_Polygon[ y1 ].iRight ) m_Polygon[ y1 ].iRight = x2;
+			if( x1 < m_Polygon[ y1 ].iLeft  ) m_Polygon[ y1 ].iLeft  = x1;
+		}
+	}else if( 0 <= y1 && y1 < GetHeight()){
+		if( x1 < 0 )         x1 = 0;
+		if( x2 > GetWidth()) x2 = GetWidth();
+		
+		FillLineLow( x1, y1, x2, yc, uFlag );
+	}
+}
+
+/*** ƒ|ƒŠƒSƒ“•`‰æ ***********************************************************/
+
 inline void CVsdFilter::PolygonClear( void ){
 	for( int y = 0; y < GetHeight(); ++y ){
 		m_Polygon[ y ].iRight	= 0;		// right

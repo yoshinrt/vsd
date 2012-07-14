@@ -245,8 +245,8 @@ class CVsdFilterAvu : public CVsdFilter {
 	BOOL GPSLogLoad( const char *szFileName, HWND hwnd );
 	
 	// ‰¼‘zŠÖ”
-	virtual void PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag );
-	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag );
+	virtual void PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag );
+	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag );
 	
 	virtual int	GetWidth( void ){ return fpip->w; }
 	virtual int	GetHeight( void ){ return fpip->h; }
@@ -311,67 +311,45 @@ inline void CVsdFilter::PutPixel( int x, int y, short iY, short iCr, short iCb )
 }
 */
 
-void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
+void CVsdFilterAvu::PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
 	
-	if( uFlag & IMG_POLYGON ){
-		// ƒ|ƒŠƒSƒ“•`‰æ
-		if( x > m_Polygon[ y ].iRight ) m_Polygon[ y ].iRight = x;
-		if( x < m_Polygon[ y ].iLeft  ) m_Polygon[ y ].iLeft  = x;
-	}else{
-		PIXEL_YC	*ycp = fpip->ycp_edit;
+	PIXEL_YC	*ycp = fpip->ycp_edit;
+	
+	if( yc.alfa ){
+		int	iIndex = GetIndex( x, y );
+		int iAlfa = ( int )yc.alfa;
 		
-		if( 0 <= x && x < fpip->max_w && 0 <= y && y < fpip->max_h ){
-			if( yc.alfa ){
-				int	iIndex = GetIndex( x, y );
-				int iAlfa = ( int )yc.alfa;
-				
-				ycp[ iIndex ].y  = ( PIXEL_t )( yc.y  + (( ycp[ iIndex ].y  * iAlfa ) >> 8 ));
-				ycp[ iIndex ].cr = ( PIXEL_t )( yc.cr + (( ycp[ iIndex ].cr * iAlfa ) >> 8 ));
-				ycp[ iIndex ].cb = ( PIXEL_t )( yc.cb + (( ycp[ iIndex ].cb * iAlfa ) >> 8 ));
-			}else{
-				ycp[ GetIndex( x, y ) ].y  = yc.y;
-				ycp[ GetIndex( x, y ) ].cr = yc.cr;
-				ycp[ GetIndex( x, y ) ].cb = yc.cb;
-			}
-		}
+		ycp[ iIndex ].y  = ( PIXEL_t )( yc.y  + (( ycp[ iIndex ].y  * iAlfa ) >> 8 ));
+		ycp[ iIndex ].cr = ( PIXEL_t )( yc.cr + (( ycp[ iIndex ].cr * iAlfa ) >> 8 ));
+		ycp[ iIndex ].cb = ( PIXEL_t )( yc.cb + (( ycp[ iIndex ].cb * iAlfa ) >> 8 ));
+	}else{
+		ycp[ GetIndex( x, y ) ].y  = yc.y;
+		ycp[ GetIndex( x, y ) ].cr = yc.cr;
+		ycp[ GetIndex( x, y ) ].cb = yc.cb;
 	}
 }
 
-void CVsdFilterAvu::FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ){
+void CVsdFilterAvu::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ){
 	
-	if( uFlag & IMG_POLYGON ){
-		// ƒ|ƒŠƒSƒ“•`‰æ
-		if( x1 > x2 ){
-			if( x1 > m_Polygon[ y1 ].iRight ) m_Polygon[ y1 ].iRight = x1;
-			if( x2 < m_Polygon[ y1 ].iLeft  ) m_Polygon[ y1 ].iLeft  = x2;
-		}else{
-			if( x2 > m_Polygon[ y1 ].iRight ) m_Polygon[ y1 ].iRight = x2;
-			if( x1 < m_Polygon[ y1 ].iLeft  ) m_Polygon[ y1 ].iLeft  = x1;
+	PIXEL_YC	*ycp = fpip->ycp_edit;
+	
+	x1 = GetIndex( x1, y1 );
+	x2 = GetIndex( x2, y1 );
+	
+	int iIndex;
+	if( yc.alfa ){
+		int iAlfa = ( int )yc.alfa;
+		
+		for( iIndex = x1; iIndex <= x2; ++iIndex ){
+			ycp[ iIndex ].y  = ( PIXEL_t )( yc.y  + (( ycp[ iIndex ].y  * iAlfa ) >> 8 ));
+			ycp[ iIndex ].cr = ( PIXEL_t )( yc.cr + (( ycp[ iIndex ].cr * iAlfa ) >> 8 ));
+			ycp[ iIndex ].cb = ( PIXEL_t )( yc.cb + (( ycp[ iIndex ].cb * iAlfa ) >> 8 ));
 		}
-	}else if( 0 <= y1 && y1 < fpip->max_h ){
-		PIXEL_YC	*ycp = fpip->ycp_edit;
-		
-		if( x1 < 0 )           x1 = 0;
-		if( x2 > fpip->max_w ) x2 = fpip->max_w;
-		
-		x1 = GetIndex( x1, y1 );
-		x2 = GetIndex( x2, y1 );
-		
-		int iIndex;
-		if( yc.alfa ){
-			int iAlfa = ( int )yc.alfa;
-			
-			for( iIndex = x1; iIndex <= x2; ++iIndex ){
-				ycp[ iIndex ].y  = ( PIXEL_t )( yc.y  + (( ycp[ iIndex ].y  * iAlfa ) >> 8 ));
-				ycp[ iIndex ].cr = ( PIXEL_t )( yc.cr + (( ycp[ iIndex ].cr * iAlfa ) >> 8 ));
-				ycp[ iIndex ].cb = ( PIXEL_t )( yc.cb + (( ycp[ iIndex ].cb * iAlfa ) >> 8 ));
-			}
-		}else{
-			for( iIndex = x1; iIndex <= x2; ++iIndex ){
-				ycp[ iIndex ].y  = yc.y;
-				ycp[ iIndex ].cr = yc.cr;
-				ycp[ iIndex ].cb = yc.cb;
-			}
+	}else{
+		for( iIndex = x1; iIndex <= x2; ++iIndex ){
+			ycp[ iIndex ].y  = yc.y;
+			ycp[ iIndex ].cr = yc.cr;
+			ycp[ iIndex ].cb = yc.cb;
 		}
 	}
 }
