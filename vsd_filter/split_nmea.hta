@@ -1,0 +1,200 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja">
+<HEAD>
+	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift-JIS">
+	<title>NMEA splitter</title>
+	<HTA:APPLICATION innerBorder="no" scroll="no" />
+</head>
+<style type="text/css">
+BODY {
+	color: WindowText;
+	background-color: ThreeDFace;
+}
+</style>
+
+<body onLoad = "WindowOnLoad()">
+<form name="form1">
+	<input type="text" name="SpeedTh" size="3" value="10">km/h 以下が
+	<input type="text" name="TimeTh" size="3" value="300">秒以上続く場合に分割<br />
+	分割後ファイル名: <input type="text" name="FileNamePfx" size="10" value="split">&lt;日付&gt;_&lt;時刻&gt;.nmea
+</form>
+
+<div align="center">
+<object id="DnD_Box" classid="clsid:8E3867A3-8586-11D1-B16A-00C0F0283628" width="250" height="100">
+	<param name="OleDropMode" value="1">
+	<param name="Style" value="1">
+	<param name="SimpleText" value="ここに NMEA ファイルを D&D">
+	<param name="allowScriptAccess" value="always">
+</object>
+</div>
+<br />
+<SPAN ID="Log"></SPAN>
+
+<script language="JavaScript">
+function WindowOnLoad(){
+	window.resizeTo( 390, 500 );
+}
+
+function SplitNMEA( NmeaFile ){
+	LogClear();
+	Log( NmeaFile + "を分割中..." );
+	
+	// オブジェクト初期化
+	var fso = new ActiveXObject( "Scripting.FileSystemObject" );
+	var fpIn = fso.OpenTextFile( NmeaFile, 1 );
+	var Dir	= fso.GetParentFolderName( NmeaFile );
+	if( Dir != "" ) Dir = Dir + "\\";
+	
+	var SpeedTh		= eval( document.form1.SpeedTh.value );
+	var TimeTh		= eval( document.form1.TimeTh.value );
+	var FileNamePfx	= document.form1.FileNamePfx.value;
+	
+	var Param;
+	var Hour, Min, Sec;
+	var Day, Mon, Year;
+	var LastMoved = 0;
+	
+	// 分割ポイントの時間を格納する配列
+	var SplitPoints = new Array();
+	
+	while( fpIn.AtEndOfStream == false ){
+		str = fpIn.ReadLine().replace( /[\x0D\x0A]/, "" );
+		
+		if( str.match( /^\$GPRMC/ )){
+			Param = str.split( "," );
+			Speed	= eval( Param[ 7 ] ) * 1.85200;
+			
+			if( Speed >= SpeedTh ){
+				Param[1].match( /^(..)(..)(..)/ );
+				Hour	= eval( RegExp.$1 );
+				Min		= eval( RegExp.$2 );
+				Sec		= eval( RegExp.$3 );
+				
+				Param[9].match( /^(..)(..)(.*)/ );
+				Day		= eval( RegExp.$1 );
+				Mon		= eval( RegExp.$2 );
+				Year	= eval( RegExp.$3 ) + 2000;
+				
+				Time	= Date.UTC( Year, Mon - 1, Day, Hour, Min, Sec );
+				
+				if( Time - LastMoved >= TimeTh * 1000 ){
+					// 最後に動いてから TimeTh 以上経過した場合，
+					// そこが LastMoved が分割の終了点，Time が次の分割の開始点になる
+					if( LastMoved != 0 ) SplitPoints.push( LastMoved + 10 );
+					SplitPoints.push( Time - 10 );
+				}
+				
+				// 最後に動いた時間を更新
+				LastMoved = Time;
+			}
+		}
+	}
+	
+	fpIn.Close();
+	
+	if( LastMoved != 0 ) SplitPoints.push( LastMoved + 10 );
+	
+	if( SplitPoints.length == 0 ){
+		Log( "★エラー!!: 有効なログが見つかりませんでした" );
+		return;
+	}
+	
+	// 分割
+	var fpIn = fso.OpenTextFile( NmeaFile, 1 );
+	var fpOut;
+	
+	i = 0;
+	var bOutput = false;
+	
+	while( fpIn.AtEndOfStream == false ){
+		str = fpIn.ReadLine().replace( /[\x0D\x0A]/, "" );
+		
+		if( str.match( /^\$GPRMC/ )){
+			Param = str.split( "," );
+			
+			Param[1].match( /^(..)(..)(..)/ );
+			Hour	= eval( RegExp.$1 );
+			Min		= eval( RegExp.$2 );
+			Sec		= eval( RegExp.$3 );
+			
+			Param[9].match( /^(..)(..)(.*)/ );
+			Day		= eval( RegExp.$1 );
+			Mon		= eval( RegExp.$2 );
+			Year	= eval( RegExp.$3 ) + 2000;
+			
+			Time	= Date.UTC( Year, Mon - 1, Day, Hour, Min, Sec );
+			
+			if( bOutput ){
+				// 出力中なら，終了ポイントを過ぎたかチェック
+				if( Time > SplitPoints[ i + 1 ] ){
+					fpOut.Close();
+					bOutput = false;
+					i += 2;
+					
+					if( i > SplitPoints.length ) break;
+				}else{
+					fpOut.WriteLine( str );
+				}
+			}else{
+				// 出力していないなら，出力開始点を通過したかチェック
+				if( Time >= SplitPoints[ i ] ){
+					fpOut = fso.CreateTextFile(
+						Dir + FileNamePfx + FormatDate( SplitPoints[ i ], 1 ) + ".nmea"
+					);
+					fpOut.WriteLine( str );
+					bOutput = true;
+					
+					Log(
+						FormatDate( SplitPoints[ i ] ) + " - " +
+						FormatDate( SplitPoints[ i + 1 ] )
+					);
+				}
+			}
+		}
+	}
+	
+	if( bOutput ) fpOut.Close();
+	fpIn.Close();
+	
+	Log( "分割終了" )
+}
+
+function Log( Message ){
+	document.getElementById( "Log" ).innerHTML += Message + "<br />";
+}
+
+function LogClear(){
+	document.getElementById( "Log" ).innerHTML = "";
+}
+
+function FormatDate( time, format ){
+	var date = new Date();
+	date.setTime( time );
+	
+	var Hour	= date.getHours();
+	var Min		= date.getMinutes();
+	var Sec		= date.getSeconds();
+	var Day		= date.getDate();
+	var Mon		= date.getMonth() + 1;
+	var Year	= date.getYear();
+	
+	if( Hour < 10 )	Hour = "0" + Hour;
+	if( Min  < 10 )	Min  = "0" + Min;
+	if( Sec  < 10 )	Sec  = "0" + Sec;
+	if( Mon  < 10 )	Mon  = "0" + Mon;
+	if( Day  < 10 )	Day  = "0" + Day;
+	
+	if( format == 1 ){
+		return "" + Year + Mon + Day + "_" + Hour + Min + Sec;
+	}
+	return Year + "/" + Mon + "/" + Day + " " + Hour + ":" + Min + ":" + Sec;
+}
+
+function DnD_Box::OLEDragDrop( Data ){
+	if( Data.GetFormat( 15 )){
+		var e = new Enumerator( Data.Files );
+		SplitNMEA( e.item());
+	}
+}
+</script>
+</body></html>
