@@ -323,9 +323,8 @@ void CVsdFilterAvu::PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag )
 		ycp[ iIndex ].cr = ( PIXEL_t )( yc.cr + (( ycp[ iIndex ].cr * iAlfa ) >> 8 ));
 		ycp[ iIndex ].cb = ( PIXEL_t )( yc.cb + (( ycp[ iIndex ].cb * iAlfa ) >> 8 ));
 	}else{
-		ycp[ GetIndex( x, y ) ].y  = yc.y;
-		ycp[ GetIndex( x, y ) ].cr = yc.cr;
-		ycp[ GetIndex( x, y ) ].cb = yc.cb;
+		//ycp[ GetIndex( x, y ) ] = *( PIXEL_YC *)( &yc );
+		ycp[ GetIndex( x, y ) ] = ( PIXEL_YC &)yc;
 	}
 }
 
@@ -347,9 +346,7 @@ void CVsdFilterAvu::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UI
 		}
 	}else{
 		for( iIndex = x1; iIndex <= x2; ++iIndex ){
-			ycp[ iIndex ].y  = yc.y;
-			ycp[ iIndex ].cr = yc.cr;
-			ycp[ iIndex ].cb = yc.cb;
+			ycp[ iIndex ] = ( PIXEL_YC &)yc;
 		}
 	}
 }

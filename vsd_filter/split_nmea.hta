@@ -16,17 +16,17 @@ BODY {
 <form name="form1">
 	<input type="text" name="SpeedTh" size="3" value="10">km/h 以下が
 	<input type="text" name="TimeTh" size="3" value="300">秒以上続く場合に分割<br />
-	分割後ファイル名: <input type="text" name="FileNamePfx" size="10" value="split">&lt;日付&gt;_&lt;時刻&gt;.nmea
+	分割後ファイル名: <input type="text" name="FileNamePfx" size="10" value="split">&lt;日付&gt;_&lt;時刻&gt;.nmea<br />
+	<p>
+	<INPUT TYPE="file" NAME="fopen" size="35"><INPUT TYPE="button" VALUE="処理開始" OnClick="OpenFile()">
 </form>
 
-<div align="center">
-<object id="DnD_Box" classid="clsid:8E3867A3-8586-11D1-B16A-00C0F0283628" width="250" height="100">
+<object id="DnD_Box" classid="clsid:8E3867A3-8586-11D1-B16A-00C0F0283628" width="350" height="100">
 	<param name="OleDropMode" value="1">
 	<param name="Style" value="1">
-	<param name="SimpleText" value="ここに NMEA ファイルを D&D">
+	<param name="SimpleText" value="処理開始ボタンか，ここに NMEA ファイルを D&D">
 	<param name="allowScriptAccess" value="always">
 </object>
-</div>
 <br />
 <SPAN ID="Log"></SPAN>
 
@@ -36,17 +36,14 @@ function WindowOnLoad(){
 }
 
 function SplitNMEA( NmeaFile ){
-	LogClear();
-	Log( NmeaFile + "を分割中..." );
-	
 	// オブジェクト初期化
 	var fso = new ActiveXObject( "Scripting.FileSystemObject" );
 	var fpIn = fso.OpenTextFile( NmeaFile, 1 );
 	var Dir	= fso.GetParentFolderName( NmeaFile );
 	if( Dir != "" ) Dir = Dir + "\\";
 	
-	var SpeedTh		= eval( document.form1.SpeedTh.value );
-	var TimeTh		= eval( document.form1.TimeTh.value );
+	var SpeedTh		= +document.form1.SpeedTh.value;
+	var TimeTh		= +document.form1.TimeTh.value;
 	var FileNamePfx	= document.form1.FileNamePfx.value;
 	
 	var Param;
@@ -57,91 +54,91 @@ function SplitNMEA( NmeaFile ){
 	// 分割ポイントの時間を格納する配列
 	var SplitPoints = new Array();
 	
-	while( fpIn.AtEndOfStream == false ){
-		str = fpIn.ReadLine().replace( /[\x0D\x0A]/, "" );
-		
-		if( str.match( /^\$GPRMC/ )){
-			Param = str.split( "," );
-			Speed	= eval( Param[ 7 ] ) * 1.85200;
+	var GpsData = new Array();
+	var TimeTbl = new Array();
+	var ProcessTime = ( new Date()).getTime();
+	
+	LogClear();
+	Log( NmeaFile + "を読み込み中..." );
+	setTimeout( AnalizeNMEA, 1 );
+	
+	function AnalizeNMEA(){
+		while( fpIn.AtEndOfStream == false ){
+			str = fpIn.ReadLine();
 			
-			if( Speed >= SpeedTh ){
-				Param[1].match( /^(..)(..)(..)/ );
-				Hour	= eval( RegExp.$1 );
-				Min		= eval( RegExp.$2 );
-				Sec		= eval( RegExp.$3 );
+			if( str.substr( 0, 6 ) == "$GPRMC" ){
 				
-				Param[9].match( /^(..)(..)(.*)/ );
-				Day		= eval( RegExp.$1 );
-				Mon		= eval( RegExp.$2 );
-				Year	= eval( RegExp.$3 ) + 2000;
+				Param = str.split( "," );
+				Speed	= +Param[ 7 ] * 1.85200;
+				
+				Time	= ~~Param[1];
+				Hour	= ~~( Time / 10000 );
+				Min		= ~~( Time / 100 ) % 100;
+				Sec		= Time % 100;
+				
+				Time	= +Param[9];
+				Day		= ~~( Time / 10000 );
+				Mon		= ~~( Time / 100 ) % 100;
+				Year	= Time % 100 + 2000;
 				
 				Time	= Date.UTC( Year, Mon - 1, Day, Hour, Min, Sec );
 				
-				if( Time - LastMoved >= TimeTh * 1000 ){
-					// 最後に動いてから TimeTh 以上経過した場合，
-					// そこが LastMoved が分割の終了点，Time が次の分割の開始点になる
-					if( LastMoved != 0 ) SplitPoints.push( LastMoved + 10 );
-					SplitPoints.push( Time - 10 );
-				}
+				TimeTbl.push( Time );
+				GpsData.push( str );
 				
-				// 最後に動いた時間を更新
-				LastMoved = Time;
+				if( Speed >= SpeedTh ){
+					if( Time - LastMoved >= TimeTh * 1000 ){
+						// 最後に動いてから TimeTh 以上経過した場合，
+						// そこが LastMoved が分割の終了点，Time が次の分割の開始点になる
+						if( LastMoved != 0 ) SplitPoints.push( LastMoved + 10 );
+						SplitPoints.push( Time - 10 );
+					}
+					
+					// 最後に動いた時間を更新
+					LastMoved = Time;
+				}
 			}
 		}
-	}
-	
-	fpIn.Close();
-	
-	if( LastMoved != 0 ) SplitPoints.push( LastMoved + 10 );
-	
-	if( SplitPoints.length == 0 ){
-		Log( "★エラー!!: 有効なログが見つかりませんでした" );
-		return;
-	}
-	
-	// 分割
-	var fpIn = fso.OpenTextFile( NmeaFile, 1 );
-	var fpOut;
-	
-	i = 0;
-	var bOutput = false;
-	
-	while( fpIn.AtEndOfStream == false ){
-		str = fpIn.ReadLine().replace( /[\x0D\x0A]/, "" );
 		
-		if( str.match( /^\$GPRMC/ )){
-			Param = str.split( "," );
-			
-			Param[1].match( /^(..)(..)(..)/ );
-			Hour	= eval( RegExp.$1 );
-			Min		= eval( RegExp.$2 );
-			Sec		= eval( RegExp.$3 );
-			
-			Param[9].match( /^(..)(..)(.*)/ );
-			Day		= eval( RegExp.$1 );
-			Mon		= eval( RegExp.$2 );
-			Year	= eval( RegExp.$3 ) + 2000;
-			
-			Time	= Date.UTC( Year, Mon - 1, Day, Hour, Min, Sec );
-			
+		fpIn.Close();
+		
+		if( LastMoved != 0 ) SplitPoints.push( LastMoved + 10 );
+		
+		if( SplitPoints.length == 0 ){
+			Log( "★エラー!!: 有効なログが見つかりませんでした" );
+			return;
+		}
+		
+		Log( NmeaFile + "を分割中..." );
+		setTimeout( OutputNMEA, 1 );
+	}
+	
+	function OutputNMEA(){
+		// 分割
+		var fpOut;
+		
+		i = 0;
+		var bOutput = false;
+		
+		for( var index = 0; index < GpsData.length; ++index ){
 			if( bOutput ){
 				// 出力中なら，終了ポイントを過ぎたかチェック
-				if( Time > SplitPoints[ i + 1 ] ){
+				if( TimeTbl[ index ] > SplitPoints[ i + 1 ] ){
 					fpOut.Close();
 					bOutput = false;
 					i += 2;
 					
-					if( i > SplitPoints.length ) break;
+					if( i > SplitPoints.length ) return;
 				}else{
-					fpOut.WriteLine( str );
+					fpOut.WriteLine( GpsData[ index ] );
 				}
 			}else{
 				// 出力していないなら，出力開始点を通過したかチェック
-				if( Time >= SplitPoints[ i ] ){
+				if( TimeTbl[ index ] >= SplitPoints[ i ] ){
 					fpOut = fso.CreateTextFile(
 						Dir + FileNamePfx + FormatDate( SplitPoints[ i ], 1 ) + ".nmea"
 					);
-					fpOut.WriteLine( str );
+					fpOut.WriteLine( GpsData[ index ] );
 					bOutput = true;
 					
 					Log(
@@ -151,12 +148,11 @@ function SplitNMEA( NmeaFile ){
 				}
 			}
 		}
+		if( bOutput ) fpOut.Close();
+		
+		Log( "分割終了" )
+		//Log(( new Date()).getTime() - ProcessTime + "ms" );
 	}
-	
-	if( bOutput ) fpOut.Close();
-	fpIn.Close();
-	
-	Log( "分割終了" )
 }
 
 function Log( Message ){
@@ -190,9 +186,17 @@ function FormatDate( time, format ){
 	return Year + "/" + Mon + "/" + Day + " " + Hour + ":" + Min + ":" + Sec;
 }
 
+function OpenFile() {
+	var FileName = document.form1.fopen.value;
+    if( FileName != "" ) SplitNMEA( FileName );
+	else Log( "★先に参照ボタンでファイルを選択してください" );
+}
+
+
 function DnD_Box::OLEDragDrop( Data ){
 	if( Data.GetFormat( 15 )){
 		var e = new Enumerator( Data.Files );
+		
 		SplitNMEA( e.item());
 	}
 }
