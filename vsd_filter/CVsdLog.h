@@ -94,6 +94,16 @@ class CVsdLog {
 	float Y			( void ){ return VsdLogGetData( fY,			m_dLogNum ); }
 	float Y0		( void ){ return VsdLogGetData( fY0,		m_dLogNum ); }
 	
+	float Speed		( int iIndex ){ return m_Log[ iIndex ].fSpeed; }
+	float Tacho		( int iIndex ){ return m_Log[ iIndex ].fTacho; }
+	float Mileage	( int iIndex ){ return m_Log[ iIndex ].fMileage; }
+	float Gx		( int iIndex ){ return m_Log[ iIndex ].fGx; }
+	float Gy		( int iIndex ){ return m_Log[ iIndex ].fGy; }
+	float X			( int iIndex ){ return m_Log[ iIndex ].fX; }
+	float X0		( int iIndex ){ return m_Log[ iIndex ].fX0; }
+	float Y			( int iIndex ){ return m_Log[ iIndex ].fY; }
+	float Y0		( int iIndex ){ return m_Log[ iIndex ].fY0; }
+	
 	float Speed		( double dIndex ){ return VsdLogGetData( fSpeed,	dIndex ); }
 	float Tacho		( double dIndex ){ return VsdLogGetData( fTacho,	dIndex ); }
 	float Mileage	( double dIndex ){ return VsdLogGetData( fMileage,	dIndex ); }

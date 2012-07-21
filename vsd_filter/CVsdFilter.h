@@ -198,6 +198,13 @@ class CVsdFilter {
 	void DrawGSnake( int iCx, int iCy, int iR );
 	void DrawMeterPanel0( void );
 	void DrawMeterPanel1( void );
+	void DrawMap(
+		int iX, int iY, int iSize,
+		const PIXEL_YCA &ycIndicator,
+		const PIXEL_YCA &ycG0,
+		const PIXEL_YCA &ycGPlus,
+		const PIXEL_YCA &ycGMinus
+	);
 	
 	enum {
 		IMG_FILL	= ( 1 << 0 ),

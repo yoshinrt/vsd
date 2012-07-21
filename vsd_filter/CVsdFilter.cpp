@@ -65,7 +65,7 @@
 	#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
 #endif
 
-#define MAX_MAP_SIZE	( GetWidth() * m_piParamT[ TRACK_MapSize ] / 1000.0 )
+#define MAX_MAP_SIZE	( GetWidth() * m_piParamT[ TRACK_MapSize ] / 1000 )
 
 // VSD log を優先，ただしチェックボックスでオーバーライドできる
 #define SelectLogVsd ( Log = ( GPSPriority && m_GPSLog || !m_VsdLog ) ? m_GPSLog : m_VsdLog )
@@ -986,7 +986,7 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	m_GPSLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	
 	DebugCmd( {
-		FILE *fpp = fopen( "C:\\DDS\\vsd\\vsd_filter\\z_gps_raw.txt", "w" );
+		FILE *fpp = fopen( "D:\\DDS\\vsd\\vsd_filter\\z_gps_raw.txt", "w" );
 		for( u = 0; u < uGPSCnt; ++u ){
 			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 				GPSLog[ u ].fX,
@@ -1004,7 +1004,7 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	delete [] GPSLog;
 	
 	DebugCmd( {
-		FILE *fpp = fopen( "C:\\DDS\\vsd\\vsd_filter\\z_upcon_gps.txt", "w" );
+		FILE *fpp = fopen( "D:\\DDS\\vsd\\vsd_filter\\z_upcon_gps.txt", "w" );
 		for( u = 0; u < ( UINT )m_GPSLog->m_iCnt; ++u ){
 			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 				m_GPSLog->m_Log[ u ].fSpeed,
@@ -1825,82 +1825,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 	}
 	
 	// MAP 表示
-	SelectLogGPS;
-	
-	int	iGx, iGy;
-	
-	if( LineTrace && Log && Log->IsDataExist()){
-		double dGx, dGy;
-		
-		int iGxPrev = INVALID_POS_I, iGyPrev;
-		
-		int iLineSt = ( int )LapNum2LogNum( Log, m_iLapIdx );
-		if( Log->m_iLogNum - iLineSt > ( int )( LineTrace * LOG_FREQ ))
-			iLineSt = Log->m_iLogNum - ( int )( LineTrace * LOG_FREQ );
-		
-		int iLineEd = m_iLapIdx != m_iLapNum - 1
-			? ( int )LapNum2LogNum( Log, m_iLapIdx + 1 ) : Log->m_iCnt - 1;
-		
-		if( iLineEd - Log->m_iLogNum > ( int )( LineTrace * LOG_FREQ ))
-			iLineEd = Log->m_iLogNum + ( int )( LineTrace * LOG_FREQ );
-		
-		for( i = iLineSt; i <= iLineEd ; ++i ){
-			#define GetMapPos( p, a ) ((( p ) - Log->m_dMapOffs ## a ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 )
-			dGx = GetMapPos( Log->X( i ), X );
-			dGy = GetMapPos( Log->Y( i ), Y );
-			
-			if( !_isnan( dGx )){
-				iGx = ( int )dGx;
-				iGy = ( int )dGy;
-				
-				if( iGxPrev != INVALID_POS_I ){
-					// Line の色用に G を求める
-					double dG = Log->Gy( i );
-					
-					PIXEL_YCA yc_line;
-					
-					if( dG >= 0.0 ){
-						BlendColor( yc_line, yc_yellow, yc_green, dG / Log->m_dMaxG );
-					}else{
-						BlendColor( yc_line, yc_yellow, yc_red, dG / Log->m_dMinG );
-					}
-					
-					// Line を引く
-					DrawLine(
-						( int )( iGx     * AspectRatio ), iGy,
-						( int )( iGxPrev * AspectRatio ), iGyPrev,
-						LINE_WIDTH, yc_line, 0
-					);
-				}
-			}else{
-				iGx = INVALID_POS_I;
-			}
-			
-			iGxPrev = iGx;
-			iGyPrev = iGy;
-		}
-		
-		// MAP インジケータ (自車)
-		dGx = GetMapPos( Log->X(), X );
-		dGy = GetMapPos( Log->Y(), Y );
-		
-		if( !_isnan( dGx )) DrawCircle(
-			( int )( dGx * AspectRatio ), ( int )dGy, 5 * GetHeight() / 480,
-			COLOR_CURRENT_POS, CVsdFilter::IMG_FILL
-		);
-		
-		// スタートライン表示
-		if( DispSyncInfo && m_iLapMode == LAPMODE_GPS ){
-			double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
-			
-			int x1 = ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsX ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
-			int y1 = ( int )(( -sin( dAngle ) * m_dStartLineX1 + cos( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsY ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
-			int x2 = ( int )((  cos( dAngle ) * m_dStartLineX2 + sin( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsX ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
-			int y2 = ( int )(( -sin( dAngle ) * m_dStartLineX2 + cos( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsY ) / Log->m_dMapSize * MAX_MAP_SIZE + 8 );
-			
-			DrawLine( x1, y1, x2, y2, yc_blue, 0 );
-		}
-	}
+	if( LineTrace ) DrawMap(
+		8, 8, MAX_MAP_SIZE,
+		COLOR_CURRENT_POS, yc_yellow, yc_green, yc_red
+	);
 	
 	// フレーム表示
 	
@@ -2009,6 +1937,90 @@ void CVsdFilter::DrawGSnake( int iCx, int iCy, int iR ){
 		iCx + iGx, iCy - iGy, iR / 20,
 		COLOR_G_SENSOR, CVsdFilter::IMG_FILL
 	);
+}
+
+/*** 走行軌跡表示 ***********************************************************/
+
+void CVsdFilter::DrawMap(
+	int iX, int iY, int iSize,
+	const PIXEL_YCA &ycIndicator,
+	const PIXEL_YCA &ycG0,
+	const PIXEL_YCA &ycGPlus,
+	const PIXEL_YCA &ycGMinus
+){
+	double dGx, dGy;
+	int	iGx, iGy;
+	int i;
+	
+	CVsdLog *Log;
+	SelectLogGPS;
+	if( !Log || !Log->IsDataExist()) return;
+	
+	int iGxPrev = INVALID_POS_I, iGyPrev;
+	
+	int iLineSt = ( int )LapNum2LogNum( Log, m_iLapIdx );
+	if( Log->m_iLogNum - iLineSt > ( int )( LineTrace * LOG_FREQ ))
+		iLineSt = Log->m_iLogNum - ( int )( LineTrace * LOG_FREQ );
+	
+	int iLineEd = m_iLapIdx != m_iLapNum - 1
+		? ( int )LapNum2LogNum( Log, m_iLapIdx + 1 ) : Log->m_iCnt - 1;
+	
+	if( iLineEd - Log->m_iLogNum > ( int )( LineTrace * LOG_FREQ ))
+		iLineEd = Log->m_iLogNum + ( int )( LineTrace * LOG_FREQ );
+	
+	for( i = iLineSt; i <= iLineEd ; ++i ){
+		if( !_isnan( Log->X( i ))){
+			#define GetMapPos( p, a ) ((( p ) - Log->m_dMapOffs ## a ) / Log->m_dMapSize * iSize )
+			iGx = iX + ( int )GetMapPos( Log->X( i ), X );
+			iGy = iY + ( int )GetMapPos( Log->Y( i ), Y );
+			
+			if( iGxPrev != INVALID_POS_I ){
+				// Line の色用に G を求める
+				double dG = Log->Gy( i );
+				
+				PIXEL_YCA yc_line;
+				
+				if( dG >= 0.0 ){
+					BlendColor( yc_line, ycG0, ycGPlus,  dG / Log->m_dMaxG );
+				}else{
+					BlendColor( yc_line, ycG0, ycGMinus, dG / Log->m_dMinG );
+				}
+				
+				// Line を引く
+				DrawLine(
+					( int )( iGx     * AspectRatio ), iGy,
+					( int )( iGxPrev * AspectRatio ), iGyPrev,
+					LINE_WIDTH, yc_line, 0
+				);
+			}
+		}else{
+			iGx = INVALID_POS_I;
+		}
+		
+		iGxPrev = iGx;
+		iGyPrev = iGy;
+	}
+	
+	// MAP インジケータ (自車)
+	dGx = iX + GetMapPos( Log->X(), X );
+	dGy = iY + GetMapPos( Log->Y(), Y );
+	
+	if( !_isnan( dGx )) DrawCircle(
+		( int )( dGx * AspectRatio ), ( int )dGy, 5 * GetHeight() / 480,
+		ycIndicator, CVsdFilter::IMG_FILL
+	);
+	
+	// スタートライン表示
+	if( DispSyncInfo && m_iLapMode == LAPMODE_GPS ){
+		double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
+		
+		int x1 = iX + ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsX ) / Log->m_dMapSize * iSize );
+		int y1 = iY + ( int )(( -sin( dAngle ) * m_dStartLineX1 + cos( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsY ) / Log->m_dMapSize * iSize );
+		int x2 = iX + ( int )((  cos( dAngle ) * m_dStartLineX2 + sin( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsX ) / Log->m_dMapSize * iSize );
+		int y2 = iY + ( int )(( -sin( dAngle ) * m_dStartLineX2 + cos( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsY ) / Log->m_dMapSize * iSize );
+		
+		DrawLine( x1, y1, x2, y2, yc_blue, 0 );
+	}
 }
 
 /*** メーターパネル type 0 **************************************************/
