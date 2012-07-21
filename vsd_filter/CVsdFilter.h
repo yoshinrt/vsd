@@ -134,6 +134,10 @@ typedef struct {
 	};
 	USHORT	alfa;
 } PIXEL_YCA;
+
+static inline Color2YCA( PIXEL_YCA &yca, int iColor ){
+}
+
 #else
 typedef	struct {
 	short	y;					//	‰æ‘f(‹P“x    )ƒf[ƒ^ (     0 ` 4096 )
@@ -143,6 +147,18 @@ typedef	struct {
 								//	‚Ü‚½”ÍˆÍ“à‚ÉŽû‚ß‚È‚­‚Ä‚à‚©‚Ü‚¢‚Ü‚¹‚ñ
 	USHORT	alfa;
 } PIXEL_YCA;
+
+static inline void Color2YCA( PIXEL_YCA &yca, int iColor ){
+	int r = (( iColor & 0xFF0000 ) >> ( 16 - 12 )) / 255;
+	int g = (( iColor & 0x00FF00 ) << ( 12 -  8 )) / 255;
+	int b = (( iColor & 0x0000FF ) << ( 12      )) / 255;
+	int a = ((( UINT )iColor & 0xFF000000 ) >> ( 24 - 8 )) / 255;
+	
+	yca.y		= ( int )(( 0.299 * ( r ) + 0.587 * ( g ) + 0.114 * ( b )) * ( 256 - ( a )) / 256 );
+	yca.cb		= ( int )((-0.169 * ( r ) - 0.331 * ( g ) + 0.500 * ( b )) * ( 256 - ( a )) / 256 );
+	yca.cr		= ( int )(( 0.500 * ( r ) - 0.419 * ( g ) - 0.081 * ( b )) * ( 256 - ( a )) / 256 );
+	yca.alfa	= a;
+}
 #endif
 
 class CVsdFilter {
@@ -301,5 +317,7 @@ class CVsdFilter {
 	int m_iBestLogNumRunning;
 	
 	PolygonData_t	*m_Polygon;
+	
+	CScript	*m_Script;
 };
 #endif

@@ -26,6 +26,8 @@
 #endif
 #include "CVsdLog.h"
 #include "CVsdFont.h"
+#include <v8.h>
+#include "CScript.h"
 #include "CVsdFilter.h"
 
 /*** macros *****************************************************************/
@@ -152,6 +154,8 @@ CVsdFilter::CVsdFilter (){
 	// str param に初期値設定
 	#define DEF_STR_PARAM( id, var, init, conf_name ) strcpy( var, init );
 	#include "def_str_param.h"
+	
+	m_Script	= NULL;
 }
 
 /*** デストラクタ ***********************************************************/
@@ -166,6 +170,7 @@ CVsdFilter::~CVsdFilter (){
 	delete m_pFontS;
 	delete m_pFontM;
 	delete m_pFontL;
+	delete m_Script;
 }
 
 /*** DrawLine ***************************************************************/
@@ -1578,6 +1583,13 @@ BOOL CVsdFilter::DrawVSD( void ){
 //
 	int	i;
 	
+	// スクリプトロード
+	if( !m_Script ){
+		m_Script = new CScript( this );
+		m_Script->Load( "d:\\dds\\vsd\\vsd_filter\\z.js" );
+		m_Script->Run();
+	}
+	
 	// フォントサイズ初期化
 	int iFontSize = m_piParamS[ SHADOW_FONT_SIZE ] > 0 ?
 		m_piParamS[ SHADOW_FONT_SIZE ] :
@@ -1771,7 +1783,7 @@ void CVsdFilter::DrawLapTime(){
 	BOOL	bInLap = FALSE;	// ラップタイム計測中
 	int	i;
 	
-	if( !DispLap || !m_iLapN um ) return;
+	if( !DispLap || !m_iLapNum ) return;
 	
 	CVsdLog *Log;
 	SelectLogForLapTime;
@@ -2038,6 +2050,23 @@ void CVsdFilter::DrawMap(
 		
 		DrawLine( x1, y1, x2, y2, yc_blue, 0 );
 	}
+}
+
+/*** 針描画 *****************************************************************/
+
+inline void DrawNeedle(
+	int x, int y, int r,
+	int iStart, int iEnd, double dVal,
+	const PIXEL_YCA yc, int iWidth
+){
+	double dAngle = ( iStart + ( iEnd - iStart ) * dVal ) * ToRAD;
+	
+	DrawLine(
+		x, y,
+		( int )( cos( dAngle ) * r ) + x,
+		( int )( sin( dAngle ) * r ) + y,
+		iWidth, yc, 0
+	);
 }
 
 /*** メーターパネル type 0 **************************************************/

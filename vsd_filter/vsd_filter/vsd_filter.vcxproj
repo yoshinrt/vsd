@@ -66,12 +66,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;VSD_FILTER_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../v8/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>D:\Program Files\AVIUTL\vsd_filter.auf</OutputFile>
-      <AdditionalDependencies>../zlib/zlib_MDd.lib;../$(IntDir)/dds_lib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../zlib/zlib_MDd.lib;../$(IntDir)/dds_lib.lib;../v8/libMDd/v8_base.lib;../v8/libMDd/preparser_lib.lib;../v8/libMDd/v8_snapshot.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -84,13 +85,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;VSD_FILTER_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../v8/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>D:\Program Files\AVIUTL\vsd_filter.auf</OutputFile>
-      <AdditionalDependencies>../zlib/zlib_MD.lib;../$(IntDir)/dds_lib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../zlib/zlib_MD.lib;../$(IntDir)/dds_lib.lib;../v8/libMD/v8_base.lib;../v8/libMD/preparser_lib.lib;../v8/libMD/v8_snapshot.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
@@ -105,29 +107,33 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;VSD_FILTER_EXPORTS;_CRT_SECURE_NO_WARNINGS;GPS_ONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>../v8/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>D:\Program Files\AVIUTL\vsd_filter.auf</OutputFile>
-      <AdditionalDependencies>../zlib/zlib_MT.lib;../$(IntDir)/dds_lib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../zlib/zlib_MT.lib;../$(IntDir)/dds_lib.lib;../v8/libMT/v8_base.lib;../v8/libMT/preparser_lib.lib;../v8/libMT/v8_snapshot.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\CScript.h" />
     <ClInclude Include="..\CVsdFilter.h" />
     <ClInclude Include="..\CVsdFont.h" />
     <ClInclude Include="..\CVsdLog.h" />
     <ClInclude Include="..\dds.h" />
     <ClInclude Include="..\def_checkbox.h" />
+    <ClInclude Include="..\def_scr_func.h" />
     <ClInclude Include="..\def_shadow.h" />
     <ClInclude Include="..\def_str_param.h" />
     <ClInclude Include="..\def_trackbar.h" />
     <ClInclude Include="..\filter.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\CScript.cpp" />
     <ClCompile Include="..\CVsdFilter.cpp" />
     <ClCompile Include="..\CVsdFont.cpp" />
     <ClCompile Include="..\CVsdLog.cpp" />

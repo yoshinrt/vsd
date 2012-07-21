@@ -19,6 +19,8 @@
 #include "dds_lib/dds_lib.h"
 #include "CVsdLog.h"
 #include "CVsdFont.h"
+#include "v8.h"
+#include "CScript.h"
 #include "CVsdFilter.h"
 
 /*** macros *****************************************************************/
