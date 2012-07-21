@@ -73,6 +73,9 @@
 // GPS log を優先
 #define SelectLogGPS ( Log = m_GPSLog ? m_GPSLog : m_VsdLog )
 
+// Laptime 計算用
+#define SelectLogForLapTime	( Log = m_iLapMode == LAPMODE_MAGNET || m_iLapMode == LAPMODE_HAND_MAGNET ? m_VsdLog : m_GPSLog )
+
 // パラメータを変換
 #define ConvParam( p, from, to ) ( \
 	from##Ed == from##St ? 0 : \
@@ -1459,6 +1462,8 @@ static const PIXEL_YCA	yc_gray_a		= RGB2YCA( 1024, 1024, 1024, 0x80 );
 #define COLOR_FASTEST_POS	yc_green
 #define COLOR_G_SCALE		yc_black
 
+static char g_szBuf[ BUF_SIZE ];
+
 /*** パラメータ調整用スピードグラフ *****************************************/
 
 #define SPEED_GRAPH_SCALE	2
@@ -1473,8 +1478,6 @@ void CVsdFilter::DrawSpeedGraph(
 	int	iLogNum;
 	int	x = iX;
 	int iCursor = 0;
-	
-	char	szBuf[ 10 ];
 	
 	iLogNum = Log->m_iLogNum - iW * SPEED_GRAPH_SCALE / 2;
 	if( iLogNum < 0 ){
@@ -1501,9 +1504,9 @@ void CVsdFilter::DrawSpeedGraph(
 		1, yc, 0
 	);
 	
-	sprintf( szBuf, "%d km/h", iVal );
-	DrawString( szBuf, m_pFontS, yc, yc_black, 0,
-		x + ( iDirection ? ( -10 - strlen( szBuf ) * m_pFontS->GetW()): 10 ),
+	sprintf( g_szBuf, "%d km/h", iVal );
+	DrawString( g_szBuf, m_pFontS, yc, yc_black, 0,
+		x + ( iDirection ? ( -10 - strlen( g_szBuf ) * m_pFontS->GetW()): 10 ),
 		iY - 10 - m_pFontS->GetH() );
 }
 
@@ -1517,8 +1520,6 @@ void CVsdFilter::DrawTachoGraph(
 	int	iLogNum;
 	int	x = iX;
 	int iCursor = 0;
-	
-	char	szBuf[ 10 ];
 	
 	iLogNum = Log->m_iLogNum - iW * SPEED_GRAPH_SCALE / 2;
 	if( iLogNum < 0 ){
@@ -1545,9 +1546,9 @@ void CVsdFilter::DrawTachoGraph(
 		1, yc, 0
 	);
 	
-	sprintf( szBuf, "%d rpm", iVal );
-	DrawString( szBuf, m_pFontS, yc, yc_black, 0,
-		x + ( iDirection ? ( -10 - strlen( szBuf ) * m_pFontS->GetW()): 10 ),
+	sprintf( g_szBuf, "%d rpm", iVal );
+	DrawString( g_szBuf, m_pFontS, yc, yc_black, 0,
+		x + ( iDirection ? ( -10 - strlen( g_szBuf ) * m_pFontS->GetW()): 10 ),
 		iY - 10 - m_pFontS->GetH() );
 }
 
@@ -1575,11 +1576,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 //	テンポラリ領域に処理した画像を格納したいときは
 //	fpip->ycp_edit と fpip->ycp_temp を入れ替えます。
 //
-	
-	char	szBuf[ 128 ];
 	int	i;
-	
-	BOOL	bInLap = FALSE;	// ラップタイム計測中
 	
 	// フォントサイズ初期化
 	int iFontSize = m_piParamS[ SHADOW_FONT_SIZE ] > 0 ?
@@ -1589,8 +1586,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 	if( m_pFontM == NULL || iFontSize != -m_logfont.lfHeight ){
 		m_logfont.lfHeight = -iFontSize * 2 / 3;
 		if( m_pFontS ) delete m_pFontS;
-		m_pFontS = new CVsdFont( m_logfont )
-		;
+		m_pFontS = new CVsdFont( m_logfont );
+		
 		m_logfont.lfHeight = -iFontSize * 2;
 		if( m_pFontL ) delete m_pFontL;
 		m_pFontL = new CVsdFont( m_logfont );
@@ -1627,7 +1624,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 	}
 	
-	Log = m_iLapMode == LAPMODE_MAGNET || m_iLapMode == LAPMODE_HAND_MAGNET ? m_VsdLog : m_GPSLog;
+	SelectLogForLapTime;
 	
 	// ラップインデックスを求める
 	if( m_iLapNum ){
@@ -1646,138 +1643,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_iLapIdx = -1;
 	}
 	
-	if( DispLap && m_iLapNum ){
-		// 時間表示
-		if( m_iLapIdx >= 0 && m_Lap[ m_iLapIdx + 1 ].iTime != 0 ){
-			int iTime;
-			if( m_iLapMode != LAPMODE_HAND_VIDEO ){
-				// 自動計測時は，タイム / ログ数 から計算
-				iTime = ( int )(( Log->m_dLogNum - m_Lap[ m_iLapIdx ].fLogNum ) * 1000 / Log->m_dFreq );
-			}else{
-				// 手動計測モードのときは，フレーム数から計算
-				iTime = ( int )(( GetFrameCnt() - m_Lap[ m_iLapIdx ].fLogNum ) * 1000.0 / GetFPS());
-			}
-			
-			sprintf( szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
-			DrawString( szBuf, m_pFontM, COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - m_pFontM->GetW() * 13, 1 );
-			bInLap = TRUE;
-		}else{
-			// まだ開始していない
-			DrawString( "Time -'--.---", m_pFontM, COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - m_pFontM->GetW() * 13, 1 );
-		}
-		
-		/*** ベストとの車間距離表示 - ***/
-		if( m_VsdLog || m_GPSLog ){
-			if( bInLap ){
-				
-				SelectLogGPS;
-				
-				// ベストラップ開始の LogNum
-				double dBestLapLogNumStart = LapNum2LogNum( Log, m_iBestLap );
-				
-				// この周の走行距離を求める
-				double dMileage = Log->Mileage() - Log->Mileage( LapNum2LogNum( Log, m_iLapIdx ));
-				
-				// この周の 1周の走行距離から，現在の走行距離を補正する
-				dMileage =
-					dMileage
-					* ( Log->Mileage( LapNum2LogNum( Log, m_iBestLap + 1 )) - Log->Mileage( dBestLapLogNumStart ))
-					/ ( Log->Mileage( LapNum2LogNum( Log, m_iLapIdx  + 1 )) - Log->Mileage( LapNum2LogNum( Log, m_iLapIdx )));
-				
-				// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
-				// m_iBestLogNumRunning <= 最終的に求める結果 < m_iBestLogNumRunning + 1  となる
-				// m_iBestLogNumRunning がおかしかったら，リセット
-				if(
-					m_iBestLogNumRunning < dBestLapLogNumStart ||
-					m_iBestLogNumRunning >= Log->m_iCnt ||
-					( Log->Mileage( m_iBestLogNumRunning ) - Log->Mileage( dBestLapLogNumStart )) > dMileage
-				) m_iBestLogNumRunning = ( int )dBestLapLogNumStart;
-				
-				for(
-					;
-					( Log->Mileage( m_iBestLogNumRunning + 1 ) - Log->Mileage( dBestLapLogNumStart )) <= dMileage &&
-					m_iBestLogNumRunning < Log->m_iCnt;
-					++m_iBestLogNumRunning
-				);
-				
-				// 最速 Lap の，1/15秒以下の値を求める = A / B
-				double dBestLapLogNumRunning =
-					( double )m_iBestLogNumRunning +
-					// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
-					( dMileage - ( Log->Mileage( m_iBestLogNumRunning ) - Log->Mileage( dBestLapLogNumStart ))) /
-					// B: 最速ラップは，1/15秒の間にこの距離を走った
-					( Log->Mileage( m_iBestLogNumRunning + 1 ) - Log->Mileage( m_iBestLogNumRunning ));
-				
-				int iDiffTime = ( int )(
-					(
-						( Log->m_dLogNum - LapNum2LogNum( Log, m_iLapIdx )) -
-						( dBestLapLogNumRunning - dBestLapLogNumStart )
-					) * 1000.0 / Log->m_dFreq
-				);
-				
-				BOOL bSign = iDiffTime <= 0;
-				if( iDiffTime < 0 ) iDiffTime = -iDiffTime;
-				
-				sprintf(
-					szBuf, "    %c%d'%02d.%03d",
-					bSign ? '-' : '+',
-					iDiffTime / 60000,
-					iDiffTime / 1000 % 60,
-					iDiffTime % 1000
-				);
-				DrawString( szBuf, m_pFontM, bSign ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
-			}else{
-				m_iPosY += m_pFontM->GetH();
-			}
-		}
-		
-		m_iPosY += m_pFontM->GetH() / 4;
-		
-		// Best 表示
-		sprintf(
-			szBuf, "Best%2d'%02d.%03d",
-			m_iBestTime / 60000,
-			m_iBestTime / 1000 % 60,
-			m_iBestTime % 1000
-		);
-		DrawString( szBuf, m_pFontM, COLOR_TIME, COLOR_TIME_EDGE, 0 );
-		
-		// Lapタイム表示
-		// 3つタイム表示する分の，最後の LapIdx を求める．
-		// 通常は m_iLapIdx + 1 だが，m_Lap[ iLapIdxEnd ].iTime == 0 の時は
-		// 周回モードでは最後のラップを走り終えた
-		// ジムカモードでは 1周走り終えたことを示しているので
-		// LapIdx を -1 する
-		int iLapIdxEnd = m_iLapIdx + 1;
-		if( m_Lap[ iLapIdxEnd ].iTime == 0 ) --iLapIdxEnd;
-		
-		// iLapIdxEnd から有効なラップタイムが 2個見つかるまで遡る
-		int iLapIdxStart = iLapIdxEnd - 1;
-		for( i = 0; iLapIdxStart > 0; --iLapIdxStart ){
-			if( m_Lap[ iLapIdxStart ].iTime ){
-				if( ++i >= 2 ) break;
-			}
-		}
-		
-		if( iLapIdxStart >= 0 ){
-			for( ; iLapIdxStart <= iLapIdxEnd; ++iLapIdxStart ){
-				if( m_Lap[ iLapIdxStart ].iTime != 0 ){
-					sprintf(
-						szBuf, "%3d%c%2d'%02d.%03d",
-						m_Lap[ iLapIdxStart ].uLap,
-						( iLapIdxStart == m_iLapIdx + 1 && bInLap ) ? '*' : ' ',
-						m_Lap[ iLapIdxStart ].iTime / 60000,
-						m_Lap[ iLapIdxStart ].iTime / 1000 % 60,
-						m_Lap[ iLapIdxStart ].iTime % 1000
-					);
-					DrawString( szBuf, m_pFontM,
-						m_iBestTime == m_Lap[ iLapIdxStart ].iTime ? COLOR_BEST_LAP : COLOR_TIME,
-						COLOR_TIME_EDGE, 0 );
-					++i;
-				}
-			}
-		}
-	}
+	DrawLapTime();
 	
 	if(
 		#ifdef GPS_ONLY
@@ -1825,10 +1691,18 @@ BOOL CVsdFilter::DrawVSD( void ){
 	}
 	
 	// MAP 表示
-	if( LineTrace ) DrawMap(
+	DrawMap(
 		8, 8, MAX_MAP_SIZE,
 		COLOR_CURRENT_POS, yc_yellow, yc_green, yc_red
 	);
+	
+	SelectLogVsd;
+	if( Log ){
+		switch( m_piParamC[ CHECK_PanelDesign ] ){
+			case 0: DrawMeterPanel0(); break;
+			case 1: DrawMeterPanel1(); break;
+		}
+	}
 	
 	// フレーム表示
 	
@@ -1842,67 +1716,209 @@ BOOL CVsdFilter::DrawVSD( void ){
 		if( m_GPSLog ){
 			i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->m_dLogNum / LOG_FREQ ) * 100 ) % ( 24 * 3600 * 100 );
 			sprintf(
-				szBuf, "GPS time: %02d:%02d:%02d.%02d",
+				g_szBuf, "GPS time: %02d:%02d:%02d.%02d",
 				i / 360000,
 				i / 6000 % 60,
 				i /  100 % 60,
 				i        % 100
 			);
-			DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );
+			DrawString( g_szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0, 0 );
 		}
 		
 		#ifndef GPS_ONLY
 			DrawString( "        start       end     range cur.pos", m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
 			
 			sprintf(
-				szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+				g_szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
 				Float2Time( VideoSt / GetFPS()),
 				Float2Time( VideoEd / GetFPS()),
 				Float2Time(( VideoEd - VideoSt ) / GetFPS()),
 				GetFrameCnt()
 			);
-			DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
+			DrawString( g_szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
 			
 			if( m_VsdLog ){
 				sprintf(
-					szBuf, "Log%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+					g_szBuf, "Log%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
 					Float2Time( LogSt / m_VsdLog->m_dFreq ),
 					Float2Time( LogEd / m_VsdLog->m_dFreq ),
 					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
 					m_VsdLog->m_iLogNum
 				);
-				DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
+				DrawString( g_szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
 			}
 			
 			if( m_GPSLog ){
 				sprintf(
-					szBuf, "GPS%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+					g_szBuf, "GPS%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
 					Float2Time( GPSSt / m_GPSLog->m_dFreq ),
 					Float2Time( GPSEd / m_GPSLog->m_dFreq ),
 					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),
 					m_GPSLog->m_iLogNum
 				);
-				DrawString( szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
+				DrawString( g_szBuf, m_pFontS, COLOR_STR, COLOR_TIME_EDGE, 0 );
 			}
 		#endif	// !GPS_ONLY
 	}
 	
-	if( !Log ) return TRUE;
-	
-	switch( m_piParamC[ CHECK_PanelDesign ] ){
-		case 0: DrawMeterPanel0(); break;
-		case 1: DrawMeterPanel1(); break;
-	}
 	return TRUE;
+}
+
+/*** ラップタイム表示 *******************************************************/
+
+void CVsdFilter::DrawLapTime(){
+	
+	BOOL	bInLap = FALSE;	// ラップタイム計測中
+	int	i;
+	
+	if( !DispLap || !m_iLapN um ) return;
+	
+	CVsdLog *Log;
+	SelectLogForLapTime;
+	
+	// 時間表示
+	if( m_iLapIdx >= 0 && m_Lap[ m_iLapIdx + 1 ].iTime != 0 ){
+		int iTime;
+		if( m_iLapMode != LAPMODE_HAND_VIDEO ){
+			// 自動計測時は，タイム / ログ数 から計算
+			iTime = ( int )(( Log->m_dLogNum - m_Lap[ m_iLapIdx ].fLogNum ) * 1000 / Log->m_dFreq );
+		}else{
+			// 手動計測モードのときは，フレーム数から計算
+			iTime = ( int )(( GetFrameCnt() - m_Lap[ m_iLapIdx ].fLogNum ) * 1000.0 / GetFPS());
+		}
+		
+		sprintf( g_szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
+		DrawString( g_szBuf, m_pFontM, COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - m_pFontM->GetW() * 13, 1 );
+		bInLap = TRUE;
+	}else{
+		// まだ開始していない
+		DrawString( "Time -'--.---", m_pFontM, COLOR_TIME, COLOR_TIME_EDGE, 0, GetWidth() - m_pFontM->GetW() * 13, 1 );
+	}
+	
+	/*** ベストとの車間距離表示 - ***/
+	if( m_VsdLog || m_GPSLog ){
+		if( bInLap ){
+			
+			SelectLogGPS;
+			
+			// ベストラップ開始の LogNum
+			double dBestLapLogNumStart = LapNum2LogNum( Log, m_iBestLap );
+			
+			// この周の走行距離を求める
+			double dMileage = Log->Mileage() - Log->Mileage( LapNum2LogNum( Log, m_iLapIdx ));
+			
+			// この周の 1周の走行距離から，現在の走行距離を補正する
+			dMileage =
+				dMileage
+				* ( Log->Mileage( LapNum2LogNum( Log, m_iBestLap + 1 )) - Log->Mileage( dBestLapLogNumStart ))
+				/ ( Log->Mileage( LapNum2LogNum( Log, m_iLapIdx  + 1 )) - Log->Mileage( LapNum2LogNum( Log, m_iLapIdx )));
+			
+			// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
+			// m_iBestLogNumRunning <= 最終的に求める結果 < m_iBestLogNumRunning + 1  となる
+			// m_iBestLogNumRunning がおかしかったら，リセット
+			if(
+				m_iBestLogNumRunning < dBestLapLogNumStart ||
+				m_iBestLogNumRunning >= Log->m_iCnt ||
+				( Log->Mileage( m_iBestLogNumRunning ) - Log->Mileage( dBestLapLogNumStart )) > dMileage
+			) m_iBestLogNumRunning = ( int )dBestLapLogNumStart;
+			
+			for(
+				;
+				( Log->Mileage( m_iBestLogNumRunning + 1 ) - Log->Mileage( dBestLapLogNumStart )) <= dMileage &&
+				m_iBestLogNumRunning < Log->m_iCnt;
+				++m_iBestLogNumRunning
+			);
+			
+			// 最速 Lap の，1/15秒以下の値を求める = A / B
+			double dBestLapLogNumRunning =
+				( double )m_iBestLogNumRunning +
+				// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
+				( dMileage - ( Log->Mileage( m_iBestLogNumRunning ) - Log->Mileage( dBestLapLogNumStart ))) /
+				// B: 最速ラップは，1/15秒の間にこの距離を走った
+				( Log->Mileage( m_iBestLogNumRunning + 1 ) - Log->Mileage( m_iBestLogNumRunning ));
+			
+			int iDiffTime = ( int )(
+				(
+					( Log->m_dLogNum - LapNum2LogNum( Log, m_iLapIdx )) -
+					( dBestLapLogNumRunning - dBestLapLogNumStart )
+				) * 1000.0 / Log->m_dFreq
+			);
+			
+			BOOL bSign = iDiffTime <= 0;
+			if( iDiffTime < 0 ) iDiffTime = -iDiffTime;
+			
+			sprintf(
+				g_szBuf, "    %c%d'%02d.%03d",
+				bSign ? '-' : '+',
+				iDiffTime / 60000,
+				iDiffTime / 1000 % 60,
+				iDiffTime % 1000
+			);
+			DrawString( g_szBuf, m_pFontM, bSign ? COLOR_DIFF_MINUS : COLOR_DIFF_PLUS, COLOR_TIME_EDGE, 0 );
+		}else{
+			m_iPosY += m_pFontM->GetH();
+		}
+	}
+	
+	m_iPosY += m_pFontM->GetH() / 4;
+	
+	// Best 表示
+	sprintf(
+		g_szBuf, "Best%2d'%02d.%03d",
+		m_iBestTime / 60000,
+		m_iBestTime / 1000 % 60,
+		m_iBestTime % 1000
+	);
+	DrawString( g_szBuf, m_pFontM, COLOR_TIME, COLOR_TIME_EDGE, 0 );
+	
+	// Lapタイム表示
+	// 3つタイム表示する分の，最後の LapIdx を求める．
+	// 通常は m_iLapIdx + 1 だが，m_Lap[ iLapIdxEnd ].iTime == 0 の時は
+	// 周回モードでは最後のラップを走り終えた
+	// ジムカモードでは 1周走り終えたことを示しているので
+	// LapIdx を -1 する
+	int iLapIdxEnd = m_iLapIdx + 1;
+	if( m_Lap[ iLapIdxEnd ].iTime == 0 ) --iLapIdxEnd;
+	
+	// iLapIdxEnd から有効なラップタイムが 2個見つかるまで遡る
+	int iLapIdxStart = iLapIdxEnd - 1;
+	for( i = 0; iLapIdxStart > 0; --iLapIdxStart ){
+		if( m_Lap[ iLapIdxStart ].iTime ){
+			if( ++i >= 2 ) break;
+		}
+	}
+	
+	if( iLapIdxStart >= 0 ){
+		for( ; iLapIdxStart <= iLapIdxEnd; ++iLapIdxStart ){
+			if( m_Lap[ iLapIdxStart ].iTime != 0 ){
+				sprintf(
+					g_szBuf, "%3d%c%2d'%02d.%03d",
+					m_Lap[ iLapIdxStart ].uLap,
+					( iLapIdxStart == m_iLapIdx + 1 && bInLap ) ? '*' : ' ',
+					m_Lap[ iLapIdxStart ].iTime / 60000,
+					m_Lap[ iLapIdxStart ].iTime / 1000 % 60,
+					m_Lap[ iLapIdxStart ].iTime % 1000
+				);
+				DrawString( g_szBuf, m_pFontM,
+					m_iBestTime == m_Lap[ iLapIdxStart ].iTime ? COLOR_BEST_LAP : COLOR_TIME,
+					COLOR_TIME_EDGE, 0
+				);
+				++i;
+			}
+		}
+	}
 }
 
 /*** G スネーク描画 *********************************************************/
 
-void CVsdFilter::DrawGSnake( int iCx, int iCy, int iR ){
+void CVsdFilter::DrawGSnake(
+	int iCx, int iCy, int iR,
+	const PIXEL_YCA &ycBall, const PIXEL_YCA &ycLine
+){
 	int	iGx, iGy;
 	int	i;
-	CVsdLog *Log;
 	
+	CVsdLog *Log;
 	SelectLogVsd;
 	
 	if( GSnakeLen > 0 ){
@@ -1913,14 +1929,14 @@ void CVsdFilter::DrawGSnake( int iCx, int iCy, int iR ){
 			
 			if( Log->m_iLogNum + i >= 0 ){
 				// i == 1 時は最後の中途半端な LogNum
-				iGx = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGx : Log->Gx()) * iR / GScale );
-				iGy = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGy : Log->Gy()) * iR / GScale );
+				iGx = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGx : Log->Gx()) * iR );
+				iGy = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGy : Log->Gy()) * iR );
 				
 				iGx = ( int )( iGx * AspectRatio );
 				
 				if( iGxPrev != INVALID_POS_I ) DrawLine(
 					iCx + iGx, iCy - iGy, iCx + iGxPrev, iCy - iGyPrev,
-					LINE_WIDTH, COLOR_G_HIST, 0
+					LINE_WIDTH, ycLine, 0
 				);
 				
 				iGxPrev = iGx;
@@ -1928,14 +1944,14 @@ void CVsdFilter::DrawGSnake( int iCx, int iCy, int iR ){
 			}
 		}
 	}else{
-		iGx = ( int )( Log->Gx() * iR / GScale * AspectRatio );
-		iGy = ( int )( Log->Gy() * iR / GScale );
+		iGx = ( int )( Log->Gx() * iR * AspectRatio );
+		iGy = ( int )( Log->Gy() * iR );
 	}
 	
 	// G インジケータ
 	DrawCircle(
 		iCx + iGx, iCy - iGy, iR / 20,
-		COLOR_G_SENSOR, CVsdFilter::IMG_FILL
+		ycBall, CVsdFilter::IMG_FILL
 	);
 }
 
@@ -1954,7 +1970,8 @@ void CVsdFilter::DrawMap(
 	
 	CVsdLog *Log;
 	SelectLogGPS;
-	if( !Log || !Log->IsDataExist()) return;
+	
+	if( !LineTrace || !Log || !Log->IsDataExist()) return;
 	
 	int iGxPrev = INVALID_POS_I, iGyPrev;
 	
@@ -2026,7 +2043,6 @@ void CVsdFilter::DrawMap(
 /*** メーターパネル type 0 **************************************************/
 
 void CVsdFilter::DrawMeterPanel0( void ){
-	char	szBuf[ 128 ];
 	int	i;
 	CVsdLog *Log;
 	
@@ -2084,9 +2100,9 @@ void CVsdFilter::DrawMeterPanel0( void ){
 				
 				// メーターパネル目盛り数値
 				if( iMeterMaxVal <= 12000 && i % 1000 == 0 || i % 2000 == 0 ){
-					sprintf( szBuf, "%d", i / 1000 );
+					sprintf( g_szBuf, "%d", i / 1000 );
 					DrawString(
-						szBuf, m_pFontM,
+						g_szBuf, m_pFontM,
 						COLOR_STR, 0,
 						( int )( cos( iDeg * ToRAD ) * iMeterR * .8 * AspectRatio ) + iMeterCx - m_pFontM->GetW() / ( i >= 10000 ? 1 : 2 ),
 						( int )( sin( iDeg * ToRAD ) * iMeterR * .8 ) + iMeterCy - m_pFontM->GetH() / 2
@@ -2117,11 +2133,11 @@ void CVsdFilter::DrawMeterPanel0( void ){
 				
 				// メーターパネル目盛り数値
 				if( i % ( iStep * 2 ) == 0 ){
-					sprintf( szBuf, "%d", i );
+					sprintf( g_szBuf, "%d", i );
 					DrawString(
-						szBuf, m_pFontM,
+						g_szBuf, m_pFontM,
 						COLOR_STR, 0,
-						( int )( cos( iDeg * ToRAD ) * iMeterR * .75 * AspectRatio ) + iMeterCx - m_pFontM->GetW() * strlen( szBuf ) / 2,
+						( int )( cos( iDeg * ToRAD ) * iMeterR * .75 * AspectRatio ) + iMeterCx - m_pFontM->GetW() * strlen( g_szBuf ) / 2,
 						( int )( sin( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCy - m_pFontM->GetH() / 2
 					);
 				}
@@ -2132,7 +2148,10 @@ void CVsdFilter::DrawMeterPanel0( void ){
 	/*** メーターデータ描画 ***/
 	
 	if( GSnakeLen >= 0 && Log->IsDataExist()){
-		DrawGSnake( iMeterCx, iMeterCy, iMeterR );
+		DrawGSnake(
+			iMeterCx, iMeterCy, ( int )( iMeterR / GScale ),
+			COLOR_G_SENSOR, COLOR_G_HIST
+		);
 	}
 	
 	// ギア表示 - VsdLog しか使用しない
@@ -2149,9 +2168,9 @@ void CVsdFilter::DrawMeterPanel0( void ){
 			else								iGear = 5;
 		}
 		
-		sprintf( szBuf, "%d", iGear );
+		sprintf( g_szBuf, "%d", iGear );
 		DrawString(
-			szBuf, m_pFontM,
+			g_szBuf, m_pFontM,
 			COLOR_STR, 0,
 			iMeterCx - m_pFontM->GetW() / 2, iMeterCy - iMeterR / 2
 		);
@@ -2159,18 +2178,18 @@ void CVsdFilter::DrawMeterPanel0( void ){
 	
 	if( Log->IsDataExist()){
 		// スピード表示
-		sprintf( szBuf, "%3d", ( int )Log->Speed() );
+		sprintf( g_szBuf, "%3d", ( int )Log->Speed() );
 		DrawString(
-			szBuf, m_pFontM,
+			g_szBuf, m_pFontM,
 			COLOR_STR, 0,
 			iMeterCx - 3 * m_pFontM->GetW() / 2, iMeterCy + iMeterR / 2
 		);
 		
 		// G 数値
 		if( GSnakeLen >= 0 ){
-			sprintf( szBuf, "%02dG", ( int )( sqrt( Log->Gx() * Log->Gx() + Log->Gy() * Log->Gy()) * 10 ));
+			sprintf( g_szBuf, "%02dG", ( int )( sqrt( Log->Gx() * Log->Gx() + Log->Gy() * Log->Gy()) * 10 ));
 			DrawString(
-				szBuf, m_pFontM,
+				g_szBuf, m_pFontM,
 				COLOR_STR, 0,
 				iMeterCx - 3 * m_pFontM->GetW() / 2, iMeterCy + iMeterR / 2 - m_pFontM->GetH()
 			);
@@ -2222,7 +2241,6 @@ void CVsdFilter::DrawMeterPanel0( void ){
 /*** メーターパネル type 1 **************************************************/
 
 void CVsdFilter::DrawMeterPanel1( void ){
-	char	szBuf[ 128 ];
 	int	i;
 	CVsdLog *Log;
 	
@@ -2314,9 +2332,9 @@ void CVsdFilter::DrawMeterPanel1( void ){
 				
 				// メーターパネル目盛り数値
 				if( iMeterMaxVal <= 12000 && i % 1000 == 0 || i % 2000 == 0 ){
-					sprintf( szBuf, "%d", i / 1000 );
+					sprintf( g_szBuf, "%d", i / 1000 );
 					DrawString(
-						szBuf, m_pFontM,
+						g_szBuf, m_pFontM,
 						COLOR_STR, 0,
 						( int )( cos( iDeg * ToRAD ) * iMeterR * .825 * AspectRatio ) + iMeterCx - m_pFontM->GetW() / ( i >= 10000 ? 1 : 2 ),
 						( int )( sin( iDeg * ToRAD ) * iMeterR * .825 ) + iMeterCy - m_pFontM->GetH() / 2
@@ -2360,11 +2378,11 @@ void CVsdFilter::DrawMeterPanel1( void ){
 				
 				// メーターパネル目盛り数値
 				if( i % ( iStep * 2 ) == 0 ){
-					sprintf( szBuf, "%d", i );
+					sprintf( g_szBuf, "%d", i );
 					DrawString(
-						szBuf, m_pFontS,
+						g_szBuf, m_pFontS,
 						COLOR_STR, 0,
-						( int )( cos( iDeg * ToRAD ) * iMeterR * .825 * AspectRatio ) + iMeterCx - m_pFontS->GetW() * strlen( szBuf ) / 2,
+						( int )( cos( iDeg * ToRAD ) * iMeterR * .825 * AspectRatio ) + iMeterCx - m_pFontS->GetW() * strlen( g_szBuf ) / 2,
 						( int )( sin( iDeg * ToRAD ) * iMeterR * .825 ) + iMeterCy - m_pFontS->GetH() / 2
 					);
 				}
@@ -2429,7 +2447,8 @@ void CVsdFilter::DrawMeterPanel1( void ){
 		DrawGSnake(
 			iMeterCx + ( int )(( iMeterR * 55 / 100 ) * AspectRatio ),
 			iMeterCy + iMeterR * 55 / 100,
-			iMeterR * 45 / 100
+			( int )( iMeterR * 45 / 100 / GScale ),
+			COLOR_G_SENSOR, COLOR_G_HIST
 		);
 	}
 	
@@ -2456,9 +2475,9 @@ void CVsdFilter::DrawMeterPanel1( void ){
 			yc_orange, CVsdFilter::IMG_FILL
 		);
 		
-		sprintf( szBuf, "%d", iGear );
+		sprintf( g_szBuf, "%d", iGear );
 		DrawString(
-			szBuf, m_pFontM,
+			g_szBuf, m_pFontM,
 			yc_black, 0,
 			iMeterCx - m_pFontM->GetW() / 2,
 			iMeterCy + iMeterR * 10 / 100
@@ -2468,9 +2487,9 @@ void CVsdFilter::DrawMeterPanel1( void ){
 	if( Log->IsDataExist()){
 		// スピード表示
 		i = ( int )Log->Speed();
-		sprintf( szBuf, "%d", i );
+		sprintf( g_szBuf, "%d", i );
 		DrawString(
-			szBuf, m_pFontL,
+			g_szBuf, m_pFontL,
 			COLOR_STR, 0,
 			iMeterCx - ( i >= 100 ? 3 : i >= 10 ? 2 : 1 ) * m_pFontL->GetW() / 2,
 			iMeterCy - ( iMeterR * 35 / 100 ) - m_pFontL->GetH() / 2
@@ -2485,9 +2504,9 @@ void CVsdFilter::DrawMeterPanel1( void ){
 		
 		// G 数値
 		if( GSnakeLen >= 0 ){
-			sprintf( szBuf, "%.1fG", sqrt( Log->Gx() * Log->Gx() + Log->Gy() * Log->Gy()));
+			sprintf( g_szBuf, "%.1fG", sqrt( Log->Gx() * Log->Gx() + Log->Gy() * Log->Gy()));
 			DrawString(
-				szBuf, m_pFontS,
+				g_szBuf, m_pFontS,
 				COLOR_STR, 0,
 				iMeterCx + ( int )(( iMeterR ) * AspectRatio ) - 4 * m_pFontS->GetW(),
 				iMeterCy + iMeterR - m_pFontS->GetH()

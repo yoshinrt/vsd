@@ -183,6 +183,20 @@ class CVsdFilter {
 	void DrawString( char *szMsg, CVsdFont *pFont, const PIXEL_YCA &yc, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
 	void DrawString( char *szMsg, CVsdFont *pFont, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
 	
+	void DrawSpeedGraph(
+		CVsdLog *Log,
+		int iX, int iY, int iW, int iH,
+		const PIXEL_YCA &yc,
+		int	iDirection
+	);
+	
+	void DrawTachoGraph(
+		CVsdLog *Log,
+		int iX, int iY, int iW, int iH,
+		const PIXEL_YCA &yc,
+		int	iDirection
+	);
+	
 	// ポリゴン描写
 	void PolygonClear( void );
 	void PolygonDraw( const PIXEL_YCA &yc, UINT uFlag );
@@ -195,7 +209,10 @@ class CVsdFilter {
 	);
 	
 	BOOL DrawVSD( void );
-	void DrawGSnake( int iCx, int iCy, int iR );
+	void DrawGSnake(
+		int iCx, int iCy, int iR,
+		const PIXEL_YCA &ycBall, const PIXEL_YCA &ycLine
+	);
 	void DrawMeterPanel0( void );
 	void DrawMeterPanel1( void );
 	void DrawMap(
@@ -205,24 +222,12 @@ class CVsdFilter {
 		const PIXEL_YCA &ycGPlus,
 		const PIXEL_YCA &ycGMinus
 	);
+	void DrawLapTime( void );
 	
 	enum {
 		IMG_FILL	= ( 1 << 0 ),
 		IMG_POLYGON	= ( 1 << 1 ),
 	};
-	
-	int m_iPosX, m_iPosY;
-	
-	int	m_iLapIdx;
-	int m_iBestLogNumRunning;
-	
-	PolygonData_t	*m_Polygon;
-	
-	// フォント
-	CVsdFont	*m_pFontS;
-	CVsdFont	*m_pFontM;
-	CVsdFont	*m_pFontL;
-	LOGFONT		m_logfont;
 	
 	// 仮想関数
 	virtual int	GetWidth( void )	= 0;
@@ -231,60 +236,6 @@ class CVsdFilter {
 	virtual int	GetFrameCnt( void )	= 0;
 	virtual double	GetFPS( void )	= 0;
 	
-	/*** ログオペレーション *************************************************/
-	
-  public:
-	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
-	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *szDst );
-	BOOL ConfigLoad( const char *szFileName );
-	BOOL ParseMarkStr( const char *szMark );
-	BOOL GPSLogLoad( const char *szFileName );
-	double GPSLogGetLength(
-		double dLong0, double dLati0,
-		double dLong1, double dLati1
-	);
-	
-	BOOL ReadLog( const char *szFileName );
-	
-	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
-	
-	void DrawSpeedGraph(
-		CVsdLog *Log,
-		int iX, int iY, int iW, int iH,
-		const PIXEL_YCA &yc,
-		int	iDirection
-	);
-	void DrawTachoGraph(
-		CVsdLog *Log,
-		int iX, int iY, int iW, int iH,
-		const PIXEL_YCA &yc,
-		int	iDirection
-	);
-	
-	CVsdLog		*m_VsdLog;
-	CVsdLog		*m_GPSLog;
-	
-	LAP_t		*m_Lap;
-	int			m_iLapMode;
-	int			m_iLapNum;
-	int			m_iBestTime;
-	int			m_iBestLap;
-	
-	int			m_iLogStart;
-	int			m_iLogStop;
-	
-	int			*m_piParamT;
-	int			*m_piParamC;
-	int			*m_piParamS;
-	
-	BOOL		m_bCalcLapTimeReq;
-	
-	// スタートライン@GPS 計測モード
-	double	m_dStartLineX1;
-	double	m_dStartLineY1;
-	double	m_dStartLineX2;
-	double	m_dStartLineY2;
-	
 	static const char *m_szTrackbarName[];
 	static const char *m_szCheckboxName[];
 	static const char *m_szShadowParamName[];
@@ -292,11 +243,63 @@ class CVsdFilter {
 	char	*m_szLogFile;
 	char	*m_szGPSLogFile;
 	
+	int			*m_piParamT;
+	int			*m_piParamC;
+	int			*m_piParamS;
+	
+	// フォント
+	CVsdFont	*m_pFontS;
+	CVsdFont	*m_pFontM;
+	CVsdFont	*m_pFontL;
+	LOGFONT		m_logfont;
+	
+	CVsdLog		*m_VsdLog;
+	CVsdLog		*m_GPSLog;
+	
+	BOOL ConfigLoad( const char *szFileName );
+	BOOL ParseMarkStr( const char *szMark );
+	BOOL GPSLogLoad( const char *szFileName );
+	BOOL ReadLog( const char *szFileName );
+	double GPSLogGetLength(
+		double dLong0, double dLati0,
+		double dLong1, double dLati1
+	);
+	
+	BOOL		m_bCalcLapTimeReq;
+	int			m_iLogStart;
+	int			m_iLogStop;
+	
+  protected:
+	
+	LAP_t		*m_Lap;
+	int			m_iLapMode;
+	int			m_iLapNum;
+	int			m_iBestTime;
+	int			m_iBestLap;
+	
+  private:
+	
+	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
+	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *szDst );
+	
+	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
+	
+	// スタートライン@GPS 計測モード
+	double	m_dStartLineX1;
+	double	m_dStartLineY1;
+	double	m_dStartLineX2;
+	double	m_dStartLineY2;
+	
 	virtual void SetFrameMark( int iFrame ) = 0;
 	virtual int  GetFrameMark( int iFrame ) = 0;
 	void CalcLapTime( void );
 	void CalcLapTimeAuto( void );
 	
-  private:
+	int m_iPosX, m_iPosY;
+	
+	int	m_iLapIdx;
+	int m_iBestLogNumRunning;
+	
+	PolygonData_t	*m_Polygon;
 };
 #endif
