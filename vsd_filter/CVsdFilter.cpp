@@ -3,7 +3,6 @@
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
 	CVsdFilter.cpp - CVsdFilter class implementation
-	$Id$
 	
 *****************************************************************************/
 

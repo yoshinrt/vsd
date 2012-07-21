@@ -3,7 +3,6 @@
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
 	CVsdFont.h - CVsdFont class header
-	$Id$
 	
 *****************************************************************************/
 

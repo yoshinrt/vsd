@@ -3,7 +3,6 @@
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
 	vsd_filter.cpp - VSD filter for AviUti
-	$Id$
 	
 *****************************************************************************/
 
