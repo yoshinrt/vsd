@@ -50,6 +50,14 @@
 	#define GPSEd			m_piParamT[ PARAM_GEd ]
 #endif
 
+// ƒpƒ‰ƒ[ƒ^‚ğ•ÏŠ·
+#define ConvParam( p, from, to ) ( \
+	from##Ed == from##St ? 0 : \
+	( double )( to##Ed - to##St ) * (( p ) - from##St ) \
+	/ ( from##Ed - from##St ) \
+	+ to##St \
+)
+
 /*** track / check ID *******************************************************/
 
 enum {
