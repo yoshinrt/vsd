@@ -6,11 +6,7 @@
 	
 *****************************************************************************/
 
-#include <windows.h>
-#include <stdio.h>
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <float.h>
+#include "StdAfx.h"
 
 #include "dds.h"
 #include "../vsd/main.h"

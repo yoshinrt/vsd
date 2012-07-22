@@ -6,8 +6,8 @@
 	
 *****************************************************************************/
 
-#include <windows.h>
-#include <gdiplus.h>
+#include "StdAfx.h"
+
 #include "pixel.h"
 #include "CVsdImage.h"
 #include "dds.h"

@@ -6,12 +6,7 @@
 	
 *****************************************************************************/
 
-#include <windows.h>
-#include <stdio.h>
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include "StdAfx.h"
 
 #include "dds.h"
 #include "../vsd/main.h"
@@ -19,7 +14,6 @@
 #include "dds_lib/dds_lib.h"
 #include "CVsdLog.h"
 #include "CVsdFont.h"
-#include <v8.h>
 #include "CScript.h"
 #include "pixel.h"
 #include "CVsdImage.h"
@@ -38,7 +32,7 @@
 #define	FILE_CFG_EXT	"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 
 #define PROG_NAME		"VSDÉÅÅ[É^Å[çáê¨"
-#define PROG_VERSION	"v1.07beta2"
+#define PROG_VERSION	"v1.10beta1"
 
 /*** new type ***************************************************************/
 
@@ -368,7 +362,7 @@ void CVsdFilterAvu::PutImage( int x, int y, CVsdImage &img ){
 			
 			PIXEL_YCA &yc = img.m_pPixelBuf[ x1 + y1 * img.m_iWidth ];
 			
-			if( 1 || yc.alfa != 256 ){
+			if( yc.alfa != 256 ){
 				int	iIndex = GetIndex( x + x1, y + y1 );
 				
 				if( yc.alfa ){

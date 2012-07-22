@@ -6,10 +6,7 @@
 	
 *****************************************************************************/
 
-#include <v8.h>
-#include <windows.h>
-#include <stdio.h>
-#include <assert.h>
+#include "StdAfx.h"
 
 #include "CScript.h"
 #include "CVsdFont.h"

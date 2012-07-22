@@ -6,16 +6,7 @@
 	
 *****************************************************************************/
 
-#include <windows.h>
-#include <stdio.h>
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <stddef.h>
-#include <float.h>
-#include <ctype.h>
-
-#include <zlib.h>
-#include <zconf.h>
+#include "StdAfx.h"
 
 #include "dds.h"
 #include "../vsd/main.h"
@@ -26,7 +17,6 @@
 #endif
 #include "CVsdLog.h"
 #include "CVsdFont.h"
-#include <v8.h>
 #include "CScript.h"
 #include "pixel.h"
 #include "CVsdImage.h"

@@ -6,7 +6,8 @@
 	
 *****************************************************************************/
 
-#include <windows.h>
+#include "StdAfx.h"
+
 #include "dds.h"
 #include "CVsdFont.h"
 

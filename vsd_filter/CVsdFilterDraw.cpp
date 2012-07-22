@@ -6,10 +6,7 @@
 	
 *****************************************************************************/
 
-#include <windows.h>
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <float.h>
+#include "StdAfx.h"
 
 #include "dds.h"
 #include "../vsd/main.h"
@@ -20,7 +17,6 @@
 #endif
 #include "CVsdLog.h"
 #include "CVsdFont.h"
-#include <v8.h>
 #include "CScript.h"
 #include "pixel.h"
 #include "CVsdImage.h"
@@ -639,7 +635,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	// png èëÇ´çûÇ›
 	{
 		CVsdImage img;
-		img.Load( "d:\\dds\\vsd\\vsd_filter\\yos.png" );
+		img.Load( "d:\\dds\\vsd\\vsd_filter\\meter.png" );
 		PutImage( 100, 200, img );
 	}
 	

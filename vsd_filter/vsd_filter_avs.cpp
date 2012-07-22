@@ -6,14 +6,14 @@
 	
 *****************************************************************************/
 
-#include <windows.h>
+#include "StdAfx.h"
+
 #include "avisynth.h"
 
 #include "dds.h"
 #include "dds_lib/dds_lib.h"
 #include "CVsdLog.h"
 #include "CVsdFont.h"
-#include <v8.h>
 #include "CScript.h"
 #include "pixel.h"
 #include "CVsdImage.h"
