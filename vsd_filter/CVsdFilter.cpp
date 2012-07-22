@@ -14,8 +14,8 @@
 #include <float.h>
 #include <ctype.h>
 
-#include "zlib/zlib.h"
-#include "zlib/zconf.h"
+#include <zlib.h>
+#include <zconf.h>
 
 #include "dds.h"
 #include "../vsd/main.h"
@@ -2054,7 +2054,7 @@ void CVsdFilter::DrawMap(
 
 /*** êjï`âÊ *****************************************************************/
 
-inline void DrawNeedle(
+void CVsdFilter::DrawNeedle(
 	int x, int y, int r,
 	int iStart, int iEnd, double dVal,
 	const PIXEL_YCA yc, int iWidth
