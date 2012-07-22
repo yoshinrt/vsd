@@ -28,6 +28,8 @@
 #include "CVsdFont.h"
 #include <v8.h>
 #include "CScript.h"
+#include "pixel.h"
+#include "CVsdImage.h"
 #include "CVsdFilter.h"
 
 /*** macros *****************************************************************/
@@ -514,7 +516,7 @@ void CVsdFilter::DrawString( char *szMsg, CVsdFont *pFont, const PIXEL_YCA &yc, 
 	m_iPosY += pFont->GetH();
 }
 
-/*** ポリゴン描画 ***********************************************************/
+/*** put pixel 系 ***********************************************************/
 
 inline void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
 	
@@ -522,7 +524,7 @@ inline void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag 
 		// ポリゴン描画
 		if( x > m_Polygon[ y ].iRight ) m_Polygon[ y ].iRight = x;
 		if( x < m_Polygon[ y ].iLeft  ) m_Polygon[ y ].iLeft  = x;
-	}else if( 0 <= x && x < GetWidth() && 0 <= y && y < GetHeight()){
+	}else if( 0 <= x && x < GetWidth() && 0 <= y && y < GetHeight() && yc.alfa != 256 ){
 		PutPixelLow( x, y, yc, uFlag );
 	}
 }
@@ -538,7 +540,7 @@ inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, U
 			if( x2 > m_Polygon[ y1 ].iRight ) m_Polygon[ y1 ].iRight = x2;
 			if( x1 < m_Polygon[ y1 ].iLeft  ) m_Polygon[ y1 ].iLeft  = x1;
 		}
-	}else if( 0 <= y1 && y1 < GetHeight()){
+	}else if( 0 <= y1 && y1 < GetHeight() && yc.alfa != 256 ){
 		if( x1 < 0 )         x1 = 0;
 		if( x2 > GetWidth()) x2 = GetWidth();
 		
@@ -1588,6 +1590,13 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_Script = new CScript( this );
 		m_Script->Load( "d:\\dds\\vsd\\vsd_filter\\z.js" );
 		m_Script->Run();
+	}
+	
+	// png 書き込み
+	{
+		CVsdImage img;
+		img.Load( "d:\\dds\\vsd\\vsd_filter\\yos.png" );
+		PutImage( 100, 200, img );
 	}
 	
 	// フォントサイズ初期化

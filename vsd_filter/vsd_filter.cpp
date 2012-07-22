@@ -21,6 +21,8 @@
 #include "CVsdFont.h"
 #include "v8.h"
 #include "CScript.h"
+#include "pixel.h"
+#include "CVsdImage.h"
 #include "CVsdFilter.h"
 
 /*** macros *****************************************************************/
@@ -248,6 +250,7 @@ class CVsdFilterAvu : public CVsdFilter {
 	// ‰¼‘zŠÖ”
 	virtual void PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag );
 	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag );
+	virtual void PutImage( int x, int y, CVsdImage &img );
 	
 	virtual int	GetWidth( void ){ return fpip->w; }
 	virtual int	GetHeight( void ){ return fpip->h; }
@@ -312,24 +315,23 @@ inline void CVsdFilter::PutPixel( int x, int y, short iY, short iCr, short iCb )
 }
 */
 
-void CVsdFilterAvu::PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
+inline void CVsdFilterAvu::PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
 	
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
+	int	iIndex = GetIndex( x, y );
 	if( yc.alfa ){
-		int	iIndex = GetIndex( x, y );
 		int iAlfa = ( int )yc.alfa;
 		
 		ycp[ iIndex ].y  = ( PIXEL_t )( yc.y  + (( ycp[ iIndex ].y  * iAlfa ) >> 8 ));
 		ycp[ iIndex ].cr = ( PIXEL_t )( yc.cr + (( ycp[ iIndex ].cr * iAlfa ) >> 8 ));
 		ycp[ iIndex ].cb = ( PIXEL_t )( yc.cb + (( ycp[ iIndex ].cb * iAlfa ) >> 8 ));
 	}else{
-		//ycp[ GetIndex( x, y ) ] = *( PIXEL_YC *)( &yc );
-		ycp[ GetIndex( x, y ) ] = ( PIXEL_YC &)yc;
+		ycp[ iIndex ] = ( PIXEL_YC &)yc;
 	}
 }
 
-void CVsdFilterAvu::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ){
+inline void CVsdFilterAvu::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ){
 	
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
@@ -348,6 +350,37 @@ void CVsdFilterAvu::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UI
 	}else{
 		for( iIndex = x1; iIndex <= x2; ++iIndex ){
 			ycp[ iIndex ] = ( PIXEL_YC &)yc;
+		}
+	}
+}
+
+/*** PutImage ***************************************************************/
+
+void CVsdFilterAvu::PutImage( int x, int y, CVsdImage &img ){
+	img.ConvRGBA2YCA();
+	
+	x &= ~1;	// 2’PˆÊ
+	
+	PIXEL_YC	*ycp = fpip->ycp_edit;
+	
+	for( int y1 = 0; y1 < img.m_iHeight; ++y1 ){
+		for( int x1 = 0; x1 < img.m_iWidth; ++x1 ){
+			
+			PIXEL_YCA &yc = img.m_pPixelBuf[ x1 + y1 * img.m_iWidth ];
+			
+			if( 1 || yc.alfa != 256 ){
+				int	iIndex = GetIndex( x + x1, y + y1 );
+				
+				if( yc.alfa ){
+					int iAlfa = ( int )yc.alfa;
+					
+					ycp[ iIndex ].y  = ( PIXEL_t )( yc.y  + (( ycp[ iIndex ].y  * iAlfa ) >> 8 ));
+					ycp[ iIndex ].cr = ( PIXEL_t )( yc.cr + (( ycp[ iIndex ].cr * iAlfa ) >> 8 ));
+					ycp[ iIndex ].cb = ( PIXEL_t )( yc.cb + (( ycp[ iIndex ].cb * iAlfa ) >> 8 ));
+				}else{
+					ycp[ iIndex ] = ( PIXEL_YC &)yc;
+				}
+			}
 		}
 	}
 }

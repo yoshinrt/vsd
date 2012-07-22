@@ -15,6 +15,8 @@
 #include "CVsdFont.h"
 #include <v8.h>
 #include "CScript.h"
+#include "pixel.h"
+#include "CVsdImage.h"
 #include "CVsdFilter.h"
 
 #define PROG_NAME	"VSDFilter"
@@ -161,7 +163,7 @@ G = Y-0.714Cr-0.344Cb
 B = Y+1.772Cb 
 */
 
-void CVsdFilterAvs::PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
+inline void CVsdFilterAvs::PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
 	
 	int	iIndex	= GetIndex( x, y );
 	
@@ -180,7 +182,7 @@ void CVsdFilterAvs::PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag )
 	}
 }
 
-void CVsdFilterAvs::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ){
+inline void CVsdFilterAvs::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ){
 	
 	int iIndex = GetIndex( x1, y1 );
 	

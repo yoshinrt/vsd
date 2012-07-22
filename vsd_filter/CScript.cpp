@@ -14,6 +14,8 @@
 #include "CScript.h"
 #include "CVsdFont.h"
 #include "CVsdLog.h"
+#include "pixel.h"
+#include "CVsdImage.h"
 #include "CVsdFilter.h"
 #include "dds.h"
 
