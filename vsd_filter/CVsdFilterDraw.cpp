@@ -629,15 +629,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 	if( !m_Script ){
 		m_Script = new CScript( this );
 		m_Script->Load( "d:\\dds\\vsd\\vsd_filter\\z.js" );
-		m_Script->Run();
 	}
-	
-	// png 書き込み
-	{
-		CVsdImage img;
-		img.Load( "d:\\dds\\vsd\\vsd_filter\\meter.png" );
-		PutImage( 100, 200, img );
-	}
+	m_Script->Run();
 	
 	// フォントサイズ初期化
 	int iFontSize = m_piParamS[ SHADOW_FONT_SIZE ] > 0 ?

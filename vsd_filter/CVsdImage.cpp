@@ -8,9 +8,9 @@
 
 #include "StdAfx.h"
 
+#include "dds.h"
 #include "pixel.h"
 #include "CVsdImage.h"
-#include "dds.h"
 
 /*** コンストラクタ・デストラクタ *******************************************/
 

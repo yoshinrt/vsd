@@ -8,13 +8,13 @@
 
 #include "StdAfx.h"
 
+#include "dds.h"
 #include "CScript.h"
 #include "CVsdFont.h"
 #include "CVsdLog.h"
 #include "pixel.h"
 #include "CVsdImage.h"
 #include "CVsdFilter.h"
-#include "dds.h"
 
 using namespace v8;
 
@@ -73,10 +73,10 @@ CVsdFilter *CScript::m_Vsd;
 
 /*** マクロ *****************************************************************/
 
-#define CheckArgs( cond ) \
+#define CheckArgs( func, cond ) \
 	if( !( cond )){ \
 		return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( \
-			"invalid number of args" \
+		#func ":invalid number of args" \
 		))); \
 	}
 
@@ -85,7 +85,7 @@ CVsdFilter *CScript::m_Vsd;
 Handle<Value> Func_DrawLine( const Arguments& args ){
 	
 	int iLen = args.Length();
-	CheckArgs( iLen == 5 || iLen == 6 );
+	CheckArgs( "DrawLine", iLen == 5 || iLen == 6 );
 	
 	PIXEL_YCA yc; Color2YCA( yc, args[ 4 ]->Int32Value());
 	
@@ -96,6 +96,24 @@ Handle<Value> Func_DrawLine( const Arguments& args ){
 		args[ 3 ]->Int32Value(), // y2
 		iLen <= 5 ? 1 : args[ 5 ]->Int32Value(), // width
 		yc, 0
+	);
+	
+	return Undefined();
+}
+
+/*** コールバック関数 *******************************************************/
+
+Handle<Value> Func_PutImage( const Arguments& args ){
+	
+	int iLen = args.Length();
+	CheckArgs( "PutImage", iLen == 3 );
+	
+	v8::Local<v8::Object> img = args[ 2 ]->ToObject();
+	
+	CScript::m_Vsd->PutImage(
+		args[ 0 ]->Int32Value(),	// x1
+		args[ 1 ]->Int32Value(),	// y1
+		*CVsdImage::GetThis( img )	// CImage
 	);
 	
 	return Undefined();
@@ -134,6 +152,9 @@ BOOL CScript::Load( char *szFileName ){
 			FunctionTemplate::New( Func_ ## name ) \
 		);
 	#include "def_scr_func.h"
+	
+	// Image クラス登録
+	CVsdImage::InitializeClass( global );
 	
 	// グローバルオブジェクトから環境を生成
 	m_context = Context::New( NULL, global );
