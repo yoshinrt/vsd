@@ -86,7 +86,7 @@ CVsdFilter *CScript::m_Vsd;
 		strcmp( *( String::AsciiValue )( obj->GetConstructorName()), name ) \
 	) return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( msg )))
 
-/*** コールバック関数 *******************************************************/
+/*** ライン描画 *************************************************************/
 
 Handle<Value> Func_DrawLine( const Arguments& args ){
 	
@@ -107,16 +107,79 @@ Handle<Value> Func_DrawLine( const Arguments& args ){
 	return Undefined();
 }
 
-/*** コールバック関数 *******************************************************/
+/*** 文字列描画 *************************************************************/
+
+Handle<Value> Func_DrawString( const Arguments& args ){
+	// arg: x, y, msg, font, color
+	// arg: x, y, msg, font, color, color
+	
+	int iLen = args.Length();
+	CheckArgs( "DrawString", iLen == 5 || iLen == 6 );
+	
+	// arg2 が Font かチェック
+	v8::Local<v8::Object> font = args[ 3 ]->ToObject();
+	CheckClass( font, "Font", "PutImage: arg[ 4 ] must be Font" );
+	
+	PIXEL_YCA yc;
+	Color2YCA( yc, args[ 4 ]->Int32Value());
+	
+	String::AsciiValue msg( args[ 2 ] );
+	
+	if( iLen >= 6 ){
+		PIXEL_YCA yc_edge;
+		Color2YCA( yc, args[ 5 ]->Int32Value());
+		CScript::m_Vsd->DrawString(
+			*msg,
+			CVsdFont::GetThis( font ),
+			yc, yc_edge, 0,
+			args[ 0 ]->Int32Value(), // x
+			args[ 1 ]->Int32Value()  // y
+		);
+	}else{
+		CScript::m_Vsd->DrawString(
+			*msg,
+			CVsdFont::GetThis( font ),
+			yc, 0,
+			args[ 0 ]->Int32Value(), // x
+			args[ 1 ]->Int32Value()  // y
+		);
+	}
+	
+	return Undefined();
+}
+
+/*** メーター針描画 *********************************************************/
+
+Handle<Value> Func_DrawNeedle( const Arguments& args ){
+	
+	int iLen = args.Length();
+	CheckArgs( "DrawNeedle", iLen == 7 || iLen == 8 );
+	
+	PIXEL_YCA yc; Color2YCA( yc, args[ 6 ]->Int32Value());
+	
+	CScript::m_Vsd->DrawNeedle(
+		args[ 0 ]->Int32Value(), // x
+		args[ 1 ]->Int32Value(), // y
+		args[ 2 ]->Int32Value(), // r
+		args[ 3 ]->Int32Value(), // start
+		args[ 4 ]->Int32Value(), // end
+		args[ 5 ]->NumberValue(), // val
+		yc,
+		iLen <= 7 ? 1 : args[ 7 ]->Int32Value() // width
+	);
+	
+	return Undefined();
+}
+
+/*** イメージ描画 ***********************************************************/
 
 Handle<Value> Func_PutImage( const Arguments& args ){
 	
 	int iLen = args.Length();
 	CheckArgs( "PutImage", iLen == 3 );
 	
-	v8::Local<v8::Object> img = args[ 2 ]->ToObject();
-	
 	// arg2 が Image かチェック
+	v8::Local<v8::Object> img = args[ 2 ]->ToObject();
 	CheckClass( img, "Image", "PutImage: arg[ 3 ] must be Image" );
 	
 	CScript::m_Vsd->PutImage(
@@ -164,6 +227,7 @@ BOOL CScript::Load( char *szFileName ){
 	
 	// Image クラス登録
 	CVsdImage::InitializeClass( global );
+	CVsdFont::InitializeClass( global );
 	
 	// グローバルオブジェクトから環境を生成
 	m_context = Context::New( NULL, global );

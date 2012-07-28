@@ -1103,7 +1103,9 @@ void CVsdFilter::DrawNeedle(
 	int iStart, int iEnd, double dVal,
 	const PIXEL_YCA yc, int iWidth
 ){
-	double dAngle = ( iStart + ( iEnd - iStart ) * dVal ) * ToRAD;
+	iStart %= 360;
+	iEnd   %= 360;
+	double dAngle = ( iStart + (( iStart > iEnd ? 360 : 0 ) + ( iEnd - iStart )) * dVal ) * ToRAD;
 	
 	DrawLine(
 		x, y,

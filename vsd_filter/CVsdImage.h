@@ -36,16 +36,13 @@ class CVsdImage {
   private:
 	// クラスコンストラクタ
 	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
-		CVsdImage* backend = NULL;
-		if ( args.Length() > 0 ){
-			backend = new CVsdImage();
-			v8::String::AsciiValue FileName( args[ 0 ] );
-			
-			if( !backend->Load( *FileName )) return v8::Undefined();
-		}else{
-			//backend = new CVsdImage();
-			return v8::Undefined();
-		}
+		// 引数チェック
+		if ( args.Length() <= 0 ) return v8::Undefined();
+		
+		CVsdImage* backend = new CVsdImage();
+		v8::String::AsciiValue FileName( args[ 0 ] );
+		
+		if( !backend->Load( *FileName )) return v8::Undefined();
 		
 		// internal field にバックエンドオブジェクトを設定
 		v8::Local<v8::Object> thisObject = args.This();
