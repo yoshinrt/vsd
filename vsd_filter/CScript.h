@@ -13,14 +13,12 @@ class CScript {
 	CScript( CVsdFilter *pVsd );
 	~CScript( void );
 	
-	BOOL Load( char *szFileName );
-	BOOL Run( void );
-	BOOL RunFunction( const char *szFunc );
+	BOOL Initialize( char *szFileName );
+	BOOL Run( const char *szFunc );
 	
 	static CVsdFilter	*m_Vsd;	// ÉGÅc
 	
   private:
 	v8::Persistent<v8::Context> m_context;
-	v8::Handle<v8::Script> m_script;
 	v8::HandleScope m_handle_scope;
 };

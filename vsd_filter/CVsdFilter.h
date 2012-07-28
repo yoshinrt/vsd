@@ -262,5 +262,220 @@ class CVsdFilter {
 	PolygonData_t	*m_Polygon;
 	
 	CScript	*m_Script;
+	
+	/*** JavaScript interface ***********************************************/
+	
+  private:
+	// クラスコンストラクタ
+	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
+		
+		CVsdFilter* backend = CScript::m_Vsd;
+		v8::String::AsciiValue FileName( args[ 0 ] );
+		
+		// internal field にバックエンドオブジェクトを設定
+		v8::Local<v8::Object> thisObject = args.This();
+		thisObject->SetInternalField( 0, v8::External::New( backend ));
+		
+		// JS オブジェクトが GC されるときにデストラクタが呼ばれるおまじない
+		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
+		objectHolder.MakeWeak( backend, CVsdFilter::Dispose );
+		
+		// コンストラクタは this を返すこと。
+		return thisObject;
+	}
+	
+	// クラスデストラクタ
+	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
+		delete static_cast<CVsdFilter*>( pVoid );
+	}
+	
+	///// プロパティアクセサ /////
+	
+	#define DEF_SCR_VAR( name, var ) \
+		static v8::Handle<v8::Value> Get_ ## name( \
+			v8::Local<v8::String> propertyName, \
+			const v8::AccessorInfo& info \
+		){ \
+			 CVsdFilter* backend = GetThis( info.Holder()); \
+			 return v8::Integer::New( backend->var ); \
+		}
+	#include "def_vsd_var.h"
+	
+	///// メソッドコールバック /////
+	
+	/*
+	static v8::Local<v8::Value> Add( const v8::Arguments& args ){
+		CVsdFilter* backend = GetThis( args.This());
+		if ( args.Length() > 0 ){
+			backend->Add( args[0]->Int32Value());
+		}else{
+			backend->Add();
+		}
+		return v8::Undefined();
+	}
+	*/
+	/*** マクロ *****************************************************************/
+	
+	#define CheckArgs( func, cond ) \
+		if( !( cond )){ \
+			return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( \
+				#func ":invalid number of args" \
+			))); \
+		}
+	
+	#define CheckClass( obj, name, msg ) \
+		if( \
+			obj.IsEmpty() || \
+			strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name ) \
+		) return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( msg )))
+	
+	/*** ライン描画 *************************************************************/
+	
+	static v8::Handle<v8::Value> Func_DrawLine( const v8::Arguments& args ){
+		
+		int iLen = args.Length();
+		CheckArgs( "DrawLine", iLen == 5 || iLen == 6 );
+		
+		PIXEL_YCA yc; Color2YCA( yc, args[ 4 ]->Int32Value());
+		
+		CScript::m_Vsd->DrawLine(
+			args[ 0 ]->Int32Value(), // x1
+			args[ 1 ]->Int32Value(), // y1
+			args[ 2 ]->Int32Value(), // x2
+			args[ 3 ]->Int32Value(), // y2
+			iLen <= 5 ? 1 : args[ 5 ]->Int32Value(), // width
+			yc, 0
+		);
+		
+		return v8::Undefined();
+	}
+	
+	/*** 文字列描画 *************************************************************/
+	
+	static v8::Handle<v8::Value> Func_DrawString( const v8::Arguments& args ){
+		// arg: x, y, msg, font, color
+		// arg: x, y, msg, font, color, color
+		
+		int iLen = args.Length();
+		CheckArgs( "DrawString", iLen == 5 || iLen == 6 );
+		
+		// arg2 が Font かチェック
+		v8::Local<v8::Object> font = args[ 3 ]->ToObject();
+		CheckClass( font, "Font", "PutImage: arg[ 4 ] must be Font" );
+		
+		PIXEL_YCA yc;
+		Color2YCA( yc, args[ 4 ]->Int32Value());
+		
+		v8::String::AsciiValue msg( args[ 2 ] );
+		
+		if( iLen >= 6 ){
+			PIXEL_YCA yc_edge;
+			Color2YCA( yc, args[ 5 ]->Int32Value());
+			CScript::m_Vsd->DrawString(
+				*msg,
+				CVsdFont::GetThis( font ),
+				yc, yc_edge, 0,
+				args[ 0 ]->Int32Value(), // x
+				args[ 1 ]->Int32Value()  // y
+			);
+		}else{
+			CScript::m_Vsd->DrawString(
+				*msg,
+				CVsdFont::GetThis( font ),
+				yc, 0,
+				args[ 0 ]->Int32Value(), // x
+				args[ 1 ]->Int32Value()  // y
+			);
+		}
+		
+		return v8::Undefined();
+	}
+	
+	/*** メーター針描画 *********************************************************/
+	
+	static v8::Handle<v8::Value> Func_DrawNeedle( const v8::Arguments& args ){
+		
+		int iLen = args.Length();
+		CheckArgs( "DrawNeedle", iLen == 7 || iLen == 8 );
+		
+		PIXEL_YCA yc; Color2YCA( yc, args[ 6 ]->Int32Value());
+		
+		CScript::m_Vsd->DrawNeedle(
+			args[ 0 ]->Int32Value(), // x
+			args[ 1 ]->Int32Value(), // y
+			args[ 2 ]->Int32Value(), // r
+			args[ 3 ]->Int32Value(), // start
+			args[ 4 ]->Int32Value(), // end
+			args[ 5 ]->NumberValue(), // val
+			yc,
+			iLen <= 7 ? 1 : args[ 7 ]->Int32Value() // width
+		);
+		
+		return v8::Undefined();
+	}
+	
+	/*** イメージ描画 ***********************************************************/
+	
+	static v8::Handle<v8::Value> Func_PutImage( const v8::Arguments& args ){
+		
+		int iLen = args.Length();
+		CheckArgs( "PutImage", iLen == 3 );
+		
+		// arg2 が Image かチェック
+		v8::Local<v8::Object> img = args[ 2 ]->ToObject();
+		CheckClass( img, "Image", "PutImage: arg[ 3 ] must be Image" );
+		
+		CScript::m_Vsd->PutImage(
+			args[ 0 ]->Int32Value(),	// x1
+			args[ 1 ]->Int32Value(),	// y1
+			*CVsdImage::GetThis( img )	// CImage
+		);
+		
+		return v8::Undefined();
+	}
+	
+	/*** デバッグ用 *************************************************************/
+	
+	// 関数オブジェクト print の実体
+	static v8::Handle<v8::Value> Func_print(const v8::Arguments& args) {
+		v8::String::AsciiValue str( args[ 0 ] );
+		DebugMsgD( "%s\n", *str );
+		return v8::Undefined();
+	}
+	
+	/****************************************************************************/
+	
+  public:
+	// this へのアクセスヘルパ
+	static CVsdFilter* GetThis( v8::Local<v8::Object> handle ){
+		 void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
+		 return static_cast<CVsdFilter*>( pThis );
+	}
+	
+	// クラステンプレートの初期化
+	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
+		// コンストラクタを作成
+		v8::Local<v8::FunctionTemplate> tmpl = v8::FunctionTemplate::New( CVsdFilter::New );
+		tmpl->SetClassName( v8::String::New( "Vsd" ));
+		
+		// フィールドなどはこちらに
+		v8::Handle<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
+		inst->SetInternalFieldCount( 1 );
+		#define DEF_SCR_VAR( name, var ) \
+			inst->SetAccessor( v8::String::New( #name ), CVsdFilter::Get_ ## name );
+		#include "def_vsd_var.h"
+		
+		// メソッドはこちらに
+		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
+		#define DEF_SCR_FUNC( name ) \
+			proto->Set( \
+				v8::String::New( #name ), \
+				v8::FunctionTemplate::New( CVsdFilter::Func_ ## name ) \
+			);
+		#include "def_vsd_func.h"
+		
+		// グローバルオブジェクトにクラスを定義
+		global->Set( v8::String::New( "Vsd" ), tmpl );
+	}
 };
 #endif

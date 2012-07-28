@@ -628,11 +628,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 	// スクリプトロード
 	if( !m_Script ){
 		m_Script = new CScript( this );
-		m_Script->Load( "d:\\dds\\vsd\\vsd_filter\\z.js" );
-		m_Script->Run();
-		m_Script->RunFunction( "Initialize" );
+		m_Script->Initialize( "d:\\dds\\vsd\\vsd_filter\\z.js" );
+		m_Script->Run( "Initialize" );
 	}
-	m_Script->RunFunction( "Draw" );
+	m_Script->Run( "Draw" );
 	
 	// フォントサイズ初期化
 	int iFontSize = m_piParamS[ SHADOW_FONT_SIZE ] > 0 ?
