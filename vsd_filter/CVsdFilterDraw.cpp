@@ -625,14 +625,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 //
 	int	i;
 	
-	// スクリプトロード
-	if( !m_Script ){
-		m_Script = new CScript( this );
-		m_Script->Initialize( "d:\\dds\\vsd\\vsd_filter\\z.js" );
-		m_Script->Run( "Initialize" );
-	}
-	m_Script->Run( "Draw" );
-	
 	// フォントサイズ初期化
 	int iFontSize = m_piParamS[ SHADOW_FONT_SIZE ] > 0 ?
 		m_piParamS[ SHADOW_FONT_SIZE ] :
@@ -698,8 +690,26 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_iLapIdx = -1;
 	}
 	
+	// JavaScript 用ログデータ計算
+	SelectLogVsd;
+	if( Log ){
+		m_dSpeed	= Log->Speed( Log->m_dLogNum );
+		m_dTacho	= Log->Tacho( Log->m_dLogNum );
+		m_dGx		= Log->Gx( Log->m_dLogNum );
+		m_dGy		= Log->Gy( Log->m_dLogNum );
+	}
+	
+	// スクリプトロード
+	if( !m_Script ){
+		m_Script = new CScript( this );
+		m_Script->Initialize( "d:\\dds\\vsd\\vsd_filter\\z.js" );
+		m_Script->Run( "Initialize" );
+	}
+	m_Script->Run( "Draw" );
+	
 	DrawLapTime();
 	
+#if 0
 	if(
 		#ifdef GPS_ONLY
 			DispGraph
@@ -744,6 +754,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 			);
 		}
 	}
+#endif
 	
 	// MAP 表示
 	DrawMap(
@@ -752,12 +763,14 @@ BOOL CVsdFilter::DrawVSD( void ){
 	);
 	
 	SelectLogVsd;
+#if 0
 	if( Log ){
 		switch( m_piParamC[ CHECK_PanelDesign ] ){
 			case 0: DrawMeterPanel0(); break;
 			case 1: DrawMeterPanel1(); break;
 		}
 	}
+#endif
 	
 	// フレーム表示
 	

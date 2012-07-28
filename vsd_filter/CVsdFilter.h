@@ -228,6 +228,12 @@ class CVsdFilter {
 	int			m_iLogStart;
 	int			m_iLogStop;
 	
+	// JavaScript 用パラメータ
+	double	m_dSpeed;
+	double	m_dTacho;
+	double	m_dGx;
+	double	m_dGy;
+	
   protected:
 	
 	LAP_t		*m_Lap;
@@ -291,13 +297,13 @@ class CVsdFilter {
 	
 	///// プロパティアクセサ /////
 	
-	#define DEF_SCR_VAR( name, var ) \
+	#define DEF_SCR_VAR( name, type, var ) \
 		static v8::Handle<v8::Value> Get_ ## name( \
 			v8::Local<v8::String> propertyName, \
 			const v8::AccessorInfo& info \
 		){ \
 			 CVsdFilter* backend = GetThis( info.Holder()); \
-			 return v8::Integer::New( backend->var ); \
+			 return v8::type::New( backend->var ); \
 		}
 	#include "def_vsd_var.h"
 	
@@ -461,7 +467,7 @@ class CVsdFilter {
 		// フィールドなどはこちらに
 		v8::Handle<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
 		inst->SetInternalFieldCount( 1 );
-		#define DEF_SCR_VAR( name, var ) \
+		#define DEF_SCR_VAR( name, type, var ) \
 			inst->SetAccessor( v8::String::New( #name ), CVsdFilter::Get_ ## name );
 		#include "def_vsd_var.h"
 		
