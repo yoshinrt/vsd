@@ -110,7 +110,7 @@ BOOL CVsdImage::ConvRGBA2YCA( void ){
 	for( int y = 0; y < m_iHeight; ++y ){
 		for( int x = 0; x < m_iWidth; ++x ){
 			int iIdx = x + y * m_iWidth;
-			Color2YCA( m_pPixelBuf[ iIdx ], m_pRGBA_Buf[ iIdx ].argb );
+			m_pPixelBuf[ iIdx ].Set( m_pRGBA_Buf[ iIdx ].argb );
 		}
 	}
 	

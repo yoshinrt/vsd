@@ -112,41 +112,42 @@ class CVsdFilter {
 	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ) = 0;
 	
 	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA &yc, UINT uFlag );
-	void DrawLine( int x1, int y1, int x2, int y2, int width, const PIXEL_YCA &yc, UINT uFlag );
+	void DrawLine( int x1, int y1, int x2, int y2, UINT uColor, UINT uFlag );
+	void DrawLine( int x1, int y1, int x2, int y2, int width, UINT uColor, UINT uFlag );
 	
-	void DrawRect( int x1, int y1, int x2, int y2, const PIXEL_YCA &yc, UINT uFlag );
-	void DrawCircle( int x, int y, int r, const PIXEL_YCA &yc, UINT uFlag );
-	void DrawCircle( int x, int y, int a, int b, const PIXEL_YCA &yc, UINT uFlag );
+	void DrawRect( int x1, int y1, int x2, int y2, UINT uColor, UINT uFlag );
+	void DrawCircle( int x, int y, int r, UINT uColor, UINT uFlag );
+	void DrawCircle( int x, int y, int a, int b, UINT uColor, UINT uFlag );
 	void DrawArc(
 		int x, int y,
 		int a, int b,
 		int iStart, int iEnd,
-		const PIXEL_YCA &yc, UINT uFlag
+		UINT uColor, UINT uFlag
 	);
 	void DrawArc(
 		int x, int y,
 		int a, int b,
 		int c, int d,
 		int iStart, int iEnd,
-		const PIXEL_YCA &yc, UINT uFlag
+		UINT uColor, UINT uFlag
 	);
 	
-	void DrawFont( int x, int y, UCHAR c, CVsdFont *pFont, const PIXEL_YCA &yc, UINT uFlag );
-	void DrawFont( int x, int y, UCHAR c, CVsdFont *pFont, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag );
-	void DrawString( char *szMsg, CVsdFont *pFont, const PIXEL_YCA &yc, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
-	void DrawString( char *szMsg, CVsdFont *pFont, const PIXEL_YCA &yc, const PIXEL_YCA &ycEdge, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
+	void DrawFont( int x, int y, UCHAR c, CVsdFont *pFont, UINT uColor, UINT uFlag );
+	void DrawFont( int x, int y, UCHAR c, CVsdFont *pFont, UINT uColor, UINT uColorEdge, UINT uFlag );
+	void DrawString( char *szMsg, CVsdFont *pFont, UINT uColor, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
+	void DrawString( char *szMsg, CVsdFont *pFont, UINT uColor, UINT uColorEdge, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
 	
 	void DrawSpeedGraph(
 		CVsdLog *Log,
 		int iX, int iY, int iW, int iH,
-		const PIXEL_YCA &yc,
+		UINT uColor,
 		int	iDirection
 	);
 	
 	void DrawTachoGraph(
 		CVsdLog *Log,
 		int iX, int iY, int iW, int iH,
-		const PIXEL_YCA &yc,
+		UINT uColor,
 		int	iDirection
 	);
 	
@@ -154,32 +155,31 @@ class CVsdFilter {
 	void PolygonClear( void );
 	void PolygonDraw( const PIXEL_YCA &yc, UINT uFlag );
 	
-	PIXEL_YCA *BlendColor(
-		PIXEL_YCA	&ycDst,
-		const PIXEL_YCA	&ycColor0,
-		const PIXEL_YCA	&ycColor1,
+	UINT BlendColor(
+		UINT uColor0,
+		UINT uColor1,
 		double	dAlfa
 	);
 	
 	BOOL DrawVSD( void );
 	void DrawGSnake(
 		int iCx, int iCy, int iR,
-		const PIXEL_YCA &ycBall, const PIXEL_YCA &ycLine
+		UINT uColorBall, UINT uColorLine
 	);
 	void DrawMeterPanel0( void );
 	void DrawMeterPanel1( void );
 	void DrawMap(
 		int iX, int iY, int iSize,
-		const PIXEL_YCA &ycIndicator,
-		const PIXEL_YCA &ycG0,
-		const PIXEL_YCA &ycGPlus,
-		const PIXEL_YCA &ycGMinus
+		UINT uColorIndicator,
+		UINT uColorG0,
+		UINT uColorGPlus,
+		UINT uColorGMinus
 	);
 	void DrawLapTime( void );
 	void DrawNeedle(
 		int x, int y, int r,
 		int iStart, int iEnd, double dVal,
-		const PIXEL_YCA yc, int iWidth
+		UINT uColor, int iWidth
 	);
 	virtual void PutImage( int x, int y, CVsdImage &img ) = 0;
 	
@@ -342,15 +342,34 @@ class CVsdFilter {
 		int iLen = args.Length();
 		CheckArgs( "DrawLine", iLen == 5 || iLen == 6 );
 		
-		PIXEL_YCA yc; Color2YCA( yc, args[ 4 ]->Int32Value());
-		
 		CScript::m_Vsd->DrawLine(
 			args[ 0 ]->Int32Value(), // x1
 			args[ 1 ]->Int32Value(), // y1
 			args[ 2 ]->Int32Value(), // x2
 			args[ 3 ]->Int32Value(), // y2
 			iLen <= 5 ? 1 : args[ 5 ]->Int32Value(), // width
-			yc, 0
+			args[ 4 ]->Int32Value(), // color
+			0
+		);
+		
+		return v8::Undefined();
+	}
+	
+	/*** ‰~•`‰æ *****************************************************************/
+	
+	static v8::Handle<v8::Value> Func_DrawCircle( const v8::Arguments& args ){
+		
+		// arg: x, y, r, yc, flag
+		
+		int iLen = args.Length();
+		CheckArgs( "DrawCircle", iLen == 4 || iLen == 5 );
+		
+		CScript::m_Vsd->DrawCircle(
+			args[ 0 ]->Int32Value(), // x
+			args[ 1 ]->Int32Value(), // y
+			args[ 2 ]->Int32Value(), // r
+			args[ 3 ]->Int32Value(), // color
+			iLen <= 4 ? 0 : args[ 4 ]->Int32Value() // flag
 		);
 		
 		return v8::Undefined();
@@ -369,18 +388,15 @@ class CVsdFilter {
 		v8::Local<v8::Object> font = args[ 3 ]->ToObject();
 		CheckClass( font, "Font", "PutImage: arg[ 4 ] must be Font" );
 		
-		PIXEL_YCA yc;
-		Color2YCA( yc, args[ 4 ]->Int32Value());
-		
 		v8::String::AsciiValue msg( args[ 2 ] );
 		
 		if( iLen >= 6 ){
-			PIXEL_YCA yc_edge;
-			Color2YCA( yc, args[ 5 ]->Int32Value());
 			CScript::m_Vsd->DrawString(
 				*msg,
 				CVsdFont::GetThis( font ),
-				yc, yc_edge, 0,
+				args[ 4 ]->Int32Value(), // color
+				args[ 5 ]->Int32Value(), // color edge
+				0,
 				args[ 0 ]->Int32Value(), // x
 				args[ 1 ]->Int32Value()  // y
 			);
@@ -388,7 +404,8 @@ class CVsdFilter {
 			CScript::m_Vsd->DrawString(
 				*msg,
 				CVsdFont::GetThis( font ),
-				yc, 0,
+				args[ 4 ]->Int32Value(), // color
+				0,
 				args[ 0 ]->Int32Value(), // x
 				args[ 1 ]->Int32Value()  // y
 			);
@@ -404,8 +421,6 @@ class CVsdFilter {
 		int iLen = args.Length();
 		CheckArgs( "DrawNeedle", iLen == 7 || iLen == 8 );
 		
-		PIXEL_YCA yc; Color2YCA( yc, args[ 6 ]->Int32Value());
-		
 		CScript::m_Vsd->DrawNeedle(
 			args[ 0 ]->Int32Value(), // x
 			args[ 1 ]->Int32Value(), // y
@@ -413,7 +428,7 @@ class CVsdFilter {
 			args[ 3 ]->Int32Value(), // start
 			args[ 4 ]->Int32Value(), // end
 			args[ 5 ]->NumberValue(), // val
-			yc,
+			args[ 6 ]->Int32Value(), // color
 			iLen <= 7 ? 1 : args[ 7 ]->Int32Value() // width
 		);
 		
