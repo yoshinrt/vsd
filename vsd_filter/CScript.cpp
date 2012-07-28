@@ -76,9 +76,15 @@ CVsdFilter *CScript::m_Vsd;
 #define CheckArgs( func, cond ) \
 	if( !( cond )){ \
 		return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( \
-		#func ":invalid number of args" \
+			#func ":invalid number of args" \
 		))); \
 	}
+
+#define CheckClass( obj, name, msg ) \
+	if( \
+		obj.IsEmpty() || \
+		strcmp( *( String::AsciiValue )( obj->GetConstructorName()), name ) \
+	) return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( msg )))
 
 /*** コールバック関数 *******************************************************/
 
@@ -109,6 +115,9 @@ Handle<Value> Func_PutImage( const Arguments& args ){
 	CheckArgs( "PutImage", iLen == 3 );
 	
 	v8::Local<v8::Object> img = args[ 2 ]->ToObject();
+	
+	// arg2 が Image かチェック
+	CheckClass( img, "Image", "PutImage: arg[ 3 ] must be Image" );
 	
 	CScript::m_Vsd->PutImage(
 		args[ 0 ]->Int32Value(),	// x1
@@ -223,5 +232,16 @@ BOOL CScript::Run( void ){
 		return TRUE;
 	}
 	
+	return TRUE;
+}
+
+/*** function 名指定実行，引数なし ******************************************/
+
+BOOL CScript::RunFunction( const char *szFunc ){
+	HandleScope handle_scope;
+	Context::Scope context_scope( m_context );
+	
+	Local<Function> hFunction = Local<Function>::Cast( m_context->Global()->Get( String::New( szFunc )));
+	Handle<Value> result = hFunction->Call( hFunction, 0, 0 );
 	return TRUE;
 }

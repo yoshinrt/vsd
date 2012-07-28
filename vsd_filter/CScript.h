@@ -15,6 +15,7 @@ class CScript {
 	
 	BOOL Load( char *szFileName );
 	BOOL Run( void );
+	BOOL RunFunction( const char *szFunc );
 	
 	static CVsdFilter	*m_Vsd;	// ÉGÅc
 	
