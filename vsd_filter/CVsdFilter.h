@@ -236,6 +236,7 @@ class CVsdFilter {
 	
 	char	*m_szLogFile;
 	char	*m_szGPSLogFile;
+	char	*m_szSkinFile;
 	
 	int			*m_piParamT;
 	int			*m_piParamC;
@@ -256,6 +257,10 @@ class CVsdFilter {
 		double dLong0, double dLati0,
 		double dLong1, double dLati1
 	);
+	void DeleteScript( void ){
+		if( m_Script ) delete m_Script;
+		m_Script = NULL;
+	}
 	
 	BOOL		m_bCalcLapTimeReq;
 	int			m_iLogStart;

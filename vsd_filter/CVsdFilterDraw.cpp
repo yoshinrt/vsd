@@ -40,16 +40,6 @@
 #endif
 
 #ifdef GPS_ONLY
-	#define Aspect			m_piParamT[ TRACK_Aspect ]
-	#define AspectRatio		(( double )m_piParamT[ TRACK_Aspect ] / 1000 )
-	#define MeterPosRight	m_piParamC[ CHECK_METER_POS ]
-#else
-	#define Aspect			1000
-	#define AspectRatio		1
-	#define MeterPosRight	!m_piParamC[ CHECK_METER_POS ]
-#endif
-
-#ifdef GPS_ONLY
 	#define GPSPriority		FALSE
 #else
 	#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
@@ -1096,13 +1086,19 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_iMaxSpeed	= 180;
 	}
 	
-	// スクリプトロード
-	if( !m_Script ){
+	// スクリプト実行
+	
+	if( !m_Script && *m_szSkinFile ){
 		m_Script = new CScript( this );
-		m_Script->Initialize( "d:\\dds\\vsd\\vsd_filter\\z.js" );
+		m_Script->Initialize( m_szSkinFile );
 		m_Script->Run( "Initialize" );
 	}
-	m_Script->Run( "Draw" );
+	
+	if( m_Script ){
+		m_Script->Run( "Draw" );
+	}else{
+		DrawString( "Skin not loaded.", *m_pFont, COLOR_STR, color_black, 0, 0 );
+	}
 	
 #if 0
 	if(

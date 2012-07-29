@@ -128,11 +128,6 @@ CVsdFilterAvs::CVsdFilterAvs(
 	// mark= 引数処理
 	if( p = args[ ARGID_MARK ].AsString( NULL )) ParseMarkStr( p );
 	
-	// FONT 指定
-	if( p = args[ ARGID_STRPARAM_FONT ].AsString( NULL )) strcpy( m_logfont.lfFaceName, p );
-	m_logfont.lfWeight	= m_piParamS[ SHADOW_FONT_ATTR ] & 0x1 ? FW_BOLD : FW_REGULAR;
-	m_logfont.lfItalic	= m_piParamS[ SHADOW_FONT_ATTR ] & 0x2 ? 1 : 0;
-	
 	// ログリード
 	#ifndef GPS_ONLY
 		if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )) if( !ReadLog( p ))

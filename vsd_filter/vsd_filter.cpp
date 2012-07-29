@@ -30,6 +30,7 @@
 #define	FILE_LOG_EXT	"log file (*.log)\0*.log; *.gz\0AllFile (*.*)\0*.*\0"
 #define	FILE_GPS_EXT	"GPS file (*.nme* *.dp3*)\0*.nme*; *.dp3*; *.gz\0AllFile (*.*)\0*.*\0"
 #define	FILE_CFG_EXT	"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
+#define	FILE_SKIN_EXT	"Skin File (*.js)\0*.js\0AllFile (*.*)\0*.*\0"
 
 #define PROG_NAME		"VSDメーター合成"
 #define PROG_VERSION	"v1.10beta1"
@@ -53,8 +54,8 @@ enum {
 #endif
 	ID_EDIT_LOAD_GPS,
 	ID_BUTT_LOAD_GPS,
-	ID_EDIT_SEL_FONT,
-	ID_BUTT_SEL_FONT,
+	ID_EDIT_SEL_SKIN,
+	ID_BUTT_SEL_SKIN,
 	ID_BUTT_LOAD_CFG,
 	ID_BUTT_SAVE_CFG,
 };
@@ -710,10 +711,10 @@ void ExtendDialog( HWND hwnd ){
 	int y = rectClient.bottom - ( POS_FILE_HEIGHT + POS_FILE_HEIGHT_MARGIN ) * POS_FILE_NUM + POS_FILE_HEIGHT_MARGIN;
 	
 #ifndef GPS_ONLY
-	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "VSDログ",	"",				"開く" );
+	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "VSDログ",	"",		"開く" );
 #endif
-	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "GPSログ",	"",				"開く" );
-	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "スキン",	"(default)",	"選択" );
+	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "GPSログ",	"",		"開く" );
+	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "スキン",	"",		"開く" );
 	
 	// cfg load/save ボタン
 	hwndChild = CreateWindow(
@@ -916,6 +917,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 					);
 				}
 				
+				if( *g_Vsd->m_szSkinFile ) g_Vsd->DeleteScript();
+				
 				// 設定再描画
 				filter->exfunc->filter_window_update( filter );
 				
@@ -925,8 +928,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				#endif
 			}
 			
-			// フォント名をダイアログに設定
-			SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_FONT ), g_Vsd->m_logfont.lfFaceName );
+			// skin 名をダイアログに設定
+			SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_SKIN ), g_Vsd->m_szSkinFile );
 			
 		  Case ID_BUTT_SAVE_CFG:
 			if( filter->exfunc->dlg_get_save_name( szBuf, FILE_CFG_EXT, NULL ))
@@ -953,6 +956,17 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				FileOpenDialog( g_Vsd->m_szGPSLogFile, BUF_SIZE, FILE_GPS_EXT ) &&
 				g_Vsd->GPSLogLoad( g_Vsd->m_szGPSLogFile, hwnd )
 			){
+				// 設定再描画
+				filter->exfunc->filter_window_update( filter );
+			}
+			
+		  Case ID_BUTT_SEL_SKIN:	// スキン選択
+			if( filter->exfunc->dlg_get_load_name( g_Vsd->m_szSkinFile, FILE_SKIN_EXT, NULL )){
+				g_Vsd->DeleteScript();
+				
+				// skin 名をダイアログに設定
+				SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_SKIN ), g_Vsd->m_szSkinFile );
+				
 				// 設定再描画
 				filter->exfunc->filter_window_update( filter );
 			}
