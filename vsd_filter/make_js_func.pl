@@ -129,6 +129,7 @@ EOF
 
 print( fpFuncProto << "EOF" );
 DEF_SCR_FUNC( DrawString )
+DEF_SCR_FUNC( DrawArc )
 DEF_SCR_FUNC( print )
 #undef DEF_SCR_FUNC
 EOF

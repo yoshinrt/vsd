@@ -58,23 +58,9 @@ static v8::Handle<v8::Value> Func_DrawCircle( const v8::Arguments& args ){
 }
 static v8::Handle<v8::Value> Func_DrawGSnake( const v8::Arguments& args ){
 	int iLen = args.Length();
-	CheckArgs( "DrawGSnake", iLen == 5 );
+	CheckArgs( "DrawGSnake", iLen == 7 );
 	
 	CScript::m_Vsd->DrawGSnake(
-		args[ 0 ]->Int32Value(),
-		args[ 1 ]->Int32Value(),
-		args[ 2 ]->Int32Value(),
-		args[ 3 ]->Int32Value(),
-		args[ 4 ]->Int32Value()
-	);
-	
-	return v8::Undefined();
-}
-static v8::Handle<v8::Value> Func_DrawMap( const v8::Arguments& args ){
-	int iLen = args.Length();
-	CheckArgs( "DrawMap", iLen == 7 );
-	
-	CScript::m_Vsd->DrawMap(
 		args[ 0 ]->Int32Value(),
 		args[ 1 ]->Int32Value(),
 		args[ 2 ]->Int32Value(),
@@ -86,11 +72,68 @@ static v8::Handle<v8::Value> Func_DrawMap( const v8::Arguments& args ){
 	
 	return v8::Undefined();
 }
+static v8::Handle<v8::Value> Func_DrawMeterPanel0( const v8::Arguments& args ){
+	int iLen = args.Length();
+	CheckArgs( "DrawMeterPanel0", iLen == 5 );
+	v8::Local<v8::Object> font4 = args[ 4 ]->ToObject();
+	CheckClass( font4, "Font", "arg[ 4 ] must be Font" );
+	CScript::m_Vsd->DrawMeterPanel0(
+		args[ 0 ]->Int32Value(),
+		args[ 1 ]->Int32Value(),
+		args[ 2 ]->Int32Value(),
+		args[ 3 ]->Int32Value(),
+		*CVsdFont::GetThis( font4 )
+	);
+	
+	return v8::Undefined();
+}
+static v8::Handle<v8::Value> Func_DrawMeterPanel1( const v8::Arguments& args ){
+	int iLen = args.Length();
+	CheckArgs( "DrawMeterPanel1", iLen == 5 );
+	v8::Local<v8::Object> font4 = args[ 4 ]->ToObject();
+	CheckClass( font4, "Font", "arg[ 4 ] must be Font" );
+	CScript::m_Vsd->DrawMeterPanel1(
+		args[ 0 ]->Int32Value(),
+		args[ 1 ]->Int32Value(),
+		args[ 2 ]->Int32Value(),
+		args[ 3 ]->Int32Value(),
+		*CVsdFont::GetThis( font4 )
+	);
+	
+	return v8::Undefined();
+}
+static v8::Handle<v8::Value> Func_DrawMap( const v8::Arguments& args ){
+	int iLen = args.Length();
+	CheckArgs( "DrawMap", iLen == 9 );
+	
+	CScript::m_Vsd->DrawMap(
+		args[ 0 ]->Int32Value(),
+		args[ 1 ]->Int32Value(),
+		args[ 2 ]->Int32Value(),
+		args[ 3 ]->Int32Value(),
+		args[ 4 ]->Int32Value(),
+		args[ 5 ]->Int32Value(),
+		args[ 6 ]->Int32Value(),
+		args[ 7 ]->Int32Value(),
+		args[ 8 ]->Int32Value()
+	);
+	
+	return v8::Undefined();
+}
 static v8::Handle<v8::Value> Func_DrawLapTime( const v8::Arguments& args ){
 	int iLen = args.Length();
-	CheckArgs( "DrawLapTime", iLen == 0 );
-	
-	CScript::m_Vsd->DrawLapTime();
+	CheckArgs( "DrawLapTime", iLen == 7 );
+	v8::Local<v8::Object> font2 = args[ 2 ]->ToObject();
+	CheckClass( font2, "Font", "arg[ 2 ] must be Font" );
+	CScript::m_Vsd->DrawLapTime(
+		args[ 0 ]->Int32Value(),
+		args[ 1 ]->Int32Value(),
+		*CVsdFont::GetThis( font2 ),
+		args[ 3 ]->Int32Value(),
+		args[ 4 ]->Int32Value(),
+		args[ 5 ]->Int32Value(),
+		args[ 6 ]->Int32Value()
+	);
 	
 	return v8::Undefined();
 }

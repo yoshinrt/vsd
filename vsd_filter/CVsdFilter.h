@@ -137,21 +137,23 @@ class CVsdFilter {
 	void DrawArc(
 		int x, int y,
 		int a, int b,
-		int iStart, int iEnd,
-		UINT uColor, UINT uFlag
+		double dStart, double dEnd,
+		UINT uColor,
+		UINT uFlag
 	);
 	void DrawArc(
 		int x, int y,
 		int a, int b,
 		int c, int d,
-		int iStart, int iEnd,
-		UINT uColor, UINT uFlag
+		double dStart, double dEnd,
+		UINT uColor,
+		UINT uFlag
 	);
 	
-	void DrawFont( int x, int y, UCHAR c, CVsdFont *pFont, UINT uColor, UINT uFlag );
-	void DrawFont( int x, int y, UCHAR c, CVsdFont *pFont, UINT uColor, UINT uColorEdge, UINT uFlag );
-	void DrawString( char *szMsg, CVsdFont *pFont, UINT uColor, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
-	void DrawString( char *szMsg, CVsdFont *pFont, UINT uColor, UINT uColorEdge, UINT uFlag, int x = POS_DEFAULT, int y = POS_DEFAULT );
+	void DrawFont( int x, int y, UCHAR c, CVsdFont &Font, UINT uColor );
+	void DrawFont( int x, int y, UCHAR c, CVsdFont &Font, UINT uColor, UINT uColorEdge );
+	void DrawString( char *szMsg, CVsdFont &Font, UINT uColor, int x, int y );
+	void DrawString( char *szMsg, CVsdFont &Font, UINT uColor, UINT uColorEdge, int x, int y );
 	
 	void DrawSpeedGraph(
 		CVsdLog *Log,
@@ -178,20 +180,36 @@ class CVsdFilter {
 	);
 	
 	BOOL DrawVSD( void );
-	void DrawGSnake( // !js_func
-		int iCx, int iCy, int iR,
+	void CVsdFilter::DrawGSnake( // !js_func
+		int iCx, int iCy, int iR, int iIndicatorR, int iWidth,
 		UINT uColorBall, UINT uColorLine
 	);
-	void DrawMeterPanel0( void );
-	void DrawMeterPanel1( void );
-	void DrawMap( // !js_func
-		int iX, int iY, int iSize,
+	void DrawMeterPanel0( // !js_func
+		int	iMeterCx,
+		int	iMeterCy,
+		int	iMeterR,
+		int	iMaxSpeed,
+		CVsdFont &Font
+	);
+	void DrawMeterPanel1( // !js_func
+		int	iMeterCx,
+		int	iMeterCy,
+		int	iMeterR,
+		int	iMaxSpeed,
+		CVsdFont &Font
+	);
+	void CVsdFilter::DrawMap( // !js_func
+		int iX, int iY, int iSize, int iWidth,
+		int iIndicatorR,
 		UINT uColorIndicator,
 		UINT uColorG0,
 		UINT uColorGPlus,
 		UINT uColorGMinus
 	);
-	void DrawLapTime( void );	// !js_func
+	void DrawLapTime( // !js_func
+		int x, int y, CVsdFont &Font,
+		UINT uColor, UINT uColorOutline, UINT uColorBest, UINT uColorPlus
+	);
 	void DrawNeedle( // !js_func
 		int x, int y, int r,
 		int iStart, int iEnd, double dVal,
@@ -224,9 +242,7 @@ class CVsdFilter {
 	int			*m_piParamS;
 	
 	// フォント
-	CVsdFont	*m_pFontS;
-	CVsdFont	*m_pFontM;
-	CVsdFont	*m_pFontL;
+	CVsdFont	*m_pFont;
 	LOGFONT		m_logfont;
 	
 	CVsdLog		*m_VsdLog;
@@ -246,10 +262,11 @@ class CVsdFilter {
 	int			m_iLogStop;
 	
 	// JavaScript 用パラメータ
-	double	m_dSpeed;	// !js_var:Speed
-	double	m_dTacho;	// !js_var:Tacho
-	double	m_dGx;		// !js_var:Gx
-	double	m_dGy;		// !js_var:Gy
+	double	m_dSpeed;		// !js_var:Speed
+	double	m_dTacho;		// !js_var:Tacho
+	double	m_dGx;			// !js_var:Gx
+	double	m_dGy;			// !js_var:Gy
+	int		m_iMaxSpeed;	// !js_var:MaxSpeed
 	
   protected:
 	
@@ -360,24 +377,56 @@ class CVsdFilter {
 		if( iLen >= 6 ){
 			CScript::m_Vsd->DrawString(
 				*msg,
-				CVsdFont::GetThis( font ),
+				*CVsdFont::GetThis( font ),
 				args[ 4 ]->Int32Value(), // color
 				args[ 5 ]->Int32Value(), // color edge
-				0,
 				args[ 0 ]->Int32Value(), // x
 				args[ 1 ]->Int32Value()  // y
 			);
 		}else{
 			CScript::m_Vsd->DrawString(
 				*msg,
-				CVsdFont::GetThis( font ),
+				*CVsdFont::GetThis( font ),
 				args[ 4 ]->Int32Value(), // color
-				0,
 				args[ 0 ]->Int32Value(), // x
 				args[ 1 ]->Int32Value()  // y
 			);
 		}
 		
+		return v8::Undefined();
+	}
+	
+	/*** DrawArc ****************************************************************/
+	
+	static v8::Handle<v8::Value> Func_DrawArc( const v8::Arguments& args ){
+		int iLen = args.Length();
+		CheckArgs( "DrawArc", 7 <= iLen && iLen <= 10 );
+		
+		if( iLen >= 9 ){
+			CScript::m_Vsd->DrawArc(
+				args[ 0 ]->Int32Value(),
+				args[ 1 ]->Int32Value(),
+				args[ 2 ]->Int32Value(),
+				args[ 3 ]->Int32Value(),
+				args[ 4 ]->Int32Value(),
+				args[ 5 ]->Int32Value(),
+				args[ 6 ]->NumberValue(),
+				args[ 7 ]->NumberValue(),
+				args[ 8 ]->Int32Value(),
+				iLen <= 9 ? 0 : args[ 9 ]->Int32Value()
+			);
+		}else{
+			CScript::m_Vsd->DrawArc(
+				args[ 0 ]->Int32Value(),
+				args[ 1 ]->Int32Value(),
+				args[ 2 ]->Int32Value(),
+				args[ 3 ]->Int32Value(),
+				args[ 4 ]->NumberValue(),
+				args[ 5 ]->NumberValue(),
+				args[ 6 ]->Int32Value(),
+				iLen <= 7 ? 0 : args[ 7 ]->Int32Value()
+			);
+		}
 		return v8::Undefined();
 	}
 	

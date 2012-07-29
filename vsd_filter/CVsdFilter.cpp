@@ -73,9 +73,7 @@ CVsdFilter::CVsdFilter (){
 	// DrawPolygon 用バッファ
 	m_Polygon			= new PolygonData_t[ MAX_POLY_HEIGHT ];
 	
-	m_pFontS				= NULL;
-	m_pFontM				= NULL;
-	m_pFontL				= NULL;
+	m_pFont				= NULL;
 	
 	m_logfont.lfHeight			= 0;							// 文字セルまたは文字の高さ
 	m_logfont.lfWidth			= 0;							// 平均文字幅
@@ -90,7 +88,7 @@ CVsdFilter::CVsdFilter (){
 	m_logfont.lfClipPrecision	= CLIP_DEFAULT_PRECIS;			// クリッピングの精度
 	m_logfont.lfQuality			= PROOF_QUALITY;				// 出力品質
 	m_logfont.lfPitchAndFamily	= FIXED_PITCH | FF_DONTCARE;	// ピッチとファミリ
-	//m_logfont.lfFaceName[LF_FACESIZE];   						// フォント名
+	strcpy( m_logfont.lfFaceName, "ＭＳ ゴシック" );			// フォント名
 	
 	// str param に初期値設定
 	#define DEF_STR_PARAM( id, var, init, conf_name ) strcpy( var, init );
@@ -108,9 +106,7 @@ CVsdFilter::~CVsdFilter (){
 	delete [] m_szLogFile;
 	delete [] m_szGPSLogFile;
 	delete [] m_Polygon;
-	delete m_pFontS;
-	delete m_pFontM;
-	delete m_pFontL;
+	delete m_pFont;
 	delete m_Script;
 }
 
@@ -229,14 +225,6 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 		  Next: ;
 		}
 		fclose( fp );
-		
-		// フォント再設定
-		m_logfont.lfWeight	= m_piParamS[ SHADOW_FONT_ATTR ] & 0x1 ? FW_BOLD : FW_REGULAR;
-		m_logfont.lfItalic	= m_piParamS[ SHADOW_FONT_ATTR ] & 0x2 ? 1 : 0;
-		
-		delete m_pFontS; m_pFontS = NULL;
-		delete m_pFontM; m_pFontM = NULL;
-		delete m_pFontL; m_pFontL = NULL;
 	}
 	return TRUE;
 }

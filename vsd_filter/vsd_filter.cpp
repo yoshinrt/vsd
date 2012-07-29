@@ -713,7 +713,7 @@ void ExtendDialog( HWND hwnd ){
 	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "VSDログ",	"",				"開く" );
 #endif
 	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "GPSログ",	"",				"開く" );
-	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "フォント",	"(default)",	"選択" );
+	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "スキン",	"(default)",	"選択" );
 	
 	// cfg load/save ボタン
 	hwndChild = CreateWindow(
@@ -955,28 +955,6 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			){
 				// 設定再描画
 				filter->exfunc->filter_window_update( filter );
-			}
-			
-		  Case ID_BUTT_SEL_FONT:	// フォント選択
-			CHOOSEFONT	cf;
-			cf.lStructSize = sizeof( CHOOSEFONT );
-			cf.hwndOwner = hwnd;
-			cf.lpLogFont = &( g_Vsd->m_logfont );
-			cf.Flags = CF_SCREENFONTS | CF_NOVERTFONTS | CF_INITTOLOGFONTSTRUCT | CF_TTONLY;
-			if( ChooseFont( &cf )){
-				// フォント強制更新
-				g_Vsd->m_piParamS[ SHADOW_FONT_SIZE ] = -g_Vsd->m_logfont.lfHeight;
-				g_Vsd->m_piParamS[ SHADOW_FONT_ATTR ] =
-					( g_Vsd->m_logfont.lfWeight > FW_REGULAR ? 1 : 0 ) |
-					( g_Vsd->m_logfont.lfItalic ? 2 : 0 );
-				delete g_Vsd->m_pFontS;
-				delete g_Vsd->m_pFontM;
-				delete g_Vsd->m_pFontL;
-				g_Vsd->m_pFontS = NULL;
-				g_Vsd->m_pFontM = NULL;
-				g_Vsd->m_pFontL = NULL;
-				
-				SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_FONT ), g_Vsd->m_logfont.lfFaceName );
 			}
 			
 		  Default:
