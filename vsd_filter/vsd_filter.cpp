@@ -350,7 +350,9 @@ inline void CVsdFilterAvu::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA 
 
 /*** PutImage ***************************************************************/
 
-void CVsdFilterAvu::PutImage( int x, int y, CVsdImage &img ){
+void CVsdFilterAvu::PutImage(	// !export
+	int x, int y, CVsdImage &img
+){
 	img.ConvRGBA2YCA();
 	
 	x &= ~1;	// 2’PˆÊ

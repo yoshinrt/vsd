@@ -119,7 +119,12 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, UINT uColor, UINT uFl
 	DrawLine( x1, y1, x2, y2, yc, uFlag );
 }
 
-void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, UINT uColor, UINT uFlag ){
+void CVsdFilter::DrawLine(	// !export
+	int x1, int y1, int x2, int y2,
+	int width,		// !arg:5 !default:1
+	UINT uColor,	// !arg:4
+	UINT uFlag		// !default:0
+){
 	
 	PIXEL_YCA yc( uColor );
 	
@@ -134,7 +139,10 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, UINT uColo
 
 /*** DrawRect ***************************************************************/
 
-void CVsdFilter::DrawRect( int x1, int y1, int x2, int y2, UINT uColor, UINT uFlag ){
+void CVsdFilter::DrawRect(	// !export
+	int x1, int y1, int x2, int y2,
+	UINT uColor, UINT uFlag
+){
 	int	y;
 	
 	if( y1 > y2 ) SWAP( y1, y2, y );
@@ -147,7 +155,11 @@ void CVsdFilter::DrawRect( int x1, int y1, int x2, int y2, UINT uColor, UINT uFl
 
 /*** DrawCircle *************************************************************/
 
-void CVsdFilter::DrawCircle( int x, int y, int r, UINT uColor, UINT uFlag ){
+void CVsdFilter::DrawCircle(	// !export
+	int x, int y, int r,
+	UINT uColor,
+	UINT uFlag	// !default:0
+){
 	
 	int	i = r;
 	int j = 0;
@@ -423,6 +435,11 @@ void CVsdFilter::DrawString( char *szMsg, CVsdFont *pFont, UINT uColor, UINT uCo
 }
 
 /*** put pixel 系 ***********************************************************/
+
+void CVsdFilter::PutPixel( int x, int y, UINT uColor, UINT uFlag ){
+	PIXEL_YCA	yc( uColor );
+	PutPixel( x, y, yc, uFlag );
+}
 
 inline void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
 	
@@ -842,7 +859,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 
 /*** ラップタイム表示 *******************************************************/
 
-void CVsdFilter::DrawLapTime(){
+void CVsdFilter::DrawLapTime(){	// !export
 	
 	BOOL	bInLap = FALSE;	// ラップタイム計測中
 	int	i;
@@ -987,7 +1004,7 @@ void CVsdFilter::DrawLapTime(){
 
 /*** G スネーク描画 *********************************************************/
 
-void CVsdFilter::DrawGSnake(
+void CVsdFilter::DrawGSnake(	// !export
 	int iCx, int iCy, int iR,
 	UINT uColorBall, UINT uColorLine
 ){
@@ -1033,7 +1050,7 @@ void CVsdFilter::DrawGSnake(
 
 /*** 走行軌跡表示 ***********************************************************/
 
-void CVsdFilter::DrawMap(
+void CVsdFilter::DrawMap(	// !export
 	int iX, int iY, int iSize,
 	UINT uColorIndicator,
 	UINT uColorG0,
@@ -1118,10 +1135,11 @@ void CVsdFilter::DrawMap(
 
 /*** 針描画 *****************************************************************/
 
-void CVsdFilter::DrawNeedle(
+void CVsdFilter::DrawNeedle(	// !export
 	int x, int y, int r,
 	int iStart, int iEnd, double dVal,
-	UINT uColor, int iWidth
+	UINT uColor,
+	int iWidth	// !default:1
 ){
 	iStart %= 360;
 	iEnd   %= 360;

@@ -106,6 +106,10 @@ class CVsdFilter {
 	
 	/*** 画像オペレーション *************************************************/
 	
+	void PutPixel(	// !js_func
+		int x, int y, UINT uColor,
+		UINT uFlag	// !default:0
+	);
 	void PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag );
 	void FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag );
 	virtual void PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag ) = 0;
@@ -113,10 +117,22 @@ class CVsdFilter {
 	
 	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA &yc, UINT uFlag );
 	void DrawLine( int x1, int y1, int x2, int y2, UINT uColor, UINT uFlag );
-	void DrawLine( int x1, int y1, int x2, int y2, int width, UINT uColor, UINT uFlag );
+	void DrawLine(		// !js_func
+		int x1, int y1, int x2, int y2,
+		int width,		// !arg:5 !default:1
+		UINT uColor,	// !arg:4
+		UINT uFlag		// !default:0
+	);
 	
-	void DrawRect( int x1, int y1, int x2, int y2, UINT uColor, UINT uFlag );
-	void DrawCircle( int x, int y, int r, UINT uColor, UINT uFlag );
+	void DrawRect(	// !js_func
+		int x1, int y1, int x2, int y2,
+		UINT uColor, UINT uFlag
+	);
+	void DrawCircle(	// !js_func
+		int x, int y, int r,
+		UINT uColor,
+		UINT uFlag		// !default:0
+	);
 	void DrawCircle( int x, int y, int a, int b, UINT uColor, UINT uFlag );
 	void DrawArc(
 		int x, int y,
@@ -162,26 +178,27 @@ class CVsdFilter {
 	);
 	
 	BOOL DrawVSD( void );
-	void DrawGSnake(
+	void DrawGSnake( // !js_func
 		int iCx, int iCy, int iR,
 		UINT uColorBall, UINT uColorLine
 	);
 	void DrawMeterPanel0( void );
 	void DrawMeterPanel1( void );
-	void DrawMap(
+	void DrawMap( // !js_func
 		int iX, int iY, int iSize,
 		UINT uColorIndicator,
 		UINT uColorG0,
 		UINT uColorGPlus,
 		UINT uColorGMinus
 	);
-	void DrawLapTime( void );
-	void DrawNeedle(
+	void DrawLapTime( void );	// !js_func
+	void DrawNeedle( // !js_func
 		int x, int y, int r,
 		int iStart, int iEnd, double dVal,
-		UINT uColor, int iWidth
+		UINT uColor,
+		int iWidth // !default:1
 	);
-	virtual void PutImage( int x, int y, CVsdImage &img ) = 0;
+	virtual void PutImage( int x, int y, CVsdImage &img ) = 0; // !js_func
 	
 	enum {
 		IMG_FILL	= ( 1 << 0 ),
@@ -189,11 +206,11 @@ class CVsdFilter {
 	};
 	
 	// 仮想関数
-	virtual int	GetWidth( void )	= 0;
-	virtual int	GetHeight( void )	= 0;
-	virtual int	GetFrameMax( void )	= 0;
-	virtual int	GetFrameCnt( void )	= 0;
-	virtual double	GetFPS( void )	= 0;
+	virtual int	GetWidth( void )	= 0;	// !js_var:Width
+	virtual int	GetHeight( void )	= 0;	// !js_var:Height
+	virtual int	GetFrameMax( void )	= 0;	// !js_var:MaxFrame
+	virtual int	GetFrameCnt( void )	= 0;	// !js_var:FrameCnt
+	virtual double GetFPS( void )	= 0;
 	
 	static const char *m_szTrackbarName[];
 	static const char *m_szCheckboxName[];
@@ -229,10 +246,10 @@ class CVsdFilter {
 	int			m_iLogStop;
 	
 	// JavaScript 用パラメータ
-	double	m_dSpeed;
-	double	m_dTacho;
-	double	m_dGx;
-	double	m_dGy;
+	double	m_dSpeed;	// !js_var:Speed
+	double	m_dTacho;	// !js_var:Tacho
+	double	m_dGx;		// !js_var:Gx
+	double	m_dGy;		// !js_var:Gy
 	
   protected:
 	
@@ -308,18 +325,6 @@ class CVsdFilter {
 	#include "def_vsd_var.h"
 	
 	///// メソッドコールバック /////
-	
-	/*
-	static v8::Local<v8::Value> Add( const v8::Arguments& args ){
-		CVsdFilter* backend = GetThis( args.This());
-		if ( args.Length() > 0 ){
-			backend->Add( args[0]->Int32Value());
-		}else{
-			backend->Add();
-		}
-		return v8::Undefined();
-	}
-	*/
 	/*** マクロ *****************************************************************/
 	
 	#define CheckArgs( func, cond ) \
@@ -335,45 +340,7 @@ class CVsdFilter {
 			strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name ) \
 		) return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( msg )))
 	
-	/*** ライン描画 *************************************************************/
-	
-	static v8::Handle<v8::Value> Func_DrawLine( const v8::Arguments& args ){
-		
-		int iLen = args.Length();
-		CheckArgs( "DrawLine", iLen == 5 || iLen == 6 );
-		
-		CScript::m_Vsd->DrawLine(
-			args[ 0 ]->Int32Value(), // x1
-			args[ 1 ]->Int32Value(), // y1
-			args[ 2 ]->Int32Value(), // x2
-			args[ 3 ]->Int32Value(), // y2
-			iLen <= 5 ? 1 : args[ 5 ]->Int32Value(), // width
-			args[ 4 ]->Int32Value(), // color
-			0
-		);
-		
-		return v8::Undefined();
-	}
-	
-	/*** 円描画 *****************************************************************/
-	
-	static v8::Handle<v8::Value> Func_DrawCircle( const v8::Arguments& args ){
-		
-		// arg: x, y, r, yc, flag
-		
-		int iLen = args.Length();
-		CheckArgs( "DrawCircle", iLen == 4 || iLen == 5 );
-		
-		CScript::m_Vsd->DrawCircle(
-			args[ 0 ]->Int32Value(), // x
-			args[ 1 ]->Int32Value(), // y
-			args[ 2 ]->Int32Value(), // r
-			args[ 3 ]->Int32Value(), // color
-			iLen <= 4 ? 0 : args[ 4 ]->Int32Value() // flag
-		);
-		
-		return v8::Undefined();
-	}
+	#include "CVsdFilterJsFunc.h"
 	
 	/*** 文字列描画 *************************************************************/
 	
@@ -410,47 +377,6 @@ class CVsdFilter {
 				args[ 1 ]->Int32Value()  // y
 			);
 		}
-		
-		return v8::Undefined();
-	}
-	
-	/*** メーター針描画 *********************************************************/
-	
-	static v8::Handle<v8::Value> Func_DrawNeedle( const v8::Arguments& args ){
-		
-		int iLen = args.Length();
-		CheckArgs( "DrawNeedle", iLen == 7 || iLen == 8 );
-		
-		CScript::m_Vsd->DrawNeedle(
-			args[ 0 ]->Int32Value(), // x
-			args[ 1 ]->Int32Value(), // y
-			args[ 2 ]->Int32Value(), // r
-			args[ 3 ]->Int32Value(), // start
-			args[ 4 ]->Int32Value(), // end
-			args[ 5 ]->NumberValue(), // val
-			args[ 6 ]->Int32Value(), // color
-			iLen <= 7 ? 1 : args[ 7 ]->Int32Value() // width
-		);
-		
-		return v8::Undefined();
-	}
-	
-	/*** イメージ描画 ***********************************************************/
-	
-	static v8::Handle<v8::Value> Func_PutImage( const v8::Arguments& args ){
-		
-		int iLen = args.Length();
-		CheckArgs( "PutImage", iLen == 3 );
-		
-		// arg2 が Image かチェック
-		v8::Local<v8::Object> img = args[ 2 ]->ToObject();
-		CheckClass( img, "Image", "PutImage: arg[ 3 ] must be Image" );
-		
-		CScript::m_Vsd->PutImage(
-			args[ 0 ]->Int32Value(),	// x1
-			args[ 1 ]->Int32Value(),	// y1
-			*CVsdImage::GetThis( img )	// CImage
-		);
 		
 		return v8::Undefined();
 	}

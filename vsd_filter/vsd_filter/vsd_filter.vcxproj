@@ -92,6 +92,7 @@
   <ItemGroup>
     <ClInclude Include="..\CScript.h" />
     <ClInclude Include="..\CVsdFilter.h" />
+    <ClInclude Include="..\CVsdFilterJsFunc.h" />
     <ClInclude Include="..\CVsdFont.h" />
     <ClInclude Include="..\CVsdImage.h" />
     <ClInclude Include="..\CVsdLog.h" />
