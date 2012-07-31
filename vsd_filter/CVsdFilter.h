@@ -150,10 +150,12 @@ class CVsdFilter {
 		UINT uFlag
 	);
 	
-	void DrawFont( int x, int y, UCHAR c, CVsdFont &Font, UINT uColor );
-	void DrawFont( int x, int y, UCHAR c, CVsdFont &Font, UINT uColor, UINT uColorEdge );
-	void DrawString( char *szMsg, CVsdFont &Font, UINT uColor, int x, int y );
-	void DrawString( char *szMsg, CVsdFont &Font, UINT uColor, UINT uColorEdge, int x, int y );
+	int DrawFont0( int x, int y, UCHAR c, CVsdFont &Font, UINT uColor );
+	int DrawFont( int x, int y, UCHAR c, CVsdFont &Font, UINT uColor, UINT uColorOutline = 0 );
+	void DrawText( // !js_func
+		int x, int y, char *szMsg, CVsdFont &Font, UINT uColor,
+		UINT uColorOutline = 0	// !default:0
+	);
 	
 	void DrawSpeedGraph(
 		CVsdLog *Log,
@@ -363,43 +365,6 @@ class CVsdFilter {
 		) return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( msg )))
 	
 	#include "CVsdFilterJsFunc.h"
-	
-	/*** 文字列描画 *************************************************************/
-	
-	static v8::Handle<v8::Value> Func_DrawString( const v8::Arguments& args ){
-		// arg: x, y, msg, font, color
-		// arg: x, y, msg, font, color, color
-		
-		int iLen = args.Length();
-		CheckArgs( "DrawString", iLen == 5 || iLen == 6 );
-		
-		// arg2 が Font かチェック
-		v8::Local<v8::Object> font = args[ 3 ]->ToObject();
-		CheckClass( font, "Font", "PutImage: arg[ 4 ] must be Font" );
-		
-		v8::String::AsciiValue msg( args[ 2 ] );
-		
-		if( iLen >= 6 ){
-			CScript::m_Vsd->DrawString(
-				*msg,
-				*CVsdFont::GetThis( font ),
-				args[ 4 ]->Int32Value(), // color
-				args[ 5 ]->Int32Value(), // color edge
-				args[ 0 ]->Int32Value(), // x
-				args[ 1 ]->Int32Value()  // y
-			);
-		}else{
-			CScript::m_Vsd->DrawString(
-				*msg,
-				*CVsdFont::GetThis( font ),
-				args[ 4 ]->Int32Value(), // color
-				args[ 0 ]->Int32Value(), // x
-				args[ 1 ]->Int32Value()  // y
-			);
-		}
-		
-		return v8::Undefined();
-	}
 	
 	/*** DrawArc ****************************************************************/
 	

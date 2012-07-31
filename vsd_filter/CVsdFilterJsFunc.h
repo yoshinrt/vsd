@@ -56,6 +56,23 @@ static v8::Handle<v8::Value> Func_DrawCircle( const v8::Arguments& args ){
 	
 	return v8::Undefined();
 }
+static v8::Handle<v8::Value> Func_DrawText( const v8::Arguments& args ){
+	int iLen = args.Length();
+	CheckArgs( "DrawText", 5 <= iLen && iLen <= 6 );
+	v8::String::AsciiValue str2( args[ 2 ] );
+	v8::Local<v8::Object> font3 = args[ 3 ]->ToObject();
+	CheckClass( font3, "Font", "arg[ 3 ] must be Font" );
+	CScript::m_Vsd->DrawText(
+		args[ 0 ]->Int32Value(),
+		args[ 1 ]->Int32Value(),
+		*str2,
+		*CVsdFont::GetThis( font3 ),
+		args[ 4 ]->Int32Value(),
+		iLen <= 5 ? 0 : args[ 5 ]->Int32Value()
+	);
+	
+	return v8::Undefined();
+}
 static v8::Handle<v8::Value> Func_DrawGSnake( const v8::Arguments& args ){
 	int iLen = args.Length();
 	CheckArgs( "DrawGSnake", iLen == 7 );

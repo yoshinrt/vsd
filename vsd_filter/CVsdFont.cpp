@@ -17,11 +17,14 @@
 
 /*** コンストラクタ *********************************************************/
 
-CVsdFont::CVsdFont( LOGFONT &logfont ){
+CVsdFont::CVsdFont( LOGFONT &logfont, UINT uAttr ){
+	m_uAttr = uAttr;
 	CreateFont( logfont );
 }
 
-CVsdFont::CVsdFont( const char *szFontName, int iSize, int iAttr ){
+CVsdFont::CVsdFont( const char *szFontName, int iSize, UINT uAttr ){
+	m_uAttr = uAttr;
+	
 	LOGFONT	logfont;
 	
 	logfont.lfHeight			= iSize;						// 文字セルまたは文字の高さ
@@ -42,18 +45,6 @@ CVsdFont::CVsdFont( const char *szFontName, int iSize, int iAttr ){
 	CreateFont( logfont );
 }
 
-/*** デストラクタ ***********************************************************/
-
-CVsdFont::~CVsdFont(){
-	int i;
-
-	for( i = 0; i <= '~' - '!'; ++i ){
-		delete [] m_FontGlyph[ i ].pBuf;
-	}
-	delete [] m_FontGlyph;
-	m_FontGlyph = NULL;
-}
-
 /*** フォント作成 ***********************************************************/
 
 void CVsdFont::CreateFont( LOGFONT &logfont ){
@@ -72,31 +63,34 @@ void CVsdFont::CreateFont( LOGFONT &logfont ){
 	GetTextMetrics( hdc, &tm );
 	
 	int iSize;
-	m_FontGlyph = new tFontGlyph[ '~' - '!' + 1 ];
 	
-	for( i = 0; i <= '~' - '!'; ++i ){
+	// プロポーショナルの Space 幅取得
+	GetGlyphOutline( hdc, ' ', GGO_GRAY8_BITMAP, &gm, 0, NULL, &mat );
+	m_iFontW_Space = gm.gmCellIncX;
+	
+	for( i = FONT_CHAR_FIRST; i <= FONT_CHAR_LAST; ++i ){
 		// 必要配列サイズ取得
-		iSize = GetGlyphOutline( hdc, '!' + i, GGO_GRAY8_BITMAP, &gm, 0, NULL, &mat );
+		iSize = GetGlyphOutline( hdc, i, GGO_GRAY8_BITMAP, &gm, 0, NULL, &mat );
+		
 		if( iSize > 0 ){
-			m_FontGlyph[ i ].pBuf = new BYTE[ iSize ];
+			FontGlyph( i ).pBuf = new BYTE[ iSize ];
 			
 			// フォントデータ取得
-			GetGlyphOutline( hdc, '!' + i, GGO_GRAY8_BITMAP, &gm, iSize, m_FontGlyph[ i ].pBuf, &mat );
-			m_FontGlyph[ i ].iW		= gm.gmBlackBoxX;
-			m_FontGlyph[ i ].iH		= gm.gmBlackBoxY;
-			m_FontGlyph[ i ].iOrgY	= tm.tmAscent - gm.gmptGlyphOrigin.y;
-			
-			if( i == 'B' - '!' ){	// 'W' が一番幅が広い
-				m_iFontW = gm.gmCellIncX;
-			}
+			GetGlyphOutline( hdc, i, GGO_GRAY8_BITMAP, &gm, iSize, FontGlyph( i ).pBuf, &mat );
+			FontGlyph( i ).iW			= gm.gmBlackBoxX;
+			FontGlyph( i ).iH			= gm.gmBlackBoxY;
+			FontGlyph( i ).iOrgY		= tm.tmAscent - gm.gmptGlyphOrigin.y;
+			FontGlyph( i ).iCellIncX	= gm.gmCellIncX;
 		}else{
-			m_FontGlyph[ i ].pBuf	= NULL;
-			m_FontGlyph[ i ].iW		=
-			m_FontGlyph[ i ].iH		=
-			m_FontGlyph[ i ].iOrgY	= 0;
+			FontGlyph( i ).pBuf			= NULL;
+			FontGlyph( i ).iW			=
+			FontGlyph( i ).iH			=
+			FontGlyph( i ).iOrgY		= 0;
+			FontGlyph( i ).iCellIncX	= m_iFontW_Space;
 		}
 	}
 	
+	m_iFontW = FontGlyph( 'B' ).iCellIncX;	// 'W' が一番幅が広い
 	m_iFontH = tm.tmHeight;
 	
 	SelectObject( hdc, hFontOld );

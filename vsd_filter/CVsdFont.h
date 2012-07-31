@@ -11,38 +11,71 @@
 
 /*** new type ***************************************************************/
 
-typedef struct {
+class CFontGlyph {
+  public:
 	BYTE	*pBuf;
+	BYTE	*pBufOutline;
 	int		iW, iH;
 	int		iOrgY;
-} tFontGlyph;
+	int		iCellIncX;
+	
+	CFontGlyph(){
+		pBuf = pBufOutline = NULL;
+	}
+	
+	~CFontGlyph(){
+		if( pBuf        ) delete [] pBuf;
+		if( pBufOutline ) delete [] pBufOutline;
+	}
+};
 
 class CVsdFont {
   public:
-	CVsdFont( LOGFONT &logfont );
-	CVsdFont( const char *szFontName, int iSize, int iAttr );
-	~CVsdFont();
+	CVsdFont( LOGFONT &logfont, UINT uAttr = 0 );
+	CVsdFont( const char *szFontName, int iSize, UINT uAttr = 0 );
+	~CVsdFont(){}
 	
 	void CreateFont( LOGFONT &logfont );
 	
-	int GetW( void ){ return m_iFontW; }
-	int GetH( void ){ return m_iFontH; }
+	static BOOL ExistFont( UCHAR c ){ return FONT_CHAR_FIRST <= c && c <= FONT_CHAR_LAST; }
+	BOOL IsOutline( void ){ return m_uAttr & ATTR_OUTLINE; }
+	BOOL IsFixed( void ){ return m_uAttr & ATTR_FIXED; }
 	
-	int	m_iFontW, m_iFontH;
-	
-	tFontGlyph *m_FontGlyph;
-	
-	// ƒtƒHƒ“ƒg
-	DWORD GetPix( UCHAR c, int x, int y ){
-		int	i = c - ' ';
-		return 0;
+	CFontGlyph& FontGlyph( UCHAR c ){
+		return m_FontGlyph[ c - FONT_CHAR_FIRST ];
 	}
 	
-	enum {
-		ATTR_BOLD		= 1 << 0,
-		ATTR_ITALIC		= 1 << 1,
-		ATTR_OUTLINE	= 1 << 2
-	};
+	static const UINT ATTR_BOLD		= 1 << 0;
+	static const UINT ATTR_ITALIC	= 1 << 1;
+	static const UINT ATTR_OUTLINE	= 1 << 2;
+	static const UINT ATTR_FIXED	= 1 << 3;
+	
+	int GetW( void ){ return m_iFontW; }
+	int GetH( void ){ return m_iFontH; }
+	int GetW_Space( void ){ return m_iFontW_Space; }
+	
+	int GetTextWidth( char *szMsg ){
+		
+		if( m_uAttr & ATTR_FIXED ){
+			return strlen( szMsg ) * GetW();
+		}
+		
+		int iWidth = 0;
+		for( int i = 0; szMsg[ i ]; ++i ){
+			iWidth += FontGlyph( szMsg[ i ] ).iW;
+		}
+		return iWidth;
+	}
+	
+  private:
+	static const int FONT_CHAR_FIRST = '!';
+	static const int FONT_CHAR_LAST	 = '~';
+	
+	CFontGlyph m_FontGlyph[ FONT_CHAR_LAST - FONT_CHAR_FIRST + 1 ];
+	
+	int	m_iFontW, m_iFontH, m_iFontW_Space;
+	
+	UINT	m_uAttr;
 	
 	/*** JavaScript interface ***********************************************/
 	

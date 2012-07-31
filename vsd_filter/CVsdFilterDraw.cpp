@@ -368,60 +368,61 @@ void CVsdFilter::DrawArc(
 
 /*** DrawFont ***************************************************************/
 
-void CVsdFilter::DrawFont( int x, int y, UCHAR c, CVsdFont &Font, UINT uColor ){
+int CVsdFilter::DrawFont0( int x, int y, UCHAR c, CVsdFont &Font, UINT uColor ){
 	
 	int	i, j;
 	
-	if( c < '!' || '~' < c ) return;
+	// 文字幅を得る
+	CFontGlyph &FontGlyph = Font.FontGlyph( c );
 	
-	tFontGlyph *pFontGlyph = &Font.m_FontGlyph[ c - '!' ];
-	int iBmpW = ( pFontGlyph->iW + 3 ) & ~3;
-	int iOrgX = ( Font.m_iFontW - pFontGlyph->iW ) / 2;
+	int iBmpW = ( FontGlyph.iW + 3 ) & ~3;
+	int iCellIncX = Font.IsFixed() ? Font.GetW() : FontGlyph.iCellIncX;
+	int iOrgX = ( iCellIncX - FontGlyph.iW ) / 2;
 	
-	for( j = 0; j < pFontGlyph->iH; ++j ) for( i = 0; i < pFontGlyph->iW; ++i ){
-		int iAlfa = 256 - ( pFontGlyph->pBuf[ iBmpW * j + i ] << 2 );
+	for( j = 0; j < FontGlyph.iH; ++j ) for( i = 0; i < FontGlyph.iW; ++i ){
+		int iDensity = FontGlyph.pBuf[ iBmpW * j + i ];	// 0～64
 		
-		PIXEL_YCA	yc( uColor );
-		yc.alfa	= iAlfa;
-		yc.y	= yc.y  * ( 256 - iAlfa ) / 256;
-		yc.cr	= yc.cr * ( 256 - iAlfa ) / 256;
-		yc.cb	= yc.cb * ( 256 - iAlfa ) / 256;
-		PutPixel( x + iOrgX + i, y + pFontGlyph->iOrgY + j, yc, 0 );
+		if( iDensity ){
+			UINT uColorTmp = ( uColor & 0xFFFFFF ) | (
+				(
+					(
+						( 0x3FFF << 6 ) - iDensity * ( 0xFF - ( uColor >> 24 ))
+					) & ~0x3F
+				) << ( 24 - 6 )
+			);
+			PutPixel( x + iOrgX + i, y + FontGlyph.iOrgY + j, uColorTmp, 0 );
+		}
 	}
+	
+	return iCellIncX;
 }
 
-void CVsdFilter::DrawFont( int x, int y, UCHAR c, CVsdFont &Font, UINT uColor, UINT uColorOutline ){
+int CVsdFilter::DrawFont( int x, int y, UCHAR c, CVsdFont &Font, UINT uColor, UINT uColorOutline ){
 	
-	if( c == ' ' ) return;
+	// フォントが存在しない文字なら，space の文字幅を返す
+	if( !CVsdFont::ExistFont( c ))
+		return ( Font.IsFixed()) ? Font.GetW() : Font.GetW_Space();
 	
-	DrawFont( x + 1, y + 0, c, Font, uColorOutline );
-	DrawFont( x - 1, y + 0, c, Font, uColorOutline );
-	DrawFont( x + 0, y + 1, c, Font, uColorOutline );
-	DrawFont( x + 0, y - 1, c, Font, uColorOutline );
-	DrawFont( x + 0, y + 0, c, Font, uColor );
+	if( Font.IsOutline()){
+		DrawFont0( x + 1, y + 0, c, Font, uColorOutline );
+		DrawFont0( x - 1, y + 0, c, Font, uColorOutline );
+		DrawFont0( x + 0, y + 1, c, Font, uColorOutline );
+		DrawFont0( x + 0, y - 1, c, Font, uColorOutline );
+	}
+	return DrawFont0( x, y, c, Font, uColor );
 }
 
-/*** DrawString *************************************************************/
+/*** DrawText *************************************************************/
 
-void CVsdFilter::DrawString( char *szMsg, CVsdFont &Font, UINT uColor, int x, int y ){
+void CVsdFilter::DrawText( int x, int y, char *szMsg, CVsdFont &Font, UINT uColor, UINT uColorOutline ){
 	
 	if( x != POS_DEFAULT ) m_iPosX = x;
 	if( y != POS_DEFAULT ) m_iPosY = y;
 	
-	for( int i = 0; szMsg[ i ]; ++i ){
-		DrawFont( m_iPosX + i * Font.GetW(), m_iPosY, szMsg[ i ], Font, uColor );
-	}
-	
-	m_iPosY += Font.GetH();
-}
-
-void CVsdFilter::DrawString( char *szMsg, CVsdFont &Font, UINT uColor, UINT uColorOutline, int x, int y ){
-	
-	if( x != POS_DEFAULT ) m_iPosX = x;
-	if( y != POS_DEFAULT ) m_iPosY = y;
+	x = m_iPosX;
 	
 	for( int i = 0; szMsg[ i ]; ++i ){
-		DrawFont( m_iPosX + i * Font.GetW(), m_iPosY, szMsg[ i ], Font, uColor, uColorOutline );
+		x += DrawFont( x, m_iPosY, szMsg[ i ], Font, uColor, uColorOutline );
 	}
 	
 	m_iPosY += Font.GetH();
@@ -510,11 +511,6 @@ static UINT	color_gray_a		= 0x80404040;
 #define COLOR_PANEL			color_gray_a
 #define COLOR_SCALE			color_white
 #define COLOR_STR			COLOR_SCALE
-#define uColor			color_white
-#define uColorOutline		color_black
-#define uColorBest		color_cyan
-#define uColorBest	color_cyan
-#define uColorPlus		color_red
 
 static char g_szBuf[ BUF_SIZE ];
 
@@ -559,9 +555,11 @@ void CVsdFilter::DrawSpeedGraph(
 	);
 	
 	sprintf( g_szBuf, "%d km/h", iVal );
-	DrawString( g_szBuf, *m_pFont, uColor, color_black,
-		x + ( iDirection ? ( -10 - strlen( g_szBuf ) * m_pFont->GetW()): 10 ),
-		iY - 10 - m_pFont->GetH());
+	DrawText(
+		x + ( iDirection ? ( -10 - m_pFont->GetTextWidth( g_szBuf )) : 10 ),
+		iY - 10 - m_pFont->GetH(),
+		g_szBuf, *m_pFont, uColor, color_black
+	);
 }
 
 void CVsdFilter::DrawTachoGraph(
@@ -601,9 +599,11 @@ void CVsdFilter::DrawTachoGraph(
 	);
 	
 	sprintf( g_szBuf, "%d rpm", iVal );
-	DrawString( g_szBuf, *m_pFont, uColor, color_black,
-		x + ( iDirection ? ( -10 - strlen( g_szBuf ) * m_pFont->GetW()): 10 ),
-		iY - 10 - m_pFont->GetH());
+	DrawText(
+		x + ( iDirection ? ( -10 - m_pFont->GetTextWidth( g_szBuf )): 10 ),
+		iY - 10 - m_pFont->GetH(),
+		g_szBuf, *m_pFont, uColor, color_black
+	);
 }
 
 /*** G スネーク描画 *********************************************************/
@@ -789,11 +789,11 @@ void CVsdFilter::DrawLapTime(
 		}
 		
 		sprintf( g_szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
-		DrawString( g_szBuf, Font, uColor, uColorOutline, x, 1 );
+		DrawText( x, y, g_szBuf, Font, uColor, uColorOutline );
 		bInLap = TRUE;
 	}else{
 		// まだ開始していない
-		DrawString( "Time -'--.---", Font, uColor, uColorOutline, x, 1 );
+		DrawText( x, y, "Time -'--.---", Font, uColor, uColorOutline );
 	}
 	
 	/*** ベストとの車間距離表示 - ***/
@@ -855,7 +855,7 @@ void CVsdFilter::DrawLapTime(
 				iDiffTime / 1000 % 60,
 				iDiffTime % 1000
 			);
-			DrawString( g_szBuf, Font, bSign ? uColorBest : uColorPlus, uColorOutline, POS_DEFAULT, POS_DEFAULT );
+			DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, Font, bSign ? uColorBest : uColorPlus, uColorOutline );
 		}else{
 			m_iPosY += Font.GetH();
 		}
@@ -870,7 +870,7 @@ void CVsdFilter::DrawLapTime(
 		m_iBestTime / 1000 % 60,
 		m_iBestTime % 1000
 	);
-	DrawString( g_szBuf, Font, uColor, uColorOutline, POS_DEFAULT, POS_DEFAULT );
+	DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, Font, uColor, uColorOutline );
 	
 	// Lapタイム表示
 	// 3つタイム表示する分の，最後の LapIdx を求める．
@@ -900,9 +900,10 @@ void CVsdFilter::DrawLapTime(
 					m_Lap[ iLapIdxStart ].iTime / 1000 % 60,
 					m_Lap[ iLapIdxStart ].iTime % 1000
 				);
-				DrawString( g_szBuf, Font,
+				DrawText(
+					POS_DEFAULT, POS_DEFAULT, g_szBuf, Font,
 					m_iBestTime == m_Lap[ iLapIdxStart ].iTime ? uColorBest : uColor,
-					uColorOutline, POS_DEFAULT, POS_DEFAULT
+					uColorOutline
 				);
 				++i;
 			}
@@ -948,11 +949,10 @@ void CVsdFilter::DrawMeterPanel0(
 			// メーターパネル目盛り数値
 			if( i % ( iStep * 2 ) == 0 ){
 				sprintf( g_szBuf, "%d", i );
-				DrawString(
-					g_szBuf, Font,
-					COLOR_STR,
-					( int )( cos( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCx - Font.GetW() * strlen( g_szBuf ) / 2,
-					( int )( sin( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCy - Font.GetH() / 2
+				DrawText(
+					( int )( cos( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCx - Font.GetTextWidth( g_szBuf ) / 2,
+					( int )( sin( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCy - Font.GetH() / 2,
+					g_szBuf, Font, COLOR_STR
 				);
 			}
 		}
@@ -998,11 +998,10 @@ void CVsdFilter::DrawMeterPanel1(
 			// メーターパネル目盛り数値
 			if( i % ( iStep * 2 ) == 0 ){
 				sprintf( g_szBuf, "%d", i );
-				DrawString(
-					g_szBuf, Font,
-					COLOR_STR,
-					( int )( cos( iDeg * ToRAD ) * iMeterR * .825 ) + iMeterCx - Font.GetW() * strlen( g_szBuf ) / 2,
-					( int )( sin( iDeg * ToRAD ) * iMeterR * .825 ) + iMeterCy - Font.GetH() / 2
+				DrawText(
+					( int )( cos( iDeg * ToRAD ) * iMeterR * .825 ) + iMeterCx - Font.GetTextWidth( g_szBuf ) / 2,
+					( int )( sin( iDeg * ToRAD ) * iMeterR * .825 ) + iMeterCy - Font.GetH() / 2,
+					g_szBuf, Font, COLOR_STR
 				);
 			}
 		}
@@ -1021,7 +1020,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	if( m_pFont == NULL || iFontSize != -m_logfont.lfHeight ){
 		m_logfont.lfHeight = -iFontSize;
 		if( m_pFont ) delete m_pFont;
-		m_pFont = new CVsdFont( m_logfont );
+		m_pFont = new CVsdFont( m_logfont, CVsdFont::ATTR_OUTLINE );
 	}
 	
 	CVsdLog *Log;
@@ -1097,7 +1096,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	if( m_Script ){
 		m_Script->Run( "Draw" );
 	}else{
-		DrawString( "Skin not loaded.", *m_pFont, COLOR_STR, color_black, 0, 0 );
+		DrawText( 0, 0, "Skin not loaded.", *m_pFont, COLOR_STR, color_black );
 	}
 	
 #if 0
@@ -1165,11 +1164,11 @@ BOOL CVsdFilter::DrawVSD( void ){
 				i /  100 % 60,
 				i        % 100
 			);
-			DrawString( g_szBuf, *m_pFont, COLOR_STR, uColorOutline, POS_DEFAULT, POS_DEFAULT );
+			DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, COLOR_STR );
 		}
 		
 		#ifndef GPS_ONLY
-			DrawString( "        start       end     range cur.pos", *m_pFont, COLOR_STR, uColorOutline, POS_DEFAULT, POS_DEFAULT );
+			DrawText( POS_DEFAULT, POS_DEFAULT, "        start       end     range cur.pos", *m_pFont, COLOR_STR );
 			
 			sprintf(
 				g_szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
@@ -1178,7 +1177,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 				Float2Time(( VideoEd - VideoSt ) / GetFPS()),
 				GetFrameCnt()
 			);
-			DrawString( g_szBuf, *m_pFont, COLOR_STR, uColorOutline, POS_DEFAULT, POS_DEFAULT );
+			DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, COLOR_STR );
 			
 			if( m_VsdLog ){
 				sprintf(
@@ -1188,7 +1187,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
 					m_VsdLog->m_iLogNum
 				);
-				DrawString( g_szBuf, *m_pFont, COLOR_STR, uColorOutline, POS_DEFAULT, POS_DEFAULT );
+				DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, COLOR_STR );
 			}
 			
 			if( m_GPSLog ){
@@ -1199,7 +1198,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),
 					m_GPSLog->m_iLogNum
 				);
-				DrawString( g_szBuf, *m_pFont, COLOR_STR, uColorOutline, POS_DEFAULT, POS_DEFAULT );
+				DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, COLOR_STR );
 			}
 		#endif	// !GPS_ONLY
 	}
