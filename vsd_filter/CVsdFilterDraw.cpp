@@ -56,6 +56,9 @@
 // Laptime 計算用
 #define SelectLogForLapTime	( Log = m_iLapMode == LAPMODE_MAGNET || m_iLapMode == LAPMODE_HAND_MAGNET ? m_VsdLog : m_GPSLog )
 
+#define DEFAULT_FONT	"ＭＳ ゴシック"
+// #define DEFAULT_FONT	"FixedSys"
+
 /*** DrawLine ***************************************************************/
 
 #define ABS( x )			(( x ) < 0 ? -( x ) : ( x ))
@@ -1015,12 +1018,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 	int	i;
 	
 	// フォントサイズ初期化
-	int iFontSize = GetHeight() / 30;
-	
-	if( m_pFont == NULL || iFontSize != -m_logfont.lfHeight ){
-		m_logfont.lfHeight = -iFontSize;
-		if( m_pFont ) delete m_pFont;
-		m_pFont = new CVsdFont( m_logfont, CVsdFont::ATTR_OUTLINE );
+	if( m_pFont == NULL ){
+		m_pFont = new CVsdFont( DEFAULT_FONT, 20, CVsdFont::ATTR_OUTLINE );
 	}
 	
 	CVsdLog *Log;

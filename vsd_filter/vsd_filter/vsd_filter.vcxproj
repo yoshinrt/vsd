@@ -92,20 +92,17 @@
   <ItemGroup>
     <ClInclude Include="..\CScript.h" />
     <ClInclude Include="..\CVsdFilter.h" />
-    <ClInclude Include="..\CVsdFilterJsFunc.h" />
     <ClInclude Include="..\CVsdFont.h" />
     <ClInclude Include="..\CVsdImage.h" />
     <ClInclude Include="..\CVsdLog.h" />
     <ClInclude Include="..\dds.h" />
     <ClInclude Include="..\def_checkbox.h" />
-    <ClInclude Include="..\def_image_var.h" />
     <ClInclude Include="..\def_shadow.h" />
     <ClInclude Include="..\def_str_param.h" />
     <ClInclude Include="..\def_trackbar.h" />
-    <ClInclude Include="..\def_vsd_func.h" />
-    <ClInclude Include="..\def_vsd_var.h" />
     <ClInclude Include="..\filter.h" />
     <ClInclude Include="..\pixel.h" />
+    <ClInclude Include="..\ScriptIF.h" />
     <ClInclude Include="..\StdAfx.h" />
   </ItemGroup>
   <ItemGroup>

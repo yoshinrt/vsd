@@ -15,6 +15,7 @@
 #include "pixel.h"
 #include "CVsdImage.h"
 #include "CVsdFilter.h"
+#include "ScriptIF.h"
 
 using namespace v8;
 
@@ -89,9 +90,9 @@ BOOL CScript::Initialize( char *szFileName ){
 	Handle<ObjectTemplate> global = ObjectTemplate::New();
 	
 	// Image クラス登録
-	CVsdImage::InitializeClass( global );
-	CVsdFont::InitializeClass( global );
-	CVsdFilter::InitializeClass( global );
+	CVsdImageIF::InitializeClass( global );
+	CVsdFontIF::InitializeClass( global );
+	CVsdFilterIF::InitializeClass( global );
 	
 	// グローバルオブジェクトから環境を生成
 	m_context = Context::New( NULL, global );

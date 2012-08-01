@@ -17,11 +17,6 @@
 
 /*** コンストラクタ *********************************************************/
 
-CVsdFont::CVsdFont( LOGFONT &logfont, UINT uAttr ){
-	m_uAttr = uAttr;
-	CreateFont( logfont );
-}
-
 CVsdFont::CVsdFont( const char *szFontName, int iSize, UINT uAttr ){
 	m_uAttr = uAttr;
 	
@@ -31,8 +26,8 @@ CVsdFont::CVsdFont( const char *szFontName, int iSize, UINT uAttr ){
 	logfont.lfWidth				= 0;							// 平均文字幅
 	logfont.lfEscapement		= 0;							// 文字送りの方向とX軸との角度
 	logfont.lfOrientation		= 0;							// ベースラインとX軸との角度
-	logfont.lfWeight			= FW_REGULAR;					// フォントの太さ
-	logfont.lfItalic			= FALSE;						// イタリック体指定
+	logfont.lfWeight			= uAttr & ATTR_BOLD ? FW_BOLD : FW_REGULAR;	// フォントの太さ
+	logfont.lfItalic			= uAttr & ATTR_ITALIC ? TRUE : FALSE;		// イタリック体指定
 	logfont.lfUnderline			= FALSE;						// 下線付き指定
 	logfont.lfStrikeOut			= FALSE;						// 打ち消し線付き指定
 	logfont.lfCharSet			= DEFAULT_CHARSET;				// キャラクタセット

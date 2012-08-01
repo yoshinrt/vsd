@@ -4,6 +4,17 @@
 ・ファームロードを独自に作る・モニターのコード削除
 
 ● vsd_filter
+・ITALIC とかの定数をどうするか
+・Image.Resize
+・Image.Rotate
+・Font outline フォント事前作成
+・Font の日本語対応
+・エラーメッセージ
+・Vsd の static object 化
+・DrawPolygon
+・Log read の JS 化，データロギング項目の自由化
+・Lap time 表示の機能細分化
+-----------------------
 ・音声 FFT 解析
 ・セクタータイム表示
 ・手動セクタータイム (+自動計測)

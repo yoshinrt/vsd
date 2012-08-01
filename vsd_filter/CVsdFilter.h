@@ -14,25 +14,10 @@
 #define GPS_FREQ	10
 
 #define G_CX_CNT		30
-
 #define LINE_WIDTH		( GetWidth() / HIREZO_TH + 1 )
-
 #define GPS_LOG_OFFS	15
-
-#define MAP_LINE1		yc_green
-#define MAP_LINE2		yc_yellow
-#define MAP_LINE3		yc_red
-
-#define HIREZO_TH		600			// ハイレゾモード時の横幅スレッショルド
 #define POS_DEFAULT		0x80000000
-
 #define BESTLAP_NONE	599999
-
-#ifdef GPS_ONLY
-	#define DEFAULT_FONT	"Arial"
-#else
-	#define DEFAULT_FONT	"Impact"
-#endif
 
 #ifdef GPS_ONLY
 	#define VideoSt			m_piParamS[ PARAM_VSt ]
@@ -182,7 +167,7 @@ class CVsdFilter {
 	);
 	
 	BOOL DrawVSD( void );
-	void CVsdFilter::DrawGSnake( // !js_func
+	void DrawGSnake( // !js_func
 		int iCx, int iCy, int iR, int iIndicatorR, int iWidth,
 		UINT uColorBall, UINT uColorLine
 	);
@@ -200,7 +185,7 @@ class CVsdFilter {
 		int	iMaxSpeed,
 		CVsdFont &Font
 	);
-	void CVsdFilter::DrawMap( // !js_func
+	void DrawMap( // !js_func
 		int iX, int iY, int iSize, int iWidth,
 		int iIndicatorR,
 		UINT uColorIndicator,
@@ -246,7 +231,6 @@ class CVsdFilter {
 	
 	// フォント
 	CVsdFont	*m_pFont;
-	LOGFONT		m_logfont;
 	
 	CVsdLog		*m_VsdLog;
 	CVsdLog		*m_GPSLog;
@@ -309,139 +293,5 @@ class CVsdFilter {
 	PolygonData_t	*m_Polygon;
 	
 	CScript	*m_Script;
-	
-	/*** JavaScript interface ***********************************************/
-	
-  private:
-	// クラスコンストラクタ
-	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
-		
-		CVsdFilter* backend = CScript::m_Vsd;
-		v8::String::AsciiValue FileName( args[ 0 ] );
-		
-		// internal field にバックエンドオブジェクトを設定
-		v8::Local<v8::Object> thisObject = args.This();
-		thisObject->SetInternalField( 0, v8::External::New( backend ));
-		
-		// JS オブジェクトが GC されるときにデストラクタが呼ばれるおまじない
-		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
-		objectHolder.MakeWeak( backend, CVsdFilter::Dispose );
-		
-		// コンストラクタは this を返すこと。
-		return thisObject;
-	}
-	
-	// クラスデストラクタ
-	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
-		delete static_cast<CVsdFilter*>( pVoid );
-	}
-	
-	///// プロパティアクセサ /////
-	
-	#define DEF_SCR_VAR( name, type, var ) \
-		static v8::Handle<v8::Value> Get_ ## name( \
-			v8::Local<v8::String> propertyName, \
-			const v8::AccessorInfo& info \
-		){ \
-			 CVsdFilter* backend = GetThis( info.Holder()); \
-			 return v8::type::New( backend->var ); \
-		}
-	#include "def_vsd_var.h"
-	
-	///// メソッドコールバック /////
-	/*** マクロ *****************************************************************/
-	
-	#define CheckArgs( func, cond ) \
-		if( !( cond )){ \
-			return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( \
-				#func ":invalid number of args" \
-			))); \
-		}
-	
-	#define CheckClass( obj, name, msg ) \
-		if( \
-			obj.IsEmpty() || \
-			strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name ) \
-		) return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( msg )))
-	
-	#include "CVsdFilterJsFunc.h"
-	
-	/*** DrawArc ****************************************************************/
-	
-	static v8::Handle<v8::Value> Func_DrawArc( const v8::Arguments& args ){
-		int iLen = args.Length();
-		CheckArgs( "DrawArc", 7 <= iLen && iLen <= 10 );
-		
-		if( iLen >= 9 ){
-			CScript::m_Vsd->DrawArc(
-				args[ 0 ]->Int32Value(),
-				args[ 1 ]->Int32Value(),
-				args[ 2 ]->Int32Value(),
-				args[ 3 ]->Int32Value(),
-				args[ 4 ]->Int32Value(),
-				args[ 5 ]->Int32Value(),
-				args[ 6 ]->NumberValue(),
-				args[ 7 ]->NumberValue(),
-				args[ 8 ]->Int32Value(),
-				iLen <= 9 ? 0 : args[ 9 ]->Int32Value()
-			);
-		}else{
-			CScript::m_Vsd->DrawArc(
-				args[ 0 ]->Int32Value(),
-				args[ 1 ]->Int32Value(),
-				args[ 2 ]->Int32Value(),
-				args[ 3 ]->Int32Value(),
-				args[ 4 ]->NumberValue(),
-				args[ 5 ]->NumberValue(),
-				args[ 6 ]->Int32Value(),
-				iLen <= 7 ? 0 : args[ 7 ]->Int32Value()
-			);
-		}
-		return v8::Undefined();
-	}
-	
-	/*** デバッグ用 *************************************************************/
-	
-	// 関数オブジェクト print の実体
-	static v8::Handle<v8::Value> Func_print(const v8::Arguments& args) {
-		v8::String::AsciiValue str( args[ 0 ] );
-		DebugMsgD( "%s\n", *str );
-		return v8::Undefined();
-	}
-	
-	/****************************************************************************/
-	
-  public:
-	// this へのアクセスヘルパ
-	static CVsdFilter* GetThis( v8::Local<v8::Object> handle ){
-		 void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
-		 return static_cast<CVsdFilter*>( pThis );
-	}
-	
-	// クラステンプレートの初期化
-	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
-		// コンストラクタを作成
-		v8::Local<v8::FunctionTemplate> tmpl = v8::FunctionTemplate::New( CVsdFilter::New );
-		tmpl->SetClassName( v8::String::New( "Vsd" ));
-		
-		// フィールドなどはこちらに
-		v8::Handle<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
-		inst->SetInternalFieldCount( 1 );
-		#define DEF_SCR_VAR( name, type, var ) \
-			inst->SetAccessor( v8::String::New( #name ), CVsdFilter::Get_ ## name );
-		#include "def_vsd_var.h"
-		
-		// メソッドはこちらに
-		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
-		#define DEF_SCR_FUNC( name ) \
-			proto->Set( \
-				v8::String::New( #name ), \
-				v8::FunctionTemplate::New( CVsdFilter::Func_ ## name ) \
-			);
-		#include "def_vsd_func.h"
-		
-		// グローバルオブジェクトにクラスを定義
-		global->Set( v8::String::New( "Vsd" ), tmpl );
-	}
 };
 #endif

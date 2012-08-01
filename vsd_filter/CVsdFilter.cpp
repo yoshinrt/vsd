@@ -76,21 +76,6 @@ CVsdFilter::CVsdFilter (){
 	
 	m_pFont				= NULL;
 	
-	m_logfont.lfHeight			= 0;							// 文字セルまたは文字の高さ
-	m_logfont.lfWidth			= 0;							// 平均文字幅
-	m_logfont.lfEscapement		= 0;							// 文字送りの方向とX軸との角度
-	m_logfont.lfOrientation		= 0;							// ベースラインとX軸との角度
-	m_logfont.lfWeight			= FW_REGULAR;					// フォントの太さ
-	m_logfont.lfItalic			= FALSE;						// イタリック体指定
-	m_logfont.lfUnderline		= FALSE;						// 下線付き指定
-	m_logfont.lfStrikeOut		= FALSE;						// 打ち消し線付き指定
-	m_logfont.lfCharSet			= DEFAULT_CHARSET;				// キャラクタセット
-	m_logfont.lfOutPrecision	= OUT_DEFAULT_PRECIS;			// 出力精度
-	m_logfont.lfClipPrecision	= CLIP_DEFAULT_PRECIS;			// クリッピングの精度
-	m_logfont.lfQuality			= PROOF_QUALITY;				// 出力品質
-	m_logfont.lfPitchAndFamily	= FIXED_PITCH | FF_DONTCARE;	// ピッチとファミリ
-	strcpy( m_logfont.lfFaceName, "ＭＳ ゴシック" );			// フォント名
-	
 	// str param に初期値設定
 	#define DEF_STR_PARAM( id, var, init, conf_name ) strcpy( var, init );
 	#include "def_str_param.h"
