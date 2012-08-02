@@ -5,8 +5,6 @@
 
 ● vsd_filter
 ・ITALIC とかの定数をどうするか
-・Image.Resize
-・Image.Rotate
 ・Font outline フォント事前作成
 ・Font の日本語対応
 ・エラーメッセージ
@@ -14,6 +12,11 @@
 ・DrawPolygon
 ・Log read の JS 化，データロギング項目の自由化
 ・Lap time 表示の機能細分化
+・Image にも Draw 系ができるようにする
+・ログ配列の template vector 化
+・メーター画像作成
+・メーター目盛り作成汎用化
+・BOOL じゃなくてエラーコードを返す
 -----------------------
 ・音声 FFT 解析
 ・セクタータイム表示
