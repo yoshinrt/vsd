@@ -23,4 +23,6 @@
 #include <zconf.h>
 #include <zlib.h>
 
+#define ToRAD		( M_PI / 180 )
+
 #endif//__STDAFX_H__

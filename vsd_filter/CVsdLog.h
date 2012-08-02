@@ -9,17 +9,11 @@
 #ifndef _CVsdLog_h_
 #define _CVsdLog_h_
 
-#ifdef GPS_ONLY
-	#define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 12 ))
-#else
-	#define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 2 ))
-#endif
+#define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 24 ))
 
 /*** macros *****************************************************************/
 
 #define DeleteIfZero( v ) if(( v ) && !( v )->m_iCnt ){ delete v; v = NULL; }
-
-#define ToRAD		( M_PI / 180 )
 
 #ifdef GPS_ONLY
 	#define INVERT_G	(-1)
@@ -54,6 +48,8 @@ class CVsdLog {
 	int			m_iCnt;
 	
 	int			m_iLogNum;
+	int			m_iMaxSpeed;
+	
 	double		m_dLogNum;
 	
 	double		m_dMapSize;
@@ -64,7 +60,6 @@ class CVsdLog {
 	double		m_dMaxG;	// â¡ë¨ G
 	double		m_dMinG;	// å∏ë¨ G
 	
-	int			m_iMaxSpeed;
 	double		m_dLogStartTime;	// ÉçÉOäJénéûä‘
 	
 	CVsdLog();

@@ -290,13 +290,13 @@ class CVsdFilterIF {
 		CheckArgs( PutImage, iLen == 3 );
 		v8::Local<v8::Object> Image2 = args[ 2 ]->ToObject();
 		CheckClass( Image2, "Image", "arg[ 2 ] must be Image" );
-		GetThis<CVsdFilter>( args.This())->PutImage(
+		int ret = GetThis<CVsdFilter>( args.This())->PutImage(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			*GetThis<CVsdImage>( Image2 )
 		);
 		
-		return v8::Undefined();
+		return v8::Integer::New( ret );
 	}
 
   public:
@@ -360,7 +360,7 @@ class CVsdImageIF {
 		CVsdImage* obj = new CVsdImage();
 		v8::String::AsciiValue FileName( args[ 0 ] );
 		
-		if( !obj->Load( *FileName )){
+		if( obj->Load( *FileName ) != ERROR_OK ){
 			delete obj;
 			return v8::Undefined();
 		}
@@ -406,6 +406,29 @@ class CVsdImageIF {
 	}
 
 	///// メソッドコールバック /////
+	static v8::Handle<v8::Value> Func_Resize( const v8::Arguments& args ){
+		int iLen = args.Length();
+		CheckArgs( Resize, iLen == 2 );
+		
+		int ret = GetThis<CVsdImage>( args.This())->Resize(
+			args[ 0 ]->Int32Value(),
+			args[ 1 ]->Int32Value()
+		);
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_Rotate( const v8::Arguments& args ){
+		int iLen = args.Length();
+		CheckArgs( Rotate, iLen == 3 );
+		
+		int ret = GetThis<CVsdImage>( args.This())->Rotate(
+			args[ 0 ]->Int32Value(),
+			args[ 1 ]->Int32Value(),
+			args[ 2 ]->NumberValue()
+		);
+		
+		return v8::Integer::New( ret );
+	}
 
   public:
 	// this へのアクセスヘルパ
@@ -429,6 +452,8 @@ class CVsdImageIF {
 
 		// メソッドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
+		proto->Set( v8::String::New( "Resize" ), v8::FunctionTemplate::New( Func_Resize ));
+		proto->Set( v8::String::New( "Rotate" ), v8::FunctionTemplate::New( Func_Rotate ));
 
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "Image" ), tmpl );

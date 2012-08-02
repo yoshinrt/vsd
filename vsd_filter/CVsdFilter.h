@@ -203,7 +203,7 @@ class CVsdFilter {
 		UINT uColor,
 		int iWidth // !default:1
 	);
-	virtual void PutImage( int x, int y, CVsdImage &img ) = 0; // !js_func
+	virtual UINT PutImage( int x, int y, CVsdImage &img ) = 0; // !js_func
 	
 	enum {
 		IMG_FILL	= ( 1 << 0 ),

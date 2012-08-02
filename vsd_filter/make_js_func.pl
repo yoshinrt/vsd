@@ -57,7 +57,7 @@ MakeJsIF( 'CVsdImage', 'Image', << '-----', '' );
 		CVsdImage* obj = new CVsdImage();
 		v8::String::AsciiValue FileName( args[ 0 ] );
 		
-		if( !obj->Load( *FileName )){
+		if( obj->Load( *FileName ) != ERROR_OK ){
 			delete obj;
 			return v8::Undefined();
 		}

@@ -15,6 +15,7 @@
 #include "pixel.h"
 #include "CVsdImage.h"
 #include "CVsdFilter.h"
+#include "error_code.h"
 #include "ScriptIF.h"
 
 using namespace v8;

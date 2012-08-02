@@ -18,6 +18,7 @@
 #include "pixel.h"
 #include "CVsdImage.h"
 #include "CVsdFilter.h"
+#include "error_code.h"
 
 /*** macros *****************************************************************/
 
@@ -245,7 +246,7 @@ class CVsdFilterAvu : public CVsdFilter {
 	// 仮想関数
 	virtual void PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag );
 	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag );
-	virtual void PutImage( int x, int y, CVsdImage &img );
+	virtual UINT PutImage( int x, int y, CVsdImage &img );
 	
 	virtual int	GetWidth( void ){ return fpip->w; }
 	virtual int	GetHeight( void ){ return fpip->h; }
@@ -351,10 +352,11 @@ inline void CVsdFilterAvu::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA 
 
 /*** PutImage ***************************************************************/
 
-void CVsdFilterAvu::PutImage(	// !export
+UINT CVsdFilterAvu::PutImage(	// !export
 	int x, int y, CVsdImage &img
 ){
-	img.ConvRGBA2YCA();
+	UINT uRet;
+	if(( uRet = img.ConvRGBA2YCA()) != ERROR_OK ) return uRet;
 	
 	x &= ~1;	// 2単位
 	
@@ -380,6 +382,8 @@ void CVsdFilterAvu::PutImage(	// !export
 			}
 		}
 	}
+	
+	return ERROR_OK;
 }
 
 /*** フレームをマーク *******************************************************/
