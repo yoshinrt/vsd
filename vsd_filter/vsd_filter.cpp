@@ -244,8 +244,8 @@ class CVsdFilterAvu : public CVsdFilter {
 	BOOL GPSLogLoad( const char *szFileName, HWND hwnd );
 	
 	// ‰¼‘zŠÖ”
-	virtual void PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag );
-	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag );
+	virtual void PutPixelLow( int x, int y, const PIXEL_YCA& yc );
+	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA& yc );
 	virtual UINT PutImage( int x, int y, CVsdImage &img );
 	
 	virtual int	GetWidth( void ){ return fpip->w; }
@@ -311,7 +311,7 @@ inline void CVsdFilter::PutPixel( int x, int y, short iY, short iCr, short iCb )
 }
 */
 
-inline void CVsdFilterAvu::PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
+inline void CVsdFilterAvu::PutPixelLow( int x, int y, const PIXEL_YCA& yc ){
 	
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
@@ -327,7 +327,7 @@ inline void CVsdFilterAvu::PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT 
 	}
 }
 
-inline void CVsdFilterAvu::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ){
+inline void CVsdFilterAvu::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA& yc ){
 	
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
@@ -352,20 +352,20 @@ inline void CVsdFilterAvu::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA 
 
 /*** PutImage ***************************************************************/
 
-UINT CVsdFilterAvu::PutImage(	// !export
+UINT CVsdFilterAvu::PutImage(
 	int x, int y, CVsdImage &img
 ){
-	UINT uRet;
-	if(( uRet = img.ConvRGBA2YCA()) != ERROR_OK ) return uRet;
-	
-	x &= ~1;	// 2’PˆÊ
-	
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
-	for( int y1 = 0; y1 < img.m_iHeight; ++y1 ){
-		for( int x1 = 0; x1 < img.m_iWidth; ++x1 ){
+	int xst = ( x >= 0 ) ? 0 : -x;
+	int xed = x + img.m_iWidth <= GetWidth() ? img.m_iWidth : GetWidth() - x;
+	int yst = ( y >= 0 ) ? 0 : -y;
+	int yed = y + img.m_iHeight <= GetHeight() ? img.m_iHeight : GetHeight() - y;
+	
+	for( int y1 = yst; y1 < yed; ++y1 ){
+		for( int x1 = xst; x1 < xed; ++x1 ){
 			
-			PIXEL_YCA &yc = img.m_pPixelBuf[ x1 + y1 * img.m_iWidth ];
+			PIXEL_YCA yc( img.GetPixel0( x1, y1 ));
 			
 			if( yc.alfa != 256 ){
 				int	iIndex = GetIndex( x + x1, y + y1 );

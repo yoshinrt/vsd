@@ -58,8 +58,8 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	int GetIndex( int x, int y ){ return m_iBytesPerLine * y + x * 2; }
 	
 	// âºëzä÷êî
-	virtual void PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag );
-	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag );
+	virtual void PutPixelLow( int x, int y, const PIXEL_YCA& yc, UINT uFlag );
+	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA& yc, UINT uFlag );
 	
 	virtual int	GetWidth( void )	{ return m_iWidth; }
 	virtual int	GetHeight( void )	{ return m_iHeight; }
@@ -158,7 +158,7 @@ G = Y-0.714Cr-0.344Cb
 B = Y+1.772Cb 
 */
 
-inline void CVsdFilterAvs::PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag ){
+inline void CVsdFilterAvs::PutPixelLow( int x, int y, const PIXEL_YCA& yc, UINT uFlag ){
 	
 	int	iIndex	= GetIndex( x, y );
 	
@@ -177,7 +177,7 @@ inline void CVsdFilterAvs::PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT 
 	}
 }
 
-inline void CVsdFilterAvs::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ){
+inline void CVsdFilterAvs::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA& yc, UINT uFlag ){
 	
 	int iIndex = GetIndex( x1, y1 );
 	

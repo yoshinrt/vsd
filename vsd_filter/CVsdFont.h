@@ -49,15 +49,15 @@ class CVsdFont {
 	static const UINT ATTR_OUTLINE	= 1 << 2;
 	static const UINT ATTR_FIXED	= 1 << 3;
 	
-	int GetW( void ){ return m_iFontW; }
-	int GetH( void ){ return m_iFontH; }	// !js_var:Height
+	int GetWidth( void ){ return m_iFontW; }
+	int GetHeight( void ){ return m_iFontH; }	// !js_var:Height
 	
 	int GetW_Space( void ){ return m_iFontW_Space; }
 	
 	int GetTextWidth( char *szMsg ){	// !js_func
 		
 		if( m_uAttr & ATTR_FIXED ){
-			return strlen( szMsg ) * GetW();
+			return strlen( szMsg ) * GetWidth();
 		}
 		
 		int iWidth = 0;

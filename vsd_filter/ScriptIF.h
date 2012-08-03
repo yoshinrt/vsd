@@ -85,7 +85,7 @@ class CVsdFilterIF {
 				args[ 5 ]->Int32Value(),
 				args[ 6 ]->NumberValue(),
 				args[ 7 ]->NumberValue(),
-				args[ 8 ]->Int32Value(),
+				PIXEL_RABY::Argb2Raby( args[ 8 ]->Int32Value()),
 				iLen <= 9 ? 0 : args[ 9 ]->Int32Value()
 			);
 		}else{
@@ -96,7 +96,7 @@ class CVsdFilterIF {
 				args[ 3 ]->Int32Value(),
 				args[ 4 ]->NumberValue(),
 				args[ 5 ]->NumberValue(),
-				args[ 6 ]->Int32Value(),
+				PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
 				iLen <= 7 ? 0 : args[ 7 ]->Int32Value()
 			);
 		}
@@ -119,7 +119,7 @@ class CVsdFilterIF {
 		GetThis<CVsdFilter>( args.This())->PutPixel(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
-			args[ 2 ]->Int32Value(),
+			PIXEL_RABY::Argb2Raby( args[ 2 ]->Int32Value()),
 			iLen <= 3 ? 0 : args[ 3 ]->Int32Value()
 		);
 		
@@ -135,7 +135,7 @@ class CVsdFilterIF {
 			args[ 2 ]->Int32Value(),
 			args[ 3 ]->Int32Value(),
 			iLen <= 5 ? 1 : args[ 5 ]->Int32Value(),
-			args[ 4 ]->Int32Value(),
+			PIXEL_RABY::Argb2Raby( args[ 4 ]->Int32Value()),
 			iLen <= 6 ? 0 : args[ 6 ]->Int32Value()
 		);
 		
@@ -150,7 +150,7 @@ class CVsdFilterIF {
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
 			args[ 3 ]->Int32Value(),
-			args[ 4 ]->Int32Value(),
+			PIXEL_RABY::Argb2Raby( args[ 4 ]->Int32Value()),
 			args[ 5 ]->Int32Value()
 		);
 		
@@ -164,7 +164,7 @@ class CVsdFilterIF {
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
-			args[ 3 ]->Int32Value(),
+			PIXEL_RABY::Argb2Raby( args[ 3 ]->Int32Value()),
 			iLen <= 4 ? 0 : args[ 4 ]->Int32Value()
 		);
 		
@@ -181,8 +181,8 @@ class CVsdFilterIF {
 			args[ 1 ]->Int32Value(),
 			*str2,
 			*GetThis<CVsdFont>( Font3 ),
-			args[ 4 ]->Int32Value(),
-			iLen <= 5 ? 0 : args[ 5 ]->Int32Value()
+			PIXEL_RABY::Argb2Raby( args[ 4 ]->Int32Value()),
+			iLen <= 5 ? 0 : PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value())
 		);
 		
 		return v8::Undefined();
@@ -197,8 +197,8 @@ class CVsdFilterIF {
 			args[ 2 ]->Int32Value(),
 			args[ 3 ]->Int32Value(),
 			args[ 4 ]->Int32Value(),
-			args[ 5 ]->Int32Value(),
-			args[ 6 ]->Int32Value()
+			PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
+			PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value())
 		);
 		
 		return v8::Undefined();
@@ -243,10 +243,10 @@ class CVsdFilterIF {
 			args[ 2 ]->Int32Value(),
 			args[ 3 ]->Int32Value(),
 			args[ 4 ]->Int32Value(),
-			args[ 5 ]->Int32Value(),
-			args[ 6 ]->Int32Value(),
-			args[ 7 ]->Int32Value(),
-			args[ 8 ]->Int32Value()
+			PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
+			PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
+			PIXEL_RABY::Argb2Raby( args[ 7 ]->Int32Value()),
+			PIXEL_RABY::Argb2Raby( args[ 8 ]->Int32Value())
 		);
 		
 		return v8::Undefined();
@@ -260,10 +260,10 @@ class CVsdFilterIF {
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			*GetThis<CVsdFont>( Font2 ),
-			args[ 3 ]->Int32Value(),
-			args[ 4 ]->Int32Value(),
-			args[ 5 ]->Int32Value(),
-			args[ 6 ]->Int32Value()
+			PIXEL_RABY::Argb2Raby( args[ 3 ]->Int32Value()),
+			PIXEL_RABY::Argb2Raby( args[ 4 ]->Int32Value()),
+			PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
+			PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value())
 		);
 		
 		return v8::Undefined();
@@ -279,7 +279,7 @@ class CVsdFilterIF {
 			args[ 3 ]->Int32Value(),
 			args[ 4 ]->Int32Value(),
 			args[ 5 ]->NumberValue(),
-			args[ 6 ]->Int32Value(),
+			PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
 			iLen <= 7 ? 1 : args[ 7 ]->Int32Value()
 		);
 		
@@ -510,7 +510,7 @@ class CVsdFontIF {
 	
 	///// プロパティアクセサ /////
 	static v8::Handle<v8::Value> Get_Height( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		 return v8::Integer::New( GetThis<CVsdFont>( info.Holder())->GetH() );
+		 return v8::Integer::New( GetThis<CVsdFont>( info.Holder())->GetHeight() );
 	}
 
 	///// メソッドコールバック /////

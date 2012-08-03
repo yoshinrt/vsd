@@ -92,38 +92,39 @@ class CVsdFilter {
 	/*** 画像オペレーション *************************************************/
 	
 	void PutPixel(	// !js_func
-		int x, int y, UINT uColor,
+		int x, int y, tRABY uColor,
 		UINT uFlag	// !default:0
 	);
-	void PutPixel( int x, int y, const PIXEL_YCA &yc, UINT uFlag );
-	void FillLine( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag );
-	virtual void PutPixelLow( int x, int y, const PIXEL_YCA &yc, UINT uFlag ) = 0;
-	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA &yc, UINT uFlag ) = 0;
+	void PutPixel( int x, int y, const PIXEL_YCA& yc, UINT uFlag );
+	void FillLine( int x1, int y1, int x2, const PIXEL_YCA& yc, UINT uFlag );
+	virtual void PutPixelLow( int x, int y, const PIXEL_YCA& yc ) = 0;
+	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA& yc ) = 0;
+	virtual UINT PutImage( int x, int y, CVsdImage &img ) = 0; // !js_func
 	
-	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA &yc, UINT uFlag );
-	void DrawLine( int x1, int y1, int x2, int y2, UINT uColor, UINT uFlag );
+	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA& yc, UINT uFlag );
+	void DrawLine( int x1, int y1, int x2, int y2, tRABY uColor, UINT uFlag );
 	void DrawLine(		// !js_func
 		int x1, int y1, int x2, int y2,
 		int width,		// !arg:5 !default:1
-		UINT uColor,	// !arg:4
+		tRABY uColor,	// !arg:4
 		UINT uFlag		// !default:0
 	);
 	
 	void DrawRect(	// !js_func
 		int x1, int y1, int x2, int y2,
-		UINT uColor, UINT uFlag
+		tRABY uColor, UINT uFlag
 	);
 	void DrawCircle(	// !js_func
 		int x, int y, int r,
-		UINT uColor,
+		tRABY uColor,
 		UINT uFlag		// !default:0
 	);
-	void DrawCircle( int x, int y, int a, int b, UINT uColor, UINT uFlag );
+	void DrawCircle( int x, int y, int a, int b, tRABY uColor, UINT uFlag );
 	void DrawArc(
 		int x, int y,
 		int a, int b,
 		double dStart, double dEnd,
-		UINT uColor,
+		tRABY uColor,
 		UINT uFlag
 	);
 	void DrawArc(
@@ -131,45 +132,45 @@ class CVsdFilter {
 		int a, int b,
 		int c, int d,
 		double dStart, double dEnd,
-		UINT uColor,
+		tRABY uColor,
 		UINT uFlag
 	);
 	
-	int DrawFont0( int x, int y, UCHAR c, CVsdFont &Font, UINT uColor );
-	int DrawFont( int x, int y, UCHAR c, CVsdFont &Font, UINT uColor, UINT uColorOutline = 0 );
+	int DrawFont0( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor );
+	int DrawFont( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor, tRABY uColorOutline = 0 );
 	void DrawText( // !js_func
-		int x, int y, char *szMsg, CVsdFont &Font, UINT uColor,
-		UINT uColorOutline = 0	// !default:0
+		int x, int y, char *szMsg, CVsdFont &Font, tRABY uColor,
+		tRABY uColorOutline = 0	// !default:0
 	);
 	
 	void DrawSpeedGraph(
 		CVsdLog *Log,
 		int iX, int iY, int iW, int iH,
-		UINT uColor,
+		tRABY uColor,
 		int	iDirection
 	);
 	
 	void DrawTachoGraph(
 		CVsdLog *Log,
 		int iX, int iY, int iW, int iH,
-		UINT uColor,
+		tRABY uColor,
 		int	iDirection
 	);
 	
 	// ポリゴン描写
 	void PolygonClear( void );
-	void PolygonDraw( const PIXEL_YCA &yc, UINT uFlag );
+	void PolygonDraw( const PIXEL_YCA& yc );
 	
 	UINT BlendColor(
-		UINT uColor0,
-		UINT uColor1,
+		tRABY uColor0,
+		tRABY uColor1,
 		double	dAlfa
 	);
 	
 	BOOL DrawVSD( void );
 	void DrawGSnake( // !js_func
 		int iCx, int iCy, int iR, int iIndicatorR, int iWidth,
-		UINT uColorBall, UINT uColorLine
+		tRABY uColorBall, tRABY uColorLine
 	);
 	void DrawMeterPanel0( // !js_func
 		int	iMeterCx,
@@ -188,26 +189,24 @@ class CVsdFilter {
 	void DrawMap( // !js_func
 		int iX, int iY, int iSize, int iWidth,
 		int iIndicatorR,
-		UINT uColorIndicator,
-		UINT uColorG0,
-		UINT uColorGPlus,
-		UINT uColorGMinus
+		tRABY uColorIndicator,
+		tRABY uColorG0,
+		tRABY uColorGPlus,
+		tRABY uColorGMinus
 	);
 	void DrawLapTime( // !js_func
 		int x, int y, CVsdFont &Font,
-		UINT uColor, UINT uColorOutline, UINT uColorBest, UINT uColorPlus
+		tRABY uColor, tRABY uColorOutline, tRABY uColorBest, tRABY uColorPlus
 	);
 	void DrawNeedle( // !js_func
 		int x, int y, int r,
 		int iStart, int iEnd, double dVal,
-		UINT uColor,
+		tRABY uColor,
 		int iWidth // !default:1
 	);
-	virtual UINT PutImage( int x, int y, CVsdImage &img ) = 0; // !js_func
 	
 	enum {
 		IMG_FILL	= ( 1 << 0 ),
-		IMG_POLYGON	= ( 1 << 1 ),
 	};
 	
 	// 仮想関数

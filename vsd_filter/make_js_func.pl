@@ -21,7 +21,7 @@ MakeJsIF( 'CVsdFilter', 'Vsd', << '-----', << '-----' );
 				args[ 5 ]->Int32Value(),
 				args[ 6 ]->NumberValue(),
 				args[ 7 ]->NumberValue(),
-				args[ 8 ]->Int32Value(),
+				PIXEL_RABY::Argb2Raby( args[ 8 ]->Int32Value()),
 				iLen <= 9 ? 0 : args[ 9 ]->Int32Value()
 			);
 		}else{
@@ -32,7 +32,7 @@ MakeJsIF( 'CVsdFilter', 'Vsd', << '-----', << '-----' );
 				args[ 3 ]->Int32Value(),
 				args[ 4 ]->NumberValue(),
 				args[ 5 ]->NumberValue(),
-				args[ 6 ]->Int32Value(),
+				PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
 				iLen <= 7 ? 0 : args[ 7 ]->Int32Value()
 			);
 		}
@@ -145,6 +145,16 @@ sub MakeJsIF {
 						--$ArgMin;
 					}else{
 						$Args[ $ArgNum ] = "args[ $ArgPos ]->Int32Value()";
+					}
+				}
+				
+				elsif( $Type eq 'tRABY' ){
+					# (¡¦¢Ï¡¦)¥é¥ô¥£!!
+					if( defined( $Default )){
+						$Args[ $ArgNum ] = "iLen <= $ArgPos ? $Default : PIXEL_RABY::Argb2Raby( args[ $ArgPos ]->Int32Value())";
+						--$ArgMin;
+					}else{
+						$Args[ $ArgNum ] = "PIXEL_RABY::Argb2Raby( args[ $ArgPos ]->Int32Value())";
 					}
 				}
 				

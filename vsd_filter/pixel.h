@@ -20,7 +20,7 @@ typedef struct {
 		struct {
 			UCHAR	y;
 			UCHAR	cb;
-			UCHAR	y1;
+			UCHAR	a;
 			UCHAR	cr;
 		};
 		
@@ -33,12 +33,15 @@ typedef struct {
 		// yuv ‘S•”Žw’è
 		UINT	ycbcr;
 	};
-	USHORT	alfa;
+	
+	PIXEL_YCA( UINT uColor ){
+		Set( uColor );
+	}
+	
+	void Set( UINT uColor ){
+		ycbcr = uColor;
+	}
 } PIXEL_YCA;
-
-static inline Color2YCA( PIXEL_YCA &yca, int iColor ){
-	hogefuga
-}
 
 #else // !AVS_PLUGIN
 typedef short	PIXEL_t;
@@ -59,18 +62,15 @@ class PIXEL_YCA {
 	}
 	
 	void Set( UINT uColor ){
-		int a = ( uColor >> 24 ) & 0xFF;
-		int r = ( uColor >> 16 ) & 0xFF;
-		int g = ( uColor >>  8 ) & 0xFF;
-		int b = ( uColor       ) & 0xFF;
-		a += a >> 7;	// ŽlŽÌŒÜ“ü‚Ì‚Â‚à‚è
+		int ir = ( char )( uColor >> 24 );
+		int ia = ( uColor >> 16 ) & 0xFF;
+		int ib = ( char )( uColor >>  8 );
+		int iy = ( uColor       ) & 0xFF;
 		
-		double dAlfa = ( 256 - a ) * ( 4096.0 / 256 / 255 );
-		
-		y		= ( int )(( 0.299 * r + 0.587 * g + 0.114 * b ) * dAlfa );
-		cb		= ( int )((-0.169 * r - 0.331 * g + 0.500 * b ) * dAlfa );
-		cr		= ( int )(( 0.500 * r - 0.419 * g - 0.081 * b ) * dAlfa );
-		alfa	= a;
+		y		= ( iy << 4 ) + ( iy >> 4 );
+		cb		= ( ib << 4 ) + ( ib >> 4 );
+		cr		= ( ir << 4 ) + ( ir >> 4 );
+		alfa	= ia + ( ia >> 7 );
 	}
 };
 #endif // !AVS_PLUGIN

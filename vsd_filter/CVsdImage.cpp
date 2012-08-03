@@ -16,16 +16,14 @@
 /*** コンストラクタ・デストラクタ *******************************************/
 
 CVsdImage::CVsdImage(){
-	m_pRGBA_Buf	= NULL;
-	m_pPixelBuf	= NULL;
+	m_pBuf	= NULL;
 	
 	m_iWidth  = 0;	// 画像の幅
 	m_iHeight = 0;	//  〃  高さ
 }
 
 CVsdImage::~CVsdImage(){
-	delete [] m_pRGBA_Buf;
-	delete [] m_pPixelBuf;
+	delete [] m_pBuf;
 }
 
 /*** イメージのロード *******************************************************/
@@ -73,9 +71,9 @@ UINT CVsdImage::Load( const char *szFileName ){
 		m_iHeight = pBitmap->GetHeight();
 		
 		// ■ロードする画像のメモリの解像度を変更/設定（この位置に任意に記述して下さい）
-		m_pRGBA_Buf = new PIXEL_RGBA[ m_iWidth * m_iHeight ];
+		m_pBuf = new PIXEL_RABY[ m_iWidth * m_iHeight ];
 		
-		if( !m_pRGBA_Buf ){
+		if( !m_pBuf ){
 			result = ERROR_NOT_ENOUGH_MEMORY;
 		}else{
 			//---- 画像イメージの読み込み
@@ -84,10 +82,12 @@ UINT CVsdImage::Load( const char *szFileName ){
 					Gdiplus::Color srcColor;
 					pBitmap->GetPixel( x, y, &srcColor );
 					
-					m_pRGBA_Buf[ x + y * m_iWidth ].r = srcColor.GetR();
-					m_pRGBA_Buf[ x + y * m_iWidth ].g = srcColor.GetG();
-					m_pRGBA_Buf[ x + y * m_iWidth ].b = srcColor.GetB();
-					m_pRGBA_Buf[ x + y * m_iWidth ].a = 255 - srcColor.GetA();
+					m_pBuf[ x + y * m_iWidth ].raby = PIXEL_RABY::Argb2Raby(
+						255 - srcColor.GetA(),
+						srcColor.GetR(),
+						srcColor.GetG(),
+						srcColor.GetB()
+					);
 				}
 			}
 		}
@@ -103,26 +103,6 @@ UINT CVsdImage::Load( const char *szFileName ){
 
 /*** リサンプリング *********************************************************/
 
-#define RGBA_TRANSPARENT	0xFF000000
-
-inline UINT CVsdImage::GetPixel0( int x, int y ){
-	return m_pRGBA_Buf[ x + y * m_iWidth ].argb;
-}
-
-inline UINT CVsdImage::GetPixel( int x, int y ){
-	if( 0 <= x && x < m_iWidth && 0 <= y && y < m_iHeight ){
-		return GetPixel0( x, y );
-	}
-	
-	if( x < 0 )	x = 0;
-	else if( x >= m_iWidth ) x = m_iWidth - 1;
-	
-	if( y < 0 ) y = 0;
-	else if( y >= m_iHeight ) y = m_iHeight - 1;
-	
-	return GetPixel0( x, y ) | RGBA_TRANSPARENT;
-}
-
 template<typename Tx, typename Ty>
 UINT CVsdImage::Resampling( Tx x, Ty y ){
 	
@@ -133,7 +113,7 @@ UINT CVsdImage::Resampling( Tx x, Ty y ){
 	
 	// 範囲外なら透明を返す
 	if( x <= -1 || m_iWidth <= x || y <= -1 || m_iHeight <= y ){
-		return RGBA_TRANSPARENT;
+		return RABY_TRANSPARENT;
 	}
 	
 	// ( int )-0.5 が 0 になってしまうので
@@ -149,28 +129,28 @@ UINT CVsdImage::Resampling( Tx x, Ty y ){
 	Ty beta = y - y0; Ty beta_ = 1 - beta;
 	
 	return
-		// alfa
+		// cr
 		(( int )(
-			(( uColorA >> 24 )		  ) * alfa_ * beta_ +
-			(( uColorB >> 24 )		  ) * alfa  * beta_ +
-			(( uColorC >> 24 )		  ) * alfa_ * beta  +
-			(( uColorD >> 24 )		  ) * alfa  * beta
+			(( char )( uColorA >> 24 )) * alfa_ * beta_ +
+			(( char )( uColorB >> 24 )) * alfa  * beta_ +
+			(( char )( uColorC >> 24 )) * alfa_ * beta  +
+			(( char )( uColorD >> 24 )) * alfa  * beta
 		) << 24 ) |
-		// R
+		// a
 		(( int )(
 			(( uColorA >> 16 ) & 0xFF ) * alfa_ * beta_ +
 			(( uColorB >> 16 ) & 0xFF ) * alfa  * beta_ +
 			(( uColorC >> 16 ) & 0xFF ) * alfa_ * beta  +
 			(( uColorD >> 16 ) & 0xFF ) * alfa  * beta
 		) << 16 ) |
-		// G
-		(( int )(
-			(( uColorA >>  8 ) & 0xFF ) * alfa_ * beta_ +
-			(( uColorB >>  8 ) & 0xFF ) * alfa  * beta_ +
-			(( uColorC >>  8 ) & 0xFF ) * alfa_ * beta  +
-			(( uColorD >>  8 ) & 0xFF ) * alfa  * beta
-		) <<  8 ) |
-		// B
+		// cb
+		((( int )(
+			(( char )( uColorA >>  8 )) * alfa_ * beta_ +
+			(( char )( uColorB >>  8 )) * alfa  * beta_ +
+			(( char )( uColorC >>  8 )) * alfa_ * beta  +
+			(( char )( uColorD >>  8 )) * alfa  * beta
+		) & 0xFF ) <<  8 ) |
+		// y
 		(( int )(
 			(( uColorA >>  0 ) & 0xFF ) * alfa_ * beta_ +
 			(( uColorB >>  0 ) & 0xFF ) * alfa  * beta_ +
@@ -184,22 +164,22 @@ UINT CVsdImage::Resampling( Tx x, Ty y ){
 // x 方向縮小
 UINT CVsdImage::Resampling( double x0, double x1, int y ){
 	// 1pix まるまる部分の計算
-	int ia, ir, ig, ib;
-	ia = ir = ig = ib = 0;
+	int ir, ia, ib, iy;
+	ir = ia = ib = iy = 0;
 	
 	for( int i = ( int )ceil( x0 ); i < ( int )ceil( x1 ); ++i ){
 		UINT u = GetPixel0( i, y );
-		ia += ( u >> 24 )       ;
-		ir += ( u >> 16 ) & 0xFF;
-		ig += ( u >>  8 ) & 0xFF;
-		ib += ( u >>  0 ) & 0xFF;
+		ir += ( u >> 24 )       ;
+		ia += ( u >> 16 ) & 0xFF;
+		ib += ( u >>  8 ) & 0xFF;
+		iy += ( u >>  0 ) & 0xFF;
 	}
 	
 	double alfa;
-	double a = ia;
-	double r = ir;
-	double g = ig;
-	double b = ib;
+	double a = ir;
+	double r = ia;
+	double g = ib;
+	double b = iy;
 	double sum = ceil( x1 ) - ceil( x0 );
 	
 	// 先頭の半端部分
@@ -236,32 +216,32 @@ UINT CVsdImage::Resampling( double x0, double x1, int y ){
 // y 方向縮小
 UINT CVsdImage::Resampling( int x, double y0, double y1 ){
 	// 1pix まるまる部分の計算
-	int ia, ir, ig, ib;
-	ia = ir = ig = ib = 0;
+	int ir, ia, ib, iy;
+	ir = ia = ib = iy = 0;
 	
 	for( int i = ( int )ceil( y0 ); i < ( int )ceil( y1 ); ++i ){
 		UINT u = GetPixel0( x, i );
-		ia += ( u >> 24 )       ;
-		ir += ( u >> 16 ) & 0xFF;
-		ig += ( u >>  8 ) & 0xFF;
-		ib += ( u >>  0 ) & 0xFF;
+		ir += ( u >> 24 )       ;
+		ia += ( u >> 16 ) & 0xFF;
+		ib += ( u >>  8 ) & 0xFF;
+		iy += ( u >>  0 ) & 0xFF;
 	}
 	
 	double alfa;
-	double a = ia;
 	double r = ir;
-	double g = ig;
+	double a = ia;
 	double b = ib;
+	double y = iy;
 	double sum = ceil( y1 ) - ceil( y0 );
 	
 	// 先頭の半端部分
 	alfa = ceil( y0 ) - y0;
 	if( alfa > 0 ){
 		UINT u = GetPixel0( x, ( int )y0 );
-		a += (( u >> 24 )        ) * alfa;
-		r += (( u >> 16 ) & 0xFF ) * alfa;
-		g += (( u >>  8 ) & 0xFF ) * alfa;
-		b += (( u >>  0 ) & 0xFF ) * alfa;
+		r += (( u >> 24 )        ) * alfa;
+		a += (( u >> 16 ) & 0xFF ) * alfa;
+		b += (( u >>  8 ) & 0xFF ) * alfa;
+		y += (( u >>  0 ) & 0xFF ) * alfa;
 		
 		sum += alfa;
 	}
@@ -270,45 +250,43 @@ UINT CVsdImage::Resampling( int x, double y0, double y1 ){
 	alfa = y1 - floor( y1 );
 	if( alfa > 0 ){
 		UINT u = GetPixel0( x, ( int )y1 );
-		a += (( u >> 24 )        ) * alfa;
-		r += (( u >> 16 ) & 0xFF ) * alfa;
-		g += (( u >>  8 ) & 0xFF ) * alfa;
-		b += (( u >>  0 ) & 0xFF ) * alfa;
+		r += (( u >> 24 )        ) * alfa;
+		a += (( u >> 16 ) & 0xFF ) * alfa;
+		b += (( u >>  8 ) & 0xFF ) * alfa;
+		y += (( u >>  0 ) & 0xFF ) * alfa;
 		
 		sum += alfa;
 	}
 	
 	return
-		(( int )( a / sum ) << 24 ) |
-		(( int )( r / sum ) << 16 ) |
-		(( int )( g / sum ) <<  8 ) |
-		(( int )( b / sum ) <<  0 );
+		(( int )( r / sum ) << 24 ) |
+		(( int )( a / sum ) << 16 ) |
+		(( int )( b / sum ) <<  8 ) |
+		(( int )( y / sum ) <<  0 );
 }
 
 /*** リサイズ ***************************************************************/
 
 UINT CVsdImage::Resize( int iWidth, int iHeight ){
 	
-	if( !m_pRGBA_Buf ) return ERROR_IMAGE_NOT_ARGB;
-	
-	PIXEL_RGBA *pNewBuf;
+	PIXEL_RABY *pNewBuf;
 	
 	// x, y 両方拡大の場合のみ，一気に拡大
 	if( iWidth > m_iWidth && iHeight > m_iHeight ){
 		
-		pNewBuf = new PIXEL_RGBA[ iWidth * iHeight ];
+		pNewBuf = new PIXEL_RABY[ iWidth * iHeight ];
 		
 		if( !pNewBuf ) return ERROR_NOT_ENOUGH_MEMORY;
 		
 		for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-			pNewBuf[ x + iWidth * y ].argb = Resampling(
+			pNewBuf[ x + iWidth * y ].raby = Resampling(
 				m_iWidth  * x / ( double )iWidth,
 				m_iHeight * y / ( double )iHeight
 			);
 		}
 		
-		delete [] m_pRGBA_Buf;
-		m_pRGBA_Buf = pNewBuf;
+		delete [] m_pBuf;
+		m_pBuf = pNewBuf;
 		
 		m_iWidth  = iWidth;
 		m_iHeight = iHeight;
@@ -316,20 +294,20 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 		/*** x 方向の処理 ***/
 		
 		if( iWidth != m_iWidth ){
-			pNewBuf = new PIXEL_RGBA[ iWidth * m_iHeight ];
+			pNewBuf = new PIXEL_RABY[ iWidth * m_iHeight ];
 			if( !pNewBuf ) return ERROR_NOT_ENOUGH_MEMORY;
 			
 			if( iWidth > m_iWidth ){
 				// x 拡大
 				for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-					pNewBuf[ x + iWidth * y ].argb = Resampling(
+					pNewBuf[ x + iWidth * y ].raby = Resampling(
 						m_iWidth  * x / ( double )iWidth, y
 					);
 				}
 			}else{
 				// x 縮小
 				for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-					pNewBuf[ x + iWidth * y ].argb = Resampling(
+					pNewBuf[ x + iWidth * y ].raby = Resampling(
 						m_iWidth * x         / ( double )iWidth,
 						m_iWidth * ( x + 1 ) / ( double )iWidth,
 						y
@@ -337,28 +315,28 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 				}
 			}
 			
-			delete [] m_pRGBA_Buf;
-			m_pRGBA_Buf = pNewBuf;
+			delete [] m_pBuf;
+			m_pBuf = pNewBuf;
 			m_iWidth = iWidth;
 		}
 		
 		/*** y 方向の処理 ***/
 		
 		if( iHeight != m_iHeight ){
-			pNewBuf = new PIXEL_RGBA[ iWidth * iHeight ];
+			pNewBuf = new PIXEL_RABY[ iWidth * iHeight ];
 			if( !pNewBuf ) return ERROR_NOT_ENOUGH_MEMORY;
 			
 			if( iHeight > m_iHeight ){
 				// y 拡大
 				for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-					pNewBuf[ x + iWidth * y ].argb = Resampling(
+					pNewBuf[ x + iWidth * y ].raby = Resampling(
 						x, m_iHeight * y / ( double )iHeight
 					);
 				}
 			}else{
 				// y 縮小
 				for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-					pNewBuf[ x + iWidth * y ].argb = Resampling(
+					pNewBuf[ x + iWidth * y ].raby = Resampling(
 						x,
 						m_iHeight * y         / ( double )iHeight,
 						m_iHeight * ( y + 1 ) / ( double )iHeight
@@ -366,8 +344,8 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 				}
 			}
 			
-			delete [] m_pRGBA_Buf;
-			m_pRGBA_Buf = pNewBuf;
+			delete [] m_pBuf;
+			m_pBuf = pNewBuf;
 			m_iHeight = iHeight;
 		}
 	}
@@ -379,47 +357,21 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 
 UINT CVsdImage::Rotate( int cx, int cy, double dAngle ){
 	
-	if( !m_pRGBA_Buf ) return ERROR_IMAGE_NOT_ARGB;
-	
-	PIXEL_RGBA *pNewBuf = new PIXEL_RGBA[ m_iWidth * m_iHeight ];
+	PIXEL_RABY *pNewBuf = new PIXEL_RABY[ m_iWidth * m_iHeight ];
 	if( !pNewBuf ) return ERROR_NOT_ENOUGH_MEMORY;
 	
 	double dSin = sin( dAngle * ToRAD );
 	double dCos = cos( dAngle * ToRAD );
 	
 	for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < m_iWidth; ++x ){
-		pNewBuf[ x + m_iWidth * y ].argb = Resampling(
+		pNewBuf[ x + m_iWidth * y ].raby = Resampling(
 			cx + ( x - cx ) * dCos + ( y - cy ) * dSin,
 			cy - ( x - cx ) * dSin + ( y - cy ) * dCos
 		);
 	}
 	
-	delete [] m_pRGBA_Buf;
-	m_pRGBA_Buf = pNewBuf;
-	
-	return ERROR_OK;
-}
-
-/*** PIXEL_RGBA -> PIXEL_YCA 変換 *******************************************/
-
-UINT CVsdImage::ConvRGBA2YCA( void ){
-	
-	if( m_pPixelBuf || !m_pRGBA_Buf ) return ERROR_IMAGE_NOT_ARGB;
-	
-	// メモリ確保
-	if( !( m_pPixelBuf = new PIXEL_YCA[ m_iWidth * m_iHeight ] )){
-		return ERROR_NOT_ENOUGH_MEMORY;
-	}
-	
-	for( int y = 0; y < m_iHeight; ++y ){
-		for( int x = 0; x < m_iWidth; ++x ){
-			int iIdx = x + y * m_iWidth;
-			m_pPixelBuf[ iIdx ].Set( m_pRGBA_Buf[ iIdx ].argb );
-		}
-	}
-	
-	delete [] m_pRGBA_Buf;
-	m_pRGBA_Buf = NULL;
+	delete [] m_pBuf;
+	m_pBuf = pNewBuf;
 	
 	return ERROR_OK;
 }
