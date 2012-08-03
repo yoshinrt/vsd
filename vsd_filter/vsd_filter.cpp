@@ -383,7 +383,7 @@ UINT CVsdFilterAvu::PutImage(
 		}
 	}
 	
-	return ERROR_OK;
+	return ERR_OK;
 }
 
 /*** フレームをマーク *******************************************************/

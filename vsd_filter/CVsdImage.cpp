@@ -43,7 +43,7 @@ UINT CVsdImage::Load( const char *szFileName ){
 			_TRUNCATE		// [in]	 出力先に格納するワイド文字の最大数
 		) != 0
 	){
-		return ERROR_MBSTOWCS;
+		return ERR_MBSTOWCS;
 	}
 	
 	// GDI+オブジェクト（画像展開に必要）
@@ -52,13 +52,13 @@ UINT CVsdImage::Load( const char *szFileName ){
 	
 	//---- GDI+の初期設定
 	if( Gdiplus::GdiplusStartup( &gdiplusToken, &gdiplusStartupInput, NULL ) != Gdiplus::Ok ){
-		return ERROR_GDIPLUS;
+		return ERR_GDIPLUS;
 	}
 	
 	//-------------------------------------------------------------
 	// 画像の読み込み
 	//-------------------------------------------------------------
-	UINT	result = ERROR_OK;
+	UINT	result = ERR_OK;
 	m_iWidth  = 0;	// 画像の幅
 	m_iHeight = 0;	//  〃  高さ
 	
@@ -74,7 +74,7 @@ UINT CVsdImage::Load( const char *szFileName ){
 		m_pBuf = new PIXEL_RABY[ m_iWidth * m_iHeight ];
 		
 		if( !m_pBuf ){
-			result = ERROR_NOT_ENOUGH_MEMORY;
+			result = ERR_NOT_ENOUGH_MEMORY;
 		}else{
 			//---- 画像イメージの読み込み
 			for( int y = 0; y < m_iHeight; ++y ){
@@ -91,6 +91,8 @@ UINT CVsdImage::Load( const char *szFileName ){
 				}
 			}
 		}
+	}else{
+		result = ERR_FILE_NOT_FOUND;
 	}
 	
 	delete pBitmap;
@@ -276,7 +278,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 		
 		pNewBuf = new PIXEL_RABY[ iWidth * iHeight ];
 		
-		if( !pNewBuf ) return ERROR_NOT_ENOUGH_MEMORY;
+		if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 		
 		for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
 			pNewBuf[ x + iWidth * y ].raby = Resampling(
@@ -295,7 +297,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 		
 		if( iWidth != m_iWidth ){
 			pNewBuf = new PIXEL_RABY[ iWidth * m_iHeight ];
-			if( !pNewBuf ) return ERROR_NOT_ENOUGH_MEMORY;
+			if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 			
 			if( iWidth > m_iWidth ){
 				// x 拡大
@@ -324,7 +326,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 		
 		if( iHeight != m_iHeight ){
 			pNewBuf = new PIXEL_RABY[ iWidth * iHeight ];
-			if( !pNewBuf ) return ERROR_NOT_ENOUGH_MEMORY;
+			if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 			
 			if( iHeight > m_iHeight ){
 				// y 拡大
@@ -350,7 +352,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 		}
 	}
 	
-	return ERROR_OK;
+	return ERR_OK;
 }
 
 /*** 回転 *******************************************************************/
@@ -358,7 +360,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 UINT CVsdImage::Rotate( int cx, int cy, double dAngle ){
 	
 	PIXEL_RABY *pNewBuf = new PIXEL_RABY[ m_iWidth * m_iHeight ];
-	if( !pNewBuf ) return ERROR_NOT_ENOUGH_MEMORY;
+	if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 	
 	double dSin = sin( dAngle * ToRAD );
 	double dCos = cos( dAngle * ToRAD );
@@ -373,5 +375,5 @@ UINT CVsdImage::Rotate( int cx, int cy, double dAngle ){
 	delete [] m_pBuf;
 	m_pBuf = pNewBuf;
 	
-	return ERROR_OK;
+	return ERR_OK;
 }

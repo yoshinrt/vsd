@@ -1125,16 +1125,13 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	if( !m_Script && *m_szSkinFile ){
 		m_Script = new CScript( this );
-		if(
-			m_Script->Initialize( m_szSkinFile ) != ERROR_OK ||
-			m_Script->Run( "Initialize" ) != ERROR_OK
-		){
+		if( m_Script->Initialize( m_szSkinFile ) != ERR_OK ){
 			m_Script->m_bError = TRUE;
 		}
 	}
 	
 	if( m_Script && !m_Script->m_bError ){
-		if( m_Script->Run( "Draw" ) != ERROR_OK ){
+		if( m_Script->Run( "Draw" ) != ERR_OK ){
 			m_Script->m_bError = TRUE;
 		}
 	}else{

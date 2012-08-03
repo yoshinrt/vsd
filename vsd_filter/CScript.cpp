@@ -31,7 +31,7 @@ void CScript::ReportException( TryCatch* try_catch ){
 	const char* exception_string = ToCString( exception );
 	Handle<Message> message = try_catch->Message();
 	
-	m_szErrorMsg = new char[ 10240 ];
+	if( !m_szErrorMsg ) m_szErrorMsg = new char[ 10240 ];
 	char *p = m_szErrorMsg;
 	
 	if ( message.IsEmpty()){
@@ -64,12 +64,15 @@ void CScript::ReportException( TryCatch* try_catch ){
 		}
 		sprintf( p, "\n" );
 		p = strchr( p, '\0' );
+		
+		/*
 		String::Utf8Value stack_trace( try_catch->StackTrace());
 		if ( stack_trace.length() > 0 ){
 			const char* stack_trace_string = ToCString( stack_trace );
 			sprintf( p, "%s\n", stack_trace_string );
 			p = strchr( p, '\0' );
 		}
+		*/
 	}
 }
 
@@ -150,7 +153,7 @@ UINT CScript::Initialize( char *szFileName ){
 		assert( try_catch.HasCaught());
 		// Print errors that happened during execution.
 		ReportException( &try_catch );
-		return ERROR_SCRIPT;
+		return ERR_SCRIPT;
 	}
 	
 	assert( !try_catch.HasCaught());
@@ -159,7 +162,7 @@ UINT CScript::Initialize( char *szFileName ){
 		// the returned value.
 		return result->Int32Value();
 	}
-	return ERROR_OK;
+	return ERR_OK;
 }
 
 /*** function ñºéwíËé¿çsÅCà¯êîÇ»Çµ ******************************************/
@@ -171,6 +174,13 @@ UINT CScript::Run( const char *szFunc ){
 	TryCatch try_catch;
 	
 	Local<Function> hFunction = Local<Function>::Cast( m_context->Global()->Get( String::New( szFunc )));
+	if( hFunction->IsUndefined()){
+		
+		if( !m_szErrorMsg ) m_szErrorMsg = new char[ 10240 ];
+		
+		sprintf( m_szErrorMsg, "Undefined function \"%s()\"", szFunc );
+		return ERR_SCRIPT;
+	}
 	Handle<Value> result = hFunction->Call( hFunction, 0, 0 );
 	
 	if( result.IsEmpty()){
@@ -178,7 +188,7 @@ UINT CScript::Run( const char *szFunc ){
 		try_catch.HasCaught();
 		// Print errors that happened during execution.
 		ReportException( &try_catch );
-		return ERROR_SCRIPT;
+		return ERR_SCRIPT;
 	}
 	
 	assert( !try_catch.HasCaught());
@@ -187,5 +197,5 @@ UINT CScript::Run( const char *szFunc ){
 		// the returned value.
 		return result->Int32Value();
 	}
-	return ERROR_OK;
+	return ERR_OK;
 }

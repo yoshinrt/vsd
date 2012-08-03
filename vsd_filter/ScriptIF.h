@@ -24,48 +24,42 @@ class CVsdFilterIF {
 		delete static_cast<CVsdFilter*>( pVoid );
 	}
 	
-	/*** マクロ *****************************************************************/
-	
-	#define CheckArgs( func, cond ) \
-		if( !( cond )){ \
-			return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( \
-				#func ":invalid number of args" \
-			))); \
-		}
-	
-	#define CheckClass( obj, name, msg ) \
-		if( \
-			obj.IsEmpty() || \
-			strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name ) \
-		) return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( msg )))
-	
 	///// プロパティアクセサ /////
 	static v8::Handle<v8::Value> Get_Width( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		 return v8::Integer::New( GetThis<CVsdFilter>( info.Holder())->GetWidth() );
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->GetWidth() ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_Height( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		 return v8::Integer::New( GetThis<CVsdFilter>( info.Holder())->GetHeight() );
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->GetHeight() ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_MaxFrame( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		 return v8::Integer::New( GetThis<CVsdFilter>( info.Holder())->GetFrameMax() );
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->GetFrameMax() ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_FrameCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		 return v8::Integer::New( GetThis<CVsdFilter>( info.Holder())->GetFrameCnt() );
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->GetFrameCnt() ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_Speed( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		 return v8::Number::New( GetThis<CVsdFilter>( info.Holder())->m_dSpeed );
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Number::New( obj->m_dSpeed ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_Tacho( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		 return v8::Number::New( GetThis<CVsdFilter>( info.Holder())->m_dTacho );
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Number::New( obj->m_dTacho ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_Gx( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		 return v8::Number::New( GetThis<CVsdFilter>( info.Holder())->m_dGx );
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Number::New( obj->m_dGx ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_Gy( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		 return v8::Number::New( GetThis<CVsdFilter>( info.Holder())->m_dGy );
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Number::New( obj->m_dGy ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_MaxSpeed( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		 return v8::Integer::New( GetThis<CVsdFilter>( info.Holder())->m_iMaxSpeed );
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->m_iMaxSpeed ) : v8::Undefined();
 	}
 
 	///// メソッドコールバック /////
@@ -73,7 +67,7 @@ class CVsdFilterIF {
 	
 	static v8::Handle<v8::Value> Func_DrawArc( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( "DrawArc", 7 <= iLen && iLen <= 10 );
+		if( CheckArgs( 7 <= iLen && iLen <= 10 )) return v8::Undefined();
 		
 		if( iLen >= 9 ){
 			CScript::m_Vsd->DrawArc(
@@ -114,9 +108,11 @@ class CVsdFilterIF {
 	
 	static v8::Handle<v8::Value> Func_PutPixel( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( PutPixel, 3 <= iLen && iLen <= 4 );
+		if( CheckArgs( 3 <= iLen && iLen <= 4 )) return v8::Undefined();
 		
-		GetThis<CVsdFilter>( args.This())->PutPixel(
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->PutPixel(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			PIXEL_RABY::Argb2Raby( args[ 2 ]->Int32Value()),
@@ -127,22 +123,28 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_PutImage( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( PutImage, iLen == 3 );
+		if( CheckArgs( iLen == 3 )) return v8::Undefined();
 		v8::Local<v8::Object> Image2 = args[ 2 ]->ToObject();
-		CheckClass( Image2, "Image", "arg[ 3 ] must be Image" );
-		int ret = GetThis<CVsdFilter>( args.This())->PutImage(
+		if( CheckClass( Image2, "Image", "arg[ 3 ] must be Image" )) return v8::Undefined();
+		CVsdImage *obj2 = GetThis<CVsdImage>( Image2 );
+		if( !obj2 ) return v8::Undefined();
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->PutImage(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
-			*GetThis<CVsdImage>( Image2 )
+			*obj2
 		);
 		
 		return v8::Integer::New( ret );
 	}
 	static v8::Handle<v8::Value> Func_DrawLine( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( DrawLine, 5 <= iLen && iLen <= 7 );
+		if( CheckArgs( 5 <= iLen && iLen <= 7 )) return v8::Undefined();
 		
-		GetThis<CVsdFilter>( args.This())->DrawLine(
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawLine(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
@@ -156,9 +158,11 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawRect( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( DrawRect, iLen == 6 );
+		if( CheckArgs( iLen == 6 )) return v8::Undefined();
 		
-		GetThis<CVsdFilter>( args.This())->DrawRect(
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawRect(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
@@ -171,9 +175,11 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawCircle( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( DrawCircle, 4 <= iLen && iLen <= 5 );
+		if( CheckArgs( 4 <= iLen && iLen <= 5 )) return v8::Undefined();
 		
-		GetThis<CVsdFilter>( args.This())->DrawCircle(
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawCircle(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
@@ -185,15 +191,19 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawText( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( DrawText, 5 <= iLen && iLen <= 6 );
+		if( CheckArgs( 5 <= iLen && iLen <= 6 )) return v8::Undefined();
 		v8::String::AsciiValue str2( args[ 2 ] );
 		v8::Local<v8::Object> Font3 = args[ 3 ]->ToObject();
-		CheckClass( Font3, "Font", "arg[ 4 ] must be Font" );
-		GetThis<CVsdFilter>( args.This())->DrawText(
+		if( CheckClass( Font3, "Font", "arg[ 4 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj3 = GetThis<CVsdFont>( Font3 );
+		if( !obj3 ) return v8::Undefined();
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawText(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			*str2,
-			*GetThis<CVsdFont>( Font3 ),
+			*obj3,
 			PIXEL_RABY::Argb2Raby( args[ 4 ]->Int32Value()),
 			iLen <= 5 ? 0 : PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value())
 		);
@@ -202,9 +212,11 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawGSnake( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( DrawGSnake, iLen == 7 );
+		if( CheckArgs( iLen == 7 )) return v8::Undefined();
 		
-		GetThis<CVsdFilter>( args.This())->DrawGSnake(
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawGSnake(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
@@ -218,39 +230,49 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawMeterPanel0( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( DrawMeterPanel0, iLen == 5 );
+		if( CheckArgs( iLen == 5 )) return v8::Undefined();
 		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
-		CheckClass( Font4, "Font", "arg[ 5 ] must be Font" );
-		GetThis<CVsdFilter>( args.This())->DrawMeterPanel0(
+		if( CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj4 = GetThis<CVsdFont>( Font4 );
+		if( !obj4 ) return v8::Undefined();
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawMeterPanel0(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
 			args[ 3 ]->Int32Value(),
-			*GetThis<CVsdFont>( Font4 )
+			*obj4
 		);
 		
 		return v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Func_DrawMeterPanel1( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( DrawMeterPanel1, iLen == 5 );
+		if( CheckArgs( iLen == 5 )) return v8::Undefined();
 		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
-		CheckClass( Font4, "Font", "arg[ 5 ] must be Font" );
-		GetThis<CVsdFilter>( args.This())->DrawMeterPanel1(
+		if( CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj4 = GetThis<CVsdFont>( Font4 );
+		if( !obj4 ) return v8::Undefined();
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawMeterPanel1(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
 			args[ 3 ]->Int32Value(),
-			*GetThis<CVsdFont>( Font4 )
+			*obj4
 		);
 		
 		return v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Func_DrawMap( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( DrawMap, iLen == 9 );
+		if( CheckArgs( iLen == 9 )) return v8::Undefined();
 		
-		GetThis<CVsdFilter>( args.This())->DrawMap(
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawMap(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
@@ -266,13 +288,17 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawLapTime( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( DrawLapTime, iLen == 7 );
+		if( CheckArgs( iLen == 7 )) return v8::Undefined();
 		v8::Local<v8::Object> Font2 = args[ 2 ]->ToObject();
-		CheckClass( Font2, "Font", "arg[ 3 ] must be Font" );
-		GetThis<CVsdFilter>( args.This())->DrawLapTime(
+		if( CheckClass( Font2, "Font", "arg[ 3 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj2 = GetThis<CVsdFont>( Font2 );
+		if( !obj2 ) return v8::Undefined();
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawLapTime(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
-			*GetThis<CVsdFont>( Font2 ),
+			*obj2,
 			PIXEL_RABY::Argb2Raby( args[ 3 ]->Int32Value()),
 			PIXEL_RABY::Argb2Raby( args[ 4 ]->Int32Value()),
 			PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
@@ -283,9 +309,11 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawNeedle( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( DrawNeedle, 7 <= iLen && iLen <= 8 );
+		if( CheckArgs( 7 <= iLen && iLen <= 8 )) return v8::Undefined();
 		
-		GetThis<CVsdFilter>( args.This())->DrawNeedle(
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawNeedle(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
@@ -303,8 +331,32 @@ class CVsdFilterIF {
 	// this へのアクセスヘルパ
 	template<typename T>
 	static T* GetThis( v8::Local<v8::Object> handle ){
-		 void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
-		 return static_cast<T*>( pThis );
+		if( handle->GetInternalField( 0 )->IsUndefined()){
+			v8::ThrowException( v8::Exception::TypeError( v8::String::New( "Invalid object ( maybe \"new\" failed )" )));
+			return NULL;
+		}
+		
+		void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
+		return static_cast<T*>( pThis );
+	}
+	
+	// 引数の数チェック
+	static BOOL CheckArgs( BOOL cond ){
+		if( !( cond )){
+			v8::ThrowException( v8::Exception::Error( v8::String::New(
+				"invalid number of args"
+			)));
+			return TRUE;
+		}
+		return FALSE;
+	}
+	
+	static BOOL CheckClass( v8::Local<v8::Object> obj, char *name, char *msg ){
+		if( strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name )){
+			v8::ThrowException( v8::Exception::TypeError( v8::String::New( msg )));
+			return TRUE;
+		}
+		return FALSE;
 	}
 	
 	// クラステンプレートの初期化
@@ -360,7 +412,7 @@ class CVsdImageIF {
 		CVsdImage* obj = new CVsdImage();
 		v8::String::AsciiValue FileName( args[ 0 ] );
 		
-		if( obj->Load( *FileName ) != ERROR_OK ){
+		if( obj->Load( *FileName ) != ERR_OK ){
 			delete obj;
 			return v8::Undefined();
 		}
@@ -382,35 +434,24 @@ class CVsdImageIF {
 		delete static_cast<CVsdImage*>( pVoid );
 	}
 	
-	/*** マクロ *****************************************************************/
-	
-	#define CheckArgs( func, cond ) \
-		if( !( cond )){ \
-			return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( \
-				#func ":invalid number of args" \
-			))); \
-		}
-	
-	#define CheckClass( obj, name, msg ) \
-		if( \
-			obj.IsEmpty() || \
-			strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name ) \
-		) return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( msg )))
-	
 	///// プロパティアクセサ /////
 	static v8::Handle<v8::Value> Get_Width( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		 return v8::Integer::New( GetThis<CVsdImage>( info.Holder())->m_iWidth );
+		CVsdImage *obj = GetThis<CVsdImage>( info.Holder());
+		return obj ? v8::Integer::New( obj->m_iWidth ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_Height( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		 return v8::Integer::New( GetThis<CVsdImage>( info.Holder())->m_iHeight );
+		CVsdImage *obj = GetThis<CVsdImage>( info.Holder());
+		return obj ? v8::Integer::New( obj->m_iHeight ) : v8::Undefined();
 	}
 
 	///// メソッドコールバック /////
 	static v8::Handle<v8::Value> Func_Resize( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( Resize, iLen == 2 );
+		if( CheckArgs( iLen == 2 )) return v8::Undefined();
 		
-		int ret = GetThis<CVsdImage>( args.This())->Resize(
+		CVsdImage *thisObj = GetThis<CVsdImage>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->Resize(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value()
 		);
@@ -419,9 +460,11 @@ class CVsdImageIF {
 	}
 	static v8::Handle<v8::Value> Func_Rotate( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( Rotate, iLen == 3 );
+		if( CheckArgs( iLen == 3 )) return v8::Undefined();
 		
-		int ret = GetThis<CVsdImage>( args.This())->Rotate(
+		CVsdImage *thisObj = GetThis<CVsdImage>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->Rotate(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->NumberValue()
@@ -434,8 +477,32 @@ class CVsdImageIF {
 	// this へのアクセスヘルパ
 	template<typename T>
 	static T* GetThis( v8::Local<v8::Object> handle ){
-		 void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
-		 return static_cast<T*>( pThis );
+		if( handle->GetInternalField( 0 )->IsUndefined()){
+			v8::ThrowException( v8::Exception::TypeError( v8::String::New( "Invalid object ( maybe \"new\" failed )" )));
+			return NULL;
+		}
+		
+		void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
+		return static_cast<T*>( pThis );
+	}
+	
+	// 引数の数チェック
+	static BOOL CheckArgs( BOOL cond ){
+		if( !( cond )){
+			v8::ThrowException( v8::Exception::Error( v8::String::New(
+				"invalid number of args"
+			)));
+			return TRUE;
+		}
+		return FALSE;
+	}
+	
+	static BOOL CheckClass( v8::Local<v8::Object> obj, char *name, char *msg ){
+		if( strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name )){
+			v8::ThrowException( v8::Exception::TypeError( v8::String::New( msg )));
+			return TRUE;
+		}
+		return FALSE;
 	}
 	
 	// クラステンプレートの初期化
@@ -493,32 +560,20 @@ class CVsdFontIF {
 		delete static_cast<CVsdFont*>( pVoid );
 	}
 	
-	/*** マクロ *****************************************************************/
-	
-	#define CheckArgs( func, cond ) \
-		if( !( cond )){ \
-			return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( \
-				#func ":invalid number of args" \
-			))); \
-		}
-	
-	#define CheckClass( obj, name, msg ) \
-		if( \
-			obj.IsEmpty() || \
-			strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name ) \
-		) return v8::ThrowException( v8::Exception::SyntaxError( v8::String::New( msg )))
-	
 	///// プロパティアクセサ /////
 	static v8::Handle<v8::Value> Get_Height( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		 return v8::Integer::New( GetThis<CVsdFont>( info.Holder())->GetHeight() );
+		CVsdFont *obj = GetThis<CVsdFont>( info.Holder());
+		return obj ? v8::Integer::New( obj->GetHeight() ) : v8::Undefined();
 	}
 
 	///// メソッドコールバック /////
 	static v8::Handle<v8::Value> Func_GetTextWidth( const v8::Arguments& args ){
 		int iLen = args.Length();
-		CheckArgs( GetTextWidth, iLen == 1 );
+		if( CheckArgs( iLen == 1 )) return v8::Undefined();
 		v8::String::AsciiValue str0( args[ 0 ] );
-		int ret = GetThis<CVsdFont>( args.This())->GetTextWidth(
+		CVsdFont *thisObj = GetThis<CVsdFont>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->GetTextWidth(
 			*str0
 		);
 		
@@ -529,8 +584,32 @@ class CVsdFontIF {
 	// this へのアクセスヘルパ
 	template<typename T>
 	static T* GetThis( v8::Local<v8::Object> handle ){
-		 void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
-		 return static_cast<T*>( pThis );
+		if( handle->GetInternalField( 0 )->IsUndefined()){
+			v8::ThrowException( v8::Exception::TypeError( v8::String::New( "Invalid object ( maybe \"new\" failed )" )));
+			return NULL;
+		}
+		
+		void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
+		return static_cast<T*>( pThis );
+	}
+	
+	// 引数の数チェック
+	static BOOL CheckArgs( BOOL cond ){
+		if( !( cond )){
+			v8::ThrowException( v8::Exception::Error( v8::String::New(
+				"invalid number of args"
+			)));
+			return TRUE;
+		}
+		return FALSE;
+	}
+	
+	static BOOL CheckClass( v8::Local<v8::Object> obj, char *name, char *msg ){
+		if( strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name )){
+			v8::ThrowException( v8::Exception::TypeError( v8::String::New( msg )));
+			return TRUE;
+		}
+		return FALSE;
 	}
 	
 	// クラステンプレートの初期化
