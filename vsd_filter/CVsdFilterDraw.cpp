@@ -21,6 +21,7 @@
 #include "pixel.h"
 #include "CVsdImage.h"
 #include "CVsdFilter.h"
+#include "error_code.h"
 
 /*** macros *****************************************************************/
 
@@ -57,7 +58,6 @@
 #define SelectLogForLapTime	( Log = m_iLapMode == LAPMODE_MAGNET || m_iLapMode == LAPMODE_HAND_MAGNET ? m_VsdLog : m_GPSLog )
 
 #define DEFAULT_FONT	"ＭＳ ゴシック"
-// #define DEFAULT_FONT	"FixedSys"
 
 /*** DrawLine ***************************************************************/
 
@@ -524,9 +524,11 @@ inline UINT CVsdFilter::BlendColor(
 #define	color_black		PIXEL_RABY::Argb2Raby( 0x00000000 )
 #define	color_white		PIXEL_RABY::Argb2Raby( 0x00FFFFFF )
 #define	color_blue		PIXEL_RABY::Argb2Raby( 0x000000FF )
+#define	color_red		PIXEL_RABY::Argb2Raby( 0x00FF0000 )
 #define	color_cyan		PIXEL_RABY::Argb2Raby( 0x0000FFFF )
 #define	color_orange	PIXEL_RABY::Argb2Raby( 0x00FF4000 )
 #define	color_gray_a	PIXEL_RABY::Argb2Raby( 0x80404040 )
+#define	color_black_a	PIXEL_RABY::Argb2Raby( 0x40000000 )
 
 #define COLOR_PANEL		color_gray_a
 #define COLOR_SCALE		color_white
@@ -1028,6 +1030,24 @@ void CVsdFilter::DrawMeterPanel1(
 	}
 }
 
+/*** エラーメッセージ *******************************************************/
+
+void CVsdFilter::DispErrorMessage( char *szMsg ){
+	DrawRect( 0, 0, GetWidth() - 1, GetHeight() - 1, color_black_a, IMG_FILL );
+	
+	int x = 0; int y = 0;
+	
+	for( ; *szMsg; ++szMsg ){
+		if( *szMsg == '\n' ){
+			// 改行
+			x = 0;
+			y += m_pFont->GetHeight();
+		}else{
+			x += DrawFont( x, y, *szMsg, *m_pFont, color_red );
+		}
+	}
+}
+
 /*** メーター等描画 *********************************************************/
 
 BOOL CVsdFilter::DrawVSD( void ){
@@ -1036,7 +1056,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	// フォントサイズ初期化
 	if( m_pFont == NULL ){
-		m_pFont = new CVsdFont( DEFAULT_FONT, 20, CVsdFont::ATTR_OUTLINE );
+		m_pFont = new CVsdFont( DEFAULT_FONT, 18, CVsdFont::ATTR_OUTLINE );
 	}
 	
 	CVsdLog *Log;
@@ -1105,14 +1125,24 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	if( !m_Script && *m_szSkinFile ){
 		m_Script = new CScript( this );
-		m_Script->Initialize( m_szSkinFile );
-		m_Script->Run( "Initialize" );
+		if(
+			m_Script->Initialize( m_szSkinFile ) != ERROR_OK ||
+			m_Script->Run( "Initialize" ) != ERROR_OK
+		){
+			m_Script->m_bError = TRUE;
+		}
 	}
 	
-	if( m_Script ){
-		m_Script->Run( "Draw" );
+	if( m_Script && !m_Script->m_bError ){
+		if( m_Script->Run( "Draw" ) != ERROR_OK ){
+			m_Script->m_bError = TRUE;
+		}
 	}else{
 		DrawText( 0, 0, "Skin not loaded.", *m_pFont, COLOR_STR, color_black );
+	}
+	
+	if( m_Script && m_Script->m_bError ){
+		DispErrorMessage( m_Script->m_szErrorMsg ? m_Script->m_szErrorMsg : "Unknown error" );
 	}
 	
 #if 0

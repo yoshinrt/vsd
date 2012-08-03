@@ -124,7 +124,8 @@ sub MakeJsIF {
 					$_ = $1;
 					
 					push( @Defs, "v8::Local<v8::Object> $_$ArgNum = args[ $ArgPos ]->ToObject();" );
-					push( @Defs, "CheckClass( $_$ArgNum, \"$_\", \"arg[ $ArgPos ] must be $_\" );" );
+					$ArgPos_p1 = $ArgPos + 1;
+					push( @Defs, "CheckClass( $_$ArgNum, \"$_\", \"arg[ $ArgPos_p1 ] must be $_\" );" );
 					$Args[ $ArgNum ] = "*GetThis<$Type>( $_$ArgNum )";
 				}
 				

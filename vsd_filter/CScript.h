@@ -13,10 +13,16 @@ class CScript {
 	CScript( CVsdFilter *pVsd );
 	~CScript( void );
 	
-	BOOL Initialize( char *szFileName );
-	BOOL Run( const char *szFunc );
+	UINT Initialize( char *szFileName );
+	UINT Run( const char *szFunc );
+	
+	const char* ToCString( const v8::String::Utf8Value& value );
+	void ReportException( v8::TryCatch* try_catch );
 	
 	static CVsdFilter	*m_Vsd;	// ÉGÅc
+	
+	char *m_szErrorMsg;
+	BOOL m_bError;
 	
   private:
 	v8::Persistent<v8::Context> m_context;

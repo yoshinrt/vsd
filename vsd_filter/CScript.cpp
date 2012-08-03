@@ -21,45 +21,56 @@
 using namespace v8;
 
 // Extracts a C string from a V8 Utf8Value.
-const char* ToCString(const String::Utf8Value& value) {
-  return *value ? *value : "<string conversion failed>";
+const char* CScript::ToCString( const String::Utf8Value& value ){
+	return *value ? *value : "<string conversion failed>";
 }
 
-void ReportException(TryCatch* try_catch) {
-  HandleScope handle_scope;
-  String::Utf8Value exception(try_catch->Exception());
-  const char* exception_string = ToCString(exception);
-  Handle<Message> message = try_catch->Message();
-  if (message.IsEmpty()) {
-    // V8 didn't provide any extra information about this error; just
-    // print the exception.
-    DebugMsgD("%s\n", exception_string);
-  } else {
-    // Print (filename):(line number): (message).
-    String::Utf8Value filename(message->GetScriptResourceName());
-    const char* filename_string = ToCString(filename);
-    int linenum = message->GetLineNumber();
-    DebugMsgD("%s:%i: %s\n", filename_string, linenum, exception_string);
-    // Print line of source code.
-    String::Utf8Value sourceline(message->GetSourceLine());
-    const char* sourceline_string = ToCString(sourceline);
-    DebugMsgD("%s\n", sourceline_string);
-    // Print wavy underline (GetUnderline is deprecated).
-    int start = message->GetStartColumn();
-    for (int i = 0; i < start; i++) {
-      DebugMsgD(" ");
-    }
-    int end = message->GetEndColumn();
-    for (int i = start; i < end; i++) {
-      DebugMsgD("^");
-    }
-    DebugMsgD("\n");
-    String::Utf8Value stack_trace(try_catch->StackTrace());
-    if (stack_trace.length() > 0) {
-      const char* stack_trace_string = ToCString(stack_trace);
-      DebugMsgD("%s\n", stack_trace_string);
-    }
-  }
+void CScript::ReportException( TryCatch* try_catch ){
+	HandleScope handle_scope;
+	String::Utf8Value exception( try_catch->Exception());
+	const char* exception_string = ToCString( exception );
+	Handle<Message> message = try_catch->Message();
+	
+	m_szErrorMsg = new char[ 10240 ];
+	char *p = m_szErrorMsg;
+	
+	if ( message.IsEmpty()){
+		// V8 didn't provide any extra information about this error; just
+		// print the exception.
+		sprintf( p, "%s\n", exception_string );
+		p = strchr( p, '\0' );
+	}else{
+		// Print ( filename ):( line number ): ( message ).
+		String::Utf8Value filename( message->GetScriptResourceName());
+		const char* filename_string = ToCString( filename );
+		int linenum = message->GetLineNumber();
+		sprintf( p, "%s:%i: %s\n", filename_string, linenum, exception_string );
+		p = strchr( p, '\0' );
+		// Print line of source code.
+		String::Utf8Value sourceline( message->GetSourceLine());
+		const char* sourceline_string = ToCString( sourceline );
+		sprintf( p, "%s\n", sourceline_string );
+		p = strchr( p, '\0' );
+		// Print wavy underline ( GetUnderline is deprecated ).
+		int start = message->GetStartColumn();
+		for ( int i = 0; i < start; i++ ){
+			sprintf( p, " " );
+			p = strchr( p, '\0' );
+		}
+		int end = message->GetEndColumn();
+		for ( int i = start; i < end; i++ ){
+			sprintf( p, "^" );
+			p = strchr( p, '\0' );
+		}
+		sprintf( p, "\n" );
+		p = strchr( p, '\0' );
+		String::Utf8Value stack_trace( try_catch->StackTrace());
+		if ( stack_trace.length() > 0 ){
+			const char* stack_trace_string = ToCString( stack_trace );
+			sprintf( p, "%s\n", stack_trace_string );
+			p = strchr( p, '\0' );
+		}
+	}
 }
 
 /*** static メンバ（；´д⊂）***********************************************/
@@ -70,20 +81,23 @@ CVsdFilter *CScript::m_Vsd;
 
 CScript::CScript( CVsdFilter *pVsd ){
 	m_context.Clear();
-	m_Vsd = pVsd;
+	m_Vsd			= pVsd;
+	m_szErrorMsg	= NULL;
+	m_bError		= FALSE;
 }
 
 /*** デストラクタ ***********************************************************/
 
 CScript::~CScript(){
 	m_context.Dispose();
+	delete [] m_szErrorMsg;
 }
 
 /*** ロード・コンパイル *****************************************************/
 
 #define SCRIPT_SIZE	( 64 * 1024 )
 
-BOOL CScript::Initialize( char *szFileName ){
+UINT CScript::Initialize( char *szFileName ){
 	// 準備
 	HandleScope handle_scope;
 	
@@ -126,7 +140,7 @@ BOOL CScript::Initialize( char *szFileName ){
 	if( script.IsEmpty()){
 		// Print errors that happened during compilation.
 		ReportException( &try_catch );
-		return false;
+		return FALSE;
 	}
 	
 	// とりあえず初期化処理
@@ -136,29 +150,42 @@ BOOL CScript::Initialize( char *szFileName ){
 		assert( try_catch.HasCaught());
 		// Print errors that happened during execution.
 		ReportException( &try_catch );
-		return FALSE;
-	}else{
-		assert( !try_catch.HasCaught());
-		if( !result->IsUndefined()) {
-			// If all went well and the result wasn't undefined then print
-			// the returned value.
-			String::Utf8Value str( result );
-			const char* cstr = ToCString( str );
-			DebugMsgD( "%s\n", cstr );
-		}
-		return TRUE;
+		return ERROR_SCRIPT;
 	}
 	
-	return TRUE;
+	assert( !try_catch.HasCaught());
+	if( !result->IsUndefined()) {
+		// If all went well and the result wasn't undefined then print
+		// the returned value.
+		return result->Int32Value();
+	}
+	return ERROR_OK;
 }
 
 /*** function 名指定実行，引数なし ******************************************/
 
-BOOL CScript::Run( const char *szFunc ){
+UINT CScript::Run( const char *szFunc ){
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_context );
 	
+	TryCatch try_catch;
+	
 	Local<Function> hFunction = Local<Function>::Cast( m_context->Global()->Get( String::New( szFunc )));
 	Handle<Value> result = hFunction->Call( hFunction, 0, 0 );
-	return TRUE;
+	
+	if( result.IsEmpty()){
+		//assert( try_catch.HasCaught());
+		try_catch.HasCaught();
+		// Print errors that happened during execution.
+		ReportException( &try_catch );
+		return ERROR_SCRIPT;
+	}
+	
+	assert( !try_catch.HasCaught());
+	if( !result->IsUndefined()) {
+		// If all went well and the result wasn't undefined then print
+		// the returned value.
+		return result->Int32Value();
+	}
+	return ERROR_OK;
 }

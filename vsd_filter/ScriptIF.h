@@ -125,6 +125,19 @@ class CVsdFilterIF {
 		
 		return v8::Undefined();
 	}
+	static v8::Handle<v8::Value> Func_PutImage( const v8::Arguments& args ){
+		int iLen = args.Length();
+		CheckArgs( PutImage, iLen == 3 );
+		v8::Local<v8::Object> Image2 = args[ 2 ]->ToObject();
+		CheckClass( Image2, "Image", "arg[ 3 ] must be Image" );
+		int ret = GetThis<CVsdFilter>( args.This())->PutImage(
+			args[ 0 ]->Int32Value(),
+			args[ 1 ]->Int32Value(),
+			*GetThis<CVsdImage>( Image2 )
+		);
+		
+		return v8::Integer::New( ret );
+	}
 	static v8::Handle<v8::Value> Func_DrawLine( const v8::Arguments& args ){
 		int iLen = args.Length();
 		CheckArgs( DrawLine, 5 <= iLen && iLen <= 7 );
@@ -175,7 +188,7 @@ class CVsdFilterIF {
 		CheckArgs( DrawText, 5 <= iLen && iLen <= 6 );
 		v8::String::AsciiValue str2( args[ 2 ] );
 		v8::Local<v8::Object> Font3 = args[ 3 ]->ToObject();
-		CheckClass( Font3, "Font", "arg[ 3 ] must be Font" );
+		CheckClass( Font3, "Font", "arg[ 4 ] must be Font" );
 		GetThis<CVsdFilter>( args.This())->DrawText(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
@@ -207,7 +220,7 @@ class CVsdFilterIF {
 		int iLen = args.Length();
 		CheckArgs( DrawMeterPanel0, iLen == 5 );
 		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
-		CheckClass( Font4, "Font", "arg[ 4 ] must be Font" );
+		CheckClass( Font4, "Font", "arg[ 5 ] must be Font" );
 		GetThis<CVsdFilter>( args.This())->DrawMeterPanel0(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
@@ -222,7 +235,7 @@ class CVsdFilterIF {
 		int iLen = args.Length();
 		CheckArgs( DrawMeterPanel1, iLen == 5 );
 		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
-		CheckClass( Font4, "Font", "arg[ 4 ] must be Font" );
+		CheckClass( Font4, "Font", "arg[ 5 ] must be Font" );
 		GetThis<CVsdFilter>( args.This())->DrawMeterPanel1(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
@@ -255,7 +268,7 @@ class CVsdFilterIF {
 		int iLen = args.Length();
 		CheckArgs( DrawLapTime, iLen == 7 );
 		v8::Local<v8::Object> Font2 = args[ 2 ]->ToObject();
-		CheckClass( Font2, "Font", "arg[ 2 ] must be Font" );
+		CheckClass( Font2, "Font", "arg[ 3 ] must be Font" );
 		GetThis<CVsdFilter>( args.This())->DrawLapTime(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
@@ -284,19 +297,6 @@ class CVsdFilterIF {
 		);
 		
 		return v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Func_PutImage( const v8::Arguments& args ){
-		int iLen = args.Length();
-		CheckArgs( PutImage, iLen == 3 );
-		v8::Local<v8::Object> Image2 = args[ 2 ]->ToObject();
-		CheckClass( Image2, "Image", "arg[ 2 ] must be Image" );
-		int ret = GetThis<CVsdFilter>( args.This())->PutImage(
-			args[ 0 ]->Int32Value(),
-			args[ 1 ]->Int32Value(),
-			*GetThis<CVsdImage>( Image2 )
-		);
-		
-		return v8::Integer::New( ret );
 	}
 
   public:
@@ -331,6 +331,7 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawArc" ), v8::FunctionTemplate::New( Func_DrawArc ));
 		proto->Set( v8::String::New( "print" ), v8::FunctionTemplate::New( Func_print ));
 		proto->Set( v8::String::New( "PutPixel" ), v8::FunctionTemplate::New( Func_PutPixel ));
+		proto->Set( v8::String::New( "PutImage" ), v8::FunctionTemplate::New( Func_PutImage ));
 		proto->Set( v8::String::New( "DrawLine" ), v8::FunctionTemplate::New( Func_DrawLine ));
 		proto->Set( v8::String::New( "DrawRect" ), v8::FunctionTemplate::New( Func_DrawRect ));
 		proto->Set( v8::String::New( "DrawCircle" ), v8::FunctionTemplate::New( Func_DrawCircle ));
@@ -341,7 +342,6 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawMap" ), v8::FunctionTemplate::New( Func_DrawMap ));
 		proto->Set( v8::String::New( "DrawLapTime" ), v8::FunctionTemplate::New( Func_DrawLapTime ));
 		proto->Set( v8::String::New( "DrawNeedle" ), v8::FunctionTemplate::New( Func_DrawNeedle ));
-		proto->Set( v8::String::New( "PutImage" ), v8::FunctionTemplate::New( Func_PutImage ));
 
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "Vsd" ), tmpl );

@@ -205,6 +205,8 @@ class CVsdFilter {
 		int iWidth // !default:1
 	);
 	
+	void DispErrorMessage( char *szMsg );
+	
 	enum {
 		IMG_FILL	= ( 1 << 0 ),
 	};
