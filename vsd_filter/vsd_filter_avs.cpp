@@ -232,6 +232,9 @@ UINT CVsdFilterAvs::PutImage(
 	int yst = ( y >= 0 ) ? 0 : -y;
 	int yed = y + img.m_iHeight <= GetHeight() ? img.m_iHeight : GetHeight() - y;
 	
+	#ifdef _OPENMP
+		#pragma omp parallel for
+	#endif
 	for( int y1 = yst; y1 < yed; ++y1 ){
 		
 		int	iIndex = GetIndex( x + xst, y + y1 );

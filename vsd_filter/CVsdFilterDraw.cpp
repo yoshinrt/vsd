@@ -142,6 +142,9 @@ void CVsdFilter::DrawRect(
 	if( x1 > x2 ) SWAP( x1, x2, y );
 	
 	if( uFlag & IMG_FILL ){
+		#ifdef _OPENMP
+			#pragma omp parallel for
+		#endif
 		for( y = y1; y <= y2; ++y ){
 			FillLine( x1, y, x2, uColor, 0 );
 		}
@@ -377,8 +380,6 @@ void CVsdFilter::DrawArc(
 
 int CVsdFilter::DrawFont0( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor ){
 	
-	int	i, j;
-	
 	// •¶Žš•‚ð“¾‚é
 	CFontGlyph &FontGlyph = Font.FontGlyph( c );
 	
@@ -386,7 +387,10 @@ int CVsdFilter::DrawFont0( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor )
 	int iCellIncX = Font.IsFixed() ? Font.GetWidth() : FontGlyph.iCellIncX;
 	int iOrgX = ( iCellIncX - FontGlyph.iW ) / 2;
 	
-	for( j = 0; j < FontGlyph.iH; ++j ) for( i = 0; i < FontGlyph.iW; ++i ){
+	#ifdef _OPENMP
+		#pragma omp parallel for
+	#endif
+	for( int j = 0; j < FontGlyph.iH; ++j ) for( int i = 0; i < FontGlyph.iW; ++i ){
 		int iDensity = FontGlyph.pBuf[ iBmpW * j + i ];	// 0`64
 		
 		if( iDensity ){
@@ -490,6 +494,9 @@ inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc
 /*** ƒ|ƒŠƒSƒ“•`‰æ ***********************************************************/
 
 inline void CVsdFilter::PolygonClear( void ){
+	#ifdef _OPENMP
+		#pragma omp parallel for
+	#endif
 	for( int y = 0; y < GetHeight(); ++y ){
 		m_Polygon[ y ].iRight	= 0;		// right
 		m_Polygon[ y ].iLeft	= 0x7FFF;	// left
@@ -497,6 +504,9 @@ inline void CVsdFilter::PolygonClear( void ){
 }
 
 inline void CVsdFilter::PolygonDraw( const PIXEL_YCA_ARG yc ){
+	#ifdef _OPENMP
+		#pragma omp parallel for
+	#endif
 	for( int y = 0; y < GetHeight(); ++y ) if( m_Polygon[ y ].iLeft <= m_Polygon[ y ].iRight ){
 		FillLine( m_Polygon[ y ].iLeft, y, m_Polygon[ y ].iRight, yc );
 	}

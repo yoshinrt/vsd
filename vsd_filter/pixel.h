@@ -35,6 +35,8 @@ class PIXEL_YCA {
 		};
 	};
 	
+	PIXEL_YCA(){};
+	
 	PIXEL_YCA( UINT uColor ){
 		Set( uColor );
 	}

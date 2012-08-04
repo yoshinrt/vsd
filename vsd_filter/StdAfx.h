@@ -23,6 +23,10 @@
 #include <zconf.h>
 #include <zlib.h>
 
+#ifdef _OPENMP
+	#include <omp.h>
+#endif
+
 #define ToRAD		( M_PI / 180 )
 
 #endif//__STDAFX_H__
