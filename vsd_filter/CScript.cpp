@@ -83,7 +83,17 @@ CVsdFilter *CScript::m_Vsd;
 /*** コンストラクタ *********************************************************/
 
 CScript::CScript( CVsdFilter *pVsd ){
-	m_context.Clear();
+	DebugMsgD( ":CScript::CScript():%X\n", GetCurrentThreadId());
+	m_pIsolate = v8::Isolate::New();
+	
+	#ifdef AVS_PLUGIN
+		v8::Isolate::Scope IsolateScope( m_pIsolate );
+	#endif
+	
+	DebugMsgD( ":CScript::CScript():m_pIsolate = %X\n", m_pIsolate );
+	
+	DebugMsgD( ":CScript::CScript():m_Context\n" );
+	m_Context.Clear();
 	m_Vsd			= pVsd;
 	m_szErrorMsg	= NULL;
 	m_bError		= FALSE;
@@ -92,8 +102,14 @@ CScript::CScript( CVsdFilter *pVsd ){
 /*** デストラクタ ***********************************************************/
 
 CScript::~CScript(){
-	m_context.Dispose();
+	#ifdef AVS_PLUGIN
+		v8::Isolate::Scope IsolateScope( m_pIsolate );
+	#endif
+	DebugMsgD( ":CScript::~CScript():%X\n", GetCurrentThreadId());
+	DebugMsgD( ":CScript::~CScript():m_pIsolate = %X\n", m_pIsolate );
+	m_Context.Dispose();
 	delete [] m_szErrorMsg;
+//	m_pIsolate->Dispose();
 }
 
 /*** ロード・コンパイル *****************************************************/
@@ -101,6 +117,10 @@ CScript::~CScript(){
 #define SCRIPT_SIZE	( 64 * 1024 )
 
 UINT CScript::Initialize( char *szFileName ){
+	#ifdef AVS_PLUGIN
+		v8::Isolate::Scope IsolateScope( m_pIsolate );
+	#endif
+	
 	// 準備
 	HandleScope handle_scope;
 	
@@ -113,7 +133,7 @@ UINT CScript::Initialize( char *szFileName ){
 	CVsdFilterIF::InitializeClass( global );
 	
 	// グローバルオブジェクトから環境を生成
-	m_context = Context::New( NULL, global );
+	m_Context = Context::New( NULL, global );
 	
 	TryCatch try_catch;
 	
@@ -134,7 +154,7 @@ UINT CScript::Initialize( char *szFileName ){
 	delete [] szBuf;
 	
 	// 環境からスコープを生成
-	Context::Scope context_scope( m_context );
+	Context::Scope context_scope( m_Context );
 	
 	Handle<Script> script = Script::Compile(
 		ScriptBody, String::New( szFileName )
@@ -168,12 +188,16 @@ UINT CScript::Initialize( char *szFileName ){
 /*** function 名指定実行，引数なし ******************************************/
 
 UINT CScript::Run( const char *szFunc ){
+	#ifdef AVS_PLUGIN
+		v8::Isolate::Scope IsolateScope( m_pIsolate );
+	#endif
+	
 	HandleScope handle_scope;
-	Context::Scope context_scope( m_context );
+	Context::Scope context_scope( m_Context );
 	
 	TryCatch try_catch;
 	
-	Local<Function> hFunction = Local<Function>::Cast( m_context->Global()->Get( String::New( szFunc )));
+	Local<Function> hFunction = Local<Function>::Cast( m_Context->Global()->Get( String::New( szFunc )));
 	if( hFunction->IsUndefined()){
 		
 		if( !m_szErrorMsg ) m_szErrorMsg = new char[ 10240 ];

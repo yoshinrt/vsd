@@ -14,15 +14,11 @@
 #ifdef AVS_PLUGIN
 typedef UCHAR	PIXEL_t;
 
-typedef struct {
+class PIXEL_YCA {
+  public:
 	union {
-		// yuv 個別指定
-		struct {
-			UCHAR	y;
-			UCHAR	cb;
-			UCHAR	a;
-			UCHAR	cr;
-		};
+		// yuv 全部指定
+		UINT	ycbcr;
 		
 		// ycb / ycr アクセス
 		struct {
@@ -30,8 +26,13 @@ typedef struct {
 			USHORT	ycr;
 		};
 		
-		// yuv 全部指定
-		UINT	ycbcr;
+		// yuv 個別指定
+		struct {
+			UCHAR	y;
+			UCHAR	cb;		// -128～127 ではなくて 0～255
+			UCHAR	alfa;
+			UCHAR	cr;		// -128～127 ではなくて 0～255
+		};
 	};
 	
 	PIXEL_YCA( UINT uColor ){
@@ -41,10 +42,14 @@ typedef struct {
 	void Set( UINT uColor ){
 		ycbcr = uColor;
 	}
-} PIXEL_YCA;
+};
+
+#define PIXEL_YCA_ARG	PIXEL_YCA
 
 #else // !AVS_PLUGIN
 typedef short	PIXEL_t;
+
+#define PIXEL_YCA_ARG	PIXEL_YCA&
 
 class PIXEL_YCA {
   public:
@@ -62,6 +67,8 @@ class PIXEL_YCA {
 	}
 	
 	void Set( UINT uColor ){
+		uColor ^= 0x80008000;
+		
 		int ir = ( char )( uColor >> 24 );
 		int ia = ( uColor >> 16 ) & 0xFF;
 		int ib = ( char )( uColor >>  8 );

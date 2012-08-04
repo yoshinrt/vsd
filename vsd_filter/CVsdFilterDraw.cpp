@@ -64,7 +64,7 @@
 #define ABS( x )			(( x ) < 0 ? -( x ) : ( x ))
 #define SWAP( x, y, tmp )	( tmp = x, x = y, y = tmp )
 
-void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA& yc, UINT uFlag ){
+void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG yc, UINT uFlag ){
 	
 	int i;
 	
@@ -393,16 +393,17 @@ int CVsdFilter::DrawFont0( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor )
 			if( iDensity == 64 ){
 				PutPixel( x + iOrgX + i, y + FontGlyph.iOrgY + j, uColor, 0 );
 			}else{
-				int ir = ( char )( uColor >> 24 );
+				int ir = ( uColor >> 24 ) - 0x80;
 				int ia = ( 0xFF << 6 ) - (( 0xFF - (( uColor >> 16 ) & 0xFF )) * iDensity );
-				int ib = ( char )( uColor >>  8 );
+				int ib = (( uColor >>  8 ) & 0xFF ) - 0x80;
 				int iy = uColor & 0xFF;
 				
-				UINT uColorTmp =
+				UINT uColorTmp = (
 					(( ir * iDensity ) & ( 0xFF << 6 )) << ( 24 - 6 ) |
 					(( ia            ) & ( 0xFF << 6 )) << ( 16 - 6 ) |
 					(( ib * iDensity ) & ( 0xFF << 6 )) << (  8 - 6 ) |
-					(( iy * iDensity ) & ( 0xFF << 6 )) >> (      6 );
+					(( iy * iDensity ) & ( 0xFF << 6 )) >> (      6 )
+				) ^ 0x80008000;
 				
 				PutPixel( x + iOrgX + i, y + FontGlyph.iOrgY + j, uColorTmp, 0 );
 			}
@@ -450,7 +451,7 @@ inline void CVsdFilter::PutPixel( int x, int y, tRABY uColor, UINT uFlag ){
 	PutPixel( x, y, yc, uFlag );
 }
 
-inline void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA& yc, UINT uFlag ){
+inline void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA_ARG yc, UINT uFlag ){
 	
 	if( !( 0 <= y && y < GetHeight())) return;
 	
@@ -462,12 +463,12 @@ inline void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA& yc, UINT uFlag 
 		if( x < m_Polygon[ y ].iLeft  ){
 			m_Polygon[ y ].iLeft  = ( x < 0 ) ? 0 : x;
 		}
-	}else if( 0 <= x && x < GetWidth() && yc.alfa != 256 ){
-		PutPixelLow( x, y, yc );
+	}else if( 0 <= x && x < GetWidth() && yc.alfa < 255 ){
+		PutPixel( x, y, yc );
 	}
 }
 
-inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA& yc, UINT uFlag ){
+inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT uFlag ){
 	
 	if( uFlag & IMG_FILL ){
 		// ポリゴン描画
@@ -478,11 +479,11 @@ inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA& yc, U
 			if( x2 > m_Polygon[ y1 ].iRight ) m_Polygon[ y1 ].iRight = x2;
 			if( x1 < m_Polygon[ y1 ].iLeft  ) m_Polygon[ y1 ].iLeft  = x1;
 		}
-	}else if( 0 <= y1 && y1 < GetHeight() && yc.alfa != 256 ){
+	}else if( 0 <= y1 && y1 < GetHeight() && yc.alfa < 255 ){
 		if( x1 < 0 )         x1 = 0;
 		if( x2 > GetWidth()) x2 = GetWidth();
 		
-		FillLineLow( x1, y1, x2, yc );
+		FillLine( x1, y1, x2, yc );
 	}
 }
 
@@ -495,9 +496,9 @@ inline void CVsdFilter::PolygonClear( void ){
 	}
 }
 
-inline void CVsdFilter::PolygonDraw( const PIXEL_YCA& yc ){
+inline void CVsdFilter::PolygonDraw( const PIXEL_YCA_ARG yc ){
 	for( int y = 0; y < GetHeight(); ++y ) if( m_Polygon[ y ].iLeft <= m_Polygon[ y ].iRight ){
-		FillLineLow( m_Polygon[ y ].iLeft, y, m_Polygon[ y ].iRight, yc );
+		FillLine( m_Polygon[ y ].iLeft, y, m_Polygon[ y ].iRight, yc );
 	}
 }
 
@@ -520,15 +521,6 @@ inline UINT CVsdFilter::BlendColor(
 /****************************************************************************/
 /*** メーター描画 ***********************************************************/
 /****************************************************************************/
-											//   AARRGGBB
-#define	color_black		PIXEL_RABY::Argb2Raby( 0x00000000 )
-#define	color_white		PIXEL_RABY::Argb2Raby( 0x00FFFFFF )
-#define	color_blue		PIXEL_RABY::Argb2Raby( 0x000000FF )
-#define	color_red		PIXEL_RABY::Argb2Raby( 0x00FF0000 )
-#define	color_cyan		PIXEL_RABY::Argb2Raby( 0x0000FFFF )
-#define	color_orange	PIXEL_RABY::Argb2Raby( 0x00FF4000 )
-#define	color_gray_a	PIXEL_RABY::Argb2Raby( 0x80404040 )
-#define	color_black_a	PIXEL_RABY::Argb2Raby( 0x40000000 )
 
 #define COLOR_PANEL		color_gray_a
 #define COLOR_SCALE		color_white
@@ -1123,6 +1115,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	// スクリプト実行
 	
+	DebugMsgD( ":DrawVSD():Running script... %X\n", GetCurrentThreadId());
 	if( !m_Script && *m_szSkinFile ){
 		m_Script = new CScript( this );
 		if( m_Script->Initialize( m_szSkinFile ) != ERR_OK ){
@@ -1130,16 +1123,17 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 	}
 	
-	if( m_Script && !m_Script->m_bError ){
-		if( m_Script->Run( "Draw" ) != ERR_OK ){
-			m_Script->m_bError = TRUE;
+	if( m_Script ){
+		if( !m_Script->m_bError ){
+			if( m_Script->Run( "Draw" ) != ERR_OK ){
+				m_Script->m_bError = TRUE;
+			}
+		}
+		if( m_Script->m_bError ){
+			DispErrorMessage( m_Script->m_szErrorMsg ? m_Script->m_szErrorMsg : "Unknown error" );
 		}
 	}else{
-		DrawText( 0, 0, "Skin not loaded.", *m_pFont, COLOR_STR, color_black );
-	}
-	
-	if( m_Script && m_Script->m_bError ){
-		DispErrorMessage( m_Script->m_szErrorMsg ? m_Script->m_szErrorMsg : "Unknown error" );
+		DrawText( 0, 0, "Skin not loaded.", *m_pFont, COLOR_STR, color_white );
 	}
 	
 #if 0

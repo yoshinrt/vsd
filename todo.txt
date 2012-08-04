@@ -16,7 +16,6 @@
 ・メーター画像作成
 ・メーター目盛り作成汎用化
 ・Image の透明色指定
-・avs の PIXEL_YCA& を PIXEL_YCA 化
 ・OpenMP
 ・printf
 -----------------------

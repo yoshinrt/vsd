@@ -95,13 +95,13 @@ class CVsdFilter {
 		int x, int y, tRABY uColor,
 		UINT uFlag	// !default:0
 	);
-	void PutPixel( int x, int y, const PIXEL_YCA& yc, UINT uFlag );
-	void FillLine( int x1, int y1, int x2, const PIXEL_YCA& yc, UINT uFlag );
-	virtual void PutPixelLow( int x, int y, const PIXEL_YCA& yc ) = 0;
-	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA& yc ) = 0;
-	virtual UINT PutImage( int x, int y, CVsdImage &img ) = 0; // !js_func
+	void         PutPixel( int x, int y, const PIXEL_YCA_ARG yc, UINT uFlag );
+	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc ) = 0;
+	void         FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT uFlag );
+	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ) = 0;
+	virtual UINT PutImage( int x, int y, CVsdImage &img ) = 0;
 	
-	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA& yc, UINT uFlag );
+	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG yc, UINT uFlag );
 	void DrawLine( int x1, int y1, int x2, int y2, tRABY uColor, UINT uFlag );
 	void DrawLine(		// !js_func
 		int x1, int y1, int x2, int y2,
@@ -137,10 +137,10 @@ class CVsdFilter {
 	);
 	
 	int DrawFont0( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor );
-	int DrawFont( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor, tRABY uColorOutline = 0 );
+	int DrawFont( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor, tRABY uColorOutline = color_black );
 	void DrawText( // !js_func
 		int x, int y, char *szMsg, CVsdFont &Font, tRABY uColor,
-		tRABY uColorOutline = 0	// !default:0
+		tRABY uColorOutline = color_black	// !default:color_black
 	);
 	
 	void DrawSpeedGraph(
@@ -159,7 +159,7 @@ class CVsdFilter {
 	
 	// ƒ|ƒŠƒSƒ“•`ŽÊ
 	void PolygonClear( void );
-	void PolygonDraw( const PIXEL_YCA& yc );
+	void PolygonDraw( const PIXEL_YCA_ARG yc );
 	
 	UINT BlendColor(
 		tRABY uColor0,

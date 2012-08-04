@@ -16,9 +16,9 @@ class PIXEL_RABY {
 		UINT	raby;
 		struct {
 			UCHAR	y;
-			char	b;
+			UCHAR	b;
 			UCHAR	a;
-			char	r;
+			UCHAR	r;
 		};
 	};
 	
@@ -39,11 +39,12 @@ class PIXEL_RABY {
 	){
 		double dAlfa = ( 255 - a ) / 255.0;
 		
-		return
+		return (
 			((( int )(( 0.500 * r - 0.419 * g - 0.081 * b ) * dAlfa )        ) << 24 ) |
 			( a << 16 ) |
 			((( int )((-0.169 * r - 0.331 * g + 0.500 * b ) * dAlfa ) & 0xFF ) <<  8 ) |
-			((( int )(( 0.299 * r + 0.587 * g + 0.114 * b ) * dAlfa ) & 0xFF )       );
+			((( int )(( 0.299 * r + 0.587 * g + 0.114 * b ) * dAlfa ) & 0xFF )       )
+		) ^ 0x80008000;
 	}
 };
 
@@ -85,3 +86,15 @@ class CVsdImage {
   private:
 	PIXEL_RABY	*m_pBuf;
 };
+
+/****************************************************************************/
+
+											//   AARRGGBB
+#define	color_black		PIXEL_RABY::Argb2Raby( 0x00000000 )
+#define	color_white		PIXEL_RABY::Argb2Raby( 0x00FFFFFF )
+#define	color_blue		PIXEL_RABY::Argb2Raby( 0x000000FF )
+#define	color_red		PIXEL_RABY::Argb2Raby( 0x00FF0000 )
+#define	color_cyan		PIXEL_RABY::Argb2Raby( 0x0000FFFF )
+#define	color_orange	PIXEL_RABY::Argb2Raby( 0x00FF4000 )
+#define	color_gray_a	PIXEL_RABY::Argb2Raby( 0x80404040 )
+#define	color_black_a	PIXEL_RABY::Argb2Raby( 0x40000000 )

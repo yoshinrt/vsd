@@ -244,8 +244,8 @@ class CVsdFilterAvu : public CVsdFilter {
 	BOOL GPSLogLoad( const char *szFileName, HWND hwnd );
 	
 	// ‰¼‘zŠÖ”
-	virtual void PutPixelLow( int x, int y, const PIXEL_YCA& yc );
-	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA& yc );
+	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
+	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
 	virtual UINT PutImage( int x, int y, CVsdImage &img );
 	
 	virtual int	GetWidth( void ){ return fpip->w; }
@@ -311,7 +311,7 @@ inline void CVsdFilter::PutPixel( int x, int y, short iY, short iCr, short iCb )
 }
 */
 
-inline void CVsdFilterAvu::PutPixelLow( int x, int y, const PIXEL_YCA& yc ){
+inline void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
 	
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
@@ -327,7 +327,7 @@ inline void CVsdFilterAvu::PutPixelLow( int x, int y, const PIXEL_YCA& yc ){
 	}
 }
 
-inline void CVsdFilterAvu::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA& yc ){
+inline void CVsdFilterAvu::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ){
 	
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
@@ -352,9 +352,7 @@ inline void CVsdFilterAvu::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA&
 
 /*** PutImage ***************************************************************/
 
-UINT CVsdFilterAvu::PutImage(
-	int x, int y, CVsdImage &img
-){
+UINT CVsdFilterAvu::PutImage( int x, int y, CVsdImage &img ){
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
 	int xst = ( x >= 0 ) ? 0 : -x;

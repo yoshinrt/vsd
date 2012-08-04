@@ -18,6 +18,7 @@
 #include "pixel.h"
 #include "CVsdImage.h"
 #include "CVsdFilter.h"
+#include "error_code.h"
 
 #define PROG_NAME	"VSDFilter"
 #define VERSION		"v1.07β2"
@@ -58,8 +59,10 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	int GetIndex( int x, int y ){ return m_iBytesPerLine * y + x * 2; }
 	
 	// 仮想関数
-	virtual void PutPixelLow( int x, int y, const PIXEL_YCA& yc, UINT uFlag );
-	virtual void FillLineLow( int x1, int y1, int x2, const PIXEL_YCA& yc, UINT uFlag );
+	void         PutPixel( int iIndex, const PIXEL_YCA_ARG yc, int iAlfa );
+	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
+	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
+	virtual UINT PutImage( int x, int y, CVsdImage &img );
 	
 	virtual int	GetWidth( void )	{ return m_iWidth; }
 	virtual int	GetHeight( void )	{ return m_iHeight; }
@@ -137,6 +140,11 @@ CVsdFilterAvs::CVsdFilterAvs(
 	// GPS ログリード
 	if( p = args[ ARGID_STRPARAM_GPSFILE ].AsString( NULL )) if( !GPSLogLoad( p ))
 		env->ThrowError( PROG_NAME ": read GPS log \"%s\" failed.", p );
+	
+	// スキンロード
+	if( p = args[ ARGID_STRPARAM_SKINFILE ].AsString( NULL )){
+		strcpy( m_szSkinFile, p );
+	}
 }
 
 CVsdFilterAvs::~CVsdFilterAvs(){
@@ -158,55 +166,109 @@ G = Y-0.714Cr-0.344Cb
 B = Y+1.772Cb 
 */
 
-inline void CVsdFilterAvs::PutPixelLow( int x, int y, const PIXEL_YCA& yc, UINT uFlag ){
+inline void CVsdFilterAvs::PutPixel( int iIndex, const PIXEL_YCA_ARG yc, int iAlfa ){
+	
+	m_pPlane[ iIndex + 0 ] = ( PIXEL_t )(
+		yc.y + ((  m_pPlane[ iIndex + 0 ] * iAlfa ) >> 8 )
+	);
+	m_pPlane[ iIndex + 1 ] = ( PIXEL_t )(
+		(( iIndex & 2 )? yc.cr : yc.cb ) + (((( int )m_pPlane[ iIndex + 1 ] - 0x80 ) * iAlfa ) >> 8 )
+	);
+}
+
+inline void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
 	
 	int	iIndex	= GetIndex( x, y );
 	
-	if( yc.alfa ){
-		int iAlfa = ( int )yc.alfa;
-		
-		m_pPlane[ iIndex + 0 ] = ( PIXEL_t )(
-			yc.y + ((  m_pPlane[ iIndex + 0 ] * iAlfa ) >> 8 )
-		);
-		m_pPlane[ iIndex + 1 ] = ( PIXEL_t )(
-			(( x & 1 )? yc.cr : yc.cb ) + (( m_pPlane[ iIndex + 1 ] * iAlfa ) >> 8 )
-		);
+	PIXEL_YCA yca = yc;
+	int iAlfa = yca.alfa;
+	yca.alfa = yca.y;
+	
+	if( iAlfa ){
+		iAlfa += iAlfa >> 8;
+		PutPixel( iIndex, yc, iAlfa );
 	}else{
-		*( USHORT *)( m_pPlane + iIndex ) = ( x & 1 ) ? yc.ycr : yc.ycb;
-		m_pPlane[ iIndex ] = yc.y;
+		*( USHORT *)( m_pPlane + iIndex ) = ( x & 1 ) ? yca.ycr : yca.ycb;
 	}
 }
 
-inline void CVsdFilterAvs::FillLineLow( int x1, int y1, int x2, const PIXEL_YCA& yc, UINT uFlag ){
+inline void CVsdFilterAvs::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ){
 	
 	int iIndex = GetIndex( x1, y1 );
 	
-	if( yc.alfa ){
-		int iAlfa = ( int )yc.alfa;
-		
+	PIXEL_YCA yca = yc;
+	int iAlfa = yca.alfa;
+	yca.alfa = yca.y;
+	
+	if( iAlfa ){
 		for( int x = x1; x <= x2; ++x, iIndex += 2 ){
-			m_pPlane[ iIndex + 0 ] = ( PIXEL_t )(
-				yc.y + ((  m_pPlane[ iIndex + 0 ] * iAlfa ) >> 8 )
-			);
-			m_pPlane[ iIndex + 1 ] = ( PIXEL_t )(
-				(( x & 1 )? yc.cr : yc.cb ) + (( m_pPlane[ iIndex + 1 ] * iAlfa ) >> 8 )
-			);
+			iAlfa += iAlfa >> 8;
+			PutPixel( iIndex, yc, iAlfa );
 		}
 	}else{
 		// x1, x2 が半端な pixel なら，それだけ先に処理
 		if( x1 & 1 ){
-			*( USHORT *)( m_pPlane + iIndex ) = yc.ycr;
+			*( USHORT *)( m_pPlane + iIndex ) = yca.ycr;
 			++x1;
 			iIndex += 2;
 		}
 		if( !( x2 & 1 )){
-			*( USHORT *)( m_pPlane + GetIndex( x2, y1 )) = yc.ycb;
+			*( USHORT *)( m_pPlane + GetIndex( x2, y1 )) = yca.ycb;
 			--x2;
 		}
 		for( int x = x1; x <= x2; x += 2, iIndex += 4 ){
-			*( UINT *)( m_pPlane + iIndex ) = yc.ycbcr;
+			*( UINT *)( m_pPlane + iIndex ) = yca.ycbcr;
 		}
 	}
+}
+
+/*** PutImage ***************************************************************/
+
+UINT CVsdFilterAvs::PutImage(
+	int x, int y, CVsdImage &img
+){
+	int xst = ( x >= 0 ) ? 0 : -x;
+	int xed = x + img.m_iWidth <= GetWidth() ? img.m_iWidth : GetWidth() - x;
+	int yst = ( y >= 0 ) ? 0 : -y;
+	int yed = y + img.m_iHeight <= GetHeight() ? img.m_iHeight : GetHeight() - y;
+	
+	for( int y1 = yst; y1 < yed; ++y1 ){
+		
+		int	iIndex = GetIndex( x + xst, y + y1 );
+		int x1 = xst;
+		
+		// 先頭の半端な 1pixel 処理
+		if( iIndex & 2 ){
+			PIXEL_YCA yc( img.GetPixel0( x1, y1 ));
+			PutPixel( x1, y1, yc );
+			iIndex += 2;
+			++x1;
+		}
+		for( ; x1 < xed - 1; x1 += 2, iIndex += 4 ){
+			PIXEL_YCA yc0( img.GetPixel0( x1    , y1 ));
+			PIXEL_YCA yc1( img.GetPixel0( x1 + 1, y1 ));
+			
+			if( yc0.alfa == 0 && yc1.alfa == 0 ){
+				// 2ピクセルが共に 100% 不透明
+				yc0.cr	= ( yc0.cr + yc1.cr ) >> 1;
+				yc0.cb	= ( yc0.cb + yc1.cb ) >> 1;
+				yc0.alfa= yc1.y;
+				
+				*( UINT *)( m_pPlane + iIndex ) = yc0.ycbcr;
+			}else{
+				// そうではなかった
+				PutPixel( x + x1,     y + y1, yc0 );
+				PutPixel( x + x1 + 1, y + y1, yc1 );
+			}
+		}
+		// 後端の半端な 1pixel 処理
+		if( x1 < xed ){
+			PIXEL_YCA yc( img.GetPixel0( x1, y1 ));
+			PutPixel( x + x1, y + y1, yc );
+		}
+	}
+	
+	return ERR_OK;
 }
 
 /*** フレームをマーク *******************************************************/

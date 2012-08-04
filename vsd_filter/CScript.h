@@ -25,6 +25,6 @@ class CScript {
 	BOOL m_bError;
 	
   private:
-	v8::Persistent<v8::Context> m_context;
-	v8::HandleScope m_handle_scope;
+	v8::Persistent<v8::Context> m_Context;
+	v8::Isolate	*m_pIsolate;
 };

@@ -8,6 +8,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsd_filter", "vsd_filter\vs
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dds_lib", "dds_lib\dds_lib\dds_lib.vcxproj", "{3FADD568-9314-46C6-A0E9-831F3F35449C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsd_filter_avs", "vsd_filter_avs\vsd_filter_avs.vcxproj", "{4D6FC7B7-DFE0-407B-8956-2F9594FB2BFF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3FADD568-9314-46C6-A0E9-831F3F35449C} = {3FADD568-9314-46C6-A0E9-831F3F35449C}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -22,6 +27,10 @@ Global
 		{3FADD568-9314-46C6-A0E9-831F3F35449C}.Debug|Win32.Build.0 = Debug|Win32
 		{3FADD568-9314-46C6-A0E9-831F3F35449C}.Release|Win32.ActiveCfg = Release|Win32
 		{3FADD568-9314-46C6-A0E9-831F3F35449C}.Release|Win32.Build.0 = Release|Win32
+		{4D6FC7B7-DFE0-407B-8956-2F9594FB2BFF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4D6FC7B7-DFE0-407B-8956-2F9594FB2BFF}.Debug|Win32.Build.0 = Debug|Win32
+		{4D6FC7B7-DFE0-407B-8956-2F9594FB2BFF}.Release|Win32.ActiveCfg = Release|Win32
+		{4D6FC7B7-DFE0-407B-8956-2F9594FB2BFF}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
