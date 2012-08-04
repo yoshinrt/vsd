@@ -121,6 +121,23 @@ class CVsdFilterIF {
 		
 		return v8::Undefined();
 	}
+	static v8::Handle<v8::Value> Func_PutImage( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 3 )) return v8::Undefined();
+		v8::Local<v8::Object> Image2 = args[ 2 ]->ToObject();
+		if( CheckClass( Image2, "Image", "arg[ 3 ] must be Image" )) return v8::Undefined();
+		CVsdImage *obj2 = GetThis<CVsdImage>( Image2 );
+		if( !obj2 ) return v8::Undefined();
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->PutImage(
+			args[ 0 ]->Int32Value(),
+			args[ 1 ]->Int32Value(),
+			*obj2
+		);
+		
+		return v8::Integer::New( ret );
+	}
 	static v8::Handle<v8::Value> Func_DrawLine( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CheckArgs( 5 <= iLen && iLen <= 7 )) return v8::Undefined();
@@ -366,6 +383,7 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawArc" ), v8::FunctionTemplate::New( Func_DrawArc ));
 		proto->Set( v8::String::New( "print" ), v8::FunctionTemplate::New( Func_print ));
 		proto->Set( v8::String::New( "PutPixel" ), v8::FunctionTemplate::New( Func_PutPixel ));
+		proto->Set( v8::String::New( "PutImage" ), v8::FunctionTemplate::New( Func_PutImage ));
 		proto->Set( v8::String::New( "DrawLine" ), v8::FunctionTemplate::New( Func_DrawLine ));
 		proto->Set( v8::String::New( "DrawRect" ), v8::FunctionTemplate::New( Func_DrawRect ));
 		proto->Set( v8::String::New( "DrawCircle" ), v8::FunctionTemplate::New( Func_DrawCircle ));

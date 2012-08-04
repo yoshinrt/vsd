@@ -99,7 +99,7 @@ class CVsdFilter {
 	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc ) = 0;
 	void         FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT uFlag );
 	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ) = 0;
-	virtual UINT PutImage( int x, int y, CVsdImage &img ) = 0;
+	virtual UINT PutImage( int x, int y, CVsdImage &img ) = 0;	// !js_func
 	
 	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG yc, UINT uFlag );
 	void DrawLine( int x1, int y1, int x2, int y2, tRABY uColor, UINT uFlag );
