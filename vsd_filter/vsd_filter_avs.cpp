@@ -58,30 +58,11 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	
 	int GetIndex( int x, int y ){ return m_iBytesPerLine * y + x * 2; }
 	
-	void PutPixelInit( void ){
-		m_iBufX = -1;
-	}
-	void PutPixelFlush( void ){
-		if( m_iBufX >= 0 ){
-			
-		}
-	}
-	
 	// 仮想関数
 	void         PutPixel( int iIndex, const PIXEL_YCA_ARG yc, int iAlfa );
 	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
 	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
 	virtual UINT PutImage( int x, int y, CVsdImage &img );
-	void PutPixelFlush( int x, int y ){
-		PIXEL_YCA	yc;
-		
-		yc.y	= m_ycaBuf0.y;
-		yc.alfa	= m_ycaBuf1.y;
-		yc.cb	= ( m_ycaBuf0.cb + m_ycaBuf1.cb ) >> 1;
-		yc.cr	= ( m_ycaBuf0.cr + m_ycaBuf1.cr ) >> 1;
-		
-		*( UINT *)( m_pPlane + GetIndex( x, y )) = yc.ycbcr;
-	}
 	
 	virtual int	GetWidth( void )	{ return m_iWidth; }
 	virtual int	GetHeight( void )	{ return m_iHeight; }
@@ -100,12 +81,6 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	
 	BYTE	*m_pPlane;
 	const char *m_szMark;
-	
-  private:
-	PIXEL_YCA	m_ycaBuf0;
-	PIXEL_YCA	m_ycaBuf1;
-	int			m_iBufX;
-	int			m_iBufY;
 };
 
 /*** コンストラクタ・デストラクタ *******************************************/
@@ -191,70 +166,58 @@ G = Y-0.714Cr-0.344Cb
 B = Y+1.772Cb 
 */
 
-inline PIXEL_YCA_ARG PutPixelBuf( PIXEL_YCA_ARG yc0, PIXEL_YCA_ARG yc1 ){
-	int iAlfa = yc1.alfa;
-	if( iAlfa == 0 ){
-		return yc1;
-	}
+inline void CVsdFilterAvs::PutPixel( int iIndex, const PIXEL_YCA_ARG yc, int iAlfa ){
 	
-	iAlfa += iAlfa >> 7;
-	
-	yc0.y  = (( yc0.y * iAlfa ) >> 8 ) + yc1.y;
-	yc0.cr = ((( int )( yc0.cr - 0x80 ) * iAlfa ) >> 8 ) + yc1.cr;
-	yc0.cb = ((( int )( yc0.cb - 0x80 ) * iAlfa ) >> 8 ) + yc1.cb;
-	
-	return yc0;
+	m_pPlane[ iIndex + 0 ] = ( PIXEL_t )(
+		yc.y + ((  m_pPlane[ iIndex + 0 ] * iAlfa ) >> 8 )
+	);
+	m_pPlane[ iIndex + 1 ] = ( PIXEL_t )(
+		(( iIndex & 2 )? yc.cr : yc.cb ) + (((( int )m_pPlane[ iIndex + 1 ] - 0x80 ) * iAlfa ) >> 8 )
+	);
 }
 
 inline void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
 	
-	int iIndex = GetIndex( x & ~1, y );
-	if( !( x & 1 )){
-		// 偶数 pixel
-		if( m_iBufX >= 0 ) PutPixelFlush( m_iBufX, m_iBufY );		// フラッシュする
-		m_ycaBuf0 = m_ycaBuf1 = *( UINT *)( m_pPlane + iIndex );	// m_ycaBuf0/1 にロード
-		m_ycaBuf1.y = m_ycaBuf1.alfa;
-		m_ycaBuf0 = PutPixelBuf( m_ycaBuf0, yc );					// yca0 に書く
-		m_iBufX = x;
-		m_iBufY = y;
+	int	iIndex	= GetIndex( x, y );
+	
+	PIXEL_YCA yca = yc;
+	int iAlfa = yca.alfa;
+	yca.alfa = yca.y;
+	
+	if( iAlfa ){
+		iAlfa += iAlfa >> 8;
+		PutPixel( iIndex, yc, iAlfa );
 	}else{
-		// 奇数 pixel
-		if( m_iBufX != x - 1 || m_iBufY != y ){
-			// yca バッファと関係無かった
-			if( m_iBufX >= 0 ) PutPixelFlush( m_iBufX, m_iBufY );		// フラッシュする
-			m_ycaBuf0 = m_ycaBuf1 = *( UINT *)( m_pPlane + iIndex );	// m_ycaBuf0/1 にロード
-			m_ycaBuf1.y = m_ycaBuf1.alfa;
-		}
-		m_ycaBuf1 = PutPixelBuf( m_ycaBuf1, yc );						// yca1 に書く
-		PutPixelFlush( x - 1, y );
-		m_iBufX = -1;
+		*( USHORT *)( m_pPlane + iIndex ) = ( x & 1 ) ? yca.ycr : yca.ycb;
 	}
 }
 
 inline void CVsdFilterAvs::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ){
 	
-	int x;
-	if( yc.alfa ){
-		for( x = x1; x <= x2; ++x ){
-			PutPixel( x, y1, yc );
+	int iIndex = GetIndex( x1, y1 );
+	
+	PIXEL_YCA yca = yc;
+	int iAlfa = yca.alfa;
+	yca.alfa = yca.y;
+	
+	if( iAlfa ){
+		for( int x = x1; x <= x2; ++x, iIndex += 2 ){
+			iAlfa += iAlfa >> 8;
+			PutPixel( iIndex, yc, iAlfa );
 		}
 	}else{
-		int iIndex = GetIndex( x1, y1 );
-		
-		PIXEL_YCA yca = yc;
-		yca.alfa = yca.y;
-		
 		// x1, x2 が半端な pixel なら，それだけ先に処理
 		if( x1 & 1 ){
-			PutPixel( x1, y1, yca );
+			*( USHORT *)( m_pPlane + iIndex ) = yca.ycr;
 			++x1;
 			iIndex += 2;
 		}
-		for( x = x1; x < x2; x += 2, iIndex += 4 ){
-			*( UINT *)( m_pPlane + iIndex ) = yca.ycbcr;
+		if( !( x2 & 1 )){
+			*( USHORT *)( m_pPlane + GetIndex( x2, y1 )) = yca.ycb;
+			--x2;
 		}
-		if( x <= x2 ){
-			PutPixel( x, y1, yca );
+		for( int x = x1; x <= x2; x += 2, iIndex += 4 ){
+			*( UINT *)( m_pPlane + iIndex ) = yca.ycbcr;
 		}
 	}
 }
@@ -269,6 +232,9 @@ UINT CVsdFilterAvs::PutImage(
 	int yst = ( y >= 0 ) ? 0 : -y;
 	int yed = y + img.m_iHeight <= GetHeight() ? img.m_iHeight : GetHeight() - y;
 	
+	#ifdef _OPENMP
+		#pragma omp parallel for
+	#endif
 	for( int y1 = yst; y1 < yed; ++y1 ){
 		
 		int	iIndex = GetIndex( x + xst, y + y1 );
