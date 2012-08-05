@@ -20,16 +20,7 @@
 
 CVsdLog::CVsdLog(){
 	m_iCnt	= 0;
-	m_Log	= new VSD_LOG_t[ MAX_VSD_LOG ];
 	m_dFreq	= LOG_FREQ;
-	
-	double	NaN = sqrt( -1.0f );
-	
-	// 初期化
-	for( UINT u = 0; u < MAX_VSD_LOG; ++u ){
-		m_Log[ u ].SetX0( NaN );
-		m_Log[ u ].SetY0( NaN );
-	}
 	
 	m_dMaxG = 0;
 	m_dMinG = 0;
@@ -41,37 +32,44 @@ CVsdLog::CVsdLog(){
 /*** デストラクタ ***********************************************************/
 
 CVsdLog::~CVsdLog(){
-	delete [] m_Log;
-	m_Log	= NULL;
 	m_iCnt	= 0;
 }
 
 /*** GPS ログの up-convert **************************************************/
 
-UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
+UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, UINT uCnt, BOOL bAllParam ){
 	
 	UINT	u;
 	
 	m_iCnt = 0;
 	
 	if( uCnt < 2 ) return 0;			// 2個データがなければ終了
-	GPSLog[ uCnt ].SetTime( FLT_MAX );	// 番犬
+
+	GPS_LOG_t	GpsLogTmp;
+	GpsLogTmp.SetTime( FLT_MAX );
+	GPSLog.push_back( GpsLogTmp );		// 番犬
 	
 	double	t;
 	double	dMileage = 0;
 	double	dBearing;
 	
-	m_Log[ 0 ].SetSpeed( 0 );
-	m_Log[ 0 ].SetTacho( 0 );
-	m_Log[ 0 ].SetGx( 0 );
-	m_Log[ 0 ].SetGy( 0 );
-	m_Log[ 0 ].SetMileage( 0 );
+	/*
+	VSD_LOG_t	LogTmp;
+	
+	LogTmp.SetSpeed( 0 );
+	LogTmp.SetTacho( 0 );
+	LogTmp.SetGx( 0 );
+	LogTmp.SetGy( 0 );
+	LogTmp.SetMileage( 0 );
+	
+	m_Log.push_back( LogTmp );
+	*/
 	
 	/*** GPS_LOG_t の方を走査して，いろいろ補正 *****************************/
 	
 	for( u = 1; u < uCnt - 1; ++u ){
 		// speed がない場合の補正
-		if( GPSLog[ u ].Speed() == FLT_MAX ){
+		if( !GPSLog[ u ].IsValidSpeed()){
 			GPSLog[ u ].SetSpeed(
 				sqrt(
 					pow( GPSLog[ u + 1 ].X() - GPSLog[ u - 1 ].X(), 2 ) +
@@ -133,7 +131,7 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 	
 	/************************************************************************/
 	
-	for( m_iCnt = 0, u = 0;m_iCnt < MAX_VSD_LOG; ++m_iCnt ){
+	for( m_iCnt = 0, u = 0; ; ++m_iCnt ){
 		
 		// GPSLog[ u ].Time() <= m_iCnt / LOG_FREQ < GPSLog[ u + 1 ].Time()
 		// の範囲になるよう調整
@@ -160,32 +158,36 @@ UINT CVsdLog::GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam ){
 		#define GetLogIntermediateVal( p )\
 			( GPSLog[ u ].p() * ( 1 - t ) + GPSLog[ u + 1 ].p() * t )
 		
-		m_Log[ m_iCnt ].SetX0( GetLogIntermediateVal( X ));
-		m_Log[ m_iCnt ].SetY0( GetLogIntermediateVal( Y ));
+		VSD_LOG_t	LogTmp;
+		
+		LogTmp.SetX0( GetLogIntermediateVal( X ));
+		LogTmp.SetY0( GetLogIntermediateVal( Y ));
 		
 		if( bAllParam ){
-			m_Log[ m_iCnt ].SetSpeed( GetLogIntermediateVal( Speed ));
+			LogTmp.SetSpeed( GetLogIntermediateVal( Speed ));
 			
-			if( m_iMaxSpeed < m_Log[ m_iCnt ].Speed() )
-				m_iMaxSpeed = ( int )ceil( m_Log[ m_iCnt ].Speed() / 10 ) * 10;
+			if( m_iMaxSpeed < LogTmp.Speed() )
+				m_iMaxSpeed = ( int )ceil( LogTmp.Speed() / 10 ) * 10;
 			
 			if( m_iCnt ){
 				dMileage += sqrt(
-					pow( m_Log[ m_iCnt - 1 ].X0() - m_Log[ m_iCnt ].X0(), 2 ) +
-					pow( m_Log[ m_iCnt - 1 ].Y0() - m_Log[ m_iCnt ].Y0(), 2 )
+					pow( m_Log[ m_iCnt - 1 ].X0() - LogTmp.X0(), 2 ) +
+					pow( m_Log[ m_iCnt - 1 ].Y0() - LogTmp.Y0(), 2 )
 				);
 			}
 			
-			m_Log[ m_iCnt ].SetMileage( dMileage );
-			m_Log[ m_iCnt ].SetTacho( 0 );
+			LogTmp.SetMileage( dMileage );
+			LogTmp.SetTacho( 0 );
 			
-			m_Log[ m_iCnt ].SetGx( GetLogIntermediateVal( Gx ));
-			m_Log[ m_iCnt ].SetGy( GetLogIntermediateVal( Gy ));
+			LogTmp.SetGx( GetLogIntermediateVal( Gx ));
+			LogTmp.SetGy( GetLogIntermediateVal( Gy ));
 		}else{
 			// PSP GPS log のときは，G の MAX 値のみをチェック
-			if( m_dMaxG < m_Log[ m_iCnt ].Gy() ) m_dMaxG = m_Log[ m_iCnt ].Gy();
-			if( m_dMinG > m_Log[ m_iCnt ].Gy() ) m_dMinG = m_Log[ m_iCnt ].Gy();
+			if( m_dMaxG < LogTmp.Gy() ) m_dMaxG = LogTmp.Gy();
+			if( m_dMinG > LogTmp.Gy() ) m_dMinG = LogTmp.Gy();
 		}
+		
+		m_Log.push_back( LogTmp );
 	}
 	
 	// スムージング

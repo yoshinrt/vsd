@@ -258,7 +258,7 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 		m_GPSLog = NULL;
 	}
 	
-	GPS_LOG_t	*GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG * GPS_FREQ / LOG_FREQ ) ];
+	std::vector<GPS_LOG_t> GPSLog;
 	
 	while( *szFileName ){
 		
@@ -311,18 +311,22 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 				if( dTime < dTime0 ) dTime += 24 * 3600;
 				dTime -= dTime0;
 				
+				GPS_LOG_t	GpsLogTmp;
+				
 				// 単位を補正
 				// 緯度・経度→メートル
-				GPSLog[ uGPSCnt ].SetX(( dLong - dLong0 ) * dLong2Meter );
-				GPSLog[ uGPSCnt ].SetY(( dLati0 - dLati ) * dLati2Meter );
+				GpsLogTmp.SetX(( dLong - dLong0 ) * dLong2Meter );
+				GpsLogTmp.SetY(( dLati0 - dLati ) * dLati2Meter );
 				
 				// 速度・向き→ベクトル座標
-				GPSLog[ uGPSCnt ].SetSpeed( BigEndianS( 12 ) / 10.0 );
-				GPSLog[ uGPSCnt ].SetBearing( BigEndianS( 14 ));
-				GPSLog[ uGPSCnt ].SetTime( dTime );
+				GpsLogTmp.SetSpeed( BigEndianS( 12 ) / 10.0 );
+				//GpsLogTmp.SetBearing( BigEndianS( 14 ));
+				GpsLogTmp.SetTime( dTime );
+				
+				GPSLog.push_back( GpsLogTmp );
 				
 				if( uGPSCnt >=2 ){
-					if( GPSLog[ uGPSCnt - 1 ].Time() == GPSLog[ uGPSCnt ].Time() ){
+					if( GPSLog[ uGPSCnt - 1 ].Time() == GpsLogTmp.Time() ){
 						// 時刻が同じログが続くときそのカウントをする
 						++uSameCnt;
 					}else if( uSameCnt ){
@@ -331,7 +335,7 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 						
 						for( u = 1; u < uSameCnt; ++ u ){
 							GPSLog[ uGPSCnt - uSameCnt + u ].SetTime(
-								( GPSLog[ uGPSCnt ].Time() - GPSLog[ uGPSCnt - uSameCnt ].Time() )
+								( GpsLogTmp.Time() - GPSLog[ uGPSCnt - uSameCnt ].Time() )
 								/ uSameCnt * u
 								);
 						}
@@ -369,16 +373,20 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 					dLati2Meter = GPSLogGetLength( dLong, dLati, dLong, dLati + 1.0 / 3600 ) * 3600;
 				}
 				
+				GPS_LOG_t	GpsLogTmp;
+				
 				// 単位を補正
 				// 緯度・経度→メートル
-				GPSLog[ uGPSCnt ].SetX(( dLong - dLong0 ) * dLong2Meter );
-				GPSLog[ uGPSCnt ].SetY(( dLati0 - dLati ) * dLati2Meter );
+				GpsLogTmp.SetX(( dLong - dLong0 ) * dLong2Meter );
+				GpsLogTmp.SetY(( dLati0 - dLati ) * dLati2Meter );
 				
 				// 速度・向き→ベクトル座標
-				GPSLog[ uGPSCnt ].SetSpeed( *( short int *)( szBuf + 0x4 ) / 10.0 );
+				GpsLogTmp.SetSpeed( *( short int *)( szBuf + 0x4 ) / 10.0 );
 				
-				GPSLog[ uGPSCnt ].SetBearing( FLT_MAX );
-				GPSLog[ uGPSCnt ].SetTime( dTime - dTime0 );
+				//GpsLogTmp.SetBearing( FLT_MAX );
+				GpsLogTmp.SetTime( dTime - dTime0 );
+				
+				GPSLog.push_back( GpsLogTmp );
 				
 				uGPSCnt++;
 				dTime += 0.2;
@@ -432,18 +440,22 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 			if( dTime < dTime0 ) dTime += 24 * 3600;
 			dTime -= dTime0;
 			
+			
+			GPS_LOG_t	GpsLogTmp;
 			// 単位を補正
 			// 緯度・経度→メートル
-			GPSLog[ uGPSCnt ].SetX(( dLong - dLong0 ) * dLong2Meter );
-			GPSLog[ uGPSCnt ].SetY(( dLati0 - dLati ) * dLati2Meter );
+			GpsLogTmp.SetX(( dLong - dLong0 ) * dLong2Meter );
+			GpsLogTmp.SetY(( dLati0 - dLati ) * dLati2Meter );
 			
 			// 速度・向き→ベクトル座標
-			GPSLog[ uGPSCnt ].SetSpeed( uParamCnt < 6 ? FLT_MAX : dSpeed * 1.852 ); // knot/h → km/h
-			GPSLog[ uGPSCnt ].SetBearing( uParamCnt < 7 ? FLT_MAX : dBearing );
-			GPSLog[ uGPSCnt ].SetTime( dTime );
+			if( uParamCnt >= 6 ) GpsLogTmp.SetSpeed( dSpeed * 1.852 ); // knot/h → km/h
+			//GpsLogTmp.SetBearing( uParamCnt < 7 ? FLT_MAX : dBearing );
+			GpsLogTmp.SetTime( dTime );
+			
+			GPSLog.push_back( GpsLogTmp );
 			
 			if( uGPSCnt >=2 ){
-				if( GPSLog[ uGPSCnt - 1 ].Time() == GPSLog[ uGPSCnt ].Time() ){
+				if( GPSLog[ uGPSCnt - 1 ].Time() == GpsLogTmp.Time() ){
 					// 時刻が同じログが続くときそのカウントをする
 					++uSameCnt;
 				}else if( uSameCnt ){
@@ -453,7 +465,7 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 					for( u = 1; u < uSameCnt; ++ u ){
 						GPSLog[ uGPSCnt - uSameCnt + u ].SetTime(
 							GPSLog[ uGPSCnt - uSameCnt + u ].Time() +
-							( GPSLog[ uGPSCnt ].Time() - GPSLog[ uGPSCnt - uSameCnt ].Time())
+							( GpsLogTmp.Time() - GPSLog[ uGPSCnt - uSameCnt ].Time())
 							/ uSameCnt * u
 						);
 					}
@@ -464,8 +476,8 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 			// 20km/h 以下で 3秒以上 log の間隔が開くとき，0km/h の log を補完する
 			if(
 				uGPSCnt >= 2 &&
-				GPSLog[ uGPSCnt ].Time() - GPSLog[ uGPSCnt - 1 ].Time() >= 3 &&
-				GPSLog[ uGPSCnt ].Speed() <= 20
+				GpsLogTmp.Time() - GPSLog[ uGPSCnt - 1 ].Time() >= 3 &&
+				GpsLogTmp.Speed() <= 20
 			){
 				// -1 +0 +1 +2
 				// A  B
@@ -473,10 +485,10 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 				// A  A' B' B
 				
 				// データ B のコピー
-				GPSLog[ uGPSCnt + 1 ] =
-				GPSLog[ uGPSCnt + 2 ] = GPSLog[ uGPSCnt ];
+				GPSLog.push_back( GpsLogTmp );	// +1
+				GPSLog.push_back( GpsLogTmp );	// +2
 				
-				// データ A のコピー
+				// データ A->A' のコピー
 				GPSLog[ uGPSCnt ] = GPSLog[ uGPSCnt - 1 ];
 				
 				// スピードを 0 に
@@ -507,11 +519,11 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	DebugCmd( {
 		FILE *fpp = fopen( "D:\\DDS\\vsd\\vsd_filter\\z_gps_raw.txt", "w" );
 		for( u = 0; u < uGPSCnt; ++u ){
-			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
+			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\t%g\n",
 				GPSLog[ u ].X(),
 				GPSLog[ u ].Y(),
 				GPSLog[ u ].Speed(),
-				GPSLog[ u ].Bearing(),
+				//GPSLog[ u ].Bearing(),
 				GPSLog[ u ].Gx(),
 				GPSLog[ u ].Gy(),
 				GPSLog[ u ].Time()
@@ -519,8 +531,6 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 		}
 		fclose( fpp );
 	} )
-	
-	delete [] GPSLog;
 	
 	DebugCmd( {
 		FILE *fpp = fopen( "D:\\DDS\\vsd\\vsd_filter\\z_upcon_gps.txt", "w" );
@@ -530,8 +540,8 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 				m_GPSLog->m_Log[ u ].Tacho(),
 				m_GPSLog->m_Log[ u ].Mileage(),
 				m_GPSLog->m_Log[ u ].X(),
-				m_GPSLog->m_Log[ u ].X0(),
 				m_GPSLog->m_Log[ u ].Y(),
+				m_GPSLog->m_Log[ u ].X0(),
 				m_GPSLog->m_Log[ u ].Y0(),
 				m_GPSLog->m_Log[ u ].Gx(),
 				m_GPSLog->m_Log[ u ].Gy()
@@ -563,7 +573,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 	
 	// GPS ログ用
 	UINT		uGPSCnt = 0;
-	GPS_LOG_t	*GPSLog = new GPS_LOG_t[ ( int )( MAX_VSD_LOG / LOG_FREQ ) ];
+	std::vector<GPS_LOG_t> GPSLog;
 	
 	// 初期化
 	m_iLapNum		= 0;
@@ -635,13 +645,19 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 			
 			// 単位を補正
 			// 緯度・経度→メートル
-			GPSLog[ uGPSCnt ].SetX(( dLong - dLong0 ) * dLong2Meter );
-			GPSLog[ uGPSCnt ].SetY(( dLati0 - dLati ) * dLati2Meter );
-			GPSLog[ uGPSCnt ].SetSpeed( dSpeed );
-			GPSLog[ uGPSCnt ].SetBearing( dBearing );
+			GPS_LOG_t	GpsLogTmp;
+			
+			GpsLogTmp.SetX(( dLong - dLong0 ) * dLong2Meter );
+			GpsLogTmp.SetY(( dLati0 - dLati ) * dLati2Meter );
+			GpsLogTmp.SetSpeed( dSpeed );
+			//GpsLogTmp.SetBearing( dBearing );
 			
 			// LOG_FREQ は 15Hz だった時代のログでは間違いだが，等比分割だし実害なし?
-			GPSLog[ uGPSCnt++ ].SetTime((( int )uLogNum - GPS_LOG_OFFS ) / ( double )LOG_FREQ );
+			GpsLogTmp.SetTime((( int )uLogNum - GPS_LOG_OFFS ) / ( double )LOG_FREQ );
+			
+			GPSLog.push_back( GpsLogTmp );
+			
+			++uGPSCnt;
 		}
 		
 		int	iTacho;
@@ -656,15 +672,17 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 			&dGy,
 			&dGx
 		)) >= 3 ){
-			m_VsdLog->m_Log[ uLogNum ].SetTacho( iTacho );
-			m_VsdLog->m_Log[ uLogNum ].SetSpeed( dSpeed );
-			m_VsdLog->m_Log[ uLogNum ].SetMileage( dMileage );
+			VSD_LOG_t	VsdLogTmp;
+			
+			VsdLogTmp.SetTacho( iTacho );
+			VsdLogTmp.SetSpeed( dSpeed );
+			VsdLogTmp.SetMileage( dMileage );
 			
 			if( uReadCnt < 5 && uLogNum ){
 				// Gデータがないときは，speedから求める←廃止
 				dGx = 0;
 				dGy = 0;
-				//dGy = ( m_VsdLog->m_Log[ uLogNum ].fSpeed - m_VsdLog->m_Log[ uLogNum - 1 ].fSpeed ) * ( 1000.0 / 3600 / 9.8 * LOG_FREQ );
+				//dGy = ( VsdLogTmp.fSpeed - m_VsdLog->m_Log[ uLogNum - 1 ].fSpeed ) * ( 1000.0 / 3600 / 9.8 * LOG_FREQ );
 			}else{
 				if( dGx >= 4 ){	
 					// 単位を G に変換
@@ -686,7 +704,7 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 				// 走行距離 == 0 && ±0.02G
 				if(
 					uLogNum &&
-					m_VsdLog->m_Log[ uLogNum - 1 ].Mileage() == m_VsdLog->m_Log[ uLogNum ].Mileage() &&
+					m_VsdLog->m_Log[ uLogNum - 1 ].Mileage() == VsdLogTmp.Mileage() &&
 					( m_VsdLog->m_Log[ uLogNum - 1 ].Gy() - dGy ) >= -0.02 &&
 					( m_VsdLog->m_Log[ uLogNum - 1 ].Gy() - dGy ) <=  0.02
 				){
@@ -695,11 +713,11 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 				}
 			}
 			
-			m_VsdLog->m_Log[ uLogNum ].SetGx( dGx );
-			m_VsdLog->m_Log[ uLogNum ].SetGy( dGy );
+			VsdLogTmp.SetGx( dGx );
+			VsdLogTmp.SetGy( dGy );
 			
 			// ログ開始・終了認識
-			if( m_VsdLog->m_Log[ uLogNum ].Speed() >= 300 ){
+			if( VsdLogTmp.Speed() >= 300 ){
 				if( !bCalibrating ){
 					bCalibrating = TRUE;
 					m_iLogStart  = m_iLogStop;
@@ -708,17 +726,20 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 			}else{
 				bCalibrating = FALSE;
 				
-				if( m_VsdLog->m_iMaxSpeed < m_VsdLog->m_Log[ uLogNum ].Speed() )
-					m_VsdLog->m_iMaxSpeed = ( int )ceil( m_VsdLog->m_Log[ uLogNum ].Speed() / 10 ) * 10;
+				if( m_VsdLog->m_iMaxSpeed < VsdLogTmp.Speed() )
+					m_VsdLog->m_iMaxSpeed = ( int )ceil( VsdLogTmp.Speed() / 10 ) * 10;
 			}
 			
 			// メーター補正
-			m_VsdLog->m_Log[ uLogNum ].SetTacho(
-				m_VsdLog->m_Log[ uLogNum ].Tacho() * m_piParamS[ METER_ADJUST ] / 1000.0
+			VsdLogTmp.SetTacho(
+				VsdLogTmp.Tacho() * m_piParamS[ METER_ADJUST ] / 1000.0
 			);
-			m_VsdLog->m_Log[ uLogNum ].SetSpeed(
-				m_VsdLog->m_Log[ uLogNum ].Speed() * m_piParamS[ METER_ADJUST ] / 1000.0
+			VsdLogTmp.SetSpeed(
+				VsdLogTmp.Speed() * m_piParamS[ METER_ADJUST ] / 1000.0
 			);
+			
+			m_VsdLog->m_Log.push_back( VsdLogTmp );
+			
 			++uLogNum;
 		}
 	}
@@ -735,8 +756,6 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 		m_VsdLog->GPSLogUpConvert( GPSLog, uGPSCnt );
 		m_VsdLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	}
-	
-	delete [] GPSLog;
 	
 	/************************************************************************/
 	

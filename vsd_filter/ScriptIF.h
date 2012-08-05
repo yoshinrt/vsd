@@ -228,40 +228,33 @@ class CVsdFilterIF {
 		
 		return v8::Undefined();
 	}
-	static v8::Handle<v8::Value> Func_DrawMeterPanel0( const v8::Arguments& args ){
+	static v8::Handle<v8::Value> Func_DrawMeterScale( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 5 )) return v8::Undefined();
-		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
-		if( CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
-		CVsdFont *obj4 = GetThis<CVsdFont>( Font4 );
-		if( !obj4 ) return v8::Undefined();
+		if( CheckArgs( iLen == 17 )) return v8::Undefined();
+		v8::Local<v8::Object> Font16 = args[ 16 ]->ToObject();
+		if( CheckClass( Font16, "Font", "arg[ 17 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj16 = GetThis<CVsdFont>( Font16 );
+		if( !obj16 ) return v8::Undefined();
 		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
-		thisObj->DrawMeterPanel0(
+		thisObj->DrawMeterScale(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
 			args[ 3 ]->Int32Value(),
-			*obj4
-		);
-		
-		return v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Func_DrawMeterPanel1( const v8::Arguments& args ){
-		int iLen = args.Length();
-		if( CheckArgs( iLen == 5 )) return v8::Undefined();
-		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
-		if( CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
-		CVsdFont *obj4 = GetThis<CVsdFont>( Font4 );
-		if( !obj4 ) return v8::Undefined();
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
-		if( !thisObj ) return v8::Undefined();
-		thisObj->DrawMeterPanel1(
-			args[ 0 ]->Int32Value(),
-			args[ 1 ]->Int32Value(),
-			args[ 2 ]->Int32Value(),
-			args[ 3 ]->Int32Value(),
-			*obj4
+			args[ 4 ]->Int32Value(),
+			PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
+			args[ 6 ]->Int32Value(),
+			args[ 7 ]->Int32Value(),
+			PIXEL_RABY::Argb2Raby( args[ 8 ]->Int32Value()),
+			args[ 9 ]->Int32Value(),
+			args[ 10 ]->Int32Value(),
+			args[ 11 ]->Int32Value(),
+			args[ 12 ]->Int32Value(),
+			args[ 13 ]->Int32Value(),
+			args[ 14 ]->Int32Value(),
+			PIXEL_RABY::Argb2Raby( args[ 15 ]->Int32Value()),
+			*obj16
 		);
 		
 		return v8::Undefined();
@@ -389,8 +382,7 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawCircle" ), v8::FunctionTemplate::New( Func_DrawCircle ));
 		proto->Set( v8::String::New( "DrawText" ), v8::FunctionTemplate::New( Func_DrawText ));
 		proto->Set( v8::String::New( "DrawGSnake" ), v8::FunctionTemplate::New( Func_DrawGSnake ));
-		proto->Set( v8::String::New( "DrawMeterPanel0" ), v8::FunctionTemplate::New( Func_DrawMeterPanel0 ));
-		proto->Set( v8::String::New( "DrawMeterPanel1" ), v8::FunctionTemplate::New( Func_DrawMeterPanel1 ));
+		proto->Set( v8::String::New( "DrawMeterScale" ), v8::FunctionTemplate::New( Func_DrawMeterScale ));
 		proto->Set( v8::String::New( "DrawMap" ), v8::FunctionTemplate::New( Func_DrawMap ));
 		proto->Set( v8::String::New( "DrawLapTime" ), v8::FunctionTemplate::New( Func_DrawLapTime ));
 		proto->Set( v8::String::New( "DrawNeedle" ), v8::FunctionTemplate::New( Func_DrawNeedle ));

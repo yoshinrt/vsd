@@ -172,18 +172,15 @@ class CVsdFilter {
 		int iCx, int iCy, int iR, int iIndicatorR, int iWidth,
 		tRABY uColorBall, tRABY uColorLine
 	);
-	void DrawMeterPanel0( // !js_func
-		int	iMeterCx,
-		int	iMeterCy,
-		int	iMeterR,
-		int	iMaxSpeed,
-		CVsdFont &Font
-	);
-	void DrawMeterPanel1( // !js_func
-		int	iMeterCx,
-		int	iMeterCy,
-		int	iMeterR,
-		int	iMaxSpeed,
+	
+	void DrawMeterScale(	// !js_func
+		int iCx, int iCy, int iR,
+		int iLineLen1, int iLineWidth1, tRABY uColorLine1,
+		int iLineLen2, int iLineWidth2, tRABY uColorLine2,
+		int iLine2Cnt,
+		int iMinDeg, int iMaxDeg,
+		int iRNum,
+		int iMaxVal, int iMaxNumCnt, tRABY uColorNum,
 		CVsdFont &Font
 	);
 	void DrawMap( // !js_func
@@ -233,8 +230,8 @@ class CVsdFilter {
 	// ƒtƒHƒ“ƒg
 	CVsdFont	*m_pFont;
 	
-	CVsdLog		*m_VsdLog;
-	CVsdLog		*m_GPSLog;
+	CVsdLog	*m_VsdLog;
+	CVsdLog	*m_GPSLog;
 	
 	BOOL ConfigLoad( const char *szFileName );
 	BOOL ParseMarkStr( const char *szMark );

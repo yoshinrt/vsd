@@ -642,7 +642,7 @@ void CVsdFilter::DrawGSnake(
 	CVsdLog *Log;
 	SelectLogVsd;
 	
-	if( Log ){
+	if( Log && Log->m_iLogNum < Log->m_iCnt ){
 		if( GSnakeLen > 0 ){
 			
 			int iGxPrev = INVALID_POS_I, iGyPrev;
@@ -718,30 +718,38 @@ void CVsdFilter::DrawMap(
 			iGy = iY + ( int )GetMapPos( Log->Y( i ), Y );
 			
 			if( iGxPrev != INVALID_POS_I ){
-				// Line の色用に G を求める
-				double dG = Log->Gy( i );
-				
-				tRABY uColorLine;
-				
-				if( dG >= 0.0 ){
-					uColorLine = BlendColor( uColorG0, uColorGPlus,  dG / Log->m_dMaxG );
-				}else{
-					uColorLine = BlendColor( uColorG0, uColorGMinus, dG / Log->m_dMinG );
+				if(
+					( iGx - iGxPrev ) * ( iGx - iGxPrev ) +
+					( iGy - iGyPrev ) * ( iGy - iGyPrev ) >= ( 25 )
+				){
+					// Line の色用に G を求める
+					
+					double dG = Log->Gy( i );
+					
+					tRABY uColorLine;
+					
+					if( dG >= 0.0 ){
+						uColorLine = BlendColor( uColorG0, uColorGPlus,  dG / Log->m_dMaxG );
+					}else{
+						uColorLine = BlendColor( uColorG0, uColorGMinus, dG / Log->m_dMinG );
+					}
+					
+					// Line を引く
+					DrawLine(
+						iGx,     iGy,
+						iGxPrev, iGyPrev,
+						iWidth, uColorLine, 0
+					);
+					iGxPrev = iGx;
+					iGyPrev = iGy;
 				}
-				
-				// Line を引く
-				DrawLine(
-					( int )( iGx     ), iGy,
-					( int )( iGxPrev ), iGyPrev,
-					iWidth, uColorLine, 0
-				);
+			}else{
+				iGxPrev = iGx;
+				iGyPrev = iGy;
 			}
 		}else{
-			iGx = INVALID_POS_I;
+			iGxPrev = INVALID_POS_I;
 		}
-		
-		iGxPrev = iGx;
-		iGyPrev = iGy;
 	}
 	
 	// MAP インジケータ (自車)
@@ -935,99 +943,65 @@ void CVsdFilter::DrawLapTime(
 	}
 }
 
-/*** メーターパネル type 0 **************************************************/
+/*** メーターパネル目盛り ***************************************************/
 
-void CVsdFilter::DrawMeterPanel0(
-	int	iMeterCx,
-	int	iMeterCy,
-	int	iMeterR,
-	int	iMaxSpeed,
+void CVsdFilter::DrawMeterScale(
+	int iCx, int iCy, int iR,
+	int iLineLen1, int iLineWidth1, tRABY uColorLine1,
+	int iLineLen2, int iLineWidth2, tRABY uColorLine2,
+	int iLine2Cnt,
+	int iMinDeg, int iMaxDeg,
+	int iRNum,
+	int iMaxVal, int iMaxNumCnt, tRABY uColorNum,
 	CVsdFont &Font
 ){
 	int	i;
 	
-	const int	iMeterMinDeg	= 135;
-	const int	iMeterMaxDeg	= 45;
-	const int	iMeterDegRange	= ( iMeterMaxDeg + 360 - iMeterMinDeg ) % 360;
-	const int	iMeterScaleLen	= iMeterR / 8;
+	const int iDegRange	= ( iMaxDeg + 360 - iMinDeg ) % 360;
 	
 	/*** メーターパネル ***/
 	
-	int	iStep = (( iMaxSpeed / 18 ) + 4 ) / 5 * 5;
-	if( iStep == 0 ) iStep = 5;
+	// iStep は切り上げ
+	int	iStep = ( iMaxVal + iMaxNumCnt - 1 ) / iMaxNumCnt;
 	
-	for( i = 0; i <= iMaxSpeed; i += iStep ){
-		int iDeg = iMeterDegRange * i / iMaxSpeed + iMeterMinDeg;
-		
-		// メーターパネル目盛り
-		if( i % iStep == 0 ){
-			DrawLine(
-				( int )( cos( iDeg * ToRAD ) * iMeterR ) + iMeterCx,
-				( int )( sin( iDeg * ToRAD ) * iMeterR ) + iMeterCy,
-				( int )( cos( iDeg * ToRAD ) * ( iMeterR * 95 / 100 )) + iMeterCx,
-				( int )( sin( iDeg * ToRAD ) * ( iMeterR * 95 / 100 )) + iMeterCy,
-				( i % ( iStep * 2 ) == 0 ) ? 2 : 1,
-				COLOR_SCALE, 0
-			);
-			
-			// メーターパネル目盛り数値
-			if( i % ( iStep * 2 ) == 0 ){
-				sprintf( g_szBuf, "%d", i );
-				DrawText(
-					( int )( cos( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCx - Font.GetTextWidth( g_szBuf ) / 2,
-					( int )( sin( iDeg * ToRAD ) * iMeterR * .75 ) + iMeterCy - Font.GetHeight() / 2,
-					g_szBuf, Font, COLOR_STR
-				);
-			}
-		}
+	if( iStep == 0 ){
+		iStep = 1;
+	}else if( iMaxVal >= 50 ){
+		// 50以上では，10単位に切り上げ
+		iStep = ( iStep + 9 ) / 10 * 10;
 	}
-}
-
-/*** メーターパネル type 1 **************************************************/
-
-void CVsdFilter::DrawMeterPanel1(
-	int	iMeterCx,
-	int	iMeterCy,
-	int	iMeterR,
-	int	iMaxSpeed,
-	CVsdFont &Font
-){
-	int	i;
 	
-	const int	iMeterMinDeg	= 90;
-	const int	iMeterMaxDeg	= 0;
-	const int	iMeterDegRange	= ( iMeterMaxDeg - iMeterMinDeg + 360 ) % 360;
-	
-	/*** メーターパネル ***/
-	
-	// GPS ログ優先時はスピードメーターパネル
-	
-	int	iStep = (( iMaxSpeed / 26 ) + 4 ) / 5 * 5;
-	if( iStep == 0 ) iStep = 5;
-	
-	for( i = 0; i <= iMaxSpeed; i += iStep ){
-		int iDeg = iMeterDegRange * i / iMaxSpeed + iMeterMinDeg;
+	for( i = 0; i <= iMaxVal * iLine2Cnt / iStep; ++i ){
+		double dAngle = ( iDegRange * i * iStep / ( double )iLine2Cnt / iMaxVal + iMinDeg ) * ToRAD;
 		
 		// メーターパネル目盛り
-		if( i % iStep == 0 ){
+		if( i % iLine2Cnt == 0 ){
 			DrawLine(
-				( int )( cos( iDeg * ToRAD ) * ( iMeterR * 100 / 100 )) + iMeterCx,
-				( int )( sin( iDeg * ToRAD ) * ( iMeterR * 100 / 100 )) + iMeterCy,
-				( int )( cos( iDeg * ToRAD ) * ( iMeterR *  95 / 100 )) + iMeterCx,
-				( int )( sin( iDeg * ToRAD ) * ( iMeterR *  95 / 100 )) + iMeterCy,
-				( i % ( iStep * 2 ) == 0 ) ? 2 : 1,
-				COLOR_SCALE, 0
+				( int )( cos( dAngle ) * iR ) + iCx,
+				( int )( sin( dAngle ) * iR ) + iCy,
+				( int )( cos( dAngle ) * ( iR - iLineLen1 )) + iCx,
+				( int )( sin( dAngle ) * ( iR - iLineLen1 )) + iCy,
+				iLineWidth1,
+				uColorLine2, 0
 			);
 			
 			// メーターパネル目盛り数値
-			if( i % ( iStep * 2 ) == 0 ){
-				sprintf( g_szBuf, "%d", i );
-				DrawText(
-					( int )( cos( iDeg * ToRAD ) * iMeterR * .825 ) + iMeterCx - Font.GetTextWidth( g_szBuf ) / 2,
-					( int )( sin( iDeg * ToRAD ) * iMeterR * .825 ) + iMeterCy - Font.GetHeight() / 2,
-					g_szBuf, Font, COLOR_STR
-				);
-			}
+			sprintf( g_szBuf, "%d", iStep * i / iLine2Cnt );
+			DrawText(
+				( int )( cos( dAngle ) * iRNum ) + iCx - Font.GetTextWidth( g_szBuf ) / 2,
+				( int )( sin( dAngle ) * iRNum ) + iCy - Font.GetHeight() / 2,
+				g_szBuf, Font, uColorNum
+			);
+		}else{
+			// 小目盛り
+			DrawLine(
+				( int )( cos( dAngle ) * iR ) + iCx,
+				( int )( sin( dAngle ) * iR ) + iCy,
+				( int )( cos( dAngle ) * ( iR - iLineLen2 )) + iCx,
+				( int )( sin( dAngle ) * ( iR - iLineLen2 )) + iCy,
+				iLineWidth2,
+				uColorLine2, 0
+			);
 		}
 	}
 }
@@ -1109,7 +1083,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	// JavaScript 用ログデータ計算
 	SelectLogVsd;
-	if( Log ){
+	if( Log && Log->m_iLogNum < Log->m_iCnt ){
 		m_dSpeed	= Log->Speed( Log->m_dLogNum );
 		m_dTacho	= Log->Tacho( Log->m_dLogNum );
 		m_dGx		= Log->Gx( Log->m_dLogNum );

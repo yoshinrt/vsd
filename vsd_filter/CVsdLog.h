@@ -23,9 +23,13 @@
 
 /*** new type ***************************************************************/
 
+static const float fNaN = sqrt( -1.0f );
+
 class VSD_LOG_t {
   public:
-	VSD_LOG_t(){}
+	VSD_LOG_t(){
+		fX = fY = fNaN;
+	}
 	~VSD_LOG_t(){}
 	
 	double Speed()		{ return fSpeed; }		void SetSpeed( double d )		{ fSpeed	= ( float )d; }
@@ -34,8 +38,8 @@ class VSD_LOG_t {
 	double Gx()			{ return fGx; }			void SetGx( double d )			{ fGx		= ( float )d; }
 	double Gy()			{ return fGy; }			void SetGy( double d )			{ fGy		= ( float )d; }
 	double X()			{ return fX; }			void SetX( double d )			{ fX		= ( float )d; }
-	double X0()			{ return fX0; }			void SetX0( double d )			{ fX0		= ( float )d; }
 	double Y()			{ return fY; }			void SetY( double d )			{ fY		= ( float )d; }
+	double X0()			{ return fX0; }			void SetX0( double d )			{ fX0		= ( float )d; }
 	double Y0()			{ return fY0; }			void SetY0( double d )			{ fY0		= ( float )d; }
 
   private:
@@ -49,7 +53,9 @@ class VSD_LOG_t {
 
 class GPS_LOG_t {
   public:
-	GPS_LOG_t(){}
+	GPS_LOG_t(){
+		fSpeed = FLT_MAX;
+	}
 	~GPS_LOG_t(){}
 	
 	double X()			{ return fX; }			void SetX( double d )			{ fX		= ( float )d; }
@@ -59,6 +65,8 @@ class GPS_LOG_t {
 	double Gx()			{ return fGx; }			void SetGx( double d )			{ fGx		= ( float )d; }
 	double Gy()			{ return fGy; }			void SetGy( double d )			{ fGy		= ( float )d; }
 	double Time()		{ return fTime; }		void SetTime( double d )		{ fTime		= ( float )d; }
+	
+	BOOL IsValidSpeed(){ return fSpeed != FLT_MAX; }
 	
   private:
 	float	fX;
@@ -72,7 +80,7 @@ class GPS_LOG_t {
 class CVsdLog {
 	
   public:
-	VSD_LOG_t	*m_Log;
+	std::vector<VSD_LOG_t>	m_Log;
 	int			m_iCnt;
 	
 	int			m_iLogNum;
@@ -92,7 +100,7 @@ class CVsdLog {
 	
 	CVsdLog();
 	~CVsdLog();
-	UINT GPSLogUpConvert( GPS_LOG_t *GPSLog, UINT uCnt, BOOL bAllParam = FALSE );
+	UINT GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, UINT uCnt, BOOL bAllParam = FALSE );
 	void RotateMap( double dAngle );
 	
 	BOOL IsDataExist( void ){
