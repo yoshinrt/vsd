@@ -2,7 +2,7 @@
 
 open( fpOut, "| nkf -s > ScriptIF.h" );
 
-MakeJsIF( 'CVsdFilter', 'Vsd', << '-----', << '-----' );
+MakeJsIF( 'CVsdFilter', '__builtin_vsd_class__', << '-----', << '-----' );
 		CVsdFilter* obj = CScript::m_Vsd;
 -----
 	/*** DrawArc ****************************************************************/

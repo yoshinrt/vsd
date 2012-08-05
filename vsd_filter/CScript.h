@@ -13,6 +13,7 @@ class CScript {
 	CScript( CVsdFilter *pVsd );
 	~CScript( void );
 	
+	UINT CompileRun( const char *szScript, const char *szFileName );
 	UINT Initialize( char *szFileName );
 	UINT Run( const char *szFunc );
 	

@@ -62,7 +62,7 @@ class CVsdFont {
 		
 		int iWidth = 0;
 		for( int i = 0; szMsg[ i ]; ++i ){
-			iWidth += ExistFont( i ) ? FontGlyph( szMsg[ i ] ).iCellIncX : m_iFontW_Space;
+			iWidth += ExistFont( szMsg[ i ] ) ? FontGlyph( szMsg[ i ] ).iCellIncX : m_iFontW_Space;
 		}
 		return iWidth;
 	}

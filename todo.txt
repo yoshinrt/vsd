@@ -4,14 +4,12 @@
 ・ファームロードを独自に作る・モニターのコード削除
 
 ● vsd_filter
+・skin ディレクトリの取得
 ・整列指定 DrawText
-・ITALIC とかの定数をどうするか
 ・Font outline フォント事前作成
 ・Font の日本語対応
-・Vsd の static object 化
 ・DrawPolygon
 ・Log read の JS 化，データロギング項目の自由化
-・Log メンバ変数の private 化
 ・Lap time 表示の機能細分化
 ・Image にも Draw 系ができるようにする
 ・printf

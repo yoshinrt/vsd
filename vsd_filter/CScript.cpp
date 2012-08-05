@@ -116,54 +116,17 @@ CScript::~CScript(){
 
 #define SCRIPT_SIZE	( 64 * 1024 )
 
-UINT CScript::Initialize( char *szFileName ){
-	#ifdef AVS_PLUGIN
-		v8::Isolate::Scope IsolateScope( m_pIsolate );
-	#endif
-	
-	// 準備
-	HandleScope handle_scope;
-	
-	// グローバルオブジェクトの生成
-	Handle<ObjectTemplate> global = ObjectTemplate::New();
-	
-	// Image クラス登録
-	CVsdImageIF::InitializeClass( global );
-	CVsdFontIF::InitializeClass( global );
-	CVsdFilterIF::InitializeClass( global );
-	
-	// グローバルオブジェクトから環境を生成
-	m_Context = Context::New( NULL, global );
-	
+UINT CScript::CompileRun( const char *szScript, const char *szFileName ){
 	TryCatch try_catch;
 	
-	char *szBuf = new char[ SCRIPT_SIZE ];
-	
-	// スクリプト ロード
-	FILE *fp;
-	if(( fp = fopen( szFileName, "r" )) == NULL ){
-		// エラー処理
-		return FALSE;
-	}
-	
-	int iReadSize = fread( szBuf, 1, SCRIPT_SIZE, fp );
-	fclose( fp );
-	szBuf[ iReadSize ] = '\0';
-	
-	Handle<String> ScriptBody = String::New( szBuf );
-	delete [] szBuf;
-	
-	// 環境からスコープを生成
-	Context::Scope context_scope( m_Context );
-	
 	Handle<Script> script = Script::Compile(
-		ScriptBody, String::New( szFileName )
+		String::New( szScript ), String::New( szFileName )
 	);
 	
 	if( script.IsEmpty()){
 		// Print errors that happened during compilation.
 		ReportException( &try_catch );
-		return FALSE;
+		return ERR_SCRIPT;
 	}
 	
 	// とりあえず初期化処理
@@ -183,6 +146,58 @@ UINT CScript::Initialize( char *szFileName ){
 		return result->Int32Value();
 	}
 	return ERR_OK;
+}
+
+UINT CScript::Initialize( char *szFileName ){
+	#ifdef AVS_PLUGIN
+		v8::Isolate::Scope IsolateScope( m_pIsolate );
+	#endif
+	
+	static const char szInitScript[] =
+		"var Vsd = new __builtin_vsd_class__();"
+		"var VSD_FILL=1;"
+		"var FONT_ITALIC=1;"
+		"var FONT_BOLD=2;"
+		"var FONT_OUTLINE=4;"
+		"var FONT_FIXED=8;";
+	
+	// 準備
+	HandleScope handle_scope;
+	
+	// グローバルオブジェクトの生成
+	Handle<ObjectTemplate> global = ObjectTemplate::New();
+	
+	// Image クラス登録
+	CVsdImageIF::InitializeClass( global );
+	CVsdFontIF::InitializeClass( global );
+	CVsdFilterIF::InitializeClass( global );
+	
+	// グローバルオブジェクトから環境を生成
+	m_Context = Context::New( NULL, global );
+	
+	char *szBuf = new char[ SCRIPT_SIZE ];
+	
+	// スクリプト ロード
+	FILE *fp;
+	if(( fp = fopen( szFileName, "r" )) == NULL ){
+		// エラー処理
+		return FALSE;
+	}
+	
+	int iReadSize = fread( szBuf, 1, SCRIPT_SIZE, fp );
+	fclose( fp );
+	szBuf[ iReadSize ] = '\0';
+	
+	// 環境からスコープを生成
+	Context::Scope context_scope( m_Context );
+	
+	UINT uRet;
+	if(( uRet = CompileRun( szInitScript, "Internal initialize script" )) == ERR_OK )
+		uRet = CompileRun( szBuf, szFileName );
+	
+	delete [] szBuf;
+	
+	return uRet;
 }
 
 /*** function 名指定実行，引数なし ******************************************/

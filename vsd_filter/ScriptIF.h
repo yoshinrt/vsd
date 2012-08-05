@@ -356,7 +356,7 @@ class CVsdFilterIF {
 	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
 		// コンストラクタを作成
 		v8::Local<v8::FunctionTemplate> tmpl = v8::FunctionTemplate::New( New );
-		tmpl->SetClassName( v8::String::New( "Vsd" ));
+		tmpl->SetClassName( v8::String::New( "__builtin_vsd_class__" ));
 		
 		// フィールドなどはこちらに
 		v8::Handle<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
@@ -388,7 +388,7 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawNeedle" ), v8::FunctionTemplate::New( Func_DrawNeedle ));
 
 		// グローバルオブジェクトにクラスを定義
-		global->Set( v8::String::New( "Vsd" ), tmpl );
+		global->Set( v8::String::New( "__builtin_vsd_class__" ), tmpl );
 	}
 };
 /****************************************************************************/
