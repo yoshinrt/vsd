@@ -651,8 +651,8 @@ void CVsdFilter::DrawGSnake(
 				
 				if( Log->m_iLogNum + i >= 0 ){
 					// i == 1 Žž‚ÍÅŒã‚Ì’†“r”¼’[‚È LogNum
-					iGx = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGx : Log->Gx()) * iR );
-					iGy = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].fGy : Log->Gy()) * iR );
+					iGx = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].Gx() : Log->Gx()) * iR );
+					iGy = ( int )((( i != 1 ) ? Log->m_Log[ Log->m_iLogNum + i ].Gy() : Log->Gy()) * iR );
 					
 					iGx = ( int )( iGx );
 					
