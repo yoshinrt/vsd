@@ -10,13 +10,12 @@
 ・Vsd の static object 化
 ・DrawPolygon
 ・Log read の JS 化，データロギング項目の自由化
+・Log メンバ変数の private 化
 ・Lap time 表示の機能細分化
 ・Image にも Draw 系ができるようにする
 ・ログ配列の template vector 化
-・メーター画像作成
 ・メーター目盛り作成汎用化
 ・Image の透明色指定
-・OpenMP
 ・printf
 -----------------------
 ・音声 FFT 解析

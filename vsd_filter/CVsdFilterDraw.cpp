@@ -1143,7 +1143,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 			DispErrorMessage( m_Script->m_szErrorMsg ? m_Script->m_szErrorMsg : "Unknown error" );
 		}
 	}else{
-		DrawText( 0, 0, "Skin not loaded.", *m_pFont, COLOR_STR, color_white );
+		DrawText( 0, 0, "Skin not loaded.", *m_pFont, COLOR_STR );
 	}
 	
 #if 0

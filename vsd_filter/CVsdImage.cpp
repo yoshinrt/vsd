@@ -22,6 +22,12 @@ CVsdImage::CVsdImage(){
 	m_iHeight = 0;	//  V  ‚‚³
 }
 
+CVsdImage::CVsdImage( CVsdImage &Org ){
+	*this = Org;
+	m_pBuf = new PIXEL_RABY[ m_iWidth * m_iHeight ];
+	memcpy( m_pBuf, Org.m_pBuf, sizeof( PIXEL_RABY ) * m_iWidth * m_iHeight );
+}
+
 CVsdImage::~CVsdImage(){
 	delete [] m_pBuf;
 }
@@ -133,10 +139,10 @@ UINT CVsdImage::Resampling( Tx x, Ty y ){
 	return
 		// cr
 		(( int )(
-			(( char )( uColorA >> 24 )) * alfa_ * beta_ +
-			(( char )( uColorB >> 24 )) * alfa  * beta_ +
-			(( char )( uColorC >> 24 )) * alfa_ * beta  +
-			(( char )( uColorD >> 24 )) * alfa  * beta
+			(( uColorA >> 24 ) & 0xFF ) * alfa_ * beta_ +
+			(( uColorB >> 24 ) & 0xFF ) * alfa  * beta_ +
+			(( uColorC >> 24 ) & 0xFF ) * alfa_ * beta  +
+			(( uColorD >> 24 ) & 0xFF ) * alfa  * beta
 		) << 24 ) |
 		// a
 		(( int )(
@@ -146,12 +152,12 @@ UINT CVsdImage::Resampling( Tx x, Ty y ){
 			(( uColorD >> 16 ) & 0xFF ) * alfa  * beta
 		) << 16 ) |
 		// cb
-		((( int )(
-			(( char )( uColorA >>  8 )) * alfa_ * beta_ +
-			(( char )( uColorB >>  8 )) * alfa  * beta_ +
-			(( char )( uColorC >>  8 )) * alfa_ * beta  +
-			(( char )( uColorD >>  8 )) * alfa  * beta
-		) & 0xFF ) <<  8 ) |
+		(( int )(
+			(( uColorA >>  8 ) & 0xFF ) * alfa_ * beta_ +
+			(( uColorB >>  8 ) & 0xFF ) * alfa  * beta_ +
+			(( uColorC >>  8 ) & 0xFF ) * alfa_ * beta  +
+			(( uColorD >>  8 ) & 0xFF ) * alfa  * beta
+		) <<  8 ) |
 		// y
 		(( int )(
 			(( uColorA >>  0 ) & 0xFF ) * alfa_ * beta_ +

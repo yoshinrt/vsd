@@ -54,12 +54,30 @@ MakeJsIF( 'CVsdImage', 'Image', << '-----', '' );
 		// 引数チェック
 		if ( args.Length() <= 0 ) return v8::Undefined();
 		
-		CVsdImage* obj = new CVsdImage();
-		v8::String::AsciiValue FileName( args[ 0 ] );
+		CVsdImage* obj;
 		
-		if( obj->Load( *FileName ) != ERR_OK ){
-			delete obj;
-			return v8::Undefined();
+		// arg[ 0 ] が Image だった場合，そのコピーを作る
+		if( args[ 0 ]->IsObject()){
+			v8::Local<v8::Object> Image0 = args[ 0 ]->ToObject();
+			if( strcmp( *( v8::String::AsciiValue )( Image0->GetConstructorName()), "Image" ) == 0 ){
+				CVsdImage *obj0 = GetThis<CVsdImage>( Image0 );
+				if( !obj0 ) return v8::Undefined();
+				
+				obj = new CVsdImage( *obj0 );
+			}else{
+				return v8::ThrowException( v8::Exception::Error( v8::String::New(
+					"arg[ 0 ] must be Image or string"
+				)));
+			}
+		}else{
+			// ファイル名指定で画像ロード
+			obj = new CVsdImage();
+			v8::String::AsciiValue FileName( args[ 0 ] );
+			
+			if( obj->Load( *FileName ) != ERR_OK ){
+				delete obj;
+				return v8::Undefined();
+			}
 		}
 -----
 

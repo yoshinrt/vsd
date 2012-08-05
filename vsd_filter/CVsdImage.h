@@ -6,7 +6,7 @@
 	
 *****************************************************************************/
 
-#define RABY_TRANSPARENT	0x00FF0000
+#define RABY_TRANSPARENT	0x80FF8000
 
 typedef UINT	tRABY;
 
@@ -51,6 +51,7 @@ class PIXEL_RABY {
 class CVsdImage {
   public:
 	CVsdImage();
+	CVsdImage( CVsdImage &Org );
 	~CVsdImage();
 	
 	UINT Load( const char *szFileName );
@@ -64,6 +65,7 @@ class CVsdImage {
 			return GetPixel0( x, y );
 		}
 		
+		/*
 		if( x < 0 )	x = 0;
 		else if( x >= m_iWidth ) x = m_iWidth - 1;
 		
@@ -71,6 +73,8 @@ class CVsdImage {
 		else if( y >= m_iHeight ) y = m_iHeight - 1;
 		
 		return GetPixel0( x, y ) | RABY_TRANSPARENT;
+		*/
+		return RABY_TRANSPARENT;
 	}
 	
 	template<typename Tx, typename Ty>
