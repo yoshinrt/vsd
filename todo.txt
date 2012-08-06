@@ -4,8 +4,14 @@
 ・ファームロードを独自に作る・モニターのコード削除
 
 ● vsd_filter
-・skin ディレクトリの取得
-・整列指定 DrawText
+・グラフ表示
+・skin ディレクトリ・Plugin ディレクトリの取得
+・ユーザエラーメッセージ
+・タコ・ギア表示
+・非 TT Font サポート
+・Avu のマルチスレッド保存が効くかどうかテスト
+・TT の文字間隔おかしくね?
+・Map の Xmax, Ymax 取得
 ・Font outline フォント事前作成
 ・Font の日本語対応
 ・DrawPolygon
@@ -13,6 +19,8 @@
 ・Lap time 表示の機能細分化
 ・Image にも Draw 系ができるようにする
 ・printf
+・skin 一覧リストボックス
+・skin 情報を js から取得
 -----------------------
 ・音声 FFT 解析
 ・セクタータイム表示

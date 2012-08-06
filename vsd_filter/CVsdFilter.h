@@ -9,12 +9,16 @@
 #ifndef _CVsdFilter_h_
 #define _CVsdFilter_h_
 
+#define PROG_NAME		"VSDFilter"
+#define PROG_NAME_J		"VSDメーター合成"
+#define PROG_NAME_LONG	"`VSDFilter' vehicle data logger overlay plugin"
+#define PROG_VERSION	"v1.10beta1"
+
 #define BUF_SIZE	1024
 #define MAX_LAP		200
 #define GPS_FREQ	10
 
 #define G_CX_CNT		30
-#define LINE_WIDTH		( GetWidth() / HIREZO_TH + 1 )
 #define GPS_LOG_OFFS	15
 #define POS_DEFAULT		0x80000000
 #define BESTLAP_NONE	599999
@@ -142,19 +146,23 @@ class CVsdFilter {
 		int x, int y, char *szMsg, CVsdFont &Font, tRABY uColor,
 		tRABY uColorOutline = color_black	// !default:color_black
 	);
-	
-	void DrawSpeedGraph(
-		CVsdLog *Log,
-		int iX, int iY, int iW, int iH,
-		tRABY uColor,
-		int	iDirection
+	void DrawTextAlign( // !js_func
+		int x, int y, UINT uAlign, char *szMsg, CVsdFont &Font, tRABY uColor,
+		tRABY uColorOutline = color_black	// !default:color_black
 	);
 	
-	void DrawTachoGraph(
-		CVsdLog *Log,
-		int iX, int iY, int iW, int iH,
+	void DrawGraph(
+		int x1, int y1, int x2, int y2,
+		char *szFormat,
+		CVsdFont &Font,
 		tRABY uColor,
-		int	iDirection
+		CVsdLog& Log,
+		double ( *GetDataFunc )( CVsdLog&, int ),
+		double dMaxVal
+	);
+	void DrawGraph(	// !js_func
+		int x1, int y1, int x2, int y2,
+		CVsdFont &Font
 	);
 	
 	// ポリゴン描写
@@ -196,7 +204,7 @@ class CVsdFilter {
 		tRABY uColor, tRABY uColorOutline, tRABY uColorBest, tRABY uColorPlus
 	);
 	void DrawNeedle( // !js_func
-		int x, int y, int r,
+		int x, int y, int r1, int r2,
 		int iStart, int iEnd, double dVal,
 		tRABY uColor,
 		int iWidth // !default:1
@@ -208,24 +216,30 @@ class CVsdFilter {
 		IMG_FILL	= ( 1 << 0 ),
 	};
 	
+	enum {
+		ALIGN_LEFT		= 0,
+		ALIGN_TOP		= 0,
+		ALIGN_HCENTER	= 1,
+		ALIGN_RIGHT		= 2,
+		ALIGN_VCENTER	= 4,
+		ALIGN_BOTTOM	= 8,
+	};
+	
 	// 仮想関数
 	virtual int	GetWidth( void )	= 0;	// !js_var:Width
 	virtual int	GetHeight( void )	= 0;	// !js_var:Height
-	virtual int	GetFrameMax( void )	= 0;	// !js_var:MaxFrame
+	virtual int	GetFrameMax( void )	= 0;	// !js_var:MaxFrameCnt
 	virtual int	GetFrameCnt( void )	= 0;	// !js_var:FrameCnt
 	virtual double GetFPS( void )	= 0;
-	
-	static const char *m_szTrackbarName[];
-	static const char *m_szCheckboxName[];
-	static const char *m_szShadowParamName[];
 	
 	char	*m_szLogFile;
 	char	*m_szGPSLogFile;
 	char	*m_szSkinFile;
+	char	*m_szSkinDir;	// !js_var:SkinDir
 	
-	int			*m_piParamT;
-	int			*m_piParamC;
-	int			*m_piParamS;
+	int		*m_piParamT;
+	int		*m_piParamC;
+	int		*m_piParamS;
 	
 	// フォント
 	CVsdFont	*m_pFont;
@@ -233,7 +247,6 @@ class CVsdFilter {
 	CVsdLog	*m_VsdLog;
 	CVsdLog	*m_GPSLog;
 	
-	BOOL ConfigLoad( const char *szFileName );
 	BOOL ParseMarkStr( const char *szMark );
 	BOOL GPSLogLoad( const char *szFileName );
 	BOOL ReadLog( const char *szFileName );
@@ -267,9 +280,6 @@ class CVsdFilter {
 	
   private:
 	
-	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
-	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *szDst );
-	
 	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
 	
 	// スタートライン@GPS 計測モード
@@ -291,5 +301,9 @@ class CVsdFilter {
 	PolygonData_t	*m_Polygon;
 	
 	CScript	*m_Script;
+	
+	// 解像度変更検出用
+	int	m_iWidth;
+	int m_iHeight;
 };
 #endif

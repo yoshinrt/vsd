@@ -16,5 +16,5 @@ popd
 
 rmdir /s/q zrelease
 
-find "#define PROG_VERSION" vsd_filter.cpp
+find "#define PROG_VERSION" CVsdFilter.h
 pause

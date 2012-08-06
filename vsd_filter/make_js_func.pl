@@ -245,7 +245,8 @@ sub MakeJsIF {
 			
 			$Type =
 				/\b(?:int|UINT)\b/	? "Integer" :
-				/\b(?:double)\b/	? "Number" :
+				/\bdouble\b/		? "Number" :
+				/\bchar\b/			? "String" :
 									  "???";
 #-----
 			$AccessorIF .= << "-----";

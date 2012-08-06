@@ -20,9 +20,6 @@
 #include "CVsdFilter.h"
 #include "error_code.h"
 
-#define PROG_NAME	"VSDFilter"
-#define VERSION		"v1.07ƒÀ2"
-
 /****************************************************************************/
 
 enum {
@@ -185,7 +182,7 @@ inline void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
 	yca.alfa = yca.y;
 	
 	if( iAlfa ){
-		iAlfa += iAlfa >> 8;
+		iAlfa += iAlfa >> 7;
 		PutPixel( iIndex, yc, iAlfa );
 	}else{
 		*( USHORT *)( m_pPlane + iIndex ) = ( x & 1 ) ? yca.ycr : yca.ycb;
@@ -202,7 +199,7 @@ inline void CVsdFilterAvs::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG
 	
 	if( iAlfa ){
 		for( int x = x1; x <= x2; ++x, iIndex += 2 ){
-			iAlfa += iAlfa >> 8;
+			iAlfa += iAlfa >> 7;
 			PutPixel( iIndex, yc, iAlfa );
 		}
 	}else{
@@ -334,5 +331,5 @@ extern "C" __declspec( dllexport ) const char* __stdcall AvisynthPluginInit2( IS
 		Create_VSDFilter, 0
 	);
 	
-	return "`VSDFilter' vehicle data logger overlay plugin";
+	return PROG_NAME_LONG " " PROG_VERSION;
 }

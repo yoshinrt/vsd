@@ -33,9 +33,6 @@
 #define	FILE_CFG_EXT	"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 #define	FILE_SKIN_EXT	"Skin File (*.js)\0*.js\0AllFile (*.*)\0*.*\0"
 
-#define PROG_NAME		"VSDメーター合成"
-#define PROG_VERSION	"v1.10beta1"
-
 /*** new type ***************************************************************/
 
 /*** const ******************************************************************/
@@ -144,7 +141,7 @@ int		shadow_param[] = {
 	#include "def_shadow.h"
 };
 
-char g_szDescription[] = PROG_NAME " " PROG_VERSION;
+char g_szDescription[] = PROG_NAME_J " " PROG_VERSION;
 
 FILTER_DLL filter = {
 	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_MAIN_MESSAGE | FILTER_FLAG_EX_INFORMATION,
@@ -242,6 +239,10 @@ class CVsdFilterAvu : public CVsdFilter {
 	BOOL ReadLog( const char *szFileName, HWND hwnd );
 #endif
 	BOOL GPSLogLoad( const char *szFileName, HWND hwnd );
+		
+	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *szDst );
+	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
+	BOOL ConfigLoad( const char *szFileName );
 	
 	// 仮想関数
 	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
@@ -261,9 +262,30 @@ class CVsdFilterAvu : public CVsdFilter {
 	int	m_iAdjustPointNum;
 	int	m_iAdjustPointVid[ 2 ];
 	int	m_iAdjustPointGPS[ 2 ];
+	
+	static const char *m_szTrackbarName[];
+	static const char *m_szCheckboxName[];
+	static const char *m_szShadowParamName[];
 };
 
 CVsdFilterAvu	*g_Vsd;
+
+/*** tarckbar / checkbox conf_name 名 ***/
+
+const char *CVsdFilterAvu::m_szTrackbarName[] = {
+	#define DEF_TRACKBAR( id, init, min, max, name, conf_name ) conf_name,
+	#include "def_trackbar.h"
+};
+
+const char *CVsdFilterAvu::m_szCheckboxName[] = {
+	#define DEF_CHECKBOX( id, init, name, conf_name ) conf_name,
+	#include "def_checkbox.h"
+};
+
+const char *CVsdFilterAvu::m_szShadowParamName[] = {
+	#define DEF_SHADOW( id, init, conf_name ) conf_name,
+	#include "def_shadow.h"
+};
 
 /*** コンストラクタ／デストラクタ *******************************************/
 
@@ -796,6 +818,111 @@ BOOL FileOpenDialog( char *&szBuf, int iBufSize, char *szExt ){
 	delete [] szBuf;
 	szBuf = szNewBuf;
 	
+	return TRUE;
+}
+
+/*** 設定ロード *************************************************************/
+
+char *CVsdFilterAvu::IsConfigParam( const char *szParamName, char *szBuf, int &iVal ){
+	
+	int	iLen;
+	
+	while( isspace( *szBuf )) ++szBuf;
+	
+	if(
+		strncmp( szBuf, szParamName, iLen = strlen( szParamName )) == 0 &&
+		szBuf[ iLen ] == '='
+	){
+		iVal = atoi( szBuf + iLen + 1 );
+		return szBuf + iLen + 1;
+	}
+	
+	return NULL;
+}
+
+char *CVsdFilterAvu::IsConfigParamStr( const char *szParamName, char *szBuf, char *szDst ){
+	
+	int		iLen;
+	char	*p;
+	
+	while( isspace( *szBuf )) ++szBuf;
+	
+	if(
+		strncmp( szBuf, szParamName, iLen = strlen( szParamName )) == 0 &&
+		szBuf[ iLen ] == '='
+	){
+		szBuf += iLen + 1;	// " を指しているはず
+		
+		// 文字列先頭
+		if( p = strchr( szBuf, '"' )){
+			szBuf = p + 1;
+		}
+		
+		strcpy( szDst, szBuf );
+		
+		// 文字列終端
+		if(( p = strchr( szDst, '"' )) || ( p = strchr( szDst, ',' ))){
+			*p = '\0';
+		}
+		
+		return szDst;
+	}
+	
+	return NULL;
+}
+
+BOOL CVsdFilterAvu::ConfigLoad( const char *szFileName ){
+	
+	int 	i, iVal;
+	FILE	*fp;
+	char	szBuf[ BUF_SIZE ];
+	
+	if(( fp = fopen( szFileName, "r" )) != NULL ){
+		m_bCalcLapTimeReq = TRUE;
+		
+		while( fgets( szBuf, BUF_SIZE, fp )){
+			if( char *p = IsConfigParam( "mark", szBuf, iVal )){
+				// ラップタイムマーク
+				ParseMarkStr( p + 1 );
+			}
+			
+			// str param のリード
+			#define DEF_STR_PARAM( id, var, init, conf_name ) else if( IsConfigParamStr( conf_name, szBuf, var ));
+			#include "def_str_param.h"
+			
+			else{
+				// Mark 以外のパラメータ
+				for( i = 0; i < TRACK_N; ++i ){
+					if(
+						m_szTrackbarName[ i ] &&
+						IsConfigParam( m_szTrackbarName[ i ], szBuf, iVal )
+					){
+						m_piParamT[ i ] = iVal;
+						goto Next;
+					}
+				}
+				
+				for( i = 0; i < CHECK_N; ++i ){
+					if(
+						m_szCheckboxName[ i ] &&
+						IsConfigParam( m_szCheckboxName[ i ], szBuf, iVal )
+					){
+						m_piParamC[ i ] = iVal;
+						goto Next;
+					}
+				}
+				
+				for( i = 0; i < SHADOW_N; ++i ){
+					if( IsConfigParam( m_szShadowParamName[ i ], szBuf, iVal )){
+						m_piParamS[ i ] = iVal;
+						goto Next;
+					}
+				}
+			}
+		  Next: ;
+		}
+		fclose( fp );
+	}
 	return TRUE;
 }
 

@@ -24,27 +24,9 @@
 
 /*** macros *****************************************************************/
 
-#define MAX_POLY_HEIGHT	2000		// polygon 用ライン数
 #define SLineWidth		( m_piParamT[ TRACK_SLineWidth ] / 10.0 )
 
 /*** static member **********************************************************/
-
-/*** tarckbar / checkbox conf_name 名 ***/
-
-const char *CVsdFilter::m_szTrackbarName[] = {
-	#define DEF_TRACKBAR( id, init, min, max, name, conf_name ) conf_name,
-	#include "def_trackbar.h"
-};
-
-const char *CVsdFilter::m_szCheckboxName[] = {
-	#define DEF_CHECKBOX( id, init, name, conf_name ) conf_name,
-	#include "def_checkbox.h"
-};
-
-const char *CVsdFilter::m_szShadowParamName[] = {
-	#define DEF_SHADOW( id, init, conf_name ) conf_name,
-	#include "def_shadow.h"
-};
 
 /*** コンストラクタ *********************************************************/
 
@@ -71,9 +53,7 @@ CVsdFilter::CVsdFilter (){
 	m_szGPSLogFile		= new char[ BUF_SIZE ];
 	m_szSkinFile		= new char[ MAX_PATH + 1 ];
 	
-	// DrawPolygon 用バッファ
-	m_Polygon			= new PolygonData_t[ MAX_POLY_HEIGHT ];
-	
+	m_Polygon			= NULL;	// DrawPolygon 用バッファ
 	m_pFont				= NULL;
 	
 	// str param に初期値設定
@@ -81,6 +61,9 @@ CVsdFilter::CVsdFilter (){
 	#include "def_str_param.h"
 	
 	m_Script	= NULL;
+	
+	m_iWidth	=
+	m_iHeight	= 0;
 }
 
 /*** デストラクタ ***********************************************************/
@@ -97,56 +80,6 @@ CVsdFilter::~CVsdFilter (){
 	delete m_Script;
 }
 
-/*** 設定ロード *************************************************************/
-
-char *CVsdFilter::IsConfigParam( const char *szParamName, char *szBuf, int &iVal ){
-	
-	int	iLen;
-	
-	while( isspace( *szBuf )) ++szBuf;
-	
-	if(
-		strncmp( szBuf, szParamName, iLen = strlen( szParamName )) == 0 &&
-		szBuf[ iLen ] == '='
-	){
-		iVal = atoi( szBuf + iLen + 1 );
-		return szBuf + iLen + 1;
-	}
-	
-	return NULL;
-}
-
-char *CVsdFilter::IsConfigParamStr( const char *szParamName, char *szBuf, char *szDst ){
-	
-	int		iLen;
-	char	*p;
-	
-	while( isspace( *szBuf )) ++szBuf;
-	
-	if(
-		strncmp( szBuf, szParamName, iLen = strlen( szParamName )) == 0 &&
-		szBuf[ iLen ] == '='
-	){
-		szBuf += iLen + 1;	// " を指しているはず
-		
-		// 文字列先頭
-		if( p = strchr( szBuf, '"' )){
-			szBuf = p + 1;
-		}
-		
-		strcpy( szDst, szBuf );
-		
-		// 文字列終端
-		if(( p = strchr( szDst, '"' )) || ( p = strchr( szDst, ',' ))){
-			*p = '\0';
-		}
-		
-		return szDst;
-	}
-	
-	return NULL;
-}
-
 BOOL CVsdFilter::ParseMarkStr( const char *szMark ){
 	
 	do{
@@ -158,61 +91,6 @@ BOOL CVsdFilter::ParseMarkStr( const char *szMark ){
 	}while( szMark );
 	
 	m_bCalcLapTimeReq = TRUE;
-	return TRUE;
-}
-
-BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
-	
-	int 	i, iVal;
-	FILE	*fp;
-	char	szBuf[ BUF_SIZE ];
-	
-	if(( fp = fopen( szFileName, "r" )) != NULL ){
-		m_bCalcLapTimeReq = TRUE;
-		
-		while( fgets( szBuf, BUF_SIZE, fp )){
-			if( char *p = IsConfigParam( "mark", szBuf, iVal )){
-				// ラップタイムマーク
-				ParseMarkStr( p + 1 );
-			}
-			
-			// str param のリード
-			#define DEF_STR_PARAM( id, var, init, conf_name ) else if( IsConfigParamStr( conf_name, szBuf, var ));
-			#include "def_str_param.h"
-			
-			else{
-				// Mark 以外のパラメータ
-				for( i = 0; i < TRACK_N; ++i ){
-					if(
-						m_szTrackbarName[ i ] &&
-						IsConfigParam( m_szTrackbarName[ i ], szBuf, iVal )
-					){
-						m_piParamT[ i ] = iVal;
-						goto Next;
-					}
-				}
-				
-				for( i = 0; i < CHECK_N; ++i ){
-					if(
-						m_szCheckboxName[ i ] &&
-						IsConfigParam( m_szCheckboxName[ i ], szBuf, iVal )
-					){
-						m_piParamC[ i ] = iVal;
-						goto Next;
-					}
-				}
-				
-				for( i = 0; i < SHADOW_N; ++i ){
-					if( IsConfigParam( m_szShadowParamName[ i ], szBuf, iVal )){
-						m_piParamS[ i ] = iVal;
-						goto Next;
-					}
-				}
-			}
-		  Next: ;
-		}
-		fclose( fp );
-	}
 	return TRUE;
 }
 

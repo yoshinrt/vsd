@@ -33,13 +33,17 @@ class CVsdFilterIF {
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->GetHeight() ) : v8::Undefined();
 	}
-	static v8::Handle<v8::Value> Get_MaxFrame( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+	static v8::Handle<v8::Value> Get_MaxFrameCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->GetFrameMax() ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_FrameCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->GetFrameCnt() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_SkinDir( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::String::New( obj->m_szSkinDir ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_Speed( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
@@ -210,6 +214,47 @@ class CVsdFilterIF {
 		
 		return v8::Undefined();
 	}
+	static v8::Handle<v8::Value> Func_DrawTextAlign( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( 6 <= iLen && iLen <= 7 )) return v8::Undefined();
+		v8::String::AsciiValue str3( args[ 3 ] );
+		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
+		if( CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj4 = GetThis<CVsdFont>( Font4 );
+		if( !obj4 ) return v8::Undefined();
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawTextAlign(
+			args[ 0 ]->Int32Value(),
+			args[ 1 ]->Int32Value(),
+			args[ 2 ]->Int32Value(),
+			*str3,
+			*obj4,
+			PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
+			iLen <= 6 ? color_black : PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value())
+		);
+		
+		return v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Func_DrawGraph( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 5 )) return v8::Undefined();
+		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
+		if( CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj4 = GetThis<CVsdFont>( Font4 );
+		if( !obj4 ) return v8::Undefined();
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawGraph(
+			args[ 0 ]->Int32Value(),
+			args[ 1 ]->Int32Value(),
+			args[ 2 ]->Int32Value(),
+			args[ 3 ]->Int32Value(),
+			*obj4
+		);
+		
+		return v8::Undefined();
+	}
 	static v8::Handle<v8::Value> Func_DrawGSnake( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CheckArgs( iLen == 7 )) return v8::Undefined();
@@ -302,7 +347,7 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawNeedle( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 7 <= iLen && iLen <= 8 )) return v8::Undefined();
+		if( CheckArgs( 8 <= iLen && iLen <= 9 )) return v8::Undefined();
 		
 		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
@@ -312,9 +357,10 @@ class CVsdFilterIF {
 			args[ 2 ]->Int32Value(),
 			args[ 3 ]->Int32Value(),
 			args[ 4 ]->Int32Value(),
-			args[ 5 ]->NumberValue(),
-			PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
-			iLen <= 7 ? 1 : args[ 7 ]->Int32Value()
+			args[ 5 ]->Int32Value(),
+			args[ 6 ]->NumberValue(),
+			PIXEL_RABY::Argb2Raby( args[ 7 ]->Int32Value()),
+			iLen <= 8 ? 1 : args[ 8 ]->Int32Value()
 		);
 		
 		return v8::Undefined();
@@ -363,8 +409,9 @@ class CVsdFilterIF {
 		inst->SetInternalFieldCount( 1 );
 		inst->SetAccessor( v8::String::New( "Width" ), Get_Width );
 		inst->SetAccessor( v8::String::New( "Height" ), Get_Height );
-		inst->SetAccessor( v8::String::New( "MaxFrame" ), Get_MaxFrame );
+		inst->SetAccessor( v8::String::New( "MaxFrameCnt" ), Get_MaxFrameCnt );
 		inst->SetAccessor( v8::String::New( "FrameCnt" ), Get_FrameCnt );
+		inst->SetAccessor( v8::String::New( "SkinDir" ), Get_SkinDir );
 		inst->SetAccessor( v8::String::New( "Speed" ), Get_Speed );
 		inst->SetAccessor( v8::String::New( "Tacho" ), Get_Tacho );
 		inst->SetAccessor( v8::String::New( "Gx" ), Get_Gx );
@@ -381,6 +428,8 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawRect" ), v8::FunctionTemplate::New( Func_DrawRect ));
 		proto->Set( v8::String::New( "DrawCircle" ), v8::FunctionTemplate::New( Func_DrawCircle ));
 		proto->Set( v8::String::New( "DrawText" ), v8::FunctionTemplate::New( Func_DrawText ));
+		proto->Set( v8::String::New( "DrawTextAlign" ), v8::FunctionTemplate::New( Func_DrawTextAlign ));
+		proto->Set( v8::String::New( "DrawGraph" ), v8::FunctionTemplate::New( Func_DrawGraph ));
 		proto->Set( v8::String::New( "DrawGSnake" ), v8::FunctionTemplate::New( Func_DrawGSnake ));
 		proto->Set( v8::String::New( "DrawMeterScale" ), v8::FunctionTemplate::New( Func_DrawMeterScale ));
 		proto->Set( v8::String::New( "DrawMap" ), v8::FunctionTemplate::New( Func_DrawMap ));

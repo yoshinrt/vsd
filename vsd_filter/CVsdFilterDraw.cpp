@@ -46,8 +46,6 @@
 	#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
 #endif
 
-#define MAX_MAP_SIZE	( GetWidth() * m_piParamT[ TRACK_MapSize ] / 1000 )
-
 // VSD log を優先，ただしチェックボックスでオーバーライドできる
 #define SelectLogVsd ( Log = ( GPSPriority && m_GPSLog || !m_VsdLog ) ? m_GPSLog : m_VsdLog )
 
@@ -93,7 +91,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG y
 			}
 		}
 	/* 傾きが1以上の場合 */
-	} else {
+	}else{
 		int E = iXdiff - 2 * iYdiff;
 		for( i = 0; i < iYdiff; i++ ){
 			PutPixel( x1, y1, yc, uFlag );
@@ -448,6 +446,27 @@ void CVsdFilter::DrawText( int x, int y, char *szMsg, CVsdFont &Font, tRABY uCol
 	m_iPosY += Font.GetHeight();
 }
 
+void CVsdFilter::DrawTextAlign( int x, int y, UINT uAlign, char *szMsg, CVsdFont &Font, tRABY uColor, tRABY uColorOutline ){
+	
+	if( uAlign & ALIGN_HCENTER ){
+		x -= Font.GetTextWidth( szMsg ) / 2;
+	}else if( uAlign & ALIGN_RIGHT ){
+		x -= Font.GetTextWidth( szMsg );
+	}
+	
+	if( uAlign & ALIGN_VCENTER ){
+		y -= Font.GetHeight() / 2;
+	}else if( uAlign & ALIGN_BOTTOM ){
+		y -= Font.GetHeight();
+	}
+	
+	for( int i = 0; szMsg[ i ]; ++i ){
+		x += DrawFont( x, y, szMsg[ i ], Font, uColor, uColorOutline );
+	}
+	
+	m_iPosY += Font.GetHeight();
+}
+
 /*** put pixel 系 ***********************************************************/
 
 inline void CVsdFilter::PutPixel( int x, int y, tRABY uColor, UINT uFlag ){
@@ -532,102 +551,108 @@ inline UINT CVsdFilter::BlendColor(
 /*** メーター描画 ***********************************************************/
 /****************************************************************************/
 
-#define COLOR_PANEL		color_gray_a
-#define COLOR_SCALE		color_white
-#define COLOR_STR		COLOR_SCALE
-
 static char g_szBuf[ BUF_SIZE ];
 
 /*** パラメータ調整用スピードグラフ *****************************************/
 
-#define SPEED_GRAPH_SCALE	2
+#define GRAPH_SCALE	2
 
-void CVsdFilter::DrawSpeedGraph(
-	CVsdLog *Log,
-	int iX, int iY, int iW, int iH,
+static double GetSpeedLog( CVsdLog& Log, int iIndex ){
+	return Log.Speed( iIndex );
+}
+
+static double GetTachoLog( CVsdLog& Log, int iIndex ){
+	return Log.Tacho( iIndex );
+}
+
+void CVsdFilter::DrawGraph(
+	int x1, int y1, int x2, int y2,
+	char *szFormat,
+	CVsdFont &Font,
 	tRABY uColor,
-	int iDirection
+	CVsdLog& Log,
+	double ( *GetDataFunc )( CVsdLog&, int ),
+	double dMaxVal
 ){
+	int	iWidth  = x2 - x1 + 1;
+	int iHeight = y2 - y1 + 1;
 	
-	int	iLogNum;
-	int	x = iX;
-	int iCursor = 0;
+	int		iPrevY = INVALID_POS_I;
+	int		iCursorPos;
+	double	dCursorVal;
+	double	dVal;
 	
-	iLogNum = Log->m_iLogNum - iW * SPEED_GRAPH_SCALE / 2;
-	if( iLogNum < 0 ){
-		x = iX - iLogNum / SPEED_GRAPH_SCALE;
-		iLogNum = 0;
-	}
-	
-	for( ; x < iX + iW - 1 && iLogNum < Log->m_iCnt - 1; ++x, iLogNum += SPEED_GRAPH_SCALE ){
-		DrawLine(
-			x,     iY + iH - 1 - ( int )Log->Speed( iLogNum )                     * iH / Log->m_iMaxSpeed,
-			x + 1, iY + iH - 1 - ( int )Log->Speed( iLogNum + SPEED_GRAPH_SCALE ) * iH / Log->m_iMaxSpeed,
-			1, uColor, 0
-		);
+	for( int x = 0; x < iWidth; ++x ){
+		int iLogNum = Log.m_iLogNum - ( x - iWidth / 2 ) * GRAPH_SCALE;
+		if( iLogNum < 0 || Log.m_iCnt < iLogNum ){
+			dVal = 0;
+		}else{
+			dVal = GetDataFunc( Log, iLogNum );
+		}
 		
-		if( x == iX + iW / 2 ) iCursor = iLogNum;
+		int iPosY = y2 - ( int )( dVal * iHeight / dMaxVal );
+		if( iPrevY != INVALID_POS_I )
+			DrawLine( x1 + x - 1, iPrevY, x1 + x, iPosY, 1, uColor, 0 );
+		
+		iPrevY = iPosY;
+		
+		if( x == iWidth / 2 ){
+			iCursorPos = iPosY;
+			dCursorVal = dVal;
+		}
 	}
 	
-	int	iVal = ( int )Log->Speed( iCursor );
-	iY = iY + iH - 1 - iH * iVal / Log->m_iMaxSpeed;
-	x  = iX + iW / 2;
+	int x = x1 + iWidth / 2;
 	DrawLine(
-		x, iY,
-		x + ( iDirection ? -10 : 10 ), iY - 10,
+		x, iCursorPos,
+		x + 10, iCursorPos - 10,
 		1, uColor, 0
 	);
 	
-	sprintf( g_szBuf, "%d km/h", iVal );
+	sprintf( g_szBuf, szFormat, dCursorVal );
 	DrawText(
-		x + ( iDirection ? ( -10 - m_pFont->GetTextWidth( g_szBuf )) : 10 ),
-		iY - 10 - m_pFont->GetHeight(),
-		g_szBuf, *m_pFont, uColor, color_black
+		x + 10,
+		iCursorPos - 10 - Font.GetHeight(),
+		g_szBuf, Font, uColor
 	);
 }
 
-void CVsdFilter::DrawTachoGraph(
-	CVsdLog *Log,
-	int iX, int iY, int iW, int iH,
-	tRABY uColor,
-	int iDirection
+// スピード・タコグラフ
+void CVsdFilter::DrawGraph(
+	int x1, int y1, int x2, int y2,
+	CVsdFont &Font
 ){
-	
-	int	iLogNum;
-	int	x = iX;
-	int iCursor = 0;
-	
-	iLogNum = Log->m_iLogNum - iW * SPEED_GRAPH_SCALE / 2;
-	if( iLogNum < 0 ){
-		x = iX - iLogNum / SPEED_GRAPH_SCALE;
-		iLogNum = 0;
-	}
-	
-	for( ; x < iX + iW - 1 && iLogNum < Log->m_iCnt - 1; ++x, iLogNum += SPEED_GRAPH_SCALE ){
-		DrawLine(
-			x,     iY + iH - 1 - ( int )Log->Tacho( iLogNum )                     * iH / 7000,
-			x + 1, iY + iH - 1 - ( int )Log->Tacho( iLogNum + SPEED_GRAPH_SCALE ) * iH / 7000,
-			1, uColor, 0
-		);
+	if(
+		#ifdef GPS_ONLY
+			DispGraph
+		#else
+			DispGraph || DispSyncInfo
+		#endif
+	){
+		if( m_VsdLog ){
+			DrawGraph(
+				x1, y1, x2, y2,
+				"%.0f km/h", Font, color_orange,
+				*m_VsdLog,
+				GetSpeedLog, m_VsdLog->m_iMaxSpeed
+			);
+			if( !DispSyncInfo ) DrawGraph(
+				x1, y1, x2, y2,
+				"%.0f rpm", Font, color_cyan,
+				*m_VsdLog,
+				GetTachoLog, 7000
+			);
+		}
 		
-		if( x == iX + iW / 2 ) iCursor = iLogNum;
+		if(( !m_VsdLog || DispSyncInfo ) && m_GPSLog ){
+			DrawGraph(
+				x1, y1, x2, y2,
+				"%.0f km/h", Font, color_cyan,
+				*m_GPSLog,
+				GetSpeedLog, m_VsdLog->m_iMaxSpeed
+			);
+		}
 	}
-	
-	int	iVal = ( int )Log->Tacho( iCursor );
-	iY = iY + iH - 1 - iH * iVal / 7000;
-	x  = iX + iW / 2;
-	DrawLine(
-		x, iY,
-		x + ( iDirection ? -10 : 10 ), iY - 10,
-		1, uColor, 0
-	);
-	
-	sprintf( g_szBuf, "%d rpm", iVal );
-	DrawText(
-		x + ( iDirection ? ( -10 - m_pFont->GetTextWidth( g_szBuf )): 10 ),
-		iY - 10 - m_pFont->GetHeight(),
-		g_szBuf, *m_pFont, uColor, color_black
-	);
 }
 
 /*** G スネーク描画 *********************************************************/
@@ -777,7 +802,7 @@ void CVsdFilter::DrawMap(
 /*** 針描画 *****************************************************************/
 
 void CVsdFilter::DrawNeedle(
-	int x, int y, int r,
+	int x, int y, int r1, int r2,
 	int iStart, int iEnd, double dVal,
 	tRABY uColor,
 	int iWidth
@@ -787,9 +812,10 @@ void CVsdFilter::DrawNeedle(
 	double dAngle = ( iStart + (( iStart > iEnd ? 360 : 0 ) + ( iEnd - iStart )) * dVal ) * ToRAD;
 	
 	DrawLine(
-		x, y,
-		( int )( cos( dAngle ) * r ) + x,
-		( int )( sin( dAngle ) * r ) + y,
+		( int )( cos( dAngle ) * r1 ) + x,
+		( int )( sin( dAngle ) * r1 ) + y,
+		( int )( cos( dAngle ) * r2 ) + x,
+		( int )( sin( dAngle ) * r2 ) + y,
 		iWidth, uColor, 0
 	);
 }
@@ -982,14 +1008,15 @@ void CVsdFilter::DrawMeterScale(
 				( int )( cos( dAngle ) * ( iR - iLineLen1 )) + iCx,
 				( int )( sin( dAngle ) * ( iR - iLineLen1 )) + iCy,
 				iLineWidth1,
-				uColorLine2, 0
+				uColorLine1, 0
 			);
 			
 			// メーターパネル目盛り数値
 			sprintf( g_szBuf, "%d", iStep * i / iLine2Cnt );
-			DrawText(
-				( int )( cos( dAngle ) * iRNum ) + iCx - Font.GetTextWidth( g_szBuf ) / 2,
-				( int )( sin( dAngle ) * iRNum ) + iCy - Font.GetHeight() / 2,
+			DrawTextAlign(
+				( int )( cos( dAngle ) * iRNum ) + iCx,
+				( int )( sin( dAngle ) * iRNum ) + iCy,
+				ALIGN_HCENTER | ALIGN_VCENTER,
 				g_szBuf, Font, uColorNum
 			);
 		}else{
@@ -1028,10 +1055,22 @@ void CVsdFilter::DispErrorMessage( char *szMsg ){
 
 BOOL CVsdFilter::DrawVSD( void ){
 	
-	int	i;
-	
-	// フォントサイズ初期化
-	if( m_pFont == NULL ){
+	// 解像度変更
+	if( m_iWidth != GetWidth() || m_iHeight != GetHeight()){
+		m_iWidth  = GetWidth();
+		m_iHeight = GetHeight();
+		
+		// ポリゴン用バッファリサイズ
+		if( m_Polygon ) delete [] m_Polygon;
+		m_Polygon = new PolygonData_t[ m_iHeight ];
+		
+		// JavaScript 再起動用に削除
+		if( m_Script ){
+			delete m_Script;
+			m_Script = NULL;
+		}
+		// フォントサイズ初期化
+		if( m_pFont ) delete m_pFont;
 		m_pFont = new CVsdFont( DEFAULT_FONT, 18, CVsdFont::ATTR_OUTLINE );
 	}
 	
@@ -1046,8 +1085,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_GPSLog->m_dLogNum = ConvParam( GetFrameCnt(), Video, GPS );
 		m_GPSLog->m_iLogNum = ( int )m_GPSLog->m_dLogNum;
 	}
-	
-	/*** Lap タイム描画 ***/
 	
 	// ラップタイムの再計算
 	if( m_iLapMode != LAPMODE_MAGNET && DispLap && m_bCalcLapTimeReq ){
@@ -1098,7 +1135,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 	}
 	
 	// スクリプト実行
-	
 	DebugMsgD( ":DrawVSD():Running script... %X\n", GetCurrentThreadId());
 	if( !m_Script && *m_szSkinFile ){
 		m_Script = new CScript( this );
@@ -1117,55 +1153,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 			DispErrorMessage( m_Script->m_szErrorMsg ? m_Script->m_szErrorMsg : "Unknown error" );
 		}
 	}else{
-		DrawText( 0, 0, "Skin not loaded.", *m_pFont, COLOR_STR );
+		DrawText( 0, 0, "Skin not loaded.", *m_pFont, color_white );
 	}
-	
-#if 0
-	if(
-		#ifdef GPS_ONLY
-			DispGraph
-		#else
-			DispGraph || DispSyncInfo
-		#endif
-	){
-		// グラフ
-		const int iGraphW = GetWidth()  * 66 / 100;
-		const int iGraphH = GetHeight() * 23 / 100;
-		int       iGraphX = GetWidth()  *  2 / 100; if( !MeterPosRight ) iGraphX = GetWidth() - iGraphX - iGraphW;
-		const int iGraphY = GetHeight() * 75 / 100;
-		
-		DrawRect(
-			iGraphX, iGraphY,
-			iGraphX + iGraphW - 1,
-			iGraphY + iGraphH - 1,
-			COLOR_PANEL, CVsdFilter::IMG_FILL
-		);
-		
-		if( m_VsdLog ){
-			DrawSpeedGraph(
-				m_VsdLog,
-				iGraphX, iGraphY,
-				iGraphW, iGraphH,
-				color_orange, 1
-			);
-			if( !DispSyncInfo ) DrawTachoGraph(
-				m_VsdLog,
-				iGraphX, iGraphY,
-				iGraphW, iGraphH,
-				color_cyan, 0
-			);
-		}
-		
-		if(( !m_VsdLog || DispSyncInfo ) && m_GPSLog ){
-			DrawSpeedGraph(
-				m_GPSLog,
-				iGraphX, iGraphY,
-				iGraphW, iGraphH,
-				color_cyan, 0
-			);
-		}
-	}
-#endif
 	
 	// フレーム表示
 	
@@ -1177,7 +1166,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_iPosY = GetHeight() / 3;
 		
 		if( m_GPSLog ){
-			i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->m_dLogNum / LOG_FREQ ) * 100 ) % ( 24 * 3600 * 100 );
+			int i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->m_dLogNum / LOG_FREQ ) * 100 ) % ( 24 * 3600 * 100 );
 			sprintf(
 				g_szBuf, "GPS time: %02d:%02d:%02d.%02d",
 				i / 360000,
@@ -1185,11 +1174,11 @@ BOOL CVsdFilter::DrawVSD( void ){
 				i /  100 % 60,
 				i        % 100
 			);
-			DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, COLOR_STR );
+			DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, color_white );
 		}
 		
 		#ifndef GPS_ONLY
-			DrawText( POS_DEFAULT, POS_DEFAULT, "        start       end     range cur.pos", *m_pFont, COLOR_STR );
+			DrawText( POS_DEFAULT, POS_DEFAULT, "        start       end     range cur.pos", *m_pFont, color_white );
 			
 			sprintf(
 				g_szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
@@ -1198,7 +1187,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 				Float2Time(( VideoEd - VideoSt ) / GetFPS()),
 				GetFrameCnt()
 			);
-			DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, COLOR_STR );
+			DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, color_white );
 			
 			if( m_VsdLog ){
 				sprintf(
@@ -1208,7 +1197,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
 					m_VsdLog->m_iLogNum
 				);
-				DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, COLOR_STR );
+				DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, color_white );
 			}
 			
 			if( m_GPSLog ){
@@ -1219,7 +1208,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),
 					m_GPSLog->m_iLogNum
 				);
-				DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, COLOR_STR );
+				DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, color_white );
 			}
 		#endif	// !GPS_ONLY
 	}

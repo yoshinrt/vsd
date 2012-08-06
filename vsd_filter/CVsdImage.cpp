@@ -286,6 +286,9 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 		
 		if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 		
+		#ifdef _OPENMP
+			#pragma omp parallel for
+		#endif
 		for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
 			pNewBuf[ x + iWidth * y ].raby = Resampling(
 				m_iWidth  * x / ( double )iWidth,
@@ -307,6 +310,9 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 			
 			if( iWidth > m_iWidth ){
 				// x Šg‘å
+				#ifdef _OPENMP
+					#pragma omp parallel for
+				#endif
 				for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
 					pNewBuf[ x + iWidth * y ].raby = Resampling(
 						m_iWidth  * x / ( double )iWidth, y
@@ -314,6 +320,9 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 				}
 			}else{
 				// x k¬
+				#ifdef _OPENMP
+					#pragma omp parallel for
+				#endif
 				for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
 					pNewBuf[ x + iWidth * y ].raby = Resampling(
 						m_iWidth * x         / ( double )iWidth,
@@ -336,6 +345,9 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 			
 			if( iHeight > m_iHeight ){
 				// y Šg‘å
+				#ifdef _OPENMP
+					#pragma omp parallel for
+				#endif
 				for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
 					pNewBuf[ x + iWidth * y ].raby = Resampling(
 						x, m_iHeight * y / ( double )iHeight
@@ -343,6 +355,9 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 				}
 			}else{
 				// y k¬
+				#ifdef _OPENMP
+					#pragma omp parallel for
+				#endif
 				for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
 					pNewBuf[ x + iWidth * y ].raby = Resampling(
 						x,
@@ -371,6 +386,9 @@ UINT CVsdImage::Rotate( int cx, int cy, double dAngle ){
 	double dSin = sin( dAngle * ToRAD );
 	double dCos = cos( dAngle * ToRAD );
 	
+	#ifdef _OPENMP
+		#pragma omp parallel for
+	#endif
 	for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < m_iWidth; ++x ){
 		pNewBuf[ x + m_iWidth * y ].raby = Resampling(
 			cx + ( x - cx ) * dCos + ( y - cy ) * dSin,

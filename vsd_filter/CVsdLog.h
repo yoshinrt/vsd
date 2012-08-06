@@ -9,8 +9,6 @@
 #ifndef _CVsdLog_h_
 #define _CVsdLog_h_
 
-#define MAX_VSD_LOG		(( int )( LOG_FREQ * 3600 * 24 ))
-
 /*** macros *****************************************************************/
 
 #define DeleteIfZero( v ) if(( v ) && !( v )->m_iCnt ){ delete v; v = NULL; }
@@ -32,23 +30,37 @@ class VSD_LOG_t {
 	}
 	~VSD_LOG_t(){}
 	
-	double Speed()		{ return fSpeed; }		void SetSpeed( double d )		{ fSpeed	= ( float )d; }
-	double Tacho()		{ return fTacho; }		void SetTacho( double d )		{ fTacho	= ( float )d; }
-	double Mileage()	{ return fMileage; }	void SetMileage( double d )		{ fMileage	= ( float )d; }
-	double Gx()			{ return fGx; }			void SetGx( double d )			{ fGx		= ( float )d; }
-	double Gy()			{ return fGy; }			void SetGy( double d )			{ fGy		= ( float )d; }
-	double X()			{ return fX; }			void SetX( double d )			{ fX		= ( float )d; }
-	double Y()			{ return fY; }			void SetY( double d )			{ fY		= ( float )d; }
-	double X0()			{ return fX0; }			void SetX0( double d )			{ fX0		= ( float )d; }
-	double Y0()			{ return fY0; }			void SetY0( double d )			{ fY0		= ( float )d; }
+	double Speed(){ return uSpeed / 100.0; }
+	void SetSpeed( double d ){
+		if( _isnan( d )) uSpeed = 0;
+		else uSpeed = ( USHORT )( d * 100 );
+	}
+	
+	double Gx(){ return iGx / 20.0; }
+	void SetGx( double d ){
+		if( _isnan( d )) iGx = 0;
+		else iGx = ( char )( d * 20 );
+	}
+	double Gy(){ return iGy / 20.0; }
+	void SetGy( double d ){
+		if( _isnan( d )) iGy = 0;
+		else iGy = ( char )( d * 20 );
+	}
+	
+	double Tacho()	{ return uTacho; }		void SetTacho	( double d ){ uTacho	= ( USHORT )d; }
+	double Mileage(){ return fMileage; }	void SetMileage	( double d ){ fMileage	= ( float )d; }
+	double X()		{ return fX; }			void SetX		( double d ){ fX		= ( float )d; }
+	double Y()		{ return fY; }			void SetY		( double d ){ fY		= ( float )d; }
+	double X0()		{ return fX0; }			void SetX0		( double d ){ fX0		= ( float )d; }
+	double Y0()		{ return fY0; }			void SetY0		( double d ){ fY0		= ( float )d; }
 
   private:
-	float	fSpeed;
-	float	fTacho;
-	float	fMileage;
-	float	fGx, fGy;
 	float	fX, fX0;
 	float	fY, fY0;
+	float	fMileage;
+	USHORT	uSpeed;
+	USHORT	uTacho;
+	char	iGx, iGy;
 };
 
 class GPS_LOG_t {
@@ -58,13 +70,13 @@ class GPS_LOG_t {
 	}
 	~GPS_LOG_t(){}
 	
-	double X()			{ return fX; }			void SetX( double d )			{ fX		= ( float )d; }
-	double Y()			{ return fY; }			void SetY( double d )			{ fY		= ( float )d; }
-	double Speed()		{ return fSpeed; }		void SetSpeed( double d )		{ fSpeed	= ( float )d; }
-	double Bearing()	{ return fBearing; }	void SetBearing( double d )		{ fBearing	= ( float )d; }
-	double Gx()			{ return fGx; }			void SetGx( double d )			{ fGx		= ( float )d; }
-	double Gy()			{ return fGy; }			void SetGy( double d )			{ fGy		= ( float )d; }
-	double Time()		{ return fTime; }		void SetTime( double d )		{ fTime		= ( float )d; }
+	double X()			{ return fX; }			void SetX		( double d ){ fX		= ( float )d; }
+	double Y()			{ return fY; }			void SetY		( double d ){ fY		= ( float )d; }
+	double Speed()		{ return fSpeed; }		void SetSpeed	( double d ){ fSpeed	= ( float )d; }
+	double Bearing()	{ return fBearing; }	void SetBearing	( double d ){ fBearing	= ( float )d; }
+	double Gx()			{ return fGx; }			void SetGx		( double d ){ fGx		= ( float )d; }
+	double Gy()			{ return fGy; }			void SetGy		( double d ){ fGy		= ( float )d; }
+	double Time()		{ return fTime; }		void SetTime	( double d ){ fTime		= ( float )d; }
 	
 	BOOL IsValidSpeed(){ return fSpeed != FLT_MAX; }
 	

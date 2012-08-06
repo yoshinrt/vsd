@@ -154,12 +154,18 @@ UINT CScript::Initialize( char *szFileName ){
 	#endif
 	
 	static const char szInitScript[] =
-		"var Vsd = new __builtin_vsd_class__();"
-		"var VSD_FILL=1;"
-		"var FONT_ITALIC=1;"
-		"var FONT_BOLD=2;"
-		"var FONT_OUTLINE=4;"
-		"var FONT_FIXED=8;";
+		"Vsd = new __builtin_vsd_class__();"
+		"DRAW_FILL=1;"
+		"FONT_ITALIC=1;"
+		"FONT_BOLD=2;"
+		"FONT_OUTLINE=4;"
+		"FONT_FIXED=8;"
+		"ALIGN_LEFT=0;"
+		"ALIGN_TOP=0;"
+		"ALIGN_HCENTER=1;"
+		"ALIGN_RIGHT=2;"
+		"ALIGN_VCENTER=4;"
+		"ALIGN_BOTTOM=8;";
 	
 	// 準備
 	HandleScope handle_scope;
@@ -190,11 +196,9 @@ UINT CScript::Initialize( char *szFileName ){
 	
 	// 環境からスコープを生成
 	Context::Scope context_scope( m_Context );
-	
-	UINT uRet;
-	if(( uRet = CompileRun( szInitScript, "Internal initialize script" )) == ERR_OK )
-		uRet = CompileRun( szBuf, szFileName );
-	
+	CompileRun( szInitScript, "Internal initialize script" );
+
+	UINT uRet = CompileRun( szBuf, szFileName );
 	delete [] szBuf;
 	
 	return uRet;

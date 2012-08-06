@@ -44,10 +44,11 @@ class CVsdFont {
 		return m_FontGlyph[ c - FONT_CHAR_FIRST ];
 	}
 	
-	static const UINT ATTR_BOLD		= 1 << 0;
-	static const UINT ATTR_ITALIC	= 1 << 1;
-	static const UINT ATTR_OUTLINE	= 1 << 2;
-	static const UINT ATTR_FIXED	= 1 << 3;
+	static const UINT ATTR_BOLD			= 1 << 0;
+	static const UINT ATTR_ITALIC		= 1 << 1;
+	static const UINT ATTR_OUTLINE		= 1 << 2;
+	static const UINT ATTR_FIXED		= 1 << 3;
+	static const UINT ATTR_NOANTIALIAS	= 1 << 4;
 	
 	int GetWidth( void ){ return m_iFontW; }
 	int GetHeight( void ){ return m_iFontH; }	// !js_var:Height
