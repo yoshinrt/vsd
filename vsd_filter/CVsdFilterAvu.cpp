@@ -243,6 +243,7 @@ class CVsdFilterAvu : public CVsdFilter {
 	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *szDst );
 	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
 	BOOL ConfigLoad( const char *szFileName );
+	void SetSkinName( HWND hwnd );
 	
 	// 仮想関数
 	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
@@ -428,101 +429,6 @@ int CVsdFilterAvu::GetFrameMark( int iFrame ){
 		}
 	}
 	return -1;
-}
-
-/*** config セーブ **********************************************************/
-
-enum {
-	#define DEF_STR_PARAM( id, var, init, conf_name ) id,
-	#include "def_str_param.h"
-};
-
-BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
-	FILE	*fp;
-	int		i;
-	UINT	uStrParamFlag = 0;
-	
-	if(( fp = fopen( szFileName, "w" )) == NULL ) return FALSE;
-	
-	fprintf( fp,
-		"DirectShowSource( \"%s\", pixel_type=\"YUY2\", fps=%d.0/%d )\n"
-		"VSDFilter",
-		fileinfo->name,
-		fileinfo->video_rate, fileinfo->video_scale
-	);
-	
-	char cSep = '(';
-	
-	// str param に初期値設定
-	#define DEF_STR_PARAM( id, var, init, conf_name ) \
-		if( strcmp( var, init ) != 0 ){ \
-			fprintf( fp, "%c \\\n\t" conf_name "=\"%s\"", cSep, var ); \
-			cSep = ','; \
-			uStrParamFlag |= 1 << id; \
-		}
-	#include "def_str_param.h"
-	
-	for( i = 0; i < TRACK_N; ++i ){
-		if(
-			m_szTrackbarName[ i ] == NULL ||
-			i >= TRACK_LineTrace && m_piParamT[ i ] == track_default[ i ] ||
-			#ifndef GPS_ONLY
-				( i == PARAM_LSt || i == PARAM_LEd ) && !( uStrParamFlag & ( 1 << STRPARAM_LOGFILE )) ||
-			#endif
-			( i == PARAM_GSt || i == PARAM_GEd ) && !( uStrParamFlag & ( 1 << STRPARAM_GPSFILE ))
-		) continue;
-		
-		fprintf(
-			fp, "%c \\\n\t%s=%d", cSep, m_szTrackbarName[ i ], m_piParamT[ i ]
-		);
-		cSep = ',';
-	}
-	
-	for( i = 0; i < CHECK_N; ++i ){
-		if(
-			m_szCheckboxName[ i ] == NULL ||
-			m_piParamC[ i ] == check_default[ i ]
-		) continue;
-		
-		fprintf(
-			fp, ", \\\n\t%s=%d", m_szCheckboxName[ i ], m_piParamC[ i ]
-		);
-	}
-	
-	for( i = 0; i < SHADOW_N; ++i ){
-		if(
-			m_piParamS[ i ] == shadow_default[ i ]
-		) continue;
-		
-		fprintf(
-			fp, ", \\\n\t%s=%d", m_szShadowParamName[ i ], m_piParamS[ i ]
-		);
-	}
-	
-	// 手動ラップ計測マーク出力
-	if( m_iLapMode != LAPMODE_MAGNET && m_iLapNum ){
-		FRAME_STATUS	fsp;
-		BOOL			bFirst = TRUE;
-		
-		// マークされているフレーム# を求める
-		for( i = 0; i < GetFrameMax(); ++i ){
-			filter->exfunc->get_frame_status( editp, i, &fsp );
-			if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
-				fprintf( fp, "%s%u", bFirst ? ", \\\n\tmark=\"" : ",", i );
-				bFirst = FALSE;
-			}
-		}
-		fputc( '"', fp );
-	}
-	
-	fprintf( fp, " \\\n)\n"
-	#ifndef GPS_ONLY
-		"# Amplify( 0.2 )\n"
-	#endif
-	);
-	
-	fclose( fp );
-	return TRUE;
 }
 
 /*** ログリード *************************************************************/
@@ -926,6 +832,109 @@ BOOL CVsdFilterAvu::ConfigLoad( const char *szFileName ){
 	return TRUE;
 }
 
+void CVsdFilterAvu::SetSkinName( HWND hwnd ){
+	if( m_Script ) delete m_Script;
+	m_Script = NULL;
+	
+	// skin 名をダイアログに設定
+	SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_SKIN ), g_Vsd->m_szSkinFile );
+}
+
+/*** config セーブ **********************************************************/
+
+enum {
+	#define DEF_STR_PARAM( id, var, init, conf_name ) id,
+	#include "def_str_param.h"
+};
+
+BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
+	FILE	*fp;
+	int		i;
+	UINT	uStrParamFlag = 0;
+	
+	if(( fp = fopen( szFileName, "w" )) == NULL ) return FALSE;
+	
+	fprintf( fp,
+		"DirectShowSource( \"%s\", pixel_type=\"YUY2\", fps=%d.0/%d )\n"
+		"VSDFilter",
+		fileinfo->name,
+		fileinfo->video_rate, fileinfo->video_scale
+	);
+	
+	char cSep = '(';
+	
+	// str param に初期値設定
+	#define DEF_STR_PARAM( id, var, init, conf_name ) \
+		if( strcmp( var, init ) != 0 ){ \
+			fprintf( fp, "%c \\\n\t" conf_name "=\"%s\"", cSep, var ); \
+			cSep = ','; \
+			uStrParamFlag |= 1 << id; \
+		}
+	#include "def_str_param.h"
+	
+	for( i = 0; i < TRACK_N; ++i ){
+		if(
+			m_szTrackbarName[ i ] == NULL ||
+			i >= TRACK_LineTrace && m_piParamT[ i ] == track_default[ i ] ||
+			#ifndef GPS_ONLY
+				( i == PARAM_LSt || i == PARAM_LEd ) && !( uStrParamFlag & ( 1 << STRPARAM_LOGFILE )) ||
+			#endif
+			( i == PARAM_GSt || i == PARAM_GEd ) && !( uStrParamFlag & ( 1 << STRPARAM_GPSFILE ))
+		) continue;
+		
+		fprintf(
+			fp, "%c \\\n\t%s=%d", cSep, m_szTrackbarName[ i ], m_piParamT[ i ]
+		);
+		cSep = ',';
+	}
+	
+	for( i = 0; i < CHECK_N; ++i ){
+		if(
+			m_szCheckboxName[ i ] == NULL ||
+			m_piParamC[ i ] == check_default[ i ]
+		) continue;
+		
+		fprintf(
+			fp, ", \\\n\t%s=%d", m_szCheckboxName[ i ], m_piParamC[ i ]
+		);
+	}
+	
+	for( i = 0; i < SHADOW_N; ++i ){
+		if(
+			m_piParamS[ i ] == shadow_default[ i ]
+		) continue;
+		
+		fprintf(
+			fp, ", \\\n\t%s=%d", m_szShadowParamName[ i ], m_piParamS[ i ]
+		);
+	}
+	
+	// 手動ラップ計測マーク出力
+	if( m_iLapMode != LAPMODE_MAGNET && m_iLapNum ){
+		FRAME_STATUS	fsp;
+		BOOL			bFirst = TRUE;
+		
+		// マークされているフレーム# を求める
+		for( i = 0; i < GetFrameMax(); ++i ){
+			filter->exfunc->get_frame_status( editp, i, &fsp );
+			if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
+				fprintf( fp, "%s%u", bFirst ? ", \\\n\tmark=\"" : ",", i );
+				bFirst = FALSE;
+			}
+		}
+		fputc( '"', fp );
+	}
+	
+	fprintf( fp, " \\\n)\n"
+	#ifndef GPS_ONLY
+		"# Amplify( 0.2 )\n"
+	#endif
+	);
+	
+	fclose( fp );
+	return TRUE;
+}
+
 /*** WndProc ****************************************************************/
 
 BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
@@ -1046,7 +1055,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 					);
 				}
 				
-				if( *g_Vsd->m_szSkinFile ) g_Vsd->DeleteScript();
+				if( *g_Vsd->m_szSkinFile ){
+					g_Vsd->SetSkinName( hwnd );
+				}
 				
 				// 設定再描画
 				filter->exfunc->filter_window_update( filter );
@@ -1056,9 +1067,6 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 					func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
 				#endif
 			}
-			
-			// skin 名をダイアログに設定
-			SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_SKIN ), g_Vsd->m_szSkinFile );
 			
 		  Case ID_BUTT_SAVE_CFG:
 			if( filter->exfunc->dlg_get_save_name( szBuf, FILE_CFG_EXT, NULL ))
@@ -1091,11 +1099,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			
 		  Case ID_BUTT_SEL_SKIN:	// スキン選択
 			if( filter->exfunc->dlg_get_load_name( g_Vsd->m_szSkinFile, FILE_SKIN_EXT, NULL )){
-				g_Vsd->DeleteScript();
-				
-				// skin 名をダイアログに設定
-				SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_SKIN ), g_Vsd->m_szSkinFile );
-				
+				g_Vsd->SetSkinName( hwnd );
 				// 設定再描画
 				filter->exfunc->filter_window_update( filter );
 			}

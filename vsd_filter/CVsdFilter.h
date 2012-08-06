@@ -254,10 +254,6 @@ class CVsdFilter {
 		double dLong0, double dLati0,
 		double dLong1, double dLati1
 	);
-	void DeleteScript( void ){
-		if( m_Script ) delete m_Script;
-		m_Script = NULL;
-	}
 	
 	BOOL		m_bCalcLapTimeReq;
 	int			m_iLogStart;
@@ -271,6 +267,8 @@ class CVsdFilter {
 	int		m_iMaxSpeed;	// !js_var:MaxSpeed
 	
   protected:
+	
+	CScript	*m_Script;
 	
 	LAP_t		*m_Lap;
 	int			m_iLapMode;
@@ -299,8 +297,6 @@ class CVsdFilter {
 	int m_iBestLogNumRunning;
 	
 	PolygonData_t	*m_Polygon;
-	
-	CScript	*m_Script;
 	
 	// 解像度変更検出用
 	int	m_iWidth;

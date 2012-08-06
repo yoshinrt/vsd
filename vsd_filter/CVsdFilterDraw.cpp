@@ -583,7 +583,7 @@ void CVsdFilter::DrawGraph(
 	double	dVal;
 	
 	for( int x = 0; x < iWidth; ++x ){
-		int iLogNum = Log.m_iLogNum - ( x - iWidth / 2 ) * GRAPH_SCALE;
+		int iLogNum = Log.m_iLogNum + ( x - iWidth / 2 ) * GRAPH_SCALE;
 		if( iLogNum < 0 || Log.m_iCnt < iLogNum ){
 			dVal = 0;
 		}else{
