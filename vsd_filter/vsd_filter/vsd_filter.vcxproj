@@ -110,6 +110,7 @@
   <ItemGroup>
     <ClCompile Include="..\CScript.cpp" />
     <ClCompile Include="..\CVsdFilter.cpp" />
+    <ClCompile Include="..\CVsdFilterAvu.cpp" />
     <ClCompile Include="..\CVsdFilterDraw.cpp" />
     <ClCompile Include="..\CVsdFont.cpp" />
     <ClCompile Include="..\CVsdImage.cpp" />
@@ -118,7 +119,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\vsd_filter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\vsd_filter.def" />

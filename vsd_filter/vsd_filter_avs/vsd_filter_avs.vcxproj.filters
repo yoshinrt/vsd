@@ -30,13 +30,13 @@
     <ClCompile Include="..\StdAfx.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\vsd_filter_avs.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="..\CScript.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="..\CVsdFilter.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CVsdFilterAvs.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
