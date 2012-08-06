@@ -9,6 +9,7 @@
 #include "StdAfx.h"
 
 #include "dds.h"
+#include "dds_lib/dds_lib.h"
 #include "CScript.h"
 #include "CVsdFont.h"
 #include "CVsdLog.h"

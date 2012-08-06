@@ -237,6 +237,10 @@ class CVsdFilter {
 	char	*m_szSkinFile;
 	char	*m_szSkinDir;	// !js_var:SkinDir
 	
+	char *SetSkinDir( void ){
+		return StrTokFile( m_szSkinDir, m_szSkinFile, STF_FULL | STF_PATH2 );
+	}
+	
 	int		*m_piParamT;
 	int		*m_piParamC;
 	int		*m_piParamS;

@@ -52,6 +52,7 @@ CVsdFilter::CVsdFilter (){
 	m_szLogFile			= new char[ MAX_PATH + 1 ];
 	m_szGPSLogFile		= new char[ BUF_SIZE ];
 	m_szSkinFile		= new char[ MAX_PATH + 1 ];
+	m_szSkinDir			= new char[ MAX_PATH + 1 ];
 	
 	m_Polygon			= NULL;	// DrawPolygon 用バッファ
 	m_pFont				= NULL;
@@ -75,6 +76,7 @@ CVsdFilter::~CVsdFilter (){
 	delete [] m_szLogFile;
 	delete [] m_szGPSLogFile;
 	delete [] m_szSkinFile;
+	delete [] m_szSkinDir;
 	delete [] m_Polygon;
 	delete m_pFont;
 	delete m_Script;

@@ -838,6 +838,8 @@ void CVsdFilterAvu::SetSkinName( HWND hwnd ){
 	
 	// skin 名をダイアログに設定
 	SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_SKIN ), g_Vsd->m_szSkinFile );
+	
+	SetSkinDir();
 }
 
 /*** config セーブ **********************************************************/
