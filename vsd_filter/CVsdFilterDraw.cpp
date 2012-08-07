@@ -168,11 +168,6 @@ void CVsdFilter::DrawCircle(
 	
 	PIXEL_YCA yc( uColor );
 	
-	// Polygon クリア
-	if( uFlag & IMG_FILL ){
-		PolygonClear();
-	}
-	
 	// 円を書く
 	while( i >= j ){
 		PutPixel( x + i, y + j, yc, uFlag ); PutPixel( x + i, y - j, yc, uFlag );
@@ -189,7 +184,7 @@ void CVsdFilter::DrawCircle(
 	}
 	
 	// Polygon 合成
-	if( uFlag & IMG_FILL ) PolygonDraw( yc );
+	if( uFlag & IMG_FILL ) DrawPolygon( yc );
 }
 
 // http://fussy.web.fc2.com/algo/algo2-2.htm
@@ -211,11 +206,6 @@ void CVsdFilter::DrawCircle( int x, int y, int a, int b, tRABY uColor, UINT uFla
 	int		f	= -2 * d + a2 + 2 * b2;
 	int		h	= -4 * d + 2 * a2 + b2;
 	
-	// Polygon クリア
-	if( uFlag & IMG_FILL ){
-		PolygonClear();
-	}
-	
 	while( i >= 0 ){
 		PutPixel( x + i, y + j, yc, uFlag );
 		PutPixel( x - i, y + j, yc, uFlag );
@@ -235,7 +225,7 @@ void CVsdFilter::DrawCircle( int x, int y, int a, int b, tRABY uColor, UINT uFla
 	}
 	
 	// Polygon 合成
-	if( uFlag & IMG_FILL ) PolygonDraw( yc );
+	if( uFlag & IMG_FILL ) DrawPolygon( yc );
 }
 
 void CVsdFilter::DrawArc(
@@ -264,11 +254,6 @@ void CVsdFilter::DrawArc(
 	
 	
 	PIXEL_YCA yc( uColor );
-	
-	// Polygon クリア
-	if( uFlag & IMG_FILL ){
-		PolygonClear();
-	}
 	
 	int	iAreaCmpS, iAreaCmpE;
 	
@@ -311,7 +296,7 @@ void CVsdFilter::DrawArc(
 	}
 	
 	// Polygon 合成
-	if( uFlag & IMG_FILL ) PolygonDraw( yc );
+	if( uFlag & IMG_FILL ) DrawPolygon( yc );
 }
 
 void CVsdFilter::DrawArc(
@@ -530,7 +515,7 @@ inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc
 
 /*** ポリゴン描画 ***********************************************************/
 
-inline void CVsdFilter::PolygonClear( void ){
+inline void CVsdFilter::InitPolygon( void ){
 	#ifdef _OPENMP
 		#pragma omp parallel for
 	#endif
@@ -540,13 +525,20 @@ inline void CVsdFilter::PolygonClear( void ){
 	}
 }
 
-inline void CVsdFilter::PolygonDraw( const PIXEL_YCA_ARG yc ){
+inline void CVsdFilter::DrawPolygon( const PIXEL_YCA_ARG yc ){
 	#ifdef _OPENMP
 		#pragma omp parallel for
 	#endif
 	for( int y = 0; y < GetHeight(); ++y ) if( m_Polygon[ y ].iLeft <= m_Polygon[ y ].iRight ){
 		FillLine( m_Polygon[ y ].iLeft, y, m_Polygon[ y ].iRight, yc );
 	}
+	
+	InitPolygon();
+}
+
+void CVsdFilter::DrawPolygon( tRABY uColor ){
+	PIXEL_YCA	yc( uColor );
+	DrawPolygon( yc );
 }
 
 /*** カラーを混ぜる *********************************************************/
@@ -1081,6 +1073,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		// ポリゴン用バッファリサイズ
 		if( m_Polygon ) delete [] m_Polygon;
 		m_Polygon = new PolygonData_t[ m_iHeight ];
+		InitPolygon();
 		
 		// JavaScript 再起動用に削除
 		if( m_Script ){

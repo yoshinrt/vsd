@@ -52,7 +52,7 @@ function Draw(){
 		MeterR2 * 0.05, 1, 0xFFFFFF,
 		5, 135, 45,
 		MeterR2 * 0.75,
-		Vsd.Speed, 12, 0xFFFFFF,
+		Vsd.MaxSpeed, 12, 0xFFFFFF,
 		FontM
 	);
 	

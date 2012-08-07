@@ -12,7 +12,6 @@
 ・Map の Xmax, Ymax 取得
 ・Font outline フォント事前作成
 ・Font の日本語対応
-・DrawPolygon
 ・Log read の JS 化，データロギング項目の自由化
 ・Lap time 表示の機能細分化
 ・Image にも Draw 系ができるようにする

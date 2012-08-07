@@ -255,6 +255,28 @@ class CVsdFilterIF {
 		
 		return v8::Undefined();
 	}
+	static v8::Handle<v8::Value> Func_InitPolygon( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->InitPolygon();
+		
+		return v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Func_DrawPolygon( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 1 )) return v8::Undefined();
+		
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawPolygon(
+			PIXEL_RABY::Argb2Raby( args[ 0 ]->Int32Value())
+		);
+		
+		return v8::Undefined();
+	}
 	static v8::Handle<v8::Value> Func_DrawGSnake( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CheckArgs( iLen == 7 )) return v8::Undefined();
@@ -430,6 +452,8 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawText" ), v8::FunctionTemplate::New( Func_DrawText ));
 		proto->Set( v8::String::New( "DrawTextAlign" ), v8::FunctionTemplate::New( Func_DrawTextAlign ));
 		proto->Set( v8::String::New( "DrawGraph" ), v8::FunctionTemplate::New( Func_DrawGraph ));
+		proto->Set( v8::String::New( "InitPolygon" ), v8::FunctionTemplate::New( Func_InitPolygon ));
+		proto->Set( v8::String::New( "DrawPolygon" ), v8::FunctionTemplate::New( Func_DrawPolygon ));
 		proto->Set( v8::String::New( "DrawGSnake" ), v8::FunctionTemplate::New( Func_DrawGSnake ));
 		proto->Set( v8::String::New( "DrawMeterScale" ), v8::FunctionTemplate::New( Func_DrawMeterScale ));
 		proto->Set( v8::String::New( "DrawMap" ), v8::FunctionTemplate::New( Func_DrawMap ));

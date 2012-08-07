@@ -161,6 +161,7 @@ UINT CScript::Initialize( char *szFileName ){
 		"FONT_BOLD=2;"
 		"FONT_OUTLINE=4;"
 		"FONT_FIXED=8;"
+		"FONT_NOANTIALIAS=16;"
 		"ALIGN_LEFT=0;"
 		"ALIGN_TOP=0;"
 		"ALIGN_HCENTER=1;"

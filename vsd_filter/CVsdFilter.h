@@ -166,8 +166,9 @@ class CVsdFilter {
 	);
 	
 	// ƒ|ƒŠƒSƒ“•`ŽÊ
-	void PolygonClear( void );
-	void PolygonDraw( const PIXEL_YCA_ARG yc );
+	void InitPolygon( void );			// !js_func
+	void DrawPolygon( tRABY uColor );	// !js_func
+	void DrawPolygon( const PIXEL_YCA_ARG yc );
 	
 	UINT BlendColor(
 		tRABY uColor0,
