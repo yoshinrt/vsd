@@ -718,7 +718,9 @@ void CVsdFilter::DrawGSnake(
 /*** 走行軌跡表示 ***********************************************************/
 
 void CVsdFilter::DrawMap(
-	int iX, int iY, int iSize, int iWidth,
+	int x1, int y1, int x2, int y2,
+	UINT uAlign,
+	int iLineWidth,
 	int iIndicatorR,
 	tRABY uColorIndicator,
 	tRABY uColorG0,
@@ -734,6 +736,30 @@ void CVsdFilter::DrawMap(
 	
 	if( !LineTrace || !Log || !Log->IsDataExist()) return;
 	
+	int iWidth  = x2 - x1 + 1;
+	int iHeight = y2 - y1 + 1;
+	double dScaleX = iWidth  / Log->m_dMapSizeX;
+	double dScaleY = iHeight / Log->m_dMapSizeY;
+	double dScale;
+	
+	if( dScaleX < dScaleY ){
+		// 幅律速なので y1 を再計算
+		dScale = dScaleX;
+		if( uAlign & ALIGN_HCENTER ){
+			y1 = y1 + ( iHeight - ( int )( Log->m_dMapSizeY * dScale )) / 2;
+		}else if( uAlign & ALIGN_BOTTOM ){
+			y1 = y1 + ( iHeight - ( int )( Log->m_dMapSizeY * dScale ));
+		}
+	}else{
+		// 高さ律速なので x1 を再計算
+		dScale = dScaleY;
+		if( uAlign & ALIGN_HCENTER ){
+			x1 = x1 + ( iWidth - ( int )( Log->m_dMapSizeX * dScale )) / 2;
+		}else if( uAlign & ALIGN_BOTTOM ){
+			x1 = x1 + ( iWidth - ( int )( Log->m_dMapSizeX * dScale ));
+		}
+	}
+	
 	int iGxPrev = INVALID_POS_I, iGyPrev;
 	
 	int iLineSt = ( int )LapNum2LogNum( Log, m_iLapIdx );
@@ -748,9 +774,9 @@ void CVsdFilter::DrawMap(
 	
 	for( i = iLineSt; i <= iLineEd ; ++i ){
 		if( !_isnan( Log->X( i ))){
-			#define GetMapPos( p, a ) ((( p ) - Log->m_dMapOffs ## a ) / Log->m_dMapSize * iSize )
-			iGx = iX + ( int )GetMapPos( Log->X( i ), X );
-			iGy = iY + ( int )GetMapPos( Log->Y( i ), Y );
+			#define GetMapPos( p, a ) ((( p ) - Log->m_dMapOffs ## a ) * dScale )
+			iGx = x1 + ( int )GetMapPos( Log->X( i ), X );
+			iGy = y1 + ( int )GetMapPos( Log->Y( i ), Y );
 			
 			if( iGxPrev != INVALID_POS_I ){
 				if(
@@ -773,7 +799,7 @@ void CVsdFilter::DrawMap(
 					DrawLine(
 						iGx,     iGy,
 						iGxPrev, iGyPrev,
-						iWidth, uColorLine, 0
+						iLineWidth, uColorLine, 0
 					);
 					iGxPrev = iGx;
 					iGyPrev = iGy;
@@ -788,8 +814,8 @@ void CVsdFilter::DrawMap(
 	}
 	
 	// MAP インジケータ (自車)
-	dGx = iX + GetMapPos( Log->X(), X );
-	dGy = iY + GetMapPos( Log->Y(), Y );
+	dGx = x1 + GetMapPos( Log->X(), X );
+	dGy = y1 + GetMapPos( Log->Y(), Y );
 	
 	if( !_isnan( dGx )) DrawCircle(
 		( int )( dGx ), ( int )dGy, iIndicatorR,
@@ -800,12 +826,12 @@ void CVsdFilter::DrawMap(
 	if( DispSyncInfo && m_iLapMode == LAPMODE_GPS ){
 		double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
 		
-		int x1 = iX + ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsX ) / Log->m_dMapSize * iSize );
-		int y1 = iY + ( int )(( -sin( dAngle ) * m_dStartLineX1 + cos( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsY ) / Log->m_dMapSize * iSize );
-		int x2 = iX + ( int )((  cos( dAngle ) * m_dStartLineX2 + sin( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsX ) / Log->m_dMapSize * iSize );
-		int y2 = iY + ( int )(( -sin( dAngle ) * m_dStartLineX2 + cos( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsY ) / Log->m_dMapSize * iSize );
+		int xs1 = x1 + ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsX ) * dScale );
+		int ys1 = y1 + ( int )(( -sin( dAngle ) * m_dStartLineX1 + cos( dAngle ) * m_dStartLineY1 - Log->m_dMapOffsY ) * dScale );
+		int xs2 = x1 + ( int )((  cos( dAngle ) * m_dStartLineX2 + sin( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsX ) * dScale );
+		int ys2 = y1 + ( int )(( -sin( dAngle ) * m_dStartLineX2 + cos( dAngle ) * m_dStartLineY2 - Log->m_dMapOffsY ) * dScale );
 		
-		DrawLine( x1, y1, x2, y2, color_blue, 0 );
+		DrawLine( xs1, ys1, xs2, ys2, color_blue, 0 );
 	}
 }
 

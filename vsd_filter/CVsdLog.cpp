@@ -244,10 +244,8 @@ void CVsdLog::RotateMap( double dAngle ){
 		}
 	}
 	
-	dMaxX -= dMinX;
-	dMaxY -= dMinY;
-	
-	m_dMapSize	= dMaxX > dMaxY ? dMaxX : dMaxY;
+	m_dMapSizeX	= dMaxX - dMinX;
+	m_dMapSizeY	= dMaxY - dMinY;
 	m_dMapOffsX	= dMinX;
 	m_dMapOffsY	= dMinY;
 }

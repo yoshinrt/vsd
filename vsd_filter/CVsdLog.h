@@ -100,7 +100,8 @@ class CVsdLog {
 	
 	double		m_dLogNum;
 	
-	double		m_dMapSize;
+	double		m_dMapSizeX;
+	double		m_dMapSizeY;
 	double		m_dMapOffsX;
 	double		m_dMapOffsY;
 	double		m_dFreq;

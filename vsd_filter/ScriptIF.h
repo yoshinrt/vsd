@@ -328,7 +328,7 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawMap( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 9 )) return v8::Undefined();
+		if( CheckArgs( iLen == 11 )) return v8::Undefined();
 		
 		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
@@ -338,10 +338,12 @@ class CVsdFilterIF {
 			args[ 2 ]->Int32Value(),
 			args[ 3 ]->Int32Value(),
 			args[ 4 ]->Int32Value(),
-			PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
-			PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
+			args[ 5 ]->Int32Value(),
+			args[ 6 ]->Int32Value(),
 			PIXEL_RABY::Argb2Raby( args[ 7 ]->Int32Value()),
-			PIXEL_RABY::Argb2Raby( args[ 8 ]->Int32Value())
+			PIXEL_RABY::Argb2Raby( args[ 8 ]->Int32Value()),
+			PIXEL_RABY::Argb2Raby( args[ 9 ]->Int32Value()),
+			PIXEL_RABY::Argb2Raby( args[ 10 ]->Int32Value())
 		);
 		
 		return v8::Undefined();

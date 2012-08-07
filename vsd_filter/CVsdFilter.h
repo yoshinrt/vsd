@@ -192,8 +192,10 @@ class CVsdFilter {
 		int iMaxVal, int iMaxNumCnt, tRABY uColorNum,
 		CVsdFont &Font
 	);
-	void DrawMap( // !js_func
-		int iX, int iY, int iSize, int iWidth,
+	void DrawMap(	// !js_func
+		int x1, int y1, int x2, int y2,
+		UINT uAlign,
+		int iWidth,
 		int iIndicatorR,
 		tRABY uColorIndicator,
 		tRABY uColorG0,
