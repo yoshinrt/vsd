@@ -381,34 +381,52 @@ int CVsdFilter::DrawFont0( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor )
 	// 文字幅を得る
 	CFontGlyph &FontGlyph = Font.FontGlyph( c );
 	
-	int iBmpW = ( FontGlyph.iW + 3 ) & ~3;
 	int iCellIncX = Font.IsFixed() ? Font.GetWidth() : FontGlyph.iCellIncX;
 	int iOrgX = ( iCellIncX - FontGlyph.iW ) / 2;
 	
-	#ifdef _OPENMP
-		#pragma omp parallel for
-	#endif
-	for( int j = 0; j < FontGlyph.iH; ++j ) for( int i = 0; i < FontGlyph.iW; ++i ){
-		int iDensity = FontGlyph.pBuf[ iBmpW * j + i ];	// 0～64
+	if( !Font.IsNoAntialias()){
+		int iBmpW = ( FontGlyph.iW + 3 ) & ~3;
 		
-		if( iDensity ){
-			if( iDensity == 64 ){
-				PutPixel( x + iOrgX + i, y + FontGlyph.iOrgY + j, uColor, 0 );
-			}else{
-				int ir = ( uColor >> 24 ) - 0x80;
-				int ia = ( 0xFF << 6 ) - (( 0xFF - (( uColor >> 16 ) & 0xFF )) * iDensity );
-				int ib = (( uColor >>  8 ) & 0xFF ) - 0x80;
-				int iy = uColor & 0xFF;
-				
-				UINT uColorTmp = (
-					(( ir * iDensity ) & ( 0xFF << 6 )) << ( 24 - 6 ) |
-					(( ia            ) & ( 0xFF << 6 )) << ( 16 - 6 ) |
-					(( ib * iDensity ) & ( 0xFF << 6 )) << (  8 - 6 ) |
-					(( iy * iDensity ) & ( 0xFF << 6 )) >> (      6 )
-				) ^ 0x80008000;
-				
-				PutPixel( x + iOrgX + i, y + FontGlyph.iOrgY + j, uColorTmp, 0 );
+		#ifdef _OPENMP
+			#pragma omp parallel for
+		#endif
+		for( int j = 0; j < FontGlyph.iH; ++j ) for( int i = 0; i < FontGlyph.iW; ++i ){
+			int iDensity = FontGlyph.pBuf[ iBmpW * j + i ];	// 0～64
+			
+			if( iDensity ){
+				if( iDensity == 64 ){
+					PutPixel( x + iOrgX + i, y + FontGlyph.iOrgY + j, uColor, 0 );
+				}else{
+					int ir = ( uColor >> 24 ) - 0x80;
+					int ia = ( 0xFF << 6 ) - (( 0xFF - (( uColor >> 16 ) & 0xFF )) * iDensity );
+					int ib = (( uColor >>  8 ) & 0xFF ) - 0x80;
+					int iy = uColor & 0xFF;
+					
+					UINT uColorTmp = (
+						(( ir * iDensity ) & ( 0xFF << 6 )) << ( 24 - 6 ) |
+						(( ia            ) & ( 0xFF << 6 )) << ( 16 - 6 ) |
+						(( ib * iDensity ) & ( 0xFF << 6 )) << (  8 - 6 ) |
+						(( iy * iDensity ) & ( 0xFF << 6 )) >> (      6 )
+					) ^ 0x80008000;
+					
+					PutPixel( x + iOrgX + i, y + FontGlyph.iOrgY + j, uColorTmp, 0 );
+				}
 			}
+		}
+	}else{
+		int iBmpW = (( FontGlyph.iW + 31 ) & ~31 ) / 8;
+		UINT uBitmap;
+		
+		#ifdef _OPENMP
+			#pragma omp parallel for
+		#endif
+		for( int j = 0; j < FontGlyph.iH; ++j ) for( int i = 0; i < FontGlyph.iW; ++i ){
+			if(( i & 0x7 ) == 0 ) uBitmap = FontGlyph.pBuf[ iBmpW * j + ( i >> 3 ) ];
+			
+			if( uBitmap & 0x80 ){
+				PutPixel( x + iOrgX + i, y + FontGlyph.iOrgY + j, uColor, 0 );
+			}
+			uBitmap <<= 1;
 		}
 	}
 	
@@ -1071,7 +1089,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 		// フォントサイズ初期化
 		if( m_pFont ) delete m_pFont;
-		m_pFont = new CVsdFont( DEFAULT_FONT, 18, CVsdFont::ATTR_OUTLINE );
+		m_pFont = new CVsdFont( DEFAULT_FONT, 18, CVsdFont::ATTR_OUTLINE | CVsdFont::ATTR_NOANTIALIAS );
 	}
 	
 	CVsdLog *Log;

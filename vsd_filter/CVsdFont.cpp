@@ -59,19 +59,21 @@ void CVsdFont::CreateFont( LOGFONT &logfont ){
 	
 	int iSize;
 	
+	int	iBitmapDepth = IsNoAntialias() ? GGO_BITMAP : GGO_GRAY8_BITMAP;
+	
 	// プロポーショナルの Space 幅取得
-	GetGlyphOutline( hdc, ' ', GGO_GRAY8_BITMAP, &gm, 0, NULL, &mat );
+	GetGlyphOutline( hdc, ' ', iBitmapDepth, &gm, 0, NULL, &mat );
 	m_iFontW_Space = gm.gmCellIncX;
 	
 	for( i = FONT_CHAR_FIRST; i <= FONT_CHAR_LAST; ++i ){
 		// 必要配列サイズ取得
-		iSize = GetGlyphOutline( hdc, i, GGO_GRAY8_BITMAP, &gm, 0, NULL, &mat );
+		iSize = GetGlyphOutline( hdc, i, iBitmapDepth, &gm, 0, NULL, &mat );
 		
 		if( iSize > 0 ){
 			FontGlyph( i ).pBuf = new BYTE[ iSize ];
 			
 			// フォントデータ取得
-			GetGlyphOutline( hdc, i, GGO_GRAY8_BITMAP, &gm, iSize, FontGlyph( i ).pBuf, &mat );
+			GetGlyphOutline( hdc, i, iBitmapDepth, &gm, iSize, FontGlyph( i ).pBuf, &mat );
 			FontGlyph( i ).iW			= gm.gmBlackBoxX;
 			FontGlyph( i ).iH			= gm.gmBlackBoxY;
 			FontGlyph( i ).iOrgY		= tm.tmAscent - gm.gmptGlyphOrigin.y;

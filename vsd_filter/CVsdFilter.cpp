@@ -396,6 +396,7 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 	m_GPSLog->GPSLogUpConvert( GPSLog, uGPSCnt, TRUE );
 	m_GPSLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	
+#if 0
 	DebugCmd( {
 		FILE *fpp = fopen( "D:\\DDS\\vsd\\vsd_filter\\z_gps_raw.txt", "w" );
 		for( u = 0; u < uGPSCnt; ++u ){
@@ -429,6 +430,25 @@ BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
 		}
 		fclose( fpp );
 	} )
+	
+	DebugCmd( {
+		FILE *fpp = fopen( "D:\\DDS\\vsd\\vsd_filter\\z_upcon_vsd.txt", "w" );
+		for( u = 0; u < ( UINT )m_VsdLog->m_iCnt; ++u ){
+			fprintf( fpp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
+				m_VsdLog->m_Log[ u ].Speed(),
+				m_VsdLog->m_Log[ u ].Tacho(),
+				m_VsdLog->m_Log[ u ].Mileage(),
+				m_VsdLog->m_Log[ u ].X(),
+				m_VsdLog->m_Log[ u ].Y(),
+				m_VsdLog->m_Log[ u ].X0(),
+				m_VsdLog->m_Log[ u ].Y0(),
+				m_VsdLog->m_Log[ u ].Gx(),
+				m_VsdLog->m_Log[ u ].Gy()
+			);
+		}
+		fclose( fpp );
+	} )
+#endif
 	
 	DeleteIfZero( m_GPSLog );
 	if( m_GPSLog ) m_GPSLog->m_dLogStartTime = dTime0 + 9 * 3600;

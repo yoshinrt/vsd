@@ -39,6 +39,7 @@ class CVsdFont {
 	static BOOL ExistFont( UCHAR c ){ return FONT_CHAR_FIRST <= c && c <= FONT_CHAR_LAST; }
 	BOOL IsOutline( void ){ return m_uAttr & ATTR_OUTLINE; }
 	BOOL IsFixed( void ){ return m_uAttr & ATTR_FIXED; }
+	BOOL IsNoAntialias( void ){ return m_uAttr & ATTR_NOANTIALIAS; }
 	
 	CFontGlyph& FontGlyph( UCHAR c ){
 		return m_FontGlyph[ c - FONT_CHAR_FIRST ];
