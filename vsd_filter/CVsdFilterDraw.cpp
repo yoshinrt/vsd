@@ -25,6 +25,8 @@
 
 /*** macros *****************************************************************/
 
+#define SPRINTF_BUF		128
+
 #define INVALID_POS_I	0x7FFFFFFF
 #define MAX_LINE_LEN	2000
 
@@ -561,8 +563,6 @@ inline UINT CVsdFilter::BlendColor(
 /*** メーター描画 ***********************************************************/
 /****************************************************************************/
 
-static char g_szBuf[ BUF_SIZE ];
-
 /*** パラメータ調整用スピードグラフ *****************************************/
 
 #define GRAPH_SCALE	2
@@ -592,6 +592,8 @@ void CVsdFilter::DrawGraph(
 	double	dCursorVal;
 	double	dVal;
 	
+	char	szBuf[ SPRINTF_BUF ];
+	
 	for( int x = 0; x < iWidth; ++x ){
 		int iLogNum = Log.m_iLogNum + ( x - iWidth / 2 ) * GRAPH_SCALE;
 		if( iLogNum < 0 || Log.m_iCnt < iLogNum ){
@@ -619,11 +621,11 @@ void CVsdFilter::DrawGraph(
 		1, uColor, 0
 	);
 	
-	sprintf( g_szBuf, szFormat, dCursorVal );
+	sprintf( szBuf, szFormat, dCursorVal );
 	DrawText(
 		x + 10,
 		iCursorPos - 10 - Font.GetHeight(),
-		g_szBuf, Font, uColor
+		szBuf, Font, uColor
 	);
 }
 
@@ -865,6 +867,7 @@ void CVsdFilter::DrawLapTime(
 	
 	BOOL	bInLap = FALSE;	// ラップタイム計測中
 	int	i;
+	char	szBuf[ SPRINTF_BUF ];
 	
 	if( !DispLap || !m_iLapNum ) return;
 	
@@ -882,8 +885,8 @@ void CVsdFilter::DrawLapTime(
 			iTime = ( int )(( GetFrameCnt() - m_Lap[ m_iLapIdx ].fLogNum ) * 1000.0 / GetFPS());
 		}
 		
-		sprintf( g_szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
-		DrawText( x, y, g_szBuf, Font, uColor, uColorOutline );
+		sprintf( szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
+		DrawText( x, y, szBuf, Font, uColor, uColorOutline );
 		bInLap = TRUE;
 	}else{
 		// まだ開始していない
@@ -943,13 +946,13 @@ void CVsdFilter::DrawLapTime(
 			if( iDiffTime < 0 ) iDiffTime = -iDiffTime;
 			
 			sprintf(
-				g_szBuf, "    %c%d'%02d.%03d",
+				szBuf, "    %c%d'%02d.%03d",
 				bSign ? '-' : '+',
 				iDiffTime / 60000,
 				iDiffTime / 1000 % 60,
 				iDiffTime % 1000
 			);
-			DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, Font, bSign ? uColorBest : uColorPlus, uColorOutline );
+			DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, Font, bSign ? uColorBest : uColorPlus, uColorOutline );
 		}else{
 			m_iPosY += Font.GetHeight();
 		}
@@ -959,12 +962,12 @@ void CVsdFilter::DrawLapTime(
 	
 	// Best 表示
 	sprintf(
-		g_szBuf, "Best%2d'%02d.%03d",
+		szBuf, "Best%2d'%02d.%03d",
 		m_iBestTime / 60000,
 		m_iBestTime / 1000 % 60,
 		m_iBestTime % 1000
 	);
-	DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, Font, uColor, uColorOutline );
+	DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, Font, uColor, uColorOutline );
 	
 	// Lapタイム表示
 	// 3つタイム表示する分の，最後の LapIdx を求める．
@@ -987,7 +990,7 @@ void CVsdFilter::DrawLapTime(
 		for( ; iLapIdxStart <= iLapIdxEnd; ++iLapIdxStart ){
 			if( m_Lap[ iLapIdxStart ].iTime != 0 ){
 				sprintf(
-					g_szBuf, "%3d%c%2d'%02d.%03d",
+					szBuf, "%3d%c%2d'%02d.%03d",
 					m_Lap[ iLapIdxStart ].uLap,
 					( iLapIdxStart == m_iLapIdx + 1 && bInLap ) ? '*' : ' ',
 					m_Lap[ iLapIdxStart ].iTime / 60000,
@@ -995,7 +998,7 @@ void CVsdFilter::DrawLapTime(
 					m_Lap[ iLapIdxStart ].iTime % 1000
 				);
 				DrawText(
-					POS_DEFAULT, POS_DEFAULT, g_szBuf, Font,
+					POS_DEFAULT, POS_DEFAULT, szBuf, Font,
 					m_iBestTime == m_Lap[ iLapIdxStart ].iTime ? uColorBest : uColor,
 					uColorOutline
 				);
@@ -1018,6 +1021,7 @@ void CVsdFilter::DrawMeterScale(
 	CVsdFont &Font
 ){
 	int	i;
+	char	szBuf[ SPRINTF_BUF ];
 	
 	const int iDegRange	= ( iMaxDeg + 360 - iMinDeg ) % 360;
 	
@@ -1048,12 +1052,12 @@ void CVsdFilter::DrawMeterScale(
 			);
 			
 			// メーターパネル目盛り数値
-			sprintf( g_szBuf, "%d", iStep * i / iLine2Cnt );
+			sprintf( szBuf, "%d", iStep * i / iLine2Cnt );
 			DrawTextAlign(
 				( int )( cos( dAngle ) * iRNum ) + iCx,
 				( int )( sin( dAngle ) * iRNum ) + iCy,
 				ALIGN_HCENTER | ALIGN_VCENTER,
-				g_szBuf, Font, uColorNum
+				szBuf, Font, uColorNum
 			);
 		}else{
 			// 小目盛り
@@ -1090,6 +1094,8 @@ void CVsdFilter::DispErrorMessage( char *szMsg ){
 /*** メーター等描画 *********************************************************/
 
 BOOL CVsdFilter::DrawVSD( void ){
+	
+	char	szBuf[ SPRINTF_BUF ];
 	
 	// 解像度変更
 	if( m_iWidth != GetWidth() || m_iHeight != GetHeight()){
@@ -1205,47 +1211,47 @@ BOOL CVsdFilter::DrawVSD( void ){
 		if( m_GPSLog ){
 			int i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->m_dLogNum / LOG_FREQ ) * 100 ) % ( 24 * 3600 * 100 );
 			sprintf(
-				g_szBuf, "GPS time: %02d:%02d:%02d.%02d",
+				szBuf, "GPS time: %02d:%02d:%02d.%02d",
 				i / 360000,
 				i / 6000 % 60,
 				i /  100 % 60,
 				i        % 100
 			);
-			DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, color_white );
+			DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
 		}
 		
 		#ifndef GPS_ONLY
 			DrawText( POS_DEFAULT, POS_DEFAULT, "        start       end     range cur.pos", *m_pFont, color_white );
 			
 			sprintf(
-				g_szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+				szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
 				Float2Time( VideoSt / GetFPS()),
 				Float2Time( VideoEd / GetFPS()),
 				Float2Time(( VideoEd - VideoSt ) / GetFPS()),
 				GetFrameCnt()
 			);
-			DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, color_white );
+			DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
 			
 			if( m_VsdLog ){
 				sprintf(
-					g_szBuf, "Log%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+					szBuf, "Log%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
 					Float2Time( LogSt / m_VsdLog->m_dFreq ),
 					Float2Time( LogEd / m_VsdLog->m_dFreq ),
 					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
 					m_VsdLog->m_iLogNum
 				);
-				DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, color_white );
+				DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
 			}
 			
 			if( m_GPSLog ){
 				sprintf(
-					g_szBuf, "GPS%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+					szBuf, "GPS%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
 					Float2Time( GPSSt / m_GPSLog->m_dFreq ),
 					Float2Time( GPSEd / m_GPSLog->m_dFreq ),
 					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),
 					m_GPSLog->m_iLogNum
 				);
-				DrawText( POS_DEFAULT, POS_DEFAULT, g_szBuf, *m_pFont, color_white );
+				DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
 			}
 		#endif	// !GPS_ONLY
 	}

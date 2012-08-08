@@ -28,6 +28,8 @@
 
 /*** static member **********************************************************/
 
+HINSTANCE	CVsdFilter::m_hInst 	= NULL;
+
 /*** コンストラクタ *********************************************************/
 
 CVsdFilter::CVsdFilter (){
@@ -53,6 +55,7 @@ CVsdFilter::CVsdFilter (){
 	m_szGPSLogFile		= new char[ BUF_SIZE ];
 	m_szSkinFile		= new char[ MAX_PATH + 1 ];
 	m_szSkinDir			= new char[ MAX_PATH + 1 ];
+	m_szPluginDir		= new char[ MAX_PATH + 1 ];
 	
 	m_Polygon			= NULL;	// DrawPolygon 用バッファ
 	m_pFont				= NULL;
@@ -61,6 +64,11 @@ CVsdFilter::CVsdFilter (){
 	#define DEF_STR_PARAM( id, var, init, conf_name ) strcpy( var, init );
 	#include "def_str_param.h"
 	
+	// plugin dll path 取得
+	GetModuleFileName(( HMODULE )m_hInst, m_szPluginDir, MAX_PATH );
+	char *p = StrTokFile( NULL, m_szPluginDir, STF_NODE );
+	if( p ) *p = '\0';
+
 	m_Script	= NULL;
 	
 	m_iWidth	=
@@ -77,6 +85,7 @@ CVsdFilter::~CVsdFilter (){
 	delete [] m_szGPSLogFile;
 	delete [] m_szSkinFile;
 	delete [] m_szSkinDir;
+	delete [] m_szPluginDir;
 	delete [] m_Polygon;
 	delete m_pFont;
 	delete m_Script;
@@ -869,4 +878,17 @@ void CVsdFilter::CalcLapTimeAuto( void ){
 	}
 	m_Lap[ m_iLapNum ].fLogNum	= FLT_MAX;	// 番犬
 	m_Lap[ m_iLapNum ].iTime	= 0;		// 番犬
+}
+
+/****************************************************************************/
+
+BOOL WINAPI DllMain(
+	HINSTANCE	hinstDLL,	// handle to DLL module
+	DWORD		fdwReason,	// reason for calling function
+	LPVOID		lpvReserved	// reserved
+){
+	if( fdwReason == DLL_PROCESS_ATTACH ){
+		CVsdFilter::m_hInst = hinstDLL;
+	}
+	return TRUE;
 }

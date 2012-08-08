@@ -88,10 +88,6 @@ enum {
 
 #define INVALID_INT		0x80000000
 
-/*** gloval var *************************************************************/
-
-HINSTANCE		g_hInst 	= NULL;
-
 /****************************************************************************/
 //---------------------------------------------------------------------
 //		フィルタ構造体定義
@@ -1233,18 +1229,5 @@ BOOL func_update( FILTER *filter, int status ){
 
 BOOL func_save_start( FILTER *filter,int s,int e,void *editp ){
 	filter->check[ CHECK_SYNCINFO ] = 0;
-	return TRUE;
-}
-
-/****************************************************************************/
-
-BOOL WINAPI DllMain(
-	HINSTANCE	hinstDLL,	// handle to DLL module
-	DWORD		fdwReason,	// reason for calling function
-	LPVOID		lpvReserved	// reserved
-){
-	if( fdwReason == DLL_PROCESS_ATTACH ){
-		g_hInst = hinstDLL;
-	}
 	return TRUE;
 }

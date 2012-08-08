@@ -141,11 +141,13 @@ UINT CScript::CompileRun( const char *szScript, const char *szFileName ){
 	}
 	
 	assert( !try_catch.HasCaught());
+	/*
 	if( !result->IsUndefined()) {
 		// If all went well and the result wasn't undefined then print
 		// the returned value.
 		return result->Int32Value();
 	}
+	*/
 	return ERR_OK;
 }
 
@@ -237,10 +239,12 @@ UINT CScript::Run( const char *szFunc ){
 	}
 	
 	assert( !try_catch.HasCaught());
+	/*
 	if( !result->IsUndefined()) {
 		// If all went well and the result wasn't undefined then print
 		// the returned value.
 		return result->Int32Value();
 	}
+	*/
 	return ERR_OK;
 }

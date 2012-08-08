@@ -239,6 +239,7 @@ class CVsdFilter {
 	char	*m_szGPSLogFile;
 	char	*m_szSkinFile;
 	char	*m_szSkinDir;	// !js_var:SkinDir
+	char	*m_szPluginDir;	// !js_var:VsdRootDir
 	
 	char *SetSkinDir( void ){
 		return StrTokFile( m_szSkinDir, m_szSkinFile, STF_FULL | STF_PATH2 );
@@ -272,6 +273,8 @@ class CVsdFilter {
 	double	m_dGx;			// !js_var:Gx
 	double	m_dGy;			// !js_var:Gy
 	int		m_iMaxSpeed;	// !js_var:MaxSpeed
+	
+	static HINSTANCE	m_hInst;	// dll handle
 	
   protected:
 	
