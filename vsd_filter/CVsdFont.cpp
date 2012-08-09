@@ -46,7 +46,6 @@ void CVsdFont::CreateFont( LOGFONT &logfont ){
 	
 	const MAT2		mat = {{ 0, 1 }, { 0, 0 }, { 0, 0 }, { 0, 1 }};
     GLYPHMETRICS	gm;
-    int	i;
 	
 	// DC, FONT ハンドル取得
 	HDC		hdc			= GetDC( NULL );
@@ -57,17 +56,15 @@ void CVsdFont::CreateFont( LOGFONT &logfont ){
 	TEXTMETRIC tm;
 	GetTextMetrics( hdc, &tm );
 	
-	int iSize;
-	
 	int	iBitmapDepth = IsNoAntialias() ? GGO_BITMAP : GGO_GRAY8_BITMAP;
 	
 	// プロポーショナルの Space 幅取得
 	GetGlyphOutline( hdc, ' ', iBitmapDepth, &gm, 0, NULL, &mat );
 	m_iFontW_Space = gm.gmCellIncX;
 	
-	for( i = FONT_CHAR_FIRST; i <= FONT_CHAR_LAST; ++i ){
+	for( int i = FONT_CHAR_FIRST; i <= FONT_CHAR_LAST; ++i ){
 		// 必要配列サイズ取得
-		iSize = GetGlyphOutline( hdc, i, iBitmapDepth, &gm, 0, NULL, &mat );
+		int iSize = GetGlyphOutline( hdc, i, iBitmapDepth, &gm, 0, NULL, &mat );
 		
 		if( iSize > 0 ){
 			FontGlyph( i ).pBuf = new BYTE[ iSize ];

@@ -67,7 +67,7 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Get_MaxSpeed( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Integer::New( obj->m_iMaxSpeed ) : v8::Undefined();
+		return obj ? v8::Integer::New( obj->GetMaxSpeed() ) : v8::Undefined();
 	}
 
 	///// メソッドコールバック /////

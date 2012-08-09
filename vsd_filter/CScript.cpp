@@ -81,6 +81,11 @@ void CScript::ReportException( TryCatch* try_catch ){
 
 CVsdFilter *CScript::m_Vsd;
 
+const char *CScript::m_szErrorMsgID[] = {
+	#define DEF_ERROR( id, msg )	msg,
+	#include "def_error.h"
+};
+
 /*** コンストラクタ *********************************************************/
 
 CScript::CScript( CVsdFilter *pVsd ){
@@ -97,7 +102,7 @@ CScript::CScript( CVsdFilter *pVsd ){
 	m_Context.Clear();
 	m_Vsd			= pVsd;
 	m_szErrorMsg	= NULL;
-	m_bError		= FALSE;
+	m_uError		= ERR_OK;
 }
 
 /*** デストラクタ ***********************************************************/
@@ -140,6 +145,10 @@ void CScript::Initialize( void ){
 #define SCRIPT_SIZE	( 64 * 1024 )
 
 UINT CScript::RunFile( char *szFileName ){
+	#ifdef AVS_PLUGIN
+		v8::Isolate::Scope IsolateScope( m_pIsolate );
+	#endif
+
 	HandleScope handle_scope;
 	
 	// 環境からスコープを生成
@@ -153,7 +162,7 @@ UINT CScript::RunFile( char *szFileName ){
 	FILE *fp;
 	if(( fp = fopen( szFileName, "r" )) == NULL ){
 		// エラー処理
-		return ERR_FILE_NOT_FOUND;
+		return m_uError = ERR_FILE_NOT_FOUND;
 	}
 	
 	int iReadSize = fread( szBuf, 1, SCRIPT_SIZE, fp );
@@ -169,7 +178,7 @@ UINT CScript::RunFile( char *szFileName ){
 	if( script.IsEmpty()){
 		// Print errors that happened during compilation.
 		ReportException( &try_catch );
-		return ERR_SCRIPT;
+		return m_uError = ERR_SCRIPT;
 	}
 	
 	// とりあえず初期化処理
@@ -179,7 +188,7 @@ UINT CScript::RunFile( char *szFileName ){
 		assert( try_catch.HasCaught());
 		// Print errors that happened during execution.
 		ReportException( &try_catch );
-		return ERR_SCRIPT;
+		return m_uError = ERR_SCRIPT;
 	}
 	
 	assert( !try_catch.HasCaught());
@@ -187,10 +196,10 @@ UINT CScript::RunFile( char *szFileName ){
 	if( !result->IsUndefined()) {
 		// If all went well and the result wasn't undefined then print
 		// the returned value.
-		return result->Int32Value();
+		return m_uError = result->Int32Value();
 	}
 	*/
-	return ERR_OK;
+	return m_uError = ERR_OK;
 }
 
 /*** function 名指定実行，引数なし ******************************************/
@@ -211,7 +220,7 @@ UINT CScript::Run( const char *szFunc ){
 		if( !m_szErrorMsg ) m_szErrorMsg = new char[ 10240 ];
 		
 		sprintf( m_szErrorMsg, "Undefined function \"%s()\"", szFunc );
-		return ERR_SCRIPT;
+		return m_uError = ERR_SCRIPT;
 	}
 	Handle<Value> result = hFunction->Call( hFunction, 0, 0 );
 	
@@ -220,7 +229,7 @@ UINT CScript::Run( const char *szFunc ){
 		try_catch.HasCaught();
 		// Print errors that happened during execution.
 		ReportException( &try_catch );
-		return ERR_SCRIPT;
+		return m_uError = ERR_SCRIPT;
 	}
 	
 	assert( !try_catch.HasCaught());
@@ -228,8 +237,8 @@ UINT CScript::Run( const char *szFunc ){
 	if( !result->IsUndefined()) {
 		// If all went well and the result wasn't undefined then print
 		// the returned value.
-		return result->Int32Value();
+		return m_uError = result->Int32Value();
 	}
 	*/
-	return ERR_OK;
+	return m_uError = ERR_OK;
 }

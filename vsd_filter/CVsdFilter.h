@@ -213,7 +213,7 @@ class CVsdFilter {
 		int iWidth // !default:1
 	);
 	
-	void DispErrorMessage( char *szMsg );
+	void DispErrorMessage( const char *szMsg );
 	
 	enum {
 		IMG_FILL	= ( 1 << 0 ),
@@ -283,6 +283,7 @@ class CVsdFilter {
 	
 	CVsdLog	*m_VsdLog;
 	CVsdLog	*m_GPSLog;
+	CVsdLog *m_CurLog;
 	
 	BOOL ParseMarkStr( const char *szMark );
 	BOOL ReadGPSLog( const char *szFileName );
@@ -301,7 +302,10 @@ class CVsdFilter {
 	double	m_dTacho;		// !js_var:Tacho
 	double	m_dGx;			// !js_var:Gx
 	double	m_dGy;			// !js_var:Gy
-	int		m_iMaxSpeed;	// !js_var:MaxSpeed
+	
+	int	GetMaxSpeed( void ){ // !js_var:MaxSpeed
+		return m_CurLog->m_iMaxSpeed;
+	}
 	
 	static HINSTANCE	m_hInst;	// dll handle
 	

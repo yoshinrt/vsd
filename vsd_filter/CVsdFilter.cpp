@@ -216,7 +216,7 @@ BOOL CVsdFilter::ReadGPSLog( const char *szFileName ){
 				GPSLog.push_back( GpsLogTmp );
 				
 				if( uGPSCnt >=2 ){
-					if( GPSLog[ uGPSCnt - 1 ].Time() == GpsLogTmp.Time() ){
+					if( GPSLog[ uGPSCnt - 1 ].Time() == GpsLogTmp.Time()){
 						// 時刻が同じログが続くときそのカウントをする
 						++uSameCnt;
 					}else if( uSameCnt ){
@@ -225,7 +225,7 @@ BOOL CVsdFilter::ReadGPSLog( const char *szFileName ){
 						
 						for( u = 1; u < uSameCnt; ++ u ){
 							GPSLog[ uGPSCnt - uSameCnt + u ].SetTime(
-								( GpsLogTmp.Time() - GPSLog[ uGPSCnt - uSameCnt ].Time() )
+								( GpsLogTmp.Time() - GPSLog[ uGPSCnt - uSameCnt ].Time())
 								/ uSameCnt * u
 								);
 						}
@@ -345,7 +345,7 @@ BOOL CVsdFilter::ReadGPSLog( const char *szFileName ){
 			GPSLog.push_back( GpsLogTmp );
 			
 			if( uGPSCnt >=2 ){
-				if( GPSLog[ uGPSCnt - 1 ].Time() == GpsLogTmp.Time() ){
+				if( GPSLog[ uGPSCnt - 1 ].Time() == GpsLogTmp.Time()){
 					// 時刻が同じログが続くときそのカウントをする
 					++uSameCnt;
 				}else if( uSameCnt ){
@@ -636,8 +636,8 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 			}else{
 				bCalibrating = FALSE;
 				
-				if( m_VsdLog->m_iMaxSpeed < VsdLogTmp.Speed() )
-					m_VsdLog->m_iMaxSpeed = ( int )ceil( VsdLogTmp.Speed() / 10 ) * 10;
+				if( m_VsdLog->m_iMaxSpeed < VsdLogTmp.Speed())
+					m_VsdLog->m_iMaxSpeed = ( int )ceil( VsdLogTmp.Speed());
 			}
 			
 			// メーター補正
@@ -789,8 +789,8 @@ void CVsdFilter::CalcLapTimeAuto( void ){
 	// iLogNum ～ iLogNum + 1 の方位を算出
 	
 	double dAngle = atan2(
-		( m_GPSLog->m_Log[ iLogNum + 1 ].Y0() - m_GPSLog->m_Log[ iLogNum ].Y0() ),
-		( m_GPSLog->m_Log[ iLogNum + 1 ].X0() - m_GPSLog->m_Log[ iLogNum ].X0() )
+		( m_GPSLog->m_Log[ iLogNum + 1 ].Y0() - m_GPSLog->m_Log[ iLogNum ].Y0()),
+		( m_GPSLog->m_Log[ iLogNum + 1 ].X0() - m_GPSLog->m_Log[ iLogNum ].X0())
 	);
 	
 	#define x1 m_dStartLineX1
@@ -838,8 +838,8 @@ void CVsdFilter::CalcLapTimeAuto( void ){
 		
 		// 進行方向の判定，dAngle ±45度
 		double dAngle2 = dAngle - atan2(
-			( m_GPSLog->m_Log[ i + 1 ].Y0() - m_GPSLog->m_Log[ i ].Y0() ),
-			( m_GPSLog->m_Log[ i + 1 ].X0() - m_GPSLog->m_Log[ i ].X0() )
+			( m_GPSLog->m_Log[ i + 1 ].Y0() - m_GPSLog->m_Log[ i ].Y0()),
+			( m_GPSLog->m_Log[ i + 1 ].X0() - m_GPSLog->m_Log[ i ].X0())
 		);
 		if     ( dAngle2 < -180 * ToRAD ) dAngle2 += 360 * ToRAD;
 		else if( dAngle2 >  180 * ToRAD ) dAngle2 -= 360 * ToRAD;

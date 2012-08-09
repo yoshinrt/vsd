@@ -24,9 +24,15 @@ class CScript {
 	static CVsdFilter	*m_Vsd;	// ÉGÅc
 	
 	char *m_szErrorMsg;
-	BOOL m_bError;
+	UINT m_uError;
+	
+	const char *GetErrorMessage( void ){
+		return m_szErrorMsg ? m_szErrorMsg : m_szErrorMsgID[ m_uError ];
+	}
 	
   private:
 	v8::Persistent<v8::Context> m_Context;
 	v8::Isolate	*m_pIsolate;
+	
+	static const char *m_szErrorMsgID[];
 };

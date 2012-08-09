@@ -74,7 +74,7 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, UINT uCnt, BOOL b
 				sqrt(
 					pow( GPSLog[ u + 1 ].X() - GPSLog[ u - 1 ].X(), 2 ) +
 					pow( GPSLog[ u + 1 ].Y() - GPSLog[ u - 1 ].Y(), 2 )
-				) / ( GPSLog[ u + 1 ].Time() - GPSLog[ u - 1 ].Time() )
+				) / ( GPSLog[ u + 1 ].Time() - GPSLog[ u - 1 ].Time())
 				* ( 3600.0 / 1000 )
 			);
 		}
@@ -102,9 +102,9 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, UINT uCnt, BOOL b
 	for( u = 1; u < uCnt - 1; ++u ){
 		// Gx / Gy を作る
 		GPSLog[ u ].SetGy(
-			( GPSLog[ u + 1 ].Speed() - GPSLog[ u - 1 ].Speed() )
+			( GPSLog[ u + 1 ].Speed() - GPSLog[ u - 1 ].Speed())
 			* ( 1 / 3.600 / GRAVITY )
-			/ ( GPSLog[ u + 1 ].Time() - GPSLog[ u - 1 ].Time() )
+			/ ( GPSLog[ u + 1 ].Time() - GPSLog[ u - 1 ].Time())
 		);
 		
 		// 横G = vω
@@ -137,12 +137,12 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, UINT uCnt, BOOL b
 		// の範囲になるよう調整
 		
 		// m_iCnt が下限を下回っているのでインクリ
-		if(( float )m_iCnt / LOG_FREQ < GPSLog[ u ].Time() ){
+		if(( float )m_iCnt / LOG_FREQ < GPSLog[ u ].Time()){
 			for( ; ( float )m_iCnt / LOG_FREQ < GPSLog[ u ].Time(); ++m_iCnt );
 		}
 		
 		// m_iCnt が上限を上回っているので，u をインクリ
-		if(( float )m_iCnt / LOG_FREQ >= GPSLog[ u + 1 ].Time() ){
+		if(( float )m_iCnt / LOG_FREQ >= GPSLog[ u + 1 ].Time()){
 			for( ; ( float )m_iCnt / LOG_FREQ >= GPSLog[ u + 1 ].Time(); ++u );
 			
 			// GPS ログ範囲を超えたので return
@@ -152,8 +152,8 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, UINT uCnt, BOOL b
 		// 5秒以上 GPS ログがあいていれば，補完情報の計算をしない
 		//if( GPSLog[ u + 1 ].Time() - GPSLog[ u ].Time() > 5 ) continue;
 		
-		t = (( double )m_iCnt / LOG_FREQ - GPSLog[ u ].Time() )
-			/ ( GPSLog[ u + 1 ].Time() - GPSLog[ u ].Time() );
+		t = (( double )m_iCnt / LOG_FREQ - GPSLog[ u ].Time())
+			/ ( GPSLog[ u + 1 ].Time() - GPSLog[ u ].Time());
 		
 		#define GetLogIntermediateVal( p )\
 			( GPSLog[ u ].p() * ( 1 - t ) + GPSLog[ u + 1 ].p() * t )
@@ -166,8 +166,8 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, UINT uCnt, BOOL b
 		if( bAllParam ){
 			LogTmp.SetSpeed( GetLogIntermediateVal( Speed ));
 			
-			if( m_iMaxSpeed < LogTmp.Speed() )
-				m_iMaxSpeed = ( int )ceil( LogTmp.Speed() / 10 ) * 10;
+			if( m_iMaxSpeed < LogTmp.Speed())
+				m_iMaxSpeed = ( int )ceil( LogTmp.Speed());
 			
 			if( m_iCnt ){
 				dMileage += sqrt(
@@ -183,8 +183,8 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, UINT uCnt, BOOL b
 			LogTmp.SetGy( GetLogIntermediateVal( Gy ));
 		}else{
 			// PSP GPS log のときは，G の MAX 値のみをチェック
-			if( m_dMaxG < LogTmp.Gy() ) m_dMaxG = LogTmp.Gy();
-			if( m_dMinG > LogTmp.Gy() ) m_dMinG = LogTmp.Gy();
+			if( m_dMaxG < LogTmp.Gy()) m_dMaxG = LogTmp.Gy();
+			if( m_dMinG > LogTmp.Gy()) m_dMinG = LogTmp.Gy();
 		}
 		
 		m_Log.push_back( LogTmp );
@@ -230,17 +230,17 @@ void CVsdLog::RotateMap( double dAngle ){
 	dMaxX = dMinX = dMaxY = dMinY = 0;
 	
 	for( i = 0; i < m_iCnt; ++i ){
-		if( _isnan( m_Log[ i ].X0() )){
+		if( _isnan( m_Log[ i ].X0())){
 			m_Log[ i ].SetX( m_Log[ i ].X0());
 			m_Log[ i ].SetY( m_Log[ i ].Y0());
 		}else{
 			m_Log[ i ].SetX(  cos( dAngle ) * m_Log[ i ].X0() + sin( dAngle ) * m_Log[ i ].Y0());
 			m_Log[ i ].SetY( -sin( dAngle ) * m_Log[ i ].X0() + cos( dAngle ) * m_Log[ i ].Y0());
 			
-			if     ( dMaxX < m_Log[ i ].X() ) dMaxX = m_Log[ i ].X();
-			else if( dMinX > m_Log[ i ].X() ) dMinX = m_Log[ i ].X();
-			if     ( dMaxY < m_Log[ i ].Y() ) dMaxY = m_Log[ i ].Y();
-			else if( dMinY > m_Log[ i ].Y() ) dMinY = m_Log[ i ].Y();
+			if     ( dMaxX < m_Log[ i ].X()) dMaxX = m_Log[ i ].X();
+			else if( dMinX > m_Log[ i ].X()) dMinX = m_Log[ i ].X();
+			if     ( dMaxY < m_Log[ i ].Y()) dMaxY = m_Log[ i ].Y();
+			else if( dMinY > m_Log[ i ].Y()) dMinY = m_Log[ i ].Y();
 		}
 	}
 	
