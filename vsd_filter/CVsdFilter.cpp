@@ -51,24 +51,25 @@ CVsdFilter::CVsdFilter (){
 	
 	m_bCalcLapTimeReq	= FALSE;
 	
-	m_szLogFile			= new char[ MAX_PATH + 1 ];
-	m_szGPSLogFile		= new char[ BUF_SIZE ];
-	m_szSkinFile		= new char[ MAX_PATH + 1 ];
-	m_szSkinDir			= new char[ MAX_PATH + 1 ];
-	m_szPluginDir		= new char[ MAX_PATH + 1 ];
-	
 	m_Polygon			= NULL;	// DrawPolygon 用バッファ
 	m_pFont				= NULL;
 	
+	m_szLogFile			= NULL;
+	m_szGPSLogFile		= NULL;
+	m_szSkinFile		= NULL;
+	m_szSkinDir			= NULL;
+	m_szPluginDir		= NULL;
+	
 	// str param に初期値設定
-	#define DEF_STR_PARAM( id, var, init, conf_name ) strcpy( var, init );
+	#define DEF_STR_PARAM( id, var, init, conf_name ) StringNew( var, init );
 	#include "def_str_param.h"
 	
+	// SkinDir セット
+	SetSkinDir( m_szSkinDir, m_szSkinFile );
+	
 	// plugin dll path 取得
-	GetModuleFileName(( HMODULE )m_hInst, m_szPluginDir, MAX_PATH );
-	char *p = StrTokFile( NULL, m_szPluginDir, STF_NODE );
-	if( p ) *p = '\0';
-
+	SetPluginDir( m_szPluginDir );
+	
 	m_Script	= NULL;
 	
 	m_iWidth	=

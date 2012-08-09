@@ -1095,7 +1095,7 @@ void CVsdFilter::DispErrorMessage( char *szMsg ){
 
 BOOL CVsdFilter::DrawVSD( void ){
 	
-	char	szBuf[ SPRINTF_BUF ];
+	char	szBuf[ MAX_PATH + 1 ];
 	
 	// 解像度変更
 	if( m_iWidth != GetWidth() || m_iHeight != GetHeight()){
@@ -1179,9 +1179,15 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	// スクリプト実行
 	DebugMsgD( ":DrawVSD():Running script... %X\n", GetCurrentThreadId());
-	if( !m_Script && *m_szSkinFile ){
+	if( !m_Script && m_szSkinFile ){
 		m_Script = new CScript( this );
-		if( m_Script->Initialize( m_szSkinFile ) != ERR_OK ){
+		
+		strcat( strcpy( szBuf, m_szPluginDir ), "initialize.js" );
+		m_Script->Initialize();
+		if(
+			m_Script->RunFile( szBuf ) != ERR_OK ||
+			m_Script->RunFile( m_szSkinFile ) != ERR_OK
+		){
 			m_Script->m_bError = TRUE;
 		}
 	}

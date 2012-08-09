@@ -45,6 +45,10 @@ class CVsdFilterIF {
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::String::New( obj->m_szSkinDir ) : v8::Undefined();
 	}
+	static v8::Handle<v8::Value> Get_VsdRootDir( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::String::New( obj->m_szPluginDir ) : v8::Undefined();
+	}
 	static v8::Handle<v8::Value> Get_Speed( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Number::New( obj->m_dSpeed ) : v8::Undefined();
@@ -426,7 +430,7 @@ class CVsdFilterIF {
 	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
 		// コンストラクタを作成
 		v8::Local<v8::FunctionTemplate> tmpl = v8::FunctionTemplate::New( New );
-		tmpl->SetClassName( v8::String::New( "__builtin_vsd_class__" ));
+		tmpl->SetClassName( v8::String::New( "__VSD_System__" ));
 		
 		// フィールドなどはこちらに
 		v8::Handle<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
@@ -436,6 +440,7 @@ class CVsdFilterIF {
 		inst->SetAccessor( v8::String::New( "MaxFrameCnt" ), Get_MaxFrameCnt );
 		inst->SetAccessor( v8::String::New( "FrameCnt" ), Get_FrameCnt );
 		inst->SetAccessor( v8::String::New( "SkinDir" ), Get_SkinDir );
+		inst->SetAccessor( v8::String::New( "VsdRootDir" ), Get_VsdRootDir );
 		inst->SetAccessor( v8::String::New( "Speed" ), Get_Speed );
 		inst->SetAccessor( v8::String::New( "Tacho" ), Get_Tacho );
 		inst->SetAccessor( v8::String::New( "Gx" ), Get_Gx );
@@ -463,7 +468,7 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawNeedle" ), v8::FunctionTemplate::New( Func_DrawNeedle ));
 
 		// グローバルオブジェクトにクラスを定義
-		global->Set( v8::String::New( "__builtin_vsd_class__" ), tmpl );
+		global->Set( v8::String::New( "__VSD_System__" ), tmpl );
 	}
 };
 /****************************************************************************/

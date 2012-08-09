@@ -113,16 +113,58 @@ CScript::~CScript(){
 //	m_pIsolate->Dispose();
 }
 
-/*** ロード・コンパイル *****************************************************/
+/*** JavaScript interface のセットアップ ************************************/
+
+void CScript::Initialize( void ){
+	#ifdef AVS_PLUGIN
+		v8::Isolate::Scope IsolateScope( m_pIsolate );
+	#endif
+	
+	// 準備
+	HandleScope handle_scope;
+	
+	// グローバルオブジェクトの生成
+	Handle<ObjectTemplate> global = ObjectTemplate::New();
+	
+	// Image クラス登録
+	CVsdImageIF::InitializeClass( global );
+	CVsdFontIF::InitializeClass( global );
+	CVsdFilterIF::InitializeClass( global );
+	
+	// グローバルオブジェクトから環境を生成
+	m_Context = Context::New( NULL, global );
+}
+
+/*** スクリプトファイルの実行 ***********************************************/
 
 #define SCRIPT_SIZE	( 64 * 1024 )
 
-UINT CScript::CompileRun( const char *szScript, const char *szFileName ){
+UINT CScript::RunFile( char *szFileName ){
+	HandleScope handle_scope;
+	
+	// 環境からスコープを生成
+	Context::Scope context_scope( m_Context );
+	
 	TryCatch try_catch;
 	
+	char *szBuf = new char[ SCRIPT_SIZE ];
+	
+	// スクリプト ロード
+	FILE *fp;
+	if(( fp = fopen( szFileName, "r" )) == NULL ){
+		// エラー処理
+		return ERR_FILE_NOT_FOUND;
+	}
+	
+	int iReadSize = fread( szBuf, 1, SCRIPT_SIZE, fp );
+	fclose( fp );
+	szBuf[ iReadSize ] = '\0';
+	
 	Handle<Script> script = Script::Compile(
-		String::New( szScript ), String::New( szFileName )
+		String::New( szBuf ), String::New( szFileName )
 	);
+	
+	delete [] szBuf;
 	
 	if( script.IsEmpty()){
 		// Print errors that happened during compilation.
@@ -149,63 +191,6 @@ UINT CScript::CompileRun( const char *szScript, const char *szFileName ){
 	}
 	*/
 	return ERR_OK;
-}
-
-UINT CScript::Initialize( char *szFileName ){
-	#ifdef AVS_PLUGIN
-		v8::Isolate::Scope IsolateScope( m_pIsolate );
-	#endif
-	
-	static const char szInitScript[] =
-		"Vsd = new __builtin_vsd_class__();"
-		"DRAW_FILL=1;"
-		"FONT_ITALIC=1;"
-		"FONT_BOLD=2;"
-		"FONT_OUTLINE=4;"
-		"FONT_FIXED=8;"
-		"FONT_NOANTIALIAS=16;"
-		"ALIGN_LEFT=0;"
-		"ALIGN_TOP=0;"
-		"ALIGN_HCENTER=1;"
-		"ALIGN_RIGHT=2;"
-		"ALIGN_VCENTER=4;"
-		"ALIGN_BOTTOM=8;";
-	
-	// 準備
-	HandleScope handle_scope;
-	
-	// グローバルオブジェクトの生成
-	Handle<ObjectTemplate> global = ObjectTemplate::New();
-	
-	// Image クラス登録
-	CVsdImageIF::InitializeClass( global );
-	CVsdFontIF::InitializeClass( global );
-	CVsdFilterIF::InitializeClass( global );
-	
-	// グローバルオブジェクトから環境を生成
-	m_Context = Context::New( NULL, global );
-	
-	char *szBuf = new char[ SCRIPT_SIZE ];
-	
-	// スクリプト ロード
-	FILE *fp;
-	if(( fp = fopen( szFileName, "r" )) == NULL ){
-		// エラー処理
-		return FALSE;
-	}
-	
-	int iReadSize = fread( szBuf, 1, SCRIPT_SIZE, fp );
-	fclose( fp );
-	szBuf[ iReadSize ] = '\0';
-	
-	// 環境からスコープを生成
-	Context::Scope context_scope( m_Context );
-	CompileRun( szInitScript, "Internal initialize script" );
-
-	UINT uRet = CompileRun( szBuf, szFileName );
-	delete [] szBuf;
-	
-	return uRet;
 }
 
 /*** function 名指定実行，引数なし ******************************************/

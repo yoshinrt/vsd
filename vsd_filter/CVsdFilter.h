@@ -241,8 +241,32 @@ class CVsdFilter {
 	char	*m_szSkinDir;	// !js_var:SkinDir
 	char	*m_szPluginDir;	// !js_var:VsdRootDir
 	
-	char *SetSkinDir( void ){
-		return StrTokFile( m_szSkinDir, m_szSkinFile, STF_FULL | STF_PATH2 );
+	static char *StringNew( char *&szDst, const char *szSrc ){
+		if( szDst ) delete [] szDst;
+		
+		if( szSrc == NULL || *szSrc == '\0' ){
+			return szDst = NULL;
+		}
+		szDst = new char[ strlen( szSrc ) + 1 ];
+		return strcpy( szDst, szSrc );
+	}
+	
+	// スキン dir 取得
+	static char *SetSkinDir( char *&szSkinDir, char *szSkinFile ){
+		char szBuf[ MAX_PATH + 1 ];
+		return StringNew(
+			szSkinDir,
+			szSkinFile ? StrTokFile( szBuf, szSkinFile, STF_FULL | STF_PATH2 ) : NULL
+		);
+	}
+	
+	// プラグイン dll dir 取得
+	static char *SetPluginDir( char *&szPluginDir ){
+		char szBuf[ MAX_PATH + 1 ];
+		GetModuleFileName(( HMODULE )m_hInst, szBuf, MAX_PATH );
+		char *p = StrTokFile( NULL, szBuf, STF_NODE );
+		if( p ) strcpy( p, "vsd_skins\\" );
+		return StringNew( szPluginDir, szBuf );
 	}
 	
 	int		*m_piParamT;

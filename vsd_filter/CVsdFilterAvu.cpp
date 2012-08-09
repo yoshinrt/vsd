@@ -236,7 +236,7 @@ class CVsdFilterAvu : public CVsdFilter {
 #endif
 	BOOL ReadGPSLog( const char *szFileName, HWND hwnd );
 		
-	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *szDst );
+	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *&szDst );
 	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
 	BOOL ConfigLoad( const char *szFileName );
 	void SetSkinName( HWND hwnd );
@@ -674,14 +674,17 @@ int StrCmpForQSort( const void *a, const void *b ){
 	return strcmp( *( const char **)a, *( const char **)b );
 }
 
-BOOL FileOpenDialog( char *&szBuf, int iBufSize, char *szExt ){
+BOOL FileOpenDialog( char *&szOut, char *szExt ){
+	
+	char szBuf[ BUF_SIZE ];
+	
 	OPENFILENAME	ofn;
 	memset( &ofn, 0, sizeof( ofn ));
 	
 	ofn.lStructSize	= sizeof( ofn );
 	ofn.lpstrFilter	= szExt;
 	ofn.lpstrFile	= szBuf;
-	ofn.nMaxFile	= iBufSize;
+	ofn.nMaxFile	= BUF_SIZE;
 	ofn.Flags		= OFN_EXPLORER | OFN_ALLOWMULTISELECT | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 	*szBuf			= '\0';
 	
@@ -693,33 +696,36 @@ BOOL FileOpenDialog( char *&szBuf, int iBufSize, char *szExt ){
 	int	iFileCnt = 0;
 	
 	// ファイルが 1個しかない場合，そのままリターン
-	if( !*p ) return TRUE;
+	if( !*p ){
+		CVsdFilter::StringNew( szOut, szBuf );
+		return TRUE;
+	}
 	
 	while( *p ){
 		szFileNames[ iFileCnt++ ] = p;
 		p = strchr( p, '\0' ) + 1;
 	}
 	
+	int iOutSize = p - szBuf;
+	
 	// ソート
 	qsort( szFileNames, iFileCnt, sizeof( char * ), StrCmpForQSort );
 	
 	// ソート結果を元に新配列作成
-	char *szNewBuf = new char [ BUF_SIZE ];
-	p = szNewBuf;
+	if( szOut ) delete [] szOut;
+	p = szOut = new char[ iOutSize ];
+	
+	strcpy( p, szBuf );	// dir をコピー
+	p = strchr( p, '\0' );
 	
 	for( int i = 0; i < iFileCnt; ++i ){
-		if( i ) *p++ = '/';
+		*p++ = '/';
 		
-		strcpy( p, szBuf ); p = strchr( p, '\0' );
-		*p++ = '\\';
 		strcpy( p, szFileNames[ i ] ); p = strchr( p, '\0' );
 		DebugMsgD( "%s\n", szFileNames[ i ] );
 	}
 	
 	// szBuf を挿げ替え
-	delete [] szBuf;
-	szBuf = szNewBuf;
-	
 	return TRUE;
 }
 
@@ -742,7 +748,7 @@ char *CVsdFilterAvu::IsConfigParam( const char *szParamName, char *szBuf, int &i
 	return NULL;
 }
 
-char *CVsdFilterAvu::IsConfigParamStr( const char *szParamName, char *szBuf, char *szDst ){
+char *CVsdFilterAvu::IsConfigParamStr( const char *szParamName, char *szBuf, char *&szDst ){
 	
 	int		iLen;
 	char	*p;
@@ -760,7 +766,7 @@ char *CVsdFilterAvu::IsConfigParamStr( const char *szParamName, char *szBuf, cha
 			szBuf = p + 1;
 		}
 		
-		strcpy( szDst, szBuf );
+		StringNew( szDst, szBuf );
 		
 		// 文字列終端
 		if(( p = strchr( szDst, '"' )) || ( p = strchr( szDst, ',' ))){
@@ -835,7 +841,7 @@ void CVsdFilterAvu::SetSkinName( HWND hwnd ){
 	// skin 名をダイアログに設定
 	SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_SKIN ), g_Vsd->m_szSkinFile );
 	
-	SetSkinDir();
+	SetSkinDir( m_szSkinDir, m_szSkinFile );
 }
 
 /*** config セーブ **********************************************************/
@@ -937,8 +943,8 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 
 BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
 	
-	TCHAR	szBuf[ MAX_PATH ];
-	TCHAR	szBuf2[ MAX_PATH ];
+	TCHAR	szBuf[ MAX_PATH + 1 ];
+	TCHAR	szBuf2[ MAX_PATH + 1 ];
 	int		iFrame;
 	
 	//	TRUEを返すと全体が再描画される
@@ -1039,21 +1045,27 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			){
 				// ログリード
 			#ifndef GPS_ONLY
-				if( *g_Vsd->m_szLogFile ){
+				if( g_Vsd->m_szLogFile ){
 					g_Vsd->ReadLog(
 						GetFullPathWithCDir( szBuf2, g_Vsd->m_szLogFile, szBuf ),
 						hwnd
 					);
 				}
 			#endif
-				if( *g_Vsd->m_szGPSLogFile ){
-					g_Vsd->ReadGPSLog(
-						GetFullPathWithCDir( szBuf2, g_Vsd->m_szGPSLogFile, szBuf ),
-						hwnd
-					);
+				if( g_Vsd->m_szGPSLogFile ){
+					if( strchr( g_Vsd->m_szGPSLogFile, '/' )){
+						// 複数ファイル
+						g_Vsd->ReadGPSLog( g_Vsd->m_szGPSLogFile, hwnd );
+					}else{
+						// 単発ファイル
+						g_Vsd->ReadGPSLog(
+							GetFullPathWithCDir( szBuf2, g_Vsd->m_szGPSLogFile, szBuf ),
+							hwnd
+						);
+					}
 				}
 				
-				if( *g_Vsd->m_szSkinFile ){
+				if( g_Vsd->m_szSkinFile ){
 					g_Vsd->SetSkinName( hwnd );
 				}
 				
@@ -1072,31 +1084,31 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			
 		#ifndef GPS_ONLY // {
 		  Case ID_BUTT_LOAD_LOG:	// .log ロード
-			if(
-				filter->exfunc->dlg_get_load_name( g_Vsd->m_szLogFile, FILE_LOG_EXT, NULL ) &&
-				g_Vsd->ReadLog( g_Vsd->m_szLogFile, hwnd )
-			){
-				// 設定再描画
-				filter->exfunc->filter_window_update( filter );
-				
-				#ifndef GPS_ONLY
-					// log pos 自動認識の更新
-					func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
-				#endif
+			if( filter->exfunc->dlg_get_load_name( szBuf, FILE_LOG_EXT, NULL )){
+				CVsdFilter::StringNew( g_Vsd->m_szLogFile, szBuf );
+				if( g_Vsd->ReadLog( g_Vsd->m_szLogFile, hwnd )){
+					// 設定再描画
+					filter->exfunc->filter_window_update( filter );
+					
+					#ifndef GPS_ONLY
+						// log pos 自動認識の更新
+						func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
+					#endif
+				}
 			}
 		#endif // }
 			
 		  Case ID_BUTT_LOAD_GPS:	// GPS ログロード
-			if(
-				FileOpenDialog( g_Vsd->m_szGPSLogFile, BUF_SIZE, FILE_GPS_EXT ) &&
-				g_Vsd->ReadGPSLog( g_Vsd->m_szGPSLogFile, hwnd )
-			){
-				// 設定再描画
-				filter->exfunc->filter_window_update( filter );
+			if( FileOpenDialog( g_Vsd->m_szGPSLogFile, FILE_GPS_EXT )){
+				if( g_Vsd->ReadGPSLog( g_Vsd->m_szGPSLogFile, hwnd )){
+					// 設定再描画
+					filter->exfunc->filter_window_update( filter );
+				}
 			}
 			
 		  Case ID_BUTT_SEL_SKIN:	// スキン選択
-			if( filter->exfunc->dlg_get_load_name( g_Vsd->m_szSkinFile, FILE_SKIN_EXT, NULL )){
+			if( filter->exfunc->dlg_get_load_name( szBuf, FILE_SKIN_EXT, NULL )){
+				CVsdFilter::StringNew( g_Vsd->m_szSkinFile, szBuf );
 				g_Vsd->SetSkinName( hwnd );
 				// 設定再描画
 				filter->exfunc->filter_window_update( filter );

@@ -37,7 +37,7 @@ CVsdImage::~CVsdImage(){
 UINT CVsdImage::Load( const char *szFileName ){
 	// 文字コードをワイド文字列に変換
 	// 【注意】本来はこの箇所は文字列バッファ長の考慮の他に文字列終端コードを処理するよりセキュアな対応が好ましいです。
-	wchar_t	path[ MAX_PATH ];
+	wchar_t	path[ MAX_PATH + 1 ];
 	size_t	pathLength = 0;
 	
 	if(
