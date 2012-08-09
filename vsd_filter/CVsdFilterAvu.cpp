@@ -234,7 +234,7 @@ class CVsdFilterAvu : public CVsdFilter {
 #ifndef GPS_ONLY
 	BOOL ReadLog( const char *szFileName, HWND hwnd );
 #endif
-	BOOL GPSLogLoad( const char *szFileName, HWND hwnd );
+	BOOL ReadGPSLog( const char *szFileName, HWND hwnd );
 		
 	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *szDst );
 	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
@@ -456,11 +456,11 @@ BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
 
 /*** GPS ログリード ********************************************************/
 
-BOOL CVsdFilterAvu::GPSLogLoad( const char *szFileName, HWND hwnd ){
+BOOL CVsdFilterAvu::ReadGPSLog( const char *szFileName, HWND hwnd ){
 	
 	char szMsg[ BUF_SIZE ];
 	
-	if( !CVsdFilter::GPSLogLoad( szFileName )){
+	if( !CVsdFilter::ReadGPSLog( szFileName )){
 		sprintf( szMsg, "ファイルがロードできません\n%s", szFileName );
 		MessageBox( NULL,
 			szMsg,
@@ -1047,7 +1047,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				}
 			#endif
 				if( *g_Vsd->m_szGPSLogFile ){
-					g_Vsd->GPSLogLoad(
+					g_Vsd->ReadGPSLog(
 						GetFullPathWithCDir( szBuf2, g_Vsd->m_szGPSLogFile, szBuf ),
 						hwnd
 					);
@@ -1089,7 +1089,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		  Case ID_BUTT_LOAD_GPS:	// GPS ログロード
 			if(
 				FileOpenDialog( g_Vsd->m_szGPSLogFile, BUF_SIZE, FILE_GPS_EXT ) &&
-				g_Vsd->GPSLogLoad( g_Vsd->m_szGPSLogFile, hwnd )
+				g_Vsd->ReadGPSLog( g_Vsd->m_szGPSLogFile, hwnd )
 			){
 				// 設定再描画
 				filter->exfunc->filter_window_update( filter );

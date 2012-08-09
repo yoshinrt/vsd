@@ -126,7 +126,7 @@ double CVsdFilter::GPSLogGetLength(
 	return	sqrt( dy * dy * M * M + pow( dx * N * cos( uy ), 2 ));
 }
 
-BOOL CVsdFilter::GPSLogLoad( const char *szFileName ){
+BOOL CVsdFilter::ReadGPSLog( const char *szFileName ){
 	
 	UINT	uGPSCnt = 0;
 	TCHAR	szBuf[ BUF_SIZE ];

@@ -256,7 +256,7 @@ class CVsdFilter {
 	CVsdLog	*m_GPSLog;
 	
 	BOOL ParseMarkStr( const char *szMark );
-	BOOL GPSLogLoad( const char *szFileName );
+	BOOL ReadGPSLog( const char *szFileName );
 	BOOL ReadLog( const char *szFileName );
 	double GPSLogGetLength(
 		double dLong0, double dLati0,

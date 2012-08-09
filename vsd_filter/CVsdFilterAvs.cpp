@@ -135,7 +135,7 @@ CVsdFilterAvs::CVsdFilterAvs(
 	#endif
 	
 	// GPS ログリード
-	if( p = args[ ARGID_STRPARAM_GPSFILE ].AsString( NULL )) if( !GPSLogLoad( p ))
+	if( p = args[ ARGID_STRPARAM_GPSFILE ].AsString( NULL )) if( !ReadGPSLog( p ))
 		env->ThrowError( PROG_NAME ": read GPS log \"%s\" failed.", p );
 	
 	// スキンロード
