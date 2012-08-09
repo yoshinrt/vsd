@@ -239,7 +239,7 @@ class CVsdFilterAvu : public CVsdFilter {
 	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *&szDst );
 	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
 	BOOL ConfigLoad( const char *szFileName );
-	void SetSkinName( HWND hwnd );
+	void SetSkinName( char *szSkinFile, HWND hwnd );
 	
 	// 仮想関数
 	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
@@ -834,14 +834,14 @@ BOOL CVsdFilterAvu::ConfigLoad( const char *szFileName ){
 	return TRUE;
 }
 
-void CVsdFilterAvu::SetSkinName( HWND hwnd ){
+void CVsdFilterAvu::SetSkinName( char *szSkinFile, HWND hwnd ){
 	if( m_Script ) delete m_Script;
 	m_Script = NULL;
 	
-	// skin 名をダイアログに設定
-	SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_SKIN ), g_Vsd->m_szSkinFile );
+	SetSkinFile( szSkinFile );
 	
-	SetSkinDir( m_szSkinDir, m_szSkinFile );
+	// skin 名をダイアログに設定
+	SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_SKIN ), m_szSkinFile );
 }
 
 /*** config セーブ **********************************************************/
@@ -1066,7 +1066,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				}
 				
 				if( g_Vsd->m_szSkinFile ){
-					g_Vsd->SetSkinName( hwnd );
+					g_Vsd->SetSkinName( g_Vsd->m_szSkinFile, hwnd );
 				}
 				
 				// 設定再描画
@@ -1108,8 +1108,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			
 		  Case ID_BUTT_SEL_SKIN:	// スキン選択
 			if( filter->exfunc->dlg_get_load_name( szBuf, FILE_SKIN_EXT, NULL )){
-				CVsdFilter::StringNew( g_Vsd->m_szSkinFile, szBuf );
-				g_Vsd->SetSkinName( hwnd );
+				g_Vsd->SetSkinName( szBuf, hwnd );
 				// 設定再描画
 				filter->exfunc->filter_window_update( filter );
 			}

@@ -65,10 +65,10 @@ CVsdFilter::CVsdFilter (){
 	#include "def_str_param.h"
 	
 	// SkinDir ƒZƒbƒg
-	SetSkinDir( m_szSkinDir, m_szSkinFile );
+	SetSkinFile( m_szSkinFile );
 	
 	// plugin dll path Žæ“¾
-	SetPluginDir( m_szPluginDir );
+	SetPluginDir();
 	
 	m_Script	= NULL;
 	

@@ -140,7 +140,7 @@ CVsdFilterAvs::CVsdFilterAvs(
 	
 	// スキンロード
 	if( p = args[ ARGID_STRPARAM_SKINFILE ].AsString( NULL )){
-		SetSkinDir( m_szSkinDir, StringNew( m_szSkinFile, p ));
+		SetSkinFile( p );
 	}
 }
 

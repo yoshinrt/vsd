@@ -252,21 +252,26 @@ class CVsdFilter {
 	}
 	
 	// スキン dir 取得
-	static char *SetSkinDir( char *&szSkinDir, char *szSkinFile ){
+	char *SetSkinFile( const char *szSkinFile ){
 		char szBuf[ MAX_PATH + 1 ];
-		return StringNew(
-			szSkinDir,
-			szSkinFile ? StrTokFile( szBuf, szSkinFile, STF_FULL | STF_PATH2 ) : NULL
-		);
+		
+		if( szSkinFile == NULL ) return StringNew( m_szSkinDir, NULL );
+		
+		// スキンファイル名を CWD=m_szPluginDir とみなしフルパスに変換
+		GetFullPathWithCDir( szBuf, szSkinFile, m_szPluginDir );
+		
+		// ↑のディレクトリ名を得る
+		StringNew( m_szSkinFile, szBuf );
+		return StringNew( m_szSkinDir, StrTokFile( szBuf, m_szSkinFile, STF_FULL | STF_PATH2 ));
 	}
 	
 	// プラグイン dll dir 取得
-	static char *SetPluginDir( char *&szPluginDir ){
+	char *SetPluginDir( void ){
 		char szBuf[ MAX_PATH + 1 ];
 		GetModuleFileName(( HMODULE )m_hInst, szBuf, MAX_PATH );
 		char *p = StrTokFile( NULL, szBuf, STF_NODE );
 		if( p ) strcpy( p, "vsd_skins\\" );
-		return StringNew( szPluginDir, szBuf );
+		return StringNew( m_szPluginDir, szBuf );
 	}
 	
 	int		*m_piParamT;
