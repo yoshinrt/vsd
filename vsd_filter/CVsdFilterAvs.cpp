@@ -141,6 +141,8 @@ CVsdFilterAvs::CVsdFilterAvs(
 	// スキンロード
 	if( p = args[ ARGID_STRPARAM_SKINFILE ].AsString( NULL )){
 		SetSkinFile( p );
+	}else{
+		SetSkinFile( "default.js" );
 	}
 }
 
@@ -198,8 +200,8 @@ inline void CVsdFilterAvs::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG
 	yca.alfa = yca.y;
 	
 	if( iAlfa ){
+		iAlfa += iAlfa >> 7;
 		for( int x = x1; x <= x2; ++x, iIndex += 2 ){
-			iAlfa += iAlfa >> 7;
 			PutPixel( iIndex, yc, iAlfa );
 		}
 	}else{

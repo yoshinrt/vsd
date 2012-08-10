@@ -1,15 +1,35 @@
+//*** 初期化処理 ************************************************************
+
+// 使用する画像・フォントの宣言
 var FontS = new Font( "Impact", Vsd.Height / 30, FONT_FIXED );
 var FontM = new Font( "Impact", Vsd.Height / 20, FONT_FIXED );
 var FontM_Outline = new Font( "Impact", Vsd.Height / 20, FONT_OUTLINE | FONT_FIXED );
 
-var MeterR = ~~( Vsd.Height * 100 / 480 );
-var MeterCx = Vsd.Width  - MeterR;
-var MeterCy = Vsd.Height - MeterR;
+// メーターを右に表示する場合 1に設定
+var MeterRight = 1;
 
-var LapTimeX = Vsd.Width - FontM_Outline.GetTextWidth( "Time 0'00.000" );
+// 動画サイズに応じてメーター画像をリサイズ
+var Scale = Vsd.Height / 720;
+
+var MeterR = 150 * Scale;
+var MeterX	= MeterRight ? Vsd.Width  - MeterR * 2: 0;
+var MeterY	= Vsd.Height - MeterR * 2;
+var MeterCx = MeterX + MeterR;
+var MeterCy = MeterY + MeterR;
+
+// スピードグラフサイズ計算
+var SpdX1 = MeterRight ? 8 : 300 * Scale * 1.1;
+var SpdX2 = MeterRight ? Vsd.Width - 300 * Scale * 1.1 : Vsd.Width - 8;
+var SpdY1 = Vsd.Height - 300 * Scale;
+var SpdY2 = Vsd.Height - 8;
+
+// スピードメータ用最高速計算
+var MaxSpeed = Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
+
+//*** メーター描画処理 ******************************************************
 
 function Draw(){
-	Vsd.DrawCircle( MeterCx, MeterCy, MeterR, 0x80404040, 1 );
+	Vsd.DrawCircle( MeterCx, MeterCy, MeterR, 0x80404040, DRAW_FILL );
 	
 	// メーター目盛り描画
 	Vsd.DrawMeterScale(
@@ -18,7 +38,7 @@ function Draw(){
 		MeterR * 0.05, 1, 0xFFFFFF,
 		2, 135, 45,
 		MeterR * 0.75,
-		Vsd.MaxSpeed, 12, 0xFFFFFF,
+		MaxSpeed, 12, 0xFFFFFF,
 		FontM
 	);
 	
@@ -43,14 +63,20 @@ function Draw(){
 	// スピードメーター針
 	Vsd.DrawNeedle(
 		MeterCx, MeterCy, MeterR * 0.95, 0,
-		135, 45, Vsd.Speed / Vsd.MaxSpeed, 0xFF0000, 3
+		135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
 	);
 	
 	// 走行軌跡
-	Vsd.DrawMap( 8, 8, Vsd.Height / 1.5, 2, 5, 0xFF0000, 0xFFFF00, 0x00FF00, 0xFF0000 );
+	//Vsd.PutImage( 0, 0, ImgMapBG );
+	Vsd.DrawMap(
+		8 * Scale, 8 * Scale, 500 * Scale, 300 * Scale,
+		ALIGN_TOP | ALIGN_LEFT,
+		2, 5, 0xFF0000, 0xFFFF00, 0x00FF00, 0xFF0000
+	);
 	
 	// ラップタイム
-	Vsd.DrawLapTime( LapTimeX, 0, FontM_Outline, 0xFFFFFF, 0, 0x00FFFF, 0xFF0000 );
+	Vsd.DrawLapTime( Vsd.Width - 1, 0, ALIGN_TOP | ALIGN_RIGHT, FontM_Outline, 0xFFFFFF, 0, 0x00FFFF, 0xFF4000 );
 	
-	Vsd.DrawGraph( 0, 0, Vsd.Width, Vsd.Height, FontM );
+	// スピードグラフ
+	Vsd.DrawGraph( SpdX1, SpdY1, SpdX2, SpdY2, FontM );
 }

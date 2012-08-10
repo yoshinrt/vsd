@@ -304,7 +304,7 @@ class CVsdFilter {
 	double	m_dGy;			// !js_var:Gy
 	
 	int	GetMaxSpeed( void ){ // !js_var:MaxSpeed
-		return m_CurLog->m_iMaxSpeed;
+		return m_CurLog ? m_CurLog->m_iMaxSpeed : 180;
 	}
 	
 	static HINSTANCE	m_hInst;	// dll handle

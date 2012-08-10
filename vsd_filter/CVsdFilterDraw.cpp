@@ -416,18 +416,23 @@ int CVsdFilter::DrawFont0( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor )
 		}
 	}else{
 		int iBmpW = (( FontGlyph.iW + 31 ) & ~31 ) / 8;
-		UINT uBitmap;
 		
 		#ifdef _OPENMP
-			#pragma omp parallel for
+			#pragma omp parallel
 		#endif
-		for( int j = 0; j < FontGlyph.iH; ++j ) for( int i = 0; i < FontGlyph.iW; ++i ){
-			if(( i & 0x7 ) == 0 ) uBitmap = FontGlyph.pBuf[ iBmpW * j + ( i >> 3 ) ];
-			
-			if( uBitmap & 0x80 ){
-				PutPixel( x + iOrgX + i, y + FontGlyph.iOrgY + j, uColor, 0 );
+		{
+			UINT uBitmap;
+			#ifdef _OPENMP
+				#pragma omp for
+			#endif
+			for( int j = 0; j < FontGlyph.iH; ++j ) for( int i = 0; i < FontGlyph.iW; ++i ){
+				if(( i & 0x7 ) == 0 ) uBitmap = FontGlyph.pBuf[ iBmpW * j + ( i >> 3 ) ];
+				
+				if( uBitmap & 0x80 ){
+					PutPixel( x + iOrgX + i, y + FontGlyph.iOrgY + j, uColor, 0 );
+				}
+				uBitmap <<= 1;
 			}
-			uBitmap <<= 1;
 		}
 	}
 	

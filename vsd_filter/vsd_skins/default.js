@@ -8,10 +8,10 @@ var ImgG     = new Image( ImgMeter );
 var FontS = new Font( "Impact", Vsd.Height / 30 );
 var FontM = new Font( "Impact", Vsd.Height / 23 );
 var FontL = new Font( "Impact", Vsd.Height / 12 );
-var FontM_Outline = new Font( "Impact", Vsd.Height / 23, FONT_FIXED | FONT_OUTLINE );
+var FontM_Outline = new Font( "Impact", Vsd.Height / 20, FONT_FIXED | FONT_OUTLINE );
 
 // メーターを右に表示する場合 1に設定
-var MeterLeft = 0;
+var MeterRight = 0;
 
 // 動画サイズに応じてメーター画像をリサイズ
 var Scale = Vsd.Height / 720;
@@ -21,8 +21,8 @@ if( Scale != 1 ){
 }
 
 // 座標等を予め計算しておく
-var MeterX	= MeterLeft ? Vsd.Width  - ImgMeter.Width : 0;
-var MeterY	= Vsd.Height - ImgMeter.Height * 0.85
+var MeterX	= MeterRight ? Vsd.Width  - ImgMeter.Width : 0;
+var MeterY	= Vsd.Height - ImgMeter.Height * 0.85;
 var MeterR  = 150 * Scale;
 var MeterR2 = 126 * Scale;
 var MeterCx = MeterX + MeterR;
@@ -32,12 +32,21 @@ var MeterCy = MeterY + MeterR;
 ImgG.Resize( ImgG.Width * Scale / 2, ImgG.Height * Scale / 2 );
 
 // G メーター用の座標計算
-var MeterGX	 = MeterLeft ? Vsd.Width - ImgMeter.Width * 1.45 : ImgMeter.Width * 0.95;
+var MeterGX	 = MeterRight ? Vsd.Width - ImgMeter.Width * 1.45 : ImgMeter.Width * 0.95;
 var MeterGY	 = Vsd.Height - ImgG.Height;
 var MeterGR  = MeterR / 2;
 var MeterGR2 = MeterR2 / 2;
 var MeterGCx = MeterGX + MeterGR;
 var MeterGCy = MeterGY + MeterGR;
+
+// スピードグラフサイズ計算
+var SpdX1 = MeterRight ? 8 : ImgMeter.Width * 1.6;
+var SpdX2 = MeterRight ? Vsd.Width - ImgMeter.Width * 1.6 : Vsd.Width - 8;
+var SpdY1 = Vsd.Height - 300 * Scale;
+var SpdY2 = Vsd.Height - 8;
+
+// スピードメータ用最高速計算
+var MaxSpeed = Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
 
 //*** メーター描画処理 ******************************************************
 
@@ -52,7 +61,7 @@ function Draw(){
 		MeterR2 * 0.05, 1, 0xFFFFFF,
 		5, 135, 45,
 		MeterR2 * 0.75,
-		Vsd.MaxSpeed, 12, 0xFFFFFF,
+		MaxSpeed, 12, 0xFFFFFF,
 		FontM
 	);
 	
@@ -73,7 +82,7 @@ function Draw(){
 	// スピードメーター針
 	Vsd.DrawNeedle(
 		MeterCx, MeterCy, MeterR2 * 0.95, MeterR2 * -0.1,
-		135, 45, Vsd.Speed / Vsd.MaxSpeed, 0xFF0000, 3
+		135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
 	);
 	
 	// Gメーターパネル画像描画
@@ -85,8 +94,8 @@ function Draw(){
 	
 	// G 数値
 	var Accel = Math.sqrt( Vsd.Gx * Vsd.Gx + Vsd.Gy * Vsd.Gy ).toFixed( 1 ) + "G";
-	Vsd.DrawText(
-		MeterGX, MeterGCy + MeterR / 2 - FontS.Height,
+	Vsd.DrawTextAlign(
+		MeterGCx, MeterGCy + MeterR / 2, ALIGN_HCENTER | ALIGN_BOTTOM,
 		Accel, FontS, 0xFFFFFF
 	);
 	
@@ -104,5 +113,6 @@ function Draw(){
 	// ラップタイム
 	Vsd.DrawLapTime( Vsd.Width - 1, 0, ALIGN_TOP | ALIGN_RIGHT, FontM_Outline, 0xFFFFFF, 0, 0x00FFFF, 0xFF4000 );
 	
-	Vsd.DrawGraph( 0, 0, Vsd.Width, Vsd.Height, FontM );
+	// スピードグラフ
+	Vsd.DrawGraph( SpdX1, SpdY1, SpdX2, SpdY2, FontM );
 }
