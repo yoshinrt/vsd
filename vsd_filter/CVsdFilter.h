@@ -203,7 +203,7 @@ class CVsdFilter {
 		tRABY uColorGMinus
 	);
 	void DrawLapTime( // !js_func
-		int x, int y, CVsdFont &Font,
+		int x, int y, UINT uAlign, CVsdFont &Font,
 		tRABY uColor, tRABY uColorOutline, tRABY uColorBest, tRABY uColorPlus
 	);
 	void DrawNeedle( // !js_func

@@ -354,21 +354,22 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawLapTime( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 7 )) return v8::Undefined();
-		v8::Local<v8::Object> Font2 = args[ 2 ]->ToObject();
-		if( CheckClass( Font2, "Font", "arg[ 3 ] must be Font" )) return v8::Undefined();
-		CVsdFont *obj2 = GetThis<CVsdFont>( Font2 );
-		if( !obj2 ) return v8::Undefined();
+		if( CheckArgs( iLen == 8 )) return v8::Undefined();
+		v8::Local<v8::Object> Font3 = args[ 3 ]->ToObject();
+		if( CheckClass( Font3, "Font", "arg[ 4 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj3 = GetThis<CVsdFont>( Font3 );
+		if( !obj3 ) return v8::Undefined();
 		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawLapTime(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
-			*obj2,
-			PIXEL_RABY::Argb2Raby( args[ 3 ]->Int32Value()),
+			args[ 2 ]->Int32Value(),
+			*obj3,
 			PIXEL_RABY::Argb2Raby( args[ 4 ]->Int32Value()),
 			PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
-			PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value())
+			PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
+			PIXEL_RABY::Argb2Raby( args[ 7 ]->Int32Value())
 		);
 		
 		return v8::Undefined();

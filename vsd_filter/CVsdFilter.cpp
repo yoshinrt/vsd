@@ -92,6 +92,8 @@ CVsdFilter::~CVsdFilter (){
 	delete m_Script;
 }
 
+/***************************************************************************/
+
 BOOL CVsdFilter::ParseMarkStr( const char *szMark ){
 	
 	do{

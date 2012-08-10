@@ -873,7 +873,7 @@ void CVsdFilter::DrawNeedle(
 /*** ラップタイム表示 *******************************************************/
 
 void CVsdFilter::DrawLapTime(
-	int x, int y, CVsdFont &Font,
+	int x, int y, UINT uAlign, CVsdFont &Font,
 	tRABY uColor, tRABY uColorOutline, tRABY uColorBest, tRABY uColorPlus
 ){
 	
@@ -884,6 +884,18 @@ void CVsdFilter::DrawLapTime(
 	if( !DispLap || !m_iLapNum ) return;
 	
 	SelectLogForLapTime;
+	
+	if( uAlign & ALIGN_HCENTER ){
+		x -= Font.GetTextWidth( "Time 0'00.000" ) / 2;
+	}else if( uAlign & ALIGN_RIGHT ){
+		x -= Font.GetTextWidth( "Time 0'00.000" );
+	}
+	
+	if( uAlign & ALIGN_VCENTER ){
+		y -= Font.GetHeight() / 2;
+	}else if( uAlign & ALIGN_BOTTOM ){
+		y -= Font.GetHeight();
+	}
 	
 	// 時間表示
 	if( m_iLapIdx >= 0 && m_Lap[ m_iLapIdx + 1 ].iTime != 0 ){

@@ -2,7 +2,7 @@
 
 // 使用する画像・フォントの宣言
 var ImgMeter = new Image( Vsd.SkinDir + "meter_bg.png" );
-var ImgMapBG = new Image( Vsd.SkinDir + "square.png" );
+//var ImgMapBG = new Image( Vsd.SkinDir + "square.png" );
 var ImgG     = new Image( ImgMeter );
 
 var FontS = new Font( "Impact", Vsd.Height / 30 );
@@ -38,8 +38,6 @@ var MeterGR  = MeterR / 2;
 var MeterGR2 = MeterR2 / 2;
 var MeterGCx = MeterGX + MeterGR;
 var MeterGCy = MeterGY + MeterGR;
-
-var LapTimeX = Vsd.Width - FontM_Outline.GetTextWidth( "Time 0'00.000" );
 
 //*** メーター描画処理 ******************************************************
 
@@ -96,15 +94,15 @@ function Draw(){
 	Vsd.DrawGSnake(	MeterGCx, MeterGCy, MeterGR2 / 1.5, 5 * Scale, 2, 0xFF4000, 0x802000 );
 	
 	// 走行軌跡
-	Vsd.PutImage( 0, 0, ImgMapBG );
+	//Vsd.PutImage( 0, 0, ImgMapBG );
 	Vsd.DrawMap(
-		20 * Scale, 20 * Scale, 380 * Scale, 280 * Scale,
-		ALIGN_HCENTER | ALIGN_VCENTER,
+		8 * Scale, 8 * Scale, 500 * Scale, 300 * Scale,
+		ALIGN_TOP | ALIGN_LEFT,
 		2, 5, 0xFF0000, 0xFFFF00, 0x00FF00, 0xFF0000
 	);
 	
 	// ラップタイム
-	Vsd.DrawLapTime( LapTimeX, 0, FontM_Outline, 0xFFFFFF, 0, 0x00FFFF, 0xFF4000 );
+	Vsd.DrawLapTime( Vsd.Width - 1, 0, ALIGN_TOP | ALIGN_RIGHT, FontM_Outline, 0xFFFFFF, 0, 0x00FFFF, 0xFF4000 );
 	
 	Vsd.DrawGraph( 0, 0, Vsd.Width, Vsd.Height, FontM );
 }
