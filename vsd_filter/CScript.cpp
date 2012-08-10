@@ -21,6 +21,17 @@
 
 using namespace v8;
 
+/*** static メンバ（；´д⊂）***********************************************/
+
+CVsdFilter *CScript::m_Vsd;
+
+const char *CScript::m_szErrorMsgID[] = {
+	#define DEF_ERROR( id, msg )	msg,
+	#include "def_error.h"
+};
+
+/*** Exception メッセージ表示 ***********************************************/
+
 // Extracts a C string from a V8 Utf8Value.
 const char* CScript::ToCString( const String::Utf8Value& value ){
 	return *value ? *value : "<string conversion failed>";
@@ -76,15 +87,6 @@ void CScript::ReportException( TryCatch* try_catch ){
 		*/
 	}
 }
-
-/*** static メンバ（；´д⊂）***********************************************/
-
-CVsdFilter *CScript::m_Vsd;
-
-const char *CScript::m_szErrorMsgID[] = {
-	#define DEF_ERROR( id, msg )	msg,
-	#include "def_error.h"
-};
 
 /*** コンストラクタ *********************************************************/
 
@@ -148,7 +150,7 @@ UINT CScript::RunFile( char *szFileName ){
 	#ifdef AVS_PLUGIN
 		v8::Isolate::Scope IsolateScope( m_pIsolate );
 	#endif
-
+	
 	HandleScope handle_scope;
 	
 	// 環境からスコープを生成
