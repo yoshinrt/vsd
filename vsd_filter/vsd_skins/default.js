@@ -17,7 +17,7 @@ var MeterRight = 0;
 var Scale = Vsd.Height / 720;
 if( Scale != 1 ){
 	ImgMeter.Resize( ImgMeter.Width * Scale, ImgMeter.Height * Scale );
-	ImgMapBG.Resize( ImgMapBG.Width * Scale, ImgMapBG.Height * Scale );
+	//ImgMapBG.Resize( ImgMapBG.Width * Scale, ImgMapBG.Height * Scale );
 }
 
 // 座標等を予め計算しておく
@@ -46,24 +46,48 @@ var SpdY1 = Vsd.Height - 300 * Scale;
 var SpdY2 = Vsd.Height - 8;
 
 // スピードメータ用最高速計算
-var MaxSpeed = Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
+
+if( Vsd.MaxTacho > 0 ){
+	var MaxTacho = Math.ceil( Vsd.MaxTacho / 1000 ) * 1000;
+}else{
+	var MaxSpeed = Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
+}
 
 //*** メーター描画処理 ******************************************************
 
 function Draw(){
-	// メーター画像描画
+date = new Date()
+Vsd.DrawText(
+		100, 0, date.toString(), FontM, 0xFFFFFF
+	);
+	// タコメーター画像描画
 	Vsd.PutImage( MeterX, MeterY, ImgMeter );
 	
-	// メーター目盛り描画
-	Vsd.DrawMeterScale(
-		MeterCx, MeterCy, MeterR2,
-		MeterR2 * 0.1,  2, 0xFFFFFF,
-		MeterR2 * 0.05, 1, 0xFFFFFF,
-		5, 135, 45,
-		MeterR2 * 0.75,
-		MaxSpeed, 12, 0xFFFFFF,
-		FontM
-	);
+	if( Vsd.MaxTacho > 0 ){
+		var MeterColor = Vsd.Tacho > 6500 && ( Vsd.FrameCnt & 0x2 ) ? 0xFF0000 : 0xFFFFFF;
+		
+		// メーター目盛り描画
+		Vsd.DrawMeterScale(
+			MeterCx, MeterCy, MeterR2,
+			MeterR2 * 0.1,  2, MeterColor,
+			MeterR2 * 0.05, 1, MeterColor,
+			5, 135, 45,
+			MeterR2 * 0.80,
+			MaxTacho / 1000, 12, MeterColor,
+			FontM
+		);
+	}else{
+		// スピードメーター目盛り描画
+		Vsd.DrawMeterScale(
+			MeterCx, MeterCy, MeterR2,
+			MeterR2 * 0.1,  2, 0xFFFFFF,
+			MeterR2 * 0.05, 1, 0xFFFFFF,
+			5, 135, 45,
+			MeterR2 * 0.75,
+			MaxSpeed, 12, 0xFFFFFF,
+			FontM
+		);
+	}
 	
 	// スピード数値表示
 	var Speed = ~~Vsd.Speed;
@@ -79,11 +103,19 @@ function Draw(){
 		"km/h", FontS, 0xFFFFFF
 	);
 	
-	// スピードメーター針
-	Vsd.DrawNeedle(
-		MeterCx, MeterCy, MeterR2 * 0.95, MeterR2 * -0.1,
-		135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
-	);
+	if( Vsd.MaxTacho > 0 ){
+		// タコメーター針
+		Vsd.DrawNeedle(
+			MeterCx, MeterCy, MeterR2 * 0.95, MeterR2 * -0.1,
+			135, 45, Vsd.Tacho / MaxTacho, 0xFF0000, 3
+		);
+	}else{
+		// スピードメーター針
+		Vsd.DrawNeedle(
+			MeterCx, MeterCy, MeterR2 * 0.95, MeterR2 * -0.1,
+			135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
+		);
+	}
 	
 	// Gメーターパネル画像描画
 	Vsd.PutImage( MeterGX, MeterGY, ImgG );

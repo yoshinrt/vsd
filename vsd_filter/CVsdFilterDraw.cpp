@@ -671,7 +671,7 @@ void CVsdFilter::DrawGraph(
 				x1, y1, x2, y2,
 				"%.0f rpm", Font, color_cyan,
 				*m_VsdLog,
-				GetTachoLog, 7000
+				GetTachoLog, m_VsdLog->m_iMaxTacho
 			);
 		}
 		

@@ -306,18 +306,21 @@ class CVsdFilter {
 	int	GetMaxSpeed( void ){ // !js_var:MaxSpeed
 		return m_CurLog ? m_CurLog->m_iMaxSpeed : 180;
 	}
+	int	GetMaxTachk( void ){ // !js_var:MaxTacho
+		return m_CurLog ? m_CurLog->m_iMaxTacho : 0;
+	}
 	
 	static HINSTANCE	m_hInst;	// dll handle
+	
+	LAP_t		*m_Lap;
+	int			m_iLapMode;
+	int			m_iLapNum;		// !js_var:LapCnt
+	int			m_iBestTime;	// !js_var:BestLapTime
+	int			m_iBestLap;		// !js_var:BestLapCnt
 	
   protected:
 	
 	CScript	*m_Script;
-	
-	LAP_t		*m_Lap;
-	int			m_iLapMode;
-	int			m_iLapNum;
-	int			m_iBestTime;
-	int			m_iBestLap;
 	
   private:
 	

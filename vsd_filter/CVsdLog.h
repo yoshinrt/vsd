@@ -97,6 +97,7 @@ class CVsdLog {
 	
 	int			m_iLogNum;
 	int			m_iMaxSpeed;
+	int			m_iMaxTacho;
 	
 	double		m_dLogNum;
 	

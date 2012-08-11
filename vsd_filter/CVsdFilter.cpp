@@ -590,6 +590,8 @@ BOOL CVsdFilter::ReadLog( const char *szFileName ){
 			VsdLogTmp.SetSpeed( dSpeed );
 			VsdLogTmp.SetMileage( dMileage );
 			
+			if( m_VsdLog->m_iMaxTacho < iTacho ) m_VsdLog->m_iMaxTacho = iTacho;
+			
 			if( uReadCnt < 5 && uLogNum ){
 				// Gƒf[ƒ^‚ª‚È‚¢‚Æ‚«‚ÍCspeed‚©‚ç‹‚ß‚é©”pŽ~
 				dGx = 0;

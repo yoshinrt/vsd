@@ -26,6 +26,7 @@ CVsdLog::CVsdLog(){
 	m_dMinG = 0;
 	
 	m_iMaxSpeed		= 0;
+	m_iMaxTacho		= 0;
 	m_dLogStartTime	= -1;
 }
 
