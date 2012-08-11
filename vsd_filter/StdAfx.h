@@ -28,6 +28,7 @@
 	#include <omp.h>
 #endif
 
+#define BUF_SIZE	1024
 #define ToRAD		( M_PI / 180 )
 
 #endif//__STDAFX_H__

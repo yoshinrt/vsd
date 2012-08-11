@@ -14,14 +14,11 @@
 #define PROG_NAME_LONG	"`VSDFilter' vehicle data logger overlay plugin"
 #define PROG_VERSION	"v1.10beta1"
 
-#define BUF_SIZE	1024
-#define MAX_LAP		200
 #define GPS_FREQ	10
+#define MAX_LAP		200
 
 #define G_CX_CNT		30
-#define GPS_LOG_OFFS	15
 #define POS_DEFAULT		0x80000000
-#define BESTLAP_NONE	599999
 
 #ifdef GPS_ONLY
 	#define VideoSt			m_piParamS[ PARAM_VSt ]
@@ -67,21 +64,7 @@ enum {
 	SHADOW_N
 };
 
-enum {
-	LAPMODE_HAND_VIDEO,		// 手動計測モード・Video フレーム
-	LAPMODE_HAND_GPS,		// 手動計測モード・GPS ログ時計
-	LAPMODE_HAND_MAGNET,	// 手動計測モード・磁気センサー時計
-	LAPMODE_GPS,			// GPS 自動計測モード
-	LAPMODE_MAGNET,			// 磁気センサー自動計測モード
-};
-
 /*** new type ***************************************************************/
-
-typedef struct {
-	USHORT	uLap;
-	float	fLogNum;
-	int		iTime;
-} LAP_t;
 
 typedef struct {
 	short	iLeft, iRight;
@@ -241,6 +224,13 @@ class CVsdFilter {
 	char	*m_szSkinDir;	// !js_var:SkinDir
 	char	*m_szPluginDir;	// !js_var:VsdRootDir
 	
+	// ログリードヘルパ
+	int ReadGPSLog( const char *szFileName );
+	int ReadLog( const char *szFileName );
+	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
+	CLapLog *CalcLapTime( int iLapMode );
+	CLapLog *CalcLapTimeAuto( void );
+	
 	static char *StringNew( char *&szDst, const char *szSrc ){
 		if( szDst ) delete [] szDst;
 		
@@ -284,18 +274,11 @@ class CVsdFilter {
 	CVsdLog	*m_VsdLog;
 	CVsdLog	*m_GPSLog;
 	CVsdLog *m_CurLog;
+	CLapLog	*m_LapLog;
 	
 	BOOL ParseMarkStr( const char *szMark );
-	BOOL ReadGPSLog( const char *szFileName );
-	BOOL ReadLog( const char *szFileName );
-	double GPSLogGetLength(
-		double dLong0, double dLati0,
-		double dLong1, double dLati1
-	);
 	
 	BOOL		m_bCalcLapTimeReq;
-	int			m_iLogStart;
-	int			m_iLogStop;
 	
 	// JavaScript 用パラメータ
 	double	m_dSpeed;		// !js_var:Speed
@@ -312,19 +295,11 @@ class CVsdFilter {
 	
 	static HINSTANCE	m_hInst;	// dll handle
 	
-	LAP_t		*m_Lap;
-	int			m_iLapMode;
-	int			m_iLapNum;		// !js_var:LapCnt
-	int			m_iBestTime;	// !js_var:BestLapTime
-	int			m_iBestLap;		// !js_var:BestLapCnt
-	
   protected:
 	
 	CScript	*m_Script;
 	
   private:
-	
-	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
 	
 	// スタートライン@GPS 計測モード
 	double	m_dStartLineX1;
@@ -334,12 +309,9 @@ class CVsdFilter {
 	
 	virtual void SetFrameMark( int iFrame ) = 0;
 	virtual int  GetFrameMark( int iFrame ) = 0;
-	void CalcLapTime( void );
-	void CalcLapTimeAuto( void );
 	
 	int m_iPosX, m_iPosY;
 	
-	int	m_iLapIdx;
 	int m_iBestLogNumRunning;
 	
 	PolygonData_t	*m_Polygon;

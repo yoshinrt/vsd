@@ -19,6 +19,46 @@
 	#define INVERT_G	1
 #endif
 
+#define BESTLAP_NONE	-1
+
+/*** Lap Time ***************************************************************/
+
+enum {
+	LAPMODE_HAND_VIDEO,		// 手動計測モード・Video フレーム
+	LAPMODE_HAND_GPS,		// 手動計測モード・GPS ログ時計
+	LAPMODE_HAND_MAGNET,	// 手動計測モード・磁気センサー時計
+	LAPMODE_GPS,			// GPS 自動計測モード
+	LAPMODE_MAGNET,			// 磁気センサー自動計測モード
+};
+
+typedef struct {
+	UINT	uLap;
+	float	fLogNum;
+	int		iTime;
+} LAP_t;
+
+class CVsdLog;
+class CLapLog {
+  public:
+	CLapLog(){
+		// 初期化
+		m_iLapNum		= 0;
+		m_iBestTime		= BESTLAP_NONE;
+		m_iBestLap		= 0;
+		m_iLapMode		= LAPMODE_HAND_VIDEO;
+		m_iLapIdx		= -1;
+	}
+	
+	~CLapLog(){}
+	
+	std::vector<LAP_t>	m_LapLog;
+	int		m_iLapMode;
+	int		m_iLapNum;
+	int		m_iBestTime;
+	int		m_iBestLap;
+	int		m_iLapIdx;
+};
+
 /*** new type ***************************************************************/
 
 static const float fNaN = sqrt( -1.0f );
@@ -53,7 +93,7 @@ class VSD_LOG_t {
 	double Y()		{ return fY; }			void SetY		( double d ){ fY		= ( float )d; }
 	double X0()		{ return fX0; }			void SetX0		( double d ){ fX0		= ( float )d; }
 	double Y0()		{ return fY0; }			void SetY0		( double d ){ fY0		= ( float )d; }
-
+	
   private:
 	float	fX, fX0;
 	float	fY, fY0;
@@ -93,11 +133,12 @@ class CVsdLog {
 	
   public:
 	std::vector<VSD_LOG_t>	m_Log;
-	int			m_iCnt;
 	
 	int			m_iLogNum;
 	int			m_iMaxSpeed;
 	int			m_iMaxTacho;
+	
+	int			m_iCnt;
 	
 	double		m_dLogNum;
 	
@@ -112,14 +153,28 @@ class CVsdLog {
 	
 	double		m_dLogStartTime;	// ログ開始時間
 	
+	// VSD ログ位置自動認識用
+	int			m_iLogStart;
+	int			m_iLogStop;
+	
 	CVsdLog();
 	~CVsdLog();
-	UINT GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, UINT uCnt, BOOL bAllParam = FALSE );
+	UINT GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, BOOL bAllParam = FALSE );
 	void RotateMap( double dAngle );
 	
 	BOOL IsDataExist( void ){
 		return 0 <= m_iLogNum && m_iLogNum < m_iCnt - 1;
 	}
+	BOOL IsDataExist( int iLogNum ){
+		return 0 <= iLogNum && iLogNum < m_iCnt - 1;
+	}
+	
+	int ReadGPSLog( const char *szFileName );
+	int ReadLog( const char *szFileName, CLapLog *&pLapLog );
+	double GPSLogGetLength(
+		double dLong0, double dLati0,
+		double dLong1, double dLati1
+	);
 	
 	#define VsdLogGetData( p, n ) (\
 		( 0 <= ( n ) && ( n ) < m_iCnt ) ? \

@@ -73,18 +73,6 @@ class CVsdFilterIF {
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->GetMaxTachk() ) : v8::Undefined();
 	}
-	static v8::Handle<v8::Value> Get_LapCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Integer::New( obj->m_iLapNum ) : v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Get_BestLapTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Integer::New( obj->m_iBestTime ) : v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Get_BestLapCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Integer::New( obj->m_iBestLap ) : v8::Undefined();
-	}
 
 	///// メソッドコールバック /////
 	/*** DrawArc ****************************************************************/
@@ -464,9 +452,6 @@ class CVsdFilterIF {
 		inst->SetAccessor( v8::String::New( "Gy" ), Get_Gy );
 		inst->SetAccessor( v8::String::New( "MaxSpeed" ), Get_MaxSpeed );
 		inst->SetAccessor( v8::String::New( "MaxTacho" ), Get_MaxTacho );
-		inst->SetAccessor( v8::String::New( "LapCnt" ), Get_LapCnt );
-		inst->SetAccessor( v8::String::New( "BestLapTime" ), Get_BestLapTime );
-		inst->SetAccessor( v8::String::New( "BestLapCnt" ), Get_BestLapCnt );
 
 		// メソッドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();

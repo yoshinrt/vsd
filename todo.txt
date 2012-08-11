@@ -12,7 +12,6 @@
 ・Log read の JS 化，データロギング項目の自由化
 ・Lap time 表示の機能細分化
 ・printf
-・ログリードを CVsdLog に移動
 ・ユーザエラーメッセージ
 ・Image にも Draw 系ができるようにする
 ・skin 一覧リストボックス

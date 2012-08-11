@@ -55,7 +55,11 @@
 #define SelectLogGPS ( m_CurLog = m_GPSLog ? m_GPSLog : m_VsdLog )
 
 // Laptime 計算用
-#define SelectLogForLapTime	( m_CurLog = m_iLapMode == LAPMODE_MAGNET || m_iLapMode == LAPMODE_HAND_MAGNET ? m_VsdLog : m_GPSLog )
+#define SelectLogForLapTime	( m_CurLog = \
+	m_LapLog && ( \
+		m_LapLog->m_iLapMode == LAPMODE_MAGNET || \
+		m_LapLog->m_iLapMode == LAPMODE_HAND_MAGNET \
+	) ? m_VsdLog : m_GPSLog )
 
 #define DEFAULT_FONT	"ＭＳ ゴシック"
 
@@ -615,11 +619,7 @@ void CVsdFilter::DrawGraph(
 	
 	for( int x = 0; x < iWidth; ++x ){
 		int iLogNum = Log.m_iLogNum + ( x - iWidth / 2 ) * GRAPH_SCALE;
-		if( iLogNum < 0 || Log.m_iCnt < iLogNum ){
-			dVal = 0;
-		}else{
-			dVal = GetDataFunc( Log, iLogNum );
-		}
+		dVal = Log.IsDataExist( iLogNum ) ? GetDataFunc( Log, iLogNum ) : 0;
 		
 		int iPosY = y2 - ( int )( dVal * iHeight / dMaxVal );
 		if( iPrevY != INVALID_POS_I )
@@ -697,7 +697,7 @@ void CVsdFilter::DrawGSnake(
 	
 	SelectLogVsd;
 	
-	if( m_CurLog && m_CurLog->m_iLogNum < m_CurLog->m_iCnt ){
+	if( m_CurLog && m_CurLog->IsDataExist( m_CurLog->m_iLogNum )){
 		if( GSnakeLen > 0 ){
 			
 			int iGxPrev = INVALID_POS_I, iGyPrev;
@@ -781,12 +781,19 @@ void CVsdFilter::DrawMap(
 	
 	int iGxPrev = INVALID_POS_I, iGyPrev;
 	
-	int iLineSt = ( int )LapNum2LogNum( m_CurLog, m_iLapIdx );
+	int iLineSt, iLineEd;
+	
+	if( m_LapLog ){
+		iLineSt = ( int )LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx );
+		iLineEd = m_LapLog->m_iLapIdx < m_LapLog->m_iLapNum - 1 ?
+			( int )LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx + 1 ) : 0;
+	}else{
+		iLineSt = 0;
+		iLineEd = m_CurLog->m_iCnt - 1;
+	}
+	
 	if( m_CurLog->m_iLogNum - iLineSt > ( int )( LineTrace * LOG_FREQ ))
 		iLineSt = m_CurLog->m_iLogNum - ( int )( LineTrace * LOG_FREQ );
-	
-	int iLineEd = m_iLapIdx != m_iLapNum - 1
-		? ( int )LapNum2LogNum( m_CurLog, m_iLapIdx + 1 ) : m_CurLog->m_iCnt - 1;
 	
 	if( iLineEd - m_CurLog->m_iLogNum > ( int )( LineTrace * LOG_FREQ ))
 		iLineEd = m_CurLog->m_iLogNum + ( int )( LineTrace * LOG_FREQ );
@@ -842,7 +849,7 @@ void CVsdFilter::DrawMap(
 	);
 	
 	// スタートライン表示
-	if( DispSyncInfo && m_iLapMode == LAPMODE_GPS ){
+	if( DispSyncInfo && m_LapLog && m_LapLog->m_iLapMode == LAPMODE_GPS ){
 		double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
 		
 		int xs1 = x1 + ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - m_CurLog->m_dMapOffsX ) * dScale );
@@ -886,7 +893,7 @@ void CVsdFilter::DrawLapTime(
 	int	i;
 	char	szBuf[ SPRINTF_BUF ];
 	
-	if( !DispLap || !m_iLapNum ) return;
+	if( !DispLap || !m_LapLog || !m_LapLog->m_iLapNum ) return;
 	
 	SelectLogForLapTime;
 	
@@ -903,14 +910,14 @@ void CVsdFilter::DrawLapTime(
 	}
 	
 	// 時間表示
-	if( m_iLapIdx >= 0 && m_Lap[ m_iLapIdx + 1 ].iTime != 0 ){
+	if( m_LapLog->m_iLapIdx >= 0 && m_LapLog->m_LapLog[ m_LapLog->m_iLapIdx + 1 ].iTime != 0 ){
 		int iTime;
-		if( m_iLapMode != LAPMODE_HAND_VIDEO ){
+		if( m_LapLog->m_iLapMode != LAPMODE_HAND_VIDEO ){
 			// 自動計測時は，タイム / ログ数 から計算
-			iTime = ( int )(( m_CurLog->m_dLogNum - m_Lap[ m_iLapIdx ].fLogNum ) * 1000 / m_CurLog->m_dFreq );
+			iTime = ( int )(( m_CurLog->m_dLogNum - m_LapLog->m_LapLog[ m_LapLog->m_iLapIdx ].fLogNum ) * 1000 / m_CurLog->m_dFreq );
 		}else{
 			// 手動計測モードのときは，フレーム数から計算
-			iTime = ( int )(( GetFrameCnt() - m_Lap[ m_iLapIdx ].fLogNum ) * 1000.0 / GetFPS());
+			iTime = ( int )(( GetFrameCnt() - m_LapLog->m_LapLog[ m_LapLog->m_iLapIdx ].fLogNum ) * 1000.0 / GetFPS());
 		}
 		
 		sprintf( szBuf, "Time%2d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
@@ -928,16 +935,16 @@ void CVsdFilter::DrawLapTime(
 			SelectLogGPS;
 			
 			// ベストラップ開始の LogNum
-			double dBestLapLogNumStart = LapNum2LogNum( m_CurLog, m_iBestLap );
+			double dBestLapLogNumStart = LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap );
 			
 			// この周の走行距離を求める
-			double dMileage = m_CurLog->Mileage() - m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_iLapIdx ));
+			double dMileage = m_CurLog->Mileage() - m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx ));
 			
 			// この周の 1周の走行距離から，現在の走行距離を補正する
 			dMileage =
 				dMileage
-				* ( m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_iBestLap + 1 )) - m_CurLog->Mileage( dBestLapLogNumStart ))
-				/ ( m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_iLapIdx  + 1 )) - m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_iLapIdx )));
+				* ( m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap + 1 )) - m_CurLog->Mileage( dBestLapLogNumStart ))
+				/ ( m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx  + 1 )) - m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx )));
 			
 			// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
 			// m_iBestLogNumRunning <= 最終的に求める結果 < m_iBestLogNumRunning + 1  となる
@@ -965,7 +972,7 @@ void CVsdFilter::DrawLapTime(
 			
 			int iDiffTime = ( int )(
 				(
-					( m_CurLog->m_dLogNum - LapNum2LogNum( m_CurLog, m_iLapIdx )) -
+					( m_CurLog->m_dLogNum - LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx )) -
 					( dBestLapLogNumRunning - dBestLapLogNumStart )
 				) * 1000.0 / m_CurLog->m_dFreq
 			);
@@ -991,43 +998,43 @@ void CVsdFilter::DrawLapTime(
 	// Best 表示
 	sprintf(
 		szBuf, "Best%2d'%02d.%03d",
-		m_iBestTime / 60000,
-		m_iBestTime / 1000 % 60,
-		m_iBestTime % 1000
+		m_LapLog->m_iBestTime / 60000,
+		m_LapLog->m_iBestTime / 1000 % 60,
+		m_LapLog->m_iBestTime % 1000
 	);
 	DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, Font, uColor, uColorOutline );
 	
 	// Lapタイム表示
 	// 3つタイム表示する分の，最後の LapIdx を求める．
-	// 通常は m_iLapIdx + 1 だが，m_Lap[ iLapIdxEnd ].iTime == 0 の時は
+	// 通常は m_iLapIdx + 1 だが，m_LapLog[ iLapIdxEnd ].iTime == 0 の時は
 	// 周回モードでは最後のラップを走り終えた
 	// ジムカモードでは 1周走り終えたことを示しているので
 	// LapIdx を -1 する
-	int iLapIdxEnd = m_iLapIdx + 1;
-	if( m_Lap[ iLapIdxEnd ].iTime == 0 ) --iLapIdxEnd;
+	int iLapIdxEnd = m_LapLog->m_iLapIdx + 1;
+	if( m_LapLog->m_LapLog[ iLapIdxEnd ].iTime == 0 ) --iLapIdxEnd;
 	
 	// iLapIdxEnd から有効なラップタイムが 2個見つかるまで遡る
 	int iLapIdxStart = iLapIdxEnd - 1;
 	for( i = 0; iLapIdxStart > 0; --iLapIdxStart ){
-		if( m_Lap[ iLapIdxStart ].iTime ){
+		if( m_LapLog->m_LapLog[ iLapIdxStart ].iTime ){
 			if( ++i >= 2 ) break;
 		}
 	}
 	
 	if( iLapIdxStart >= 0 ){
 		for( ; iLapIdxStart <= iLapIdxEnd; ++iLapIdxStart ){
-			if( m_Lap[ iLapIdxStart ].iTime != 0 ){
+			if( m_LapLog->m_LapLog[ iLapIdxStart ].iTime != 0 ){
 				sprintf(
 					szBuf, "%3d%c%2d'%02d.%03d",
-					m_Lap[ iLapIdxStart ].uLap,
-					( iLapIdxStart == m_iLapIdx + 1 && bInLap ) ? '*' : ' ',
-					m_Lap[ iLapIdxStart ].iTime / 60000,
-					m_Lap[ iLapIdxStart ].iTime / 1000 % 60,
-					m_Lap[ iLapIdxStart ].iTime % 1000
+					m_LapLog->m_LapLog[ iLapIdxStart ].uLap,
+					( iLapIdxStart == m_LapLog->m_iLapIdx + 1 && bInLap ) ? '*' : ' ',
+					m_LapLog->m_LapLog[ iLapIdxStart ].iTime / 60000,
+					m_LapLog->m_LapLog[ iLapIdxStart ].iTime / 1000 % 60,
+					m_LapLog->m_LapLog[ iLapIdxStart ].iTime % 1000
 				);
 				DrawText(
 					POS_DEFAULT, POS_DEFAULT, szBuf, Font,
-					m_iBestTime == m_Lap[ iLapIdxStart ].iTime ? uColorBest : uColor,
+					m_LapLog->m_iBestTime == m_LapLog->m_LapLog[ iLapIdxStart ].iTime ? uColorBest : uColor,
 					uColorOutline
 				);
 				++i;
@@ -1156,35 +1163,44 @@ BOOL CVsdFilter::DrawVSD( void ){
 	}
 	
 	// ラップタイムの再計算
-	if( m_iLapMode != LAPMODE_MAGNET && DispLap && m_bCalcLapTimeReq ){
+	if(
+		DispLap && m_bCalcLapTimeReq &&
+		( m_LapLog == NULL || m_LapLog->m_iLapMode != LAPMODE_MAGNET )
+	){
 		m_bCalcLapTimeReq	= FALSE;
-		m_iLapMode			= LAPMODE_HAND_VIDEO;
 		
+		if( m_LapLog ) delete m_LapLog;
+		
+		// GPS からラップタイム計算してみる
 		if( m_GPSLog && m_piParamT[ TRACK_SLineWidth ] > 0 ){
-			CalcLapTimeAuto();
+			m_LapLog = CalcLapTimeAuto();
 		}
-		if( m_iLapMode != LAPMODE_GPS ){
-			CalcLapTime();
+		
+		// できなかったので手動で
+		if( !m_LapLog ){
+			m_LapLog = CalcLapTime(
+				m_VsdLog ? LAPMODE_HAND_MAGNET :
+				m_GPSLog ? LAPMODE_HAND_GPS :
+						   LAPMODE_HAND_VIDEO
+			);
 		}
 	}
 	
 	SelectLogForLapTime;
 	
 	// ラップインデックスを求める
-	if( m_iLapNum ){
-		// VSD/GPS 両方のログがなければ，手動計測での m_Lap[].fLogNum はフレーム# なので
-		// m_Lap[].fLogNum と精度をあわせるため，m_dLogNum はいったん float に落とす
-		float fLogNum = m_iLapMode != LAPMODE_HAND_VIDEO ? ( float )m_CurLog->m_dLogNum : GetFrameCnt();
+	if( m_LapLog && m_LapLog->m_iLapNum ){
+		// VSD/GPS 両方のログがなければ，手動計測での m_LapLog[].fLogNum はフレーム# なので
+		// m_LapLog[].fLogNum と精度をあわせるため，m_dLogNum はいったん float に落とす
+		float fLogNum = m_LapLog->m_iLapMode != LAPMODE_HAND_VIDEO ? ( float )m_CurLog->m_dLogNum : GetFrameCnt();
 		
 		// カレントポインタがおかしいときは，-1 にリセット
 		if(
-			m_iLapIdx >= m_iLapNum ||
-			m_iLapIdx >= 0 && m_Lap[ m_iLapIdx ].fLogNum > fLogNum
-		) m_iLapIdx = -1;
+			m_LapLog->m_iLapIdx >= m_LapLog->m_iLapNum ||
+			m_LapLog->m_iLapIdx >= 0 && m_LapLog->m_LapLog[ m_LapLog->m_iLapIdx ].fLogNum > fLogNum
+		) m_LapLog->m_iLapIdx = -1;
 		
-		for( ; m_Lap[ m_iLapIdx + 1 ].fLogNum <= fLogNum; ++m_iLapIdx );
-	}else{
-		m_iLapIdx = -1;
+		for( ; m_LapLog->m_LapLog[ m_LapLog->m_iLapIdx + 1 ].fLogNum <= fLogNum; ++m_LapLog->m_iLapIdx );
 	}
 	
 	// JavaScript 用ログデータ計算

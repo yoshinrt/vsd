@@ -57,9 +57,6 @@ if( Vsd.MaxTacho > 0 ){
 
 function Draw(){
 date = new Date()
-Vsd.DrawText(
-		100, 0, date.toString(), FontM, 0xFFFFFF
-	);
 	// タコメーター画像描画
 	Vsd.PutImage( MeterX, MeterY, ImgMeter );
 	

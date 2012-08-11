@@ -433,8 +433,9 @@ int CVsdFilterAvu::GetFrameMark( int iFrame ){
 BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
 	
 	char szMsg[ BUF_SIZE ];
+	int iCnt;
 	
-	if( !CVsdFilter::ReadLog( szFileName )){
+	if( !( iCnt = CVsdFilter::ReadLog( szFileName ))){
 		sprintf( szMsg, "ファイルがロードできません\n%s", szFileName );
 		MessageBox( NULL,
 			szMsg,
@@ -448,7 +449,7 @@ BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
 	
 	// trackbar 設定
 	track_e[ PARAM_LSt ] =
-	track_e[ PARAM_LEd ] = m_VsdLog->m_iCnt;
+	track_e[ PARAM_LEd ] = iCnt;
 	
 	return TRUE;
 }
@@ -460,7 +461,8 @@ BOOL CVsdFilterAvu::ReadGPSLog( const char *szFileName, HWND hwnd ){
 	
 	char szMsg[ BUF_SIZE ];
 	
-	if( !CVsdFilter::ReadGPSLog( szFileName )){
+	int iCnt;
+	if( !( iCnt = CVsdFilter::ReadGPSLog( szFileName ))){
 		sprintf( szMsg, "ファイルがロードできません\n%s", szFileName );
 		MessageBox( NULL,
 			szMsg,
@@ -480,7 +482,7 @@ BOOL CVsdFilterAvu::ReadGPSLog( const char *szFileName, HWND hwnd ){
 		}
 	#else
 		track_e[ PARAM_GSt ] =
-		track_e[ PARAM_GEd ] = m_GPSLog->m_iCnt;
+		track_e[ PARAM_GEd ] = iCnt;
 	#endif
 
 	return TRUE;
@@ -914,7 +916,7 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	}
 	
 	// 手動ラップ計測マーク出力
-	if( m_iLapMode != LAPMODE_MAGNET && m_iLapNum ){
+	if( m_LapLog && m_LapLog->m_iLapMode != LAPMODE_MAGNET && m_LapLog->m_iLapNum ){
 		FRAME_STATUS	fsp;
 		BOOL			bFirst = TRUE;
 		
@@ -1209,10 +1211,11 @@ BOOL func_update( FILTER *filter, int status ){
 	#ifndef GPS_ONLY
 		if(
 			status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS ) &&
-			filter->check[ CHECK_LOGPOS ]
+			filter->check[ CHECK_LOGPOS ] &&
+			g_Vsd->m_VsdLog
 		){
-			filter->track[ PARAM_LSt ] = g_Vsd->m_iLogStart;
-			filter->track[ PARAM_LEd ] = g_Vsd->m_iLogStop;
+			filter->track[ PARAM_LSt ] = g_Vsd->m_VsdLog->m_iLogStart;
+			filter->track[ PARAM_LEd ] = g_Vsd->m_VsdLog->m_iLogStop;
 			
 			// 設定再描画
 			filter->exfunc->filter_window_update( filter );
