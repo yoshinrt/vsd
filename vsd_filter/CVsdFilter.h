@@ -136,20 +136,20 @@ class CVsdFilter {
 		UINT uFlag
 	);
 	
-	int DrawFont0( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor );
-	int DrawFont( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor, tRABY uColorOutline = color_black );
+	int DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, tRABY uColor );
+	int DrawFont( int x, int y, WCHAR c, CVsdFont &Font, tRABY uColor, tRABY uColorOutline = color_black );
 	void DrawText( // !js_func
-		int x, int y, char *szMsg, CVsdFont &Font, tRABY uColor,
+		int x, int y, LPCWSTR szMsg, CVsdFont &Font, tRABY uColor,
 		tRABY uColorOutline = color_black	// !default:color_black
 	);
 	void DrawTextAlign( // !js_func
-		int x, int y, UINT uAlign, char *szMsg, CVsdFont &Font, tRABY uColor,
+		int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFont &Font, tRABY uColor,
 		tRABY uColorOutline = color_black	// !default:color_black
 	);
 	
 	void DrawGraph(
 		int x1, int y1, int x2, int y2,
-		char *szFormat,
+		LPCWSTR szFormat,
 		CVsdFont &Font,
 		tRABY uColor,
 		CVsdLog& Log,
@@ -210,13 +210,13 @@ class CVsdFilter {
 	);
 	
 	// ラップタイム情報
-	char *FormatTime( int iTime ); // !js_func
+	LPCWSTR FormatTime( int iTime ); // !js_func
 	
 	int CurTime( void ){ return m_LapLog ? m_LapLog->m_iCurTime : TIME_NONE; }	// !js_var:CurTime
 	int BestLapTime( void ){ return m_LapLog ? m_LapLog->m_iBestTime : TIME_NONE; }	// !js_var:BestLapTime
 	int DiffTime( void ){ return m_LapLog ? m_LapLog->m_iDiffTime : TIME_NONE; }	// !js_var:DiffTime
 	
-	void DispErrorMessage( const char *szMsg );
+	void DispErrorMessage( LPCWSTR szMsg );
 	
 	enum {
 		IMG_FILL	= ( 1 << 0 ),
@@ -241,8 +241,10 @@ class CVsdFilter {
 	char	*m_szLogFile;
 	char	*m_szGPSLogFile;
 	char	*m_szSkinFile;
-	char	*m_szSkinDir;	// !js_var:SkinDir
-	char	*m_szPluginDir;	// !js_var:VsdRootDir
+	char	*m_szSkinDirA;
+	LPWSTR	m_szSkinDirW;	// !js_var:SkinDir
+	char	*m_szPluginDirA;
+	LPWSTR	m_szPluginDirW;	// !js_var:VsdRootDir
 	
 	// ログリードヘルパ
 	int ReadGPSLog( const char *szFileName );
@@ -262,18 +264,62 @@ class CVsdFilter {
 		return strcpy( szDst, szSrc );
 	}
 	
+	static LPWSTR StringNew( LPWSTR& szDst, LPCWSTR szSrc ){
+		if( szDst ) delete [] szDst;
+		
+		if( szSrc == NULL || *szSrc == '\0' ){
+			return szDst = NULL;
+		}
+		szDst = new WCHAR[ wcslen( szSrc ) + 1 ];
+		return wcscpy( szDst, szSrc );
+	}
+	
+	static LPWSTR StringNew( LPWSTR& szDst, const char *szSrc ){
+		if( szDst ) delete [] szDst;
+		
+		if( szSrc == NULL || *szSrc == '\0' ){
+			return szDst = NULL;
+		}
+		// SJIS->WCHAR 変換
+		int iLen = MultiByteToWideChar(
+			CP_ACP,				// コードページ
+			0,					// 文字の種類を指定するフラグ
+			szSrc,				// マップ元文字列のアドレス
+			-1,					// マップ元文字列のバイト数
+			NULL,				// マップ先ワイド文字列を入れるバッファのアドレス
+			0					// バッファのサイズ
+		);
+		szDst = new WCHAR[ iLen ];
+		
+		MultiByteToWideChar(
+			CP_ACP,				// コードページ
+			0,					// 文字の種類を指定するフラグ
+			szSrc,				// マップ元文字列のアドレス
+			-1,					// マップ元文字列のバイト数
+			szDst,				// マップ先ワイド文字列を入れるバッファのアドレス
+			iLen				// バッファのサイズ
+		);
+		
+		return szDst;
+	}
+	
 	// スキン dir 取得
 	char *SetSkinFile( const char *szSkinFile ){
 		char szBuf[ MAX_PATH + 1 ];
 		
-		if( szSkinFile == NULL ) return StringNew( m_szSkinDir, NULL );
+		if( szSkinFile == NULL ){
+			StringNew( m_szSkinDirW, ( LPCWSTR )NULL );
+			return StringNew( m_szSkinDirA, NULL );
+		}
 		
-		// スキンファイル名を CWD=m_szPluginDir とみなしフルパスに変換
-		GetFullPathWithCDir( szBuf, szSkinFile, m_szPluginDir );
+		// スキンファイル名を CWD=m_szPluginDirA とみなしフルパスに変換
+		GetFullPathWithCDir( szBuf, szSkinFile, m_szPluginDirA );
 		
 		// ↑のディレクトリ名を得る
 		StringNew( m_szSkinFile, szBuf );
-		return StringNew( m_szSkinDir, StrTokFile( szBuf, m_szSkinFile, STF_FULL | STF_PATH2 ));
+		StringNew( m_szSkinDirA, StrTokFile( szBuf, m_szSkinFile, STF_FULL | STF_PATH2 ));
+		StringNew( m_szSkinDirW, m_szSkinDirA );
+		return m_szSkinDirA;
 	}
 	
 	// プラグイン dll dir 取得
@@ -282,7 +328,9 @@ class CVsdFilter {
 		GetModuleFileName(( HMODULE )m_hInst, szBuf, MAX_PATH );
 		char *p = StrTokFile( NULL, szBuf, STF_NODE );
 		if( p ) strcpy( p, "vsd_skins\\" );
-		return StringNew( m_szPluginDir, szBuf );
+		StringNew( m_szPluginDirA, szBuf );
+		StringNew( m_szPluginDirW, m_szPluginDirA );
+		return m_szPluginDirA;
 	}
 	
 	int		*m_piParamT;

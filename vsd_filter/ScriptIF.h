@@ -55,11 +55,11 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Get_SkinDir( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::String::New( obj->m_szSkinDir ) : v8::Undefined();
+		return obj ? v8::String::New(( uint16_t *) obj->m_szSkinDirW ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_VsdRootDir( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::String::New( obj->m_szPluginDir ) : v8::Undefined();
+		return obj ? v8::String::New(( uint16_t *) obj->m_szPluginDirW ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_Speed( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
@@ -216,7 +216,7 @@ class CVsdFilterIF {
 	static v8::Handle<v8::Value> Func_DrawText( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CheckArgs( 5 <= iLen && iLen <= 6 )) return v8::Undefined();
-		v8::String::AsciiValue str2( args[ 2 ] );
+		v8::String::Value str2( args[ 2 ] );
 		v8::Local<v8::Object> Font3 = args[ 3 ]->ToObject();
 		if( CheckClass( Font3, "Font", "arg[ 4 ] must be Font" )) return v8::Undefined();
 		CVsdFont *obj3 = GetThis<CVsdFont>( Font3 );
@@ -226,7 +226,7 @@ class CVsdFilterIF {
 		thisObj->DrawText(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
-			*str2,
+			( LPCWSTR )*str2,
 			*obj3,
 			PIXEL_RABY::Argb2Raby( args[ 4 ]->Int32Value()),
 			iLen <= 5 ? color_black : PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value())
@@ -237,7 +237,7 @@ class CVsdFilterIF {
 	static v8::Handle<v8::Value> Func_DrawTextAlign( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CheckArgs( 6 <= iLen && iLen <= 7 )) return v8::Undefined();
-		v8::String::AsciiValue str3( args[ 3 ] );
+		v8::String::Value str3( args[ 3 ] );
 		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
 		if( CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
 		CVsdFont *obj4 = GetThis<CVsdFont>( Font4 );
@@ -248,7 +248,7 @@ class CVsdFilterIF {
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
-			*str3,
+			( LPCWSTR )*str3,
 			*obj4,
 			PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
 			iLen <= 6 ? color_black : PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value())
@@ -416,11 +416,11 @@ class CVsdFilterIF {
 		
 		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
-		char *ret = thisObj->FormatTime(
+		LPCWSTR ret = thisObj->FormatTime(
 			args[ 0 ]->Int32Value()
 		);
 		
-		return v8::String::New( ret );
+		return v8::String::New(( uint16_t *)ret );
 	}
 
   public:
@@ -694,11 +694,11 @@ class CVsdFontIF {
 	static v8::Handle<v8::Value> Func_GetTextWidth( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CheckArgs( iLen == 1 )) return v8::Undefined();
-		v8::String::AsciiValue str0( args[ 0 ] );
+		v8::String::Value str0( args[ 0 ] );
 		CVsdFont *thisObj = GetThis<CVsdFont>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->GetTextWidth(
-			*str0
+			( LPCWSTR )*str0
 		);
 		
 		return v8::Integer::New( ret );

@@ -46,8 +46,10 @@ CVsdFilter::CVsdFilter (){
 	m_szLogFile			= NULL;
 	m_szGPSLogFile		= NULL;
 	m_szSkinFile		= NULL;
-	m_szSkinDir			= NULL;
-	m_szPluginDir		= NULL;
+	m_szSkinDirA		= NULL;
+	m_szPluginDirA		= NULL;
+	m_szSkinDirW		= NULL;
+	m_szPluginDirW		= NULL;
 	
 	// str param Ç…èâä˙ílê›íË
 	#define DEF_STR_PARAM( id, var, init, conf_name ) StringNew( var, init );
@@ -74,8 +76,10 @@ CVsdFilter::~CVsdFilter (){
 	delete [] m_szLogFile;
 	delete [] m_szGPSLogFile;
 	delete [] m_szSkinFile;
-	delete [] m_szSkinDir;
-	delete [] m_szPluginDir;
+	delete [] m_szSkinDirA;
+	delete [] m_szPluginDirA;
+	delete [] m_szSkinDirW;
+	delete [] m_szPluginDirW;
 	delete [] m_Polygon;
 	delete m_pFont;
 	delete m_Script;

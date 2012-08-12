@@ -263,12 +263,18 @@ sub MakeJsIF {
 				/\b(?:int|UINT)\b/	? "Integer" :
 				/\bdouble\b/		? "Number" :
 				/\bchar\b/			? "String" :
+				/\bLPC?WSTR\b/		? "String" :
 									  "???";
+			
+			$Cast = '';
+			if( /\bLPC?WSTR\b/ ){
+				$Cast	= '( uint16_t *)';
+			}
 #-----
 			$AccessorIF .= << "-----";
 	static v8::Handle<v8::Value> Get_$JSvar( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		$Class *obj = GetThis<$Class>( info.Holder());
-		return obj ? v8::${Type}::New( obj->$RealVar ) : v8::Undefined();
+		return obj ? v8::${Type}::New($Cast obj->$RealVar ) : v8::Undefined();
 	}
 -----
 		}

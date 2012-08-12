@@ -13,9 +13,8 @@ class CScript {
 	CScript( CVsdFilter *pVsd );
 	~CScript( void );
 	
-	UINT CompileRun( const char *szScript, const char *szFileName );
 	void Initialize( void );
-	UINT RunFile( char *szFileName );
+	UINT RunFile( LPCWSTR szFileName );
 	UINT Run( const char *szFunc );
 	
 	const char* ToCString( const v8::String::Utf8Value& value );
@@ -23,10 +22,10 @@ class CScript {
 	
 	static CVsdFilter	*m_Vsd;	// ÉGÅc
 	
-	char *m_szErrorMsg;
+	LPWSTR m_szErrorMsg;
 	UINT m_uError;
 	
-	const char *GetErrorMessage( void ){
+	LPCWSTR GetErrorMessage( void ){
 		return m_szErrorMsg ? m_szErrorMsg : m_szErrorMsgID[ m_uError ];
 	}
 	
@@ -34,5 +33,5 @@ class CScript {
 	v8::Persistent<v8::Context> m_Context;
 	v8::Isolate	*m_pIsolate;
 	
-	static const char *m_szErrorMsgID[];
+	static LPCWSTR m_szErrorMsgID[];
 };

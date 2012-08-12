@@ -38,12 +38,12 @@ class CVsdFont {
 	void CreateFont( const char *szFontName, int iSize, UINT uAttr );
 	void CreateFont( LOGFONT &logfont );
 	
-	static BOOL ExistFont( UCHAR c ){ return FONT_CHAR_FIRST <= c && c <= FONT_CHAR_LAST; }
+	static BOOL ExistFont( WCHAR c ){ return FONT_CHAR_FIRST <= c && c <= FONT_CHAR_LAST; }
 	BOOL IsOutline( void ){ return m_uAttr & ATTR_OUTLINE; }
 	BOOL IsFixed( void ){ return m_uAttr & ATTR_FIXED; }
 	BOOL IsNoAntialias( void ){ return m_uAttr & ATTR_NOANTIALIAS; }
 	
-	CFontGlyph& FontGlyph( UCHAR c ){
+	CFontGlyph& FontGlyph( WCHAR c ){
 		return m_FontGlyph[ c - FONT_CHAR_FIRST ];
 	}
 	
@@ -58,10 +58,10 @@ class CVsdFont {
 	
 	int GetW_Space( void ){ return m_iFontW_Space; }
 	
-	int GetTextWidth( char *szMsg ){	// !js_func
+	int GetTextWidth( LPCWSTR szMsg ){	// !js_func
 		
 		if( m_uAttr & ATTR_FIXED ){
-			return strlen( szMsg ) * GetWidth();
+			return wcslen( szMsg ) * GetWidth();
 		}
 		
 		int iWidth = 0;

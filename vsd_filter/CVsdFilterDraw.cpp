@@ -368,7 +368,7 @@ void CVsdFilter::DrawArc(
 
 /*** DrawFont ***************************************************************/
 
-int CVsdFilter::DrawFont0( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor ){
+int CVsdFilter::DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, tRABY uColor ){
 	
 	// 文字幅を得る
 	CFontGlyph &FontGlyph = Font.FontGlyph( c );
@@ -430,7 +430,7 @@ int CVsdFilter::DrawFont0( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor )
 	return iCellIncX;
 }
 
-int CVsdFilter::DrawFont( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor, tRABY uColorOutline ){
+int CVsdFilter::DrawFont( int x, int y, WCHAR c, CVsdFont &Font, tRABY uColor, tRABY uColorOutline ){
 	
 	// フォントが存在しない文字なら，space の文字幅を返す
 	if( !CVsdFont::ExistFont( c ))
@@ -447,7 +447,7 @@ int CVsdFilter::DrawFont( int x, int y, UCHAR c, CVsdFont &Font, tRABY uColor, t
 
 /*** DrawText *************************************************************/
 
-void CVsdFilter::DrawText( int x, int y, char *szMsg, CVsdFont &Font, tRABY uColor, tRABY uColorOutline ){
+void CVsdFilter::DrawText( int x, int y, LPCWSTR szMsg, CVsdFont &Font, tRABY uColor, tRABY uColorOutline ){
 	
 	if( x != POS_DEFAULT ) m_iPosX = x;
 	if( y != POS_DEFAULT ) m_iPosY = y;
@@ -461,7 +461,7 @@ void CVsdFilter::DrawText( int x, int y, char *szMsg, CVsdFont &Font, tRABY uCol
 	m_iPosY += Font.GetHeight();
 }
 
-void CVsdFilter::DrawTextAlign( int x, int y, UINT uAlign, char *szMsg, CVsdFont &Font, tRABY uColor, tRABY uColorOutline ){
+void CVsdFilter::DrawTextAlign( int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFont &Font, tRABY uColor, tRABY uColorOutline ){
 	
 	if( uAlign & ALIGN_HCENTER ){
 		x -= Font.GetTextWidth( szMsg ) / 2;
@@ -587,7 +587,7 @@ static double GetTachoLog( CVsdLog& Log, int iIndex ){
 
 void CVsdFilter::DrawGraph(
 	int x1, int y1, int x2, int y2,
-	char *szFormat,
+	LPCWSTR szFormat,
 	CVsdFont &Font,
 	tRABY uColor,
 	CVsdLog& Log,
@@ -602,7 +602,7 @@ void CVsdFilter::DrawGraph(
 	double	dCursorVal;
 	double	dVal;
 	
-	char	szBuf[ SPRINTF_BUF ];
+	WCHAR	szBuf[ SPRINTF_BUF ];
 	
 	for( int x = 0; x < iWidth; ++x ){
 		int iLogNum = Log.m_iLogNum + ( x - iWidth / 2 ) * GRAPH_SCALE;
@@ -627,7 +627,7 @@ void CVsdFilter::DrawGraph(
 		1, uColor, 0
 	);
 	
-	sprintf( szBuf, szFormat, dCursorVal );
+	swprintf( szBuf, sizeof( szBuf ), szFormat, dCursorVal );
 	DrawText(
 		x + 10,
 		iCursorPos - 10 - Font.GetHeight(),
@@ -650,13 +650,13 @@ void CVsdFilter::DrawGraph(
 		if( m_VsdLog ){
 			DrawGraph(
 				x1, y1, x2, y2,
-				"%.0f km/h", Font, color_orange,
+				L"%.0f km/h", Font, color_orange,
 				*m_VsdLog,
 				GetSpeedLog, m_VsdLog->m_iMaxSpeed
 			);
 			if( !DispSyncInfo ) DrawGraph(
 				x1, y1, x2, y2,
-				"%.0f rpm", Font, color_cyan,
+				L"%.0f rpm", Font, color_cyan,
 				*m_VsdLog,
 				GetTachoLog, m_VsdLog->m_iMaxTacho
 			);
@@ -665,7 +665,7 @@ void CVsdFilter::DrawGraph(
 		if(( !m_VsdLog || DispSyncInfo ) && m_GPSLog ){
 			DrawGraph(
 				x1, y1, x2, y2,
-				"%.0f km/h", Font, color_cyan,
+				L"%.0f km/h", Font, color_cyan,
 				*m_GPSLog,
 				GetSpeedLog, m_VsdLog->m_iMaxSpeed
 			);
@@ -871,12 +871,12 @@ void CVsdFilter::DrawNeedle(
 
 /*** ラップタイム format ****************************************************/
 
-char *CVsdFilter::FormatTime( int iTime ){
-	static char szBuf[ 32 ];
+LPCWSTR CVsdFilter::FormatTime( int iTime ){
+	static WCHAR szBuf[ 32 ];
 	
-	if( iTime == TIME_NONE ) return "-'--.---";
+	if( iTime == TIME_NONE ) return L"-'--.---";
 	
-	sprintf( szBuf, "%d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
+	swprintf( szBuf, sizeof( szBuf ), L"%d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
 	return szBuf;
 }
 
@@ -887,16 +887,16 @@ void CVsdFilter::DrawLapTime(
 	tRABY uColor, tRABY uColorOutline, tRABY uColorBest, tRABY uColorPlus
 ){
 	int	i;
-	char	szBuf[ SPRINTF_BUF ];
+	WCHAR	szBuf[ SPRINTF_BUF ];
 	
 	if( !DispLap || !m_LapLog ) return;
 	
 	SelectLogForLapTime;
 	
 	if( uAlign & ALIGN_HCENTER ){
-		x -= Font.GetTextWidth( "Time 0'00.000" ) / 2;
+		x -= Font.GetTextWidth( L"Time 0'00.000" ) / 2;
 	}else if( uAlign & ALIGN_RIGHT ){
-		x -= Font.GetTextWidth( "Time 0'00.000" );
+		x -= Font.GetTextWidth( L"Time 0'00.000" );
 	}
 	
 	if( uAlign & ALIGN_VCENTER ){
@@ -909,8 +909,8 @@ void CVsdFilter::DrawLapTime(
 	BOOL	bInLap = FALSE;
 	
 	if( m_LapLog->m_iCurTime != TIME_NONE ){
-		sprintf(
-			szBuf, "Time%2d'%02d.%03d",
+		swprintf(
+			szBuf, sizeof( szBuf ), L"Time%2d'%02d.%03d",
 			m_LapLog->m_iCurTime / 60000,
 			m_LapLog->m_iCurTime / 1000 % 60,
 			m_LapLog->m_iCurTime % 1000
@@ -921,8 +921,8 @@ void CVsdFilter::DrawLapTime(
 		BOOL bSign = m_LapLog->m_iDiffTime <= 0;
 		if( m_LapLog->m_iDiffTime < 0 ) m_LapLog->m_iDiffTime = -m_LapLog->m_iDiffTime;
 		
-		sprintf(
-			szBuf, "    %c%d'%02d.%03d",
+		swprintf(
+			szBuf, sizeof( szBuf ), L"    %c%d'%02d.%03d",
 			bSign ? '-' : '+',
 			m_LapLog->m_iDiffTime / 60000,
 			m_LapLog->m_iDiffTime / 1000 % 60,
@@ -933,15 +933,15 @@ void CVsdFilter::DrawLapTime(
 		bInLap = TRUE;
 	}else{
 		// まだ開始していない
-		DrawText( x, y, "Time -'--.---", Font, uColor, uColorOutline );
+		DrawText( x, y, L"Time -'--.---", Font, uColor, uColorOutline );
 		m_iPosY += Font.GetHeight();
 	}
 	
 	m_iPosY += Font.GetHeight() / 4;
 	
 	// Best 表示
-	sprintf(
-		szBuf, "Best%2d'%02d.%03d",
+	swprintf(
+		szBuf, sizeof( szBuf ), L"Best%2d'%02d.%03d",
 		m_LapLog->m_iBestTime / 60000,
 		m_LapLog->m_iBestTime / 1000 % 60,
 		m_LapLog->m_iBestTime % 1000
@@ -968,8 +968,8 @@ void CVsdFilter::DrawLapTime(
 	if( iLapIdxStart >= 0 ){
 		for( ; iLapIdxStart <= iLapIdxEnd; ++iLapIdxStart ){
 			if( m_LapLog->m_Lap[ iLapIdxStart ].iTime != 0 ){
-				sprintf(
-					szBuf, "%3d%c%2d'%02d.%03d",
+				swprintf(
+					szBuf, sizeof( szBuf ), L"%3d%c%2d'%02d.%03d",
 					m_LapLog->m_Lap[ iLapIdxStart ].uLap,
 					( iLapIdxStart == m_LapLog->m_iLapIdx + 1 && bInLap ) ? '*' : ' ',
 					m_LapLog->m_Lap[ iLapIdxStart ].iTime / 60000,
@@ -1000,7 +1000,7 @@ void CVsdFilter::DrawMeterScale(
 	CVsdFont &Font
 ){
 	int	i;
-	char	szBuf[ SPRINTF_BUF ];
+	WCHAR	szBuf[ SPRINTF_BUF ];
 	
 	const int iDegRange	= ( iMaxDeg + 360 - iMinDeg ) % 360;
 	
@@ -1031,7 +1031,7 @@ void CVsdFilter::DrawMeterScale(
 			);
 			
 			// メーターパネル目盛り数値
-			sprintf( szBuf, "%d", iStep * i / iLine2Cnt );
+			swprintf( szBuf, sizeof( szBuf ), L"%d", iStep * i / iLine2Cnt );
 			DrawTextAlign(
 				( int )( cos( dAngle ) * iRNum ) + iCx,
 				( int )( sin( dAngle ) * iRNum ) + iCy,
@@ -1054,7 +1054,7 @@ void CVsdFilter::DrawMeterScale(
 
 /*** エラーメッセージ *******************************************************/
 
-void CVsdFilter::DispErrorMessage( const char *szMsg ){
+void CVsdFilter::DispErrorMessage( LPCWSTR szMsg ){
 	DrawRect( 0, 0, GetWidth() - 1, GetHeight() - 1, color_black_a, IMG_FILL );
 	
 	int x = 0; int y = 0;
@@ -1074,7 +1074,7 @@ void CVsdFilter::DispErrorMessage( const char *szMsg ){
 
 BOOL CVsdFilter::DrawVSD( void ){
 	
-	char	szBuf[ MAX_PATH + 1 ];
+	WCHAR	szBuf[ MAX_PATH + 1 ];
 	
 	// 解像度変更
 	if( m_iWidth != GetWidth() || m_iHeight != GetHeight()){
@@ -1152,17 +1152,21 @@ BOOL CVsdFilter::DrawVSD( void ){
 	if( !m_Script && m_szSkinFile ){
 		m_Script = new CScript( this );
 		
-		strcat( strcpy( szBuf, m_szPluginDir ), "initialize.js" );
+		wcscat( wcscpy( szBuf, m_szPluginDirW ), L"initialize.js" );
 		m_Script->Initialize();
-		if( m_Script->RunFile( szBuf ) == ERR_OK )
-			m_Script->RunFile( m_szSkinFile );
+		if( m_Script->RunFile( szBuf ) == ERR_OK ){
+			LPWSTR p = NULL;
+			StringNew( p, m_szSkinFile );
+			m_Script->RunFile( p );
+			delete [] p;
+		}
 	}
 	
 	if( m_Script ){
 		if( !m_Script->m_uError ) m_Script->Run( "Draw" );
 		if( m_Script->m_uError ) DispErrorMessage( m_Script->GetErrorMessage());
 	}else{
-		DrawText( 0, 0, "Skin not loaded.", *m_pFont, color_white );
+		DrawText( 0, 0, L"Skin not loaded.", *m_pFont, color_white );
 	}
 	
 	// フレーム表示
@@ -1176,8 +1180,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 		
 		if( m_GPSLog ){
 			int i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->m_dLogNum / LOG_FREQ ) * 100 ) % ( 24 * 3600 * 100 );
-			sprintf(
-				szBuf, "GPS time: %02d:%02d:%02d.%02d",
+			swprintf(
+				szBuf, sizeof( szBuf ), L"GPS time: %02d:%02d:%02d.%02d",
 				i / 360000,
 				i / 6000 % 60,
 				i /  100 % 60,
@@ -1187,10 +1191,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 		
 		#ifndef GPS_ONLY
-			DrawText( POS_DEFAULT, POS_DEFAULT, "        start       end     range cur.pos", *m_pFont, color_white );
+			DrawText( POS_DEFAULT, POS_DEFAULT, L"        start       end     range cur.pos", *m_pFont, color_white );
 			
-			sprintf(
-				szBuf, "Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+			swprintf(
+				szBuf, sizeof( szBuf ), L"Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
 				Float2Time( VideoSt / GetFPS()),
 				Float2Time( VideoEd / GetFPS()),
 				Float2Time(( VideoEd - VideoSt ) / GetFPS()),
@@ -1199,8 +1203,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 			DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
 			
 			if( m_VsdLog ){
-				sprintf(
-					szBuf, "Log%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+				swprintf(
+					szBuf, sizeof( szBuf ), L"Log%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
 					Float2Time( LogSt / m_VsdLog->m_dFreq ),
 					Float2Time( LogEd / m_VsdLog->m_dFreq ),
 					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
@@ -1210,8 +1214,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 			}
 			
 			if( m_GPSLog ){
-				sprintf(
-					szBuf, "GPS%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
+				swprintf(
+					szBuf, sizeof( szBuf ), L"GPS%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
 					Float2Time( GPSSt / m_GPSLog->m_dFreq ),
 					Float2Time( GPSEd / m_GPSLog->m_dFreq ),
 					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),

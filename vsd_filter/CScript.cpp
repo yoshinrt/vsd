@@ -25,8 +25,8 @@ using namespace v8;
 
 CVsdFilter *CScript::m_Vsd;
 
-const char *CScript::m_szErrorMsgID[] = {
-	#define DEF_ERROR( id, msg )	msg,
+LPCWSTR CScript::m_szErrorMsgID[] = {
+	#define DEF_ERROR( id, msg )	L##msg,
 	#include "def_error.h"
 };
 
@@ -37,52 +37,51 @@ const char* CScript::ToCString( const String::Utf8Value& value ){
 	return *value ? *value : "<string conversion failed>";
 }
 
+#define MSGBUF_SIZE	( 4 * 1024 )
+
 void CScript::ReportException( TryCatch* try_catch ){
 	HandleScope handle_scope;
 	String::Utf8Value exception( try_catch->Exception());
 	const char* exception_string = ToCString( exception );
 	Handle<Message> message = try_catch->Message();
 	
-	if( !m_szErrorMsg ) m_szErrorMsg = new char[ 10240 ];
-	char *p = m_szErrorMsg;
+	if( !m_szErrorMsg ) m_szErrorMsg = new WCHAR[ MSGBUF_SIZE ];
+	LPWSTR p = m_szErrorMsg;
 	
 	if ( message.IsEmpty()){
 		// V8 didn't provide any extra information about this error; just
 		// print the exception.
-		sprintf( p, "%s\n", exception_string );
-		p = strchr( p, '\0' );
+		swprintf( p, MSGBUF_SIZE, L"%s\n", exception_string );
+		p = wcschr( p, '\0' );
 	}else{
 		// Print ( filename ):( line number ): ( message ).
 		String::Utf8Value filename( message->GetScriptResourceName());
 		const char* filename_string = ToCString( filename );
 		int linenum = message->GetLineNumber();
-		sprintf( p, "%s:%i: %s\n", filename_string, linenum, exception_string );
-		p = strchr( p, '\0' );
+		swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s:%i: %s\n", filename_string, linenum, exception_string );
+		p = wcschr( p, '\0' );
 		// Print line of source code.
-		String::Utf8Value sourceline( message->GetSourceLine());
-		const char* sourceline_string = ToCString( sourceline );
-		sprintf( p, "%s\n", sourceline_string );
-		p = strchr( p, '\0' );
+		String::Value sourceline( message->GetSourceLine());
+		swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s\n", sourceline );
+		p = wcschr( p, '\0' );
 		// Print wavy underline ( GetUnderline is deprecated ).
 		int start = message->GetStartColumn();
 		for ( int i = 0; i < start; i++ ){
-			sprintf( p, " " );
-			p = strchr( p, '\0' );
+			*p++ = L' ';
 		}
 		int end = message->GetEndColumn();
 		for ( int i = start; i < end; i++ ){
-			sprintf( p, "^" );
-			p = strchr( p, '\0' );
+			*p++ = L'^';
 		}
-		sprintf( p, "\n" );
-		p = strchr( p, '\0' );
+		*p++ = L'\n';
+		*p = L'\0';
 		
 		/*
 		String::Utf8Value stack_trace( try_catch->StackTrace());
 		if ( stack_trace.length() > 0 ){
 			const char* stack_trace_string = ToCString( stack_trace );
 			sprintf( p, "%s\n", stack_trace_string );
-			p = strchr( p, '\0' );
+			p = wcschr( p, '\0' );
 		}
 		*/
 	}
@@ -144,9 +143,7 @@ void CScript::Initialize( void ){
 
 /*** スクリプトファイルの実行 ***********************************************/
 
-#define SCRIPT_SIZE	( 64 * 1024 )
-
-UINT CScript::RunFile( char *szFileName ){
+UINT CScript::RunFile( LPCWSTR szFileName ){
 	#ifdef AVS_PLUGIN
 		v8::Isolate::Scope IsolateScope( m_pIsolate );
 	#endif
@@ -158,21 +155,27 @@ UINT CScript::RunFile( char *szFileName ){
 	
 	TryCatch try_catch;
 	
-	char *szBuf = new char[ SCRIPT_SIZE ];
-	
 	// スクリプト ロード
 	FILE *fp;
-	if(( fp = fopen( szFileName, "r" )) == NULL ){
+	if(( fp = _wfopen( szFileName, L"r" )) == NULL ){
 		// エラー処理
 		return m_uError = ERR_FILE_NOT_FOUND;
 	}
 	
-	int iReadSize = fread( szBuf, 1, SCRIPT_SIZE, fp );
+	// ファイルサイズ取得
+	fseek( fp, 0, SEEK_END );
+	fpos_t Size;
+	fgetpos( fp, &Size );
+	fseek( fp, 0, SEEK_SET );
+	
+	char *szBuf = new char[ ( UINT )Size + 1 ];
+	
+	int iReadSize = fread( szBuf, 1, ( size_t )Size, fp );
 	fclose( fp );
 	szBuf[ iReadSize ] = '\0';
 	
 	Handle<Script> script = Script::Compile(
-		String::New( szBuf ), String::New( szFileName )
+		String::New( szBuf ), String::New(( uint16_t *)szFileName )
 	);
 	
 	delete [] szBuf;
@@ -219,9 +222,9 @@ UINT CScript::Run( const char *szFunc ){
 	Local<Function> hFunction = Local<Function>::Cast( m_Context->Global()->Get( String::New( szFunc )));
 	if( hFunction->IsUndefined()){
 		
-		if( !m_szErrorMsg ) m_szErrorMsg = new char[ 10240 ];
+		if( !m_szErrorMsg ) m_szErrorMsg = new WCHAR[ MSGBUF_SIZE ];
 		
-		sprintf( m_szErrorMsg, "Undefined function \"%s()\"", szFunc );
+		swprintf( m_szErrorMsg, MSGBUF_SIZE, L"Undefined function \"%s()\"", szFunc );
 		return m_uError = ERR_SCRIPT;
 	}
 	Handle<Value> result = hFunction->Call( hFunction, 0, 0 );
