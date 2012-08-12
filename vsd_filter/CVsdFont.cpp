@@ -43,34 +43,32 @@ CVsdFont::CVsdFont( LPCWSTR szFontName, int iSize, UINT uAttr ){
 void CVsdFont::CreateFont( const char *szFontName, int iSize, UINT uAttr ){
 	m_uAttr = uAttr;
 	
-	LOGFONT	logfont;
+	m_LogFont.lfHeight			= iSize;						// 文字セルまたは文字の高さ
+	m_LogFont.lfWidth			= 0;							// 平均文字幅
+	m_LogFont.lfEscapement		= 0;							// 文字送りの方向とX軸との角度
+	m_LogFont.lfOrientation		= 0;							// ベースラインとX軸との角度
+	m_LogFont.lfWeight			= uAttr & ATTR_BOLD ? FW_BOLD : FW_REGULAR;	// フォントの太さ
+	m_LogFont.lfItalic			= uAttr & ATTR_ITALIC ? TRUE : FALSE;		// イタリック体指定
+	m_LogFont.lfUnderline		= FALSE;						// 下線付き指定
+	m_LogFont.lfStrikeOut		= FALSE;						// 打ち消し線付き指定
+	m_LogFont.lfCharSet			= DEFAULT_CHARSET;				// キャラクタセット
+	m_LogFont.lfOutPrecision	= OUT_DEFAULT_PRECIS;			// 出力精度
+	m_LogFont.lfClipPrecision	= CLIP_DEFAULT_PRECIS;			// クリッピングの精度
+	m_LogFont.lfQuality			= PROOF_QUALITY;				// 出力品質
+	m_LogFont.lfPitchAndFamily	= FIXED_PITCH | FF_DONTCARE;	// ピッチとファミリ
+	strcpy( m_LogFont.lfFaceName, szFontName );					// フォント名
 	
-	logfont.lfHeight			= iSize;						// 文字セルまたは文字の高さ
-	logfont.lfWidth				= 0;							// 平均文字幅
-	logfont.lfEscapement		= 0;							// 文字送りの方向とX軸との角度
-	logfont.lfOrientation		= 0;							// ベースラインとX軸との角度
-	logfont.lfWeight			= uAttr & ATTR_BOLD ? FW_BOLD : FW_REGULAR;	// フォントの太さ
-	logfont.lfItalic			= uAttr & ATTR_ITALIC ? TRUE : FALSE;		// イタリック体指定
-	logfont.lfUnderline			= FALSE;						// 下線付き指定
-	logfont.lfStrikeOut			= FALSE;						// 打ち消し線付き指定
-	logfont.lfCharSet			= DEFAULT_CHARSET;				// キャラクタセット
-	logfont.lfOutPrecision		= OUT_DEFAULT_PRECIS;			// 出力精度
-	logfont.lfClipPrecision		= CLIP_DEFAULT_PRECIS;			// クリッピングの精度
-	logfont.lfQuality			= PROOF_QUALITY;				// 出力品質
-	logfont.lfPitchAndFamily	= FIXED_PITCH | FF_DONTCARE;	// ピッチとファミリ
-	strcpy( logfont.lfFaceName, szFontName );					// フォント名
-	
-	CreateFont( logfont );
+	CreateFont();
 }
 
-void CVsdFont::CreateFont( LOGFONT &logfont ){
+void CVsdFont::CreateFont( void ){
 	
 	const MAT2		mat = {{ 0, 1 }, { 0, 0 }, { 0, 0 }, { 0, 1 }};
     GLYPHMETRICS	gm;
 	
 	// DC, FONT ハンドル取得
 	HDC		hdc			= GetDC( NULL );
-	HFONT	hFont		= CreateFontIndirect( &logfont );
+	HFONT	hFont		= CreateFontIndirect( &m_LogFont );
 	HFONT	hFontOld	= ( HFONT )SelectObject( hdc, hFont );
 	
 	// tmAscent 取得

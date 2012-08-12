@@ -32,17 +32,11 @@ LPCWSTR CScript::m_szErrorMsgID[] = {
 
 /*** Exception メッセージ表示 ***********************************************/
 
-// Extracts a C string from a V8 Utf8Value.
-const char* CScript::ToCString( const String::Utf8Value& value ){
-	return *value ? *value : "<string conversion failed>";
-}
-
 #define MSGBUF_SIZE	( 4 * 1024 )
 
 void CScript::ReportException( TryCatch* try_catch ){
 	HandleScope handle_scope;
-	String::Utf8Value exception( try_catch->Exception());
-	const char* exception_string = ToCString( exception );
+	String::Value exception( try_catch->Exception());
 	Handle<Message> message = try_catch->Message();
 	
 	if( !m_szErrorMsg ) m_szErrorMsg = new WCHAR[ MSGBUF_SIZE ];
@@ -51,18 +45,17 @@ void CScript::ReportException( TryCatch* try_catch ){
 	if ( message.IsEmpty()){
 		// V8 didn't provide any extra information about this error; just
 		// print the exception.
-		swprintf( p, MSGBUF_SIZE, L"%s\n", exception_string );
+		swprintf( p, MSGBUF_SIZE, L"%s\n", *exception );
 		p = wcschr( p, '\0' );
 	}else{
 		// Print ( filename ):( line number ): ( message ).
-		String::Utf8Value filename( message->GetScriptResourceName());
-		const char* filename_string = ToCString( filename );
+		String::Value filename( message->GetScriptResourceName());
 		int linenum = message->GetLineNumber();
-		swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s:%i: %s\n", filename_string, linenum, exception_string );
+		swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s:%i: %s\n", *filename, linenum, *exception );
 		p = wcschr( p, '\0' );
 		// Print line of source code.
 		String::Value sourceline( message->GetSourceLine());
-		swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s\n", sourceline );
+		swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s\n", *sourceline );
 		p = wcschr( p, '\0' );
 		// Print wavy underline ( GetUnderline is deprecated ).
 		int start = message->GetStartColumn();
@@ -209,7 +202,7 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 
 /*** function 名指定実行，引数なし ******************************************/
 
-UINT CScript::Run( const char *szFunc ){
+UINT CScript::Run( LPCWSTR szFunc ){
 	#ifdef AVS_PLUGIN
 		v8::Isolate::Scope IsolateScope( m_pIsolate );
 	#endif
@@ -219,7 +212,7 @@ UINT CScript::Run( const char *szFunc ){
 	
 	TryCatch try_catch;
 	
-	Local<Function> hFunction = Local<Function>::Cast( m_Context->Global()->Get( String::New( szFunc )));
+	Local<Function> hFunction = Local<Function>::Cast( m_Context->Global()->Get( String::New(( uint16_t *)szFunc )));
 	if( hFunction->IsUndefined()){
 		
 		if( !m_szErrorMsg ) m_szErrorMsg = new WCHAR[ MSGBUF_SIZE ];

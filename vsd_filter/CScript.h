@@ -15,7 +15,7 @@ class CScript {
 	
 	void Initialize( void );
 	UINT RunFile( LPCWSTR szFileName );
-	UINT Run( const char *szFunc );
+	UINT Run( LPCWSTR szFunc );
 	
 	const char* ToCString( const v8::String::Utf8Value& value );
 	void ReportException( v8::TryCatch* try_catch );

@@ -1163,7 +1163,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	}
 	
 	if( m_Script ){
-		if( !m_Script->m_uError ) m_Script->Run( "Draw" );
+		if( !m_Script->m_uError ) m_Script->Run( L"Draw" );
 		if( m_Script->m_uError ) DispErrorMessage( m_Script->GetErrorMessage());
 	}else{
 		DrawText( 0, 0, L"Skin not loaded.", *m_pFont, color_white );

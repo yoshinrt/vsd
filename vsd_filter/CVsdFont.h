@@ -36,7 +36,7 @@ class CVsdFont {
 	~CVsdFont(){}
 	
 	void CreateFont( const char *szFontName, int iSize, UINT uAttr );
-	void CreateFont( LOGFONT &logfont );
+	void CreateFont( void );
 	
 	static BOOL ExistFont( WCHAR c ){ return FONT_CHAR_FIRST <= c && c <= FONT_CHAR_LAST; }
 	BOOL IsOutline( void ){ return m_uAttr & ATTR_OUTLINE; }
@@ -76,6 +76,7 @@ class CVsdFont {
 	static const int FONT_CHAR_LAST	 = '~';
 	
 	CFontGlyph m_FontGlyph[ FONT_CHAR_LAST - FONT_CHAR_FIRST + 1 ];
+	LOGFONT	m_LogFont;
 	
 	int	m_iFontW, m_iFontH, m_iFontW_Space;
 	
