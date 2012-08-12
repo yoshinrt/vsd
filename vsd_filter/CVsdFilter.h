@@ -209,7 +209,12 @@ class CVsdFilter {
 		int iWidth // !default:1
 	);
 	
+	// ラップタイム情報
 	char *FormatTime( int iTime ); // !js_func
+	
+	int CurTime( void ){ return m_LapLog ? m_LapLog->m_iCurTime : TIME_NONE; }	// !js_var:CurTime
+	int BestLapTime( void ){ return m_LapLog ? m_LapLog->m_iBestTime : TIME_NONE; }	// !js_var:BestLapTime
+	int DiffTime( void ){ return m_LapLog ? m_LapLog->m_iDiffTime : TIME_NONE; }	// !js_var:DiffTime
 	
 	void DispErrorMessage( const char *szMsg );
 	

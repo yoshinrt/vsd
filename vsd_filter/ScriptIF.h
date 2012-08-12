@@ -25,6 +25,18 @@ class CVsdFilterIF {
 	}
 	
 	///// プロパティアクセサ /////
+	static v8::Handle<v8::Value> Get_CurTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->CurTime() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_BestLapTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->BestLapTime() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_DiffTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->DiffTime() ) : v8::Undefined();
+	}
 	static v8::Handle<v8::Value> Get_Width( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->GetWidth() ) : v8::Undefined();
@@ -452,6 +464,9 @@ class CVsdFilterIF {
 		// フィールドなどはこちらに
 		v8::Handle<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
 		inst->SetInternalFieldCount( 1 );
+		inst->SetAccessor( v8::String::New( "CurTime" ), Get_CurTime );
+		inst->SetAccessor( v8::String::New( "BestLapTime" ), Get_BestLapTime );
+		inst->SetAccessor( v8::String::New( "DiffTime" ), Get_DiffTime );
 		inst->SetAccessor( v8::String::New( "Width" ), Get_Width );
 		inst->SetAccessor( v8::String::New( "Height" ), Get_Height );
 		inst->SetAccessor( v8::String::New( "MaxFrameCnt" ), Get_MaxFrameCnt );
@@ -518,9 +533,9 @@ class CVsdImageIF {
 		}else{
 			// ファイル名指定で画像ロード
 			obj = new CVsdImage();
-			v8::String::AsciiValue FileName( args[ 0 ] );
+			v8::String::Value FileName( args[ 0 ] );
 			
-			if( obj->Load( *FileName ) != ERR_OK ){
+			if( obj->Load(( LPCWSTR )*FileName ) != ERR_OK ){
 				delete obj;
 				return v8::Undefined();
 			}
@@ -645,9 +660,9 @@ class CVsdFontIF {
 		// 引数チェック
 		if ( args.Length() < 2 ) return v8::Undefined();
 		
-		v8::String::AsciiValue FontName( args[ 0 ] );
+		v8::String::Value FontName( args[ 0 ] );
 		CVsdFont *obj = new CVsdFont(
-			*FontName,
+			( LPCWSTR )*FontName,
 			args[ 1 ]->Int32Value(),
 			args.Length() <= 2 ? 0 : args[ 2 ]->Int32Value()
 		);

@@ -18,6 +18,29 @@
 /*** コンストラクタ *********************************************************/
 
 CVsdFont::CVsdFont( const char *szFontName, int iSize, UINT uAttr ){
+	CreateFont( szFontName, iSize, uAttr );
+}
+
+CVsdFont::CVsdFont( LPCWSTR szFontName, int iSize, UINT uAttr ){
+	char szFont[ LF_FACESIZE ];
+	
+	WideCharToMultiByte(
+		CP_ACP,				// コードページ
+		0,					// 処理速度とマッピング方法を決定するフラグ
+		szFontName,			// ワイド文字列のアドレス
+		-1,					// ワイド文字列の文字数
+		szFont,				// 新しい文字列を受け取るバッファのアドレス
+		sizeof( szFont ),	// 新しい文字列を受け取るバッファのサイズ
+		NULL,				// マップできない文字の既定値のアドレス
+		NULL				// 既定の文字を使ったときにセットするフラグのアドレス
+	);
+	
+	CreateFont( szFont, iSize, uAttr );
+}
+
+/*** フォント作成 ***********************************************************/
+
+void CVsdFont::CreateFont( const char *szFontName, int iSize, UINT uAttr ){
 	m_uAttr = uAttr;
 	
 	LOGFONT	logfont;
@@ -39,8 +62,6 @@ CVsdFont::CVsdFont( const char *szFontName, int iSize, UINT uAttr ){
 	
 	CreateFont( logfont );
 }
-
-/*** フォント作成 ***********************************************************/
 
 void CVsdFont::CreateFont( LOGFONT &logfont ){
 	

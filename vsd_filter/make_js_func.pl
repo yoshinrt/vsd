@@ -72,9 +72,9 @@ MakeJsIF( 'CVsdImage', 'Image', << '-----', '' );
 		}else{
 			// ファイル名指定で画像ロード
 			obj = new CVsdImage();
-			v8::String::AsciiValue FileName( args[ 0 ] );
+			v8::String::Value FileName( args[ 0 ] );
 			
-			if( obj->Load( *FileName ) != ERR_OK ){
+			if( obj->Load(( LPCWSTR )*FileName ) != ERR_OK ){
 				delete obj;
 				return v8::Undefined();
 			}
@@ -85,9 +85,9 @@ MakeJsIF( 'CVsdFont', 'Font', << '-----', '' );
 		// 引数チェック
 		if ( args.Length() < 2 ) return v8::Undefined();
 		
-		v8::String::AsciiValue FontName( args[ 0 ] );
+		v8::String::Value FontName( args[ 0 ] );
 		CVsdFont *obj = new CVsdFont(
-			*FontName,
+			( LPCWSTR )*FontName,
 			args[ 1 ]->Int32Value(),
 			args.Length() <= 2 ? 0 : args[ 2 ]->Int32Value()
 		);
@@ -155,6 +155,12 @@ sub MakeJsIF {
 					$Args[ $ArgNum ] = "*str$ArgNum";
 				}
 				
+				elsif( $Type =~ /^LPC?WSTR$/ ){
+					# WCHAR string 型
+					push( @Defs, "v8::String::Value str$ArgNum( args[ $ArgPos ] );" );
+					$Args[ $ArgNum ] = "( $Type )*str$ArgNum";
+				}
+				
 				elsif( $Type eq 'double' ){
 					$Args[ $ArgNum ] = "args[ $ArgPos ]->NumberValue()";
 				}
@@ -212,6 +218,11 @@ sub MakeJsIF {
 			elsif( $RetType eq 'char' ){
 				$RetVar   = "char *ret = ";
 				$RetValue = "v8::String::New( ret )"
+			}
+			
+			elsif( $RetType =~ /^LPC?WSTR$/ ){
+				$RetVar   = "$RetType ret = ";
+				$RetValue = "v8::String::New(( uint16_t *)ret )"
 			}
 			
 			elsif( $RetType eq 'double' ){

@@ -54,7 +54,7 @@ class CVsdImage {
 	CVsdImage( CVsdImage &Org );
 	~CVsdImage();
 	
-	UINT Load( const char *szFileName );
+	UINT Load( LPCWSTR szFileName );
 	
 	inline UINT GetPixel0( int x, int y ){
 		return m_pBuf[ x + y * m_iWidth ].raby;

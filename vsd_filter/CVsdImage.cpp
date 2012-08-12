@@ -34,7 +34,8 @@ CVsdImage::~CVsdImage(){
 
 /*** イメージのロード *******************************************************/
 
-UINT CVsdImage::Load( const char *szFileName ){
+UINT CVsdImage::Load( LPCWSTR szFileName ){
+#if 0
 	// 文字コードをワイド文字列に変換
 	// 【注意】本来はこの箇所は文字列バッファ長の考慮の他に文字列終端コードを処理するよりセキュアな対応が好ましいです。
 	wchar_t	path[ MAX_PATH + 1 ];
@@ -51,6 +52,9 @@ UINT CVsdImage::Load( const char *szFileName ){
 	){
 		return ERR_MBSTOWCS;
 	}
+#else
+	LPCWSTR	path = szFileName;
+#endif
 	
 	// GDI+オブジェクト（画像展開に必要）
 	Gdiplus::GdiplusStartupInput	gdiplusStartupInput;

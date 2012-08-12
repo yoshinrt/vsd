@@ -32,8 +32,10 @@ class CFontGlyph {
 class CVsdFont {
   public:
 	CVsdFont( const char *szFontName, int iSize, UINT uAttr = 0 );
+	CVsdFont( LPCWSTR szFontName, int iSize, UINT uAttr = 0 );
 	~CVsdFont(){}
 	
+	void CreateFont( const char *szFontName, int iSize, UINT uAttr );
 	void CreateFont( LOGFONT &logfont );
 	
 	static BOOL ExistFont( UCHAR c ){ return FONT_CHAR_FIRST <= c && c <= FONT_CHAR_LAST; }
