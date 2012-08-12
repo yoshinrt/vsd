@@ -105,7 +105,7 @@ sub MakeJsIF {
 		if( /!js_func\b/ ){
 			
 			# ´Ø¿ôÌ¾
-			/([\w_]+)\s+([\w_]+)\s*\(/;
+			/([\w_]+)\s+\*?([\w_]+)\s*\(/;
 			( $RetType, $FuncName ) = ( $1, $2 );
 			
 			$ArgNum = 0;
@@ -207,6 +207,11 @@ sub MakeJsIF {
 			elsif( $RetType eq 'int' || $RetType eq 'UINT' ){
 				$RetVar   = "int ret = ";
 				$RetValue = "v8::Integer::New( ret )"
+			}
+			
+			elsif( $RetType eq 'char' ){
+				$RetVar   = "char *ret = ";
+				$RetValue = "v8::String::New( ret )"
 			}
 			
 			elsif( $RetType eq 'double' ){

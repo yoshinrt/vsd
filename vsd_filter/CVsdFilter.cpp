@@ -38,7 +38,6 @@ CVsdFilter::CVsdFilter (){
 	m_GPSLog 			= NULL;
 	m_LapLog			= NULL;
 	
-	m_iBestLogNumRunning= 0;
 	m_bCalcLapTimeReq	= FALSE;
 	
 	m_Polygon			= NULL;	// DrawPolygon 用バッファ
@@ -132,20 +131,20 @@ double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 	
 	if( m_LapLog->m_iLapMode == LAPMODE_MAGNET || m_LapLog->m_iLapMode == LAPMODE_HAND_MAGNET ){
 		// iLogNum は VSD ログ番号
-		if( Log == m_VsdLog ) return m_LapLog->m_LapLog[ iLapNum ].fLogNum;
+		if( Log == m_VsdLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
 		if( LogSt == LogEd )  return 0;
-		a = ( m_LapLog->m_LapLog[ iLapNum ].fLogNum - LogSt ) / ( LogEd - LogSt );
+		a = ( m_LapLog->m_Lap[ iLapNum ].fLogNum - LogSt ) / ( LogEd - LogSt );
 		
 	}else if( m_LapLog->m_iLapMode == LAPMODE_GPS || m_LapLog->m_iLapMode == LAPMODE_HAND_GPS ){
 		// iLogNum は GPS ログ番号
-		if( Log == m_GPSLog ) return m_LapLog->m_LapLog[ iLapNum ].fLogNum;
+		if( Log == m_GPSLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
 		if( GPSSt == GPSEd )  return 0;
-		a = ( m_LapLog->m_LapLog[ iLapNum ].fLogNum - GPSSt ) / ( GPSEd - GPSSt );
+		a = ( m_LapLog->m_Lap[ iLapNum ].fLogNum - GPSSt ) / ( GPSEd - GPSSt );
 		
 	}else{
 		// iLogNum はビデオフレーム番号
 		if( VideoSt == VideoEd ) return 0;
-		a = ( m_LapLog->m_LapLog[ iLapNum ].fLogNum - VideoSt ) / ( VideoEd - VideoSt );
+		a = ( m_LapLog->m_Lap[ iLapNum ].fLogNum - VideoSt ) / ( VideoEd - VideoSt );
 	}
 	
 	return Log == m_VsdLog ?
@@ -153,9 +152,9 @@ double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 		a * ( GPSEd - GPSSt ) + GPSSt;
 }
 
-/*** ラップタイム再計算 (手動) **********************************************/
+/*** ラップタイム再生成 (手動) **********************************************/
 
-CLapLog *CVsdFilter::CalcLapTime( int iLapMode ){
+CLapLog *CVsdFilter::CreateLapTime( int iLapMode ){
 	
 	int		iTime, iPrevTime;
 	int		iFrame = 0;
@@ -191,7 +190,7 @@ CLapLog *CVsdFilter::CalcLapTime( int iLapMode ){
 		if(
 			pLapLog->m_iLapNum &&
 			LapTime.iTime &&
-			( pLapLog->m_iBestTime == BESTLAP_NONE || pLapLog->m_iBestTime > LapTime.iTime )
+			( pLapLog->m_iBestTime == TIME_NONE || pLapLog->m_iBestTime > LapTime.iTime )
 		){
 			pLapLog->m_iBestTime	= LapTime.iTime;
 			pLapLog->m_iBestLap		= pLapLog->m_iLapNum - 1;
@@ -201,23 +200,23 @@ CLapLog *CVsdFilter::CalcLapTime( int iLapMode ){
 		++pLapLog->m_iLapNum;
 		++iFrame;
 		
-		pLapLog->m_LapLog.push_back( LapTime );
+		pLapLog->m_Lap.push_back( LapTime );
 	}
 	
-	if( pLapLog->m_LapLog.size() == 0 ){
+	if( pLapLog->m_Lap.size() == 0 ){
 		delete pLapLog;
 		return NULL;
 	}
 	LapTime.fLogNum	= FLT_MAX;	// 番犬
 	LapTime.iTime	= 0;		// 番犬
-	pLapLog->m_LapLog.push_back( LapTime );
+	pLapLog->m_Lap.push_back( LapTime );
 	
 	return pLapLog;
 }
 
-/*** ラップタイム再計算 (GPS auto) ******************************************/
+/*** ラップタイム再生成 (GPS auto) ******************************************/
 
-CLapLog *CVsdFilter::CalcLapTimeAuto( void ){
+CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	
 	int iFrame;
 	LAP_t	LapTime;
@@ -310,7 +309,7 @@ CLapLog *CVsdFilter::CalcLapTimeAuto( void ){
 			
 			if(
 				pLapLog->m_iLapNum &&
-				( pLapLog->m_iBestTime == BESTLAP_NONE || pLapLog->m_iBestTime > LapTime.iTime )
+				( pLapLog->m_iBestTime == TIME_NONE || pLapLog->m_iBestTime > LapTime.iTime )
 			){
 				pLapLog->m_iBestTime	= LapTime.iTime;
 				pLapLog->m_iBestLap		= pLapLog->m_iLapNum - 1;
@@ -319,21 +318,107 @@ CLapLog *CVsdFilter::CalcLapTimeAuto( void ){
 			iPrevTime = iTime;
 			++pLapLog->m_iLapNum;
 			
-			pLapLog->m_LapLog.push_back( LapTime );
+			pLapLog->m_Lap.push_back( LapTime );
 		}
 		++iLapNum;
 	}
 	
-	if( pLapLog->m_LapLog.size() == 0 ){
+	if( pLapLog->m_Lap.size() == 0 ){
 		delete pLapLog;
 		return NULL;
 	}
 
 	LapTime.fLogNum	= FLT_MAX;	// 番犬
 	LapTime.iTime	= 0;		// 番犬
-	pLapLog->m_LapLog.push_back( LapTime );
+	pLapLog->m_Lap.push_back( LapTime );
 	
 	return pLapLog;
+}
+
+/*** ラップタイム情報計算 ***************************************************/
+
+void CVsdFilter::CalcLapTime( void ){
+	if( !m_LapLog ) return;
+	
+	SelectLogForLapTime;
+	if( !m_CurLog ) return;
+	
+	// ラップインデックスを求める
+	// VSD/GPS 両方のログがなければ，手動計測での m_LapLog[].fLogNum はフレーム# なので
+	// m_LapLog[].fLogNum と精度をあわせるため，m_dLogNum はいったん float に落とす
+	float fLogNum = m_LapLog->m_iLapMode != LAPMODE_HAND_VIDEO ? ( float )m_CurLog->m_dLogNum : GetFrameCnt();
+	
+	// カレントポインタがおかしいときは，-1 にリセット
+	if(
+		m_LapLog->m_iLapIdx >= m_LapLog->m_iLapNum ||
+		m_LapLog->m_iLapIdx >= 0 && m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum > fLogNum
+	) m_LapLog->m_iLapIdx = -1;
+	
+	for( ; m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].fLogNum <= fLogNum; ++m_LapLog->m_iLapIdx );
+	
+	// 時間表示
+	m_LapLog->m_iCurTime = TIME_NONE;
+	
+	if( m_LapLog->m_iLapIdx >= 0 && m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime != 0 ){
+		if( m_LapLog->m_iLapMode != LAPMODE_HAND_VIDEO ){
+			// 自動計測時は，タイム / ログ数 から計算
+			m_LapLog->m_iCurTime = ( int )(( m_CurLog->m_dLogNum - m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum ) * 1000 / m_CurLog->m_dFreq );
+		}else{
+			// 手動計測モードのときは，フレーム数から計算
+			m_LapLog->m_iCurTime = ( int )(( GetFrameCnt() - m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum ) * 1000.0 / GetFPS());
+		}
+	}
+	
+	/*** ベストとの車間距離表示 - ***/
+	m_LapLog->m_iDiffTime = TIME_NONE;
+	
+	if( m_CurLog && m_LapLog->m_iCurTime != TIME_NONE ){
+		
+		SelectLogGPS;
+		
+		// ベストラップ開始の LogNum
+		double dBestLapLogNumStart = LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap );
+		
+		// この周の走行距離を求める
+		double dMileage = m_CurLog->Mileage() - m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx ));
+		
+		// この周の 1周の走行距離から，現在の走行距離を補正する
+		dMileage =
+			dMileage
+			* ( m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap + 1 )) - m_CurLog->Mileage( dBestLapLogNumStart ))
+			/ ( m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx  + 1 )) - m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx )));
+		
+		// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
+		// m_LapLog->m_iBestLogNumRunning <= 最終的に求める結果 < m_LapLog->m_iBestLogNumRunning + 1  となる
+		// m_LapLog->m_iBestLogNumRunning がおかしかったら，リセット
+		if(
+			m_LapLog->m_iBestLogNumRunning < dBestLapLogNumStart ||
+			m_LapLog->m_iBestLogNumRunning >= m_CurLog->m_iCnt ||
+			( m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning ) - m_CurLog->Mileage( dBestLapLogNumStart )) > dMileage
+		) m_LapLog->m_iBestLogNumRunning = ( int )dBestLapLogNumStart;
+		
+		for(
+			;
+			( m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning + 1 ) - m_CurLog->Mileage( dBestLapLogNumStart )) <= dMileage &&
+			m_LapLog->m_iBestLogNumRunning < m_CurLog->m_iCnt;
+			++m_LapLog->m_iBestLogNumRunning
+		);
+		
+		// 最速 Lap の，1/15秒以下の値を求める = A / B
+		double dBestLapLogNumRunning =
+			( double )m_LapLog->m_iBestLogNumRunning +
+			// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
+			( dMileage - ( m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning ) - m_CurLog->Mileage( dBestLapLogNumStart ))) /
+			// B: 最速ラップは，1/15秒の間にこの距離を走った
+			( m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning + 1 ) - m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning ));
+		
+		m_LapLog->m_iDiffTime = ( int )(
+			(
+				( m_CurLog->m_dLogNum - LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx )) -
+				( dBestLapLogNumRunning - dBestLapLogNumStart )
+			) * 1000.0 / m_CurLog->m_dFreq
+		);
+	}
 }
 
 /****************************************************************************/

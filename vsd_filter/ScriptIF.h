@@ -398,6 +398,18 @@ class CVsdFilterIF {
 		
 		return v8::Undefined();
 	}
+	static v8::Handle<v8::Value> Func_FormatTime( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 1 )) return v8::Undefined();
+		
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		char *ret = thisObj->FormatTime(
+			args[ 0 ]->Int32Value()
+		);
+		
+		return v8::String::New( ret );
+	}
 
   public:
 	// this へのアクセスヘルパ
@@ -472,6 +484,7 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawMap" ), v8::FunctionTemplate::New( Func_DrawMap ));
 		proto->Set( v8::String::New( "DrawLapTime" ), v8::FunctionTemplate::New( Func_DrawLapTime ));
 		proto->Set( v8::String::New( "DrawNeedle" ), v8::FunctionTemplate::New( Func_DrawNeedle ));
+		proto->Set( v8::String::New( "FormatTime" ), v8::FunctionTemplate::New( Func_FormatTime ));
 
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "__VSD_System__" ), tmpl );

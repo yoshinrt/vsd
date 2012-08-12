@@ -19,7 +19,7 @@
 	#define INVERT_G	1
 #endif
 
-#define BESTLAP_NONE	-1
+#define TIME_NONE	-1
 
 /*** Lap Time ***************************************************************/
 
@@ -43,20 +43,24 @@ class CLapLog {
 	CLapLog(){
 		// èâä˙âª
 		m_iLapNum		= 0;
-		m_iBestTime		= BESTLAP_NONE;
+		m_iBestTime		= TIME_NONE;
 		m_iBestLap		= 0;
 		m_iLapMode		= LAPMODE_HAND_VIDEO;
 		m_iLapIdx		= -1;
+		m_iBestLogNumRunning	= 0;
 	}
 	
 	~CLapLog(){}
 	
-	std::vector<LAP_t>	m_LapLog;
-	int		m_iLapMode;
-	int		m_iLapNum;
-	int		m_iBestTime;
-	int		m_iBestLap;
-	int		m_iLapIdx;
+	std::vector<LAP_t>	m_Lap;
+	int	m_iLapMode;
+	int	m_iLapNum;
+	int	m_iBestTime;
+	int	m_iBestLap;
+	int	m_iLapIdx;
+	int	m_iCurTime;		// åªç›ÉâÉbÉvåoâﬂéûä‘
+	int	m_iDiffTime;
+	int m_iBestLogNumRunning;
 };
 
 /*** new type ***************************************************************/

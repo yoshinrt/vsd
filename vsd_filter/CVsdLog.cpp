@@ -613,16 +613,16 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 			LapTime.uLap	= uLap;
 			LapTime.fLogNum	= ( float )m_iCnt;
 			LapTime.iTime	= ( uReadCnt == 4 ) ? iTime : 0;
-			pLapLog->m_LapLog.push_back( LapTime );
+			pLapLog->m_Lap.push_back( LapTime );
 			
 			if(
 				uReadCnt == 4 &&
-				( pLapLog->m_iBestTime == BESTLAP_NONE || pLapLog->m_iBestTime > iTime )
+				( pLapLog->m_iBestTime == TIME_NONE || pLapLog->m_iBestTime > iTime )
 			){
 				pLapLog->m_iBestTime	= iTime;
 				pLapLog->m_iBestLap	= pLapLog->m_iLapNum - 1;
 				
-				iLogFreqLog	 += m_iCnt - ( int )pLapLog->m_LapLog[ pLapLog->m_iLapNum - 1 ].fLogNum;
+				iLogFreqLog	 += m_iCnt - ( int )pLapLog->m_Lap[ pLapLog->m_iLapNum - 1 ].fLogNum;
 				iLogFreqTime += iTime;
 			}
 			++pLapLog->m_iLapNum;
@@ -760,7 +760,7 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 	if( pLapLog ){
 		LapTime.fLogNum	= FLT_MAX;	// ”ÔŒ¢
 		LapTime.iTime	= 0;		// ”ÔŒ¢
-		pLapLog->m_LapLog.push_back( LapTime );
+		pLapLog->m_Lap.push_back( LapTime );
 	}
 	
 	return m_iCnt;

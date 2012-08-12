@@ -44,6 +44,19 @@
 	+ to##St \
 )
 
+// VSD log を優先，ただしチェックボックスでオーバーライドできる
+#define SelectLogVsd ( m_CurLog = ( GPSPriority && m_GPSLog || !m_VsdLog ) ? m_GPSLog : m_VsdLog )
+
+// GPS log を優先
+#define SelectLogGPS ( m_CurLog = m_GPSLog ? m_GPSLog : m_VsdLog )
+
+// Laptime 計算用
+#define SelectLogForLapTime	( m_CurLog = \
+	m_LapLog && ( \
+		m_LapLog->m_iLapMode == LAPMODE_MAGNET || \
+		m_LapLog->m_iLapMode == LAPMODE_HAND_MAGNET \
+	) ? m_VsdLog : m_GPSLog )
+
 /*** track / check ID *******************************************************/
 
 enum {
@@ -196,6 +209,8 @@ class CVsdFilter {
 		int iWidth // !default:1
 	);
 	
+	char *FormatTime( int iTime ); // !js_func
+	
 	void DispErrorMessage( const char *szMsg );
 	
 	enum {
@@ -228,8 +243,9 @@ class CVsdFilter {
 	int ReadGPSLog( const char *szFileName );
 	int ReadLog( const char *szFileName );
 	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
-	CLapLog *CalcLapTime( int iLapMode );
-	CLapLog *CalcLapTimeAuto( void );
+	CLapLog *CreateLapTime( int iLapMode );
+	CLapLog *CreateLapTimeAuto( void );
+	void CalcLapTime( void );
 	
 	static char *StringNew( char *&szDst, const char *szSrc ){
 		if( szDst ) delete [] szDst;
@@ -311,8 +327,6 @@ class CVsdFilter {
 	virtual int  GetFrameMark( int iFrame ) = 0;
 	
 	int m_iPosX, m_iPosY;
-	
-	int m_iBestLogNumRunning;
 	
 	PolygonData_t	*m_Polygon;
 	
