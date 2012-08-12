@@ -33,18 +33,32 @@ class CVsdFont {
   public:
 	CVsdFont( const char *szFontName, int iSize, UINT uAttr = 0 );
 	CVsdFont( LPCWSTR szFontName, int iSize, UINT uAttr = 0 );
-	~CVsdFont(){}
+	~CVsdFont(){
+		DebugMsgD( "delete CFont %X\n", this );
+	}
 	
 	void CreateFont( const char *szFontName, int iSize, UINT uAttr );
 	void CreateFont( void );
 	
-	static BOOL ExistFont( WCHAR c ){ return FONT_CHAR_FIRST <= c && c <= FONT_CHAR_LAST; }
+	static BOOL ExistFont( WCHAR c ){
+		return ( c >= 0x80 ) || FONT_CHAR_FIRST <= c && c <= FONT_CHAR_LAST;
+	}
 	BOOL IsOutline( void ){ return m_uAttr & ATTR_OUTLINE; }
 	BOOL IsFixed( void ){ return m_uAttr & ATTR_FIXED; }
 	BOOL IsNoAntialias( void ){ return m_uAttr & ATTR_NOANTIALIAS; }
 	
 	CFontGlyph& FontGlyph( WCHAR c ){
-		return m_FontGlyph[ c - FONT_CHAR_FIRST ];
+		// ASCII のグリフ
+		if( c < 0x80 ) return m_FontGlyph[ c - FONT_CHAR_FIRST ];
+		
+		// 漢字のグリフ
+		std::map<WCHAR, CFontGlyph *>::iterator itr;
+		if(( itr = m_FontGlyphK.find( c )) != m_FontGlyphK.end()){
+			return *( itr->second );
+		}
+		
+		// 見つからなかったので，作成
+		return CreateFontGlyphK( c );
 	}
 	
 	static const UINT ATTR_BOLD			= 1 << 0;
@@ -72,14 +86,19 @@ class CVsdFont {
 	}
 	
   private:
+	CFontGlyph& CreateFontGlyphK( WCHAR c );
+	
 	static const int FONT_CHAR_FIRST = '!';
 	static const int FONT_CHAR_LAST	 = '~';
 	
 	CFontGlyph m_FontGlyph[ FONT_CHAR_LAST - FONT_CHAR_FIRST + 1 ];
+	std::map<WCHAR, CFontGlyph *> m_FontGlyphK;
 	LOGFONT	m_LogFont;
 	
 	int	m_iFontW, m_iFontH, m_iFontW_Space;
 	
 	UINT	m_uAttr;
+	
+	static const MAT2	mat;
 };
 #endif

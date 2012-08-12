@@ -23,6 +23,7 @@
 #include <zconf.h>
 #include <zlib.h>
 #include <vector>
+#include <map>
 
 #ifdef _OPENMP
 	#include <omp.h>

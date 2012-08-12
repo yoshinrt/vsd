@@ -16,6 +16,7 @@
 /*** コンストラクタ・デストラクタ *******************************************/
 
 CVsdImage::CVsdImage(){
+	DebugMsgD( "new CVsdImage %X\n", this );
 	m_pBuf	= NULL;
 	
 	m_iWidth  = 0;	// 画像の幅
@@ -23,12 +24,14 @@ CVsdImage::CVsdImage(){
 }
 
 CVsdImage::CVsdImage( CVsdImage &Org ){
+	DebugMsgD( "new CVsdImage %X\n", this );
 	*this = Org;
 	m_pBuf = new PIXEL_RABY[ m_iWidth * m_iHeight ];
 	memcpy( m_pBuf, Org.m_pBuf, sizeof( PIXEL_RABY ) * m_iWidth * m_iHeight );
 }
 
 CVsdImage::~CVsdImage(){
+	DebugMsgD( "delete CVsdImage %X\n", this );
 	delete [] m_pBuf;
 }
 

@@ -238,5 +238,8 @@ UINT CScript::Run( LPCWSTR szFunc ){
 		return m_uError = result->Int32Value();
 	}
 	*/
+	// ガーベッジコレクション?
+	//while( !v8::V8::IdleNotification());
+	
 	return m_uError = ERR_OK;
 }

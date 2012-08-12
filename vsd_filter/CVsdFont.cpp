@@ -18,10 +18,12 @@
 /*** コンストラクタ *********************************************************/
 
 CVsdFont::CVsdFont( const char *szFontName, int iSize, UINT uAttr ){
+	DebugMsgD( "new CFont %X\n", this );
 	CreateFont( szFontName, iSize, uAttr );
 }
 
 CVsdFont::CVsdFont( LPCWSTR szFontName, int iSize, UINT uAttr ){
+	DebugMsgD( "new CFont %X\n", this );
 	char szFont[ LF_FACESIZE ];
 	
 	WideCharToMultiByte(
@@ -61,10 +63,9 @@ void CVsdFont::CreateFont( const char *szFontName, int iSize, UINT uAttr ){
 	CreateFont();
 }
 
+const MAT2 CVsdFont::mat = {{ 0, 1 }, { 0, 0 }, { 0, 0 }, { 0, 1 }};
+
 void CVsdFont::CreateFont( void ){
-	
-	const MAT2		mat = {{ 0, 1 }, { 0, 0 }, { 0, 0 }, { 0, 1 }};
-    GLYPHMETRICS	gm;
 	
 	// DC, FONT ハンドル取得
 	HDC		hdc			= GetDC( NULL );
@@ -74,22 +75,23 @@ void CVsdFont::CreateFont( void ){
 	// tmAscent 取得
 	TEXTMETRIC tm;
 	GetTextMetrics( hdc, &tm );
+    GLYPHMETRICS	gm;
 	
 	int	iBitmapDepth = IsNoAntialias() ? GGO_BITMAP : GGO_GRAY8_BITMAP;
 	
 	// プロポーショナルの Space 幅取得
-	GetGlyphOutline( hdc, ' ', iBitmapDepth, &gm, 0, NULL, &mat );
+	GetGlyphOutlineW( hdc, ' ', iBitmapDepth, &gm, 0, NULL, &mat );
 	m_iFontW_Space = gm.gmCellIncX;
 	
 	for( int i = FONT_CHAR_FIRST; i <= FONT_CHAR_LAST; ++i ){
 		// 必要配列サイズ取得
-		int iSize = GetGlyphOutline( hdc, i, iBitmapDepth, &gm, 0, NULL, &mat );
+		int iSize = GetGlyphOutlineW( hdc, i, iBitmapDepth, &gm, 0, NULL, &mat );
 		
 		if( iSize > 0 ){
 			FontGlyph( i ).pBuf = new BYTE[ iSize ];
 			
 			// フォントデータ取得
-			GetGlyphOutline( hdc, i, iBitmapDepth, &gm, iSize, FontGlyph( i ).pBuf, &mat );
+			GetGlyphOutlineW( hdc, i, iBitmapDepth, &gm, iSize, FontGlyph( i ).pBuf, &mat );
 			FontGlyph( i ).iW			= gm.gmBlackBoxX;
 			FontGlyph( i ).iH			= gm.gmBlackBoxY;
 			FontGlyph( i ).iOrgY		= tm.tmAscent - gm.gmptGlyphOrigin.y;
@@ -109,4 +111,50 @@ void CVsdFont::CreateFont( void ){
 	SelectObject( hdc, hFontOld );
 	DeleteObject( hFont );
 	ReleaseDC( NULL, hdc );			/* ウインドウのHDC解放 */
+}
+
+// 漢字 glyph 作成
+CFontGlyph& CVsdFont::CreateFontGlyphK( WCHAR c ){
+	
+	// DC, FONT ハンドル取得
+	HDC		hdc			= GetDC( NULL );
+	HFONT	hFont		= CreateFontIndirect( &m_LogFont );
+	HFONT	hFontOld	= ( HFONT )SelectObject( hdc, hFont );
+	
+	// tmAscent 取得
+	TEXTMETRIC tm;
+	GetTextMetrics( hdc, &tm );
+    GLYPHMETRICS	gm;
+	
+	int	iBitmapDepth = IsNoAntialias() ? GGO_BITMAP : GGO_GRAY8_BITMAP;
+	
+	// 必要配列サイズ取得
+	int iSize = GetGlyphOutlineW( hdc, c, iBitmapDepth, &gm, 0, NULL, &mat );
+	
+	CFontGlyph	*pGlyph = new CFontGlyph;
+	
+	if( iSize > 0 ){
+		pGlyph->pBuf = new BYTE[ iSize ];
+		
+		// フォントデータ取得
+		GetGlyphOutlineW( hdc, c, iBitmapDepth, &gm, iSize, pGlyph->pBuf, &mat );
+		pGlyph->iW			= gm.gmBlackBoxX;
+		pGlyph->iH			= gm.gmBlackBoxY;
+		pGlyph->iOrgY		= tm.tmAscent - gm.gmptGlyphOrigin.y;
+		pGlyph->iCellIncX	= gm.gmCellIncX;
+	}else{
+		pGlyph->pBuf		= NULL;
+		pGlyph->iW			=
+		pGlyph->iH			=
+		pGlyph->iOrgY		= 0;
+		pGlyph->iCellIncX	= m_iFontW_Space;
+	}
+	
+	m_FontGlyphK[ c ] = pGlyph;
+	
+	SelectObject( hdc, hFontOld );
+	DeleteObject( hFont );
+	ReleaseDC( NULL, hdc );			/* ウインドウのHDC解放 */
+	
+	return *pGlyph;
 }

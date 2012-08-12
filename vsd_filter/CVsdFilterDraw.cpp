@@ -876,7 +876,12 @@ LPCWSTR CVsdFilter::FormatTime( int iTime ){
 	
 	if( iTime == TIME_NONE ) return L"-'--.---";
 	
-	swprintf( szBuf, sizeof( szBuf ), L"%d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
+	WCHAR *p = szBuf;
+	if( iTime < 0 ){
+		*p++ = '-';
+		iTime = -iTime;
+	}
+	swprintf( p, sizeof( szBuf ), L"%d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000 );
 	return szBuf;
 }
 
