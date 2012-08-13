@@ -21,11 +21,12 @@ class CVsdFilterIF {
 	
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
-		delete static_cast<CVsdFilter*>( pVoid );
+	//	delete static_cast<CVsdFilter*>( pVoid );
+		handle.Dispose();
 	}
 	
 	///// プロパティアクセサ /////
-	static v8::Handle<v8::Value> Get_CurTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+	static v8::Handle<v8::Value> Get_ElapsedTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->CurTime() ) : v8::Undefined();
 	}
@@ -36,6 +37,18 @@ class CVsdFilterIF {
 	static v8::Handle<v8::Value> Get_DiffTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->DiffTime() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_LapTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->LapTime() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_LapCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->LapCnt() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_MaxLapCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->MaxLapCnt() ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_Width( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
@@ -464,9 +477,12 @@ class CVsdFilterIF {
 		// フィールドなどはこちらに
 		v8::Handle<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
 		inst->SetInternalFieldCount( 1 );
-		inst->SetAccessor( v8::String::New( "CurTime" ), Get_CurTime );
+		inst->SetAccessor( v8::String::New( "ElapsedTime" ), Get_ElapsedTime );
 		inst->SetAccessor( v8::String::New( "BestLapTime" ), Get_BestLapTime );
 		inst->SetAccessor( v8::String::New( "DiffTime" ), Get_DiffTime );
+		inst->SetAccessor( v8::String::New( "LapTime" ), Get_LapTime );
+		inst->SetAccessor( v8::String::New( "LapCnt" ), Get_LapCnt );
+		inst->SetAccessor( v8::String::New( "MaxLapCnt" ), Get_MaxLapCnt );
 		inst->SetAccessor( v8::String::New( "Width" ), Get_Width );
 		inst->SetAccessor( v8::String::New( "Height" ), Get_Height );
 		inst->SetAccessor( v8::String::New( "MaxFrameCnt" ), Get_MaxFrameCnt );
@@ -556,6 +572,7 @@ class CVsdImageIF {
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 		delete static_cast<CVsdImage*>( pVoid );
+		handle.Dispose();
 	}
 	
 	///// プロパティアクセサ /////
@@ -682,6 +699,7 @@ class CVsdFontIF {
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 		delete static_cast<CVsdFont*>( pVoid );
+		handle.Dispose();
 	}
 	
 	///// プロパティアクセサ /////

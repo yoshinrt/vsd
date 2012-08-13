@@ -19,7 +19,7 @@
 	#define INVERT_G	1
 #endif
 
-#define TIME_NONE	-1
+#define TIME_NONE	(( int )0x80000000 )
 
 /*** Lap Time ***************************************************************/
 

@@ -100,6 +100,8 @@ sub MakeJsIF {
 	$AccessorIF	= '';
 	$Function	= '';
 	
+	$IfNotVsd = $Class eq 'CVsdFilter' ? '//' : '';
+	
 	open( fpIn,	"< $Class.h" );
 	while( <fpIn> ){
 		if( /!js_func\b/ ){
@@ -307,7 +309,8 @@ $NewObject
 	
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
-		delete static_cast<$Class*>( pVoid );
+	$IfNotVsd	delete static_cast<$Class*>( pVoid );
+		handle.Dispose();
 	}
 	
 	///// プロパティアクセサ /////

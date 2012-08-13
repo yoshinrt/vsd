@@ -885,6 +885,92 @@ LPCWSTR CVsdFilter::FormatTime( int iTime ){
 	return szBuf;
 }
 
+/*** ラップタイム情報計算 ***************************************************/
+
+void CVsdFilter::CalcLapTime( void ){
+	if( !m_LapLog ) return;
+	
+	SelectLogForLapTime;
+	if( !m_CurLog ) return;
+	
+	// ラップインデックスを求める
+	// VSD/GPS 両方のログがなければ，手動計測での m_LapLog[].fLogNum はフレーム# なので
+	// m_LapLog[].fLogNum と精度をあわせるため，m_dLogNum はいったん float に落とす
+	float fLogNum = m_LapLog->m_iLapMode != LAPMODE_HAND_VIDEO ? ( float )m_CurLog->m_dLogNum : GetFrameCnt();
+	
+	// カレントポインタがおかしいときは，-1 にリセット
+	if(
+		m_LapLog->m_iLapIdx >= m_LapLog->m_iLapNum ||
+		m_LapLog->m_iLapIdx >= 0 && m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum > fLogNum
+	) m_LapLog->m_iLapIdx = -1;
+	
+	for( ; m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].fLogNum <= fLogNum; ++m_LapLog->m_iLapIdx );
+	
+	// 時間表示
+	m_LapLog->m_iCurTime = TIME_NONE;
+	
+	if( m_LapLog->m_iLapIdx >= 0 && m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime != 0 ){
+		if( m_LapLog->m_iLapMode != LAPMODE_HAND_VIDEO ){
+			// 自動計測時は，タイム / ログ数 から計算
+			m_LapLog->m_iCurTime = ( int )(( m_CurLog->m_dLogNum - m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum ) * 1000 / m_CurLog->m_dFreq );
+		}else{
+			// 手動計測モードのときは，フレーム数から計算
+			m_LapLog->m_iCurTime = ( int )(( GetFrameCnt() - m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum ) * 1000.0 / GetFPS());
+		}
+	}
+	
+	/*** ベストとの車間距離表示 - ***/
+	m_LapLog->m_iDiffTime = TIME_NONE;
+	
+	if( m_CurLog && m_LapLog->m_iCurTime != TIME_NONE ){
+		
+		SelectLogGPS;
+		
+		// ベストラップ開始の LogNum
+		double dBestLapLogNumStart = LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap );
+		
+		// この周の走行距離を求める
+		double dMileage = m_CurLog->Mileage() - m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx ));
+		
+		// この周の 1周の走行距離から，現在の走行距離を補正する
+		dMileage =
+			dMileage
+			* ( m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap + 1 )) - m_CurLog->Mileage( dBestLapLogNumStart ))
+			/ ( m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx  + 1 )) - m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx )));
+		
+		// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
+		// m_LapLog->m_iBestLogNumRunning <= 最終的に求める結果 < m_LapLog->m_iBestLogNumRunning + 1  となる
+		// m_LapLog->m_iBestLogNumRunning がおかしかったら，リセット
+		if(
+			m_LapLog->m_iBestLogNumRunning < dBestLapLogNumStart ||
+			m_LapLog->m_iBestLogNumRunning >= m_CurLog->m_iCnt ||
+			( m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning ) - m_CurLog->Mileage( dBestLapLogNumStart )) > dMileage
+		) m_LapLog->m_iBestLogNumRunning = ( int )dBestLapLogNumStart;
+		
+		for(
+			;
+			( m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning + 1 ) - m_CurLog->Mileage( dBestLapLogNumStart )) <= dMileage &&
+			m_LapLog->m_iBestLogNumRunning < m_CurLog->m_iCnt;
+			++m_LapLog->m_iBestLogNumRunning
+		);
+		
+		// 最速 Lap の，1/15秒以下の値を求める = A / B
+		double dBestLapLogNumRunning =
+			( double )m_LapLog->m_iBestLogNumRunning +
+			// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
+			( dMileage - ( m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning ) - m_CurLog->Mileage( dBestLapLogNumStart ))) /
+			// B: 最速ラップは，1/15秒の間にこの距離を走った
+			( m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning + 1 ) - m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning ));
+		
+		m_LapLog->m_iDiffTime = ( int )(
+			(
+				( m_CurLog->m_dLogNum - LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx )) -
+				( dBestLapLogNumRunning - dBestLapLogNumStart )
+			) * 1000.0 / m_CurLog->m_dFreq
+		);
+	}
+}
+
 /*** ラップタイム表示 *******************************************************/
 
 void CVsdFilter::DrawLapTime(

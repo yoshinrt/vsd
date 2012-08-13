@@ -21,6 +21,8 @@
 
 using namespace v8;
 
+#define AVS_PLUGIN
+
 /*** static メンバ（；´д⊂）***********************************************/
 
 CVsdFilter *CScript::m_Vsd;
@@ -102,11 +104,18 @@ CScript::CScript( CVsdFilter *pVsd ){
 /*** デストラクタ ***********************************************************/
 
 CScript::~CScript(){
+	DebugMsgD( ":CScript::~CScript():%X\n", GetCurrentThreadId());
+	DebugMsgD( ":CScript::~CScript():m_pIsolate = %X\n", m_pIsolate );
+	
 	#ifdef AVS_PLUGIN
 		v8::Isolate::Scope IsolateScope( m_pIsolate );
 	#endif
-	DebugMsgD( ":CScript::~CScript():%X\n", GetCurrentThreadId());
-	DebugMsgD( ":CScript::~CScript():m_pIsolate = %X\n", m_pIsolate );
+	{
+		HandleScope handle_scope;
+		Context::Scope context_scope( m_Context );
+		while( !v8::V8::IdleNotification());
+	}
+	
 	m_Context.Dispose();
 	delete [] m_szErrorMsg;
 //	m_pIsolate->Dispose();
@@ -197,6 +206,9 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 		return m_uError = result->Int32Value();
 	}
 	*/
+	// ガーベッジコレクション?
+	//while( !v8::V8::IdleNotification());
+	
 	return m_uError = ERR_OK;
 }
 
@@ -240,6 +252,7 @@ UINT CScript::Run( LPCWSTR szFunc ){
 	*/
 	// ガーベッジコレクション?
 	//while( !v8::V8::IdleNotification());
+	//v8::V8::IdleNotification();
 	
 	return m_uError = ERR_OK;
 }

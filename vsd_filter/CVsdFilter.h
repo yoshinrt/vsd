@@ -212,9 +212,21 @@ class CVsdFilter {
 	// ラップタイム情報
 	LPCWSTR FormatTime( int iTime ); // !js_func
 	
-	int CurTime( void ){ return m_LapLog ? m_LapLog->m_iCurTime : TIME_NONE; }	// !js_var:CurTime
+	int CurTime( void ){ return m_LapLog ? m_LapLog->m_iCurTime : TIME_NONE; }	// !js_var:ElapsedTime
 	int BestLapTime( void ){ return m_LapLog ? m_LapLog->m_iBestTime : TIME_NONE; }	// !js_var:BestLapTime
 	int DiffTime( void ){ return m_LapLog ? m_LapLog->m_iDiffTime : TIME_NONE; }	// !js_var:DiffTime
+	int LapTime( void ){	// !js_var:LapTime
+		if( !m_LapLog || m_LapLog->m_iLapIdx < 0 ) return TIME_NONE;
+		if( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime ){
+			return m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime;
+		}
+		return m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].iTime;
+	}
+	int LapCnt( void ){ // !js_var:LapCnt
+		if( !m_LapLog ) return 0;
+		return m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].uLap;
+	}
+	int MaxLapCnt( void ){ return m_LapLog->m_Lap[ m_LapLog->m_iLapNum - 1 ].uLap; } // !js_var:MaxLapCnt
 	
 	void DispErrorMessage( LPCWSTR szMsg );
 	

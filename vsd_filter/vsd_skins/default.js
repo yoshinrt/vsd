@@ -1,6 +1,6 @@
-//*** ‰Šú‰»ˆ— ************************************************************
+//*** åˆæœŸåŒ–å‡¦ç† ************************************************************
 
-// g—p‚·‚é‰æ‘œEƒtƒHƒ“ƒg‚ÌéŒ¾
+// ä½¿ç”¨ã™ã‚‹ç”»åƒãƒ»ãƒ•ã‚©ãƒ³ãƒˆã®å®£è¨€
 var ImgMeter = new Image( Vsd.SkinDir + "meter_bg.png" );
 //var ImgMapBG = new Image( Vsd.SkinDir + "square.png" );
 var ImgG     = new Image( ImgMeter );
@@ -10,17 +10,17 @@ var FontM = new Font( "Impact", Vsd.Height / 23 );
 var FontL = new Font( "Impact", Vsd.Height / 12 );
 var FontM_Outline = new Font( "Impact", Vsd.Height / 20, FONT_FIXED | FONT_OUTLINE );
 
-// ƒ[ƒ^[‚ğ‰E‚É•\¦‚·‚éê‡ 1‚Éİ’è
+// ãƒ¡ãƒ¼ã‚¿ãƒ¼ã‚’å³ã«è¡¨ç¤ºã™ã‚‹å ´åˆ 1ã«è¨­å®š
 var MeterRight = 0;
 
-// “®‰æƒTƒCƒY‚É‰‚¶‚Äƒ[ƒ^[‰æ‘œ‚ğƒŠƒTƒCƒY
+// å‹•ç”»ã‚µã‚¤ã‚ºã«å¿œã˜ã¦ãƒ¡ãƒ¼ã‚¿ãƒ¼ç”»åƒã‚’ãƒªã‚µã‚¤ã‚º
 var Scale = Vsd.Height / 720;
 if( Scale != 1 ){
 	ImgMeter.Resize( ImgMeter.Width * Scale, ImgMeter.Height * Scale );
 	//ImgMapBG.Resize( ImgMapBG.Width * Scale, ImgMapBG.Height * Scale );
 }
 
-// À•W“™‚ğ—\‚ßŒvZ‚µ‚Ä‚¨‚­
+// åº§æ¨™ç­‰ã‚’äºˆã‚è¨ˆç®—ã—ã¦ãŠã
 var MeterX	= MeterRight ? Vsd.Width  - ImgMeter.Width : 0;
 var MeterY	= Vsd.Height - ImgMeter.Height * 0.85;
 var MeterR  = 150 * Scale;
@@ -28,10 +28,10 @@ var MeterR2 = 126 * Scale;
 var MeterCx = MeterX + MeterR;
 var MeterCy = MeterY + MeterR;
 
-// G —p‰æ‘œ‚ğƒŠƒTƒCƒY
+// G ç”¨ç”»åƒã‚’ãƒªã‚µã‚¤ã‚º
 ImgG.Resize( ImgG.Width * Scale / 2, ImgG.Height * Scale / 2 );
 
-// G ƒ[ƒ^[—p‚ÌÀ•WŒvZ
+// G ãƒ¡ãƒ¼ã‚¿ãƒ¼ç”¨ã®åº§æ¨™è¨ˆç®—
 var MeterGX	 = MeterRight ? Vsd.Width - ImgMeter.Width * 1.45 : ImgMeter.Width * 0.95;
 var MeterGY	 = Vsd.Height - ImgG.Height;
 var MeterGR  = MeterR / 2;
@@ -39,13 +39,13 @@ var MeterGR2 = MeterR2 / 2;
 var MeterGCx = MeterGX + MeterGR;
 var MeterGCy = MeterGY + MeterGR;
 
-// ƒXƒs[ƒhƒOƒ‰ƒtƒTƒCƒYŒvZ
+// ã‚¹ãƒ”ãƒ¼ãƒ‰ã‚°ãƒ©ãƒ•ã‚µã‚¤ã‚ºè¨ˆç®—
 var SpdX1 = MeterRight ? 8 : ImgMeter.Width * 1.6;
 var SpdX2 = MeterRight ? Vsd.Width - ImgMeter.Width * 1.6 : Vsd.Width - 8;
 var SpdY1 = Vsd.Height - 300 * Scale;
 var SpdY2 = Vsd.Height - 8;
 
-// ƒXƒs[ƒhƒ[ƒ^—pÅ‚‘¬ŒvZ
+// ã‚¹ãƒ”ãƒ¼ãƒ‰ãƒ¡ãƒ¼ã‚¿ç”¨æœ€é«˜é€Ÿè¨ˆç®—
 
 if( Vsd.MaxTacho > 0 ){
 	var MaxTacho = Math.ceil( Vsd.MaxTacho / 1000 ) * 1000;
@@ -53,16 +53,16 @@ if( Vsd.MaxTacho > 0 ){
 	var MaxSpeed = Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
 }
 
-//*** ƒ[ƒ^[•`‰æˆ— ******************************************************
+//*** ãƒ¡ãƒ¼ã‚¿ãƒ¼æç”»å‡¦ç† ******************************************************
 
 function Draw(){
-	// ƒ^ƒRƒ[ƒ^[‰æ‘œ•`‰æ
+	// ã‚¿ã‚³ãƒ¡ãƒ¼ã‚¿ãƒ¼ç”»åƒæç”»
 	Vsd.PutImage( MeterX, MeterY, ImgMeter );
 	
 	if( Vsd.MaxTacho > 0 ){
 		var MeterColor = Vsd.Tacho > 6500 && ( Vsd.FrameCnt & 0x2 ) ? 0xFF0000 : 0xFFFFFF;
 		
-		// ƒ[ƒ^[–Ú·‚è•`‰æ
+		// ãƒ¡ãƒ¼ã‚¿ãƒ¼ç›®ç››ã‚Šæç”»
 		Vsd.DrawMeterScale(
 			MeterCx, MeterCy, MeterR2,
 			MeterR2 * 0.1,  2, MeterColor,
@@ -73,7 +73,7 @@ function Draw(){
 			FontM
 		);
 	}else{
-		// ƒXƒs[ƒhƒ[ƒ^[–Ú·‚è•`‰æ
+		// ã‚¹ãƒ”ãƒ¼ãƒ‰ãƒ¡ãƒ¼ã‚¿ãƒ¼ç›®ç››ã‚Šæç”»
 		Vsd.DrawMeterScale(
 			MeterCx, MeterCy, MeterR2,
 			MeterR2 * 0.1,  2, 0xFFFFFF,
@@ -85,7 +85,7 @@ function Draw(){
 		);
 	}
 	
-	// ƒXƒs[ƒh”’l•\¦
+	// ã‚¹ãƒ”ãƒ¼ãƒ‰æ•°å€¤è¡¨ç¤º
 	var Speed = ~~Vsd.Speed;
 	Vsd.DrawTextAlign(
 		MeterCx, MeterCy + MeterR * 0.25, 
@@ -100,37 +100,37 @@ function Draw(){
 	);
 	
 	if( Vsd.MaxTacho > 0 ){
-		// ƒ^ƒRƒ[ƒ^[j
+		// ã‚¿ã‚³ãƒ¡ãƒ¼ã‚¿ãƒ¼é‡
 		Vsd.DrawNeedle(
 			MeterCx, MeterCy, MeterR2 * 0.95, MeterR2 * -0.1,
 			135, 45, Vsd.Tacho / MaxTacho, 0xFF0000, 3
 		);
 	}else{
-		// ƒXƒs[ƒhƒ[ƒ^[j
+		// ã‚¹ãƒ”ãƒ¼ãƒ‰ãƒ¡ãƒ¼ã‚¿ãƒ¼é‡
 		Vsd.DrawNeedle(
 			MeterCx, MeterCy, MeterR2 * 0.95, MeterR2 * -0.1,
 			135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
 		);
 	}
 	
-	// Gƒ[ƒ^[ƒpƒlƒ‹‰æ‘œ•`‰æ
+	// Gãƒ¡ãƒ¼ã‚¿ãƒ¼ãƒ‘ãƒãƒ«ç”»åƒæç”»
 	Vsd.PutImage( MeterGX, MeterGY, ImgG );
 	Vsd.DrawLine( MeterGCx - MeterGR2, MeterGCy, MeterGCx + MeterGR2, MeterGCy, 0x802000 );
 	Vsd.DrawLine( MeterGCx, MeterGCy - MeterGR2, MeterGCx, MeterGCy + MeterGR2, 0x802000 );
 	Vsd.DrawCircle( MeterGCx, MeterGCy, MeterGR2 / 3,     0x802000 );
 	Vsd.DrawCircle( MeterGCx, MeterGCy, MeterGR2 / 3 * 2, 0x802000 );
 	
-	// G ”’l
+	// G æ•°å€¤
 	var Accel = Math.sqrt( Vsd.Gx * Vsd.Gx + Vsd.Gy * Vsd.Gy ).toFixed( 1 ) + "G";
 	Vsd.DrawTextAlign(
 		MeterGCx, MeterGCy + MeterR / 2, ALIGN_HCENTER | ALIGN_BOTTOM,
 		Accel, FontS, 0xFFFFFF
 	);
 	
-	// G ƒXƒl[ƒN
+	// G ã‚¹ãƒãƒ¼ã‚¯
 	Vsd.DrawGSnake(	MeterGCx, MeterGCy, MeterGR2 / 1.5, 5 * Scale, 2, 0xFF4000, 0x802000 );
 	
-	// ‘–s‹OÕ
+	// èµ°è¡Œè»Œè·¡
 	//Vsd.PutImage( 0, 0, ImgMapBG );
 	Vsd.DrawMap(
 		8 * Scale, 8 * Scale, 500 * Scale, 300 * Scale,
@@ -138,9 +138,9 @@ function Draw(){
 		2, 5, 0xFF0000, 0xFFFF00, 0x00FF00, 0xFF0000
 	);
 	
-	// ƒ‰ƒbƒvƒ^ƒCƒ€
+	// ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ 
 	Vsd.DrawLapTime( Vsd.Width - 1, 0, ALIGN_TOP | ALIGN_RIGHT, FontM_Outline, 0xFFFFFF, 0, 0x00FFFF, 0xFF4000 );
 	
-	// ƒXƒs[ƒhƒOƒ‰ƒt
+	// ã‚¹ãƒ”ãƒ¼ãƒ‰ã‚°ãƒ©ãƒ•
 	Vsd.DrawGraph( SpdX1, SpdY1, SpdX2, SpdY2, FontM );
 }

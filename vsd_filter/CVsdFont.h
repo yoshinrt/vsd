@@ -34,7 +34,7 @@ class CVsdFont {
 	CVsdFont( const char *szFontName, int iSize, UINT uAttr = 0 );
 	CVsdFont( LPCWSTR szFontName, int iSize, UINT uAttr = 0 );
 	~CVsdFont(){
-		DebugMsgD( "delete CFont %X\n", this );
+		DebugMsgD( "delete CFont %d:%X\n", m_iObjCnt--, this );
 	}
 	
 	void CreateFont( const char *szFontName, int iSize, UINT uAttr );
@@ -100,5 +100,9 @@ class CVsdFont {
 	UINT	m_uAttr;
 	
 	static const MAT2	mat;
+	
+#ifdef DEBUG
+	static int m_iObjCnt;
+#endif
 };
 #endif
