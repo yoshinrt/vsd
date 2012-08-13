@@ -24,6 +24,7 @@
 #include <zlib.h>
 #include <vector>
 #include <map>
+#include <functional>
 
 #ifdef _OPENMP
 	#include <omp.h>

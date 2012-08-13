@@ -580,26 +580,13 @@ inline UINT CVsdFilter::BlendColor(
 
 #define GRAPH_SCALE	1
 
-static double GetSpeedLog( CVsdLog& Log, int iIndex ){
-	return Log.Speed( iIndex );
-}
-static double GetTachoLog( CVsdLog& Log, int iIndex ){
-	return Log.Tacho( iIndex );
-}
-static double GetGxLog( CVsdLog& Log, int iIndex ){
-	return Log.Gx( iIndex );
-}
-static double GetGyLog( CVsdLog& Log, int iIndex ){
-	return Log.Gy( iIndex );
-}
-
 void CVsdFilter::DrawGraph(
 	int x1, int y1, int x2, int y2,
 	LPCWSTR szFormat,
 	CVsdFont &Font,
 	tRABY uColor,
 	CVsdLog& Log,
-	double ( *GetDataFunc )( CVsdLog&, int ),
+	double ( CVsdLog::*GetDataFunc )( int ),
 	double dMaxVal
 ){
 	int	iWidth  = x2 - x1 + 1;
@@ -620,7 +607,7 @@ void CVsdFilter::DrawGraph(
 	
 	for( int x = 0; x < iWidth; ++x ){
 		int iLogNum = Log.m_iLogNum + ( x - iWidth / 2 ) * GRAPH_SCALE;
-		dVal = Log.IsDataExist( iLogNum ) ? GetDataFunc( Log, iLogNum ) : 0;
+		dVal = Log.IsDataExist( iLogNum ) ? std::mem_fun1( GetDataFunc )( &Log, iLogNum ) : 0;
 		
 		int iPosY = y2 - ( int )(( dVal - dMinVal ) * iHeight / ( dMaxVal - dMinVal ));
 		if( iPrevY != INVALID_POS_I )
@@ -712,7 +699,7 @@ void CVsdFilter::DrawGraph(
 				x1, iYSpeed1, x2, iYSpeed2,
 				L"%.0f km/h", Font, color_orange,
 				*m_CurLog,
-				GetSpeedLog, m_CurLog->m_iMaxSpeed
+				&CVsdLog::Speed, m_CurLog->m_iMaxSpeed
 			);
 		}
 		if( uFlag & GRAPH_TACHO ){
@@ -720,7 +707,7 @@ void CVsdFilter::DrawGraph(
 				x1, iYTacho1, x2, iYTacho2,
 				L"%.0f rpm", Font, color_cyan,
 				*m_CurLog,
-				GetTachoLog, m_CurLog->m_iMaxTacho
+				&CVsdLog::Tacho, m_CurLog->m_iMaxTacho
 			);
 		}
 		if( uFlag & GRAPH_GX ){
@@ -728,7 +715,7 @@ void CVsdFilter::DrawGraph(
 				x1, iYGx1, x2, iYGx2,
 				L"%.2f G(x)", Font, color_green,
 				*m_CurLog,
-				GetGxLog, -m_CurLog->m_dMaxGx
+				&CVsdLog::Gx, -m_CurLog->m_dMaxGx
 			);
 		}
 		if( uFlag & GRAPH_GY ){
@@ -736,7 +723,7 @@ void CVsdFilter::DrawGraph(
 				x1, iYGy1, x2, iYGy2,
 				L"%.2f G(y)", Font, color_masenta,
 				*m_CurLog,
-				GetGyLog, -m_CurLog->m_dMaxGy
+				&CVsdLog::Gy, -m_CurLog->m_dMaxGy
 			);
 		}
 		
@@ -746,7 +733,7 @@ void CVsdFilter::DrawGraph(
 					x1, y1, x2, y2,
 					L"%.0f km/h", Font, color_cyan,
 					*m_GPSLog,
-					GetSpeedLog, m_GPSLog->m_iMaxSpeed
+					&CVsdLog::Speed, m_GPSLog->m_iMaxSpeed
 				);
 			}
 		#endif
