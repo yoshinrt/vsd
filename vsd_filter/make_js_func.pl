@@ -303,6 +303,7 @@ $NewObject
 		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
 		objectHolder.MakeWeak( obj, Dispose );
 		
+		DebugMsgD( ">>>new js obj $Class:%d:%X\\n", ++m_iCnt, obj );
 		// コンストラクタは this を返すこと。
 		return thisObject;
 	}
@@ -310,6 +311,7 @@ $NewObject
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 	$IfNotVsd	delete static_cast<$Class*>( pVoid );
+		DebugMsgD( "<<<del js obj $Class:%d:%X\\n", m_iCnt--, pVoid );
 		handle.Dispose();
 	}
 	
@@ -365,7 +367,14 @@ $Function
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "$JsClass" ), tmpl );
 	}
+	
+	#ifdef DEBUG
+	static int m_iCnt;
+	#endif
 };
+#ifdef DEBUG
+int ${Class}IF::m_iCnt = 0;
+#endif
 -----
 }
 

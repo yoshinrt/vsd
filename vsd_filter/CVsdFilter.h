@@ -139,11 +139,13 @@ class CVsdFilter {
 	int DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, tRABY uColor );
 	int DrawFont( int x, int y, WCHAR c, CVsdFont &Font, tRABY uColor, tRABY uColorOutline = color_black );
 	void DrawText( // !js_func
-		int x, int y, LPCWSTR szMsg, CVsdFont &Font, tRABY uColor,
+		int x, int y, LPCWSTR szMsg, CVsdFont &Font,
+		tRABY uColor,						// !default:color_white
 		tRABY uColorOutline = color_black	// !default:color_black
 	);
 	void DrawTextAlign( // !js_func
-		int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFont &Font, tRABY uColor,
+		int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFont &Font,
+		tRABY uColor,						// !default:color_white
 		tRABY uColorOutline = color_black	// !default:color_black
 	);
 	
@@ -156,9 +158,19 @@ class CVsdFilter {
 		double ( *GetDataFunc )( CVsdLog&, int ),
 		double dMaxVal
 	);
+	
+	enum {
+		GRAPH_SPEED	= 1 << 0,
+		GRAPH_TACHO	= 1 << 1,
+		GRAPH_GX	= 1 << 2,
+		GRAPH_GY	= 1 << 3,
+		GRAPH_TILE	= 1 << 31,
+	};
+	
 	void DrawGraph(	// !js_func
 		int x1, int y1, int x2, int y2,
-		CVsdFont &Font
+		CVsdFont &Font,
+		UINT uFlag = GRAPH_SPEED		// !default:1
 	);
 	
 	// ƒ|ƒŠƒSƒ“•`ŽÊ
@@ -198,9 +210,18 @@ class CVsdFilter {
 		tRABY uColorGPlus,
 		tRABY uColorGMinus
 	);
-	void DrawLapTime( // !js_func
+	void DrawLapTime(	// !js_func
 		int x, int y, UINT uAlign, CVsdFont &Font,
-		tRABY uColor, tRABY uColorOutline, tRABY uColorBest, tRABY uColorPlus
+		tRABY uColor,			// !default:color_white
+		tRABY uColorBest,		// !default:color_cyan
+		tRABY uColorPlus,		// !default:color_red
+		tRABY uColorOutline		// !default:color_black
+	);
+	void DrawLapTimeLog(	// !js_func
+		int x, int y, UINT uAlign, int iNum, CVsdFont &Font,
+		tRABY uColor,			// !default:color_white
+		tRABY uColorBest,		// !default:color_cyan
+		tRABY uColorOutline		// !default:color_black
 	);
 	void DrawNeedle( // !js_func
 		int x, int y, int r1, int r2,
@@ -366,6 +387,8 @@ class CVsdFilter {
 	double	m_dTacho;		// !js_var:Tacho
 	double	m_dGx;			// !js_var:Gx
 	double	m_dGy;			// !js_var:Gy
+	double MaxGx( void ){ return m_CurLog ? m_CurLog->m_dMaxGx : 0; } // !js_var:MaxGx
+	double MaxGy( void ){ return m_CurLog ? m_CurLog->m_dMaxGy : 0; } // !js_var:MaxGy
 	
 	int	GetMaxSpeed( void ){ // !js_var:MaxSpeed
 		return m_CurLog ? m_CurLog->m_iMaxSpeed : 180;
@@ -391,7 +414,7 @@ class CVsdFilter {
 	virtual void SetFrameMark( int iFrame ) = 0;
 	virtual int  GetFrameMark( int iFrame ) = 0;
 	
-	int m_iPosX, m_iPosY;
+	int m_iTextPosX, m_iTextPosY;
 	
 	PolygonData_t	*m_Polygon;
 	

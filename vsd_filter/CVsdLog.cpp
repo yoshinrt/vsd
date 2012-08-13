@@ -24,8 +24,9 @@ CVsdLog::CVsdLog(){
 	m_iCnt	= 0;
 	m_dFreq	= LOG_FREQ;
 	
-	m_dMaxG = 0;
-	m_dMinG = 0;
+	m_dMaxGx =
+	m_dMaxGy =
+	m_dMinGy = 0;
 	
 	m_iMaxSpeed		= 0;
 	m_iMaxTacho		= 0;
@@ -187,8 +188,8 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, BOOL bAllParam ){
 			LogTmp.SetGy( GetLogIntermediateVal( Gy ));
 		}else{
 			// PSP GPS log のときは，G の MAX 値のみをチェック
-			if( m_dMaxG < LogTmp.Gy()) m_dMaxG = LogTmp.Gy();
-			if( m_dMinG > LogTmp.Gy()) m_dMinG = LogTmp.Gy();
+			if( m_dMaxGy < LogTmp.Gy()) m_dMaxGy = LogTmp.Gy();
+			if( m_dMinGy > LogTmp.Gy()) m_dMinGy = LogTmp.Gy();
 		}
 		
 		m_Log.push_back( LogTmp );
@@ -197,18 +198,18 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, BOOL bAllParam ){
 	// スムージング
 	if( bAllParam ){
 		UINT	v = 2;
-		double	d;
-		double	d2 = 0;
+		double	dGx0, dGx1 = 0;
+		double	dGy0, dGy1 = 0;
 		
 		while( v-- ) for( u = 2; u < ( UINT )m_iCnt - 2; ++u ){
-			m_Log[ u ].SetGx((
+			m_Log[ u ].SetGx( dGx0 = (
 				m_Log[ u - 2 ].Gx() +
 				m_Log[ u - 1 ].Gx() +
 				m_Log[ u + 0 ].Gx() +
 				m_Log[ u + 1 ].Gx() +
 				m_Log[ u + 2 ].Gx()
 			) / 5 );
-			m_Log[ u ].SetGy( d = (
+			m_Log[ u ].SetGy( dGy0 = (
 				m_Log[ u - 2 ].Gy() +
 				m_Log[ u - 1 ].Gy() +
 				m_Log[ u + 0 ].Gy() +
@@ -216,9 +217,11 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, BOOL bAllParam ){
 				m_Log[ u + 2 ].Gy()
 			) / 5 );
 			
-			d2 = d2 * 0.9 + d * 0.1;
-			if( m_dMaxG < d2 ) m_dMaxG = d2;
-			if( m_dMinG > d2 ) m_dMinG = d2;
+			dGx1 = dGx1 * 0.9 + dGx0 * 0.1;
+			dGy1 = dGy1 * 0.9 + dGy0 * 0.1;
+			if( m_dMaxGx < fabs( dGx1 )) m_dMaxGx = fabs( dGx1 );
+			if( m_dMaxGy < dGy1 ) m_dMaxGy = dGy1;
+			if( m_dMinGy > dGy1 ) m_dMinGy = dGy1;
 		}
 	}
 	return m_iCnt;
@@ -713,6 +716,9 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 			
 			VsdLogTmp.SetGx( dGx );
 			VsdLogTmp.SetGy( dGy );
+			
+			if( m_dMaxGx < fabs( dGx )) m_dMaxGx = fabs( dGx );
+			if( m_dMaxGy < -dGy       ) m_dMaxGy = -dGy;
 			
 			// ログ開始・終了認識
 			if( VsdLogTmp.Speed() >= 300 ){

@@ -139,7 +139,7 @@ function Draw(){
 	);
 	
 	// ラップタイム
-	Vsd.DrawLapTime( Vsd.Width - 1, 0, ALIGN_TOP | ALIGN_RIGHT, FontM_Outline, 0xFFFFFF, 0, 0x00FFFF, 0xFF4000 );
+	Vsd.DrawLapTime( Vsd.Width - 1, 0, ALIGN_TOP | ALIGN_RIGHT, FontM_Outline );
 	
 	// スピードグラフ
 	Vsd.DrawGraph( SpdX1, SpdY1, SpdX2, SpdY2, FontM );

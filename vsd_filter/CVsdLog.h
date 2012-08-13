@@ -152,8 +152,9 @@ class CVsdLog {
 	double		m_dMapOffsY;
 	double		m_dFreq;
 	
-	double		m_dMaxG;	// 加速 G
-	double		m_dMinG;	// 減速 G
+	double		m_dMaxGx;	// 左右 G
+	double		m_dMaxGy;	// 加速 G
+	double		m_dMinGy;	// 減速 G
 	
 	double		m_dLogStartTime;	// ログ開始時間
 	

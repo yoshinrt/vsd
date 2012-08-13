@@ -21,8 +21,6 @@
 
 using namespace v8;
 
-#define AVS_PLUGIN
-
 /*** static メンバ（；´д⊂）***********************************************/
 
 CVsdFilter *CScript::m_Vsd;
@@ -86,9 +84,9 @@ void CScript::ReportException( TryCatch* try_catch ){
 
 CScript::CScript( CVsdFilter *pVsd ){
 	DebugMsgD( ":CScript::CScript():%X\n", GetCurrentThreadId());
-	m_pIsolate = v8::Isolate::New();
 	
 	#ifdef AVS_PLUGIN
+		m_pIsolate = v8::Isolate::New();
 		v8::Isolate::Scope IsolateScope( m_pIsolate );
 	#endif
 	
@@ -107,18 +105,18 @@ CScript::~CScript(){
 	DebugMsgD( ":CScript::~CScript():%X\n", GetCurrentThreadId());
 	DebugMsgD( ":CScript::~CScript():m_pIsolate = %X\n", m_pIsolate );
 	
-	#ifdef AVS_PLUGIN
-		v8::Isolate::Scope IsolateScope( m_pIsolate );
-	#endif
 	{
-		HandleScope handle_scope;
-		Context::Scope context_scope( m_Context );
+		#ifdef AVS_PLUGIN
+			v8::Isolate::Scope IsolateScope( m_pIsolate );
+		#endif
+		m_Context.Dispose();
 		while( !v8::V8::IdleNotification());
 	}
+	#ifdef AVS_PLUGIN
+		m_pIsolate->Dispose();
+	#endif
 	
-	m_Context.Dispose();
 	delete [] m_szErrorMsg;
-//	m_pIsolate->Dispose();
 }
 
 /*** JavaScript interface のセットアップ ************************************/

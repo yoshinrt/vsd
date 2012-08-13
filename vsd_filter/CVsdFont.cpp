@@ -22,12 +22,12 @@ int CVsdFont::m_iObjCnt = 0;
 /*** コンストラクタ *********************************************************/
 
 CVsdFont::CVsdFont( const char *szFontName, int iSize, UINT uAttr ){
-	DebugMsgD( "new CFont %d:%X\n", ++m_iObjCnt, this );
+	//DebugMsgD( "new CFont %d:%X\n", ++m_iObjCnt, this );
 	CreateFont( szFontName, iSize, uAttr );
 }
 
 CVsdFont::CVsdFont( LPCWSTR szFontName, int iSize, UINT uAttr ){
-	DebugMsgD( "new CFont %d:%X\n", ++m_iObjCnt, this );
+	//DebugMsgD( "new CFont %d:%X\n", ++m_iObjCnt, this );
 	char szFont[ LF_FACESIZE ];
 	
 	WideCharToMultiByte(

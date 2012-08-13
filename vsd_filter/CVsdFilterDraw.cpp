@@ -449,37 +449,44 @@ int CVsdFilter::DrawFont( int x, int y, WCHAR c, CVsdFont &Font, tRABY uColor, t
 
 void CVsdFilter::DrawText( int x, int y, LPCWSTR szMsg, CVsdFont &Font, tRABY uColor, tRABY uColorOutline ){
 	
-	if( x != POS_DEFAULT ) m_iPosX = x;
-	if( y != POS_DEFAULT ) m_iPosY = y;
+	if( x != POS_DEFAULT ) m_iTextPosX = x;
+	if( y != POS_DEFAULT ) m_iTextPosY = y;
 	
-	x = m_iPosX;
+	x = m_iTextPosX;
 	
 	for( int i = 0; szMsg[ i ]; ++i ){
-		x += DrawFont( x, m_iPosY, szMsg[ i ], Font, uColor, uColorOutline );
+		x += DrawFont( x, m_iTextPosY, szMsg[ i ], Font, uColor, uColorOutline );
 	}
 	
-	m_iPosY += Font.GetHeight();
+	m_iTextPosY += Font.GetHeight();
 }
 
 void CVsdFilter::DrawTextAlign( int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFont &Font, tRABY uColor, tRABY uColorOutline ){
 	
+	if( x != POS_DEFAULT ) m_iTextPosX = x;
+	if( y != POS_DEFAULT ) m_iTextPosY = y;
+	
 	if( uAlign & ALIGN_HCENTER ){
-		x -= Font.GetTextWidth( szMsg ) / 2;
+		x = m_iTextPosX - Font.GetTextWidth( szMsg ) / 2;
 	}else if( uAlign & ALIGN_RIGHT ){
-		x -= Font.GetTextWidth( szMsg );
+		x = m_iTextPosX - Font.GetTextWidth( szMsg );
+	}else{
+		x = m_iTextPosX;
 	}
 	
 	if( uAlign & ALIGN_VCENTER ){
-		y -= Font.GetHeight() / 2;
+		y = m_iTextPosY - Font.GetHeight() / 2;
 	}else if( uAlign & ALIGN_BOTTOM ){
-		y -= Font.GetHeight();
+		y = m_iTextPosY - Font.GetHeight();
+	}else{
+		y = m_iTextPosY;
 	}
 	
 	for( int i = 0; szMsg[ i ]; ++i ){
 		x += DrawFont( x, y, szMsg[ i ], Font, uColor, uColorOutline );
 	}
 	
-	m_iPosY += Font.GetHeight();
+	m_iTextPosY += Font.GetHeight();
 }
 
 /*** put pixel 系 ***********************************************************/
@@ -638,7 +645,8 @@ void CVsdFilter::DrawGraph(
 // スピード・タコグラフ
 void CVsdFilter::DrawGraph(
 	int x1, int y1, int x2, int y2,
-	CVsdFont &Font
+	CVsdFont &Font,
+	UINT uFlag
 ){
 	if(
 		#ifdef GPS_ONLY
@@ -803,9 +811,9 @@ void CVsdFilter::DrawMap(
 					tRABY uColorLine;
 					
 					if( dG >= 0.0 ){
-						uColorLine = BlendColor( uColorG0, uColorGPlus,  dG / m_CurLog->m_dMaxG );
+						uColorLine = BlendColor( uColorG0, uColorGPlus,  dG / m_CurLog->m_dMaxGy );
 					}else{
-						uColorLine = BlendColor( uColorG0, uColorGMinus, dG / m_CurLog->m_dMinG );
+						uColorLine = BlendColor( uColorG0, uColorGMinus, dG / m_CurLog->m_dMinGy );
 					}
 					
 					// Line を引く
@@ -975,26 +983,23 @@ void CVsdFilter::CalcLapTime( void ){
 
 void CVsdFilter::DrawLapTime(
 	int x, int y, UINT uAlign, CVsdFont &Font,
-	tRABY uColor, tRABY uColorOutline, tRABY uColorBest, tRABY uColorPlus
+	tRABY uColor, tRABY uColorBest, tRABY uColorPlus, tRABY uColorOutline
 ){
-	int	i;
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
 	if( !DispLap || !m_LapLog ) return;
 	
 	SelectLogForLapTime;
 	
-	if( uAlign & ALIGN_HCENTER ){
-		x -= Font.GetTextWidth( L"Time 0'00.000" ) / 2;
-	}else if( uAlign & ALIGN_RIGHT ){
-		x -= Font.GetTextWidth( L"Time 0'00.000" );
-	}
-	
 	if( uAlign & ALIGN_VCENTER ){
-		y -= Font.GetHeight() / 2;
+		m_iTextPosY = y - ( Font.GetHeight() * 6 + Font.GetHeight() / 4 ) / 2;
 	}else if( uAlign & ALIGN_BOTTOM ){
-		y -= Font.GetHeight();
+		m_iTextPosY = y - ( Font.GetHeight() * 6 + Font.GetHeight() / 4 );
+	}else{
+		m_iTextPosY = y;
 	}
+	m_iTextPosX = x;
+	uAlign &= ALIGN_LEFT | ALIGN_HCENTER | ALIGN_RIGHT;
 	
 	// 時間表示
 	BOOL	bInLap = FALSE;
@@ -1006,7 +1011,7 @@ void CVsdFilter::DrawLapTime(
 			m_LapLog->m_iCurTime / 1000 % 60,
 			m_LapLog->m_iCurTime % 1000
 		);
-		DrawText( x, y, szBuf, Font, uColor, uColorOutline );
+		DrawTextAlign( POS_DEFAULT, POS_DEFAULT, uAlign, szBuf, Font, uColor, uColorOutline );
 		
 		/*** ベストとの車間距離表示 - ***/
 		BOOL bSign = m_LapLog->m_iDiffTime <= 0;
@@ -1019,16 +1024,16 @@ void CVsdFilter::DrawLapTime(
 			m_LapLog->m_iDiffTime / 1000 % 60,
 			m_LapLog->m_iDiffTime % 1000
 		);
-		DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, Font, bSign ? uColorBest : uColorPlus, uColorOutline );
+		DrawTextAlign( POS_DEFAULT, POS_DEFAULT, uAlign, szBuf, Font, bSign ? uColorBest : uColorPlus, uColorOutline );
 		
 		bInLap = TRUE;
 	}else{
 		// まだ開始していない
-		DrawText( x, y, L"Time -'--.---", Font, uColor, uColorOutline );
-		m_iPosY += Font.GetHeight();
+		DrawTextAlign( POS_DEFAULT, POS_DEFAULT, uAlign, L"Time -'--.---", Font, uColor, uColorOutline );
+		m_iTextPosY += Font.GetHeight();
 	}
 	
-	m_iPosY += Font.GetHeight() / 4;
+	m_iTextPosY += Font.GetHeight() / 4;
 	
 	// Best 表示
 	swprintf(
@@ -1037,7 +1042,37 @@ void CVsdFilter::DrawLapTime(
 		m_LapLog->m_iBestTime / 1000 % 60,
 		m_LapLog->m_iBestTime % 1000
 	);
-	DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, Font, uColor, uColorOutline );
+	DrawTextAlign( POS_DEFAULT, POS_DEFAULT, uAlign, szBuf, Font, uColor, uColorOutline );
+	
+	// Lapタイム表示
+	DrawLapTimeLog(
+		m_iTextPosX, m_iTextPosY, uAlign,
+		3, Font, uColor, uColorBest, uColorOutline
+	);
+}
+
+/*** ラップタイム履歴表示 ***************************************************/
+
+void CVsdFilter::DrawLapTimeLog(
+	int x, int y, UINT uAlign, int iNum, CVsdFont &Font,
+	tRABY uColor, tRABY uColorBest, tRABY uColorOutline
+){
+	int	i;
+	WCHAR	szBuf[ SPRINTF_BUF ];
+	
+	if( !DispLap || !m_LapLog ) return;
+	
+	SelectLogForLapTime;
+	
+	if( uAlign & ALIGN_VCENTER ){
+		m_iTextPosY = y - Font.GetHeight() * iNum / 2;
+	}else if( uAlign & ALIGN_BOTTOM ){
+		m_iTextPosY = y - Font.GetHeight() * iNum;
+	}else{
+		m_iTextPosY = y;
+	}
+	m_iTextPosX = x;
+	uAlign &= ALIGN_LEFT | ALIGN_HCENTER | ALIGN_RIGHT;
 	
 	// Lapタイム表示
 	// 3つタイム表示する分の，最後の LapIdx を求める．
@@ -1050,30 +1085,26 @@ void CVsdFilter::DrawLapTime(
 	
 	// iLapIdxEnd から有効なラップタイムが 2個見つかるまで遡る
 	int iLapIdxStart = iLapIdxEnd - 1;
-	for( i = 0; iLapIdxStart > 0; --iLapIdxStart ){
+	for( i = 1; iLapIdxStart > 0; --iLapIdxStart ){
 		if( m_LapLog->m_Lap[ iLapIdxStart ].iTime ){
-			if( ++i >= 2 ) break;
+			if( ++i >= iNum ) break;
 		}
 	}
 	
-	if( iLapIdxStart >= 0 ){
-		for( ; iLapIdxStart <= iLapIdxEnd; ++iLapIdxStart ){
-			if( m_LapLog->m_Lap[ iLapIdxStart ].iTime != 0 ){
-				swprintf(
-					szBuf, sizeof( szBuf ), L"%3d%c%2d'%02d.%03d",
-					m_LapLog->m_Lap[ iLapIdxStart ].uLap,
-					( iLapIdxStart == m_LapLog->m_iLapIdx + 1 && bInLap ) ? '*' : ' ',
-					m_LapLog->m_Lap[ iLapIdxStart ].iTime / 60000,
-					m_LapLog->m_Lap[ iLapIdxStart ].iTime / 1000 % 60,
-					m_LapLog->m_Lap[ iLapIdxStart ].iTime % 1000
-				);
-				DrawText(
-					POS_DEFAULT, POS_DEFAULT, szBuf, Font,
-					m_LapLog->m_iBestTime == m_LapLog->m_Lap[ iLapIdxStart ].iTime ? uColorBest : uColor,
-					uColorOutline
-				);
-				++i;
-			}
+	if( iLapIdxStart >= 0 ) for( ; iLapIdxStart <= iLapIdxEnd; ++iLapIdxStart ){
+		if( m_LapLog->m_Lap[ iLapIdxStart ].iTime != 0 ){
+			swprintf(
+				szBuf, sizeof( szBuf ), L"%3d%3d'%02d.%03d",
+				m_LapLog->m_Lap[ iLapIdxStart ].uLap,
+				m_LapLog->m_Lap[ iLapIdxStart ].iTime / 60000,
+				m_LapLog->m_Lap[ iLapIdxStart ].iTime / 1000 % 60,
+				m_LapLog->m_Lap[ iLapIdxStart ].iTime % 1000
+			);
+			DrawTextAlign(
+				POS_DEFAULT, POS_DEFAULT, uAlign, szBuf, Font,
+				m_LapLog->m_iBestTime == m_LapLog->m_Lap[ iLapIdxStart ].iTime ? uColorBest : uColor,
+				uColorOutline
+			);
 		}
 	}
 }
@@ -1266,8 +1297,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	if( DispSyncInfo ){
 		
-		m_iPosX = 0;
-		m_iPosY = GetHeight() / 3;
+		m_iTextPosX = 0;
+		m_iTextPosY = GetHeight() / 3;
 		
 		if( m_GPSLog ){
 			int i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->m_dLogNum / LOG_FREQ ) * 100 ) % ( 24 * 3600 * 100 );

@@ -15,6 +15,7 @@ class CVsdFilterIF {
 		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
 		objectHolder.MakeWeak( obj, Dispose );
 		
+		DebugMsgD( ">>>new js obj CVsdFilter:%d:%X\n", ++m_iCnt, obj );
 		// コンストラクタは this を返すこと。
 		return thisObject;
 	}
@@ -22,6 +23,7 @@ class CVsdFilterIF {
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 	//	delete static_cast<CVsdFilter*>( pVoid );
+		DebugMsgD( "<<<del js obj CVsdFilter:%d:%X\n", m_iCnt--, pVoid );
 		handle.Dispose();
 	}
 	
@@ -89,6 +91,14 @@ class CVsdFilterIF {
 	static v8::Handle<v8::Value> Get_Gy( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Number::New( obj->m_dGy ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_MaxGx( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Number::New( obj->MaxGx() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_MaxGy( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Number::New( obj->MaxGy() ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_MaxSpeed( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
@@ -228,7 +238,7 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawText( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 5 <= iLen && iLen <= 6 )) return v8::Undefined();
+		if( CheckArgs( 4 <= iLen && iLen <= 6 )) return v8::Undefined();
 		v8::String::Value str2( args[ 2 ] );
 		v8::Local<v8::Object> Font3 = args[ 3 ]->ToObject();
 		if( CheckClass( Font3, "Font", "arg[ 4 ] must be Font" )) return v8::Undefined();
@@ -241,7 +251,7 @@ class CVsdFilterIF {
 			args[ 1 ]->Int32Value(),
 			( LPCWSTR )*str2,
 			*obj3,
-			PIXEL_RABY::Argb2Raby( args[ 4 ]->Int32Value()),
+			iLen <= 4 ? color_white : PIXEL_RABY::Argb2Raby( args[ 4 ]->Int32Value()),
 			iLen <= 5 ? color_black : PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value())
 		);
 		
@@ -249,7 +259,7 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawTextAlign( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 6 <= iLen && iLen <= 7 )) return v8::Undefined();
+		if( CheckArgs( 5 <= iLen && iLen <= 7 )) return v8::Undefined();
 		v8::String::Value str3( args[ 3 ] );
 		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
 		if( CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
@@ -263,7 +273,7 @@ class CVsdFilterIF {
 			args[ 2 ]->Int32Value(),
 			( LPCWSTR )*str3,
 			*obj4,
-			PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
+			iLen <= 5 ? color_white : PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
 			iLen <= 6 ? color_black : PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value())
 		);
 		
@@ -271,7 +281,7 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawGraph( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 5 )) return v8::Undefined();
+		if( CheckArgs( 5 <= iLen && iLen <= 6 )) return v8::Undefined();
 		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
 		if( CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
 		CVsdFont *obj4 = GetThis<CVsdFont>( Font4 );
@@ -283,7 +293,8 @@ class CVsdFilterIF {
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
 			args[ 3 ]->Int32Value(),
-			*obj4
+			*obj4,
+			iLen <= 5 ? 1 : args[ 5 ]->Int32Value()
 		);
 		
 		return v8::Undefined();
@@ -383,7 +394,7 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawLapTime( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 8 )) return v8::Undefined();
+		if( CheckArgs( 4 <= iLen && iLen <= 8 )) return v8::Undefined();
 		v8::Local<v8::Object> Font3 = args[ 3 ]->ToObject();
 		if( CheckClass( Font3, "Font", "arg[ 4 ] must be Font" )) return v8::Undefined();
 		CVsdFont *obj3 = GetThis<CVsdFont>( Font3 );
@@ -395,10 +406,32 @@ class CVsdFilterIF {
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
 			*obj3,
-			PIXEL_RABY::Argb2Raby( args[ 4 ]->Int32Value()),
-			PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
-			PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
-			PIXEL_RABY::Argb2Raby( args[ 7 ]->Int32Value())
+			iLen <= 4 ? color_white : PIXEL_RABY::Argb2Raby( args[ 4 ]->Int32Value()),
+			iLen <= 5 ? color_cyan : PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
+			iLen <= 6 ? color_red : PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
+			iLen <= 7 ? color_black : PIXEL_RABY::Argb2Raby( args[ 7 ]->Int32Value())
+		);
+		
+		return v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Func_DrawLapTimeLog( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( 5 <= iLen && iLen <= 8 )) return v8::Undefined();
+		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
+		if( CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj4 = GetThis<CVsdFont>( Font4 );
+		if( !obj4 ) return v8::Undefined();
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawLapTimeLog(
+			args[ 0 ]->Int32Value(),
+			args[ 1 ]->Int32Value(),
+			args[ 2 ]->Int32Value(),
+			args[ 3 ]->Int32Value(),
+			*obj4,
+			iLen <= 5 ? color_white : PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
+			iLen <= 6 ? color_cyan : PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
+			iLen <= 7 ? color_black : PIXEL_RABY::Argb2Raby( args[ 7 ]->Int32Value())
 		);
 		
 		return v8::Undefined();
@@ -493,6 +526,8 @@ class CVsdFilterIF {
 		inst->SetAccessor( v8::String::New( "Tacho" ), Get_Tacho );
 		inst->SetAccessor( v8::String::New( "Gx" ), Get_Gx );
 		inst->SetAccessor( v8::String::New( "Gy" ), Get_Gy );
+		inst->SetAccessor( v8::String::New( "MaxGx" ), Get_MaxGx );
+		inst->SetAccessor( v8::String::New( "MaxGy" ), Get_MaxGy );
 		inst->SetAccessor( v8::String::New( "MaxSpeed" ), Get_MaxSpeed );
 		inst->SetAccessor( v8::String::New( "MaxTacho" ), Get_MaxTacho );
 
@@ -514,13 +549,21 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawMeterScale" ), v8::FunctionTemplate::New( Func_DrawMeterScale ));
 		proto->Set( v8::String::New( "DrawMap" ), v8::FunctionTemplate::New( Func_DrawMap ));
 		proto->Set( v8::String::New( "DrawLapTime" ), v8::FunctionTemplate::New( Func_DrawLapTime ));
+		proto->Set( v8::String::New( "DrawLapTimeLog" ), v8::FunctionTemplate::New( Func_DrawLapTimeLog ));
 		proto->Set( v8::String::New( "DrawNeedle" ), v8::FunctionTemplate::New( Func_DrawNeedle ));
 		proto->Set( v8::String::New( "FormatTime" ), v8::FunctionTemplate::New( Func_FormatTime ));
 
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "__VSD_System__" ), tmpl );
 	}
+	
+	#ifdef DEBUG
+	static int m_iCnt;
+	#endif
 };
+#ifdef DEBUG
+int CVsdFilterIF::m_iCnt = 0;
+#endif
 /****************************************************************************/
 
 class CVsdImageIF {
@@ -565,6 +608,7 @@ class CVsdImageIF {
 		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
 		objectHolder.MakeWeak( obj, Dispose );
 		
+		DebugMsgD( ">>>new js obj CVsdImage:%d:%X\n", ++m_iCnt, obj );
 		// コンストラクタは this を返すこと。
 		return thisObject;
 	}
@@ -572,6 +616,7 @@ class CVsdImageIF {
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 		delete static_cast<CVsdImage*>( pVoid );
+		DebugMsgD( "<<<del js obj CVsdImage:%d:%X\n", m_iCnt--, pVoid );
 		handle.Dispose();
 	}
 	
@@ -666,7 +711,14 @@ class CVsdImageIF {
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "Image" ), tmpl );
 	}
+	
+	#ifdef DEBUG
+	static int m_iCnt;
+	#endif
 };
+#ifdef DEBUG
+int CVsdImageIF::m_iCnt = 0;
+#endif
 /****************************************************************************/
 
 class CVsdFontIF {
@@ -692,6 +744,7 @@ class CVsdFontIF {
 		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
 		objectHolder.MakeWeak( obj, Dispose );
 		
+		DebugMsgD( ">>>new js obj CVsdFont:%d:%X\n", ++m_iCnt, obj );
 		// コンストラクタは this を返すこと。
 		return thisObject;
 	}
@@ -699,6 +752,7 @@ class CVsdFontIF {
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 		delete static_cast<CVsdFont*>( pVoid );
+		DebugMsgD( "<<<del js obj CVsdFont:%d:%X\n", m_iCnt--, pVoid );
 		handle.Dispose();
 	}
 	
@@ -772,4 +826,11 @@ class CVsdFontIF {
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "Font" ), tmpl );
 	}
+	
+	#ifdef DEBUG
+	static int m_iCnt;
+	#endif
 };
+#ifdef DEBUG
+int CVsdFontIF::m_iCnt = 0;
+#endif
