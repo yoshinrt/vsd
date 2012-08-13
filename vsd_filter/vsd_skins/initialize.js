@@ -1,8 +1,8 @@
 Vsd = new __VSD_System__();
 
 DRAW_FILL			= 1;
-FONT_ITALIC			= 1 << 0;
-FONT_BOLD			= 1 << 1;
+FONT_BOLD			= 1 << 0;
+FONT_ITALIC			= 1 << 1;
 FONT_OUTLINE		= 1 << 2;
 FONT_FIXED			= 1 << 3;
 FONT_NOANTIALIAS	= 1 << 4;

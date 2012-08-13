@@ -663,6 +663,7 @@ void CVsdFilter::DrawGraph(
 		#endif
 	){
 		SelectLogVsd;
+		if( !m_CurLog ) return;
 		
 		int	iYSpeed1, iYSpeed2;
 		int	iYTacho1, iYTacho2;
@@ -710,32 +711,32 @@ void CVsdFilter::DrawGraph(
 			DrawGraph(
 				x1, iYSpeed1, x2, iYSpeed2,
 				L"%.0f km/h", Font, color_orange,
-				*m_VsdLog,
-				GetSpeedLog, m_VsdLog->m_iMaxSpeed
+				*m_CurLog,
+				GetSpeedLog, m_CurLog->m_iMaxSpeed
 			);
 		}
 		if( uFlag & GRAPH_TACHO ){
 			DrawGraph(
 				x1, iYTacho1, x2, iYTacho2,
 				L"%.0f rpm", Font, color_cyan,
-				*m_VsdLog,
-				GetTachoLog, m_VsdLog->m_iMaxTacho
+				*m_CurLog,
+				GetTachoLog, m_CurLog->m_iMaxTacho
 			);
 		}
 		if( uFlag & GRAPH_GX ){
 			DrawGraph(
 				x1, iYGx1, x2, iYGx2,
 				L"%.2f G(x)", Font, color_green,
-				*m_VsdLog,
-				GetGxLog, -m_VsdLog->m_dMaxGx
+				*m_CurLog,
+				GetGxLog, -m_CurLog->m_dMaxGx
 			);
 		}
 		if( uFlag & GRAPH_GY ){
 			DrawGraph(
 				x1, iYGy1, x2, iYGy2,
 				L"%.2f G(y)", Font, color_masenta,
-				*m_VsdLog,
-				GetGyLog, -m_VsdLog->m_dMaxGy
+				*m_CurLog,
+				GetGyLog, -m_CurLog->m_dMaxGy
 			);
 		}
 		
@@ -745,7 +746,7 @@ void CVsdFilter::DrawGraph(
 					x1, y1, x2, y2,
 					L"%.0f km/h", Font, color_cyan,
 					*m_GPSLog,
-					GetSpeedLog, m_VsdLog->m_iMaxSpeed
+					GetSpeedLog, m_GPSLog->m_iMaxSpeed
 				);
 			}
 		#endif
