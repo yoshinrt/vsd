@@ -576,20 +576,21 @@ inline UINT CVsdFilter::BlendColor(
 		(( UINT )(( uColor1 & 0x000000FF ) * dAlfa + ( uColor0 & 0x000000FF ) * ( 1 - dAlfa )) & 0x000000FF );
 }
 
-/****************************************************************************/
-/*** メーター描画 ***********************************************************/
-/****************************************************************************/
-
 /*** パラメータ調整用スピードグラフ *****************************************/
 
-#define GRAPH_SCALE	2
+#define GRAPH_SCALE	1
 
 static double GetSpeedLog( CVsdLog& Log, int iIndex ){
 	return Log.Speed( iIndex );
 }
-
 static double GetTachoLog( CVsdLog& Log, int iIndex ){
 	return Log.Tacho( iIndex );
+}
+static double GetGxLog( CVsdLog& Log, int iIndex ){
+	return Log.Gx( iIndex );
+}
+static double GetGyLog( CVsdLog& Log, int iIndex ){
+	return Log.Gy( iIndex );
 }
 
 void CVsdFilter::DrawGraph(
@@ -608,6 +609,12 @@ void CVsdFilter::DrawGraph(
 	int		iCursorPos;
 	double	dCursorVal;
 	double	dVal;
+	double	dMinVal = 0;
+	
+	if( dMaxVal < 0 ){
+		dMinVal = dMaxVal;
+		dMaxVal = -dMaxVal;
+	}
 	
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
@@ -615,7 +622,7 @@ void CVsdFilter::DrawGraph(
 		int iLogNum = Log.m_iLogNum + ( x - iWidth / 2 ) * GRAPH_SCALE;
 		dVal = Log.IsDataExist( iLogNum ) ? GetDataFunc( Log, iLogNum ) : 0;
 		
-		int iPosY = y2 - ( int )( dVal * iHeight / dMaxVal );
+		int iPosY = y2 - ( int )(( dVal - dMinVal ) * iHeight / ( dMaxVal - dMinVal ));
 		if( iPrevY != INVALID_POS_I )
 			DrawLine( x1 + x - 1, iPrevY, x1 + x, iPosY, 1, uColor, 0 );
 		
@@ -655,29 +662,93 @@ void CVsdFilter::DrawGraph(
 			DispGraph || DispSyncInfo
 		#endif
 	){
-		if( m_VsdLog ){
+		SelectLogVsd;
+		
+		int	iYSpeed1, iYSpeed2;
+		int	iYTacho1, iYTacho2;
+		int	iYGx1, iYGx2;
+		int	iYGy1, iYGy2;
+		
+		// 同期情報時はスピードのみ
+		if( DispSyncInfo ) uFlag = GRAPH_SPEED;
+		
+		if( uFlag & GRAPH_TILE ){
+			// タイル時の座標を求める
+			int iGraphNum = 0;
+			if( uFlag & GRAPH_SPEED )	++iGraphNum;
+			if( uFlag & GRAPH_TACHO )	++iGraphNum;
+			if( uFlag & GRAPH_GX )		++iGraphNum;
+			if( uFlag & GRAPH_GY )		++iGraphNum;
+			
+			int j = 0;
+			if( uFlag & GRAPH_SPEED ){
+				iYSpeed1 = y1 + ( y2 - y1 ) * j / iGraphNum;
+				iYSpeed2 = y1 + ( y2 - y1 ) * ( j + 1 ) / iGraphNum;
+				++j;
+			}
+			if( uFlag & GRAPH_TACHO ){
+				iYTacho1 = y1 + ( y2 - y1 ) * j / iGraphNum;
+				iYTacho2 = y1 + ( y2 - y1 ) * ( j + 1 ) / iGraphNum;
+				++j;
+			}
+			if( uFlag & GRAPH_GX ){
+				iYGx1 = y1 + ( y2 - y1 ) * j / iGraphNum;
+				iYGx2 = y1 + ( y2 - y1 ) * ( j + 1 ) / iGraphNum;
+				++j;
+			}
+			if( uFlag & GRAPH_GY ){
+				iYGy1 = y1 + ( y2 - y1 ) * j / iGraphNum;
+				iYGy2 = y1 + ( y2 - y1 ) * ( j + 1 ) / iGraphNum;
+				++j;
+			}
+		}else{
+			iYSpeed1 = iYTacho1 = iYGx1 = iYGy1 = y1;
+			iYSpeed2 = iYTacho2 = iYGx2 = iYGy2 = y2;
+		}
+		
+		if( uFlag & GRAPH_SPEED ){
 			DrawGraph(
-				x1, y1, x2, y2,
+				x1, iYSpeed1, x2, iYSpeed2,
 				L"%.0f km/h", Font, color_orange,
 				*m_VsdLog,
 				GetSpeedLog, m_VsdLog->m_iMaxSpeed
 			);
-			if( !DispSyncInfo ) DrawGraph(
-				x1, y1, x2, y2,
+		}
+		if( uFlag & GRAPH_TACHO ){
+			DrawGraph(
+				x1, iYTacho1, x2, iYTacho2,
 				L"%.0f rpm", Font, color_cyan,
 				*m_VsdLog,
 				GetTachoLog, m_VsdLog->m_iMaxTacho
 			);
 		}
-		
-		if(( !m_VsdLog || DispSyncInfo ) && m_GPSLog ){
+		if( uFlag & GRAPH_GX ){
 			DrawGraph(
-				x1, y1, x2, y2,
-				L"%.0f km/h", Font, color_cyan,
-				*m_GPSLog,
-				GetSpeedLog, m_VsdLog->m_iMaxSpeed
+				x1, iYGx1, x2, iYGx2,
+				L"%.2f G(x)", Font, color_green,
+				*m_VsdLog,
+				GetGxLog, -m_VsdLog->m_dMaxGx
 			);
 		}
+		if( uFlag & GRAPH_GY ){
+			DrawGraph(
+				x1, iYGy1, x2, iYGy2,
+				L"%.2f G(y)", Font, color_masenta,
+				*m_VsdLog,
+				GetGyLog, -m_VsdLog->m_dMaxGy
+			);
+		}
+		
+		#ifndef GPS_ONLY
+			if( DispSyncInfo && m_GPSLog ){
+				DrawGraph(
+					x1, y1, x2, y2,
+					L"%.0f km/h", Font, color_cyan,
+					*m_GPSLog,
+					GetSpeedLog, m_VsdLog->m_iMaxSpeed
+				);
+			}
+		#endif
 	}
 }
 

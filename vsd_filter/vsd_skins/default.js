@@ -141,6 +141,9 @@ function Draw(){
 	// ラップタイム
 	Vsd.DrawLapTime( Vsd.Width - 1, 0, ALIGN_TOP | ALIGN_RIGHT, FontM_Outline );
 	
-	// スピードグラフ
-	Vsd.DrawGraph( SpdX1, SpdY1, SpdX2, SpdY2, FontM );
+	// グラフ
+	Vsd.DrawGraph(
+		SpdX1, SpdY1, SpdX2, SpdY2, FontM,
+		GRAPH_SPEED | GRAPH_TACHO | GRAPH_GX | GRAPH_GY | GRAPH_TILE
+	);
 }

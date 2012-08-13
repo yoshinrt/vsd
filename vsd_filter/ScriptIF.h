@@ -15,7 +15,9 @@ class CVsdFilterIF {
 		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
 		objectHolder.MakeWeak( obj, Dispose );
 		
-		DebugMsgD( ">>>new js obj CVsdFilter:%d:%X\n", ++m_iCnt, obj );
+		#ifdef DEBUG
+			DebugMsgD( ">>>new js obj CVsdFilter:%d:%X\n", ++m_iCnt, obj );
+		#endif
 		// コンストラクタは this を返すこと。
 		return thisObject;
 	}
@@ -23,7 +25,9 @@ class CVsdFilterIF {
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 	//	delete static_cast<CVsdFilter*>( pVoid );
-		DebugMsgD( "<<<del js obj CVsdFilter:%d:%X\n", m_iCnt--, pVoid );
+		#ifdef DEBUG
+			DebugMsgD( "<<<del js obj CVsdFilter:%d:%X\n", m_iCnt--, pVoid );
+		#endif
 		handle.Dispose();
 	}
 	
@@ -608,7 +612,9 @@ class CVsdImageIF {
 		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
 		objectHolder.MakeWeak( obj, Dispose );
 		
-		DebugMsgD( ">>>new js obj CVsdImage:%d:%X\n", ++m_iCnt, obj );
+		#ifdef DEBUG
+			DebugMsgD( ">>>new js obj CVsdImage:%d:%X\n", ++m_iCnt, obj );
+		#endif
 		// コンストラクタは this を返すこと。
 		return thisObject;
 	}
@@ -616,7 +622,9 @@ class CVsdImageIF {
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 		delete static_cast<CVsdImage*>( pVoid );
-		DebugMsgD( "<<<del js obj CVsdImage:%d:%X\n", m_iCnt--, pVoid );
+		#ifdef DEBUG
+			DebugMsgD( "<<<del js obj CVsdImage:%d:%X\n", m_iCnt--, pVoid );
+		#endif
 		handle.Dispose();
 	}
 	
@@ -744,7 +752,9 @@ class CVsdFontIF {
 		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
 		objectHolder.MakeWeak( obj, Dispose );
 		
-		DebugMsgD( ">>>new js obj CVsdFont:%d:%X\n", ++m_iCnt, obj );
+		#ifdef DEBUG
+			DebugMsgD( ">>>new js obj CVsdFont:%d:%X\n", ++m_iCnt, obj );
+		#endif
 		// コンストラクタは this を返すこと。
 		return thisObject;
 	}
@@ -752,7 +762,9 @@ class CVsdFontIF {
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 		delete static_cast<CVsdFont*>( pVoid );
-		DebugMsgD( "<<<del js obj CVsdFont:%d:%X\n", m_iCnt--, pVoid );
+		#ifdef DEBUG
+			DebugMsgD( "<<<del js obj CVsdFont:%d:%X\n", m_iCnt--, pVoid );
+		#endif
 		handle.Dispose();
 	}
 	

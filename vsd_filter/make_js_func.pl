@@ -303,7 +303,9 @@ $NewObject
 		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
 		objectHolder.MakeWeak( obj, Dispose );
 		
-		DebugMsgD( ">>>new js obj $Class:%d:%X\\n", ++m_iCnt, obj );
+		#ifdef DEBUG
+			DebugMsgD( ">>>new js obj $Class:%d:%X\\n", ++m_iCnt, obj );
+		#endif
 		// コンストラクタは this を返すこと。
 		return thisObject;
 	}
@@ -311,7 +313,9 @@ $NewObject
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 	$IfNotVsd	delete static_cast<$Class*>( pVoid );
-		DebugMsgD( "<<<del js obj $Class:%d:%X\\n", m_iCnt--, pVoid );
+		#ifdef DEBUG
+			DebugMsgD( "<<<del js obj $Class:%d:%X\\n", m_iCnt--, pVoid );
+		#endif
 		handle.Dispose();
 	}
 	

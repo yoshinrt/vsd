@@ -102,3 +102,5 @@ class CVsdImage {
 #define	color_orange	PIXEL_RABY::Argb2Raby( 0x00FF4000 )
 #define	color_gray_a	PIXEL_RABY::Argb2Raby( 0x80404040 )
 #define	color_black_a	PIXEL_RABY::Argb2Raby( 0x40000000 )
+#define	color_green		PIXEL_RABY::Argb2Raby( 0x0000FF00 )
+#define	color_masenta	PIXEL_RABY::Argb2Raby( 0x00FF00FF )
