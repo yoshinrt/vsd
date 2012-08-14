@@ -145,7 +145,7 @@ CVsdFilterAvs::CVsdFilterAvs(
 	if( p = args[ ARGID_STRPARAM_SKINFILE ].AsString( NULL )){
 		SetSkinFile( p );
 	}else{
-		SetSkinFile( "default.js" );
+		SetSkinFile( "standard.js" );
 	}
 }
 

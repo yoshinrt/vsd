@@ -1,8 +1,7 @@
 //*** 初期化処理 ************************************************************
 
 // 使用する画像・フォントの宣言
-var ImgMeter = new Image( Vsd.SkinDir + "meter_bg.png" );
-//var ImgMapBG = new Image( Vsd.SkinDir + "square.png" );
+var ImgMeter = new Image( Vsd.SkinDir + "standard.png" );
 var ImgG     = new Image( ImgMeter );
 
 var FontS = new Font( "Impact", Vsd.Height / 30 );
@@ -17,7 +16,6 @@ var MeterRight = 0;
 var Scale = Vsd.Height / 720;
 if( Scale != 1 ){
 	ImgMeter.Resize( ImgMeter.Width * Scale, ImgMeter.Height * Scale );
-	//ImgMapBG.Resize( ImgMapBG.Width * Scale, ImgMapBG.Height * Scale );
 }
 
 // 座標等を予め計算しておく
@@ -131,7 +129,6 @@ function Draw(){
 	Vsd.DrawGSnake(	MeterGCx, MeterGCy, MeterGR2 / 1.5, 5 * Scale, 2, 0xFF4000, 0x802000 );
 	
 	// 走行軌跡
-	//Vsd.PutImage( 0, 0, ImgMapBG );
 	Vsd.DrawMap(
 		8 * Scale, 8 * Scale, 500 * Scale, 300 * Scale,
 		ALIGN_TOP | ALIGN_LEFT,

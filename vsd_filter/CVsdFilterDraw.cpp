@@ -1250,10 +1250,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 		InitPolygon();
 		
 		// JavaScript 再起動用に削除
-		if( m_Script ){
-			delete m_Script;
-			m_Script = NULL;
-		}
+		if( m_Script ) ReloadScript();
+		
 		// フォントサイズ初期化
 		if( m_pFont ) delete m_pFont;
 		m_pFont = new CVsdFont( DEFAULT_FONT, 18, CVsdFont::ATTR_OUTLINE | CVsdFont::ATTR_NOANTIALIAS );
@@ -1316,7 +1314,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_Script = new CScript( this );
 		m_Script->Initialize();
 		
-		wcscat( wcscpy( szBuf, m_szPluginDirW ), L"initialize.js" );
+		wcscat( wcscpy( szBuf, m_szPluginDirW ), L"_initialize" );
 		
 		if( m_Script->RunFile( szBuf ) == ERR_OK ){
 			LPWSTR p = NULL;

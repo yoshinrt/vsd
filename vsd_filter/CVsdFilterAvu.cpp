@@ -412,8 +412,7 @@ void CVsdFilterAvu::DispErrorMessage( LPCWSTR szMsg ){
 		MessageBoxW( NULL, szMsg, PROG_NAME_J_W, MB_RETRYCANCEL | MB_ICONWARNING )
 		== IDRETRY
 	){
-		delete m_Script;
-		m_Script = NULL;
+		ReloadScript();
 	}
 }
 
@@ -851,9 +850,7 @@ BOOL CVsdFilterAvu::ConfigLoad( const char *szFileName ){
 }
 
 void CVsdFilterAvu::SetSkinName( char *szSkinFile, HWND hwnd ){
-	if( m_Script ) delete m_Script;
-	m_Script = NULL;
-	
+	ReloadScript();
 	SetSkinFile( szSkinFile );
 	
 	// skin 名をダイアログに設定
@@ -1103,6 +1100,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			if( filter->exfunc->dlg_get_load_name( szBuf, FILE_LOG_EXT, NULL )){
 				CVsdFilter::StringNew( g_Vsd->m_szLogFile, szBuf );
 				if( g_Vsd->ReadLog( g_Vsd->m_szLogFile, hwnd )){
+					g_Vsd->ReloadScript();
 					// 設定再描画
 					filter->exfunc->filter_window_update( filter );
 					
@@ -1117,6 +1115,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		  Case ID_BUTT_LOAD_GPS:	// GPS ログロード
 			if( FileOpenDialog( g_Vsd->m_szGPSLogFile, FILE_GPS_EXT )){
 				if( g_Vsd->ReadGPSLog( g_Vsd->m_szGPSLogFile, hwnd )){
+					g_Vsd->ReloadScript();
 					// 設定再描画
 					filter->exfunc->filter_window_update( filter );
 				}

@@ -431,6 +431,13 @@ class CVsdFilter {
 	
 	static HINSTANCE	m_hInst;	// dll handle
 	
+	void ReloadScript( void ){
+		if( m_Script ){
+			delete m_Script;
+			m_Script = NULL;
+		}
+	}
+	
   protected:
 	
 	CScript	*m_Script;
