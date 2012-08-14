@@ -17,8 +17,6 @@ BackImg.Resize( Vsd.Width, 120 );
 //*** メーター描画処理 ******************************************************
 
 function Draw(){
-	//Vsd.DrawRect( 0, 0, 1280, 720, 0xFFFFFF, DRAW_FILL );
-	
 	// 背景
 	//Vsd.DrawRect( 0, 0, Vsd.Width - 1, 120, 0x80006000, DRAW_FILL );
 	Vsd.PutImage( 0, 0, BackImg );

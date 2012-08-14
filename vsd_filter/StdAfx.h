@@ -18,6 +18,7 @@
 #include <string.h>
 #include <string>
 #include <tchar.h>
+#include <direct.h>
 #include <v8.h>
 #include <vector>
 #include <zconf.h>

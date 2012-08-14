@@ -393,7 +393,7 @@ class CVsdFilter {
 	int	GetMaxSpeed( void ){ // !js_var:MaxSpeed
 		return m_CurLog ? m_CurLog->m_iMaxSpeed : 180;
 	}
-	int	GetMaxTachk( void ){ // !js_var:MaxTacho
+	int	GetMaxTacho( void ){ // !js_var:MaxTacho
 		return m_CurLog ? m_CurLog->m_iMaxTacho : 0;
 	}
 	

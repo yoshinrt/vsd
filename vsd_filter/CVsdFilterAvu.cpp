@@ -871,7 +871,7 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 	
 	// str param Ç…èâä˙ílê›íË
 	#define DEF_STR_PARAM( id, var, init, conf_name ) \
-		if( strcmp( var, init ) != 0 ){ \
+		if( var && ( init == NULL || strcmp( var, init ) != 0 )){ \
 			fprintf( fp, "%c \\\n\t" conf_name "=\"%s\"", cSep, var ); \
 			cSep = ','; \
 			uStrParamFlag |= 1 << id; \

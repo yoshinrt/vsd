@@ -49,7 +49,7 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, BOOL bAllParam ){
 	
 	UINT uCnt = GPSLog.size();
 	if( uCnt < 2 ) return 0;			// 2個データがなければ終了
-
+	
 	GPS_LOG_t	GpsLogTmp;
 	GpsLogTmp.SetTime( FLT_MAX );
 	GPSLog.push_back( GpsLogTmp );		// 番犬
@@ -248,9 +248,13 @@ double CVsdLog::GPSLogGetLength(
 	return	sqrt( dy * dy * M * M + pow( dx * N * cos( uy ), 2 ));
 }
 
+#define	getcwd	_getcwd
+#define	chdir	_chdir
+
 int CVsdLog::ReadGPSLog( const char *szFileName ){
 	
 	UINT	uGPSCnt = 0;
+	TCHAR	szCurDir[ MAX_PATH ];
 	TCHAR	szBuf[ BUF_SIZE ];
 	
 	double	dLati, dLati0 = 0;
@@ -266,10 +270,22 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 	
 	std::vector<GPS_LOG_t> GPSLog;
 	
+	getcwd( szCurDir, MAX_PATH );	// カレント dir
+	
+	// マルチファイルの場合，1個目は dir めいなのでそこに cd
+	char const *p;
+	if( p = strchr( szFileName, '/' )){
+		strncpy( szBuf, szFileName, p - szFileName );
+		*( szBuf + ( p - szFileName )) = '\0';
+		chdir( szBuf );
+		
+		szFileName = p + 1;
+	}
+	
 	while( *szFileName ){
 		
 		// ファイル名を / で分解
-		char const *p = szFileName;
+		p = szFileName;
 		if( !( p = strchr( szFileName, '/' ))) p = strchr( szFileName, '\0' );
 		strncpy( szBuf, szFileName, p - szFileName );
 		*( szBuf + ( p - szFileName )) = '\0';
@@ -343,7 +359,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 							GPSLog[ uGPSCnt - uSameCnt + u ].SetTime(
 								( GpsLogTmp.Time() - GPSLog[ uGPSCnt - uSameCnt ].Time())
 								/ uSameCnt * u
-								);
+							);
 						}
 						uSameCnt = 0;
 					}
@@ -514,6 +530,8 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 		
 		gzclose( fp );
 	}
+	
+	chdir( szCurDir );	// pwd を元に戻す
 	
 	/************************************************************************/
 	

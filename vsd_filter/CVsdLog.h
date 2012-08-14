@@ -11,14 +11,6 @@
 
 /*** macros *****************************************************************/
 
-#define DeleteIfZero( v ) if(( v ) && !( v )->m_iCnt ){ delete v; v = NULL; }
-
-#ifdef GPS_ONLY
-	#define INVERT_G	(-1)
-#else
-	#define INVERT_G	1
-#endif
-
 #define TIME_NONE	(( int )0x80000000 )
 
 /*** Lap Time ***************************************************************/

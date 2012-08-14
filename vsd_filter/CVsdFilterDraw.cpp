@@ -28,7 +28,6 @@
 #define SPRINTF_BUF		128
 
 #define INVALID_POS_I	0x7FFFFFFF
-#define MAX_LINE_LEN	2000
 
 #define LineTrace		m_piParamT[ TRACK_LineTrace ]
 #define DispLap			m_piParamC[ CHECK_LAP ]
@@ -44,8 +43,10 @@
 
 #ifdef GPS_ONLY
 	#define GPSPriority		FALSE
+	#define INVERT_G		(-1)
 #else
 	#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
+	#define INVERT_G		1
 #endif
 
 #define DEFAULT_FONT	"ＭＳ ゴシック"
@@ -642,13 +643,7 @@ void CVsdFilter::DrawGraph(
 	CVsdFont &Font,
 	UINT uFlag
 ){
-	if(
-		#ifdef GPS_ONLY
-			DispGraph
-		#else
-			DispGraph || DispSyncInfo
-		#endif
-	){
+	if( DispGraph || DispSyncInfo ){
 		SelectLogVsd;
 		if( !m_CurLog ) return;
 		
@@ -750,6 +745,8 @@ void CVsdFilter::DrawGSnake(
 	int	i;
 	
 	SelectLogVsd;
+	
+	iR = iR * INVERT_G;
 	
 	if( m_CurLog && m_CurLog->IsDataExist( m_CurLog->m_iLogNum )){
 		if( GSnakeLen > 0 ){
@@ -913,6 +910,7 @@ void CVsdFilter::DrawMap(
 		
 		DrawLine( xs1, ys1, xs2, ys2, color_blue, 0 );
 	}
+	SelectLogVsd;
 }
 
 /*** 針描画 *****************************************************************/
@@ -1108,6 +1106,7 @@ void CVsdFilter::DrawLapTime(
 		m_iTextPosX, m_iTextPosY, uAlign,
 		3, Font, uColor, uColorBest, uColorOutline
 	);
+	SelectLogVsd;
 }
 
 /*** ラップタイム履歴表示 ***************************************************/
@@ -1166,6 +1165,7 @@ void CVsdFilter::DrawLapTimeLog(
 			);
 		}
 	}
+	SelectLogVsd;
 }
 
 /*** メーターパネル目盛り ***************************************************/

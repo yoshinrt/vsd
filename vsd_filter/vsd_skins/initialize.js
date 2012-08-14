@@ -1,3 +1,5 @@
+// ★これはスキンではありません
+
 Vsd = new __VSD_System__();
 
 DRAW_FILL			= 1;

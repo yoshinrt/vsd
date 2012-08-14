@@ -1,14 +1,14 @@
-//*** ‰Šú‰»ˆ— ************************************************************
+//*** åˆæœŸåŒ–å‡¦ç† ************************************************************
 
-// g—p‚·‚é‰æ‘œEƒtƒHƒ“ƒg‚ÌéŒ¾
+// ä½¿ç”¨ã™ã‚‹ç”»åƒãƒ»ãƒ•ã‚©ãƒ³ãƒˆã®å®£è¨€
 var FontS = new Font( "Impact", Vsd.Height / 30, FONT_FIXED );
 var FontM = new Font( "Impact", Vsd.Height / 20, FONT_FIXED );
 var FontM_Outline = new Font( "Impact", Vsd.Height / 20, FONT_OUTLINE | FONT_FIXED );
 
-// ƒ[ƒ^[‚ğ‰E‚É•\¦‚·‚éê‡ 1‚Éİ’è
+// ãƒ¡ãƒ¼ã‚¿ãƒ¼ã‚’å³ã«è¡¨ç¤ºã™ã‚‹å ´åˆ 1ã«è¨­å®š
 var MeterRight = 1;
 
-// “®‰æƒTƒCƒY‚É‰‚¶‚Äƒ[ƒ^[‰æ‘œ‚ğƒŠƒTƒCƒY
+// å‹•ç”»ã‚µã‚¤ã‚ºã«å¿œã˜ã¦ãƒ¡ãƒ¼ã‚¿ãƒ¼ç”»åƒã‚’ãƒªã‚µã‚¤ã‚º
 var Scale = Vsd.Height / 720;
 
 var MeterR = 150 * Scale;
@@ -17,21 +17,21 @@ var MeterY	= Vsd.Height - MeterR * 2;
 var MeterCx = MeterX + MeterR;
 var MeterCy = MeterY + MeterR;
 
-// ƒXƒs[ƒhƒOƒ‰ƒtƒTƒCƒYŒvZ
+// ã‚¹ãƒ”ãƒ¼ãƒ‰ã‚°ãƒ©ãƒ•ã‚µã‚¤ã‚ºè¨ˆç®—
 var SpdX1 = MeterRight ? 8 : 300 * Scale * 1.1;
 var SpdX2 = MeterRight ? Vsd.Width - 300 * Scale * 1.1 : Vsd.Width - 8;
 var SpdY1 = Vsd.Height - 300 * Scale;
 var SpdY2 = Vsd.Height - 8;
 
-// ƒXƒs[ƒhƒ[ƒ^—pÅ‚‘¬ŒvZ
+// ã‚¹ãƒ”ãƒ¼ãƒ‰ãƒ¡ãƒ¼ã‚¿ç”¨æœ€é«˜é€Ÿè¨ˆç®—
 var MaxSpeed = Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
 
-//*** ƒ[ƒ^[•`‰æˆ— ******************************************************
+//*** ãƒ¡ãƒ¼ã‚¿ãƒ¼æç”»å‡¦ç† ******************************************************
 
 function Draw(){
 	Vsd.DrawCircle( MeterCx, MeterCy, MeterR, 0x80404040, DRAW_FILL );
 	
-	// ƒ[ƒ^[–Ú·‚è•`‰æ
+	// ãƒ¡ãƒ¼ã‚¿ãƒ¼ç›®ç››ã‚Šæç”»
 	Vsd.DrawMeterScale(
 		MeterCx, MeterCy, MeterR,
 		MeterR * 0.1,  2, 0xFFFFFF,
@@ -53,20 +53,20 @@ function Draw(){
 		Speed, FontM, 0xFFFFFF
 	);
 	
-	// G ”’l
+	// G æ•°å€¤
 	var Accel = Math.sqrt( Vsd.Gx * Vsd.Gx + Vsd.Gy * Vsd.Gy ).toFixed( 1 ) + "G";
 	Vsd.DrawText(
 		MeterCx - FontS.GetTextWidth( Accel ) / 2, MeterCy + MeterR / 2 - FontS.Height,
 		Accel, FontS, 0xFFFFFF
 	);
 	
-	// ƒXƒs[ƒhƒ[ƒ^[j
+	// ã‚¹ãƒ”ãƒ¼ãƒ‰ãƒ¡ãƒ¼ã‚¿ãƒ¼é‡
 	Vsd.DrawNeedle(
 		MeterCx, MeterCy, MeterR * 0.95, 0,
 		135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
 	);
 	
-	// ‘–s‹OÕ
+	// èµ°è¡Œè»Œè·¡
 	//Vsd.PutImage( 0, 0, ImgMapBG );
 	Vsd.DrawMap(
 		8 * Scale, 8 * Scale, 500 * Scale, 300 * Scale,
@@ -74,9 +74,9 @@ function Draw(){
 		2, 5, 0xFF0000, 0xFFFF00, 0x00FF00, 0xFF0000
 	);
 	
-	// ƒ‰ƒbƒvƒ^ƒCƒ€
+	// ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ 
 	Vsd.DrawLapTime( Vsd.Width - 1, 0, ALIGN_TOP | ALIGN_RIGHT, FontM_Outline );
 	
-	// ƒXƒs[ƒhƒOƒ‰ƒt
+	// ã‚¹ãƒ”ãƒ¼ãƒ‰ã‚°ãƒ©ãƒ•
 	Vsd.DrawGraph( SpdX1, SpdY1, SpdX2, SpdY2, FontM, GRAPH_SPEED | GRAPH_GX | GRAPH_GY | GRAPH_TILE );
 }
