@@ -11,6 +11,7 @@
 
 #define PROG_NAME		"VSDFilter"
 #define PROG_NAME_J		"VSDメーター合成"
+#define PROG_NAME_J_W	L"VSDメーター合成"
 #define PROG_NAME_LONG	"`VSDFilter' vehicle data logger overlay plugin"
 #define PROG_VERSION	"v1.10beta1"
 
@@ -249,7 +250,7 @@ class CVsdFilter {
 	}
 	int MaxLapCnt( void ){ return m_LapLog->m_Lap[ m_LapLog->m_iLapNum - 1 ].uLap; } // !js_var:MaxLapCnt
 	
-	void DispErrorMessage( LPCWSTR szMsg );
+	virtual void DispErrorMessage( LPCWSTR szMsg ) = 0;
 	
 	enum {
 		IMG_FILL	= ( 1 << 0 ),
@@ -331,6 +332,37 @@ class CVsdFilter {
 			-1,					// マップ元文字列のバイト数
 			szDst,				// マップ先ワイド文字列を入れるバッファのアドレス
 			iLen				// バッファのサイズ
+		);
+		
+		return szDst;
+	}
+	
+	static char *StringNew( char *&szDst, LPCWSTR &szSrc ){
+		if( szDst ) delete [] szDst;
+		
+		if( szSrc == NULL || *szSrc == '\0' ){
+			return szDst = NULL;
+		}
+		// SJIS->WCHAR 変換
+		int iLen = WideCharToMultiByte(
+			CP_ACP,				// コードページ
+			0,					// 文字の種類を指定するフラグ
+			szSrc,				// マップ元文字列のアドレス
+			-1,					// マップ元文字列のバイト数
+			NULL,				// マップ先ワイド文字列を入れるバッファのアドレス
+			0,					// バッファのサイズ
+			NULL, NULL
+		);
+		szDst = new char[ iLen ];
+		
+		WideCharToMultiByte(
+			CP_ACP,				// コードページ
+			0,					// 文字の種類を指定するフラグ
+			szSrc,				// マップ元文字列のアドレス
+			-1,					// マップ元文字列のバイト数
+			szDst,				// マップ先ワイド文字列を入れるバッファのアドレス
+			iLen,				// バッファのサイズ
+			NULL, NULL
 		);
 		
 		return szDst;

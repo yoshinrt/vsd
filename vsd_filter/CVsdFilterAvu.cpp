@@ -255,6 +255,8 @@ class CVsdFilterAvu : public CVsdFilter {
 	virtual void SetFrameMark( int iFrame );
 	virtual int  GetFrameMark( int iFrame );
 	
+	void DispErrorMessage( LPCWSTR szMsg );
+	
 	// 1スライダ調整用パラメータ
 	int	m_iAdjustPointNum;
 	int	m_iAdjustPointVid[ 2 ];
@@ -401,6 +403,18 @@ UINT CVsdFilterAvu::PutImage( int x, int y, CVsdImage &img ){
 	}
 	
 	return ERR_OK;
+}
+
+/*** エラーメッセージ *******************************************************/
+
+void CVsdFilterAvu::DispErrorMessage( LPCWSTR szMsg ){
+	if(
+		MessageBoxW( NULL, szMsg, PROG_NAME_J_W, MB_RETRYCANCEL | MB_ICONWARNING )
+		== IDRETRY
+	){
+		delete m_Script;
+		m_Script = NULL;
+	}
 }
 
 /*** フレームをマーク *******************************************************/

@@ -1233,24 +1233,6 @@ void CVsdFilter::DrawMeterScale(
 	}
 }
 
-/*** エラーメッセージ *******************************************************/
-
-void CVsdFilter::DispErrorMessage( LPCWSTR szMsg ){
-	DrawRect( 0, 0, GetWidth() - 1, GetHeight() - 1, color_black_a, IMG_FILL );
-	
-	int x = 0; int y = 0;
-	
-	for( ; *szMsg; ++szMsg ){
-		if( *szMsg == '\n' ){
-			// 改行
-			x = 0;
-			y += m_pFont->GetHeight();
-		}else{
-			x += DrawFont( x, y, *szMsg, *m_pFont, color_red );
-		}
-	}
-}
-
 /*** メーター等描画 *********************************************************/
 
 BOOL CVsdFilter::DrawVSD( void ){
@@ -1332,19 +1314,24 @@ BOOL CVsdFilter::DrawVSD( void ){
 	DebugMsgD( ":DrawVSD():Running script... %X\n", GetCurrentThreadId());
 	if( !m_Script && m_szSkinFile ){
 		m_Script = new CScript( this );
+		m_Script->Initialize();
 		
 		wcscat( wcscpy( szBuf, m_szPluginDirW ), L"initialize.js" );
-		m_Script->Initialize();
+		
 		if( m_Script->RunFile( szBuf ) == ERR_OK ){
 			LPWSTR p = NULL;
 			StringNew( p, m_szSkinFile );
 			m_Script->RunFile( p );
 			delete [] p;
 		}
+		
+		if( m_Script->m_uError ){
+			DispErrorMessage( m_Script->GetErrorMessage());
+		}
 	}
 	
-	if( m_Script ){
-		if( !m_Script->m_uError ) m_Script->Run( L"Draw" );
+	if( m_Script && !m_Script->m_uError ){
+		m_Script->Run( L"Draw" );
 		if( m_Script->m_uError ) DispErrorMessage( m_Script->GetErrorMessage());
 	}else{
 		DrawText( 0, 0, L"Skin not loaded.", *m_pFont, color_white );

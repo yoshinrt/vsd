@@ -70,6 +70,8 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	virtual void SetFrameMark( int iFrame );
 	virtual int  GetFrameMark( int iFrame );
 	
+	void DispErrorMessage( LPCWSTR szMsg );
+	
 	// パラメータ
 	int	m_iWidth, m_iHeight, m_iFrameCnt, m_iFrameMax;
 	int m_iBytesPerLine;
@@ -78,6 +80,7 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	
 	BYTE	*m_pPlane;
 	const char *m_szMark;
+	IScriptEnvironment* m_env;
 };
 
 /*** コンストラクタ・デストラクタ *******************************************/
@@ -273,6 +276,14 @@ UINT CVsdFilterAvs::PutImage(
 	return ERR_OK;
 }
 
+/*** エラーメッセージ *******************************************************/
+
+void CVsdFilterAvs::DispErrorMessage( LPCWSTR szMsg ){
+	char *p = NULL;
+	m_env->ThrowError( "%s", StringNew( p, szMsg ));
+	delete [] p;
+}
+
 /*** フレームをマーク *******************************************************/
 
 void CVsdFilterAvs::SetFrameMark( int iFrame ){
@@ -281,11 +292,8 @@ void CVsdFilterAvs::SetFrameMark( int iFrame ){
 };
 
 int CVsdFilterAvs::GetFrameMark( int iFrame ){
-	
 	int	i;
-	
 	for( i = 0; m_piMark[ i ] < iFrame && m_piMark[ i ] >= 0; ++i );
-	
 	return m_piMark[ i ];
 }
 
@@ -299,6 +307,7 @@ PVideoFrame __stdcall CVsdFilterAvs::GetFrame( int n, IScriptEnvironment* env ){
 	m_iWidth			= src->GetRowSize()>>1; //case of YUY2
 	m_iHeight			= src->GetHeight();
 	m_iFrameCnt			= n;
+	m_env				= env;
 	
 	m_pPlane			= src->GetWritePtr();
 	
