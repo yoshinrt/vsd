@@ -3,16 +3,16 @@
 var Scale = Vsd.Height / 720;
 
 // 使用する画像・フォントの宣言
-var FontS = new Font( "Arial Black", 20 * Scale, FONT_NOANTIALIAS );
-var FontM = new Font( "Arial Black", 44 * Scale, FONT_NOANTIALIAS );
-var FontL = new Font( "Arial Black", 90 * Scale, FONT_NOANTIALIAS );
+var FontS = new Font( "Arial Black", 20 * Scale );
+var FontM = new Font( "Arial Black", 44 * Scale );
+var FontL = new Font( "Arial Black", 90 * Scale );
 
 var GCx = 540 * Scale;
 var GCy = 60 * Scale;
 var GR  = 55 * Scale;
 
 var BackImg = new Image( Vsd.SkinDir + "compact.png" );
-BackImg.Resize( Vsd.Width, 120 );
+BackImg.Resize( Vsd.Width, 120 * Scale );
 
 //*** メーター描画処理 ******************************************************
 

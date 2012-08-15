@@ -161,7 +161,7 @@ FILTER_DLL filter = {
 								//	FILTER_FLAG_IMPORT				: インポートメニューを作ります
 								//	FILTER_FLAG_EXPORT				: エクスポートメニューを作ります
 	0,0,						//	設定ウインドウのサイズ (FILTER_FLAG_WINDOW_SIZEが立っている時に有効)
-	PROG_NAME,					//	フィルタの名前
+	PROG_NAME_J,				//	フィルタの名前
 	TRACK_N,					//	トラックバーの数 (0なら名前初期値等もNULLでよい)
 	track_name,					//	トラックバーの名前郡へのポインタ
 	track_default,				//	トラックバーの初期値郡へのポインタ

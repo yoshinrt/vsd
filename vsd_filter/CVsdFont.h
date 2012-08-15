@@ -14,18 +14,19 @@
 class CFontGlyph {
   public:
 	BYTE	*pBuf;
-	BYTE	*pBufOutline;
-	int		iW, iH;
-	int		iOrgY;
-	int		iCellIncX;
+	//BYTE	*pBufOutline;
+	short	iW, iH;
+	short	iOrgY;
+	short	iCellIncX;
 	
 	CFontGlyph(){
-		pBuf = pBufOutline = NULL;
+		pBuf = NULL;
+		//pBufOutline = NULL;
 	}
 	
 	~CFontGlyph(){
 		if( pBuf        ) delete [] pBuf;
-		if( pBufOutline ) delete [] pBufOutline;
+		//if( pBufOutline ) delete [] pBufOutline;
 	}
 };
 

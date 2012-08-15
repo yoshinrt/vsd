@@ -54,13 +54,13 @@ if( Vsd.MaxTacho > 0 ){
 //*** メーター描画処理 ******************************************************
 
 function Draw(){
-	// タコメーター画像描画
+	// メーター画像描画
 	Vsd.PutImage( MeterX, MeterY, ImgMeter );
 	
 	if( Vsd.MaxTacho > 0 ){
 		var MeterColor = Vsd.Tacho > 6500 && ( Vsd.FrameCnt & 0x2 ) ? 0xFF0000 : 0xFFFFFF;
 		
-		// メーター目盛り描画
+		// タコメーター目盛り描画
 		Vsd.DrawMeterScale(
 			MeterCx, MeterCy, MeterR2,
 			MeterR2 * 0.1,  2, MeterColor,
@@ -84,11 +84,10 @@ function Draw(){
 	}
 	
 	// スピード数値表示
-	var Speed = ~~Vsd.Speed;
 	Vsd.DrawTextAlign(
 		MeterCx, MeterCy + MeterR * 0.25, 
 		ALIGN_HCENTER | ALIGN_VCENTER,
-		Speed, FontL, 0xFFFFFF
+		~~Vsd.Speed, FontL, 0xFFFFFF
 	);
 	
 	Vsd.DrawTextAlign(
