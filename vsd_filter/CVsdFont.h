@@ -20,7 +20,8 @@ class CFontGlyph {
 	short	iCellIncX;
 	
 	CFontGlyph(){
-		pBuf = NULL;
+		pBuf		= NULL;
+		iCellIncX	= -1;
 		//pBufOutline = NULL;
 	}
 	
@@ -42,7 +43,7 @@ class CVsdFont {
 	void CreateFont( void );
 	
 	static BOOL ExistFont( WCHAR c ){
-		return ( c >= 0x80 ) || FONT_CHAR_FIRST <= c && c <= FONT_CHAR_LAST;
+		return FONT_CHAR_FIRST <= c;
 	}
 	BOOL IsOutline( void ){ return m_uAttr & ATTR_OUTLINE; }
 	BOOL IsFixed( void ){ return m_uAttr & ATTR_FIXED; }
@@ -50,7 +51,10 @@ class CVsdFont {
 	
 	CFontGlyph& FontGlyph( WCHAR c ){
 		// ASCII のグリフ
-		if( c < 0x80 ) return m_FontGlyph[ c - FONT_CHAR_FIRST ];
+		if( c <= FONT_CHAR_LAST ){
+			CFontGlyph *p = &m_FontGlyph[ c - FONT_CHAR_FIRST ];
+			return p->iCellIncX >= 0 ? *p : CreateFontGlyph( c );
+		}
 		
 		// 漢字のグリフ
 		std::map<WCHAR, CFontGlyph *>::iterator itr;
@@ -59,7 +63,7 @@ class CVsdFont {
 		}
 		
 		// 見つからなかったので，作成
-		return CreateFontGlyphK( c );
+		return CreateFontGlyph( c );
 	}
 	
 	static const UINT ATTR_BOLD			= 1 << 0;
@@ -87,7 +91,7 @@ class CVsdFont {
 	}
 	
   private:
-	CFontGlyph& CreateFontGlyphK( WCHAR c );
+	CFontGlyph& CreateFontGlyph( WCHAR c );
 	
 	static const int FONT_CHAR_FIRST = '!';
 	static const int FONT_CHAR_LAST	 = '~';

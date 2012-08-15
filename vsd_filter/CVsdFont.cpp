@@ -87,29 +87,8 @@ void CVsdFont::CreateFont( void ){
 	GetGlyphOutlineW( hdc, ' ', iBitmapDepth, &gm, 0, NULL, &mat );
 	m_iFontW_Space = gm.gmCellIncX;
 	
-	for( int i = FONT_CHAR_FIRST; i <= FONT_CHAR_LAST; ++i ){
-		// 必要配列サイズ取得
-		int iSize = GetGlyphOutlineW( hdc, i, iBitmapDepth, &gm, 0, NULL, &mat );
-		
-		if( iSize > 0 ){
-			FontGlyph( i ).pBuf = new BYTE[ iSize ];
-			
-			// フォントデータ取得
-			GetGlyphOutlineW( hdc, i, iBitmapDepth, &gm, iSize, FontGlyph( i ).pBuf, &mat );
-			FontGlyph( i ).iW			= gm.gmBlackBoxX;
-			FontGlyph( i ).iH			= gm.gmBlackBoxY;
-			FontGlyph( i ).iOrgY		= tm.tmAscent - gm.gmptGlyphOrigin.y;
-			FontGlyph( i ).iCellIncX	= gm.gmCellIncX;
-		}else{
-			FontGlyph( i ).pBuf			= NULL;
-			FontGlyph( i ).iW			=
-			FontGlyph( i ).iH			=
-			FontGlyph( i ).iOrgY		= 0;
-			FontGlyph( i ).iCellIncX	= m_iFontW_Space;
-		}
-	}
-	
-	m_iFontW = FontGlyph( 'B' ).iCellIncX;	// 'W' が一番幅が広い
+	GetGlyphOutlineW( hdc, 'B', iBitmapDepth, &gm, 0, NULL, &mat );
+	m_iFontW = gm.gmCellIncX;	// 'W' が一番幅が広い
 	m_iFontH = tm.tmHeight;
 	
 	SelectObject( hdc, hFontOld );
@@ -118,7 +97,7 @@ void CVsdFont::CreateFont( void ){
 }
 
 // 漢字 glyph 作成
-CFontGlyph& CVsdFont::CreateFontGlyphK( WCHAR c ){
+CFontGlyph& CVsdFont::CreateFontGlyph( WCHAR c ){
 	
 	// DC, FONT ハンドル取得
 	HDC		hdc			= GetDC( NULL );
@@ -135,7 +114,12 @@ CFontGlyph& CVsdFont::CreateFontGlyphK( WCHAR c ){
 	// 必要配列サイズ取得
 	int iSize = GetGlyphOutlineW( hdc, c, iBitmapDepth, &gm, 0, NULL, &mat );
 	
-	CFontGlyph	*pGlyph = new CFontGlyph;
+	CFontGlyph	*pGlyph;
+	if( c <= FONT_CHAR_LAST ){
+		pGlyph = &m_FontGlyph[ c - FONT_CHAR_FIRST ];
+	}else{
+		pGlyph = new CFontGlyph;
+	}
 	
 	if( iSize > 0 ){
 		pGlyph->pBuf = new BYTE[ iSize ];
@@ -144,8 +128,8 @@ CFontGlyph& CVsdFont::CreateFontGlyphK( WCHAR c ){
 		GetGlyphOutlineW( hdc, c, iBitmapDepth, &gm, iSize, pGlyph->pBuf, &mat );
 		pGlyph->iW			= gm.gmBlackBoxX;
 		pGlyph->iH			= gm.gmBlackBoxY;
-		pGlyph->iOrgY		= tm.tmAscent - gm.gmptGlyphOrigin.y;
-		pGlyph->iCellIncX	= gm.gmCellIncX;
+		pGlyph->iOrgY		= ( short )( tm.tmAscent - gm.gmptGlyphOrigin.y );
+		pGlyph->iCellIncX	= ( short )gm.gmCellIncX;
 	}else{
 		pGlyph->pBuf		= NULL;
 		pGlyph->iW			=
@@ -154,7 +138,7 @@ CFontGlyph& CVsdFont::CreateFontGlyphK( WCHAR c ){
 		pGlyph->iCellIncX	= m_iFontW_Space;
 	}
 	
-	m_FontGlyphK[ c ] = pGlyph;
+	if( c > FONT_CHAR_LAST ) m_FontGlyphK[ c ] = pGlyph;
 	
 	SelectObject( hdc, hFontOld );
 	DeleteObject( hFont );
