@@ -57,23 +57,16 @@ class CVsdImage {
 	UINT Load( LPCWSTR szFileName );
 	
 	inline UINT GetPixel0( int x, int y ){
-		return m_pBuf[ x + y * m_iWidth ].raby;
+		return m_pBuf[ ( x - m_iOffsX ) + ( y - m_iOffsY ) * m_iRawWidth ].raby;
 	}
 	
 	inline UINT GetPixel( int x, int y ){
-		if( 0 <= x && x < m_iWidth && 0 <= y && y < m_iHeight ){
+		int x0 = x - m_iOffsX;
+		int y0 = y - m_iOffsY;
+		
+		if( 0 <= x0 && x0 < m_iRawWidth && 0 <= y0 && y0 < m_iRawHeight ){
 			return GetPixel0( x, y );
 		}
-		
-		/*
-		if( x < 0 )	x = 0;
-		else if( x >= m_iWidth ) x = m_iWidth - 1;
-		
-		if( y < 0 ) y = 0;
-		else if( y >= m_iHeight ) y = m_iHeight - 1;
-		
-		return GetPixel0( x, y ) | RABY_TRANSPARENT;
-		*/
 		return RABY_TRANSPARENT;
 	}
 	
@@ -83,10 +76,15 @@ class CVsdImage {
 	UINT Resampling( int x, double y0, double y1 );
 	UINT Resize( int iWidth, int iHeight );			// !js_func
 	UINT Rotate( int cx, int cy, double dAngle );	// !js_func
+	UINT Clip( int x1, int y1, int x2, int y2 );
 	
 	int m_iWidth;	// !js_var:Width
 	int m_iHeight;	// !js_var:Height
 	
+	int m_iRawWidth;
+	int m_iRawHeight;
+	int m_iOffsX;
+	int m_iOffsY;
   private:
 	PIXEL_RABY	*m_pBuf;
 };

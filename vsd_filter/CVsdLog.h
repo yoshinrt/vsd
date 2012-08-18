@@ -62,6 +62,7 @@ static const float fNaN = sqrt( -1.0f );
 class VSD_LOG_t {
   public:
 	VSD_LOG_t(){
+		fX0 = fY0 =
 		fX = fY = fNaN;
 	}
 	~VSD_LOG_t(){}

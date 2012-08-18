@@ -59,7 +59,7 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	void         PutPixel( int iIndex, const PIXEL_YCA_ARG yc, int iAlfa );
 	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
 	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
-	virtual UINT PutImage( int x, int y, CVsdImage &img );
+	virtual UINT PutImage( int x, int y, CVsdImage &img, UINT uAlign );
 	
 	virtual int	GetWidth( void )	{ return m_iWidth; }
 	virtual int	GetHeight( void )	{ return m_iHeight; }
@@ -227,12 +227,24 @@ inline void CVsdFilterAvs::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG
 /*** PutImage ***************************************************************/
 
 UINT CVsdFilterAvs::PutImage(
-	int x, int y, CVsdImage &img
+	int x, int y, CVsdImage &img, UINT uAlign
 ){
-	int xst = ( x >= 0 ) ? 0 : -x;
-	int xed = x + img.m_iWidth <= GetWidth() ? img.m_iWidth : GetWidth() - x;
-	int yst = ( y >= 0 ) ? 0 : -y;
-	int yed = y + img.m_iHeight <= GetHeight() ? img.m_iHeight : GetHeight() - y;
+	if( uAlign & ALIGN_HCENTER ){
+		x -= img.m_iWidth / 2;
+	}else if( uAlign & ALIGN_RIGHT ){
+		x -= img.m_iWidth;
+	}
+	
+	if( uAlign & ALIGN_VCENTER ){
+		y -= img.m_iHeight / 2;
+	}else if( uAlign & ALIGN_BOTTOM ){
+		y -= img.m_iHeight;
+	}
+	
+	int xst = ( -x <= img.m_iOffsX ) ? img.m_iOffsX : -x;
+	int yst = ( -y <= img.m_iOffsY ) ? img.m_iOffsY : -y;
+	int xed = x + img.m_iOffsX + img.m_iRawWidth  <= GetWidth()  ? img.m_iOffsX + img.m_iRawWidth  : GetWidth()  - x;
+	int yed = y + img.m_iOffsY + img.m_iRawHeight <= GetHeight() ? img.m_iOffsY + img.m_iRawHeight : GetHeight() - y;
 	
 	#ifdef _OPENMP
 		#pragma omp parallel for

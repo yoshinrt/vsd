@@ -21,13 +21,14 @@ CVsdImage::CVsdImage(){
 	
 	m_iWidth  = 0;	// ‰æ‘œ‚Ì•
 	m_iHeight = 0;	//  V  ‚‚³
+	m_iOffsX = m_iOffsY = 0;
 }
 
 CVsdImage::CVsdImage( CVsdImage &Org ){
 	DebugMsgD( "new CVsdImage %X\n", this );
 	*this = Org;
-	m_pBuf = new PIXEL_RABY[ m_iWidth * m_iHeight ];
-	memcpy( m_pBuf, Org.m_pBuf, sizeof( PIXEL_RABY ) * m_iWidth * m_iHeight );
+	m_pBuf = new PIXEL_RABY[ m_iRawWidth * m_iRawHeight ];
+	memcpy( m_pBuf, Org.m_pBuf, sizeof( PIXEL_RABY ) * m_iRawWidth * m_iRawHeight );
 }
 
 CVsdImage::~CVsdImage(){
@@ -72,8 +73,17 @@ UINT CVsdImage::Load( LPCWSTR szFileName ){
 	// ‰æ‘œ‚Ì“Ç‚Ýž‚Ý
 	//-------------------------------------------------------------
 	UINT	result = ERR_OK;
-	m_iWidth  = 0;	// ‰æ‘œ‚Ì•
-	m_iHeight = 0;	//  V  ‚‚³
+	m_iWidth =	// ‰æ‘œ‚Ì•
+	m_iHeight =	//  V  ‚‚³
+	m_iRawWidth =
+	m_iRawHeight = 0;
+	
+	int	iMinX = MAXINT;
+	int iMinY = MAXINT;
+	int iMaxX = MININT;
+	int iMaxY = MININT;
+	
+	UINT	raby;
 	
 	//--- ‰æ‘œƒtƒ@ƒCƒ‹‚ðŠJ‚­
 	//  y‘Î‰ž‰æ‘œŒ`Ž®z  BMP, JPEG, PNG, GIF, TIFF, WMF, EMF
@@ -95,12 +105,19 @@ UINT CVsdImage::Load( LPCWSTR szFileName ){
 					Gdiplus::Color srcColor;
 					pBitmap->GetPixel( x, y, &srcColor );
 					
-					m_pBuf[ x + y * m_iWidth ].raby = PIXEL_RABY::Argb2Raby(
+					m_pBuf[ x + y * m_iWidth ].raby = raby = PIXEL_RABY::Argb2Raby(
 						255 - srcColor.GetA(),
 						srcColor.GetR(),
 						srcColor.GetG(),
 						srcColor.GetB()
 					);
+					
+					if( raby != RABY_TRANSPARENT ){
+						if     ( iMinX > x ) iMinX = x;
+						else if( iMaxX < x ) iMaxX = x;
+						if     ( iMinY > y ) iMinY = y;
+						else if( iMaxY < y ) iMaxY = y;
+					}
 				}
 			}
 		}
@@ -112,6 +129,8 @@ UINT CVsdImage::Load( LPCWSTR szFileName ){
 	
 	//---- GDI+‚Ì‰ð•ú
 	Gdiplus::GdiplusShutdown( gdiplusToken );
+	
+	Clip( iMinX, iMinY, iMaxX, iMaxY );
 	
 	return result;
 }
@@ -183,7 +202,7 @@ UINT CVsdImage::Resampling( double x0, double x1, int y ){
 	ir = ia = ib = iy = 0;
 	
 	for( int i = ( int )ceil( x0 ); i < ( int )ceil( x1 ); ++i ){
-		UINT u = GetPixel0( i, y );
+		UINT u = GetPixel( i, y );
 		ir += ( u >> 24 )       ;
 		ia += ( u >> 16 ) & 0xFF;
 		ib += ( u >>  8 ) & 0xFF;
@@ -200,7 +219,7 @@ UINT CVsdImage::Resampling( double x0, double x1, int y ){
 	// æ“ª‚Ì”¼’[•”•ª
 	alfa = ceil( x0 ) - x0;
 	if( alfa > 0 ){
-		UINT u = GetPixel0(( int )x0, y );
+		UINT u = GetPixel(( int )x0, y );
 		a += (( u >> 24 )        ) * alfa;
 		r += (( u >> 16 ) & 0xFF ) * alfa;
 		g += (( u >>  8 ) & 0xFF ) * alfa;
@@ -212,7 +231,7 @@ UINT CVsdImage::Resampling( double x0, double x1, int y ){
 	// ÅŒã‚Ì”¼’[•”•ª
 	alfa = x1 - floor( x1 );
 	if( alfa > 0 ){
-		UINT u = GetPixel0(( int )x1, y );
+		UINT u = GetPixel(( int )x1, y );
 		a += (( u >> 24 )        ) * alfa;
 		r += (( u >> 16 ) & 0xFF ) * alfa;
 		g += (( u >>  8 ) & 0xFF ) * alfa;
@@ -235,7 +254,7 @@ UINT CVsdImage::Resampling( int x, double y0, double y1 ){
 	ir = ia = ib = iy = 0;
 	
 	for( int i = ( int )ceil( y0 ); i < ( int )ceil( y1 ); ++i ){
-		UINT u = GetPixel0( x, i );
+		UINT u = GetPixel( x, i );
 		ir += ( u >> 24 )       ;
 		ia += ( u >> 16 ) & 0xFF;
 		ib += ( u >>  8 ) & 0xFF;
@@ -252,7 +271,7 @@ UINT CVsdImage::Resampling( int x, double y0, double y1 ){
 	// æ“ª‚Ì”¼’[•”•ª
 	alfa = ceil( y0 ) - y0;
 	if( alfa > 0 ){
-		UINT u = GetPixel0( x, ( int )y0 );
+		UINT u = GetPixel( x, ( int )y0 );
 		r += (( u >> 24 )        ) * alfa;
 		a += (( u >> 16 ) & 0xFF ) * alfa;
 		b += (( u >>  8 ) & 0xFF ) * alfa;
@@ -264,7 +283,7 @@ UINT CVsdImage::Resampling( int x, double y0, double y1 ){
 	// ÅŒã‚Ì”¼’[•”•ª
 	alfa = y1 - floor( y1 );
 	if( alfa > 0 ){
-		UINT u = GetPixel0( x, ( int )y1 );
+		UINT u = GetPixel( x, ( int )y1 );
 		r += (( u >> 24 )        ) * alfa;
 		a += (( u >> 16 ) & 0xFF ) * alfa;
 		b += (( u >>  8 ) & 0xFF ) * alfa;
@@ -286,6 +305,13 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 	
 	PIXEL_RABY *pNewBuf;
 	
+	int	iMinX = MAXINT;
+	int iMinY = MAXINT;
+	int iMaxX = MININT;
+	int iMaxY = MININT;
+	
+	UINT	raby;
+	
 	// x, y —¼•ûŠg‘å‚Ìê‡‚Ì‚ÝCˆê‹C‚ÉŠg‘å
 	if( iWidth > m_iWidth && iHeight > m_iHeight ){
 		
@@ -297,10 +323,17 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 			#pragma omp parallel for
 		#endif
 		for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-			pNewBuf[ x + iWidth * y ].raby = Resampling(
+			pNewBuf[ x + iWidth * y ].raby = raby = Resampling(
 				m_iWidth  * x / ( double )iWidth,
 				m_iHeight * y / ( double )iHeight
 			);
+			
+			if( raby != RABY_TRANSPARENT ){
+				if     ( iMinX > x ) iMinX = x;
+				else if( iMaxX < x ) iMaxX = x;
+				if     ( iMinY > y ) iMinY = y;
+				else if( iMaxY < y ) iMaxY = y;
+			}
 		}
 		
 		delete [] m_pBuf;
@@ -321,9 +354,15 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 					#pragma omp parallel for
 				#endif
 				for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-					pNewBuf[ x + iWidth * y ].raby = Resampling(
+					pNewBuf[ x + iWidth * y ].raby = raby = Resampling(
 						m_iWidth  * x / ( double )iWidth, y
 					);
+					if( raby != RABY_TRANSPARENT ){
+						if     ( iMinX > x ) iMinX = x;
+						else if( iMaxX < x ) iMaxX = x;
+						if     ( iMinY > y ) iMinY = y;
+						else if( iMaxY < y ) iMaxY = y;
+					}
 				}
 			}else{
 				// x k¬
@@ -331,22 +370,37 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 					#pragma omp parallel for
 				#endif
 				for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-					pNewBuf[ x + iWidth * y ].raby = Resampling(
+					pNewBuf[ x + iWidth * y ].raby = raby = Resampling(
 						m_iWidth * x         / ( double )iWidth,
 						m_iWidth * ( x + 1 ) / ( double )iWidth,
 						y
 					);
+					if( raby != RABY_TRANSPARENT ){
+						if     ( iMinX > x ) iMinX = x;
+						else if( iMaxX < x ) iMaxX = x;
+						if     ( iMinY > y ) iMinY = y;
+						else if( iMaxY < y ) iMaxY = y;
+					}
 				}
 			}
 			
 			delete [] m_pBuf;
 			m_pBuf = pNewBuf;
 			m_iWidth = iWidth;
+			
+			m_iRawWidth  = m_iWidth;
+			m_iRawHeight = m_iHeight;
+			m_iOffsX = m_iOffsY = 0;
 		}
 		
 		/*** y •ûŒü‚Ìˆ— ***/
 		
 		if( iHeight != m_iHeight ){
+			iMinX = MAXINT;
+			iMinY = MAXINT;
+			iMaxX = MININT;
+			iMaxY = MININT;
+			
 			pNewBuf = new PIXEL_RABY[ iWidth * iHeight ];
 			if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 			
@@ -356,9 +410,15 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 					#pragma omp parallel for
 				#endif
 				for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-					pNewBuf[ x + iWidth * y ].raby = Resampling(
+					pNewBuf[ x + iWidth * y ].raby = raby = Resampling(
 						x, m_iHeight * y / ( double )iHeight
 					);
+					if( raby != RABY_TRANSPARENT ){
+						if     ( iMinX > x ) iMinX = x;
+						else if( iMaxX < x ) iMaxX = x;
+						if     ( iMinY > y ) iMinY = y;
+						else if( iMaxY < y ) iMaxY = y;
+					}
 				}
 			}else{
 				// y k¬
@@ -366,20 +426,33 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 					#pragma omp parallel for
 				#endif
 				for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-					pNewBuf[ x + iWidth * y ].raby = Resampling(
+					pNewBuf[ x + iWidth * y ].raby = raby = Resampling(
 						x,
 						m_iHeight * y         / ( double )iHeight,
 						m_iHeight * ( y + 1 ) / ( double )iHeight
 					);
+					if( raby != RABY_TRANSPARENT ){
+						if     ( iMinX > x ) iMinX = x;
+						else if( iMaxX < x ) iMaxX = x;
+						if     ( iMinY > y ) iMinY = y;
+						else if( iMaxY < y ) iMaxY = y;
+					}
 				}
 			}
 			
 			delete [] m_pBuf;
 			m_pBuf = pNewBuf;
 			m_iHeight = iHeight;
+			
+			m_iRawWidth  = m_iWidth;
+			m_iRawHeight = m_iHeight;
+			m_iOffsX = m_iOffsY = 0;
 		}
 	}
 	
+	if( iMinX != MAXINT ){
+		Clip( iMinX, iMinY, iMaxX, iMaxY );
+	}
 	return ERR_OK;
 }
 
@@ -393,18 +466,63 @@ UINT CVsdImage::Rotate( int cx, int cy, double dAngle ){
 	double dSin = sin( dAngle * ToRAD );
 	double dCos = cos( dAngle * ToRAD );
 	
+	int	iMinX = MAXINT;
+	int iMinY = MAXINT;
+	int iMaxX = MININT;
+	int iMaxY = MININT;
+	
+	UINT	raby;
+	
 	#ifdef _OPENMP
 		#pragma omp parallel for
 	#endif
 	for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < m_iWidth; ++x ){
-		pNewBuf[ x + m_iWidth * y ].raby = Resampling(
+		pNewBuf[ x + m_iWidth * y ].raby = raby = Resampling(
 			cx + ( x - cx ) * dCos + ( y - cy ) * dSin,
 			cy - ( x - cx ) * dSin + ( y - cy ) * dCos
 		);
+		
+		if( raby != RABY_TRANSPARENT ){
+			if     ( iMinX > x ) iMinX = x;
+			else if( iMaxX < x ) iMaxX = x;
+			if     ( iMinY > y ) iMinY = y;
+			else if( iMaxY < y ) iMaxY = y;
+		}
 	}
 	
 	delete [] m_pBuf;
 	m_pBuf = pNewBuf;
+	
+	Clip( iMinX, iMinY, iMaxX, iMaxY );
+	
+	return ERR_OK;
+}
+
+/*** —LŒø•”•ª‚¾‚¯ƒNƒŠƒbƒv ***************************************************/
+
+UINT CVsdImage::Clip( int x1, int y1, int x2, int y2 ){
+	
+	int iNewWidth	= x2 - x1 + 1;
+	int iNewHeight	= y2 - y1 + 1;
+	
+	m_iRawWidth  = m_iWidth;
+	m_iRawHeight = m_iHeight;
+	m_iOffsX = m_iOffsY = 0;
+	
+	PIXEL_RABY *pNewBuf = new PIXEL_RABY[ iNewWidth * iNewHeight ];
+	if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
+	
+	for( int y = 0; y < iNewHeight; ++y ) for( int x = 0; x < iNewWidth; ++x ){
+		pNewBuf[ x + y * iNewWidth ].raby = GetPixel( x + x1, y + y1 );
+	}
+	
+	delete [] m_pBuf;
+	m_pBuf = pNewBuf;
+	
+	m_iRawWidth		= iNewWidth;
+	m_iRawHeight	= iNewHeight;
+	m_iOffsX		= x1;
+	m_iOffsY		= y1;
 	
 	return ERR_OK;
 }

@@ -26,6 +26,7 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include <limits.h>
 
 #ifdef _OPENMP
 	#include <omp.h>

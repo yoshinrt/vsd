@@ -142,13 +142,11 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, BOOL bAllParam ){
 		// の範囲になるよう調整
 		
 		// m_iCnt が下限を下回っているのでインクリ
-		if(( float )m_iCnt / LOG_FREQ < GPSLog[ u ].Time()){
-			for( ; ( float )m_iCnt / LOG_FREQ < GPSLog[ u ].Time(); ++m_iCnt );
-		}
+		for( ; ( double )m_iCnt / LOG_FREQ < GPSLog[ u ].Time(); ++m_iCnt );
 		
 		// m_iCnt が上限を上回っているので，u をインクリ
-		if(( float )m_iCnt / LOG_FREQ >= GPSLog[ u + 1 ].Time()){
-			for( ; ( float )m_iCnt / LOG_FREQ >= GPSLog[ u + 1 ].Time(); ++u );
+		if(( double )m_iCnt / LOG_FREQ >= GPSLog[ u + 1 ].Time()){
+			for( ; ( double )m_iCnt / LOG_FREQ >= GPSLog[ u + 1 ].Time(); ++u );
 			
 			// GPS ログ範囲を超えたので return
 			if( u > uCnt - 2 ) break;
@@ -163,36 +161,37 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, BOOL bAllParam ){
 		#define GetLogIntermediateVal( p )\
 			( GPSLog[ u ].p() * ( 1 - t ) + GPSLog[ u + 1 ].p() * t )
 		
-		VSD_LOG_t	LogTmp;
+		if( bAllParam ){
+			VSD_LOG_t	LogTmp;
+			m_Log.push_back( LogTmp );
+		}
 		
-		LogTmp.SetX0( GetLogIntermediateVal( X ));
-		LogTmp.SetY0( GetLogIntermediateVal( Y ));
+		m_Log[ m_iCnt ].SetX0( GetLogIntermediateVal( X ));
+		m_Log[ m_iCnt ].SetY0( GetLogIntermediateVal( Y ));
 		
 		if( bAllParam ){
-			LogTmp.SetSpeed( GetLogIntermediateVal( Speed ));
+			m_Log[ m_iCnt ].SetSpeed( GetLogIntermediateVal( Speed ));
 			
-			if( m_iMaxSpeed < LogTmp.Speed())
-				m_iMaxSpeed = ( int )ceil( LogTmp.Speed());
+			if( m_iMaxSpeed < m_Log[ m_iCnt ].Speed())
+				m_iMaxSpeed = ( int )ceil( m_Log[ m_iCnt ].Speed());
 			
 			if( m_iCnt ){
 				dMileage += sqrt(
-					pow( m_Log[ m_iCnt - 1 ].X0() - LogTmp.X0(), 2 ) +
-					pow( m_Log[ m_iCnt - 1 ].Y0() - LogTmp.Y0(), 2 )
+					pow( m_Log[ m_iCnt - 1 ].X0() - m_Log[ m_iCnt ].X0(), 2 ) +
+					pow( m_Log[ m_iCnt - 1 ].Y0() - m_Log[ m_iCnt ].Y0(), 2 )
 				);
 			}
 			
-			LogTmp.SetMileage( dMileage );
-			LogTmp.SetTacho( 0 );
+			m_Log[ m_iCnt ].SetMileage( dMileage );
+			m_Log[ m_iCnt ].SetTacho( 0 );
 			
-			LogTmp.SetGx( GetLogIntermediateVal( Gx ));
-			LogTmp.SetGy( GetLogIntermediateVal( Gy ));
+			m_Log[ m_iCnt ].SetGx( GetLogIntermediateVal( Gx ));
+			m_Log[ m_iCnt ].SetGy( GetLogIntermediateVal( Gy ));
 		}else{
 			// PSP GPS log のときは，G の MAX 値のみをチェック
-			if( m_dMaxGy < LogTmp.Gy()) m_dMaxGy = LogTmp.Gy();
-			if( m_dMinGy > LogTmp.Gy()) m_dMinGy = LogTmp.Gy();
+			if( m_dMaxGy < m_Log[ m_iCnt ].Gy()) m_dMaxGy = m_Log[ m_iCnt ].Gy();
+			if( m_dMinGy > m_Log[ m_iCnt ].Gy()) m_dMinGy = m_Log[ m_iCnt ].Gy();
 		}
-		
-		m_Log.push_back( LogTmp );
 	}
 	
 	// スムージング
