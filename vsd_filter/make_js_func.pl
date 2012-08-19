@@ -9,9 +9,9 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----' );
 	
 	static v8::Handle<v8::Value> Func_DrawArc( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 7 <= iLen && iLen <= 10 )) return v8::Undefined();
+		if( CheckArgs( 7 <= iLen && iLen <= 9 )) return v8::Undefined();
 		
-		if( iLen >= 9 ){
+		if( iLen >= 8 ){
 			CScript::m_Vsd->DrawArc(
 				args[ 0 ]->Int32Value(),
 				args[ 1 ]->Int32Value(),
@@ -21,8 +21,7 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----' );
 				args[ 5 ]->Int32Value(),
 				args[ 6 ]->NumberValue(),
 				args[ 7 ]->NumberValue(),
-				PIXEL_RABY::Argb2Raby( args[ 8 ]->Int32Value()),
-				iLen <= 9 ? 0 : args[ 9 ]->Int32Value()
+				PIXEL_RABY::Argb2Raby( args[ 8 ]->Int32Value())
 			);
 		}else{
 			CScript::m_Vsd->DrawArc(
@@ -32,8 +31,7 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----' );
 				args[ 3 ]->Int32Value(),
 				args[ 4 ]->NumberValue(),
 				args[ 5 ]->NumberValue(),
-				PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
-				iLen <= 7 ? 0 : args[ 7 ]->Int32Value()
+				PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value())
 			);
 		}
 		return v8::Undefined();

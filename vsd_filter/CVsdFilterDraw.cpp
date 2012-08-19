@@ -240,7 +240,7 @@ void CVsdFilter::DrawArc(
 	int x, int y,
 	int a, int b,
 	double dStart, double dEnd,
-	tRABY uColor, UINT uFlag
+	tRABY uColor
 ){
 	int		i	= a;
 	int		j	= 0;
@@ -279,16 +279,16 @@ void CVsdFilter::DrawArc(
 		
 		if( iStart < iEnd ){
 			// st && ed
-			if( iAreaCmpS <= 0x00 && 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, uFlag );
-			if( iAreaCmpS <= 0x10 && 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, uFlag );
-			if( iAreaCmpS <= 0x20 && 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, uFlag );
-			if( iAreaCmpS <= 0x30 && 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, uFlag );
+			if( iAreaCmpS <= 0x00 && 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, 0 );
+			if( iAreaCmpS <= 0x10 && 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, 0 );
+			if( iAreaCmpS <= 0x20 && 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, 0 );
+			if( iAreaCmpS <= 0x30 && 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, 0 );
 		}else{
 			// st || ed
-			if( iAreaCmpS <= 0x00 || 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, uFlag );
-			if( iAreaCmpS <= 0x10 || 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, uFlag );
-			if( iAreaCmpS <= 0x20 || 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, uFlag );
-			if( iAreaCmpS <= 0x30 || 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, uFlag );
+			if( iAreaCmpS <= 0x00 || 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, 0 );
+			if( iAreaCmpS <= 0x10 || 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, 0 );
+			if( iAreaCmpS <= 0x20 || 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, 0 );
+			if( iAreaCmpS <= 0x30 || 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, 0 );
 		}
 		
 		if( f >= 0 ){
@@ -302,9 +302,6 @@ void CVsdFilter::DrawArc(
 			h += 4 * b2 * j;
 		}
 	}
-	
-	// Polygon çáê¨
-	if( uFlag & IMG_FILL ) DrawPolygon( yc );
 }
 
 void CVsdFilter::DrawArc(
@@ -312,7 +309,7 @@ void CVsdFilter::DrawArc(
 	int a, int b,
 	int c, int d,
 	double dStart, double dEnd,
-	tRABY uColor, UINT uFlag
+	tRABY uColor
 ){
 	int		iStX = ( int )( 1024 * a * abs( cos( ToRAD * dStart )));
 	int		iStY = ( int )( 1024 * b * abs( sin( ToRAD * dStart )));

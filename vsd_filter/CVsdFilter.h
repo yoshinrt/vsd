@@ -100,7 +100,8 @@ class CVsdFilter {
 	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc ) = 0;
 	void         FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT uFlag );
 	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ) = 0;
-	virtual UINT PutImage( int x, int y, CVsdImage &img,	// !js_func
+	virtual UINT PutImage(	// !js_func
+		int x, int y, CVsdImage &img,
 		UINT uAlign = 0	// !default:0
 	) = 0;
 	
@@ -115,7 +116,8 @@ class CVsdFilter {
 	
 	void DrawRect(	// !js_func
 		int x1, int y1, int x2, int y2,
-		tRABY uColor, UINT uFlag
+		tRABY uColor,
+		UINT uFlag	// !default:0
 	);
 	void DrawCircle(	// !js_func
 		int x, int y, int r,
@@ -127,16 +129,14 @@ class CVsdFilter {
 		int x, int y,
 		int a, int b,
 		double dStart, double dEnd,
-		tRABY uColor,
-		UINT uFlag
+		tRABY uColor
 	);
 	void DrawArc(
 		int x, int y,
 		int a, int b,
 		int c, int d,
 		double dStart, double dEnd,
-		tRABY uColor,
-		UINT uFlag
+		tRABY uColor
 	);
 	
 	int DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, tRABY uColor );

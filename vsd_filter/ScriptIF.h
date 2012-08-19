@@ -118,9 +118,9 @@ class CVsdFilterIF {
 	
 	static v8::Handle<v8::Value> Func_DrawArc( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 7 <= iLen && iLen <= 10 )) return v8::Undefined();
+		if( CheckArgs( 7 <= iLen && iLen <= 9 )) return v8::Undefined();
 		
-		if( iLen >= 9 ){
+		if( iLen >= 8 ){
 			CScript::m_Vsd->DrawArc(
 				args[ 0 ]->Int32Value(),
 				args[ 1 ]->Int32Value(),
@@ -130,8 +130,7 @@ class CVsdFilterIF {
 				args[ 5 ]->Int32Value(),
 				args[ 6 ]->NumberValue(),
 				args[ 7 ]->NumberValue(),
-				PIXEL_RABY::Argb2Raby( args[ 8 ]->Int32Value()),
-				iLen <= 9 ? 0 : args[ 9 ]->Int32Value()
+				PIXEL_RABY::Argb2Raby( args[ 8 ]->Int32Value())
 			);
 		}else{
 			CScript::m_Vsd->DrawArc(
@@ -141,8 +140,7 @@ class CVsdFilterIF {
 				args[ 3 ]->Int32Value(),
 				args[ 4 ]->NumberValue(),
 				args[ 5 ]->NumberValue(),
-				PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
-				iLen <= 7 ? 0 : args[ 7 ]->Int32Value()
+				PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value())
 			);
 		}
 		return v8::Undefined();
@@ -174,7 +172,7 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_PutImage( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 3 )) return v8::Undefined();
+		if( CheckArgs( 3 <= iLen && iLen <= 4 )) return v8::Undefined();
 		v8::Local<v8::Object> Image2 = args[ 2 ]->ToObject();
 		if( CheckClass( Image2, "Image", "arg[ 3 ] must be Image" )) return v8::Undefined();
 		CVsdImage *obj2 = GetThis<CVsdImage>( Image2 );
@@ -184,7 +182,8 @@ class CVsdFilterIF {
 		int ret = thisObj->PutImage(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
-			*obj2
+			*obj2,
+			iLen <= 3 ? 0 : args[ 3 ]->Int32Value()
 		);
 		
 		return v8::Integer::New( ret );
@@ -209,7 +208,7 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawRect( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 6 )) return v8::Undefined();
+		if( CheckArgs( 5 <= iLen && iLen <= 6 )) return v8::Undefined();
 		
 		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
@@ -219,7 +218,7 @@ class CVsdFilterIF {
 			args[ 2 ]->Int32Value(),
 			args[ 3 ]->Int32Value(),
 			PIXEL_RABY::Argb2Raby( args[ 4 ]->Int32Value()),
-			args[ 5 ]->Int32Value()
+			iLen <= 5 ? 0 : args[ 5 ]->Int32Value()
 		);
 		
 		return v8::Undefined();
