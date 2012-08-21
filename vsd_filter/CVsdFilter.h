@@ -129,7 +129,8 @@ class CVsdFilter {
 		int x, int y,
 		int a, int b,
 		double dStart, double dEnd,
-		tRABY uColor
+		tRABY uColor,
+		UINT uFlag
 	);
 	void DrawArc(
 		int x, int y,

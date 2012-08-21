@@ -113,14 +113,14 @@ class CVsdFilterIF {
 		return obj ? v8::Integer::New( obj->GetMaxTacho() ) : v8::Undefined();
 	}
 
-	///// メソッドコールバック /////
+	///// メャbドコールバック /////
 	/*** DrawArc ****************************************************************/
 	
 	static v8::Handle<v8::Value> Func_DrawArc( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CheckArgs( 7 <= iLen && iLen <= 9 )) return v8::Undefined();
 		
-		if( iLen >= 8 ){
+		if( iLen >= 9 ){
 			CScript::m_Vsd->DrawArc(
 				args[ 0 ]->Int32Value(),
 				args[ 1 ]->Int32Value(),
@@ -140,7 +140,8 @@ class CVsdFilterIF {
 				args[ 3 ]->Int32Value(),
 				args[ 4 ]->NumberValue(),
 				args[ 5 ]->NumberValue(),
-				PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value())
+				PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
+				iLen <= 7 ? 0 : args[ 7 ]->Int32Value()
 			);
 		}
 		return v8::Undefined();
@@ -534,7 +535,7 @@ class CVsdFilterIF {
 		inst->SetAccessor( v8::String::New( "MaxSpeed" ), Get_MaxSpeed );
 		inst->SetAccessor( v8::String::New( "MaxTacho" ), Get_MaxTacho );
 
-		// メソッドはこちらに
+		// メャbドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
 		proto->Set( v8::String::New( "DrawArc" ), v8::FunctionTemplate::New( Func_DrawArc ));
 		proto->Set( v8::String::New( "print" ), v8::FunctionTemplate::New( Func_print ));
@@ -637,7 +638,7 @@ class CVsdImageIF {
 		return obj ? v8::Integer::New( obj->m_iHeight ) : v8::Undefined();
 	}
 
-	///// メソッドコールバック /////
+	///// メャbドコールバック /////
 	static v8::Handle<v8::Value> Func_Resize( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CheckArgs( iLen == 2 )) return v8::Undefined();
@@ -710,7 +711,7 @@ class CVsdImageIF {
 		inst->SetAccessor( v8::String::New( "Width" ), Get_Width );
 		inst->SetAccessor( v8::String::New( "Height" ), Get_Height );
 
-		// メソッドはこちらに
+		// メャbドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
 		proto->Set( v8::String::New( "Resize" ), v8::FunctionTemplate::New( Func_Resize ));
 		proto->Set( v8::String::New( "Rotate" ), v8::FunctionTemplate::New( Func_Rotate ));
@@ -773,7 +774,7 @@ class CVsdFontIF {
 		return obj ? v8::Integer::New( obj->GetHeight() ) : v8::Undefined();
 	}
 
-	///// メソッドコールバック /////
+	///// メャbドコールバック /////
 	static v8::Handle<v8::Value> Func_GetTextWidth( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CheckArgs( iLen == 1 )) return v8::Undefined();
@@ -830,7 +831,7 @@ class CVsdFontIF {
 		inst->SetInternalFieldCount( 1 );
 		inst->SetAccessor( v8::String::New( "Height" ), Get_Height );
 
-		// メソッドはこちらに
+		// メャbドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
 		proto->Set( v8::String::New( "GetTextWidth" ), v8::FunctionTemplate::New( Func_GetTextWidth ));
 
