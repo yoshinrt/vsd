@@ -18,4 +18,5 @@ GRAPH_SPEED			= 1 << 0;
 GRAPH_TACHO			= 1 << 1;
 GRAPH_GX			= 1 << 2;
 GRAPH_GY			= 1 << 3;
-GRAPH_TILE			= 1 << 31;
+GRAPH_HTILE			= 1 << 30;
+GRAPH_VTILE			= 1 << 31;

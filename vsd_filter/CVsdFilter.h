@@ -168,7 +168,8 @@ class CVsdFilter {
 		GRAPH_TACHO	= 1 << 1,
 		GRAPH_GX	= 1 << 2,
 		GRAPH_GY	= 1 << 3,
-		GRAPH_TILE	= 1 << 31,
+		GRAPH_HTILE	= 1 << 30,
+		GRAPH_VTILE	= 1 << 31,
 	};
 	
 	void DrawGraph(	// !js_func
@@ -251,7 +252,9 @@ class CVsdFilter {
 		if( !m_LapLog ) return 0;
 		return m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].uLap;
 	}
-	int MaxLapCnt( void ){ return m_LapLog->m_Lap[ m_LapLog->m_iLapNum - 1 ].uLap; } // !js_var:MaxLapCnt
+	int MaxLapCnt( void ){ // !js_var:MaxLapCnt
+		return m_LapLog ? m_LapLog->m_Lap[ m_LapLog->m_iLapNum - 1 ].uLap : 0;
+	}
 	
 	virtual void DispErrorMessage( LPCWSTR szMsg ) = 0;
 	
