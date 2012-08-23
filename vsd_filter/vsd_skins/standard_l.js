@@ -141,7 +141,7 @@ function Draw(){
 	Vsd.DrawGraph(
 		SpdX1, SpdY1, SpdX2, SpdY2, FontM,
 		Vsd.MaxTacho > 0 ?
-			GRAPH_SPEED | GRAPH_TACHO | GRAPH_GX | GRAPH_GY | GRAPH_TILE :
-			GRAPH_SPEED |               GRAPH_GX | GRAPH_GY | GRAPH_TILE
+			GRAPH_SPEED | GRAPH_TACHO | GRAPH_GX | GRAPH_GY | GRAPH_VTILE :
+			GRAPH_SPEED |               GRAPH_GX | GRAPH_GY | GRAPH_VTILE
 	);
 }
