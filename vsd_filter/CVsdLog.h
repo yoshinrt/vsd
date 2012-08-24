@@ -149,7 +149,7 @@ class CVsdLog {
 	~CVsdLog(){}
 	UINT GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, BOOL bAllParam = FALSE );
 	void RotateMap( double dAngle );
-	double GetIndex( int iFrame, int iVidSt, int iVidEd, int iLogSt, int iLogEd, int iPrevIdx );
+	double GetIndex( double dFrame, int iVidSt, int iVidEd, int iLogSt, int iLogEd, int iPrevIdx );
 	
 	BOOL IsDataExist( void ){
 		return 0 <= m_iLogNum && m_iLogNum < m_iCnt - 1;

@@ -944,7 +944,7 @@ void CVsdFilter::CalcLapTime( void ){
 	if( !m_LapLog ) return;
 	
 	SelectLogForLapTime;
-	if( !m_CurLog ) return;
+//	if( !m_CurLog ) return;
 	
 	// ラップインデックスを求める
 	// VSD/GPS 両方のログがなければ，手動計測での m_LapLog[].fLogNum はフレーム# なので
@@ -1061,18 +1061,22 @@ void CVsdFilter::DrawLapTime(
 		);
 		DrawTextAlign( POS_DEFAULT, POS_DEFAULT, uAlign, szBuf, Font, uColor, uColorOutline );
 		
-		/*** ベストとの車間距離表示 - ***/
-		BOOL bSign = m_LapLog->m_iDiffTime <= 0;
-		if( m_LapLog->m_iDiffTime < 0 ) m_LapLog->m_iDiffTime = -m_LapLog->m_iDiffTime;
-		
-		swprintf(
-			szBuf, sizeof( szBuf ), L"    %c%d'%02d.%03d",
-			bSign ? '-' : '+',
-			m_LapLog->m_iDiffTime / 60000,
-			m_LapLog->m_iDiffTime / 1000 % 60,
-			m_LapLog->m_iDiffTime % 1000
-		);
-		DrawTextAlign( POS_DEFAULT, POS_DEFAULT, uAlign, szBuf, Font, bSign ? uColorBest : uColorPlus, uColorOutline );
+		if( m_LapLog->m_iDiffTime != TIME_NONE ){
+			/*** ベストとの車間距離表示 - ***/
+			BOOL bSign = m_LapLog->m_iDiffTime <= 0;
+			if( m_LapLog->m_iDiffTime < 0 ) m_LapLog->m_iDiffTime = -m_LapLog->m_iDiffTime;
+			
+			swprintf(
+				szBuf, sizeof( szBuf ), L"    %c%d'%02d.%03d",
+				bSign ? '-' : '+',
+				m_LapLog->m_iDiffTime / 60000,
+				m_LapLog->m_iDiffTime / 1000 % 60,
+				m_LapLog->m_iDiffTime % 1000
+			);
+			DrawTextAlign( POS_DEFAULT, POS_DEFAULT, uAlign, szBuf, Font, bSign ? uColorBest : uColorPlus, uColorOutline );
+		}else{
+			m_iTextPosY += Font.GetHeight();
+		}
 		
 		bInLap = TRUE;
 	}else{

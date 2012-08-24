@@ -36,14 +36,14 @@ CVsdLog::CVsdLog(){
 /*** fraem# Ç…ëŒâûÇ∑ÇÈÉçÉO index ÇìæÇÈ *************************************/
 
 double CVsdLog::GetIndex(
-	int	iFrame,
+	double	dFrame,
 	int iVidSt, int iVidEd,
 	int iLogSt, int iLogEd,
 	int iPrevIdx
 ){
 	if( iVidSt == iVidEd ) return -1;
 	
-	double dTime = ( iLogSt + ( iLogEd - iLogSt ) * ( iFrame - iVidSt ) / ( double )( iVidEd - iVidSt )) / SLIDER_TIME;
+	double dTime = ( iLogSt + ( iLogEd - iLogSt ) * ( dFrame - iVidSt ) / ( double )( iVidEd - iVidSt )) / SLIDER_TIME;
 	
 	int idx;
 	

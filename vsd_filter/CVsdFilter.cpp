@@ -128,32 +128,43 @@ BOOL CVsdFilter::ParseMarkStr( const char *szMark ){
 
 double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 	
-	double a;
+	double dFrame;
 	
 	// iLapNum がおかしいときは 0 を返しとく
 	if( iLapNum < 0 ) return 0;
 	
 	if( m_LapLog->m_iLapMode == LAPMODE_MAGNET ){
-		// iLogNum は VSD ログ番号
+		// fLogNum は VSD ログ番号
 		if( Log == m_VsdLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
 		if( VsdSt == VsdEd )  return 0;
-		a = ( m_LapLog->m_Lap[ iLapNum ].fLogNum - VsdSt ) / ( VsdEd - VsdSt );
 		
-	}else if( m_LapLog->m_iLapMode == LAPMODE_GPS || m_LapLog->m_iLapMode == LAPMODE_HAND_GPS ){
-		// iLogNum は GPS ログ番号
+		// 一旦ビデオフレームに変換
+		dFrame =
+			( Log->Time( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME - VsdSt ) /
+			( VsdEd - VsdSt ) * ( VideoEd - VideoSt ) + VideoSt;
+		
+		return Log->GetIndex( dFrame, VideoSt, VideoEd, GPSSt, GPSEd, -1 );
+		
+	}else if( m_LapLog->m_iLapMode != LAPMODE_HAND_VIDEO ){
+		// fLogNum は GPS ログ番号
 		if( Log == m_GPSLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
 		if( GPSSt == GPSEd )  return 0;
-		a = ( m_LapLog->m_Lap[ iLapNum ].fLogNum - GPSSt ) / ( GPSEd - GPSSt );
 		
-	}else{
-		// iLogNum はビデオフレーム番号
-		if( VideoSt == VideoEd ) return 0;
-		a = ( m_LapLog->m_Lap[ iLapNum ].fLogNum - VideoSt ) / ( VideoEd - VideoSt );
+		// 一旦ビデオフレームに変換
+		dFrame =
+			( Log->Time( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME - VsdSt ) /
+			( VsdEd - VsdSt ) * ( VideoEd - VideoSt ) + VideoSt;
+		
+		return Log->GetIndex( dFrame, VideoSt, VideoEd, VsdSt, VsdEd, -1 );
 	}
 	
+	// fLogNum はビデオフレーム番号
+	if( VideoSt == VideoEd ) return 0;
+	dFrame = m_LapLog->m_Lap[ iLapNum ].fLogNum;
+	
 	return Log == m_VsdLog ?
-		a * ( VsdEd - VsdSt ) + VsdSt :
-		a * ( GPSEd - GPSSt ) + GPSSt;
+		Log->GetIndex( dFrame, VideoSt, VideoEd, VsdSt, VsdEd, -1 ) :
+		Log->GetIndex( dFrame, VideoSt, VideoEd, GPSSt, GPSEd, -1 );
 }
 
 /*** ラップタイム再生成 (手動) **********************************************/
@@ -172,12 +183,13 @@ CLapLog *CVsdFilter::CreateLapTime( int iLapMode ){
 		
 		if( pLapLog->m_iLapMode == LAPMODE_HAND_GPS ){
 			dLogNum	= GetLogIndex( iFrame, GPS, -1 );
-			iTime	= ( int )( dLogNum / LOG_FREQ * 1000 );
+			iTime	= ( int )( m_GPSLog->Time( dLogNum ) * 1000 );
+			LapTime.fLogNum	= ( float )dLogNum;
 		}else{
+			// LAPMODE_HAND_VIDEO
 			iTime	= ( int )( iFrame * 1000.0 / GetFPS());
+			LapTime.fLogNum	= ( float )iFrame;
 		}
-		
-		LapTime.fLogNum	= pLapLog->m_iLapMode == LAPMODE_HAND_VIDEO ? iFrame : ( float )dLogNum;
 		
 		if( m_piParamT[ TRACK_SLineWidth ] < 0 ){
 			// ジムカーナモード
@@ -233,18 +245,18 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	// iLogNum ～ iLogNum + 1 の方位を算出
 	
 	double dAngle = atan2(
-		( m_GPSLog->m_Log[ iLogNum + 1 ].Y0() - m_GPSLog->m_Log[ iLogNum ].Y0()),
-		( m_GPSLog->m_Log[ iLogNum + 1 ].X0() - m_GPSLog->m_Log[ iLogNum ].X0())
+		( m_GPSLog->Y0( iLogNum + 1 ) - m_GPSLog->Y0( iLogNum )),
+		( m_GPSLog->X0( iLogNum + 1 ) - m_GPSLog->X0( iLogNum ))
 	);
 	
 	#define x1 m_dStartLineX1
 	#define y1 m_dStartLineY1
 	#define x2 m_dStartLineX2
 	#define y2 m_dStartLineY2
-	#define x3 m_GPSLog->m_Log[ i ].X0()
-	#define y3 m_GPSLog->m_Log[ i ].Y0()
-	#define x4 m_GPSLog->m_Log[ i + 1 ].X0()
-	#define y4 m_GPSLog->m_Log[ i + 1 ].Y0()
+	#define x3 m_GPSLog->X0( i )
+	#define y3 m_GPSLog->Y0( i )
+	#define x4 m_GPSLog->X0( i + 1 )
+	#define y4 m_GPSLog->Y0( i + 1 )
 	
 	// 仮想光電管の位置を求める
 	x2 = m_GPSLog->X0( dLogNum );	// スタート地点
@@ -282,8 +294,8 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 		
 		// 進行方向の判定，dAngle ±45度
 		double dAngle2 = dAngle - atan2(
-			( m_GPSLog->m_Log[ i + 1 ].Y0() - m_GPSLog->m_Log[ i ].Y0()),
-			( m_GPSLog->m_Log[ i + 1 ].X0() - m_GPSLog->m_Log[ i ].X0())
+			( m_GPSLog->Y0( i + 1 ) - m_GPSLog->Y0( i )),
+			( m_GPSLog->X0( i + 1 ) - m_GPSLog->X0( i ))
 		);
 		if     ( dAngle2 < -180 * ToRAD ) dAngle2 += 360 * ToRAD;
 		else if( dAngle2 >  180 * ToRAD ) dAngle2 -= 360 * ToRAD;
@@ -300,8 +312,7 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 		
 		// 半端な LogNum
 		dLogNum = i + a;
-		iTime = ( int )( dLogNum / LOG_FREQ * 1000 );
-		iPrevTime;
+		iTime = ( int )( m_GPSLog->Time( dLogNum ) * 1000 );
 		
 		if( m_piParamS[ SHADOW_LAP_START ] - 1 <= iLapNum && iLapNum <= m_piParamS[ SHADOW_LAP_END ] ){
 			LapTime.uLap	= pLapLog->m_iLapNum;
