@@ -97,7 +97,6 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, BOOL bAllParam ){
 	VsdLogTmp.SetTime( FLT_MAX );
 	GPSLog.push_back( VsdLogTmp );		// 番犬
 	
-	double	t;
 	double	dDistance = 0;
 	double	dBearing;
 	
@@ -154,7 +153,9 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, BOOL bAllParam ){
 			* ( 1 / 3.600 / GRAVITY )
 			/ ( GPSLog[ u + 1 ].Time() - GPSLog[ u - 1 ].Time())
 		);
-		
+		if( GPSLog[ u ].Gy() > 10 ){
+			int a= 0;
+		}
 		// 横G = vω
 		dBearing = GPSLog[ u + 1 ].Bearing() - GPSLog[ u - 1 ].Bearing();
 		if     ( dBearing >  180 ) dBearing -= 360;
@@ -179,37 +180,18 @@ UINT CVsdLog::GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, BOOL bAllParam ){
 	
 	/************************************************************************/
 	
-	for( m_iCnt = 0, u = 0; ; ++m_iCnt ){
-		
-		// GPSLog[ u ].Time() <= m_iCnt / SLIDER_TIME < GPSLog[ u + 1 ].Time()
-		// の範囲になるよう調整
-		
-		// m_iCnt が下限を下回っているのでインクリ
-		for( ; ( double )m_iCnt / SLIDER_TIME < GPSLog[ u ].Time(); ++m_iCnt );
-		
-		// m_iCnt が上限を上回っているので，u をインクリ
-		if(( double )m_iCnt / SLIDER_TIME >= GPSLog[ u + 1 ].Time()){
-			for( ; ( double )m_iCnt / SLIDER_TIME >= GPSLog[ u + 1 ].Time(); ++u );
-			
-			// GPS ログ範囲を超えたので return
-			if( u > uCnt - 2 ) break;
-		}
-		
+	for( m_iCnt = 0; m_iCnt < ( int )uCnt - 2; ++m_iCnt ){
 		// 5秒以上 GPS ログがあいていれば，補完情報の計算をしない
-		//if( GPSLog[ u + 1 ].Time() - GPSLog[ u ].Time() > 5 ) continue;
+		//if( GPSLog[ m_iCnt + 1 ].Time() - GPSLog[ m_iCnt ].Time() > 5 ) continue;
 		
-		t = (( double )m_iCnt / SLIDER_TIME - GPSLog[ u ].Time())
-			/ ( GPSLog[ u + 1 ].Time() - GPSLog[ u ].Time());
-		
-		#define GetLogIntermediateVal( p )\
-			( GPSLog[ u ].p() * ( 1 - t ) + GPSLog[ u + 1 ].p() * t )
+		#define GetLogIntermediateVal( p ) GPSLog[ m_iCnt ].p()
 		
 		if( bAllParam ){
 			VSD_LOG_t	LogTmp;
 			m_Log.push_back( LogTmp );
 		}
 		
-		m_Log[ m_iCnt ].SetTime(( double )m_iCnt / SLIDER_TIME );
+		m_Log[ m_iCnt ].SetTime( GetLogIntermediateVal( Time ));
 		m_Log[ m_iCnt ].SetX0( GetLogIntermediateVal( X ));
 		m_Log[ m_iCnt ].SetY0( GetLogIntermediateVal( Y ));
 		
@@ -557,12 +539,15 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 				
 				// スピードを 0 に
 				GPSLog[ uGPSCnt ].SetSpeed( 0 );
+				GPSLog[ uGPSCnt ].SetGx( 0 );
+				GPSLog[ uGPSCnt ].SetGy( 0 );
 				GPSLog[ uGPSCnt + 1 ].SetSpeed( 0 );
+				GPSLog[ uGPSCnt + 1 ].SetGx( 0 );
+				GPSLog[ uGPSCnt + 1 ].SetGy( 0 );
 				
 				// 時間調整
-				double dDiff = GPSLog[ uGPSCnt - 1 ].Time() - GPSLog[ uGPSCnt - 2 ].Time();
-				GPSLog[ uGPSCnt     ].SetTime( GPSLog[ uGPSCnt     ].Time() + dDiff );
-				GPSLog[ uGPSCnt + 1 ].SetTime( GPSLog[ uGPSCnt + 1 ].Time() + dDiff );
+				GPSLog[ uGPSCnt     ].SetTime( GPSLog[ uGPSCnt     ].Time() + 0.5 );
+				GPSLog[ uGPSCnt + 1 ].SetTime( GPSLog[ uGPSCnt + 1 ].Time() - 0.5 );
 				
 				uGPSCnt += 2;
 			}
@@ -580,7 +565,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 	// アップコンバート用バッファ確保・初期化
 	GPSLogUpConvert( GPSLog, TRUE );
 	
-#if 0
+#if 1
 	DebugCmd( {
 		FILE *fpp = fopen( "D:\\DDS\\vsd\\vsd_filter\\z_gps_raw.txt", "w" );
 		for( u = 0; u < uGPSCnt; ++u ){
