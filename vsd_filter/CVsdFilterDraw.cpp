@@ -673,8 +673,8 @@ void CVsdFilter::DrawGraph(
 		int iX2 = x2;
 		int iY1 = y1;
 		int iY2 = y2;
-			
-			int j = 0;
+		
+		int j = 0;
 		
 		if( uFlag & GRAPH_SPEED ){
 			CalcGpaphPos();
@@ -739,17 +739,17 @@ void CVsdFilter::DrawGSnake(
 	
 	iR = iR * INVERT_G;
 	
-	if( m_CurLog && m_CurLog->IsDataExist( m_CurLog->m_iLogNum )){
+	if( m_CurLog && m_CurLog->IsDataExist()){
 		if( GSnakeLen > 0 ){
 			
 			int iGxPrev = INVALID_POS_I, iGyPrev;
 			
-			for( i = -( int )( GSnakeLen * LOG_FREQ / 10.0 ) ; i <= 1 ; ++i ){
+			for( i = -( int )( GSnakeLen * m_CurLog->m_dFreq / 10.0 ) ; i <= 1 ; ++i ){
 				
 				if( m_CurLog->m_iLogNum + i >= 0 ){
 					// i == 1 時は最後の中途半端な LogNum
-					iGx = ( int )((( i != 1 ) ? m_CurLog->m_Log[ m_CurLog->m_iLogNum + i ].Gx() : m_CurLog->Gx()) * iR );
-					iGy = ( int )((( i != 1 ) ? m_CurLog->m_Log[ m_CurLog->m_iLogNum + i ].Gy() : m_CurLog->Gy()) * iR );
+					iGx = ( int )((( i != 1 ) ? m_CurLog->Gx( m_CurLog->m_iLogNum + i ) : m_CurLog->Gx()) * iR );
+					iGy = ( int )((( i != 1 ) ? m_CurLog->Gy( m_CurLog->m_iLogNum + i ) : m_CurLog->Gy()) * iR );
 					
 					iGx = ( int )( iGx );
 					
@@ -828,56 +828,53 @@ void CVsdFilter::DrawMap(
 	if( m_LapLog ){
 		iLineSt = ( int )LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx );
 		iLineEd = m_LapLog->m_iLapIdx < m_LapLog->m_iLapNum - 1 ?
-			( int )LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx + 1 ) : 0;
+			( int )LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx + 1 ) :
+			m_CurLog->m_iCnt - 1;
 	}else{
 		iLineSt = 0;
 		iLineEd = m_CurLog->m_iCnt - 1;
 	}
 	
-	if( m_CurLog->m_iLogNum - iLineSt > ( int )( LineTrace * LOG_FREQ ))
-		iLineSt = m_CurLog->m_iLogNum - ( int )( LineTrace * LOG_FREQ );
+	if( m_CurLog->m_iLogNum - iLineSt > ( int )( LineTrace * m_CurLog->m_dFreq ))
+		iLineSt = m_CurLog->m_iLogNum - ( int )( LineTrace * m_CurLog->m_dFreq );
 	
-	if( iLineEd - m_CurLog->m_iLogNum > ( int )( LineTrace * LOG_FREQ ))
-		iLineEd = m_CurLog->m_iLogNum + ( int )( LineTrace * LOG_FREQ );
+	if( iLineEd - m_CurLog->m_iLogNum > ( int )( LineTrace * m_CurLog->m_dFreq ))
+		iLineEd = m_CurLog->m_iLogNum + ( int )( LineTrace * m_CurLog->m_dFreq );
 	
 	for( i = iLineSt; i <= iLineEd ; ++i ){
-		if( !_isnan( m_CurLog->X( i ))){
-			#define GetMapPos( p, a ) ((( p ) - m_CurLog->m_dMapOffs ## a ) * dScale )
-			iGx = x1 + ( int )GetMapPos( m_CurLog->X( i ), X );
-			iGy = y1 + ( int )GetMapPos( m_CurLog->Y( i ), Y );
-			
-			if( iGxPrev != INVALID_POS_I ){
-				if(
-					( iGx - iGxPrev ) * ( iGx - iGxPrev ) +
-					( iGy - iGyPrev ) * ( iGy - iGyPrev ) >= ( 25 )
-				){
-					// Line の色用に G を求める
-					
-					double dG = m_CurLog->Gy( i );
-					
-					tRABY uColorLine;
-					
-					if( dG >= 0.0 ){
-						uColorLine = BlendColor( uColorG0, uColorGPlus,  dG / m_CurLog->m_dMaxGy );
-					}else{
-						uColorLine = BlendColor( uColorG0, uColorGMinus, dG / m_CurLog->m_dMinGy );
-					}
-					
-					// Line を引く
-					DrawLine(
-						iGx,     iGy,
-						iGxPrev, iGyPrev,
-						iLineWidth, uColorLine, 0
-					);
-					iGxPrev = iGx;
-					iGyPrev = iGy;
+		#define GetMapPos( p, a ) ((( p ) - m_CurLog->m_dMapOffs ## a ) * dScale )
+		iGx = x1 + ( int )GetMapPos( m_CurLog->X( i ), X );
+		iGy = y1 + ( int )GetMapPos( m_CurLog->Y( i ), Y );
+		
+		if( iGxPrev != INVALID_POS_I ){
+			if(
+				( iGx - iGxPrev ) * ( iGx - iGxPrev ) +
+				( iGy - iGyPrev ) * ( iGy - iGyPrev ) >= ( 25 )
+			){
+				// Line の色用に G を求める
+				
+				double dG = m_CurLog->Gy( i );
+				
+				tRABY uColorLine;
+				
+				if( dG >= 0.0 ){
+					uColorLine = BlendColor( uColorG0, uColorGPlus,  dG / m_CurLog->m_dMaxGy );
+				}else{
+					uColorLine = BlendColor( uColorG0, uColorGMinus, dG / m_CurLog->m_dMinGy );
 				}
-			}else{
+				
+				// Line を引く
+				DrawLine(
+					iGx,     iGy,
+					iGxPrev, iGyPrev,
+					iLineWidth, uColorLine, 0
+				);
 				iGxPrev = iGx;
 				iGyPrev = iGy;
 			}
 		}else{
-			iGxPrev = INVALID_POS_I;
+			iGxPrev = iGx;
+			iGyPrev = iGy;
 		}
 	}
 	
@@ -885,7 +882,7 @@ void CVsdFilter::DrawMap(
 	dGx = x1 + GetMapPos( m_CurLog->X(), X );
 	dGy = y1 + GetMapPos( m_CurLog->Y(), Y );
 	
-	if( !_isnan( dGx )) DrawCircle(
+	DrawCircle(
 		( int )( dGx ), ( int )dGy, iIndicatorR,
 		uColorIndicator, CVsdFilter::IMG_FILL
 	);
@@ -968,7 +965,7 @@ void CVsdFilter::CalcLapTime( void ){
 	if( m_LapLog->m_iLapIdx >= 0 && m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime != 0 ){
 		if( m_LapLog->m_iLapMode != LAPMODE_HAND_VIDEO ){
 			// 自動計測時は，タイム / ログ数 から計算
-			m_LapLog->m_iCurTime = ( int )(( m_CurLog->m_dLogNum - m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum ) * 1000 / m_CurLog->m_dFreq );
+			m_LapLog->m_iCurTime = ( int )(( m_CurLog->Time() - m_CurLog->Time( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum )) * 1000 );
 		}else{
 			// 手動計測モードのときは，フレーム数から計算
 			m_LapLog->m_iCurTime = ( int )(( GetFrameCnt() - m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum ) * 1000.0 / GetFPS());
@@ -980,19 +977,22 @@ void CVsdFilter::CalcLapTime( void ){
 	
 	if( m_CurLog && m_LapLog->m_iCurTime != TIME_NONE ){
 		
-		SelectLogGPS;
-		
 		// ベストラップ開始の LogNum
 		double dBestLapLogNumStart = LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap );
 		
+		// 現在ラップ開始の LogNum
+		double dCurLapLogNumStart = LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx );
+		
 		// この周の走行距離を求める
-		double dMileage = m_CurLog->Mileage() - m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx ));
+		double dDistanceCurLapStart = m_CurLog->Distance( dCurLapLogNumStart );
+		double dDistance = m_CurLog->Distance() - dDistanceCurLapStart;
 		
 		// この周の 1周の走行距離から，現在の走行距離を補正する
-		dMileage =
-			dMileage
-			* ( m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap + 1 )) - m_CurLog->Mileage( dBestLapLogNumStart ))
-			/ ( m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx  + 1 )) - m_CurLog->Mileage( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx )));
+		double dDistanceBestLapStart = m_CurLog->Distance( dBestLapLogNumStart );
+		dDistance =
+			dDistance
+			* ( m_CurLog->Distance( LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap + 1 )) - dDistanceBestLapStart )
+			/ ( m_CurLog->Distance( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx  + 1 )) - dDistanceCurLapStart );
 		
 		// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
 		// m_LapLog->m_iBestLogNumRunning <= 最終的に求める結果 < m_LapLog->m_iBestLogNumRunning + 1  となる
@@ -1000,12 +1000,12 @@ void CVsdFilter::CalcLapTime( void ){
 		if(
 			m_LapLog->m_iBestLogNumRunning < dBestLapLogNumStart ||
 			m_LapLog->m_iBestLogNumRunning >= m_CurLog->m_iCnt ||
-			( m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning ) - m_CurLog->Mileage( dBestLapLogNumStart )) > dMileage
+			( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ) - dDistanceBestLapStart ) > dDistance
 		) m_LapLog->m_iBestLogNumRunning = ( int )dBestLapLogNumStart;
 		
 		for(
 			;
-			( m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning + 1 ) - m_CurLog->Mileage( dBestLapLogNumStart )) <= dMileage &&
+			( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning + 1 ) - dDistanceBestLapStart ) <= dDistance &&
 			m_LapLog->m_iBestLogNumRunning < m_CurLog->m_iCnt;
 			++m_LapLog->m_iBestLogNumRunning
 		);
@@ -1013,16 +1013,16 @@ void CVsdFilter::CalcLapTime( void ){
 		// 最速 Lap の，1/15秒以下の値を求める = A / B
 		double dBestLapLogNumRunning =
 			( double )m_LapLog->m_iBestLogNumRunning +
-			// A: 最速ラップは，後これだけ走らないと dMileage と同じではない
-			( dMileage - ( m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning ) - m_CurLog->Mileage( dBestLapLogNumStart ))) /
+			// A: 最速ラップは，後これだけ走らないと dDistance と同じではない
+			( dDistance - ( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ) - dDistanceBestLapStart )) /
 			// B: 最速ラップは，1/15秒の間にこの距離を走った
-			( m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning + 1 ) - m_CurLog->Mileage( m_LapLog->m_iBestLogNumRunning ));
+			( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning + 1 ) - m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ));
 		
 		m_LapLog->m_iDiffTime = ( int )(
 			(
-				( m_CurLog->m_dLogNum - LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx )) -
-				( dBestLapLogNumRunning - dBestLapLogNumStart )
-			) * 1000.0 / m_CurLog->m_dFreq
+				( m_CurLog->Time() - m_CurLog->Time( dCurLapLogNumStart )) -
+				( m_CurLog->Time( dBestLapLogNumRunning ) - m_CurLog->Time( dBestLapLogNumStart ))
+			) * 1000.0
 		);
 	}
 }
@@ -1250,11 +1250,11 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	// ログ位置の計算
 	if( m_VsdLog ){
-		m_VsdLog->m_dLogNum = ConvParam( GetFrameCnt(), Video, Log );
+		m_VsdLog->m_dLogNum = GetLogIndex( GetFrameCnt(), Vsd, m_VsdLog->m_iLogNum );
 		m_VsdLog->m_iLogNum = ( int )m_VsdLog->m_dLogNum;
 	}
 	if( m_GPSLog ){
-		m_GPSLog->m_dLogNum = ConvParam( GetFrameCnt(), Video, GPS );
+		m_GPSLog->m_dLogNum = GetLogIndex( GetFrameCnt(), GPS, m_GPSLog->m_iLogNum );
 		m_GPSLog->m_iLogNum = ( int )m_GPSLog->m_dLogNum;
 	}
 	
@@ -1287,10 +1287,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 	// JavaScript 用ログデータ計算
 	SelectLogVsd;
 	if( m_CurLog && m_CurLog->IsDataExist()){
-		m_dSpeed	= m_CurLog->Speed( m_CurLog->m_dLogNum );
-		m_dTacho	= m_CurLog->Tacho( m_CurLog->m_dLogNum );
-		m_dGx		= m_CurLog->Gx( m_CurLog->m_dLogNum );
-		m_dGy		= m_CurLog->Gy( m_CurLog->m_dLogNum );
+		m_dSpeed	= m_CurLog->Speed();
+		m_dTacho	= m_CurLog->Tacho();
+		m_dGx		= m_CurLog->Gx();
+		m_dGy		= m_CurLog->Gy();
 	}else{
 		m_dSpeed	=
 		m_dTacho	=
@@ -1335,7 +1335,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_iTextPosY = GetHeight() / 3;
 		
 		if( m_GPSLog ){
-			int i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->m_dLogNum / LOG_FREQ ) * 100 ) % ( 24 * 3600 * 100 );
+			int i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->Time()) * 100 ) % ( 24 * 3600 * 100 );
 			swprintf(
 				szBuf, sizeof( szBuf ), L"GPS time: %02d:%02d:%02d.%02d",
 				i / 360000,
@@ -1361,10 +1361,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 			if( m_VsdLog ){
 				swprintf(
 					szBuf, sizeof( szBuf ), L"Log%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
-					Float2Time( LogSt / m_VsdLog->m_dFreq ),
-					Float2Time( LogEd / m_VsdLog->m_dFreq ),
-					Float2Time(( LogEd - LogSt ) / m_VsdLog->m_dFreq ),
-					m_VsdLog->m_iLogNum
+					Float2Time( VsdSt / ( double )SLIDER_TIME ),
+					Float2Time( VsdEd / ( double )SLIDER_TIME ),
+					Float2Time(( VsdEd - VsdSt ) / ( double )SLIDER_TIME ),
+					( int )( m_VsdLog->Time() * SLIDER_TIME )
 				);
 				DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
 			}
@@ -1372,10 +1372,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 			if( m_GPSLog ){
 				swprintf(
 					szBuf, sizeof( szBuf ), L"GPS%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
-					Float2Time( GPSSt / m_GPSLog->m_dFreq ),
-					Float2Time( GPSEd / m_GPSLog->m_dFreq ),
-					Float2Time(( GPSEd - GPSSt ) / m_GPSLog->m_dFreq ),
-					m_GPSLog->m_iLogNum
+					Float2Time( GPSSt / ( double )SLIDER_TIME ),
+					Float2Time( GPSEd / ( double )SLIDER_TIME ),
+					Float2Time(( GPSEd - GPSSt ) / ( double )SLIDER_TIME ),
+					( int )( m_GPSLog->Time() * SLIDER_TIME )
 				);
 				DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
 			}

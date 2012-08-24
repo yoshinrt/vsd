@@ -1207,7 +1207,7 @@ void SetupLogOffset( FILTER *filter ){
 			g_Vsd->VideoSt + ( int )( g_Vsd->GetFPS() * ADJUST_WIDTH );
 		
 		g_Vsd->GPSEd =
-			g_Vsd->GPSSt + ( int )( LOG_FREQ * ADJUST_WIDTH );
+			g_Vsd->GPSSt + ( int )( SLIDER_TIME * ADJUST_WIDTH );
 	}
 	
 	filter->exfunc->filter_window_update( filter );

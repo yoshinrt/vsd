@@ -15,7 +15,6 @@
 #define PROG_NAME_LONG	"`VSDFilter' vehicle data logger overlay plugin"
 #define PROG_VERSION	"v1.10beta1"
 
-#define GPS_FREQ	10
 #define MAX_LAP		200
 
 #define G_CX_CNT		30
@@ -24,26 +23,22 @@
 #ifdef GPS_ONLY
 	#define VideoSt			m_piParamS[ PARAM_VSt ]
 	#define VideoEd			m_piParamS[ PARAM_VEd ]
-	#define LogSt			0
-	#define LogEd			0
+	#define VsdSt			0
+	#define VsdEd			0
 	#define GPSSt			m_piParamS[ PARAM_GSt ]
 	#define GPSEd			m_piParamS[ PARAM_GEd ]
 #else
 	#define VideoSt			m_piParamT[ PARAM_VSt ]
 	#define VideoEd			m_piParamT[ PARAM_VEd ]
-	#define LogSt			m_piParamT[ PARAM_LSt ]
-	#define LogEd			m_piParamT[ PARAM_LEd ]
+	#define VsdSt			m_piParamT[ PARAM_LSt ]
+	#define VsdEd			m_piParamT[ PARAM_LEd ]
 	#define GPSSt			m_piParamT[ PARAM_GSt ]
 	#define GPSEd			m_piParamT[ PARAM_GEd ]
 #endif
 
 // パラメータを変換
-#define ConvParam( p, from, to ) ( \
-	from##Ed == from##St ? 0 : \
-	( double )( to##Ed - to##St ) * (( p ) - from##St ) \
-	/ ( from##Ed - from##St ) \
-	+ to##St \
-)
+#define GetLogIndex( frame, to, prev ) \
+	m_##to##Log->GetIndex( frame, VideoSt, VideoEd, to##St, to##Ed, prev )
 
 // VSD log を優先，ただしチェックボックスでオーバーライドできる
 #define SelectLogVsd ( m_CurLog = ( GPSPriority && m_GPSLog || !m_VsdLog ) ? m_GPSLog : m_VsdLog )

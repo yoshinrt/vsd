@@ -34,5 +34,6 @@
 
 #define BUF_SIZE	1024
 #define ToRAD		( M_PI / 180 )
+#define SLIDER_TIME	LOG_FREQ
 
 #endif//__STDAFX_H__

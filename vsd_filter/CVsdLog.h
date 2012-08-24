@@ -56,47 +56,38 @@ class CLapLog {
 
 /*** new type ***************************************************************/
 
-static const float fNaN = sqrt( -1.0f );
-
 class VSD_LOG_t {
   public:
 	VSD_LOG_t(){
-		fX0 = fY0 =
-		fX = fY = fNaN;
+		memset( this, 0, sizeof( VSD_LOG_t ));
 	}
 	~VSD_LOG_t(){}
 	
 	double Speed(){ return uSpeed / 100.0; }
 	void SetSpeed( double d ){
-		if( _isnan( d )) uSpeed = 0;
-		else uSpeed = ( USHORT )( d * 100 );
-	}
-	
-	double Gx(){ return iGx / 20.0; }
-	void SetGx( double d ){
-		if( _isnan( d )) iGx = 0;
-		else iGx = ( char )( d * 20 );
-	}
-	double Gy(){ return iGy / 20.0; }
-	void SetGy( double d ){
-		if( _isnan( d )) iGy = 0;
-		else iGy = ( char )( d * 20 );
+		uSpeed = ( USHORT )( d * 100 );
 	}
 	
 	double Tacho()	{ return uTacho; }		void SetTacho	( double d ){ uTacho	= ( USHORT )d; }
-	double Mileage(){ return fMileage; }	void SetMileage	( double d ){ fMileage	= ( float )d; }
+	double Distance(){ return fDistance; }	void SetDistance	( double d ){ fDistance	= ( float )d; }
 	double X()		{ return fX; }			void SetX		( double d ){ fX		= ( float )d; }
 	double Y()		{ return fY; }			void SetY		( double d ){ fY		= ( float )d; }
 	double X0()		{ return fX0; }			void SetX0		( double d ){ fX0		= ( float )d; }
 	double Y0()		{ return fY0; }			void SetY0		( double d ){ fY0		= ( float )d; }
+	double Bearing(){ return fBearing; }	void SetBearing	( double d ){ fBearing	= ( float )d; }
+	double Gx()		{ return fGx; }			void SetGx		( double d ){ fGx		= ( float )d; }
+	double Gy()		{ return fGy; }			void SetGy		( double d ){ fGy		= ( float )d; }
+	double Time()	{ return fTime; }		void SetTime	( double d ){ fTime		= ( float )d; }
 	
   private:
 	float	fX, fX0;
 	float	fY, fY0;
-	float	fMileage;
+	float	fDistance;
 	USHORT	uSpeed;
 	USHORT	uTacho;
-	char	iGx, iGy;
+	float	fBearing;
+	float	fGx, fGy;
+	float	fTime;
 };
 
 class GPS_LOG_t {
@@ -155,9 +146,10 @@ class CVsdLog {
 	int			m_iLogStop;
 	
 	CVsdLog();
-	~CVsdLog();
+	~CVsdLog(){}
 	UINT GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, BOOL bAllParam = FALSE );
 	void RotateMap( double dAngle );
+	double GetIndex( int iFrame, int iVidSt, int iVidEd, int iLogSt, int iLogEd, int iPrevIdx );
 	
 	BOOL IsDataExist( void ){
 		return 0 <= m_iLogNum && m_iLogNum < m_iCnt - 1;
@@ -183,32 +175,38 @@ class CVsdLog {
 	
 	double Speed	( void ){ return VsdLogGetData( Speed,		m_dLogNum ); }
 	double Tacho	( void ){ return VsdLogGetData( Tacho,		m_dLogNum ); }
-	double Mileage	( void ){ return VsdLogGetData( Mileage,	m_dLogNum ); }
+	double Distance	( void ){ return VsdLogGetData( Distance,	m_dLogNum ); }
 	double Gx		( void ){ return VsdLogGetData( Gx,			m_dLogNum ); }
 	double Gy		( void ){ return VsdLogGetData( Gy,			m_dLogNum ); }
 	double X		( void ){ return VsdLogGetData( X,			m_dLogNum ); }
 	double X0		( void ){ return VsdLogGetData( X0,			m_dLogNum ); }
 	double Y		( void ){ return VsdLogGetData( Y,			m_dLogNum ); }
 	double Y0		( void ){ return VsdLogGetData( Y0,			m_dLogNum ); }
+	double Bearing	( void ){ return VsdLogGetData( Bearing,	m_dLogNum ); }
+	double Time		( void ){ return VsdLogGetData( Time,		m_dLogNum ); }
 	
 	double Speed	( int iIndex ){ return m_Log[ iIndex ].Speed(); }
 	double Tacho	( int iIndex ){ return m_Log[ iIndex ].Tacho(); }
-	double Mileage	( int iIndex ){ return m_Log[ iIndex ].Mileage(); }
+	double Distance	( int iIndex ){ return m_Log[ iIndex ].Distance(); }
 	double Gx		( int iIndex ){ return m_Log[ iIndex ].Gx(); }
 	double Gy		( int iIndex ){ return m_Log[ iIndex ].Gy(); }
 	double X		( int iIndex ){ return m_Log[ iIndex ].X(); }
 	double X0		( int iIndex ){ return m_Log[ iIndex ].X0(); }
 	double Y		( int iIndex ){ return m_Log[ iIndex ].Y(); }
 	double Y0		( int iIndex ){ return m_Log[ iIndex ].Y0(); }
+	double Bearing	( int iIndex ){ return m_Log[ iIndex ].Bearing(); }
+	double Time		( int iIndex ){ return m_Log[ iIndex ].Time(); }
 	
 	double Speed	( double dIndex ){ return VsdLogGetData( Speed,		dIndex ); }
 	double Tacho	( double dIndex ){ return VsdLogGetData( Tacho,		dIndex ); }
-	double Mileage	( double dIndex ){ return VsdLogGetData( Mileage,	dIndex ); }
+	double Distance	( double dIndex ){ return VsdLogGetData( Distance,	dIndex ); }
 	double Gx		( double dIndex ){ return VsdLogGetData( Gx,		dIndex ); }
 	double Gy		( double dIndex ){ return VsdLogGetData( Gy,		dIndex ); }
 	double X		( double dIndex ){ return VsdLogGetData( X,			dIndex ); }
 	double X0		( double dIndex ){ return VsdLogGetData( X0,		dIndex ); }
 	double Y		( double dIndex ){ return VsdLogGetData( Y,			dIndex ); }
 	double Y0		( double dIndex ){ return VsdLogGetData( Y0,		dIndex ); }
+	double Bearing	( double dIndex ){ return VsdLogGetData( Bearing,	dIndex ); }
+	double Time		( double dIndex ){ return VsdLogGetData( Time,		dIndex ); }
 };
 #endif

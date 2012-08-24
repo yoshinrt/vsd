@@ -136,8 +136,8 @@ double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 	if( m_LapLog->m_iLapMode == LAPMODE_MAGNET ){
 		// iLogNum は VSD ログ番号
 		if( Log == m_VsdLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
-		if( LogSt == LogEd )  return 0;
-		a = ( m_LapLog->m_Lap[ iLapNum ].fLogNum - LogSt ) / ( LogEd - LogSt );
+		if( VsdSt == VsdEd )  return 0;
+		a = ( m_LapLog->m_Lap[ iLapNum ].fLogNum - VsdSt ) / ( VsdEd - VsdSt );
 		
 	}else if( m_LapLog->m_iLapMode == LAPMODE_GPS || m_LapLog->m_iLapMode == LAPMODE_HAND_GPS ){
 		// iLogNum は GPS ログ番号
@@ -152,7 +152,7 @@ double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 	}
 	
 	return Log == m_VsdLog ?
-		a * ( LogEd - LogSt ) + LogSt :
+		a * ( VsdEd - VsdSt ) + VsdSt :
 		a * ( GPSEd - GPSSt ) + GPSSt;
 }
 
@@ -171,7 +171,7 @@ CLapLog *CVsdFilter::CreateLapTime( int iLapMode ){
 	while(( iFrame = GetFrameMark( iFrame )) >= 0 ){
 		
 		if( pLapLog->m_iLapMode == LAPMODE_HAND_GPS ){
-			dLogNum	= ConvParam( iFrame, Video, GPS );
+			dLogNum	= GetLogIndex( iFrame, GPS, -1 );
 			iTime	= ( int )( dLogNum / LOG_FREQ * 1000 );
 		}else{
 			iTime	= ( int )( iFrame * 1000.0 / GetFPS());
@@ -226,7 +226,7 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	
 	/*** スタートラインの位置を取得 ***/
 	// iFrame に対応する GPS ログ番号取得
-	double dLogNum = ConvParam( iFrame, Video, GPS );
+	double dLogNum = GetLogIndex( iFrame, GPS, -1 );
 	
 	int iLogNum = ( int )dLogNum;
 	
