@@ -1275,7 +1275,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 		// ‚Å‚«‚È‚©‚Á‚½‚Ì‚ÅŽè“®‚Å
 		if( !m_LapLog ){
 			m_LapLog = CreateLapTime(
-				m_VsdLog ? LAPMODE_HAND_MAGNET :
 				m_GPSLog ? LAPMODE_HAND_GPS :
 						   LAPMODE_HAND_VIDEO
 			);

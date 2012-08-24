@@ -133,7 +133,7 @@ double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 	// iLapNum ‚ª‚¨‚©‚µ‚¢‚Æ‚«‚Í 0 ‚ð•Ô‚µ‚Æ‚­
 	if( iLapNum < 0 ) return 0;
 	
-	if( m_LapLog->m_iLapMode == LAPMODE_MAGNET || m_LapLog->m_iLapMode == LAPMODE_HAND_MAGNET ){
+	if( m_LapLog->m_iLapMode == LAPMODE_MAGNET ){
 		// iLogNum ‚Í VSD ƒƒO”Ô†
 		if( Log == m_VsdLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
 		if( LogSt == LogEd )  return 0;
@@ -170,10 +170,7 @@ CLapLog *CVsdFilter::CreateLapTime( int iLapMode ){
 	
 	while(( iFrame = GetFrameMark( iFrame )) >= 0 ){
 		
-		if( pLapLog->m_iLapMode == LAPMODE_HAND_MAGNET ){
-			dLogNum	= ConvParam( iFrame, Video, Log );
-			iTime	= ( int )( dLogNum / m_VsdLog->m_dFreq * 1000 );
-		}else if( pLapLog->m_iLapMode == LAPMODE_HAND_GPS ){
+		if( pLapLog->m_iLapMode == LAPMODE_HAND_GPS ){
 			dLogNum	= ConvParam( iFrame, Video, GPS );
 			iTime	= ( int )( dLogNum / LOG_FREQ * 1000 );
 		}else{

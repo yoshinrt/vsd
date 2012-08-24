@@ -16,9 +16,8 @@
 /*** Lap Time ***************************************************************/
 
 enum {
-	LAPMODE_HAND_VIDEO,		// 手動計測モード・Video フレーム
-	LAPMODE_HAND_GPS,		// 手動計測モード・GPS ログ時計
-	LAPMODE_HAND_MAGNET,	// 手動計測モード・磁気センサー時計
+	LAPMODE_HAND_VIDEO,		// 手動計測モード，時計は Video フレーム
+	LAPMODE_HAND_GPS,		// 手動計測モード，時計は GPS ログ時計
 	LAPMODE_GPS,			// GPS 自動計測モード
 	LAPMODE_MAGNET,			// 磁気センサー自動計測モード
 };

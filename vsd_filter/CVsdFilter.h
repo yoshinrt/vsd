@@ -53,10 +53,8 @@
 
 // Laptime ŒvŽZ—p
 #define SelectLogForLapTime	( m_CurLog = \
-	m_LapLog && ( \
-		m_LapLog->m_iLapMode == LAPMODE_MAGNET || \
-		m_LapLog->m_iLapMode == LAPMODE_HAND_MAGNET \
-	) ? m_VsdLog : m_GPSLog )
+	m_LapLog && m_LapLog->m_iLapMode == LAPMODE_MAGNET \
+	? m_VsdLog : m_GPSLog )
 
 /*** track / check ID *******************************************************/
 
