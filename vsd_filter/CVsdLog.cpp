@@ -33,6 +33,11 @@ CVsdLog::CVsdLog(){
 	m_dLogStartTime	= -1;
 	
 	m_uSameCnt		= 0;
+	
+	m_dLong0 =
+	m_dLati0 =
+	m_dLong2Meter =
+	m_dLati2Meter = 0;
 }
 
 /*** fraem# に対応するログ index を得る *************************************/
@@ -112,7 +117,7 @@ void CVsdLog::Dump( char *szFileName ){
 
 /*** GPS ログの up-convert **************************************************/
 
-UINT CVsdLog::GPSLogUpConvert( BOOL bAllParam ){
+UINT CVsdLog::GPSLogUpConvert( BOOL bGpsLog ){
 	
 	int	i;
 	
@@ -203,7 +208,7 @@ UINT CVsdLog::GPSLogUpConvert( BOOL bAllParam ){
 	
 	for( i = 0; i < m_iCnt; ++i ){
 		
-		if( bAllParam ){
+		if( bGpsLog ){
 			
 			if( m_iMaxSpeed < Speed( i ))
 				m_iMaxSpeed = ( int )ceil( Speed( i ));
@@ -224,7 +229,7 @@ UINT CVsdLog::GPSLogUpConvert( BOOL bAllParam ){
 	
 	// スムージング
 	#define G_SMOOTH_NUM	2
-	if( bAllParam ){
+	if( bGpsLog ){
 		double	dGx0, dGx1 = 0;
 		double	dGy0, dGy1 = 0;
 		
@@ -279,25 +284,35 @@ double CVsdLog::GPSLogGetLength(
 #define	getcwd	_getcwd
 #define	chdir	_chdir
 
-void CVsdLog::PushGPSRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati ){
+void CVsdLog::PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati ){
+	
 	if( m_iCnt == 0 ){
 		m_dLogStartTime = VsdLogTmp.Time();
-		m_dLong0 = dLong;
-		m_dLati0 = dLati;
-		m_dLong2Meter = GPSLogGetLength( dLong, dLati, dLong + 1.0 / 3600, dLati ) * 3600;
-		m_dLati2Meter = GPSLogGetLength( dLong, dLati, dLong, dLati + 1.0 / 3600 ) * 3600;
-		
-		VsdLogTmp.SetX0( 0 );
-		VsdLogTmp.SetY0( 0 );
+	}
+	
+	if( dLong == 0 ){
+		// GPS データがないので，直前の x, y データコピー
+		if( m_iCnt != 0 ){
+			VsdLogTmp.SetX0( X0( m_iCnt - 1 ));
+			VsdLogTmp.SetY0( Y0( m_iCnt - 1 ));
+		}
 	}else{
+		// 一発目の GPS データ，それを原点にする
+		if( m_dLong0 == 0 ){
+			m_dLong0 = dLong;
+			m_dLati0 = dLati;
+			m_dLong2Meter = GPSLogGetLength( dLong, dLati, dLong + 1.0 / 3600, dLati ) * 3600;
+			m_dLati2Meter = GPSLogGetLength( dLong, dLati, dLong, dLati + 1.0 / 3600 ) * 3600;
+		}
+		
 		// 単位を補正
 		// 緯度・経度→メートル
 		VsdLogTmp.SetX0(( dLong - m_dLong0 ) * m_dLong2Meter );
 		VsdLogTmp.SetY0(( m_dLati0 - dLati ) * m_dLati2Meter );
+		
+		if( VsdLogTmp.Time() < m_dLogStartTime ) VsdLogTmp.SetTime( VsdLogTmp.Time() + 24 * 3600 );
+		VsdLogTmp.SetTime( VsdLogTmp.Time() - m_dLogStartTime );
 	}
-	
-	if( VsdLogTmp.Time() < m_dLogStartTime ) VsdLogTmp.SetTime( VsdLogTmp.Time() + 24 * 3600 );
-	VsdLogTmp.SetTime( VsdLogTmp.Time() - m_dLogStartTime );
 	
 	DebugCmd(
 		VsdLogTmp.SetX( dLong - m_dLong0 );
@@ -427,7 +442,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 				// 速度
 				VsdLogTmp.SetSpeed( BigEndianS( 12 ) / 10.0 );
 				
-				PushGPSRecord(
+				PushRecord(
 					VsdLogTmp,
 					BigEndianI( 4 ) / 460800.0,
 					BigEndianI( 8 ) / 460800.0
@@ -457,7 +472,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 				// 速度
 				VsdLogTmp.SetSpeed( *( short int *)( szBuf + 0x4 ) / 10.0 );
 				
-				PushGPSRecord(
+				PushRecord(
 					VsdLogTmp,
 					*( short int *)( szBuf + 0x0 ) / 460800.0 + dLongBase,
 					*( short int *)( szBuf + 0x2 ) / 460800.0 + dLatiBase
@@ -507,7 +522,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 			// 速度
 			if( uParamCnt >= 6 ) VsdLogTmp.SetSpeed( dSpeed * 1.852 ); // knot/h → km/h
 			
-			PushGPSRecord( VsdLogTmp, dLong, dLati );
+			PushRecord( VsdLogTmp, dLong, dLati );
 		}
 		
 		gzclose( fp );
@@ -595,13 +610,10 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 			++pLapLog->m_iLapNum;
 		}
 		
+		double	dLati = 0;
+		double	dLong = 0;
 		if(( p = strstr( szBuf, "GPS" )) != NULL ){ // GPS記録を見つけた
-			double	dLati;
-			double	dLong;
-			
 			sscanf( p, "GPS%lg%lg", &dLati, &dLong );
-			VsdLogTmp.SetX( dLong );
-			VsdLogTmp.SetY( dLati );
 		}
 		
 		int		iTacho;
@@ -680,9 +692,7 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 			}
 			
 			VsdLogTmp.SetTime(( double )m_iCnt / LOG_FREQ );
-			
-			m_Log.push_back( VsdLogTmp );
-			++m_iCnt;
+			PushRecord( VsdLogTmp, dLong, dLati );
 		}
 	}
 	
@@ -693,7 +703,7 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 	
 	/*** GPS ログから軌跡を求める *******************************************/
 	
-	//if( uGPSCnt ) GPSLogUpConvert();
+	GPSLogUpConvert();
 	
 	/************************************************************************/
 	

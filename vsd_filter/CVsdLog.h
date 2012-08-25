@@ -130,7 +130,7 @@ class CVsdLog {
 	CVsdLog();
 	~CVsdLog(){}
 	
-	UINT GPSLogUpConvert( BOOL bAllParam = FALSE );
+	UINT GPSLogUpConvert( BOOL bGpsLog = FALSE );
 	void RotateMap( double dAngle );
 	double GetIndex( double dFrame, int iVidSt, int iVidEd, int iLogSt, int iLogEd, int iPrevIdx );
 	
@@ -145,7 +145,7 @@ class CVsdLog {
 		return 0 <= iLogNum && iLogNum < m_iCnt - 1;
 	}
 	
-	void PushGPSRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati );
+	void PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati );
 	int ReadGPSLog( const char *szFileName );
 	int ReadLog( const char *szFileName, CLapLog *&pLapLog );
 	double GPSLogGetLength(
