@@ -90,32 +90,6 @@ class VSD_LOG_t {
 	float	fTime;
 };
 
-class GPS_LOG_t {
-  public:
-	GPS_LOG_t(){
-		fSpeed = FLT_MAX;
-	}
-	~GPS_LOG_t(){}
-	
-	double X()			{ return fX; }			void SetX		( double d ){ fX		= ( float )d; }
-	double Y()			{ return fY; }			void SetY		( double d ){ fY		= ( float )d; }
-	double Speed()		{ return fSpeed; }		void SetSpeed	( double d ){ fSpeed	= ( float )d; }
-	double Bearing()	{ return fBearing; }	void SetBearing	( double d ){ fBearing	= ( float )d; }
-	double Gx()			{ return fGx; }			void SetGx		( double d ){ fGx		= ( float )d; }
-	double Gy()			{ return fGy; }			void SetGy		( double d ){ fGy		= ( float )d; }
-	double Time()		{ return fTime; }		void SetTime	( double d ){ fTime		= ( float )d; }
-	
-	BOOL IsValidSpeed(){ return fSpeed != FLT_MAX; }
-	
-  private:
-	float	fX;
-	float	fY;
-	float	fSpeed;
-	float	fBearing;
-	float	fGx, fGy;
-	float	fTime;
-};
-
 class CVsdLog {
 	
   public:
@@ -141,15 +115,28 @@ class CVsdLog {
 	
 	double		m_dLogStartTime;	// ログ開始時間
 	
+	// 緯度経度→メートル 変換用
+	double m_dLong0;
+	double m_dLati0;
+	double m_dLong2Meter;
+	double m_dLati2Meter;
+	
 	// VSD ログ位置自動認識用
 	int			m_iLogStart;
 	int			m_iLogStop;
 	
+	UINT		m_uSameCnt;
+	
 	CVsdLog();
 	~CVsdLog(){}
-	UINT GPSLogUpConvert( std::vector<GPS_LOG_t>& GPSLog, BOOL bAllParam = FALSE );
+	
+	UINT GPSLogUpConvert( BOOL bAllParam = FALSE );
 	void RotateMap( double dAngle );
 	double GetIndex( double dFrame, int iVidSt, int iVidEd, int iLogSt, int iLogEd, int iPrevIdx );
+	
+	#ifdef DEBUG
+		void Dump( char *szFileName );
+	#endif
 	
 	BOOL IsDataExist( void ){
 		return 0 <= m_iLogNum && m_iLogNum < m_iCnt - 1;
@@ -158,6 +145,7 @@ class CVsdLog {
 		return 0 <= iLogNum && iLogNum < m_iCnt - 1;
 	}
 	
+	void PushGPSRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati );
 	int ReadGPSLog( const char *szFileName );
 	int ReadLog( const char *szFileName, CLapLog *&pLapLog );
 	double GPSLogGetLength(
