@@ -127,6 +127,9 @@ UINT CVsdLog::GPSLogUpConvert( BOOL bAllParam ){
 	
 	/*** VSD_LOG_t の方を走査して，いろいろ補正 *****************************/
 	
+	m_dFreq = 0;
+	int iFreqCnt = 0;
+	
 	for( i = 1; i < m_iCnt - 1; ++i ){
 		// speed がない場合の補正
 		if( 0 /* ★★★暫定★★★ */ ){
@@ -149,12 +152,20 @@ UINT CVsdLog::GPSLogUpConvert( BOOL bAllParam ){
 				360
 			)
 		);
+		
+		// 5km/h 以上の時のみ，ログ Freq を計算する
+		if( Speed( i ) >= 5 ){
+			m_dFreq += Time( i ) - Time( i - 1 );
+			++iFreqCnt;
+		}
 	}
 	
-	m_Log[ 0          ].SetSpeed(	Speed( 1 ));
-	m_Log[ 0          ].SetBearing(	Bearing( 1 ));
-	m_Log[ m_iCnt - 1 ].SetSpeed(	Speed( m_iCnt - 2 ));
-	m_Log[ m_iCnt - 1 ].SetBearing(	Bearing( m_iCnt - 2 ));
+	m_dFreq = iFreqCnt / m_dFreq;
+	
+	m_Log[ 0          ].SetSpeed  ( Speed( 1 ));
+	m_Log[ 0          ].SetBearing( Bearing( 1 ));
+	m_Log[ m_iCnt - 1 ].SetSpeed  ( Speed( m_iCnt - 2 ));
+	m_Log[ m_iCnt - 1 ].SetBearing( Bearing( m_iCnt - 2 ));
 	
 	for( i = 1; i < m_iCnt - 1; ++i ){
 		// Gx / Gy を作る
@@ -214,23 +225,22 @@ UINT CVsdLog::GPSLogUpConvert( BOOL bAllParam ){
 	// スムージング
 	#define G_SMOOTH_NUM	2
 	if( bAllParam ){
-		UINT	v = 2;
 		double	dGx0, dGx1 = 0;
 		double	dGy0, dGy1 = 0;
 		
-		/*while( v-- )*/ for( i = ( G_SMOOTH_NUM - 1 ) / 2; i < m_iCnt - G_SMOOTH_NUM / 2; ++i ){
+		for( i = ( G_SMOOTH_NUM - 1 ) / 2; i < m_iCnt - G_SMOOTH_NUM / 2; ++i ){
 			m_Log[ i ].SetGx( dGx0 = (
-				Gx( i - 2 ) * ( G_SMOOTH_NUM >= 5 ? 1 : 0 ) +
-				Gx( i + 2 ) * ( G_SMOOTH_NUM >= 4 ? 1 : 0 ) +
-				Gx( i - 1 ) * ( G_SMOOTH_NUM >= 3 ? 1 : 0 ) +
-				Gx( i + 1 ) * ( G_SMOOTH_NUM >= 2 ? 1 : 0 ) +
+				( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
+				( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
+				( G_SMOOTH_NUM >= 3 ? Gx( i - 1 ) : 0 ) +
+				( G_SMOOTH_NUM >= 2 ? Gx( i + 1 ) : 0 ) +
 				Gx( i + 0 )
 			) / G_SMOOTH_NUM );
 			m_Log[ i ].SetGy( dGy0 = (
-				Gy( i - 2 ) * ( G_SMOOTH_NUM >= 5 ? 1 : 0 ) +
-				Gy( i + 2 ) * ( G_SMOOTH_NUM >= 4 ? 1 : 0 ) +
-				Gy( i - 1 ) * ( G_SMOOTH_NUM >= 3 ? 1 : 0 ) +
-				Gy( i + 1 ) * ( G_SMOOTH_NUM >= 2 ? 1 : 0 ) +
+				( G_SMOOTH_NUM >= 5 ? Gy( i - 2 ) : 0 ) +
+				( G_SMOOTH_NUM >= 4 ? Gy( i + 2 ) : 0 ) +
+				( G_SMOOTH_NUM >= 3 ? Gy( i - 1 ) : 0 ) +
+				( G_SMOOTH_NUM >= 2 ? Gy( i + 1 ) : 0 ) +
 				Gy( i + 0 )
 			) / G_SMOOTH_NUM );
 			
@@ -241,6 +251,7 @@ UINT CVsdLog::GPSLogUpConvert( BOOL bAllParam ){
 			if( m_dMinGy > dGy1 ) m_dMinGy = dGy1;
 		}
 	}
+	
 	return m_iCnt;
 }
 

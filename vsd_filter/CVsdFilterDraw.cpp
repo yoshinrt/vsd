@@ -31,7 +31,6 @@
 
 #define LineTrace		m_piParamT[ TRACK_LineTrace ]
 #define DispLap			m_piParamC[ CHECK_LAP ]
-#define GSnakeLen		m_piParamT[ TRACK_G_Len ]
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] * ( INVERT_G / 1000.0 ))
 #define DispGraph		m_piParamC[ CHECK_GRAPH ]
 
@@ -730,7 +729,8 @@ void CVsdFilter::DrawGraph(
 
 void CVsdFilter::DrawGSnake(
 	int iCx, int iCy, int iR, int iIndicatorR, int iWidth,
-	tRABY uColorBall, tRABY uColorLine
+	tRABY uColorBall, tRABY uColorLine,
+	double dLength
 ){
 	int	iGx, iGy;
 	int	i;
@@ -740,11 +740,11 @@ void CVsdFilter::DrawGSnake(
 	iR = iR * INVERT_G;
 	
 	if( m_CurLog && m_CurLog->IsDataExist()){
-		if( GSnakeLen > 0 ){
+		if( dLength > 0 ){
 			
 			int iGxPrev = INVALID_POS_I, iGyPrev;
 			
-			for( i = -( int )( GSnakeLen * m_CurLog->m_dFreq / 10.0 ) ; i <= 1 ; ++i ){
+			for( i = -( int )( dLength * m_CurLog->m_dFreq ) ; i <= 1 ; ++i ){
 				
 				if( m_CurLog->m_iLogNum + i >= 0 ){
 					// i == 1 ‚ÍÅŒã‚Ì’†“r”¼’[‚È LogNum

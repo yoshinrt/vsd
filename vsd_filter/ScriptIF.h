@@ -327,7 +327,7 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawGSnake( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 7 )) return v8::Undefined();
+		if( CheckArgs( 7 <= iLen && iLen <= 8 )) return v8::Undefined();
 		
 		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
@@ -338,7 +338,8 @@ class CVsdFilterIF {
 			args[ 3 ]->Int32Value(),
 			args[ 4 ]->Int32Value(),
 			PIXEL_RABY::Argb2Raby( args[ 5 ]->Int32Value()),
-			PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value())
+			PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
+			iLen <= 7 ? 3 : args[ 7 ]->NumberValue()
 		);
 		
 		return v8::Undefined();

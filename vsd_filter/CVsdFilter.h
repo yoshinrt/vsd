@@ -185,7 +185,8 @@ class CVsdFilter {
 	BOOL DrawVSD( void );
 	void DrawGSnake( // !js_func
 		int iCx, int iCy, int iR, int iIndicatorR, int iWidth,
-		tRABY uColorBall, tRABY uColorLine
+		tRABY uColorBall, tRABY uColorLine,
+		double dLength	// !default:3
 	);
 	
 	void DrawMeterScale(	// !js_func

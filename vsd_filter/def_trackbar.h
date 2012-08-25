@@ -20,7 +20,6 @@ DEF_TRACKBAR(	PARAM_GEd,			0,		0,		9999,	"GPS最後",			"gps_end"		)
 #endif
 DEF_TRACKBAR(	TRACK_LineTrace,	240,	0,		1000,	"走行軌跡長さ",		"map_length"	)
 DEF_TRACKBAR(	TRACK_MapAngle,		0,		0,		3600,	"走行軌跡回転",		"map_angle"		)
-DEF_TRACKBAR(	TRACK_G_Len,		30,		-1,		300,	"G軌跡表示長さ",	"g_length"		)
 DEF_TRACKBAR(	TRACK_SLineWidth,	200,	-1,		1000,	"計測地点幅",		"start_width"	)
 
 #undef DEF_TRACKBAR

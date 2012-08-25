@@ -173,7 +173,12 @@ sub MakeJsIF {
 				}
 				
 				elsif( $Type eq 'double' ){
-					$Args[ $ArgNum ] = "args[ $ArgPos ]->NumberValue()";
+					if( defined( $Default )){
+						$Args[ $ArgNum ] = "iLen <= $ArgPos ? $Default : args[ $ArgPos ]->NumberValue()";
+						--$ArgMin;
+					}else{
+						$Args[ $ArgNum ] = "args[ $ArgPos ]->NumberValue()";
+					}
 				}
 				
 				elsif( $Type eq 'int' || $Type eq 'UINT' ){
