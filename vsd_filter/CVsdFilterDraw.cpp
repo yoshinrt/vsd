@@ -739,7 +739,7 @@ void CVsdFilter::DrawGSnake(
 	
 	iR = iR * INVERT_G;
 	
-	if( m_CurLog && m_CurLog->IsDataExist()){
+	if( m_CurLog ){
 		if( dLength > 0 ){
 			
 			int iGxPrev = INVALID_POS_I, iGyPrev;
@@ -795,7 +795,7 @@ void CVsdFilter::DrawMap(
 	
 	SelectLogGPS;
 	
-	if( !LineTrace || !m_CurLog || !m_CurLog->IsDataExist()) return;
+	if( !LineTrace || !m_CurLog ) return;
 	
 	int iWidth  = x2 - x1 + 1;
 	int iHeight = y2 - y1 + 1;
@@ -1290,7 +1290,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	// JavaScript 用ログデータ計算
 	SelectLogVsd;
-	if( m_CurLog && m_CurLog->IsDataExist()){
+	if( m_CurLog ){
 		m_dSpeed	= m_CurLog->Speed();
 		m_dTacho	= m_CurLog->Tacho();
 		m_dGx		= m_CurLog->Gx();

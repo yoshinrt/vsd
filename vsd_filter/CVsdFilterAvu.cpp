@@ -1134,7 +1134,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			}
 			
 		  Case ID_BUTT_SEL_SKIN:	// ƒXƒLƒ“‘I‘ð
-			if( filter->exfunc->dlg_get_load_name( szBuf, FILE_SKIN_EXT, NULL )){
+			if( filter->exfunc->dlg_get_load_name( szBuf, FILE_SKIN_EXT, g_Vsd->m_szPluginDirA )){
 				g_Vsd->SetSkinName( szBuf, hwnd );
 				// Ý’èÄ•`‰æ
 				filter->exfunc->filter_window_update( filter );

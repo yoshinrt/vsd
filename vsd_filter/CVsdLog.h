@@ -63,20 +63,16 @@ class VSD_LOG_t {
 	}
 	~VSD_LOG_t(){}
 	
-	double Speed(){ return uSpeed / 100.0; }
-	void SetSpeed( double d ){
-		uSpeed = ( USHORT )( d * 100 );
-	}
-	
+	double Speed(){ return uSpeed / 100.0; }void SetSpeed	( double d ){ uSpeed	= ( USHORT )( d * 100 ); }
 	double Tacho()	{ return uTacho; }		void SetTacho	( double d ){ uTacho	= ( USHORT )d; }
-	double Distance(){ return fDistance; }	void SetDistance	( double d ){ fDistance	= ( float )d; }
+	double Distance(){ return fDistance; }	void SetDistance( double d ){ fDistance	= ( float )d; }
 	double X()		{ return fX; }			void SetX		( double d ){ fX		= ( float )d; }
 	double Y()		{ return fY; }			void SetY		( double d ){ fY		= ( float )d; }
 	double X0()		{ return fX0; }			void SetX0		( double d ){ fX0		= ( float )d; }
 	double Y0()		{ return fY0; }			void SetY0		( double d ){ fY0		= ( float )d; }
 	double Bearing(){ return fBearing; }	void SetBearing	( double d ){ fBearing	= ( float )d; }
-	double Gx()		{ return fGx; }			void SetGx		( double d ){ fGx		= ( float )d; }
-	double Gy()		{ return fGy; }			void SetGy		( double d ){ fGy		= ( float )d; }
+	double Gx()		{ return iGx / 100.0; }	void SetGx		( double d ){ iGx		= ( int )( d * 100 ); }
+	double Gy()		{ return iGy / 100.0; }	void SetGy		( double d ){ iGy		= ( int )( d * 100 ); }
 	double Time()	{ return fTime; }		void SetTime	( double d ){ fTime		= ( float )d; }
 	
   private:
@@ -85,8 +81,8 @@ class VSD_LOG_t {
 	float	fDistance;
 	USHORT	uSpeed;
 	USHORT	uTacho;
+	short	iGx, iGy;
 	float	fBearing;
-	float	fGx, fGy;
 	float	fTime;
 };
 
@@ -130,7 +126,7 @@ class CVsdLog {
 	CVsdLog();
 	~CVsdLog(){}
 	
-	UINT GPSLogUpConvert( BOOL bGpsLog = FALSE );
+	UINT GPSLogUpConvert();
 	void RotateMap( double dAngle );
 	double GetIndex( double dFrame, int iVidSt, int iVidEd, int iLogSt, int iLogEd, int iPrevIdx );
 	
@@ -138,9 +134,6 @@ class CVsdLog {
 		void Dump( char *szFileName );
 	#endif
 	
-	BOOL IsDataExist( void ){
-		return 0 <= m_iLogNum && m_iLogNum < m_iCnt - 1;
-	}
 	BOOL IsDataExist( int iLogNum ){
 		return 0 <= iLogNum && iLogNum < m_iCnt - 1;
 	}

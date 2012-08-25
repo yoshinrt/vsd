@@ -16,7 +16,6 @@
 /*** macros *****************************************************************/
 
 #define GRAVITY			9.80665
-#define GPS_LOG_OFFS	15
 
 /*** コンストラクタ *********************************************************/
 
@@ -66,8 +65,10 @@ double CVsdLog::GetIndex(
 		// iPrevIdx がおかしいので，binary serch する
 		int iSt = 0;
 		int iEd = m_iCnt - 1;
-		while( iSt != iEd ){
+		while( 1 ){
 			idx = ( iSt + iEd ) / 2;
+			if( iSt == iEd ) break;
+			
 			if( Time( idx ) > dTime ){
 				iEd = idx - 1;
 			}else if( Time( idx + 1 ) <= dTime ){
@@ -117,7 +118,7 @@ void CVsdLog::Dump( char *szFileName ){
 
 /*** GPS ログの up-convert **************************************************/
 
-UINT CVsdLog::GPSLogUpConvert( BOOL bGpsLog ){
+UINT CVsdLog::GPSLogUpConvert( void ){
 	
 	int	i;
 	
@@ -207,54 +208,44 @@ UINT CVsdLog::GPSLogUpConvert( BOOL bGpsLog ){
 	/************************************************************************/
 	
 	for( i = 0; i < m_iCnt; ++i ){
+		if( m_iMaxSpeed < Speed( i ))
+			m_iMaxSpeed = ( int )ceil( Speed( i ));
 		
-		if( bGpsLog ){
-			
-			if( m_iMaxSpeed < Speed( i ))
-				m_iMaxSpeed = ( int )ceil( Speed( i ));
-			
-			if( i ) dDistance += sqrt(
-				pow( X0( i - 1 ) - X0( i ), 2 ) +
-				pow( Y0( i - 1 ) - Y0( i ), 2 )
-			);
-			
-			m_Log[ i ].SetDistance( dDistance );
-			m_Log[ i ].SetTacho( 0 );
-		}else{
-			// PSP GPS log のときは，G の MAX 値のみをチェック
-			if( m_dMaxGy < Gy( i )) m_dMaxGy = Gy( i );
-			if( m_dMinGy > Gy( i )) m_dMinGy = Gy( i );
-		}
+		if( i ) dDistance += sqrt(
+			pow( X0( i - 1 ) - X0( i ), 2 ) +
+			pow( Y0( i - 1 ) - Y0( i ), 2 )
+		);
+		
+		m_Log[ i ].SetDistance( dDistance );
+		m_Log[ i ].SetTacho( 0 );
 	}
 	
 	// スムージング
 	#define G_SMOOTH_NUM	2
-	if( bGpsLog ){
-		double	dGx0, dGx1 = 0;
-		double	dGy0, dGy1 = 0;
+	double	dGx0, dGx1 = 0;
+	double	dGy0, dGy1 = 0;
+	
+	for( i = ( G_SMOOTH_NUM - 1 ) / 2; i < m_iCnt - G_SMOOTH_NUM / 2; ++i ){
+		m_Log[ i ].SetGx( dGx0 = (
+			( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
+			( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
+			( G_SMOOTH_NUM >= 3 ? Gx( i - 1 ) : 0 ) +
+			( G_SMOOTH_NUM >= 2 ? Gx( i + 1 ) : 0 ) +
+			Gx( i + 0 )
+		) / G_SMOOTH_NUM );
+		m_Log[ i ].SetGy( dGy0 = (
+			( G_SMOOTH_NUM >= 5 ? Gy( i - 2 ) : 0 ) +
+			( G_SMOOTH_NUM >= 4 ? Gy( i + 2 ) : 0 ) +
+			( G_SMOOTH_NUM >= 3 ? Gy( i - 1 ) : 0 ) +
+			( G_SMOOTH_NUM >= 2 ? Gy( i + 1 ) : 0 ) +
+			Gy( i + 0 )
+		) / G_SMOOTH_NUM );
 		
-		for( i = ( G_SMOOTH_NUM - 1 ) / 2; i < m_iCnt - G_SMOOTH_NUM / 2; ++i ){
-			m_Log[ i ].SetGx( dGx0 = (
-				( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
-				( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
-				( G_SMOOTH_NUM >= 3 ? Gx( i - 1 ) : 0 ) +
-				( G_SMOOTH_NUM >= 2 ? Gx( i + 1 ) : 0 ) +
-				Gx( i + 0 )
-			) / G_SMOOTH_NUM );
-			m_Log[ i ].SetGy( dGy0 = (
-				( G_SMOOTH_NUM >= 5 ? Gy( i - 2 ) : 0 ) +
-				( G_SMOOTH_NUM >= 4 ? Gy( i + 2 ) : 0 ) +
-				( G_SMOOTH_NUM >= 3 ? Gy( i - 1 ) : 0 ) +
-				( G_SMOOTH_NUM >= 2 ? Gy( i + 1 ) : 0 ) +
-				Gy( i + 0 )
-			) / G_SMOOTH_NUM );
-			
-			dGx1 = dGx1 * 0.9 + dGx0 * 0.1;
-			dGy1 = dGy1 * 0.9 + dGy0 * 0.1;
-			if( m_dMaxGx < fabs( dGx1 )) m_dMaxGx = fabs( dGx1 );
-			if( m_dMaxGy < dGy1 ) m_dMaxGy = dGy1;
-			if( m_dMinGy > dGy1 ) m_dMinGy = dGy1;
-		}
+		dGx1 = dGx1 * 0.9 + dGx0 * 0.1;
+		dGy1 = dGy1 * 0.9 + dGy0 * 0.1;
+		if( m_dMaxGx < fabs( dGx1 )) m_dMaxGx = fabs( dGx1 );
+		if( m_dMaxGy < dGy1 ) m_dMaxGy = dGy1;
+		if( m_dMinGy > dGy1 ) m_dMinGy = dGy1;
 	}
 	
 	return m_iCnt;
@@ -288,14 +279,17 @@ void CVsdLog::PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati ){
 	
 	if( m_iCnt == 0 ){
 		m_dLogStartTime = VsdLogTmp.Time();
+		
+		// 小さい方の番犬
+		m_Log.push_back( VsdLogTmp );
+		m_Log[ 0 ].SetTime( FLT_MIN );
+		++m_iCnt;
 	}
 	
 	if( dLong == 0 ){
 		// GPS データがないので，直前の x, y データコピー
-		if( m_iCnt != 0 ){
-			VsdLogTmp.SetX0( X0( m_iCnt - 1 ));
-			VsdLogTmp.SetY0( Y0( m_iCnt - 1 ));
-		}
+		VsdLogTmp.SetX0( X0( m_iCnt - 1 ));
+		VsdLogTmp.SetY0( Y0( m_iCnt - 1 ));
 	}else{
 		// 一発目の GPS データ，それを原点にする
 		if( m_dLong0 == 0 ){
@@ -321,7 +315,7 @@ void CVsdLog::PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati ){
 	
 	m_Log.push_back( VsdLogTmp );
 	
-	if( m_iCnt >= 1 ){
+	if( m_iCnt >= 2 ){
 		if( Time( m_iCnt - 1 ) == VsdLogTmp.Time()){
 			// 時刻が同じログが続くときそのカウントをする
 			++m_uSameCnt;
@@ -532,13 +526,13 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 	
 	/************************************************************************/
 	
-	#define DUMP_LOG
+	//#define DUMP_LOG
 	#if defined DEBUG && defined DUMP_LOG
 		Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_raw.txt" );
 	#endif
 	
 	// アップコンバート用バッファ確保・初期化
-	GPSLogUpConvert( TRUE );
+	GPSLogUpConvert();
 	
 	#if defined DEBUG && defined DUMP_LOG
 		Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_upcon.txt" );
@@ -700,10 +694,6 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 	if( iLogFreqTime ){
 		m_dFreq = iLogFreqLog / ( iLogFreqTime / 1000.0 );
 	}
-	
-	/*** GPS ログから軌跡を求める *******************************************/
-	
-	GPSLogUpConvert();
 	
 	/************************************************************************/
 	
