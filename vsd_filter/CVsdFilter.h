@@ -152,7 +152,7 @@ class CVsdFilter {
 		CVsdFont &Font,
 		tRABY uColor,
 		CVsdLog& Log,
-		double ( CVsdLog::*GetDataFunc )( int ),
+		double ( CVsdLog::*GetDataFunc )( double ),
 		double dMaxVal
 	);
 	

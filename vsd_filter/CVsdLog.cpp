@@ -47,10 +47,14 @@ double CVsdLog::GetIndex(
 	int iLogSt, int iLogEd,
 	int iPrevIdx
 ){
-	if( iVidSt == iVidEd ) return -1;
-	
-	double dTime = ( iLogSt + ( iLogEd - iLogSt ) * ( dFrame - iVidSt ) / ( double )( iVidEd - iVidSt )) / SLIDER_TIME;
-	
+	if( iVidSt == iVidEd ) return 0;
+	return GetIndex(
+		( iLogSt + ( iLogEd - iLogSt ) * ( dFrame - iVidSt ) / ( double )( iVidEd - iVidSt )) / SLIDER_TIME,
+		iPrevIdx
+	);
+}
+
+double CVsdLog::GetIndex( double dTime, int iPrevIdx ){
 	int idx;
 	
 	if( dTime < 0 ) return -1;

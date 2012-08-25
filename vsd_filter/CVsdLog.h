@@ -129,6 +129,7 @@ class CVsdLog {
 	UINT GPSLogUpConvert();
 	void RotateMap( double dAngle );
 	double GetIndex( double dFrame, int iVidSt, int iVidEd, int iLogSt, int iLogEd, int iPrevIdx );
+	double GetIndex( double dTime, int iPrevIdx );
 	
 	#ifdef DEBUG
 		void Dump( char *szFileName );

@@ -4,7 +4,7 @@
     <LocalDebuggerWorkingDirectory>D:\DDS\vsd\vsd_filter\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>C:\Program Files (x86)\MediaPlayerClassic\mpc-hc.exe</LocalDebuggerCommand>
-    <LocalDebuggerCommandArguments>D:\DDS\vsd\vsd_filter\z.avs</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>D:\DDS\vsd\vsd_filter\z_std.avs</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerCommand>C:\Program Files (x86)\MediaPlayerClassic\mpc-hc.exe</LocalDebuggerCommand>

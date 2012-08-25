@@ -578,7 +578,9 @@ inline UINT CVsdFilter::BlendColor(
 
 /*** パラメータ調整用スピードグラフ *****************************************/
 
-#define GRAPH_SCALE	1
+#define GRAPH_SCALE	( 1.0 / SLIDER_TIME * 2 )	// 1dot あたりの log 時間
+#define GRAPH_STEP	1						// x をこれ dot ずつのステップで描く
+
 
 void CVsdFilter::DrawGraph(
 	int x1, int y1, int x2, int y2,
@@ -586,15 +588,13 @@ void CVsdFilter::DrawGraph(
 	CVsdFont &Font,
 	tRABY uColor,
 	CVsdLog& Log,
-	double ( CVsdLog::*GetDataFunc )( int ),
+	double ( CVsdLog::*GetDataFunc )( double ),
 	double dMaxVal
 ){
 	int	iWidth  = x2 - x1 + 1;
 	int iHeight = y2 - y1 + 1;
 	
 	int		iPrevY = INVALID_POS_I;
-	int		iCursorPos;
-	double	dCursorVal;
 	double	dVal;
 	double	dMinVal = 0;
 	
@@ -605,35 +605,38 @@ void CVsdFilter::DrawGraph(
 	
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
-	for( int x = 0; x < iWidth; ++x ){
-		int iLogNum = Log.m_iLogNum + ( x - iWidth / 2 ) * GRAPH_SCALE;
-		dVal = Log.IsDataExist( iLogNum ) ? std::mem_fun1( GetDataFunc )( &Log, iLogNum ) : 0;
+	double	dTime0 = Log.Time() - ( iWidth / 2 ) * GRAPH_SCALE;
+	int		iIndex = -1;
+	double	dIndex;
+	
+	for( int x = 0; x < iWidth; x += GRAPH_STEP ){
+		dIndex = Log.GetIndex( dTime0 + x * GRAPH_SCALE, iIndex );
+		iIndex = ( int )dIndex;
+		
+		dVal = std::mem_fun1( GetDataFunc )( &Log, dIndex );
 		
 		int iPosY = y2 - ( int )(( dVal - dMinVal ) * iHeight / ( dMaxVal - dMinVal ));
 		if( iPrevY != INVALID_POS_I )
-			DrawLine( x1 + x - 1, iPrevY, x1 + x, iPosY, 1, uColor, 0 );
+			DrawLine( x1 + x - GRAPH_STEP, iPrevY, x1 + x, iPosY, 1, uColor, 0 );
 		
 		iPrevY = iPosY;
 		
 		if( x == iWidth / 2 ){
-			iCursorPos = iPosY;
-			dCursorVal = dVal;
+			int x = x1 + iWidth / 2;
+			DrawLine(
+				x, iPosY,
+				x + 10, iPosY - 10,
+				1, uColor, 0
+			);
+			
+			swprintf( szBuf, sizeof( szBuf ), szFormat, dVal );
+			DrawText(
+				x + 10,
+				iPosY - 10 - Font.GetHeight(),
+				szBuf, Font, uColor
+			);
 		}
 	}
-	
-	int x = x1 + iWidth / 2;
-	DrawLine(
-		x, iCursorPos,
-		x + 10, iCursorPos - 10,
-		1, uColor, 0
-	);
-	
-	swprintf( szBuf, sizeof( szBuf ), szFormat, dCursorVal );
-	DrawText(
-		x + 10,
-		iCursorPos - 10 - Font.GetHeight(),
-		szBuf, Font, uColor
-	);
 }
 
 #define CalcGpaphPos() { \
