@@ -212,26 +212,27 @@ UINT CVsdLog::GPSLogUpConvert( BOOL bAllParam ){
 	}
 	
 	// スムージング
-	if( 0 && bAllParam ){
+	#define G_SMOOTH_NUM	2
+	if( bAllParam ){
 		UINT	v = 2;
 		double	dGx0, dGx1 = 0;
 		double	dGy0, dGy1 = 0;
 		
-		while( v-- ) for( i = 2; i < m_iCnt - 2; ++i ){
+		/*while( v-- )*/ for( i = ( G_SMOOTH_NUM - 1 ) / 2; i < m_iCnt - G_SMOOTH_NUM / 2; ++i ){
 			m_Log[ i ].SetGx( dGx0 = (
-				Gx( i - 2 ) +
-				Gx( i - 1 ) +
-				Gx( i + 0 ) +
-				Gx( i + 1 ) +
-				Gx( i + 2 )
-			) / 5 );
+				Gx( i - 2 ) * ( G_SMOOTH_NUM >= 5 ? 1 : 0 ) +
+				Gx( i + 2 ) * ( G_SMOOTH_NUM >= 4 ? 1 : 0 ) +
+				Gx( i - 1 ) * ( G_SMOOTH_NUM >= 3 ? 1 : 0 ) +
+				Gx( i + 1 ) * ( G_SMOOTH_NUM >= 2 ? 1 : 0 ) +
+				Gx( i + 0 )
+			) / G_SMOOTH_NUM );
 			m_Log[ i ].SetGy( dGy0 = (
-				Gy( i - 2 ) +
-				Gy( i - 1 ) +
-				Gy( i + 0 ) +
-				Gy( i + 1 ) +
-				Gy( i + 2 )
-			) / 5 );
+				Gy( i - 2 ) * ( G_SMOOTH_NUM >= 5 ? 1 : 0 ) +
+				Gy( i + 2 ) * ( G_SMOOTH_NUM >= 4 ? 1 : 0 ) +
+				Gy( i - 1 ) * ( G_SMOOTH_NUM >= 3 ? 1 : 0 ) +
+				Gy( i + 1 ) * ( G_SMOOTH_NUM >= 2 ? 1 : 0 ) +
+				Gy( i + 0 )
+			) / G_SMOOTH_NUM );
 			
 			dGx1 = dGx1 * 0.9 + dGx0 * 0.1;
 			dGy1 = dGy1 * 0.9 + dGy0 * 0.1;
@@ -505,7 +506,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 	
 	/************************************************************************/
 	
-	//#define DUMP_LOG
+	#define DUMP_LOG
 	#if defined DEBUG && defined DUMP_LOG
 		Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_raw.txt" );
 	#endif
