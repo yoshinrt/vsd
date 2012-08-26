@@ -52,8 +52,8 @@ enum {
 #endif
 	ID_EDIT_LOAD_GPS,
 	ID_BUTT_LOAD_GPS,
-	ID_EDIT_SEL_SKIN,
-	ID_BUTT_SEL_SKIN,
+	ID_COMBO_SEL_SKIN,
+	ID_BUTT_SEL_SKIN,	// NOT USED
 	ID_BUTT_LOAD_CFG,
 	ID_BUTT_SAVE_CFG,
 };
@@ -545,10 +545,70 @@ BOOL func_proc( FILTER *fp, FILTER_PROC_INFO *fpip ){
 	return g_Vsd->DrawVSD();
 }
 
+/*** *.js ファイルリスト取得 ************************************************/
+
+void ListTreeCallback( const char *szPath, const char *szFile, HWND hwnd ){
+	if( !IsExt( szFile, "js" )) return;
+	
+	char szBuf[ MAX_PATH + 1 ];
+	
+	strcat( strcpy( szBuf, szPath ), szFile );
+	char *p = szBuf + strlen( g_Vsd->m_szPluginDirA );
+	
+	SendMessage( hwnd, CB_ADDSTRING, 0, ( LPARAM )p );
+}
+
+// szPath は [ MAX_PATH + 1 ] の配列で，work に使用される
+BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, void ( *CallbackFunc )( LPCTSTR, LPCTSTR, HWND ), HWND hwnd ){
+	
+	HANDLE				hFindFile;		/* find handle						*/
+	WIN32_FIND_DATA		FindData;		/* find data struc					*/
+	
+	BOOL	bSuccess = TRUE;			/* success flag						*/
+	
+	// szPath が \ で終わってない時の対処
+	int iFileIdx = _tcslen( szPath );	// \0
+	
+	if( iFileIdx != 0 && szPath[ iFileIdx - 1 ] != '\\' ){
+		_tcscat_s( szPath, MAX_PATH, _T( "\\" ));
+		++iFileIdx;
+	}
+	
+	_tcscat_s( szPath, MAX_PATH, szFile );
+	
+	if(( hFindFile = FindFirstFile( szPath, &FindData )) != INVALID_HANDLE_VALUE ){
+		do{
+			if( _tcscmp( FindData.cFileName, _T( "." ))&&
+				_tcscmp( FindData.cFileName, _T( ".." ))){
+				
+				if( FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ){
+					_tcscpy_s( &szPath[ iFileIdx ], MAX_PATH - iFileIdx, FindData.cFileName );
+					ListTree( szPath, szFile, CallbackFunc, hwnd );
+				}else{
+					szPath[ iFileIdx ] = _T( '\0' );
+					CallbackFunc( szPath, FindData.cFileName, hwnd );
+				}
+			}
+		}while( FindNextFile( hFindFile, &FindData ));
+		
+		FindClose( hFindFile );
+	}
+	return( bSuccess );
+}
+
+void SetSkinFileList( HWND hwnd ){
+	char szBuf[ MAX_PATH + 1 ];
+	
+	strcpy( szBuf, g_Vsd->m_szPluginDirA );
+	ListTree( szBuf, "*", ListTreeCallback, hwnd );
+	SendMessage( hwnd, CB_ADDSTRING, 0, ( LPARAM )"ファイル名を指定して開く..." );
+	SetWindowText( hwnd, g_Vsd->m_szSkinFile );
+}
+
 /*** ダイアログサイズ拡張とパーツ追加 ***************************************/
 
-void CreateSubControl(
-	HWND hwnd, int &iID, HFONT hfont, int iX, int &iY, RECT rectClient,
+void CreateControlFileName(
+	HWND hwnd, HINSTANCE hInst, int &iID, HFONT hfont, int iX, int &iY, RECT rectClient,
 	char *szCap, char *szEdit, char *szButt
 ) {
 	
@@ -558,7 +618,7 @@ void CreateSubControl(
 		"STATIC", szCap, WS_CHILD | WS_VISIBLE,
 		iX, iY,
 		POS_FILE_CAPTION_SIZE, POS_FILE_HEIGHT,
-		hwnd, 0, 0, NULL
+		hwnd, 0, hInst, NULL
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
@@ -567,7 +627,7 @@ void CreateSubControl(
 		"EDIT", szEdit, WS_CHILD | WS_VISIBLE | ES_READONLY,
 		iX + POS_FILE_CAPTION_SIZE, iY,
 		POS_FILE_NAME_SIZE, POS_FILE_HEIGHT,
-		hwnd, ( HMENU )iID, 0, NULL
+		hwnd, ( HMENU )iID, hInst, NULL
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
@@ -575,7 +635,7 @@ void CreateSubControl(
 		"BUTTON", szButt, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		iX + POS_FILE_CAPTION_SIZE + POS_FILE_NAME_SIZE, iY,
 		POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT,
-		hwnd, ( HMENU )( iID + 1 ), 0, NULL
+		hwnd, ( HMENU )( iID + 1 ), hInst, NULL
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
@@ -583,7 +643,36 @@ void CreateSubControl(
 	iY += POS_FILE_HEIGHT + POS_FILE_HEIGHT_MARGIN;
 }
 
-void ExtendDialog( HWND hwnd ){
+void CreateControlSkinName(
+	HWND hwnd, HINSTANCE hInst, int &iID, HFONT hfont, int iX, int &iY, RECT rectClient,
+	char *szCap, char *szEdit
+) {
+	
+	HWND hwndChild;
+	
+	hwndChild = CreateWindow(
+		"STATIC", szCap, WS_CHILD | WS_VISIBLE,
+		iX, iY,
+		POS_FILE_CAPTION_SIZE, POS_FILE_HEIGHT,
+		hwnd, 0, hInst, NULL
+	);
+	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
+	
+	hwndChild = CreateWindowEx(
+		WS_EX_CLIENTEDGE,
+		"COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWN,
+		iX + POS_FILE_CAPTION_SIZE, iY,
+		POS_FILE_NAME_SIZE + POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT * 10,
+		hwnd, ( HMENU )iID, hInst, NULL
+	);
+	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
+	SendMessage( hwndChild, CB_SETCURSEL, 0, 0 );
+	
+	iID += 2;
+	iY += POS_FILE_HEIGHT + POS_FILE_HEIGHT_MARGIN;
+}
+
+void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	
 	union {
 		struct {
@@ -653,7 +742,7 @@ void ExtendDialog( HWND hwnd ){
 				"BUTTON", "set", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 				rectClient.right - POS_SET_BUTT_SIZE, 14 + ( i + 1 ) * 24,
 				POS_SET_BUTT_SIZE, 16,
-				hwnd, ( HMENU )( ID_BUTT_SET_VSt + i ), 0, NULL
+				hwnd, ( HMENU )( ID_BUTT_SET_VSt + i ), hInst, NULL
 			);
 			SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 		}
@@ -664,17 +753,17 @@ void ExtendDialog( HWND hwnd ){
 	int y = rectClient.bottom - ( POS_FILE_HEIGHT + POS_FILE_HEIGHT_MARGIN ) * POS_FILE_NUM + POS_FILE_HEIGHT_MARGIN;
 	
 #ifndef GPS_ONLY
-	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "VSDログ",	"",		"開く" );
+	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "VSDログ",	"",		"開く" );
 #endif
-	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "GPSログ",	"",		"開く" );
-	CreateSubControl( hwnd, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "スキン",	"",		"開く" );
+	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "GPSログ",	"",		"開く" );
+	CreateControlSkinName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "スキン",	"" );
 	
 	// cfg load/save ボタン
 	hwndChild = CreateWindow(
 		"STATIC", "cfgファイル", WS_CHILD | WS_VISIBLE,
 		rectClient.right - ( POS_FILE_BUTT_SIZE * 2 + POS_FILE_CAPTION_SIZE ), y,
 		POS_FILE_CAPTION_SIZE, POS_FILE_HEIGHT,
-		hwnd, 0, 0, NULL
+		hwnd, 0, hInst, NULL
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
@@ -682,7 +771,7 @@ void ExtendDialog( HWND hwnd ){
 		"BUTTON", "開く", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		rectClient.right - ( POS_FILE_BUTT_SIZE * 2 ), y,
 		POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT,
-		hwnd, ( HMENU )( i++ ), 0, NULL
+		hwnd, ( HMENU )( i++ ), hInst, NULL
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
@@ -690,7 +779,7 @@ void ExtendDialog( HWND hwnd ){
 		"BUTTON", "保存", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		rectClient.right - POS_FILE_BUTT_SIZE, y,
 		POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT,
-		hwnd, ( HMENU )( i++ ), 0, NULL
+		hwnd, ( HMENU )( i++ ), hInst, NULL
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 }
@@ -866,7 +955,7 @@ void CVsdFilterAvu::SetSkinName( char *szSkinFile, HWND hwnd ){
 	SetSkinFile( szSkinFile );
 	
 	// skin 名をダイアログに設定
-	SetWindowText( GetDlgItem( hwnd, ID_EDIT_SEL_SKIN ), m_szSkinFile );
+	SetWindowText( GetDlgItem( hwnd, ID_COMBO_SEL_SKIN ), m_szSkinFile );
 }
 
 /*** config セーブ **********************************************************/
@@ -974,7 +1063,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	
 	//	TRUEを返すと全体が再描画される
 	
-	if( message == WM_FILTER_INIT ) ExtendDialog( hwnd );
+	if( message == WM_FILTER_INIT ) ExtendDialog( hwnd, 0 );
 	
 	//	編集中でなければ何もしない
 	if( filter->exfunc->is_editing( editp ) != TRUE ) return FALSE;
@@ -994,6 +1083,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			track_e[ PARAM_VSt ] =
 			track_e[ PARAM_VEd ] = filter->exfunc->get_frame_n( editp );
 		#endif
+		
+		// リストボックスアイテム追加
+		SetSkinFileList( GetDlgItem( hwnd, ID_COMBO_SEL_SKIN ));
 		
 		// 設定再描画
 		filter->exfunc->filter_window_update( filter );
@@ -1047,8 +1139,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		}
 		
 	  Case WM_COMMAND:
-		if( ID_BUTT_SET_VSt <= wparam && wparam <= ID_BUTT_SET_GEd ){
 		#ifndef GPS_ONLY
+		if( ID_BUTT_SET_VSt <= wparam && wparam <= ID_BUTT_SET_GEd ){
 			// フレーム数セット
 			switch( wparam ){
 				case ID_BUTT_SET_VSt:	filter->track[ PARAM_VSt ] = filter->exfunc->get_frame( editp );
@@ -1060,9 +1152,10 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			}
 			// 設定再描画
 			filter->exfunc->filter_window_update( filter );
+		}else
 		#endif
-			
-		}else switch( wparam ){
+		
+		switch( wparam ){
 		  case ID_BUTT_LOAD_CFG:	// .avs ロード
 			if(
 				filter->exfunc->dlg_get_load_name( szBuf, FILE_CFG_EXT, NULL ) &&
@@ -1133,13 +1226,30 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				}
 			}
 			
-		  Case ID_BUTT_SEL_SKIN:	// スキン選択
-			if( filter->exfunc->dlg_get_load_name( szBuf, FILE_SKIN_EXT, g_Vsd->m_szPluginDirA )){
+		  Case ( CBN_SELCHANGE << 16 ) | ID_COMBO_SEL_SKIN:	// スキン選択
+			{
+				HWND hWndCombo = GetDlgItem( hwnd, ID_COMBO_SEL_SKIN );
+				int i = SendMessage( hWndCombo, CB_GETCURSEL, 0, 0 );
+				
+				// ファイルを開くが選択された?
+				if( SendMessage( hWndCombo, CB_GETCOUNT,  0, 0 ) - 1 == i ){
+					
+					// ダイアログがキャンセルされた
+					if( !filter->exfunc->dlg_get_load_name( szBuf, FILE_SKIN_EXT, NULL )){
+						// とりあえず，直前の skin 名をそのままコピーしとく
+						//strcpy( szBuf, g_Vsd->m_szSkinFile );
+						//SetWindowText( hWndCombo, g_Vsd->m_szSkinFile );
+						// 何しても無駄だった...
+						return TRUE;
+					}
+				}else{
+					// スキンがドロップダウンリストから選択された
+					SendMessage( hWndCombo, CB_GETLBTEXT, i, ( LPARAM )szBuf );
+				}
+				
 				g_Vsd->SetSkinName( szBuf, hwnd );
-				// 設定再描画
-				filter->exfunc->filter_window_update( filter );
+				filter->exfunc->filter_window_update( filter );	// 設定再描画
 			}
-			
 		  Default:
 			return FALSE;
 		}

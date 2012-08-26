@@ -55,11 +55,11 @@ CVsdFilter::CVsdFilter (){
 	#define DEF_STR_PARAM( id, var, init, conf_name ) StringNew( var, init );
 	#include "def_str_param.h"
 	
-	// SkinDir セット
-	SetSkinFile( m_szSkinFile );
-	
 	// plugin dll path 取得
 	SetPluginDir();
+	
+	// SkinDir セット
+	SetSkinFile( m_szSkinFile );
 	
 	m_Script	= NULL;
 	

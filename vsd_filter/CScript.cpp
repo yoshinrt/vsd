@@ -155,12 +155,17 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 	
 	TryCatch try_catch;
 	
+	// PluginDir に cd
+	TCHAR	szCurDir[ MAX_PATH ];
+	getcwd( szCurDir, MAX_PATH );	// カレント dir
+	chdir( m_Vsd->m_szPluginDirA );
+	
 	// スクリプト ロード
 	FILE *fp;
-	if(( fp = _wfopen( szFileName, L"r" )) == NULL ){
-		// エラー処理
-		return m_uError = ERR_FILE_NOT_FOUND;
-	}
+	fp = _wfopen( szFileName, L"r" );
+	
+	chdir( szCurDir );	// pwd を元に戻す
+	if( fp == NULL ) return m_uError = ERR_FILE_NOT_FOUND;
 	
 	// ファイルサイズ取得
 	fseek( fp, 0, SEEK_END );

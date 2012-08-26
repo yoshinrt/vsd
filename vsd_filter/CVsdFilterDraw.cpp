@@ -1311,9 +1311,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_Script = new CScript( this );
 		m_Script->Initialize();
 		
-		wcscat( wcscpy( szBuf, m_szPluginDirW ), L"_initialize" );
-		
-		if( m_Script->RunFile( szBuf ) == ERR_OK ){
+		if( m_Script->RunFile( L"_initialize" ) == ERR_OK ){
 			LPWSTR p = NULL;
 			StringNew( p, m_szSkinFile );
 			m_Script->RunFile( p );

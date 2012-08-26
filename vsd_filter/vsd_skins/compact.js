@@ -77,7 +77,7 @@ function Draw(){
 	Vsd.DrawGraph(
 		620 * Scale, 5, Vsd.Width - 250 * Scale, 120 * Scale - 5, FontS,
 		Vsd.MaxTacho > 0 ?
-			GRAPH_SPEED | GRAPH_TACHO | GRAPH_GX | GRAPH_GY :
-			GRAPH_SPEED |               GRAPH_GX | GRAPH_GY
+			GRAPH_SPEED | GRAPH_TACHO | GRAPH_GX | GRAPH_GY | GRAPH_HTILE :
+			GRAPH_SPEED |               GRAPH_GX | GRAPH_GY | GRAPH_HTILE
 	);
 }

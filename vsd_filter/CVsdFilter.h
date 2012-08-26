@@ -13,7 +13,7 @@
 #define PROG_NAME_J		"VSDメーター合成"
 #define PROG_NAME_J_W	L"VSDメーター合成"
 #define PROG_NAME_LONG	"`VSDFilter' vehicle data logger overlay plugin"
-#define PROG_VERSION	"v1.10beta1"
+#define PROG_VERSION	"v1.10beta3"
 
 #define MAX_LAP		200
 
@@ -27,6 +27,7 @@
 	#define VsdEd			0
 	#define GPSSt			m_piParamS[ PARAM_GSt ]
 	#define GPSEd			m_piParamS[ PARAM_GEd ]
+	#define DEFAULT_SKIN	"standard_l.js"
 #else
 	#define VideoSt			m_piParamT[ PARAM_VSt ]
 	#define VideoEd			m_piParamT[ PARAM_VEd ]
@@ -34,6 +35,7 @@
 	#define VsdEd			m_piParamT[ PARAM_LEd ]
 	#define GPSSt			m_piParamT[ PARAM_GSt ]
 	#define GPSEd			m_piParamT[ PARAM_GEd ]
+	#define DEFAULT_SKIN	"standard_r.js"
 #endif
 
 // パラメータを変換
@@ -289,6 +291,7 @@ class CVsdFilter {
 	void CalcLapTime( void );
 	
 	static char *StringNew( char *&szDst, const char *szSrc ){
+		if( szDst == szSrc ) return( szDst );
 		if( szDst ) delete [] szDst;
 		
 		if( szSrc == NULL || *szSrc == '\0' ){
@@ -299,6 +302,7 @@ class CVsdFilter {
 	}
 	
 	static LPWSTR StringNew( LPWSTR& szDst, LPCWSTR szSrc ){
+		if( szDst == szSrc ) return( szDst );
 		if( szDst ) delete [] szDst;
 		
 		if( szSrc == NULL || *szSrc == '\0' ){
@@ -377,12 +381,13 @@ class CVsdFilter {
 			return StringNew( m_szSkinDirA, NULL );
 		}
 		
+		StringNew( m_szSkinFile, szSkinFile );
+		
 		// スキンファイル名を CWD=m_szPluginDirA とみなしフルパスに変換
 		GetFullPathWithCDir( szBuf, szSkinFile, m_szPluginDirA );
 		
 		// ↑のディレクトリ名を得る
-		StringNew( m_szSkinFile, szBuf );
-		StringNew( m_szSkinDirA, StrTokFile( szBuf, m_szSkinFile, STF_FULL | STF_PATH2 ));
+		StringNew( m_szSkinDirA, StrTokFile( szBuf, szBuf, STF_FULL | STF_PATH2 ));
 		StringNew( m_szSkinDirW, m_szSkinDirA );
 		return m_szSkinDirA;
 	}

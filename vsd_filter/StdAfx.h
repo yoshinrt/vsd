@@ -36,4 +36,7 @@
 #define ToRAD		( M_PI / 180 )
 #define SLIDER_TIME	LOG_FREQ
 
+#define	getcwd	_getcwd
+#define	chdir	_chdir
+
 #endif//__STDAFX_H__

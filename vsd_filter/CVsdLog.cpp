@@ -276,9 +276,6 @@ double CVsdLog::GPSLogGetLength(
 	return	sqrt( dy * dy * M * M + pow( dx * N * cos( uy ), 2 ));
 }
 
-#define	getcwd	_getcwd
-#define	chdir	_chdir
-
 void CVsdLog::PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati ){
 	
 	if( m_iCnt == 0 ){
@@ -374,7 +371,7 @@ void CVsdLog::PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati ){
 }
 
 int CVsdLog::ReadGPSLog( const char *szFileName ){
-	TCHAR	szCurDir[ MAX_PATH ];
+	TCHAR	szCurDir[ MAX_PATH + 1 ];
 	TCHAR	szBuf[ BUF_SIZE ];
 	
 	double	dLati;
