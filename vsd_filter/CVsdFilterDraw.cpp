@@ -944,10 +944,8 @@ LPCWSTR CVsdFilter::FormatTime( int iTime ){
 /*** ラップタイム情報計算 ***************************************************/
 
 void CVsdFilter::CalcLapTime( void ){
-	if( !m_LapLog ) return;
-	
 	SelectLogForLapTime;
-//	if( !m_CurLog ) return;
+	//if( !m_CurLog ) return;
 	
 	// ラップインデックスを求める
 	// VSD/GPS 両方のログがなければ，手動計測での m_LapLog[].fLogNum はフレーム# なので
@@ -1088,22 +1086,24 @@ void CVsdFilter::DrawLapTime(
 		m_iTextPosY += Font.GetHeight();
 	}
 	
-	m_iTextPosY += Font.GetHeight() / 4;
+	if( m_LapLog->m_iBestTime >= 0 ){
+		m_iTextPosY += Font.GetHeight() / 4;
 	
-	// Best 表示
-	swprintf(
-		szBuf, sizeof( szBuf ), L"Best%2d'%02d.%03d",
-		m_LapLog->m_iBestTime / 60000,
-		m_LapLog->m_iBestTime / 1000 % 60,
-		m_LapLog->m_iBestTime % 1000
-	);
-	DrawTextAlign( POS_DEFAULT, POS_DEFAULT, uAlign, szBuf, Font, uColor, uColorOutline );
+		// Best 表示
+		swprintf(
+			szBuf, sizeof( szBuf ), L"Best%2d'%02d.%03d",
+			m_LapLog->m_iBestTime / 60000,
+			m_LapLog->m_iBestTime / 1000 % 60,
+			m_LapLog->m_iBestTime % 1000
+		);
+		DrawTextAlign( POS_DEFAULT, POS_DEFAULT, uAlign, szBuf, Font, uColor, uColorOutline );
 	
-	// Lapタイム表示
-	DrawLapTimeLog(
-		m_iTextPosX, m_iTextPosY, uAlign,
-		3, Font, uColor, uColorBest, uColorOutline
-	);
+		// Lapタイム表示
+		DrawLapTimeLog(
+			m_iTextPosX, m_iTextPosY, uAlign,
+			3, Font, uColor, uColorBest, uColorOutline
+		);
+	}
 	SelectLogVsd;
 }
 
@@ -1272,7 +1272,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 	){
 		m_bCalcLapTimeReq	= FALSE;
 		
-		if( m_LapLog ) delete m_LapLog;
+		if( m_LapLog ){
+			delete m_LapLog;
+			m_LapLog = NULL;
+		}
 		
 		// GPS からラップタイム計算してみる
 		if( m_GPSLog && m_piParamT[ TRACK_SLineWidth ] > 0 ){
