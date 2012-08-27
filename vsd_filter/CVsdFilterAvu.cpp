@@ -599,6 +599,8 @@ BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, void ( *CallbackFunc )( LPCTSTR, L
 void SetSkinFileList( HWND hwnd ){
 	char szBuf[ MAX_PATH + 1 ];
 	
+	if( SendMessage( hwnd, CB_GETCOUNT,  0, 0 ) > 0 ) return;
+	
 	strcpy( szBuf, g_Vsd->m_szPluginDirA );
 	ListTree( szBuf, "*", ListTreeCallback, hwnd );
 	SendMessage( hwnd, CB_ADDSTRING, 0, ( LPARAM )"ファイル名を指定して開く..." );
