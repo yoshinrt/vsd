@@ -64,7 +64,7 @@ for( $i = 0; $i <= $#Data; ++$i ){
 		last if( $#SplitTbl < 0 );
 		
 		# 分割した nmea の最後に TimeTh 分のダミーデータをつける
-		AddDummyRMC( ${ $Data[ $i - 1 ] }[ 1 ], $End ) if( $End != 0 );
+		AddDummyRMC( ${ $Data[ $i - 1 ] }[ 1 ], $End + ( $TimeTh >> 1 )) if( $End != 0 );
 		
 		$Start = shift( @SplitTbl );
 		$End   = shift( @SplitTbl );
@@ -99,14 +99,15 @@ for( $i = 0; $i <= $#Data; ++$i ){
 		#open( fpOut, "> $FileName" );
 		$bOutput = 0;
 		
-		$Start -= $TimeTh;
-		$End   += $TimeTh;
+		# データ自体は $TimeTh / 2 ぶんのマージン込みで切り出し
+		$Start -= $TimeTh >> 1;
+		$End   += $TimeTh >> 1;
 	}
 	
 	if( $Start <= ${ $_ }[ 0 ] && ${ $_ }[ 0 ] <= $End ){
 		# 分割した nmea の先頭に TimeTh 分のダミーデータをつける
 		if( $bOutput == 0 ){
-			AddDummyRMC( ${ $_ }[ 1 ], $Start );
+			AddDummyRMC( ${ $_ }[ 1 ], $Start - ( $TimeTh >> 1 ));
 			$bOutput = 1;
 		}
 		
@@ -115,7 +116,7 @@ for( $i = 0; $i <= $#Data; ++$i ){
 }
 
 # 最後に分割した nmea の最後に TimeTh 分のダミーデータをつける
-AddDummyRMC( ${ $Data[ $i - 1 ] }[ 1 ], $End );
+AddDummyRMC( ${ $Data[ $i - 1 ] }[ 1 ], $End + ( $TimeTh >> 1 ));
 
 sub GetDate {
 	my( $Sec, $Min, $Hour, $Day, $Mon, $Year ) = localtime( $_[ 0 ] );
