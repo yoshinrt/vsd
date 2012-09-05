@@ -1335,7 +1335,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	// ƒtƒŒ[ƒ€•\¦
 	
-	#define Float2Time( n )	( int )( n ) / 60, fmod( n, 60 )
+	#define Float2Time( n )	( int )( n ) / 60, ( int )(( n ) * 1000 ) % 60000 / 1000
 	
 	if( DispSyncInfo ){
 		

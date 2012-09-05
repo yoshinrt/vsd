@@ -30,4 +30,10 @@
     <LocalDebuggerWorkingDirectory>D:\Video\Car\ELISE\20120514_suzuka</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
+    <LocalDebuggerCommand>D:\Program Files\AVIUTL\aviutl.exe</LocalDebuggerCommand>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommandArguments>D:\Video\Car\ELISE\20120514_suzuka\FILE0004.mp4</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>D:\Video\Car\ELISE\20120514_suzuka\</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
 </Project>

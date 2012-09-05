@@ -283,7 +283,7 @@ void CVsdLog::PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati ){
 		
 		// è¨Ç≥Ç¢ï˚ÇÃî‘å¢
 		m_Log.push_back( VsdLogTmp );
-		m_Log[ 0 ].SetTime( FLT_MIN );
+		m_Log[ 0 ].SetTime( -FLT_MAX );
 		++m_iCnt;
 	}
 	

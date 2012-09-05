@@ -512,6 +512,9 @@ UINT CVsdImage::Clip( int x1, int y1, int x2, int y2 ){
 	PIXEL_RABY *pNewBuf = new PIXEL_RABY[ iNewWidth * iNewHeight ];
 	if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 	
+	#ifdef _OPENMP
+		#pragma omp parallel for
+	#endif
 	for( int y = 0; y < iNewHeight; ++y ) for( int x = 0; x < iNewWidth; ++x ){
 		pNewBuf[ x + y * iNewWidth ].raby = GetPixel( x + x1, y + y1 );
 	}

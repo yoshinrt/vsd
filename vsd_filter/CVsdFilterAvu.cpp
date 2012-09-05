@@ -393,6 +393,9 @@ UINT CVsdFilterAvu::PutImage( int x, int y, CVsdImage &img, UINT uAlign ){
 	int xed = x + img.m_iOffsX + img.m_iRawWidth  <= GetWidth()  ? img.m_iOffsX + img.m_iRawWidth  : GetWidth()  - x;
 	int yed = y + img.m_iOffsY + img.m_iRawHeight <= GetHeight() ? img.m_iOffsY + img.m_iRawHeight : GetHeight() - y;
 	
+	#ifdef _OPENMP
+		#pragma omp parallel for
+	#endif
 	for( int y1 = yst; y1 < yed; ++y1 ){
 		for( int x1 = xst; x1 < xed; ++x1 ){
 			
