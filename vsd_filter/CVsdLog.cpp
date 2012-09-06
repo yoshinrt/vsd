@@ -57,9 +57,6 @@ double CVsdLog::GetIndex(
 double CVsdLog::GetIndex( double dTime, int iPrevIdx ){
 	int idx;
 	
-	if( dTime < 0 ) return -1;
-	if( dTime >= Time( m_iCnt - 1 )) return m_iCnt;
-	
 	// Time( idx ) <= dTime < Time( idx + 1 )
 	// となる idx を見つける
 	if(
@@ -122,6 +119,8 @@ void CVsdLog::Dump( char *szFileName ){
 
 /*** GPS ログの up-convert **************************************************/
 
+#define WATCHDOG_TIME	( 3600 * 24 )
+
 UINT CVsdLog::GPSLogUpConvert( void ){
 	
 	int	i;
@@ -129,7 +128,7 @@ UINT CVsdLog::GPSLogUpConvert( void ){
 	if( m_iCnt < 2 ) return 0;			// 2個データがなければ終了
 	
 	VSD_LOG_t	VsdLogTmp;
-	VsdLogTmp.SetTime( FLT_MAX );
+	VsdLogTmp.SetTime( WATCHDOG_TIME );
 	m_Log.push_back( VsdLogTmp );		// 番犬
 	
 	double	dDistance = 0;
@@ -283,7 +282,7 @@ void CVsdLog::PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati ){
 		
 		// 小さい方の番犬
 		m_Log.push_back( VsdLogTmp );
-		m_Log[ 0 ].SetTime( -FLT_MAX );
+		m_Log[ 0 ].SetTime( -WATCHDOG_TIME );
 		++m_iCnt;
 	}
 	
@@ -707,9 +706,11 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 		pLapLog->m_Lap.push_back( LapTime );
 	}
 	
-	// Vsd log の番犬
-	m_Log.push_back( m_Log[ m_iCnt - 1 ] );
-	m_Log[ m_iCnt ].SetTime( FLT_MAX );
+	if( m_iCnt ){
+		// Vsd log の番犬
+		m_Log.push_back( m_Log[ m_iCnt - 1 ] );
+		m_Log[ m_iCnt ].SetTime( WATCHDOG_TIME );
+	}
 	
 	return m_iCnt;
 }
