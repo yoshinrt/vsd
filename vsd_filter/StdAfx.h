@@ -1,5 +1,4 @@
-#ifndef __STDAFX_H__
-#define __STDAFX_H__
+#pragma once
 
 #include <windows.h>
 #include <crtdbg.h>
@@ -38,5 +37,3 @@
 
 #define	getcwd	_getcwd
 #define	chdir	_chdir
-
-#endif//__STDAFX_H__

@@ -6,8 +6,7 @@
 	
 *****************************************************************************/
 
-#ifndef _CVsdFilter_h_
-#define _CVsdFilter_h_
+#pragma once
 
 #define PROG_NAME		"VSDFilter"
 #define PROG_NAME_J		"VSDÉÅÅ[É^Å[çáê¨"
@@ -466,4 +465,3 @@ class CVsdFilter {
 	int	m_iWidth;
 	int m_iHeight;
 };
-#endif

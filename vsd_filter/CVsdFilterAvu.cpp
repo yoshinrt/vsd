@@ -478,7 +478,7 @@ BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
 	// trackbar Ý’è
 	track_e[ PARAM_LSt ] =
 	track_e[ PARAM_LEd ] =
-		( int )( g_Vsd->m_VsdLog->Time( g_Vsd->m_VsdLog->m_iCnt - 1 ) * SLIDER_TIME );
+		( int )( g_Vsd->m_VsdLog->Time( g_Vsd->m_VsdLog->GetCnt() - 2 ) * SLIDER_TIME );
 	
 	return TRUE;
 }
@@ -512,7 +512,7 @@ BOOL CVsdFilterAvu::ReadGPSLog( const char *szFileName, HWND hwnd ){
 	#else
 		track_e[ PARAM_GSt ] =
 		track_e[ PARAM_GEd ] =
-			( int )( g_Vsd->m_GPSLog->Time( g_Vsd->m_GPSLog->m_iCnt - 1 ) * SLIDER_TIME );
+			( int )( g_Vsd->m_GPSLog->Time( g_Vsd->m_GPSLog->GetCnt() - 2 ) * SLIDER_TIME );
 	#endif
 
 	return TRUE;

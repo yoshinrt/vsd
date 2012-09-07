@@ -6,8 +6,7 @@
 	
 *****************************************************************************/
 
-#ifndef _CVsdFont_h_
-#define _CVsdFont_h_
+#pragma once
 
 /*** new type ***************************************************************/
 
@@ -110,4 +109,3 @@ class CVsdFont {
 	static int m_iObjCnt;
 #endif
 };
-#endif

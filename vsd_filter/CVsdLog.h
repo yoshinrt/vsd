@@ -6,12 +6,12 @@
 	
 *****************************************************************************/
 
-#ifndef _CVsdLog_h_
-#define _CVsdLog_h_
+#pragma once
 
 /*** macros *****************************************************************/
 
 #define TIME_NONE	(( int )0x80000000 )
+#define WATCHDOG_TIME	1E+12
 
 /*** Lap Time ***************************************************************/
 
@@ -63,6 +63,13 @@ class VSD_LOG_t {
 	}
 	~VSD_LOG_t(){}
 	
+	void StopLog( double dTime ){
+		SetSpeed( 0 );
+		SetGx( 0 );
+		SetGy( 0 );
+		SetTime( dTime );
+	}
+	
 	double Speed(){ return uSpeed / 100.0; }void SetSpeed	( double d ){ uSpeed	= ( USHORT )( d * 100 ); }
 	double Tacho()	{ return uTacho; }		void SetTacho	( double d ){ uTacho	= ( USHORT )d; }
 	double Distance(){ return fDistance; }	void SetDistance( double d ){ fDistance	= ( float )d; }
@@ -90,12 +97,11 @@ class CVsdLog {
 	
   public:
 	std::vector<VSD_LOG_t>	m_Log;
+	int GetCnt( void ){ return m_Log.size(); }
 	
 	int			m_iLogNum;
 	int			m_iMaxSpeed;
 	int			m_iMaxTacho;
-	
-	int			m_iCnt;
 	
 	double		m_dLogNum;
 	
@@ -136,7 +142,7 @@ class CVsdLog {
 	#endif
 	
 	BOOL IsDataExist( int iLogNum ){
-		return 0 <= iLogNum && iLogNum < m_iCnt - 1;
+		return 0 <= iLogNum && iLogNum < GetCnt();
 	}
 	
 	void PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati );
@@ -147,13 +153,19 @@ class CVsdLog {
 		double dLong1, double dLati1
 	);
 	
-	#define VsdLogGetData( p, n ) (\
-		( 0 <= ( n ) && ( n ) < m_iCnt ) ? \
-			( float )( \
-				m_Log[ ( UINT )( n )     ].p() * ( 1 - (( n ) - ( UINT )( n ))) + \
-				m_Log[ ( UINT )( n ) + 1 ].p() * (      ( n ) - ( UINT )( n )) \
-			) : 0 \
-		)
+	// I’[‘¤‚Ì”ÔŒ¢’Ç‰Á
+	void AddWatchDog( void ){
+		m_Log.push_back( m_Log[ GetCnt() - 1 ] );
+		m_Log.push_back( m_Log[ GetCnt() - 1 ] );
+		m_Log[ GetCnt() - 2 ].StopLog( Time( GetCnt() - 2 ) + 1.0 / SLIDER_TIME );
+		m_Log[ GetCnt() - 1 ].StopLog( WATCHDOG_TIME );
+	}
+	
+	#define VsdLogGetData( p, n ) \
+		( float )( \
+			m_Log[ ( UINT )( n )     ].p() * ( 1 - (( n ) - ( UINT )( n ))) + \
+			m_Log[ ( UINT )( n ) + 1 ].p() * (      ( n ) - ( UINT )( n )) \
+		) \
 	
 	double Speed	( void ){ return VsdLogGetData( Speed,		m_dLogNum ); }
 	double Tacho	( void ){ return VsdLogGetData( Tacho,		m_dLogNum ); }
@@ -191,4 +203,3 @@ class CVsdLog {
 	double Bearing	( double dIndex ){ return VsdLogGetData( Bearing,	dIndex ); }
 	double Time		( double dIndex ){ return VsdLogGetData( Time,		dIndex ); }
 };
-#endif

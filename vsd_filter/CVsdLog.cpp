@@ -20,7 +20,6 @@
 /*** コンストラクタ *********************************************************/
 
 CVsdLog::CVsdLog(){
-	m_iCnt	= 0;
 	m_dFreq	= LOG_FREQ;
 	
 	m_dMaxGx =
@@ -60,12 +59,12 @@ double CVsdLog::GetIndex( double dTime, int iPrevIdx ){
 	// Time( idx ) <= dTime < Time( idx + 1 )
 	// となる idx を見つける
 	if(
-		iPrevIdx < 0 || iPrevIdx >= m_iCnt ||
+		iPrevIdx < 0 || iPrevIdx >= GetCnt() ||
 		Time( iPrevIdx ) > dTime
 	){
 		// iPrevIdx がおかしいので，binary serch する
 		int iSt = 0;
-		int iEd = m_iCnt - 1;
+		int iEd = GetCnt() - 1;
 		while( 1 ){
 			idx = ( iSt + iEd ) / 2;
 			if( iSt == iEd ) break;
@@ -98,7 +97,7 @@ void CVsdLog::Dump( char *szFileName ){
 	FILE *fp = fopen( szFileName, "w" );
 	fputs( "Time\tSpeed\tTacho\tDistance\tX\tY\tX0\tY0\tGx\tGy\tBearing\n", fp );
 	
-	for( int i = 0; i < m_iCnt; ++i ){
+	for( int i = 0; i < GetCnt(); ++i ){
 		fprintf( fp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 			Time( i ),
 			Speed( i ),
@@ -119,17 +118,11 @@ void CVsdLog::Dump( char *szFileName ){
 
 /*** GPS ログの up-convert **************************************************/
 
-#define WATCHDOG_TIME	( 3600 * 24 )
-
 UINT CVsdLog::GPSLogUpConvert( void ){
 	
 	int	i;
 	
-	if( m_iCnt < 2 ) return 0;			// 2個データがなければ終了
-	
-	VSD_LOG_t	VsdLogTmp;
-	VsdLogTmp.SetTime( WATCHDOG_TIME );
-	m_Log.push_back( VsdLogTmp );		// 番犬
+	if( GetCnt() < 2 ) return 0;			// 2個データがなければ終了
 	
 	double	dDistance = 0;
 	double	dBearing;
@@ -139,7 +132,7 @@ UINT CVsdLog::GPSLogUpConvert( void ){
 	m_dFreq = 0;
 	int iFreqCnt = 0;
 	
-	for( i = 1; i < m_iCnt - 1; ++i ){
+	for( i = 1; i < GetCnt() - 1; ++i ){
 		// speed がない場合の補正
 		if( 0 /* ★★★暫定★★★ */ ){
 			m_Log[ i ].SetSpeed(
@@ -171,12 +164,10 @@ UINT CVsdLog::GPSLogUpConvert( void ){
 	
 	m_dFreq = iFreqCnt / m_dFreq;
 	
-	m_Log[ 0          ].SetSpeed  ( Speed( 1 ));
-	m_Log[ 0          ].SetBearing( Bearing( 1 ));
-	m_Log[ m_iCnt - 1 ].SetSpeed  ( Speed( m_iCnt - 2 ));
-	m_Log[ m_iCnt - 1 ].SetBearing( Bearing( m_iCnt - 2 ));
+	m_Log[ 0            ].SetBearing( Bearing( 1 ));
+	m_Log[ GetCnt() - 1 ].SetBearing( Bearing( GetCnt() - 2 ));
 	
-	for( i = 1; i < m_iCnt - 1; ++i ){
+	for( i = 1; i < GetCnt() - 1; ++i ){
 		// Gx / Gy を作る
 		m_Log[ i ].SetGy(
 			( Speed( i + 1 ) - Speed( i - 1 ))
@@ -203,14 +194,9 @@ UINT CVsdLog::GPSLogUpConvert( void ){
 		}
 	}
 	
-	m_Log[ 0 ].SetGx(			Gx( 1 ));
-	m_Log[ 0 ].SetGy(			Gy( 1 ));
-	m_Log[ m_iCnt - 1 ].SetGx(	Gx( m_iCnt - 2 ));
-	m_Log[ m_iCnt - 1 ].SetGy(	Gy( m_iCnt - 2 ));
-	
 	/************************************************************************/
 	
-	for( i = 0; i < m_iCnt; ++i ){
+	for( i = 0; i < GetCnt(); ++i ){
 		if( m_iMaxSpeed < Speed( i ))
 			m_iMaxSpeed = ( int )ceil( Speed( i ));
 		
@@ -228,7 +214,7 @@ UINT CVsdLog::GPSLogUpConvert( void ){
 	double	dGx0, dGx1 = 0;
 	double	dGy0, dGy1 = 0;
 	
-	for( i = ( G_SMOOTH_NUM - 1 ) / 2; i < m_iCnt - G_SMOOTH_NUM / 2; ++i ){
+	for( i = ( G_SMOOTH_NUM - 1 ) / 2; i < GetCnt() - G_SMOOTH_NUM / 2; ++i ){
 		m_Log[ i ].SetGx( dGx0 = (
 			( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
 			( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
@@ -251,7 +237,7 @@ UINT CVsdLog::GPSLogUpConvert( void ){
 		if( m_dMinGy > dGy1 ) m_dMinGy = dGy1;
 	}
 	
-	return m_iCnt;
+	return GetCnt();
 }
 
 /*** GPS ログリード ********************************************************/
@@ -277,19 +263,20 @@ double CVsdLog::GPSLogGetLength(
 
 void CVsdLog::PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati ){
 	
-	if( m_iCnt == 0 ){
+	if( GetCnt() == 0 ){
 		m_dLogStartTime = VsdLogTmp.Time();
 		
 		// 小さい方の番犬
 		m_Log.push_back( VsdLogTmp );
-		m_Log[ 0 ].SetTime( -WATCHDOG_TIME );
-		++m_iCnt;
+		m_Log.push_back( VsdLogTmp );
+		m_Log[ 0 ].StopLog( -WATCHDOG_TIME );
+		m_Log[ 1 ].StopLog( -1.0 / SLIDER_TIME );
 	}
 	
 	if( dLong == 0 ){
 		// GPS データがないので，直前の x, y データコピー
-		VsdLogTmp.SetX0( X0( m_iCnt - 1 ));
-		VsdLogTmp.SetY0( Y0( m_iCnt - 1 ));
+		VsdLogTmp.SetX0( X0( GetCnt() - 1 ));
+		VsdLogTmp.SetY0( Y0( GetCnt() - 1 ));
 	}else{
 		// 一発目の GPS データ，それを原点にする
 		if( m_dLong0 == 0 ){
@@ -315,18 +302,21 @@ void CVsdLog::PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati ){
 	
 	m_Log.push_back( VsdLogTmp );
 	
-	if( m_iCnt >= 2 ){
-		if( Time( m_iCnt - 1 ) == VsdLogTmp.Time()){
+	if( GetCnt() >= 4 ){
+		if( Time( GetCnt() - 2 ) == VsdLogTmp.Time()){
 			// 時刻が同じログが続くときそのカウントをする
 			++m_uSameCnt;
 		}else if( m_uSameCnt ){
 			// 時刻が同じログが途切れたので，時間を補正する
 			++m_uSameCnt;
 			
-			for( UINT u = 1; u < m_uSameCnt; ++ u ){
-				m_Log[ m_iCnt - m_uSameCnt + u ].SetTime(
-					Time(( int )( m_iCnt - m_uSameCnt + u )) +
-					( VsdLogTmp.Time() - Time(( int )( m_iCnt - m_uSameCnt )))
+			// -5 -4 -3 -2 -1
+			//  A  A  A  A  B
+			
+			for( UINT u = 1; u < m_uSameCnt; ++u ){
+				m_Log[ GetCnt() - 1 - m_uSameCnt + u ].SetTime(
+					Time(( int )( GetCnt() - 1 - m_uSameCnt + u )) +
+					( VsdLogTmp.Time() - Time(( int )( GetCnt() - 1 - m_uSameCnt )))
 					/ m_uSameCnt * u
 				);
 			}
@@ -335,38 +325,28 @@ void CVsdLog::PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati ){
 		
 		// 20km/h 以下で 3秒以上 log の間隔が開くとき，0km/h の log を補完する
 		if(
-			VsdLogTmp.Time() - Time( m_iCnt - 1 ) >= 3 &&
+			VsdLogTmp.Time() - Time( GetCnt() - 2 ) >= 3 &&
 			VsdLogTmp.Speed() <= 20
 		){
-			// -1 +0 +1 +2
+			// -2 -1 +0 +1
 			// A  B
 			//  ↓
 			// A  A' B' B
 			
-			// [+0] にデータ A->A' のコピー
-			m_Log[ m_iCnt ] = m_Log[ m_iCnt - 1 ];
+			// [-1] にデータ A->A' のコピー
+			m_Log[ GetCnt() - 1 ] = m_Log[ GetCnt() - 2 ];
 			
 			// データ B のコピー
-			m_Log.push_back( VsdLogTmp );	// [+1]
-			m_Log.push_back( VsdLogTmp );	// [+2]
+			m_Log.push_back( VsdLogTmp );
+			m_Log.push_back( VsdLogTmp );
 			
+			// -4 -3 -2 -1
+			// A  A' B' B
 			// スピードを 0 に
-			m_Log[ m_iCnt ].SetSpeed( 0 );
-			m_Log[ m_iCnt ].SetGx( 0 );
-			m_Log[ m_iCnt ].SetGy( 0 );
-			m_Log[ m_iCnt + 1 ].SetSpeed( 0 );
-			m_Log[ m_iCnt + 1 ].SetGx( 0 );
-			m_Log[ m_iCnt + 1 ].SetGy( 0 );
-			
-			// 時間調整
-			m_Log[ m_iCnt     ].SetTime( Time( m_iCnt )     + 0.5 ); // 適当に 0.5秒
-			m_Log[ m_iCnt + 1 ].SetTime( Time( m_iCnt + 1 ) - 0.5 );
-			
-			m_iCnt += 2;
+			m_Log[ GetCnt() - 3 ].StopLog( Time( GetCnt() - 4 ) + 1.0 / SLIDER_TIME );
+			m_Log[ GetCnt() - 2 ].StopLog( Time( GetCnt() - 1 ) - 1.0 / SLIDER_TIME );
 		}
 	}
-	
-	m_iCnt++;
 }
 
 int CVsdLog::ReadGPSLog( const char *szFileName ){
@@ -461,7 +441,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 				
 				VSD_LOG_t	VsdLogTmp;
 				
-				VsdLogTmp.SetTime( dTime + m_iCnt / 5 );	// 5Hz 固定らしい
+				VsdLogTmp.SetTime( dTime + ( GetCnt() - 2 ) / 5 );	// 5Hz 固定らしい
 				
 				// 速度
 				VsdLogTmp.SetSpeed( *( short int *)( szBuf + 0x4 ) / 10.0 );
@@ -532,7 +512,10 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 	#endif
 	
 	// アップコンバート用バッファ確保・初期化
-	GPSLogUpConvert();
+	if( GetCnt()){
+		AddWatchDog();
+		GPSLogUpConvert();
+	}
 	
 	#if defined DEBUG && defined DUMP_LOG
 		Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_upcon.txt" );
@@ -540,7 +523,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 	
 	m_dLogStartTime += 9 * 3600;
 	
-	return m_iCnt;
+	return GetCnt();
 }
 
 /*** ログリード *************************************************************/
@@ -587,7 +570,7 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 			int iTime = ( uMin * 60 + uSec ) * 1000 + uMSec;
 			
 			LapTime.uLap	= uLap;
-			LapTime.fLogNum	= ( float )m_iCnt;
+			LapTime.fLogNum	= ( float )GetCnt();
 			LapTime.iTime	= ( uReadCnt == 4 ) ? iTime : 0;
 			pLapLog->m_Lap.push_back( LapTime );
 			
@@ -598,7 +581,7 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 				pLapLog->m_iBestTime	= iTime;
 				pLapLog->m_iBestLap	= pLapLog->m_iLapNum - 1;
 				
-				iLogFreqLog	 += m_iCnt - ( int )pLapLog->m_Lap[ pLapLog->m_iLapNum - 1 ].fLogNum;
+				iLogFreqLog	 += GetCnt() - ( int )pLapLog->m_Lap[ pLapLog->m_iLapNum - 1 ].fLogNum;
 				iLogFreqTime += iTime;
 			}
 			++pLapLog->m_iLapNum;
@@ -630,11 +613,11 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 			
 			if( m_iMaxTacho < iTacho ) m_iMaxTacho = iTacho;
 			
-			if( uReadCnt < 5 && m_iCnt ){
+			if( uReadCnt < 5 && GetCnt() ){
 				// Gデータがないときは，speedから求める←廃止
 				dGx = 0;
 				dGy = 0;
-				//dGy = ( VsdLogTmp.fSpeed - m_Log[ m_iCnt - 1 ].fSpeed ) * ( 1000.0 / 3600 / 9.8 * LOG_FREQ );
+				//dGy = ( VsdLogTmp.fSpeed - m_Log[ GetCnt() - 1 ].fSpeed ) * ( 1000.0 / 3600 / 9.8 * LOG_FREQ );
 			}else{
 				if( dGx >= 4 ){	
 					// 単位を G に変換
@@ -642,7 +625,7 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 					dGy =  dGy / ACC_1G_Z;
 				}
 				
-				if( m_iCnt == 0 ){
+				if( GetCnt() == 0 ){
 					// G センターの初期値
 					dGcx = dGx;
 					dGcy = dGy;
@@ -655,10 +638,10 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 				// 静止していると思しきときは，G センターを補正する
 				// 走行距離 == 0 && ±0.02G
 				if(
-					m_iCnt &&
-					Distance( m_iCnt - 1 ) == VsdLogTmp.Distance() &&
-					( Gy( m_iCnt - 1 ) - dGy ) >= -0.02 &&
-					( Gy( m_iCnt - 1 ) - dGy ) <=  0.02
+					GetCnt() &&
+					Distance( GetCnt() - 1 ) == VsdLogTmp.Distance() &&
+					( Gy( GetCnt() - 1 ) - dGy ) >= -0.02 &&
+					( Gy( GetCnt() - 1 ) - dGy ) <=  0.02
 				){
 					dGcx += dGx / 160;
 					dGcy += dGy / 160;
@@ -676,7 +659,7 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 				if( !bCalibrating ){
 					bCalibrating = TRUE;
 					m_iLogStart  = m_iLogStop;
-					m_iLogStop   = m_iCnt;
+					m_iLogStop   = GetCnt();
 				}
 			}else{
 				bCalibrating = FALSE;
@@ -685,7 +668,7 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 					m_iMaxSpeed = ( int )ceil( VsdLogTmp.Speed());
 			}
 			
-			VsdLogTmp.SetTime(( double )m_iCnt / LOG_FREQ );
+			VsdLogTmp.SetTime(( double )GetCnt() / LOG_FREQ );
 			PushRecord( VsdLogTmp, dLong, dLati );
 		}
 	}
@@ -706,13 +689,11 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 		pLapLog->m_Lap.push_back( LapTime );
 	}
 	
-	if( m_iCnt ){
-		// Vsd log の番犬
-		m_Log.push_back( m_Log[ m_iCnt - 1 ] );
-		m_Log[ m_iCnt ].SetTime( WATCHDOG_TIME );
+	if( GetCnt()){
+		AddWatchDog();
 	}
 	
-	return m_iCnt;
+	return GetCnt();
 }
 
 /*** MAP 回転処理 ***********************************************************/
@@ -724,7 +705,7 @@ void CVsdLog::RotateMap( double dAngle ){
 	
 	dMaxX = dMinX = dMaxY = dMinY = 0;
 	
-	for( i = 0; i < m_iCnt; ++i ){
+	for( i = 0; i < GetCnt(); ++i ){
 		if( _isnan( X0( i ))){
 			m_Log[ i ].SetX( X0( i ));
 			m_Log[ i ].SetY( Y0( i ));

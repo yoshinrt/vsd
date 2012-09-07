@@ -832,10 +832,10 @@ void CVsdFilter::DrawMap(
 		iLineSt = ( int )LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx );
 		iLineEd = m_LapLog->m_iLapIdx < m_LapLog->m_iLapNum - 1 ?
 			( int )LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx + 1 ) :
-			m_CurLog->m_iCnt - 1;
+			m_CurLog->GetCnt() - 1;
 	}else{
 		iLineSt = 0;
-		iLineEd = m_CurLog->m_iCnt - 1;
+		iLineEd = m_CurLog->GetCnt() - 1;
 	}
 	
 	if( m_CurLog->m_iLogNum - iLineSt > ( int )( LineTrace * m_CurLog->m_dFreq ))
@@ -1000,14 +1000,14 @@ void CVsdFilter::CalcLapTime( void ){
 		// m_LapLog->m_iBestLogNumRunning がおかしかったら，リセット
 		if(
 			m_LapLog->m_iBestLogNumRunning < dBestLapLogNumStart ||
-			m_LapLog->m_iBestLogNumRunning >= m_CurLog->m_iCnt ||
+			m_LapLog->m_iBestLogNumRunning >= m_CurLog->GetCnt() ||
 			( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ) - dDistanceBestLapStart ) > dDistance
 		) m_LapLog->m_iBestLogNumRunning = ( int )dBestLapLogNumStart;
 		
 		for(
 			;
 			( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning + 1 ) - dDistanceBestLapStart ) <= dDistance &&
-			m_LapLog->m_iBestLogNumRunning < m_CurLog->m_iCnt;
+			m_LapLog->m_iBestLogNumRunning < m_CurLog->GetCnt();
 			++m_LapLog->m_iBestLogNumRunning
 		);
 		

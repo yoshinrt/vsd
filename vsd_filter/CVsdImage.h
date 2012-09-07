@@ -6,6 +6,8 @@
 	
 *****************************************************************************/
 
+#pragma once
+
 #define RABY_TRANSPARENT	0x80FF8000
 
 typedef UINT	tRABY;

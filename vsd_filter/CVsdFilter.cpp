@@ -285,7 +285,7 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	int iTime, iPrevTime;
 	int	iLapNum = 0;
 	
-	for( int i = 0; i < m_GPSLog->m_iCnt - 1; ++i ){
+	for( int i = 1; i < m_GPSLog->GetCnt() - 1; ++i ){
 		
 		/*** Œğ·”»’èCŒğ“_”»’è ***/
 		double s1, s2, a;
