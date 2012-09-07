@@ -507,7 +507,7 @@ BOOL CVsdFilterAvu::ReadGPSLog( const char *szFileName, HWND hwnd ){
 	#ifdef GPS_ONLY
 		if( GPSSt == INVALID_INT ){
 			GPSSt	= 0;
-			GPSEd	= ( int )( g_Vsd->m_GPSLog->Time( g_Vsd->m_GPSLog->m_iCnt - 1 ) * SLIDER_TIME );
+			GPSEd	= ( int )( g_Vsd->m_GPSLog->Time( g_Vsd->m_GPSLog->GetCnt() - 1 ) * SLIDER_TIME );
 		}
 	#else
 		track_e[ PARAM_GSt ] =
