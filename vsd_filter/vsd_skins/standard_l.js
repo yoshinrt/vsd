@@ -6,6 +6,7 @@ var ImgG     = new Image( ImgMeter );
 
 var FontS = new Font( "Impact", Vsd.Height / 30 );
 var FontM = new Font( "Impact", Vsd.Height / 23 );
+var FontG = new Font( "Impact", Vsd.Height / 20 );
 var FontL = new Font( "Impact", Vsd.Height / 12 );
 var FontM_Outline = new Font( "Impact", Vsd.Height / 20, FONT_FIXED | FONT_OUTLINE );
 
@@ -58,7 +59,7 @@ function Draw(){
 	Vsd.PutImage( MeterX, MeterY, ImgMeter );
 	
 	if( Vsd.MaxTacho > 0 ){
-		var MeterColor = Vsd.Tacho > 6500 && ( Vsd.FrameCnt & 0x2 ) ? 0xFF0000 : 0xFFFFFF;
+		var MeterColor = Vsd.Tacho > REV_LIMIT && ( Vsd.FrameCnt & 0x2 ) ? 0xFF0000 : 0xFFFFFF;
 		
 		// タコメーター目盛り描画
 		Vsd.DrawMeterScale(
@@ -69,6 +70,19 @@ function Draw(){
 			MeterR2 * 0.80,
 			MaxTacho / 1000, 12, MeterColor,
 			FontM
+		);
+		
+		// ギア
+		Vsd.DrawRect(
+			MeterCx - MeterR * 0.09, MeterCy - MeterR * 0.48,
+			MeterCx + MeterR * 0.09, MeterCy - MeterR * 0.22,
+			0xFF4000, DRAW_FILL
+		);
+		
+		Vsd.DrawTextAlign(
+			MeterCx, MeterCy - MeterR * 0.35,
+			ALIGN_HCENTER | ALIGN_VCENTER,
+			GetGear( Vsd.Tacho / Vsd.Speed ), FontG, 0
 		);
 	}else{
 		// スピードメーター目盛り描画

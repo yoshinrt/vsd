@@ -1,5 +1,7 @@
 @echo off
 
+set path=%path%;c:\cygwin\bin
+
 mkdir zrelease
 mkdir zrelease\avisynth
 
@@ -12,7 +14,7 @@ copy ..\split_nmea.hta .
 
 mkdir vsd_skins
 cd vsd_skins
-xcopy /s /i "D:\Program Files\AVIUTL\vsd_skins"
+xcopy /i "D:\Program Files\AVIUTL\vsd_skins"
 
 cd ..
 d:\dds\bin\lha a -d ..\vsd_filter_gps.lzh *
@@ -21,5 +23,4 @@ popd
 
 rmdir /s/q zrelease
 
-find "#define PROG_VERSION" CVsdFilter.h
-pause
+perl -ne 'rename( "vsd_filter_gps.lzh", "vsd_filter_gps$1$2.lzh" ) if( /#define\s+PROG_VERSION\s+"v(.+)\.(.+)"/ );' CVsdFilter.h
