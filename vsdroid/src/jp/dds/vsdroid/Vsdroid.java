@@ -138,6 +138,9 @@ public class Vsdroid extends Activity {
 		int		iTSCRaw			= 0;
 		int 	iSectorCnt		= 0;
 		int 	iSectorCntMax	= 1;
+		long	iTime;
+		Calendar	Cal;
+		
 		double	dGx, dGy;
 		double	dGcx, dGcy;
 		double	dGymkhaStart	= 1;
@@ -185,7 +188,9 @@ public class Vsdroid extends Activity {
 			iSectorCnt		= 0;
 			iSectorCntMax	= 1;
 			dGymkhaStart	= 1;
-
+			
+			Cal				= Calendar.getInstance();
+			
 			LapState		= LAP_STATE.NONE;
 
 			// レコード
@@ -334,6 +339,7 @@ public class Vsdroid extends Activity {
 
 				++iRet;
 				// 0xFF が見つかったので，データ変換
+				iTime		= System.currentTimeMillis();	// ここで時刻取得
 				iTacho		= Unpack();
 				iSpeedRaw	= Unpack();
 
@@ -432,13 +438,19 @@ public class Vsdroid extends Activity {
 
 			if( iSpeedRaw > 0 ) bLogStart = true;
 			if( !bLogStart ) return;
-
+			
+			Cal.setTimeInMillis( iTime );
+			
 			// 基本データ
 			s = String.format(
-				"%d\t%.2f\t%.2f\t%.4f\t%.4f\t%d",
+				"%d\t%.2f\t%.2f\t%.4f\t%.4f\t%d\t%2d:%02d:%02d.%03d",
 				iTacho, ( double )iSpeedRaw / 100,
 				( double )iMileageRaw / PULSE_PER_1KM * 1000,
-				dGy, dGx, iTSCRaw
+				dGy, dGx, iTSCRaw,
+				Cal.get( Calendar.HOUR_OF_DAY ),
+				Cal.get( Calendar.MINUTE ),
+				Cal.get( Calendar.SECOND ),
+				Cal.get( Calendar.MILLISECOND )
 			);
 
 			// ラップタイム
