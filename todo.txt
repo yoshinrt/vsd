@@ -6,22 +6,17 @@
 ● vsd_filter
 ・VSD log の時刻を入れて GPS ログと自動同期
 　・GPS/VSD の波形マッチング
+  ・なんか !GPS_ONLY 時に，log offset スライダの動きがおかしい
 ・スピードがない NMEA 対応がまだ
 ・ドロップダウンリストでファイル名を指定した場合，ファイル名が表示されてない
-・なんか !GPS_ONLY 時に，log offset スライダの動きがおかしい
 ・Font, Image の Dispose メソッド
 ・同期モードを削除して同期専用スキン
 ・Log read の JS 化，データロギング項目の自由化
 ・エラーメッセージ vararg 化
-・タコ・ギア表示
 ・Font outline フォント事前作成
 ・printf
 ・ユーザエラーメッセージ
 ・Image にも Draw 系ができるようにする
-・skin 一覧リストボックス
-・skin 情報を js から取得
-・char → TCHAR
-・TT の文字間隔おかしくね?
 -----------------------
 ・セクタータイム表示
 ・手動セクタータイム (+自動計測)

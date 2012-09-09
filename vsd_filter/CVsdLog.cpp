@@ -98,7 +98,7 @@ void CVsdLog::Dump( char *szFileName ){
 	fputs( "Time\tSpeed\tTacho\tDistance\tX\tY\tX0\tY0\tGx\tGy\tBearing\n", fp );
 	
 	for( int i = 0; i < GetCnt(); ++i ){
-		fprintf( fp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
+		fprintf( fp, "%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 			Time( i ),
 			Speed( i ),
 			Tacho( i ),
@@ -108,8 +108,7 @@ void CVsdLog::Dump( char *szFileName ){
 			X0( i ),
 			Y0( i ),
 			Gx( i ),
-			Gy( i ),
-			Bearing( i )
+			Gy( i )
 		);
 	}
 	fclose( fp );
@@ -125,14 +124,16 @@ UINT CVsdLog::GPSLogUpConvert( void ){
 	if( GetCnt() < 2 ) return 0;			// 2個データがなければ終了
 	
 	double	dDistance = 0;
-	double	dBearing;
 	
 	/*** VSD_LOG_t の方を走査して，いろいろ補正 *****************************/
 	
 	m_dFreq = 0;
 	int iFreqCnt = 0;
 	
-	for( i = 1; i < GetCnt() - 1; ++i ){
+	double	dBearing;
+	double	dBearingPrev;
+	
+	for( i = 1; i < GetCnt() - 2; ++i ){
 		// speed がない場合の補正
 		if( 0 /* ★★★暫定★★★ */ ){
 			m_Log[ i ].SetSpeed(
@@ -144,16 +145,36 @@ UINT CVsdLog::GPSLogUpConvert( void ){
 			);
 		}
 		
-		// bearing がない場合の補正
-		m_Log[ i ].SetBearing(
-			fmod(
-				atan2(
-					Y0( i + 1 ) - Y0( i - 1 ),
-					X0( i + 1 ) - X0( i - 1 )
-				) / ToRAD + ( 360 * 2 - 90 ),
-				360
-			)
-		);
+		// bearing 計算
+		dBearing = atan2( Y0( i + 1 ) - Y0( i ), X0( i + 1 ) - X0( i ));
+		
+		// 横 G 計算
+		if( i >= 2 ){
+			// Gx / Gy を作る
+			m_Log[ i ].SetGy(
+				( Speed( i + 1 ) - Speed( i ))
+				* ( 1 / 3.600 / GRAVITY )
+				/ ( Time( i + 1 ) - Time( i ))
+			);
+			
+			// 横G = vω
+			double dBearingDelta = dBearing - dBearingPrev;
+			if     ( dBearingDelta >  M_PI ) dBearingDelta -= M_PI * 2;
+			else if( dBearingDelta < -M_PI ) dBearingDelta += M_PI * 2;
+			
+			m_Log[ i ].SetGx(
+				dBearingDelta / GRAVITY
+				/ ( Time( i + 1 ) - Time( i ))
+				* ( Speed( i ) / 3.600 )
+			);
+			
+			// ±5G 以上は，削除
+			if( Gx( i ) < -3 || Gx( i ) > 3 ){
+				m_Log[ i ].SetGx( Gx( i - 1 ));
+			}
+		}
+		
+		dBearingPrev = dBearing;
 		
 		// 5km/h 以上の時のみ，ログ Freq を計算する
 		if( Speed( i ) >= 5 ){
@@ -163,36 +184,6 @@ UINT CVsdLog::GPSLogUpConvert( void ){
 	}
 	
 	m_dFreq = iFreqCnt / m_dFreq;
-	
-	m_Log[ 0            ].SetBearing( Bearing( 1 ));
-	m_Log[ GetCnt() - 1 ].SetBearing( Bearing( GetCnt() - 2 ));
-	
-	for( i = 1; i < GetCnt() - 1; ++i ){
-		// Gx / Gy を作る
-		m_Log[ i ].SetGy(
-			( Speed( i + 1 ) - Speed( i - 1 ))
-			* ( 1 / 3.600 / GRAVITY )
-			/ ( Time( i + 1 ) - Time( i - 1 ))
-		);
-		if( Gy( i ) > 10 ){
-			int a= 0;
-		}
-		// 横G = vω
-		dBearing = Bearing( i + 1 ) - Bearing( i - 1 );
-		if     ( dBearing >  180 ) dBearing -= 360;
-		else if( dBearing < -180 ) dBearing += 360;
-		
-		m_Log[ i ].SetGx(
-			dBearing * ( ToRAD / GRAVITY )
-			/ ( Time( i + 1 ) - Time( i - 1 ))
-			* ( Speed( i ) / 3.600 )
-		);
-		
-		// ±5G 以上は，削除
-		if( Gx( i ) < -3 || Gx( i ) > 3 ){
-			m_Log[ i ].SetGx( Gx( i - 1 ));
-		}
-	}
 	
 	/************************************************************************/
 	
@@ -210,12 +201,16 @@ UINT CVsdLog::GPSLogUpConvert( void ){
 	}
 	
 	// スムージング
-	#define G_SMOOTH_NUM	2
+	#define G_SMOOTH_NUM	3
 	double	dGx0, dGx1 = 0;
 	double	dGy0, dGy1 = 0;
 	
 	for( i = ( G_SMOOTH_NUM - 1 ) / 2; i < GetCnt() - G_SMOOTH_NUM / 2; ++i ){
+		if( i < 2 || i >= GetCnt() - 2 ) continue;
+		
 		m_Log[ i ].SetGx( dGx0 = (
+			( G_SMOOTH_NUM >= 7 ? Gx( i - 3 ) : 0 ) +
+			( G_SMOOTH_NUM >= 6 ? Gx( i + 3 ) : 0 ) +
 			( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
 			( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
 			( G_SMOOTH_NUM >= 3 ? Gx( i - 1 ) : 0 ) +
@@ -223,6 +218,8 @@ UINT CVsdLog::GPSLogUpConvert( void ){
 			Gx( i + 0 )
 		) / G_SMOOTH_NUM );
 		m_Log[ i ].SetGy( dGy0 = (
+			( G_SMOOTH_NUM >= 7 ? Gy( i - 3 ) : 0 ) +
+			( G_SMOOTH_NUM >= 6 ? Gy( i + 3 ) : 0 ) +
 			( G_SMOOTH_NUM >= 5 ? Gy( i - 2 ) : 0 ) +
 			( G_SMOOTH_NUM >= 4 ? Gy( i + 2 ) : 0 ) +
 			( G_SMOOTH_NUM >= 3 ? Gy( i - 1 ) : 0 ) +
@@ -270,7 +267,7 @@ void CVsdLog::PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati ){
 		m_Log.push_back( VsdLogTmp );
 		m_Log.push_back( VsdLogTmp );
 		m_Log[ 0 ].StopLog( -WATCHDOG_TIME );
-		m_Log[ 1 ].StopLog( -1.0 / SLIDER_TIME );
+		m_Log[ 1 ].StopLog( -0.5 );
 	}
 	
 	if( dLong == 0 ){
@@ -343,8 +340,8 @@ void CVsdLog::PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati ){
 			// -4 -3 -2 -1
 			// A  A' B' B
 			// スピードを 0 に
-			m_Log[ GetCnt() - 3 ].StopLog( Time( GetCnt() - 4 ) + 1.0 / SLIDER_TIME );
-			m_Log[ GetCnt() - 2 ].StopLog( Time( GetCnt() - 1 ) - 1.0 / SLIDER_TIME );
+			m_Log[ GetCnt() - 3 ].StopLog( Time( GetCnt() - 4 ) + 0.5 );
+			m_Log[ GetCnt() - 2 ].StopLog( Time( GetCnt() - 1 ) - 0.5 );
 		}
 	}
 }

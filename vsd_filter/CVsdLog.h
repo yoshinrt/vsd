@@ -77,20 +77,18 @@ class VSD_LOG_t {
 	double Y()		{ return fY; }			void SetY		( double d ){ fY		= ( float )d; }
 	double X0()		{ return fX0; }			void SetX0		( double d ){ fX0		= ( float )d; }
 	double Y0()		{ return fY0; }			void SetY0		( double d ){ fY0		= ( float )d; }
-	double Bearing(){ return fBearing; }	void SetBearing	( double d ){ fBearing	= ( float )d; }
 	double Gx()		{ return iGx / 100.0; }	void SetGx		( double d ){ iGx		= ( int )( d * 100 ); }
 	double Gy()		{ return iGy / 100.0; }	void SetGy		( double d ){ iGy		= ( int )( d * 100 ); }
 	double Time()	{ return fTime; }		void SetTime	( double d ){ fTime		= ( float )d; }
 	
   private:
+	float	fTime;
 	float	fX, fX0;
 	float	fY, fY0;
 	float	fDistance;
 	USHORT	uSpeed;
 	USHORT	uTacho;
 	short	iGx, iGy;
-	float	fBearing;
-	float	fTime;
 };
 
 class CVsdLog {
@@ -157,7 +155,7 @@ class CVsdLog {
 	void AddWatchDog( void ){
 		m_Log.push_back( m_Log[ GetCnt() - 1 ] );
 		m_Log.push_back( m_Log[ GetCnt() - 1 ] );
-		m_Log[ GetCnt() - 2 ].StopLog( Time( GetCnt() - 2 ) + 1.0 / SLIDER_TIME );
+		m_Log[ GetCnt() - 2 ].StopLog( Time( GetCnt() - 2 ) + 0.5 );
 		m_Log[ GetCnt() - 1 ].StopLog( WATCHDOG_TIME );
 	}
 	
@@ -176,7 +174,6 @@ class CVsdLog {
 	double X0		( void ){ return VsdLogGetData( X0,			m_dLogNum ); }
 	double Y		( void ){ return VsdLogGetData( Y,			m_dLogNum ); }
 	double Y0		( void ){ return VsdLogGetData( Y0,			m_dLogNum ); }
-	double Bearing	( void ){ return VsdLogGetData( Bearing,	m_dLogNum ); }
 	double Time		( void ){ return VsdLogGetData( Time,		m_dLogNum ); }
 	
 	double Speed	( int iIndex ){ return m_Log[ iIndex ].Speed(); }
@@ -188,7 +185,6 @@ class CVsdLog {
 	double X0		( int iIndex ){ return m_Log[ iIndex ].X0(); }
 	double Y		( int iIndex ){ return m_Log[ iIndex ].Y(); }
 	double Y0		( int iIndex ){ return m_Log[ iIndex ].Y0(); }
-	double Bearing	( int iIndex ){ return m_Log[ iIndex ].Bearing(); }
 	double Time		( int iIndex ){ return m_Log[ iIndex ].Time(); }
 	
 	double Speed	( double dIndex ){ return VsdLogGetData( Speed,		dIndex ); }
@@ -200,6 +196,5 @@ class CVsdLog {
 	double X0		( double dIndex ){ return VsdLogGetData( X0,		dIndex ); }
 	double Y		( double dIndex ){ return VsdLogGetData( Y,			dIndex ); }
 	double Y0		( double dIndex ){ return VsdLogGetData( Y0,		dIndex ); }
-	double Bearing	( double dIndex ){ return VsdLogGetData( Bearing,	dIndex ); }
 	double Time		( double dIndex ){ return VsdLogGetData( Time,		dIndex ); }
 };
