@@ -102,6 +102,10 @@ MakeJsIF( 'CVsdFont', 'Font', << '-----', '' );
 		);
 -----
 
+MakeJsIF( 'CVsdFile', 'File', << '-----', '' );
+		CVsdFile *obj = new CVsdFile();
+-----
+
 sub MakeJsIF {
 	my( $Class, $JsClass, $NewObject, $FunctionIF ) = @_;
 	

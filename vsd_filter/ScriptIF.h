@@ -847,3 +847,144 @@ class CVsdFontIF {
 #ifdef DEBUG
 int CVsdFontIF::m_iCnt = 0;
 #endif
+/****************************************************************************/
+
+class CVsdFileIF {
+  private:
+	// クラスコンストラクタ
+	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
+		
+		CVsdFile *obj = new CVsdFile();
+
+		// internal field にバックエンドオブジェクトを設定
+		v8::Local<v8::Object> thisObject = args.This();
+		thisObject->SetInternalField( 0, v8::External::New( obj ));
+		
+		// JS オブジェクトが GC されるときにデストラクタが呼ばれるおまじない
+		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
+		objectHolder.MakeWeak( obj, Dispose );
+		
+		#ifdef DEBUG
+			DebugMsgD( ">>>new js obj CVsdFile:%d:%X\n", ++m_iCnt, obj );
+		#endif
+		// コンストラクタは this を返すこと。
+		return thisObject;
+	}
+	
+	// クラスデストラクタ
+	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
+		delete static_cast<CVsdFile*>( pVoid );
+		#ifdef DEBUG
+			DebugMsgD( "<<<del js obj CVsdFile:%d:%X\n", m_iCnt--, pVoid );
+		#endif
+		handle.Dispose();
+	}
+	
+	///// プロパティアクセサ /////
+
+	///// メャbドコールバック /////
+	static v8::Handle<v8::Value> Func_Open( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 2 )) return v8::Undefined();
+		v8::String::Value str0( args[ 0 ] );
+		v8::String::Value str1( args[ 1 ] );
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->Open(
+			( LPCWSTR )*str0,
+			( LPCWSTR )*str1
+		);
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_Close( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->Close();
+		
+		return v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Func_ReadLine( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		char *ret = thisObj->ReadLine();
+		
+		return v8::String::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_IsEOF( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->IsEOF();
+		
+		return v8::Integer::New( ret );
+	}
+
+  public:
+	// this へのアクセスヘルパ
+	template<typename T>
+	static T* GetThis( v8::Local<v8::Object> handle ){
+		if( handle->GetInternalField( 0 )->IsUndefined()){
+			v8::ThrowException( v8::Exception::TypeError( v8::String::New( "Invalid object ( maybe \"new\" failed )" )));
+			return NULL;
+		}
+		
+		void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
+		return static_cast<T*>( pThis );
+	}
+	
+	// 引数の数チェック
+	static BOOL CheckArgs( BOOL cond ){
+		if( !( cond )){
+			v8::ThrowException( v8::Exception::Error( v8::String::New(
+				"invalid number of args"
+			)));
+			return TRUE;
+		}
+		return FALSE;
+	}
+	
+	static BOOL CheckClass( v8::Local<v8::Object> obj, char *name, char *msg ){
+		if( strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name )){
+			v8::ThrowException( v8::Exception::TypeError( v8::String::New( msg )));
+			return TRUE;
+		}
+		return FALSE;
+	}
+	
+	// クラステンプレートの初期化
+	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
+		// コンストラクタを作成
+		v8::Local<v8::FunctionTemplate> tmpl = v8::FunctionTemplate::New( New );
+		tmpl->SetClassName( v8::String::New( "File" ));
+		
+		// フィールドなどはこちらに
+		v8::Handle<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
+		inst->SetInternalFieldCount( 1 );
+
+		// メャbドはこちらに
+		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
+		proto->Set( v8::String::New( "Open" ), v8::FunctionTemplate::New( Func_Open ));
+		proto->Set( v8::String::New( "Close" ), v8::FunctionTemplate::New( Func_Close ));
+		proto->Set( v8::String::New( "ReadLine" ), v8::FunctionTemplate::New( Func_ReadLine ));
+		proto->Set( v8::String::New( "IsEOF" ), v8::FunctionTemplate::New( Func_IsEOF ));
+
+		// グローバルオブジェクトにクラスを定義
+		global->Set( v8::String::New( "File" ), tmpl );
+	}
+	
+	#ifdef DEBUG
+	static int m_iCnt;
+	#endif
+};
+#ifdef DEBUG
+int CVsdFileIF::m_iCnt = 0;
+#endif

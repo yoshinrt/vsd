@@ -17,6 +17,7 @@
 #include "pixel.h"
 #include "CVsdImage.h"
 #include "CVsdFilter.h"
+#include "CVsdFile.h"
 #include "error_code.h"
 #include "ScriptIF.h"
 
@@ -137,6 +138,7 @@ void CScript::Initialize( void ){
 	CVsdImageIF::InitializeClass( global );
 	CVsdFontIF::InitializeClass( global );
 	CVsdFilterIF::InitializeClass( global );
+	CVsdFileIF::InitializeClass( global );
 	
 	// グローバルオブジェクトから環境を生成
 	m_Context = Context::New( NULL, global );
