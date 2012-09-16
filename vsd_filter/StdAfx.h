@@ -15,17 +15,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <string>
-#include <tchar.h>
+#include <limits.h>
 #include <direct.h>
+#include <tchar.h>
 #include <v8.h>
-#include <vector>
 #include <zconf.h>
 #include <zlib.h>
+
+#include <string>
 #include <vector>
 #include <map>
 #include <functional>
-#include <limits.h>
 
 #ifdef _OPENMP
 	#include <omp.h>

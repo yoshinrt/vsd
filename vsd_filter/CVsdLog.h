@@ -13,6 +13,8 @@
 #define TIME_NONE	(( int )0x80000000 )
 #define WATCHDOG_TIME	1E+12
 
+#define WATCHDOG_REC_NUM	2	// ログ先頭の番犬分のレコード数
+
 /*** Lap Time ***************************************************************/
 
 enum {
@@ -57,76 +59,79 @@ class CLapLog {
 /*** new type ***************************************************************/
 
 class VSD_LOG_t {
+	
   public:
 	VSD_LOG_t(){
-		memset( this, 0, sizeof( VSD_LOG_t ));
+		m_fMin =  FLT_MAX;
+		m_fMax = -FLT_MAX;
 	}
+	
 	~VSD_LOG_t(){}
 	
-	void StopLog( double dTime ){
-		SetSpeed( 0 );
-		SetGx( 0 );
-		SetGy( 0 );
-		SetTime( dTime );
+	// 値取得
+	double Get( int    iIndex ){ return m_Log[ iIndex ]; }
+	double Get( double dIndex ){
+		double alfa = dIndex - ( UINT )dIndex;
+		return
+			m_Log[ ( UINT )dIndex     ] * ( 1 - alfa ) +
+			m_Log[ ( UINT )dIndex + 1 ] * (     alfa );
 	}
 	
-	double Speed(){ return uSpeed / 100.0; }void SetSpeed	( double d ){ uSpeed	= ( USHORT )( d * 100 ); }
-	double Tacho()	{ return uTacho; }		void SetTacho	( double d ){ uTacho	= ( USHORT )d; }
-	double Distance(){ return fDistance; }	void SetDistance( double d ){ fDistance	= ( float )d; }
-	double X()		{ return fX; }			void SetX		( double d ){ fX		= ( float )d; }
-	double Y()		{ return fY; }			void SetY		( double d ){ fY		= ( float )d; }
-	double X0()		{ return fX0; }			void SetX0		( double d ){ fX0		= ( float )d; }
-	double Y0()		{ return fY0; }			void SetY0		( double d ){ fY0		= ( float )d; }
-	double Gx()		{ return iGx / 100.0; }	void SetGx		( double d ){ iGx		= ( int )( d * 100 ); }
-	double Gy()		{ return iGy / 100.0; }	void SetGy		( double d ){ iGy		= ( int )( d * 100 ); }
-	double Time()	{ return fTime; }		void SetTime	( double d ){ fTime		= ( float )d; }
+	double GetMin(){ return m_fMin; }
+	double GetMax(){ return m_fMax; }
+	
+	// 値設定
+	void Set( int iIndex, double dVal ){
+		if(      m_fMin > dVal ) m_fMin = ( float )dVal;
+		else if( m_fMax < dVal ) m_fMax = ( float )dVal;
+		
+		// ★無い値を線形補間する必要あり
+		if( GetCnt() > iIndex ) m_Log[ iIndex ] = ( float )dVal;
+		else while( GetCnt() <= iIndex ) Push( dVal );
+	}
+	
+	int GetCnt( void ){
+		return m_Log.size();
+	}
+	
+	void InitMinMax( void ){
+		m_fMin =  FLT_MAX;
+		m_fMax = -FLT_MAX;
+	}
 	
   private:
-	float	fTime;
-	float	fX, fX0;
-	float	fY, fY0;
-	float	fDistance;
-	USHORT	uSpeed;
-	USHORT	uTacho;
-	short	iGx, iGy;
+	float	m_fMin;
+	float	m_fMax;
+	std::vector<float>	m_Log;
 };
 
 class CVsdLog {
 	
   public:
-	std::vector<VSD_LOG_t>	m_Log;
-	int GetCnt( void ){ return m_Log.size(); }
+	int GetCnt( void ){ return m_iCnt; }
 	
-	int			m_iLogNum;
-	int			m_iMaxSpeed;
-	int			m_iMaxTacho;
+	/////////////////////////
 	
-	double		m_dLogNum;
+	int		m_iLogNum;
+	double	m_dLogNum;
 	
-	double		m_dMapSizeX;
-	double		m_dMapSizeY;
-	double		m_dMapOffsX;
-	double		m_dMapOffsY;
-	double		m_dFreq;
-	
-	double		m_dMaxGx;	// 左右 G
-	double		m_dMaxGy;	// 加速 G
-	double		m_dMinGy;	// 減速 G
-	
-	double		m_dLogStartTime;	// ログ開始時間
+	double	m_dFreq;
+	double	m_dLogStartTime;	// ログ開始時間
 	
 	// 緯度経度→メートル 変換用
-	double m_dLong0;
-	double m_dLati0;
-	double m_dLong2Meter;
-	double m_dLati2Meter;
+	double	m_dLong0;
+	double	m_dLati0;
 	
 	// VSD ログ位置自動認識用
-	int			m_iLogStart;
-	int			m_iLogStop;
+	int		m_iLogStart;
+	int		m_iLogStop;
 	
-	UINT		m_uSameCnt;
+	UINT	m_uSameCnt;
 	
+	// ログの map
+	std::map<std::string, VSD_LOG_t *> m_Logs;
+	
+	// コンストラクタ・デストラクタ
 	CVsdLog();
 	~CVsdLog(){}
 	
@@ -143,9 +148,10 @@ class CVsdLog {
 		return 0 <= iLogNum && iLogNum < GetCnt();
 	}
 	
-	void PushRecord( VSD_LOG_t& VsdLogTmp, double dLong, double dLati );
+	void PushRecord( void );
 	int ReadGPSLog( const char *szFileName );
 	int ReadLog( const char *szFileName, CLapLog *&pLapLog );
+	
 	double GPSLogGetLength(
 		double dLong0, double dLati0,
 		double dLong1, double dLati1
@@ -153,48 +159,112 @@ class CVsdLog {
 	
 	// 終端側の番犬追加
 	void AddWatchDog( void ){
+		/* ★保留
 		m_Log.push_back( m_Log[ GetCnt() - 1 ] );
 		m_Log.push_back( m_Log[ GetCnt() - 1 ] );
 		m_Log[ GetCnt() - 2 ].StopLog( Time( GetCnt() - 2 ) + 0.5 );
 		m_Log[ GetCnt() - 1 ].StopLog( WATCHDOG_TIME );
+		*/
 	}
 	
-	#define VsdLogGetData( p, n ) \
-		( float )( \
-			m_Log[ ( UINT )( n )     ].p() * ( 1 - (( n ) - ( UINT )( n ))) + \
-			m_Log[ ( UINT )( n ) + 1 ].p() * (      ( n ) - ( UINT )( n )) \
-		) \
+	// key の存在確認
 	
-	double Speed	( void ){ return VsdLogGetData( Speed,		m_dLogNum ); }
-	double Tacho	( void ){ return VsdLogGetData( Tacho,		m_dLogNum ); }
-	double Distance	( void ){ return VsdLogGetData( Distance,	m_dLogNum ); }
-	double Gx		( void ){ return VsdLogGetData( Gx,			m_dLogNum ); }
-	double Gy		( void ){ return VsdLogGetData( Gy,			m_dLogNum ); }
-	double X		( void ){ return VsdLogGetData( X,			m_dLogNum ); }
-	double X0		( void ){ return VsdLogGetData( X0,			m_dLogNum ); }
-	double Y		( void ){ return VsdLogGetData( Y,			m_dLogNum ); }
-	double Y0		( void ){ return VsdLogGetData( Y0,			m_dLogNum ); }
-	double Time		( void ){ return VsdLogGetData( Time,		m_dLogNum ); }
+	VSD_LOG_t *GetEmement( const char *szKey ){
+		std::string strKey( szKey );
+		return GetElement( strKey );
+	}
+	VSD_LOG_t *GetElement( const std::string &strKey ){
+		std::map<std::string, VSD_LOG_t *>::iterator itr;
+		if(( itr = m_Logs.find( strKey )) != m_Logs.end()){
+			return itr->second;
+		}
+		return NULL;
+	}
 	
-	double Speed	( int iIndex ){ return m_Log[ iIndex ].Speed(); }
-	double Tacho	( int iIndex ){ return m_Log[ iIndex ].Tacho(); }
-	double Distance	( int iIndex ){ return m_Log[ iIndex ].Distance(); }
-	double Gx		( int iIndex ){ return m_Log[ iIndex ].Gx(); }
-	double Gy		( int iIndex ){ return m_Log[ iIndex ].Gy(); }
-	double X		( int iIndex ){ return m_Log[ iIndex ].X(); }
-	double X0		( int iIndex ){ return m_Log[ iIndex ].X0(); }
-	double Y		( int iIndex ){ return m_Log[ iIndex ].Y(); }
-	double Y0		( int iIndex ){ return m_Log[ iIndex ].Y0(); }
-	double Time		( int iIndex ){ return m_Log[ iIndex ].Time(); }
+	// レコードコピー
+	void CopyRecord( int iTo, int iFrom );
 	
-	double Speed	( double dIndex ){ return VsdLogGetData( Speed,		dIndex ); }
-	double Tacho	( double dIndex ){ return VsdLogGetData( Tacho,		dIndex ); }
-	double Distance	( double dIndex ){ return VsdLogGetData( Distance,	dIndex ); }
-	double Gx		( double dIndex ){ return VsdLogGetData( Gx,		dIndex ); }
-	double Gy		( double dIndex ){ return VsdLogGetData( Gy,		dIndex ); }
-	double X		( double dIndex ){ return VsdLogGetData( X,			dIndex ); }
-	double X0		( double dIndex ){ return VsdLogGetData( X0,		dIndex ); }
-	double Y		( double dIndex ){ return VsdLogGetData( Y,			dIndex ); }
-	double Y0		( double dIndex ){ return VsdLogGetData( Y0,		dIndex ); }
-	double Time		( double dIndex ){ return VsdLogGetData( Time,		dIndex ); }
+	// set / get 関数
+	
+	double Get( const char *szKey, int iIndex ){
+		std::string strKey( szKey );
+		return Get( strKey, iIndex );
+	}
+	
+	double Get( const std::string &strKey, int iIndex ){
+		if( m_Logs.find( strKey ) == m_Logs.end()){
+			return 0;	// 要素なし
+		}
+		return m_Logs[ strKey ]->Get( iIndex );
+	}
+	
+	double Get( const char *szKey, double dIndex ){
+		std::string strKey( szKey );
+		return Get( strKey, dIndex );
+	}
+	
+	double Get( const std::string &strKey, double dIndex ){
+		if( m_Logs.find( strKey ) == m_Logs.end()){
+			return 0;	// 要素なし
+		}
+		return m_Logs[ strKey ]->Get( dIndex );
+	}
+	
+	void Set( const char *szKey, int iIndex, double dVal );
+	void Set( const std::string &strKey, int iIndex, double dVal );
+	
+	double GetMin( const char *szKey ){
+		std::string strKey( szKey );
+		return GetMin( strKey );
+	}
+	
+	double GetMin( const std::string &strKey ){
+		VSD_LOG_t	*pLog = GetElement( strKey );
+		return pLog ? pLog->GetMin() : 0;
+	}
+	
+	double GetMax( const char *szKey ){
+		std::string strKey( szKey );
+		return GetMax( strKey );
+	}
+	
+	double GetMax( const std::string &strKey ){
+		VSD_LOG_t	*pLog = GetElement( strKey );
+		return pLog ? pLog->GetMax() : 0;
+	}
+	
+	#define DEF_LOG( name ) static const std::string m_str##name;
+	#include "def_log.h"
+	#define DEF_LOG( name ) double name( void          ){ return Get( m_str##name, m_dLogNum ); }
+	#include "def_log.h"
+	#define DEF_LOG( name ) double name( int    iIndex ){ return Get( m_str##name, iIndex ); }
+	#include "def_log.h"
+	#define DEF_LOG( name ) double name( double dIndex ){ return Get( m_str##name, dIndex ); }
+	#include "def_log.h"
+	#define DEF_LOG( name ) void Set##name( int iIndex, double dVal ){ Set( m_str##name, iIndex, dVal ); }
+	#include "def_log.h"
+	#define DEF_LOG( name ) double Max##name( void ){ return GetMax( m_str##name ); }
+	#include "def_log.h"
+	#define DEF_LOG( name ) double Min##name( void ){ return GetMin( m_str##name ); }
+	#include "def_log.h"
+	
+	// 緯度経度セット
+	void SetLongitude( int iIndex, double dVal ){
+		if( m_dLong0 == 0 ) m_dLong0 = dVal;
+		SetX0( iIndex, dVal - m_dLong0 );
+	}
+	
+	void SetLatitude( int iIndex, double dVal ){
+		if( m_dLati0 == 0 ) m_dLati0 = dVal;
+		SetY0( iIndex, m_dLati0 - dVal );
+	}
+	
+	void SetDateTime( int iIndex, double dVal ){
+		if( m_dLogStartTime == 0 ) m_dLogStartTime = dVal;
+		else if( dVal < m_dLogStartTime ) dVal += 24 * 3600;
+		SetTime( iIndex, dVal - m_dLogStartTime );
+	}
+	
+  private:
+	int	m_iCnt;
 };

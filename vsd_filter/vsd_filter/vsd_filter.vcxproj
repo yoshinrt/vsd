@@ -145,6 +145,7 @@
     <ClInclude Include="..\dds.h" />
     <ClInclude Include="..\def_checkbox.h" />
     <ClInclude Include="..\def_error.h" />
+    <ClInclude Include="..\def_log.h" />
     <ClInclude Include="..\def_shadow.h" />
     <ClInclude Include="..\def_str_param.h" />
     <ClInclude Include="..\def_trackbar.h" />

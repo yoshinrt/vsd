@@ -121,6 +121,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\CScript.cpp" />
+    <ClCompile Include="..\CVsdFile.cpp" />
     <ClCompile Include="..\CVsdFilter.cpp" />
     <ClCompile Include="..\CVsdFilterAvs.cpp" />
     <ClCompile Include="..\CVsdFilterDraw.cpp" />
@@ -136,6 +137,7 @@
   <ItemGroup>
     <ClInclude Include="..\avisynth.h" />
     <ClInclude Include="..\CScript.h" />
+    <ClInclude Include="..\CVsdFile.h" />
     <ClInclude Include="..\CVsdFilter.h" />
     <ClInclude Include="..\CVsdFont.h" />
     <ClInclude Include="..\CVsdImage.h" />

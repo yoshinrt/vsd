@@ -423,14 +423,14 @@ class CVsdFilter {
 	double	m_dTacho;		// !js_var:Tacho
 	double	m_dGx;			// !js_var:Gx
 	double	m_dGy;			// !js_var:Gy
-	double MaxGx( void ){ return m_CurLog ? m_CurLog->m_dMaxGx : 0; } // !js_var:MaxGx
-	double MaxGy( void ){ return m_CurLog ? m_CurLog->m_dMaxGy : 0; } // !js_var:MaxGy
+	double MaxGx( void ){ return m_CurLog ? m_CurLog->MaxGx() : 0; } // !js_var:MaxGx
+	double MaxGy( void ){ return m_CurLog ? m_CurLog->MaxGy() : 0; } // !js_var:MaxGy
 	
-	int	GetMaxSpeed( void ){ // !js_var:MaxSpeed
-		return m_CurLog ? m_CurLog->m_iMaxSpeed : 180;
+	double	GetMaxSpeed( void ){ // !js_var:MaxSpeed
+		return m_CurLog ? m_CurLog->MaxSpeed() : 180;
 	}
-	int	GetMaxTacho( void ){ // !js_var:MaxTacho
-		return m_CurLog ? m_CurLog->m_iMaxTacho : 0;
+	double	GetMaxTacho( void ){ // !js_var:MaxTacho
+		return m_CurLog ? m_CurLog->MaxTacho() : 0;
 	}
 	
 	static HINSTANCE	m_hInst;	// dll handle

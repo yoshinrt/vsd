@@ -684,7 +684,7 @@ void CVsdFilter::DrawGraph(
 				iX1, iY1, iX2, iY2,
 				L"%.0f km/h", Font, color_orange,
 				*m_CurLog,
-				&CVsdLog::Speed, m_CurLog->m_iMaxSpeed
+				&CVsdLog::Speed, m_CurLog->MaxSpeed()
 			);
 		}
 		if( uFlag & GRAPH_TACHO ){
@@ -693,7 +693,7 @@ void CVsdFilter::DrawGraph(
 				iX1, iY1, iX2, iY2,
 				L"%.0f rpm", Font, color_cyan,
 				*m_CurLog,
-				&CVsdLog::Tacho, m_CurLog->m_iMaxTacho
+				&CVsdLog::Tacho, m_CurLog->MaxTacho()
 			);
 		}
 		if( uFlag & GRAPH_GX ){
@@ -702,7 +702,7 @@ void CVsdFilter::DrawGraph(
 				iX1, iY1, iX2, iY2,
 				L"%.2f G(x)", Font, color_green,
 				*m_CurLog,
-				&CVsdLog::Gx, -m_CurLog->m_dMaxGx
+				&CVsdLog::Gx, -m_CurLog->MaxGx()
 			);
 		}
 		if( uFlag & GRAPH_GY ){
@@ -711,7 +711,7 @@ void CVsdFilter::DrawGraph(
 				iX1, iY1, iX2, iY2,
 				L"%.2f G(y)", Font, color_masenta,
 				*m_CurLog,
-				&CVsdLog::Gy, -m_CurLog->m_dMaxGy
+				&CVsdLog::Gy, -m_CurLog->MaxGy()
 			);
 		}
 		
@@ -721,7 +721,7 @@ void CVsdFilter::DrawGraph(
 					x1, y1, x2, y2,
 					L"%.0f km/h", Font, color_cyan,
 					*m_GPSLog,
-					&CVsdLog::Speed, m_GPSLog->m_iMaxSpeed
+					&CVsdLog::Speed, m_GPSLog->MaxSpeed()
 				);
 			}
 		#endif
@@ -800,27 +800,35 @@ void CVsdFilter::DrawMap(
 	
 	if( !LineTrace || !m_CurLog ) return;
 	
+	VSD_LOG_t	*pLogX = m_CurLog->GetElement( CVsdLog::m_strX );
+	VSD_LOG_t	*pLogY = m_CurLog->GetElement( CVsdLog::m_strY );
+	
+	double dMapSizeX = pLogX->GetMax() - pLogX->GetMin();
+	double dMapOffsX = pLogX->GetMin();
+	double dMapSizeY = pLogY->GetMax() - pLogY->GetMin();
+	double dMapOffsY = pLogY->GetMin();
+	
 	int iWidth  = x2 - x1 + 1;
 	int iHeight = y2 - y1 + 1;
-	double dScaleX = iWidth  / m_CurLog->m_dMapSizeX;
-	double dScaleY = iHeight / m_CurLog->m_dMapSizeY;
+	double dScaleX = iWidth  / dMapSizeX;
+	double dScaleY = iHeight / dMapSizeY;
 	double dScale;
 	
 	if( dScaleX < dScaleY ){
 		// •—¥‘¬‚È‚Ì‚Å y1 ‚ðÄŒvŽZ
 		dScale = dScaleX;
 		if( uAlign & ALIGN_HCENTER ){
-			y1 = y1 + ( iHeight - ( int )( m_CurLog->m_dMapSizeY * dScale )) / 2;
+			y1 = y1 + ( iHeight - ( int )( dMapSizeY * dScale )) / 2;
 		}else if( uAlign & ALIGN_BOTTOM ){
-			y1 = y1 + ( iHeight - ( int )( m_CurLog->m_dMapSizeY * dScale ));
+			y1 = y1 + ( iHeight - ( int )( dMapSizeY * dScale ));
 		}
 	}else{
 		// ‚‚³—¥‘¬‚È‚Ì‚Å x1 ‚ðÄŒvŽZ
 		dScale = dScaleY;
 		if( uAlign & ALIGN_HCENTER ){
-			x1 = x1 + ( iWidth - ( int )( m_CurLog->m_dMapSizeX * dScale )) / 2;
+			x1 = x1 + ( iWidth - ( int )( dMapSizeX * dScale )) / 2;
 		}else if( uAlign & ALIGN_BOTTOM ){
-			x1 = x1 + ( iWidth - ( int )( m_CurLog->m_dMapSizeX * dScale ));
+			x1 = x1 + ( iWidth - ( int )( dMapSizeX * dScale ));
 		}
 	}
 	
@@ -845,7 +853,7 @@ void CVsdFilter::DrawMap(
 		iLineEd = m_CurLog->m_iLogNum + ( int )( LineTrace * m_CurLog->m_dFreq );
 	
 	for( i = iLineSt; i <= iLineEd ; ++i ){
-		#define GetMapPos( p, a ) ((( p ) - m_CurLog->m_dMapOffs ## a ) * dScale )
+		#define GetMapPos( p, a ) ((( p ) - dMapOffs ## a ) * dScale )
 		iGx = x1 + ( int )GetMapPos( m_CurLog->X( i ), X );
 		iGy = y1 + ( int )GetMapPos( m_CurLog->Y( i ), Y );
 		
@@ -861,9 +869,9 @@ void CVsdFilter::DrawMap(
 				tRABY uColorLine;
 				
 				if( dG >= 0.0 ){
-					uColorLine = BlendColor( uColorG0, uColorGPlus,  dG / m_CurLog->m_dMaxGy );
+					uColorLine = BlendColor( uColorG0, uColorGPlus,  dG / m_CurLog->MaxGy() );
 				}else{
-					uColorLine = BlendColor( uColorG0, uColorGMinus, dG / m_CurLog->m_dMinGy );
+					uColorLine = BlendColor( uColorG0, uColorGMinus, dG / m_CurLog->MinGy() );
 				}
 				
 				// Line ‚ðˆø‚­
@@ -894,10 +902,10 @@ void CVsdFilter::DrawMap(
 	if( DispSyncInfo && m_LapLog && m_LapLog->m_iLapMode == LAPMODE_GPS ){
 		double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
 		
-		int xs1 = x1 + ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - m_CurLog->m_dMapOffsX ) * dScale );
-		int ys1 = y1 + ( int )(( -sin( dAngle ) * m_dStartLineX1 + cos( dAngle ) * m_dStartLineY1 - m_CurLog->m_dMapOffsY ) * dScale );
-		int xs2 = x1 + ( int )((  cos( dAngle ) * m_dStartLineX2 + sin( dAngle ) * m_dStartLineY2 - m_CurLog->m_dMapOffsX ) * dScale );
-		int ys2 = y1 + ( int )(( -sin( dAngle ) * m_dStartLineX2 + cos( dAngle ) * m_dStartLineY2 - m_CurLog->m_dMapOffsY ) * dScale );
+		int xs1 = x1 + ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - dMapOffsX ) * dScale );
+		int ys1 = y1 + ( int )(( -sin( dAngle ) * m_dStartLineX1 + cos( dAngle ) * m_dStartLineY1 - dMapOffsY ) * dScale );
+		int xs2 = x1 + ( int )((  cos( dAngle ) * m_dStartLineX2 + sin( dAngle ) * m_dStartLineY2 - dMapOffsX ) * dScale );
+		int ys2 = y1 + ( int )(( -sin( dAngle ) * m_dStartLineX2 + cos( dAngle ) * m_dStartLineY2 - dMapOffsY ) * dScale );
 		
 		DrawLine( xs1, ys1, xs2, ys2, color_blue, 0 );
 	}
