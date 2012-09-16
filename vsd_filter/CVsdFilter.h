@@ -153,8 +153,7 @@ class CVsdFilter {
 		CVsdFont &Font,
 		tRABY uColor,
 		CVsdLog& Log,
-		double ( CVsdLog::*GetDataFunc )( double ),
-		double dMaxVal
+		VSD_LOG_t	&Data
 	);
 	
 	enum {
@@ -430,7 +429,7 @@ class CVsdFilter {
 		return m_CurLog ? m_CurLog->MaxSpeed() : 180;
 	}
 	double	GetMaxTacho( void ){ // !js_var:MaxTacho
-		return m_CurLog ? m_CurLog->MaxTacho() : 0;
+		return m_CurLog && m_CurLog->m_pLogTacho ? m_CurLog->MaxTacho() : 0;
 	}
 	
 	static HINSTANCE	m_hInst;	// dll handle

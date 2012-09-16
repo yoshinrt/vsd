@@ -19,9 +19,6 @@
 
 /*** コンストラクタ *********************************************************/
 
-#define DEF_LOG( name ) const std::string CVsdLog::m_str##name( #name );
-#include "def_log.h"
-
 CVsdLog::CVsdLog(){
 	m_dFreq	= LOG_FREQ;
 	
@@ -30,6 +27,9 @@ CVsdLog::CVsdLog(){
 	m_dLong0	=
 	m_dLati0	= 0;
 	m_iCnt		= 0;
+	
+	#define DEF_LOG( name )	m_pLog##name = NULL;
+	#include "def_log.h"
 }
 
 /*** frame# に対応するログ index を得る *************************************/
@@ -116,13 +116,14 @@ void CVsdLog::Dump( char *szFileName ){
 
 void CVsdLog::Set( const char *szKey, int iIndex, double dVal ){
 	std::string strKey( szKey );
-	Set( strKey, iIndex, dVal );
-}
-
-void CVsdLog::Set( const std::string &strKey, int iIndex, double dVal ){
 	if( m_Logs.find( strKey ) == m_Logs.end()){
 		// 要素なし，生成される
-		m_Logs[ strKey ] = new VSD_LOG_t();
+		VSD_LOG_t *p;
+		m_Logs[ strKey ] = p = new VSD_LOG_t();
+		
+		// Speed とか基本データの参照用ポインタに代入
+		#define DEF_LOG( name )	if( strKey == #name ) m_pLog##name = p;
+		#include "def_log.h"
 	}
 	
 	m_Logs[ strKey ]->Set( iIndex, dVal );
@@ -166,10 +167,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 	double dLati2Meter = GPSLogGetLength( m_dLong0, m_dLati0, m_dLong0, m_dLati0 + 1.0 / 3600 ) * 3600;
 	
 	m_dFreq = 0;
-	int iFreqCnt = 0;
-	
-	BOOL bExistPos   = GetElement( m_strX0 ) && GetElement( m_strY0 );
-	
+	int		iFreqCnt = 0;
 	int		iSameCnt = 0;
 	
 	// 同じ時間が連続する場合の時刻調整と，
@@ -200,7 +198,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 		#pragma omp parallel
 	#endif
 	{
-		if( bExistPos ){
+		if( m_pLogX0 && m_pLogY0 ){
 			// 緯度・経度→メートル
 			#ifdef _OPENMP
 				#pragma omp for
@@ -211,7 +209,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 			}
 			
 			// 走行距離算出	(並列化不可能)
-			if( !GetElement( m_strDistance )){
+			if( !m_pLogDistance ){
 				for( int i = 1; i < GetCnt(); ++i ){
 					double x = X0( i - 1 ) - X0( i ); x *= x;
 					double y = Y0( i - 1 ) - Y0( i ); y *= y;
@@ -222,7 +220,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 			}
 			
 			// スピード生成
-			if( !GetElement( m_strSpeed )){
+			if( !m_pLogSpeed ){
 				#ifdef _OPENMP
 					#pragma omp for
 				#endif
@@ -237,7 +235,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 			}
 			
 			// G 計算
-			if( !GetElement( m_strGx )){
+			if( !m_pLogGx ){
 				double	dBearingPrev;
 				
 				#ifdef _OPENMP

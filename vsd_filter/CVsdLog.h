@@ -161,22 +161,23 @@ class CVsdLog {
 	// 番犬追加
 	void AddWatchDog( void );
 	void AddStopRecord( int iIndex, double dTime ){
-		if( GetElement( m_strSpeed )) SetSpeed( iIndex, 0 );
-		if( GetElement( m_strGx    )) SetGx(    iIndex, 0 );
-		if( GetElement( m_strGx    )) SetGy(    iIndex, 0 );
+		if( m_pLogSpeed ) SetSpeed( iIndex, 0 );
+		if( m_pLogGx    ) SetGx(    iIndex, 0 );
+		if( m_pLogGy    ) SetGy(    iIndex, 0 );
 		SetTime( iIndex, dTime );
 	}
 	
 	// key の存在確認
 	
-	VSD_LOG_t *GetEmement( const char *szKey ){
+	VSD_LOG_t *GetElement( const char *szKey, BOOL bCreate = FALSE ){
 		std::string strKey( szKey );
-		return GetElement( strKey );
-	}
-	VSD_LOG_t *GetElement( const std::string &strKey ){
 		std::map<std::string, VSD_LOG_t *>::iterator itr;
+		
 		if(( itr = m_Logs.find( strKey )) != m_Logs.end()){
 			return itr->second;
+		}
+		if( bCreate ){
+			return m_Logs[ strKey ] = new VSD_LOG_t();
 		}
 		return NULL;
 	}
@@ -188,11 +189,6 @@ class CVsdLog {
 	template<typename T>
 	double Get( const char *szKey, T Index ){
 		std::string strKey( szKey );
-		return Get( strKey, Index );
-	}
-	
-	template<typename T>
-	double Get( const std::string &strKey, T Index ){
 		if( m_Logs.find( strKey ) == m_Logs.end()){
 			return 0;	// 要素なし
 		}
@@ -200,41 +196,34 @@ class CVsdLog {
 	}
 	
 	void Set( const char *szKey, int iIndex, double dVal );
-	void Set( const std::string &strKey, int iIndex, double dVal );
 	
 	double GetMin( const char *szKey ){
-		std::string strKey( szKey );
-		return GetMin( strKey );
-	}
-	
-	double GetMin( const std::string &strKey ){
-		VSD_LOG_t	*pLog = GetElement( strKey );
+		VSD_LOG_t	*pLog = GetElement( szKey );
 		return pLog ? pLog->GetMin() : 0;
 	}
 	
 	double GetMax( const char *szKey ){
-		std::string strKey( szKey );
-		return GetMax( strKey );
-	}
-	
-	double GetMax( const std::string &strKey ){
-		VSD_LOG_t	*pLog = GetElement( strKey );
+		VSD_LOG_t	*pLog = GetElement( szKey );
 		return pLog ? pLog->GetMax() : 0;
 	}
 	
-	#define DEF_LOG( name ) static const std::string m_str##name;
+	#define DEF_LOG( name ) VSD_LOG_t	*m_pLog##name;
 	#include "def_log.h"
-	#define DEF_LOG( name ) double name( void          ){ return Get( m_str##name, m_dLogNum ); }
+	#define DEF_LOG( name ) double name( void          ){ return m_pLog##name->Get( m_dLogNum ); }
 	#include "def_log.h"
-	#define DEF_LOG( name ) double name( int    iIndex ){ return Get( m_str##name, iIndex ); }
+	#define DEF_LOG( name ) double name( int    iIndex ){ return m_pLog##name->Get( iIndex ); }
 	#include "def_log.h"
-	#define DEF_LOG( name ) double name( double dIndex ){ return Get( m_str##name, dIndex ); }
+	#define DEF_LOG( name ) double name( double dIndex ){ return m_pLog##name->Get( dIndex ); }
 	#include "def_log.h"
-	#define DEF_LOG( name ) void Set##name( int iIndex, double dVal ){ Set( m_str##name, iIndex, dVal ); }
+	#define DEF_LOG( name ) void Set##name( int iIndex, double dVal ){ \
+		if( !m_pLog##name ) m_pLog##name = GetElement( #name, TRUE ); \
+		m_pLog##name->Set( iIndex, dVal ); \
+		if( m_iCnt <= iIndex ) m_iCnt = iIndex + 1; \
+	}
 	#include "def_log.h"
-	#define DEF_LOG( name ) double Max##name( void ){ return GetMax( m_str##name ); }
+	#define DEF_LOG( name ) double Max##name( void ){ return m_pLog##name->GetMax(); }
 	#include "def_log.h"
-	#define DEF_LOG( name ) double Min##name( void ){ return GetMin( m_str##name ); }
+	#define DEF_LOG( name ) double Min##name( void ){ return m_pLog##name->GetMin(); }
 	#include "def_log.h"
 	
 	// 緯度経度セット

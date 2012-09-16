@@ -588,21 +588,13 @@ void CVsdFilter::DrawGraph(
 	CVsdFont &Font,
 	tRABY uColor,
 	CVsdLog& Log,
-	double ( CVsdLog::*GetDataFunc )( double ),
-	double dMaxVal
+	VSD_LOG_t	&Data
 ){
 	int	iWidth  = x2 - x1 + 1;
 	int iHeight = y2 - y1 + 1;
 	
 	int		iPrevY = INVALID_POS_I;
 	double	dVal;
-	double	dMinVal = 0;
-	
-	if( dMaxVal < 0 ){
-		dMinVal = dMaxVal;
-		dMaxVal = -dMaxVal;
-	}
-	
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
 	double	dTime0 = Log.Time() - ( iWidth / 2 ) * GRAPH_SCALE;
@@ -613,9 +605,9 @@ void CVsdFilter::DrawGraph(
 		dIndex = Log.GetIndex( dTime0 + x * GRAPH_SCALE, iIndex );
 		iIndex = ( int )dIndex;
 		
-		dVal = std::mem_fun1( GetDataFunc )( &Log, dIndex );
+		dVal = Data.Get( dIndex );
 		
-		int iPosY = y2 - ( int )(( dVal - dMinVal ) * iHeight / ( dMaxVal - dMinVal ));
+		int iPosY = y2 - ( int )(( dVal - Data.GetMin()) * iHeight / ( Data.GetMax() - Data.GetMin()));
 		if( iPrevY != INVALID_POS_I )
 			DrawLine( x1 + x - GRAPH_STEP, iPrevY, x1 + x, iPosY, 1, uColor, 0 );
 		
@@ -678,50 +670,52 @@ void CVsdFilter::DrawGraph(
 		
 		int j = 0;
 		
-		if( uFlag & GRAPH_SPEED ){
+		VSD_LOG_t	*pLog;
+		
+		if( uFlag & GRAPH_SPEED && ( pLog = m_CurLog->m_pLogSpeed )){
 			CalcGpaphPos();
 			DrawGraph(
 				iX1, iY1, iX2, iY2,
 				L"%.0f km/h", Font, color_orange,
 				*m_CurLog,
-				&CVsdLog::Speed, m_CurLog->MaxSpeed()
+				*pLog
 			);
 		}
-		if( uFlag & GRAPH_TACHO ){
+		if( uFlag & GRAPH_TACHO && ( pLog = m_CurLog->m_pLogTacho )){
 			CalcGpaphPos();
 			DrawGraph(
 				iX1, iY1, iX2, iY2,
 				L"%.0f rpm", Font, color_cyan,
 				*m_CurLog,
-				&CVsdLog::Tacho, m_CurLog->MaxTacho()
+				*pLog
 			);
 		}
-		if( uFlag & GRAPH_GX ){
+		if( uFlag & GRAPH_GX && ( pLog = m_CurLog->m_pLogGx )){
 			CalcGpaphPos();
 			DrawGraph(
 				iX1, iY1, iX2, iY2,
 				L"%.2f G(lon)", Font, color_green,
 				*m_CurLog,
-				&CVsdLog::Gx, -m_CurLog->MaxGx()
+				*pLog
 			);
 		}
-		if( uFlag & GRAPH_GY ){
+		if( uFlag & GRAPH_GY && ( pLog = m_CurLog->m_pLogGy )){
 			CalcGpaphPos();
 			DrawGraph(
 				iX1, iY1, iX2, iY2,
 				L"%.2f G(lat)", Font, color_masenta,
 				*m_CurLog,
-				&CVsdLog::Gy, -m_CurLog->MaxGy()
+				*pLog
 			);
 		}
 		
 		#ifndef GPS_ONLY
-			if( DispSyncInfo && m_GPSLog ){
+			if( DispSyncInfo && m_GPSLog && ( pLog = m_GPSLog->m_pLogSpeed )){
 				DrawGraph(
 					x1, y1, x2, y2,
 					L"%.0f km/h", Font, color_cyan,
 					*m_GPSLog,
-					&CVsdLog::Speed, m_GPSLog->MaxSpeed()
+					*pLog
 				);
 			}
 		#endif
@@ -800,13 +794,10 @@ void CVsdFilter::DrawMap(
 	
 	if( !LineTrace || !m_CurLog ) return;
 	
-	VSD_LOG_t	*pLogX = m_CurLog->GetElement( CVsdLog::m_strX );
-	VSD_LOG_t	*pLogY = m_CurLog->GetElement( CVsdLog::m_strY );
-	
-	double dMapSizeX = pLogX->GetMax() - pLogX->GetMin();
-	double dMapOffsX = pLogX->GetMin();
-	double dMapSizeY = pLogY->GetMax() - pLogY->GetMin();
-	double dMapOffsY = pLogY->GetMin();
+	double dMapSizeX = m_CurLog->m_pLogX->GetMax() - m_CurLog->m_pLogX->GetMin();
+	double dMapOffsX = m_CurLog->m_pLogX->GetMin();
+	double dMapSizeY = m_CurLog->m_pLogY->GetMax() - m_CurLog->m_pLogY->GetMin();
+	double dMapOffsY = m_CurLog->m_pLogY->GetMin();
 	
 	int iWidth  = x2 - x1 + 1;
 	int iHeight = y2 - y1 + 1;
@@ -869,9 +860,9 @@ void CVsdFilter::DrawMap(
 				tRABY uColorLine;
 				
 				if( dG >= 0.0 ){
-					uColorLine = BlendColor( uColorG0, uColorGPlus,  dG / m_CurLog->MaxGy() );
+					uColorLine = BlendColor( uColorG0, uColorGPlus,  dG / m_CurLog->MaxGy());
 				}else{
-					uColorLine = BlendColor( uColorG0, uColorGMinus, dG / m_CurLog->MinGy() );
+					uColorLine = BlendColor( uColorG0, uColorGMinus, dG / m_CurLog->MinGy());
 				}
 				
 				// Line ‚ðˆø‚­
@@ -1306,7 +1297,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	SelectLogVsd;
 	if( m_CurLog ){
 		m_dSpeed	= m_CurLog->Speed();
-		m_dTacho	= m_CurLog->Tacho();
+		m_dTacho	= m_CurLog->m_pLogTacho ? m_CurLog->Tacho() : 0;
 		m_dGx		= m_CurLog->Gx();
 		m_dGy		= m_CurLog->Gy();
 	}else{
