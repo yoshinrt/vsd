@@ -700,7 +700,7 @@ void CVsdFilter::DrawGraph(
 			CalcGpaphPos();
 			DrawGraph(
 				iX1, iY1, iX2, iY2,
-				L"%.2f G(x)", Font, color_green,
+				L"%.2f G(lon)", Font, color_green,
 				*m_CurLog,
 				&CVsdLog::Gx, -m_CurLog->MaxGx()
 			);
@@ -709,7 +709,7 @@ void CVsdFilter::DrawGraph(
 			CalcGpaphPos();
 			DrawGraph(
 				iX1, iY1, iX2, iY2,
-				L"%.2f G(y)", Font, color_masenta,
+				L"%.2f G(lat)", Font, color_masenta,
 				*m_CurLog,
 				&CVsdLog::Gy, -m_CurLog->MaxGy()
 			);

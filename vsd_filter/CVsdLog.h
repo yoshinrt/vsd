@@ -94,6 +94,10 @@ class VSD_LOG_t {
 		return m_Log.size();
 	}
 	
+	void Push( double dVal ){
+		m_Log.push_back(( float )dVal );
+	}
+	
 	void InitMinMax( void ){
 		m_fMin =  FLT_MAX;
 		m_fMax = -FLT_MAX;
@@ -126,8 +130,6 @@ class CVsdLog {
 	int		m_iLogStart;
 	int		m_iLogStop;
 	
-	UINT	m_uSameCnt;
-	
 	// ログの map
 	std::map<std::string, VSD_LOG_t *> m_Logs;
 	
@@ -135,7 +137,7 @@ class CVsdLog {
 	CVsdLog();
 	~CVsdLog(){}
 	
-	UINT GPSLogUpConvert();
+	UINT GPSLogRescan();
 	void RotateMap( double dAngle );
 	double GetIndex( double dFrame, int iVidSt, int iVidEd, int iLogSt, int iLogEd, int iPrevIdx );
 	double GetIndex( double dTime, int iPrevIdx );
@@ -148,7 +150,6 @@ class CVsdLog {
 		return 0 <= iLogNum && iLogNum < GetCnt();
 	}
 	
-	void PushRecord( void );
 	int ReadGPSLog( const char *szFileName );
 	int ReadLog( const char *szFileName, CLapLog *&pLapLog );
 	
@@ -157,14 +158,13 @@ class CVsdLog {
 		double dLong1, double dLati1
 	);
 	
-	// 終端側の番犬追加
-	void AddWatchDog( void ){
-		/* ★保留
-		m_Log.push_back( m_Log[ GetCnt() - 1 ] );
-		m_Log.push_back( m_Log[ GetCnt() - 1 ] );
-		m_Log[ GetCnt() - 2 ].StopLog( Time( GetCnt() - 2 ) + 0.5 );
-		m_Log[ GetCnt() - 1 ].StopLog( WATCHDOG_TIME );
-		*/
+	// 番犬追加
+	void AddWatchDog( void );
+	void AddStopRecord( int iIndex, double dTime ){
+		if( GetElement( m_strSpeed )) SetSpeed( iIndex, 0 );
+		if( GetElement( m_strGx    )) SetGx(    iIndex, 0 );
+		if( GetElement( m_strGx    )) SetGy(    iIndex, 0 );
+		SetTime( iIndex, dTime );
 	}
 	
 	// key の存在確認
@@ -185,29 +185,18 @@ class CVsdLog {
 	void CopyRecord( int iTo, int iFrom );
 	
 	// set / get 関数
-	
-	double Get( const char *szKey, int iIndex ){
+	template<typename T>
+	double Get( const char *szKey, T Index ){
 		std::string strKey( szKey );
-		return Get( strKey, iIndex );
+		return Get( strKey, Index );
 	}
 	
-	double Get( const std::string &strKey, int iIndex ){
+	template<typename T>
+	double Get( const std::string &strKey, T Index ){
 		if( m_Logs.find( strKey ) == m_Logs.end()){
 			return 0;	// 要素なし
 		}
-		return m_Logs[ strKey ]->Get( iIndex );
-	}
-	
-	double Get( const char *szKey, double dIndex ){
-		std::string strKey( szKey );
-		return Get( strKey, dIndex );
-	}
-	
-	double Get( const std::string &strKey, double dIndex ){
-		if( m_Logs.find( strKey ) == m_Logs.end()){
-			return 0;	// 要素なし
-		}
-		return m_Logs[ strKey ]->Get( dIndex );
+		return m_Logs[ strKey ]->Get( Index );
 	}
 	
 	void Set( const char *szKey, int iIndex, double dVal );
@@ -260,7 +249,7 @@ class CVsdLog {
 	}
 	
 	void SetDateTime( int iIndex, double dVal ){
-		if( m_dLogStartTime == 0 ) m_dLogStartTime = dVal;
+		if( m_dLogStartTime < 0 ) m_dLogStartTime = dVal;
 		else if( dVal < m_dLogStartTime ) dVal += 24 * 3600;
 		SetTime( iIndex, dVal - m_dLogStartTime );
 	}

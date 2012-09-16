@@ -26,7 +26,6 @@ CVsdLog::CVsdLog(){
 	m_dFreq	= LOG_FREQ;
 	
 	m_dLogStartTime	= -1;
-	m_uSameCnt		= 0;
 	
 	m_dLong0	=
 	m_dLati0	= 0;
@@ -81,7 +80,7 @@ double CVsdLog::GetIndex( double dTime, int iPrevIdx ){
 	
 	// index の端数を求める
 	return idx +
-		( dTime                   - Time( idx )) /
+		( dTime           - Time( idx )) /
 		( Time( idx + 1 ) - Time( idx ));
 }
 
@@ -121,7 +120,6 @@ void CVsdLog::Set( const char *szKey, int iIndex, double dVal ){
 }
 
 void CVsdLog::Set( const std::string &strKey, int iIndex, double dVal ){
-	if( iIndex == 0 ) iIndex = 2;	// 番犬用
 	if( m_Logs.find( strKey ) == m_Logs.end()){
 		// 要素なし，生成される
 		m_Logs[ strKey ] = new VSD_LOG_t();
@@ -143,10 +141,19 @@ void CVsdLog::CopyRecord( int iTo, int iFrom ){
 	}
 }
 
+/*** 番犬追加 ***************************************************************/
+
+void CVsdLog::AddWatchDog( void ){
+	int iCnt = GetCnt() - 1;
+	CopyRecord( 0, 2 );           AddStopRecord( 0, -WATCHDOG_TIME );
+	CopyRecord( 1, 2 );           AddStopRecord( 1, Time( 2 ) - 0.5 );
+	CopyRecord( iCnt + 1, iCnt ); AddStopRecord( iCnt + 1, Time( iCnt ) + 0.5 );
+	CopyRecord( iCnt + 2, iCnt ); AddStopRecord( iCnt + 2, WATCHDOG_TIME );
+}
+
 /*** GPS ログの up-convert **************************************************/
 
-UINT CVsdLog::GPSLogUpConvert( void ){
-	int	i;
+UINT CVsdLog::GPSLogRescan( void ){
 	
 	if( GetCnt() == 0 ) return 0;			// 2個データがなければ終了
 	
@@ -161,116 +168,166 @@ UINT CVsdLog::GPSLogUpConvert( void ){
 	m_dFreq = 0;
 	int iFreqCnt = 0;
 	
-	double	dBearing;
-	double	dBearingPrev;
+	BOOL bExistPos   = GetElement( m_strX0 ) && GetElement( m_strY0 );
 	
-	BOOL bExistSpeed = GetElement( m_strSpeed ) != NULL;
+	int		iSameCnt = 0;
 	
-	// ★インデックスの境界条件要注意
-	for( i = 1; i < GetCnt(); ++i ){
-		// 緯度・経度→メートル
-		SetX0( i, X0( i ) * dLong2Meter );
-		SetY0( i, Y0( i ) * dLati2Meter );
-		
-		// speed がない場合の補正
-		if( !bExistSpeed ){
-			SetSpeed( i,
-				sqrt(
-					// ★ここもインデックスが怪しい
-					pow( X0( i + 1 ) - X0( i - 1 ), 2 ) +
-					pow( Y0( i + 1 ) - Y0( i - 1 ), 2 )
-				) / ( Time( i + 1 ) - Time( i - 1 ))
-				* ( 3600.0 / 1000 )
-			);
+	// 同じ時間が連続する場合の時刻調整と，
+	for( int i = 1; i < GetCnt(); ++i ){
+		if( Time( i - 1 ) == Time( i )){
+			// 時刻が同じログが続くときそのカウントをする
+			++iSameCnt;
+		}else if( iSameCnt ){
+			// 時刻が同じログが途切れたので，時間を補正する
+			++iSameCnt;
+			
+			// -4 -3 -2 -1 +0
+			//  A  A  A  A  B
+			//u =  1  2  3
+			
+			for( int j = 1; j < iSameCnt; ++j ){
+				SetTime(
+					i - iSameCnt + j,
+					Time( i - iSameCnt ) + 
+					( Time( i ) - Time( i - iSameCnt )) / iSameCnt * j
+				);
+			}
+			iSameCnt = 0;
 		}
-		
-		// bearing 計算
-		dBearing = atan2( Y0( i + 1 ) - Y0( i ), X0( i + 1 ) - X0( i ));
-		
-		// 横 G 計算
-		if( i >= 2 ){
-			// Gx / Gy を作る
-			SetGy( i,
-				( Speed( i + 1 ) - Speed( i ))
-				* ( 1 / 3.600 / GRAVITY )
-				/ ( Time( i + 1 ) - Time( i ))
-			);
+	}
+	
+	#ifdef _OPENMP
+		#pragma omp parallel
+	#endif
+	{
+		if( bExistPos ){
+			// 緯度・経度→メートル
+			#ifdef _OPENMP
+				#pragma omp for
+			#endif
+			for( int i = 0; i < GetCnt(); ++i ){
+				SetX0( i, X0( i ) * dLong2Meter );
+				SetY0( i, Y0( i ) * dLati2Meter );
+			}
 			
-			// 横G = vω
-			double dBearingDelta = dBearing - dBearingPrev;
-			if     ( dBearingDelta >  M_PI ) dBearingDelta -= M_PI * 2;
-			else if( dBearingDelta < -M_PI ) dBearingDelta += M_PI * 2;
+			// 走行距離算出	(並列化不可能)
+			if( !GetElement( m_strDistance )){
+				for( int i = 1; i < GetCnt(); ++i ){
+					double x = X0( i - 1 ) - X0( i ); x *= x;
+					double y = Y0( i - 1 ) - Y0( i ); y *= y;
+					
+					dDistance += sqrt( x + y );
+					SetDistance( i, dDistance );
+				}
+			}
 			
-			SetGx( i,
-				dBearingDelta / GRAVITY
-				/ ( Time( i + 1 ) - Time( i ))
-				* ( Speed( i ) / 3.600 )
-			);
+			// スピード生成
+			if( !GetElement( m_strSpeed )){
+				#ifdef _OPENMP
+					#pragma omp for
+				#endif
+				for( int i = 0; i < GetCnt() - 1; ++i ){
+					SetSpeed( i,
+						( Distance( i + 1 ) - Distance( i ))
+						* ( 3600.0 / 1000 ) /
+						( Time( i + 1 ) - Time( i ))
+					);
+				}
+				SetSpeed( GetCnt() - 1, 0 );
+			}
 			
-			// ±5G 以上は，削除
-			if( Gx( i ) < -3 || Gx( i ) > 3 ){
-				SetGx( i, Gx( i - 1 ));
+			// G 計算
+			if( !GetElement( m_strGx )){
+				double	dBearingPrev;
+				
+				#ifdef _OPENMP
+					#pragma omp for
+				#endif
+				for( int i = 0; i < GetCnt() - 1; ++i ){
+					// bearing 計算
+					double dBearing = atan2( Y0( i + 1 ) - Y0( i ), X0( i + 1 ) - X0( i ));
+					
+					// 横 G 計算
+					if( i >= 2 ){
+						// Gx / Gy を作る
+						SetGy( i,
+							( Speed( i + 1 ) - Speed( i ))
+							* ( 1 / 3.600 / GRAVITY )
+							/ ( Time( i + 1 ) - Time( i ))
+						);
+						
+						// 横G = vω
+						double dBearingDelta = dBearing - dBearingPrev;
+						if     ( dBearingDelta >  M_PI ) dBearingDelta -= M_PI * 2;
+						else if( dBearingDelta < -M_PI ) dBearingDelta += M_PI * 2;
+						
+						SetGx( i,
+							dBearingDelta / GRAVITY
+							/ ( Time( i + 1 ) - Time( i ))
+							* ( Speed( i ) / 3.600 )
+						);
+						
+						// ±5G 以上は，削除
+						if( Gx( i ) < -3 || Gx( i ) > 3 ){
+							SetGx( i, Gx( i - 1 ));
+						}
+					}
+					
+					dBearingPrev = dBearing;
+					
+					// 5km/h 以上の時のみ，ログ Freq を計算する
+					/* ★暫定
+					if( Speed( i ) >= 5 ){
+						m_dFreq += Time( i ) - Time( i - 1 );
+						++iFreqCnt;
+					}
+					*/
+				}
+				SetGx( GetCnt() - 1, 0 );
+				SetGy( GetCnt() - 1, 0 );
+				
+				// スムージング
+				#define G_SMOOTH_NUM	3
+				double	dGx0, dGx1 = 0;
+				double	dGy0, dGy1 = 0;
+				
+				for( int i = ( G_SMOOTH_NUM - 1 ) / 2; i < GetCnt() - G_SMOOTH_NUM / 2; ++i ){
+					if( i < 2 || i >= GetCnt() - 2 ) continue;
+					
+					SetGx( i, dGx0 = (
+						( G_SMOOTH_NUM >= 7 ? Gx( i - 3 ) : 0 ) +
+						( G_SMOOTH_NUM >= 6 ? Gx( i + 3 ) : 0 ) +
+						( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
+						( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
+						( G_SMOOTH_NUM >= 3 ? Gx( i - 1 ) : 0 ) +
+						( G_SMOOTH_NUM >= 2 ? Gx( i + 1 ) : 0 ) +
+						Gx( i + 0 )
+					) / G_SMOOTH_NUM );
+					SetGy( i, dGy0 = (
+						( G_SMOOTH_NUM >= 7 ? Gy( i - 3 ) : 0 ) +
+						( G_SMOOTH_NUM >= 6 ? Gy( i + 3 ) : 0 ) +
+						( G_SMOOTH_NUM >= 5 ? Gy( i - 2 ) : 0 ) +
+						( G_SMOOTH_NUM >= 4 ? Gy( i + 2 ) : 0 ) +
+						( G_SMOOTH_NUM >= 3 ? Gy( i - 1 ) : 0 ) +
+						( G_SMOOTH_NUM >= 2 ? Gy( i + 1 ) : 0 ) +
+						Gy( i + 0 )
+					) / G_SMOOTH_NUM );
+					
+					dGx1 = dGx1 * 0.9 + dGx0 * 0.1;
+					dGy1 = dGy1 * 0.9 + dGy0 * 0.1;
+					/* ★暫定
+					if( MaxGx() < fabs( dGx1 )) MaxGx() = fabs( dGx1 );
+					if( MaxGy() < dGy1 ) MaxGy() = dGy1;
+					if( MinGy() > dGy1 ) MinGy() = dGy1;
+					*/
+				}
 			}
 		}
-		
-		dBearingPrev = dBearing;
-		
-		// 5km/h 以上の時のみ，ログ Freq を計算する
-		if( Speed( i ) >= 5 ){
-			m_dFreq += Time( i ) - Time( i - 1 );
-			++iFreqCnt;
-		}
-	}
+  	}
 	
-	m_dFreq = iFreqCnt / m_dFreq;
-	
-	/************************************************************************/
-	
-	for( i = 0; i < GetCnt(); ++i ){
-		if( i ) dDistance += sqrt(
-			pow( X0( i - 1 ) - X0( i ), 2 ) +
-			pow( Y0( i - 1 ) - Y0( i ), 2 )
-		);
-		
-		SetDistance( i, dDistance );
-		SetTacho( i, 0 );
-	}
-	
-	// スムージング
-	#define G_SMOOTH_NUM	3
-	double	dGx0, dGx1 = 0;
-	double	dGy0, dGy1 = 0;
-	
-	for( i = ( G_SMOOTH_NUM - 1 ) / 2; i < GetCnt() - G_SMOOTH_NUM / 2; ++i ){
-		if( i < 2 || i >= GetCnt() - 2 ) continue;
-		
-		SetGx( i, dGx0 = (
-			( G_SMOOTH_NUM >= 7 ? Gx( i - 3 ) : 0 ) +
-			( G_SMOOTH_NUM >= 6 ? Gx( i + 3 ) : 0 ) +
-			( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
-			( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
-			( G_SMOOTH_NUM >= 3 ? Gx( i - 1 ) : 0 ) +
-			( G_SMOOTH_NUM >= 2 ? Gx( i + 1 ) : 0 ) +
-			Gx( i + 0 )
-		) / G_SMOOTH_NUM );
-		SetGy( i, dGy0 = (
-			( G_SMOOTH_NUM >= 7 ? Gy( i - 3 ) : 0 ) +
-			( G_SMOOTH_NUM >= 6 ? Gy( i + 3 ) : 0 ) +
-			( G_SMOOTH_NUM >= 5 ? Gy( i - 2 ) : 0 ) +
-			( G_SMOOTH_NUM >= 4 ? Gy( i + 2 ) : 0 ) +
-			( G_SMOOTH_NUM >= 3 ? Gy( i - 1 ) : 0 ) +
-			( G_SMOOTH_NUM >= 2 ? Gy( i + 1 ) : 0 ) +
-			Gy( i + 0 )
-		) / G_SMOOTH_NUM );
-		
-		dGx1 = dGx1 * 0.9 + dGx0 * 0.1;
-		dGy1 = dGy1 * 0.9 + dGy0 * 0.1;
-		/* ★暫定
-		if( MaxGx() < fabs( dGx1 )) MaxGx() = fabs( dGx1 );
-		if( MaxGy() < dGy1 ) MaxGy() = dGy1;
-		if( MinGy() > dGy1 ) MinGy() = dGy1;
-		*/
-	}
+	// ★暫定
+	//m_dFreq = iFreqCnt / m_dFreq;
+	m_dFreq = 10;
 	
 	return GetCnt();
 }
@@ -296,57 +353,6 @@ double CVsdLog::GPSLogGetLength(
 	return	sqrt( dy * dy * M * M + pow( dx * N * cos( uy ), 2 ));
 }
 
-void CVsdLog::PushRecord( void ){
-	
-#if 0	// ★超暫定
-	if( GetCnt() >= 4 ){
-		if( Time( GetCnt() - 2 ) == VsdLogTmp.Time()){
-			// 時刻が同じログが続くときそのカウントをする
-			++m_uSameCnt;
-		}else if( m_uSameCnt ){
-			// 時刻が同じログが途切れたので，時間を補正する
-			++m_uSameCnt;
-			
-			// -5 -4 -3 -2 -1
-			//  A  A  A  A  B
-			
-			for( UINT u = 1; u < m_uSameCnt; ++u ){
-				SetDateTime( GetCnt() - 1 - m_uSameCnt + u,
-					Time(( int )( GetCnt() - 1 - m_uSameCnt + u )) +
-					( VsdLogTmp.Time() - Time(( int )( GetCnt() - 1 - m_uSameCnt )))
-					/ m_uSameCnt * u
-				);
-			}
-			m_uSameCnt = 0;
-		}
-		
-		// 20km/h 以下で 3秒以上 log の間隔が開くとき，0km/h の log を補完する
-		if(
-			VsdLogTmp.Time() - Time( GetCnt() - 2 ) >= 3 &&
-			VsdLogTmp.Speed() <= 20
-		){
-			// -2 -1 +0 +1
-			// A  B
-			//  ↓
-			// A  A' B' B
-			
-			// [-1] にデータ A->A' のコピー
-			m_Log[ GetCnt() - 1 ] = m_Log[ GetCnt() - 2 ];
-			
-			// データ B のコピー
-			m_Log.push_back( VsdLogTmp );
-			m_Log.push_back( VsdLogTmp );
-			
-			// -4 -3 -2 -1
-			// A  A' B' B
-			// スピードを 0 に
-			m_Log[ GetCnt() - 3 ].StopLog( Time( GetCnt() - 4 ) + 0.5 );
-			m_Log[ GetCnt() - 2 ].StopLog( Time( GetCnt() - 1 ) - 0.5 );
-		}
-	}
-#endif
-}
-
 int CVsdLog::ReadGPSLog( const char *szFileName ){
 	TCHAR	szCurDir[ MAX_PATH + 1 ];
 	TCHAR	szBuf[ BUF_SIZE ];
@@ -358,6 +364,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 	gzFile	fp;
 	
 	UINT	u;
+	int		iCnt = WATCHDOG_REC_NUM;
 	
 	getcwd( szCurDir, MAX_PATH );	// カレント dir
 	
@@ -399,9 +406,6 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 				( *(( UCHAR *)szBuf + p + 1 )       ))
 			
 			while( gzread( fp, szBuf, 16 )){
-				
-				int iCnt = GetCnt();
-				
 				// 値補正
 				// 2254460 → 22:54:46.0
 				u = BigEndianI( 0 ) & 0x3FFFFF;
@@ -415,6 +419,8 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 				SetSpeed( iCnt, BigEndianS( 12 ) / 10.0 );
 				SetLongitude( iCnt, BigEndianI( 4 ) / 460800.0 );
 				SetLatitude(  iCnt, BigEndianI( 8 ) / 460800.0 );
+				
+				++iCnt;
 			}
 		}
 		
@@ -432,15 +438,14 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 				+ 9 * 3600; // なぜか UTC-9 の時間なので，補正
 			
 			while( gzread( fp, szBuf, 18 )){
-				
-				int iCnt = GetCnt();
-				
 				SetDateTime( iCnt, dTime + ( GetCnt() - 2 ) / 5 );	// 5Hz 固定らしい
 				
 				// 速度
 				SetSpeed( iCnt, *( short int *)( szBuf + 0x4 ) / 10.0 );
 				SetLongitude( iCnt, *( short int *)( szBuf + 0x0 ) / 460800.0 + dLongBase );
 				SetLatitude(  iCnt, *( short int *)( szBuf + 0x2 ) / 460800.0 + dLatiBase );
+				
+				++iCnt;
 			}
 		}
 		
@@ -479,14 +484,14 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 			if( cEastWest   == 'W' ) dLong = -dLong;
 			if( cNorthSouth == 'S' ) dLati = -dLati;
 			
-			int iCnt = GetCnt();
-			
 			SetDateTime( iCnt, dTime );
 			
 			// 速度
 			if( uParamCnt >= 6 ) SetSpeed( iCnt, dSpeed * 1.852 ); // knot/h → km/h
 			SetLongitude( iCnt, dLong );
 			SetLatitude(  iCnt, dLati );
+			
+			++iCnt;
 		}
 		
 		gzclose( fp );
@@ -496,23 +501,23 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 	
 	/************************************************************************/
 	
-	#define DUMP_LOG
-	#if defined DEBUG && defined DUMP_LOG
-		Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_raw.txt" );
-	#endif
-	
-	// アップコンバート用バッファ確保・初期化
 	if( GetCnt()){
 		AddWatchDog();
-		GPSLogUpConvert();
+		
+		#define DUMP_LOG
+		#if defined DEBUG && defined DUMP_LOG
+			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_raw.txt" );
+		#endif
+		
+		// ログ再スキャン
+		GPSLogRescan();
+		
+		#if defined DEBUG && defined DUMP_LOG
+			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_upcon.txt" );
+		#endif
+		
+		m_dLogStartTime += 9 * 3600;
 	}
-	
-	#if defined DEBUG && defined DUMP_LOG
-		Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_upcon.txt" );
-	#endif
-	
-	m_dLogStartTime += 9 * 3600;
-	
 	return GetCnt();
 }
 
@@ -543,9 +548,9 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 	
 	LAP_t	LapTime;
 	
+	int iCnt = WATCHDOG_REC_NUM;
+	
 	while( gzgets( fp, szBuf, BUF_SIZE ) != Z_NULL ){
-		int	iCnt = GetCnt();
-		
 		if(( p = strstr( szBuf, "LAP" )) != NULL ){ // ラップタイム記録を見つけた
 			
 			if( pLapLog == NULL ){
@@ -648,7 +653,9 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 				bCalibrating = FALSE;
 			}
 			
-			SetDateTime( iCnt, ( double )iCnt / LOG_FREQ );
+			SetDateTime( iCnt, ( double )( iCnt - WATCHDOG_REC_NUM ) / LOG_FREQ );
+			
+			++iCnt;
 		}
 	}
 	
