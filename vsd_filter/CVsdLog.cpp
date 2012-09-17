@@ -12,6 +12,13 @@
 #include "dds_lib/dds_lib.h"
 #include "../vsd/main.h"
 #include "CVsdLog.h"
+#include "CScript.h"
+#include "CVsdFont.h"
+#include "pixel.h"
+#include "CVsdImage.h"
+#include "CVsdFilter.h"
+#include "CVsdFile.h"
+#include "error_code.h"
 
 /*** macros *****************************************************************/
 
@@ -330,7 +337,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 	return GetCnt();
 }
 
-/*** GPS ログリード ********************************************************/
+/*** 距離算出 **************************************************************/
 
 double CVsdLog::GPSLogGetLength(
 	double dLong0, double dLati0,
@@ -351,6 +358,96 @@ double CVsdLog::GPSLogGetLength(
 	return	sqrt( dy * dy * M * M + pow( dx * N * cos( uy ), 2 ));
 }
 
+/*** ログリード by JavaScript **********************************************/
+
+int CVsdLog::ReadGPSLog( const char *szFileName ){
+	TCHAR	szCurDir[ MAX_PATH + 1 ];
+	TCHAR	szBuf[ BUF_SIZE ];
+	
+	getcwd( szCurDir, MAX_PATH );	// カレント dir
+	
+	// マルチファイルの場合，1個目は dir 名なのでそこに cd
+	char const *p;
+	if( p = strchr( szFileName, '/' )){
+		strncpy( szBuf, szFileName, p - szFileName );
+		*( szBuf + ( p - szFileName )) = '\0';
+		chdir( szBuf );
+		
+		szFileName = p + 1;
+	}
+	
+	{
+		// JavaScript オブジェクト初期化
+		CScript Script;
+		Script.Initialize();
+		if( Script.RunFile( L"log_reader\\nmea.js" ) != ERR_OK ){
+			return 0;	// エラー
+		}
+		
+		while( *szFileName ){
+			
+			// ファイル名を / で分解
+			p = szFileName;
+			if( !( p = strchr( szFileName, '/' ))) p = strchr( szFileName, '\0' );
+			strncpy( szBuf, szFileName, p - szFileName );
+			*( szBuf + ( p - szFileName )) = '\0';
+			szFileName = *p ? p + 1 : p;	// p == '/' ならスキップ
+			
+			// スクリプト実行
+			LPWSTR pStr = NULL;
+			CVsdFilter::StringNew( pStr, szBuf );
+			
+			Script.Run_s( L"Read_nmea", pStr );
+			delete [] pStr;
+		}
+		
+		chdir( szCurDir );	// pwd を元に戻す
+		
+		/*** JS の Log にアクセス *******************************************/
+		
+		{
+			#ifdef AVS_PLUGIN
+				v8::Isolate::Scope IsolateScope( Script.m_pIsolate );
+			#endif
+			v8::HandleScope handle_scope;
+			v8::Context::Scope context_scope( Script.m_Context );
+			
+			v8::Local<v8::Array> hArray = v8::Local<v8::Array>::Cast( Script.m_Context->Global()->Get( v8::String::New(( uint16_t *)L"Log" )));
+			if( !hArray->IsArray()) return 0;
+			
+			v8::Local<v8::Array> Keys = hArray->GetPropertyNames();
+			
+			for( UINT u = 0; u < Keys->Length(); ++u ){
+				v8::String::Value str0( Keys->Get( u ));
+			}
+		}
+	}
+	
+	/************************************************************************/
+	
+	if( GetCnt()){
+		AddWatchDog();
+		
+		#define DUMP_LOG
+		#if defined DEBUG && defined DUMP_LOG
+			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_raw.txt" );
+		#endif
+		
+		// ログ再スキャン
+		GPSLogRescan();
+		
+		#if defined DEBUG && defined DUMP_LOG
+			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_upcon.txt" );
+		#endif
+		
+		m_dLogStartTime += 9 * 3600;
+	}
+	return GetCnt();
+}
+
+/*** GPS ログリード ********************************************************/
+
+#if 0
 int CVsdLog::ReadGPSLog( const char *szFileName ){
 	TCHAR	szCurDir[ MAX_PATH + 1 ];
 	TCHAR	szBuf[ BUF_SIZE ];
@@ -518,6 +615,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 	}
 	return GetCnt();
 }
+#endif
 
 /*** ログリード *************************************************************/
 

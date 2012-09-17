@@ -96,7 +96,9 @@ CScript::CScript( CVsdFilter *pVsd ){
 	
 	DebugMsgD( ":CScript::CScript():m_Context\n" );
 	m_Context.Clear();
-	m_Vsd			= pVsd;
+	
+	if( pVsd ) m_Vsd = pVsd;
+	
 	m_szErrorMsg	= NULL;
 	m_uError		= ERR_OK;
 }
@@ -224,10 +226,24 @@ UINT CScript::Run( LPCWSTR szFunc ){
 	#ifdef AVS_PLUGIN
 		v8::Isolate::Scope IsolateScope( m_pIsolate );
 	#endif
-	
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_Context );
 	
+	return RunArg( szFunc, 0, NULL );
+}
+
+UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0 ){
+	#ifdef AVS_PLUGIN
+		v8::Isolate::Scope IsolateScope( m_pIsolate );
+	#endif
+	HandleScope handle_scope;
+	Context::Scope context_scope( m_Context );
+	
+	Handle<Value> Args[] = { String::New(( uint16_t *)str0 ) };
+	return RunArg( szFunc, 1, Args );
+}
+
+UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[] ){
 	TryCatch try_catch;
 	
 	Local<Function> hFunction = Local<Function>::Cast( m_Context->Global()->Get( String::New(( uint16_t *)szFunc )));
@@ -238,7 +254,7 @@ UINT CScript::Run( LPCWSTR szFunc ){
 		swprintf( m_szErrorMsg, MSGBUF_SIZE, L"Undefined function \"%s()\"", szFunc );
 		return m_uError = ERR_SCRIPT;
 	}
-	Handle<Value> result = hFunction->Call( hFunction, 0, 0 );
+	Handle<Value> result = hFunction->Call( hFunction, iArgNum, Args );
 	
 	if( result.IsEmpty()){
 		//assert( try_catch.HasCaught());
