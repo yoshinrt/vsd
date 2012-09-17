@@ -395,7 +395,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 			
 			// スクリプト実行
 			LPWSTR pStr = NULL;
-			CVsdFilter::StringNew( pStr, szBuf );
+			StringNew( pStr, szBuf );
 			
 			Script.Run_s( L"Read_nmea", pStr );
 			delete [] pStr;

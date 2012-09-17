@@ -21,8 +21,11 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----' );
 		int iLen = args.Length();
 		if( CheckArgs( 7 <= iLen && iLen <= 9 )) return v8::Undefined();
 		
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		
 		if( iLen >= 9 ){
-			CScript::m_Vsd->DrawArc(
+			thisObj->DrawArc(
 				args[ 0 ]->Int32Value(),
 				args[ 1 ]->Int32Value(),
 				args[ 2 ]->Int32Value(),
@@ -34,7 +37,7 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----' );
 				PIXEL_RABY::Argb2Raby( args[ 8 ]->Int32Value())
 			);
 		}else{
-			CScript::m_Vsd->DrawArc(
+			thisObj->DrawArc(
 				args[ 0 ]->Int32Value(),
 				args[ 1 ]->Int32Value(),
 				args[ 2 ]->Int32Value(),

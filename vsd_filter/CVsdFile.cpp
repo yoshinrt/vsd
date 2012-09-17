@@ -21,7 +21,15 @@ int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 	// gz open
 	if( *pMode == 'z' ){
 		++pMode;
-		//m_gzfp = gzopen( szFile, szMode );
+		char *pFile = NULL;
+		char *pMode = NULL;
+
+		StringNew( pFile, szFile );
+		StringNew( pMode, szMode );
+
+		m_gzfp = gzopen( pFile, pMode );
+		delete [] pFile;
+		delete [] pMode;
 		return m_gzfp != NULL ? 0 : 1;
 	}
 	

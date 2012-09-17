@@ -123,6 +123,25 @@ CScript::~CScript(){
 	delete [] m_szErrorMsg;
 }
 
+/*** デバッグ用 *************************************************************/
+
+static v8::Handle<v8::Value> Func_DebugPrintD( const v8::Arguments& args ){
+	v8::String::AsciiValue str( args[ 0 ] );
+	DebugMsgD( "%s\n", *str );
+	return v8::Undefined();
+}
+
+static v8::Handle<v8::Value> Func_DebugPrintW( const v8::Arguments& args ){
+	v8::String::Value str( args[ 0 ] );
+	
+	MessageBoxW(
+		NULL, ( LPCWSTR )*str,
+		L"VSD filter JavaScript message",
+		MB_OK
+	);
+	return v8::Undefined();
+}
+
 /*** JavaScript interface のセットアップ ************************************/
 
 void CScript::Initialize( void ){
@@ -141,6 +160,10 @@ void CScript::Initialize( void ){
 	CVsdFontIF::InitializeClass( global );
 	CVsdFilterIF::InitializeClass( global );
 	CVsdFileIF::InitializeClass( global );
+	
+	// デバッグ用の DebugPrint* 登録
+	global->Set( v8::String::New( "DebugPrintD" ),  v8::FunctionTemplate::New( Func_DebugPrintD ));
+	global->Set( v8::String::New( "DebugPrintW" ),  v8::FunctionTemplate::New( Func_DebugPrintW ));
 	
 	// グローバルオブジェクトから環境を生成
 	m_Context = Context::New( NULL, global );

@@ -820,7 +820,7 @@ BOOL FileOpenDialog( char *&szOut, char *szExt ){
 	
 	// ファイルが 1個しかない場合，そのままリターン
 	if( !*p ){
-		CVsdFilter::StringNew( szOut, szBuf );
+		StringNew( szOut, szBuf );
 		return TRUE;
 	}
 	
@@ -1210,7 +1210,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		#ifndef GPS_ONLY // {
 		  Case ID_BUTT_LOAD_LOG:	// .log ロード
 			if( filter->exfunc->dlg_get_load_name( szBuf, FILE_LOG_EXT, NULL )){
-				CVsdFilter::StringNew( g_Vsd->m_szLogFile, szBuf );
+				StringNew( g_Vsd->m_szLogFile, szBuf );
 				if( g_Vsd->ReadLog( g_Vsd->m_szLogFile, hwnd )){
 					g_Vsd->ReloadScript();
 					// 設定再描画
