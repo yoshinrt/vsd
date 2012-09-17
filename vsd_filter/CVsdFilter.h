@@ -395,7 +395,7 @@ class CVsdFilter {
 		char szBuf[ MAX_PATH + 1 ];
 		GetModuleFileName(( HMODULE )m_hInst, szBuf, MAX_PATH );
 		char *p = StrTokFile( NULL, szBuf, STF_NODE );
-		if( p ) strcpy( p, "vsd_skins\\" );
+		if( p ) strcpy( p, "vsd_plugins\\" );
 		StringNew( m_szPluginDirA, szBuf );
 		StringNew( m_szPluginDirW, m_szPluginDirA );
 		return m_szPluginDirA;

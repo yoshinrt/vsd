@@ -12,9 +12,9 @@ copy "D:\Program Files\AviSynth 2.5\plugins\vsd_filter_avs.dll" avisynth\vsd_fil
 copy ..\manual.url .
 copy ..\split_nmea.hta .
 
-mkdir vsd_skins
-cd vsd_skins
-xcopy /i "D:\Program Files\AVIUTL\vsd_skins"
+mkdir vsd_plugins
+cd vsd_plugins
+xcopy /i "D:\Program Files\AVIUTL\vsd_plugins"
 
 cd ..
 d:\dds\bin\lha a -d ..\vsd_filter_gps.lzh *
