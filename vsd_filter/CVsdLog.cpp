@@ -397,7 +397,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 			LPWSTR pStr = NULL;
 			StringNew( pStr, szBuf );
 			
-			Script.Run_s( L"Read_nmea", pStr );
+			Script.Run_s( L"ReadLog", pStr );
 			delete [] pStr;
 		}
 		

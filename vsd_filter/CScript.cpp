@@ -163,7 +163,7 @@ void CScript::Initialize( void ){
 	
 	// デバッグ用の DebugPrint* 登録
 	global->Set( v8::String::New( "DebugPrintD" ),  v8::FunctionTemplate::New( Func_DebugPrintD ));
-	global->Set( v8::String::New( "DebugPrintW" ),  v8::FunctionTemplate::New( Func_DebugPrintW ));
+	global->Set( v8::String::New( "MessageBox" ),  v8::FunctionTemplate::New( Func_DebugPrintW ));
 	
 	// グローバルオブジェクトから環境を生成
 	m_Context = Context::New( NULL, global );

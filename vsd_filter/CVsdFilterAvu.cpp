@@ -793,10 +793,6 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 
 /*** ログリード複数ファイル対応版 *******************************************/
 
-int StrCmpForQSort( const void *a, const void *b ){
-	return strcmp( *( const char **)a, *( const char **)b );
-}
-
 BOOL FileOpenDialog( char *&szOut, char *szExt ){
 	
 	char szBuf[ BUF_SIZE ];
@@ -813,42 +809,17 @@ BOOL FileOpenDialog( char *&szOut, char *szExt ){
 	
 	if( !GetOpenFileName( &ofn )) return FALSE;
 	
-	// ファイル名の配列を作成
-	char *p = strchr( szBuf, '\0' ) + 1;	// 最初の dir 名をスキップ
-	char *szFileNames[ 100 ];
-	int	iFileCnt = 0;
+	// ファイル名を '/' で連結
+	char *p = szBuf;
 	
-	// ファイルが 1個しかない場合，そのままリターン
-	if( !*p ){
-		StringNew( szOut, szBuf );
-		return TRUE;
+	while( 1 ){
+		p = strchr( p, '\0' );
+		if( *( p + 1 ) == '\0' ) break;
+		*p = '/';
+		++p;
 	}
 	
-	while( *p ){
-		szFileNames[ iFileCnt++ ] = p;
-		p = strchr( p, '\0' ) + 1;
-	}
-	
-	int iOutSize = p - szBuf;
-	
-	// ソート
-	qsort( szFileNames, iFileCnt, sizeof( char * ), StrCmpForQSort );
-	
-	// ソート結果を元に新配列作成
-	if( szOut ) delete [] szOut;
-	p = szOut = new char[ iOutSize ];
-	
-	strcpy( p, szBuf );	// dir をコピー
-	p = strchr( p, '\0' );
-	
-	for( int i = 0; i < iFileCnt; ++i ){
-		*p++ = '/';
-		
-		strcpy( p, szFileNames[ i ] ); p = strchr( p, '\0' );
-		DebugMsgD( "%s\n", szFileNames[ i ] );
-	}
-	
-	// szBuf を挿げ替え
+	StringNew( szOut, szBuf );
 	return TRUE;
 }
 
