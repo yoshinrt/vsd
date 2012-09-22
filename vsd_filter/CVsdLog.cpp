@@ -26,7 +26,7 @@
 
 /*** コンストラクタ *********************************************************/
 
-CVsdLog::CVsdLog(){
+CVsdLog::CVsdLog( CVsdFilter *pVsd ){
 	m_dFreq	= LOG_FREQ;
 	
 	m_dLogStartTime	= -1;
@@ -34,6 +34,7 @@ CVsdLog::CVsdLog(){
 	m_dLong0	=
 	m_dLati0	= 0;
 	m_iCnt		= 0;
+	m_pVsd		= pVsd;
 	
 	#define DEF_LOG( name )	m_pLog##name = NULL;
 	#include "def_log.h"
@@ -320,13 +321,20 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 		CScript Script;
 		Script.Initialize();
 		if( Script.RunFile( L"log_reader\\nmea.js" ) != ERR_OK ){
-			return 0;	// エラー
+			// エラー
+			m_pVsd->DispErrorMessage( Script.GetErrorMessage());
+			return 0;
 		}
 		
 		// スクリプト実行
 		LPWSTR pStr = NULL;
 		Script.Run_s( L"ReadLog", StringNew( pStr, szFileName ));
 		delete [] pStr;
+		
+		if( Script.m_uError != ERR_OK ){
+			m_pVsd->DispErrorMessage( Script.GetErrorMessage());
+			return 0;
+		}
 		
 		/*** JS の Log にアクセス *******************************************/
 		
@@ -517,6 +525,13 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 /*** ログリード *************************************************************/
 
 int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
+	return 0;
+}
+
+/*** ログリード *************************************************************/
+
+#if 0
+int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 	
 	TCHAR	szBuf[ BUF_SIZE ];
 	gzFile	fp;
@@ -674,6 +689,7 @@ int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 	
 	return GetCnt();
 }
+#endif
 
 /*** MAP 回転処理 ***********************************************************/
 

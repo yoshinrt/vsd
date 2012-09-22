@@ -423,12 +423,7 @@ UINT CVsdFilterAvu::PutImage( int x, int y, CVsdImage &img, UINT uAlign ){
 /*** エラーメッセージ *******************************************************/
 
 void CVsdFilterAvu::DispErrorMessage( LPCWSTR szMsg ){
-	if(
-		MessageBoxW( NULL, szMsg, PROG_NAME_J_W, MB_RETRYCANCEL | MB_ICONWARNING )
-		== IDRETRY
-	){
-		ReloadScript();
-	}
+	MessageBoxW( NULL, szMsg, PROG_NAME_J_W, MB_ICONWARNING );
 }
 
 /*** フレームをマーク *******************************************************/
@@ -460,16 +455,18 @@ int CVsdFilterAvu::GetFrameMark( int iFrame ){
 #ifndef GPS_ONLY
 BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
 	
-	char szMsg[ BUF_SIZE ];
+	//char szMsg[ BUF_SIZE ];
 	int iCnt;
 	
 	if( !( iCnt = CVsdFilter::ReadLog( szFileName ))){
+		/*
 		sprintf( szMsg, "ファイルがロードできません\n%s", szFileName );
 		MessageBox( NULL,
 			szMsg,
 			"VSD",
 			MB_OK | MB_ICONWARNING
 		);
+		*/
 		return FALSE;
 	}
 	
@@ -488,16 +485,18 @@ BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
 
 BOOL CVsdFilterAvu::ReadGPSLog( const char *szFileName, HWND hwnd ){
 	
-	char szMsg[ BUF_SIZE ];
+	//char szMsg[ BUF_SIZE ];
 	
 	int iCnt;
 	if( !( iCnt = CVsdFilter::ReadGPSLog( szFileName ))){
+		/*
 		sprintf( szMsg, "ファイルがロードできません\n%s", szFileName );
 		MessageBox( NULL,
 			szMsg,
 			"VSD",
 			MB_OK | MB_ICONWARNING
 		);
+		*/
 		return FALSE;
 	}
 	

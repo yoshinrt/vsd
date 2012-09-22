@@ -111,6 +111,7 @@ class VSD_LOG_t {
 	std::vector<float>	m_Log;
 };
 
+class CVsdFilter;
 class CVsdLog {
 	
   public:
@@ -136,7 +137,7 @@ class CVsdLog {
 	std::map<std::string, VSD_LOG_t *> m_Logs;
 	
 	// コンストラクタ・デストラクタ
-	CVsdLog();
+	CVsdLog( CVsdFilter *pVsd );
 	~CVsdLog(){}
 	
 	UINT GPSLogRescan();
@@ -228,23 +229,7 @@ class CVsdLog {
 	#define DEF_LOG( name ) double Min##name( void ){ return m_pLog##name->GetMin(); }
 	#include "def_log.h"
 	
-	// 緯度経度セット
-	void SetLongitude( int iIndex, double dVal ){
-		if( m_dLong0 == 0 ) m_dLong0 = dVal;
-		SetX0( iIndex, dVal - m_dLong0 );
-	}
-	
-	void SetLatitude( int iIndex, double dVal ){
-		if( m_dLati0 == 0 ) m_dLati0 = dVal;
-		SetY0( iIndex, m_dLati0 - dVal );
-	}
-	
-	void SetDateTime( int iIndex, double dVal ){
-		if( m_dLogStartTime < 0 ) m_dLogStartTime = dVal;
-		else if( dVal < m_dLogStartTime ) dVal += 24 * 3600;
-		SetTime( iIndex, dVal - m_dLogStartTime );
-	}
-	
   private:
 	int	m_iCnt;
+	CVsdFilter	*m_pVsd;
 };

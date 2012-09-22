@@ -16,7 +16,27 @@ function ReadLog( FileName ){
 	var Ext = Files[ 0 ].toLowerCase().replace( /\.gz$/, '' );
 	Ext.match( /([^\.]+)$/ );
 	
-	return eval( "Read_" + RegExp.$1 + "( Files )" );
+	var Cnt = eval( "Read_" + RegExp.$1 + "( Files )" );
+	
+	if( typeof( Log ) != 'object' ){
+		MessageBox( Files.join( "\n" ) + "\nArray 型の変数 'Log' を定義してください" );
+		delete( Log );
+		return 0;
+	}
+	
+	if( typeof( Log.Time ) != 'object' ){
+		MessageBox( Files.join( "\n" ) + "\nArray 型の変数 'Log.Time' を定義してください" );
+		delete( Log );
+		return 0;
+	}
+	
+	if( Cnt == 0 ){
+		MessageBox( Files.join( "\n" ) + "\n有効なログが見つかりませんでした" );
+		delete( Log );
+		return 0;
+	}
+	
+	return Cnt;
 }
 
 function Read_nmea( Files ){
@@ -26,16 +46,16 @@ function Read_nmea( Files ){
 	Log.Longitude	= new Array();
 	Log.Latitude	= new Array();
 	
+	var	Cnt = 0;
+	var Line;
+	var bSpeed = false;
+	
 	for( var i = 0; i < Files.length; ++i ){
 		var file = new File();
 		if( file.Open( Files[ i ], "zr" )){
-			MessageBox( "Can't open file: " + Files[ i ] );
+			MessageBox( "ファイルが開けません: " + Files[ i ] );
 			return 0;
 		}
-		
-		var	Cnt = 0;
-		var Line;
-		var bSpeed = false;
 		
 		while( !file.IsEOF()){
 			Line = file.ReadLine();
