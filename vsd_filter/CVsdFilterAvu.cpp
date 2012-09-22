@@ -551,53 +551,17 @@ BOOL func_proc( FILTER *fp, FILTER_PROC_INFO *fpip ){
 
 /*** *.js ファイルリスト取得 ************************************************/
 
-void ListTreeCallback( const char *szPath, const char *szFile, HWND hwnd ){
-	if( !IsExt( szFile, "js" )) return;
+BOOL ListTreeCallback( const char *szPath, const char *szFile, void *pParam ){
+	if( !IsExt( szFile, "js" )) return TRUE;
 	
 	char szBuf[ MAX_PATH + 1 ];
 	
 	strcat( strcpy( szBuf, szPath ), szFile );
 	char *p = szBuf + strlen( g_Vsd->m_szPluginDirA );
 	
-	SendMessage( hwnd, CB_ADDSTRING, 0, ( LPARAM )p );
-}
-
-// szPath は [ MAX_PATH + 1 ] の配列で，work に使用される
-BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, void ( *CallbackFunc )( LPCTSTR, LPCTSTR, HWND ), HWND hwnd ){
+	SendMessage(( HWND )pParam, CB_ADDSTRING, 0, ( LPARAM )p );
 	
-	HANDLE				hFindFile;		/* find handle						*/
-	WIN32_FIND_DATA		FindData;		/* find data struc					*/
-	
-	BOOL	bSuccess = TRUE;			/* success flag						*/
-	
-	// szPath が \ で終わってない時の対処
-	int iFileIdx = _tcslen( szPath );	// \0
-	
-	if( iFileIdx != 0 && szPath[ iFileIdx - 1 ] != '\\' ){
-		_tcscat_s( szPath, MAX_PATH, _T( "\\" ));
-		++iFileIdx;
-	}
-	
-	_tcscat_s( szPath, MAX_PATH, szFile );
-	
-	if(( hFindFile = FindFirstFile( szPath, &FindData )) != INVALID_HANDLE_VALUE ){
-		do{
-			if( _tcscmp( FindData.cFileName, _T( "." ))&&
-				_tcscmp( FindData.cFileName, _T( ".." ))){
-				
-				if( FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ){
-					_tcscpy_s( &szPath[ iFileIdx ], MAX_PATH - iFileIdx, FindData.cFileName );
-					ListTree( szPath, szFile, CallbackFunc, hwnd );
-				}else{
-					szPath[ iFileIdx ] = _T( '\0' );
-					CallbackFunc( szPath, FindData.cFileName, hwnd );
-				}
-			}
-		}while( FindNextFile( hFindFile, &FindData ));
-		
-		FindClose( hFindFile );
-	}
-	return( bSuccess );
+	return TRUE;
 }
 
 void SetSkinFileList( HWND hwnd ){

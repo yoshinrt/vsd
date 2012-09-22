@@ -37,6 +37,9 @@
 	#define DEFAULT_SKIN	"standard_r.js"
 #endif
 
+#define PLUGIN_DIR		"vsd_plugins"
+#define LOG_READER_DIR	"log_reader"
+
 // ƒpƒ‰ƒ[ƒ^‚ð•ÏŠ·
 #define GetLogIndex( frame, to, prev ) \
 	m_##to##Log->GetIndex( frame, VideoSt, VideoEd, to##St, to##Ed, prev )
@@ -313,7 +316,7 @@ class CVsdFilter {
 		char szBuf[ MAX_PATH + 1 ];
 		GetModuleFileName(( HMODULE )m_hInst, szBuf, MAX_PATH );
 		char *p = StrTokFile( NULL, szBuf, STF_NODE );
-		if( p ) strcpy( p, "vsd_plugins\\" );
+		if( p ) strcpy( p, PLUGIN_DIR "\\" );
 		StringNew( m_szPluginDirA, szBuf );
 		StringNew( m_szPluginDirW, m_szPluginDirA );
 		return m_szPluginDirA;
@@ -382,3 +385,5 @@ class CVsdFilter {
 	int	m_iWidth;
 	int m_iHeight;
 };
+
+BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, LPCTSTR, void * ), void *pParam );

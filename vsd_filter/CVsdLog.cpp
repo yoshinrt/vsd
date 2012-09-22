@@ -350,14 +350,38 @@ double CVsdLog::GPSLogGetLength(
 
 /*** ログリード by JavaScript **********************************************/
 
+BOOL LogReaderCallback( const char *szPath, const char *szFile, void *pParam ){
+	if( !IsExt( szFile, "js" )) return TRUE;
+	
+	CScript &Script = *( CScript *)pParam;
+	
+	char szBuf[ MAX_PATH + 1 ];
+	strcat( strcpy( szBuf, szPath ), szFile );
+	
+	LPWSTR pFile = NULL;
+	Script.RunFile( StringNew( pFile, szBuf ));
+	delete pFile;
+	
+	if( Script.m_uError ){
+		// エラー
+		Script.m_Vsd->DispErrorMessage( Script.GetErrorMessage());
+		return FALSE;
+	}
+	
+	return TRUE;
+}
+
 int CVsdLog::ReadGPSLog( const char *szFileName ){
 	{
 		// JavaScript オブジェクト初期化
 		CScript Script( m_pVsd );
 		Script.Initialize();
-		if( Script.RunFile( L"log_reader\\nmea.js" ) != ERR_OK ){
-			// エラー
-			m_pVsd->DispErrorMessage( Script.GetErrorMessage());
+		
+		// スクリプトロード
+		char szBuf[ MAX_PATH + 1 ];
+		strcpy( szBuf, m_pVsd->m_szSkinDirA );
+		strcat( szBuf, LOG_READER_DIR "\\" );
+		if( !ListTree( szBuf, "*", LogReaderCallback, &Script )){
 			return 0;
 		}
 		

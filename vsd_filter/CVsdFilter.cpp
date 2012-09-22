@@ -357,6 +357,51 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	return pLapLog;
 }
 
+/*** ファイルリスト取得 *****************************************************/
+
+// szPath は [ MAX_PATH + 1 ] の配列で，work に使用される
+BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, LPCTSTR, void * ), void *pParam ){
+	
+	HANDLE				hFindFile;		/* find handle						*/
+	WIN32_FIND_DATA		FindData;		/* find data struc					*/
+	
+	BOOL	bSuccess = TRUE;			/* success flag						*/
+	
+	// szPath が \ で終わってない時の対処
+	int iFileIdx = _tcslen( szPath );	// \0
+	
+	if( iFileIdx != 0 && szPath[ iFileIdx - 1 ] != '\\' ){
+		_tcscat_s( szPath, MAX_PATH, _T( "\\" ));
+		++iFileIdx;
+	}
+	
+	_tcscat_s( szPath, MAX_PATH, szFile );
+	
+	if(( hFindFile = FindFirstFile( szPath, &FindData )) != INVALID_HANDLE_VALUE ){
+		do{
+			if( _tcscmp( FindData.cFileName, _T( "." ))&&
+				_tcscmp( FindData.cFileName, _T( ".." ))){
+				
+				if( FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ){
+					if( _tcscmp( FindData.cFileName, LOG_READER_DIR ) != 0 ){
+						_tcscpy_s( &szPath[ iFileIdx ], MAX_PATH - iFileIdx, FindData.cFileName );
+						ListTree( szPath, szFile, CallbackFunc, pParam );
+					}
+				}else{
+					szPath[ iFileIdx ] = _T( '\0' );
+					if( !CallbackFunc( szPath, FindData.cFileName, pParam )){
+						bSuccess = FALSE;
+						break;
+					}
+				}
+			}
+		}while( FindNextFile( hFindFile, &FindData ));
+		
+		FindClose( hFindFile );
+	}
+	return( bSuccess );
+}
+
 /****************************************************************************/
 
 BOOL WINAPI DllMain(
