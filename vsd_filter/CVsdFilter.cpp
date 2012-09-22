@@ -92,9 +92,9 @@ int CVsdFilter::ReadLog( const char *szFileName ){
 	m_VsdLog = new CVsdLog( this );
 	if( m_LapLog ) delete m_LapLog;
 	m_LapLog = NULL;
-	int iRet = m_VsdLog->ReadLog( szFileName, m_LapLog );
+	int iRet = m_VsdLog->ReadGPSLog( szFileName /*, m_LapLog*/ );
 	if( iRet ){
-		m_VsdLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
+		//m_VsdLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	}else{
 		delete m_VsdLog;
 		m_VsdLog = NULL;
