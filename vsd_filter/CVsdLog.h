@@ -105,6 +105,8 @@ class VSD_LOG_t {
 		m_fMax = -FLT_MAX;
 	}
 	
+	void Resize( int iCnt, double dVal ){ m_Log.resize( iCnt, ( float )dVal ); }
+	
   private:
 	float	m_fMin;
 	float	m_fMax;
@@ -172,18 +174,7 @@ class CVsdLog {
 	
 	// key の存在確認
 	
-	VSD_LOG_t *GetElement( const char *szKey, BOOL bCreate = FALSE ){
-		std::string strKey( szKey );
-		std::map<std::string, VSD_LOG_t *>::iterator itr;
-		
-		if(( itr = m_Logs.find( strKey )) != m_Logs.end()){
-			return itr->second;
-		}
-		if( bCreate ){
-			return m_Logs[ strKey ] = new VSD_LOG_t();
-		}
-		return NULL;
-	}
+	VSD_LOG_t *GetElement( const char *szKey, BOOL bCreate = FALSE );
 	
 	// レコードコピー
 	void CopyRecord( int iTo, int iFrom );

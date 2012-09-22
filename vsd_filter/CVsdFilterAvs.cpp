@@ -104,6 +104,8 @@ CVsdFilterAvs::CVsdFilterAvs(
 	m_piMark	= new int[ MAX_LAP ];
 	m_iMarkCnt	= 0;
 	
+	m_env = NULL;
+	
 	// パラメータ初期値
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	m_piParamT[ id ] = init;
 	#include "def_trackbar.h"
@@ -292,9 +294,13 @@ UINT CVsdFilterAvs::PutImage(
 /*** エラーメッセージ *******************************************************/
 
 void CVsdFilterAvs::DispErrorMessage( LPCWSTR szMsg ){
-	char *p = NULL;
-	m_env->ThrowError( "%s", StringNew( p, szMsg ));
-	delete [] p;
+	if( m_env ){
+		char *p = NULL;
+		m_env->ThrowError( "%s", StringNew( p, szMsg ));
+		delete [] p;
+	}else{
+		MessageBoxW( NULL, szMsg, PROG_NAME_J_W, MB_ICONWARNING );
+	}
 }
 
 /*** フレームをマーク *******************************************************/

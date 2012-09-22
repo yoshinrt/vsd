@@ -12,7 +12,7 @@ class CVsdFilter;
 
 class CScript {
   public:
-	CScript( CVsdFilter *pVsd = NULL );
+	CScript( CVsdFilter *pVsd );
 	~CScript( void );
 	
 	void Initialize( void );

@@ -80,14 +80,15 @@ function Read_nmea( Files ){
 				var Time	= +Param[ 1 ];
 				var Hour	= ~~( Time / 10000 );
 				var Min		= ~~( Time / 100 ) % 100;
-				var Sec		= Time % 100;
+				var Sec		= ~~Time % 100;
+				var Milli	= ~~( Time * 1000 ) % 1000;
 				
 				var DateTime= ~~Param[ 9 ];
 				var Day		= ~~( DateTime / 10000 );
 				var Mon		= ~~( DateTime / 100 ) % 100;
 				var Year	= DateTime % 100 + 2000;
 				
-				Log.Time[ Cnt ]	= Date.UTC( Year, Mon - 1, Day, Hour, Min, Sec );
+				Log.Time[ Cnt ]	= Date.UTC( Year, Mon - 1, Day, Hour, Min, Sec, Milli );
 				
 				var Long = +Param[ 5 ];
 				Long = ~~( Long / 100 ) + ( Long % 100 / 60 );

@@ -120,22 +120,31 @@ void CVsdLog::Dump( char *szFileName ){
 }
 #endif
 
-/*** ログの Set *************************************************************/
+/*** key の存在確認 *********************************************************/
 
-void CVsdLog::Set( const char *szKey, int iIndex, double dVal ){
+VSD_LOG_t *CVsdLog::GetElement( const char *szKey, BOOL bCreate ){
 	std::string strKey( szKey );
-	if( m_Logs.find( strKey ) == m_Logs.end()){
-		// 要素なし，生成される
+	std::map<std::string, VSD_LOG_t *>::iterator itr;
+	
+	if(( itr = m_Logs.find( strKey )) != m_Logs.end()){
+		return itr->second;
+	}
+	if( bCreate ){
 		VSD_LOG_t *p;
 		m_Logs[ strKey ] = p = new VSD_LOG_t();
 		
 		// Speed とか基本データの参照用ポインタに代入
 		#define DEF_LOG( name )	if( strKey == #name ) m_pLog##name = p;
 		#include "def_log.h"
+		return p;
 	}
-	
-	m_Logs[ strKey ]->Set( iIndex, dVal );
-	
+	return NULL;
+}
+
+/*** ログの Set *************************************************************/
+
+void CVsdLog::Set( const char *szKey, int iIndex, double dVal ){
+	GetElement( szKey, TRUE )->Set( iIndex, dVal );
 	if( m_iCnt <= iIndex ) m_iCnt = iIndex + 1;
 }
 
@@ -170,90 +179,116 @@ UINT CVsdLog::GPSLogRescan( void ){
 	m_dFreq = 0;
 	int		iFreqCnt = 0;
 	
+	BOOL	bCreateSpeed	= FALSE;
+	BOOL	bCreateG		= FALSE;
+	
+	if( m_pLogX0 != 0 && m_pLogY0 != 0 ){
+		if( !m_pLogSpeed ){
+			bCreateSpeed = TRUE;
+			m_pLogSpeed = GetElement( "Speed", TRUE );
+			m_pLogSpeed->Resize( GetCnt(), 0 );
+		}
+		
+		if( !m_pLogGx ){
+			bCreateG = TRUE;
+			m_pLogGx = GetElement( "Gx", TRUE );
+			m_pLogGx->Resize( GetCnt(), 0 );
+			m_pLogGy = GetElement( "Gy", TRUE );
+			m_pLogGy->Resize( GetCnt(), 0 );
+		}
+	}
+	
 	#ifdef _OPENMP
 		#pragma omp parallel
 	#endif
 	{
-		if( m_pLogX0 != 0 && m_pLogY0 != 0 ){
-			// スピード生成
-			if( !m_pLogSpeed ){
-				#ifdef _OPENMP
-					#pragma omp for
-				#endif
-				for( int i = 0; i < GetCnt() - 1; ++i ){
-					if( Time( i + 1 ) - Time( i ) >= ( TIME_STOP - TIME_STOP_MARGIN * 2 )){
-						// 時間が開いている停止ログ
-						SetSpeed( i++, 0 );
-						SetSpeed( i,   0 );
-					}else{
-						SetSpeed( i,
-							( Distance( i + 1 ) - Distance( i ))
-							* ( 3600.0 / 1000 ) /
-							( Time( i + 1 ) - Time( i ))
-						);
-					}
+		// スピード生成
+		if( bCreateSpeed ){
+			#ifdef _OPENMP
+				#pragma omp for
+			#endif
+			for( int i = 0; i < GetCnt() - 1; ++i ){
+				if( Time( i + 1 ) - Time( i ) >= ( TIME_STOP - TIME_STOP_MARGIN * 2 )){
+					// 時間が開いている停止ログ
+					SetSpeed( i, 0 );
+				}else{
+					SetSpeed( i,
+						( Distance( i + 1 ) - Distance( i ))
+						* ( 3600.0 / 1000 ) /
+						( Time( i + 1 ) - Time( i ))
+					);
 				}
-				// 番犬はすでに 0 → SetSpeed( GetCnt() - 1, 0 );
 			}
+			// 番犬はすでに 0 → SetSpeed( GetCnt() - 1, 0 );
+		}
+		
+		// G 計算
+		if( bCreateG ){
+			double	dBearingPrev = 100;
 			
-			// G 計算
-			if( !m_pLogGx ){
-				double	dBearingPrev;
-				
-				#ifdef _OPENMP
-					#pragma omp for
-				#endif
-				for( int i = 0; i < GetCnt() - 1; ++i ){
-					// bearing 計算
-					double dBearing = atan2( Y0( i + 1 ) - Y0( i ), X0( i + 1 ) - X0( i ));
-					
-					// 横 G 計算
-					if( i >= 2 ){
-						// Gx / Gy を作る
-						SetGy( i,
-							( Speed( i + 1 ) - Speed( i ))
-							* ( 1 / 3.600 / GRAVITY )
-							/ ( Time( i + 1 ) - Time( i ))
-						);
-						
-						// 横G = vω
-						double dBearingDelta = dBearing - dBearingPrev;
-						if     ( dBearingDelta >  M_PI ) dBearingDelta -= M_PI * 2;
-						else if( dBearingDelta < -M_PI ) dBearingDelta += M_PI * 2;
-						
-						SetGx( i,
-							dBearingDelta / GRAVITY
-							/ ( Time( i + 1 ) - Time( i ))
-							* ( Speed( i ) / 3.600 )
-						);
-						
-						// ±5G 以上は，削除
-						if( Gx( i ) < -3 || Gx( i ) > 3 ){
-							SetGx( i, Gx( i - 1 ));
-						}
-					}
-					
-					dBearingPrev = dBearing;
-					
-					// 5km/h 以上の時のみ，ログ Freq を計算する
-					/* ★暫定
-					if( Speed( i ) >= 5 ){
-						m_dFreq += Time( i ) - Time( i - 1 );
-						++iFreqCnt;
-					}
-					*/
+			#ifdef _OPENMP
+				#pragma omp for
+			#endif
+			for( int i = 1; i < GetCnt() - 1; ++i ){
+				if( dBearingPrev = 100 ){
+					dBearingPrev = atan2( Y0( i ) - Y0( i - 1 ), X0( i ) - X0( i - 1 ));
 				}
-				SetGx( GetCnt() - 1, 0 );
-				SetGy( GetCnt() - 1, 0 );
 				
-				// スムージング
-				#define G_SMOOTH_NUM	3
-				double	dGx0, dGx1 = 0;
-				double	dGy0, dGy1 = 0;
+				// bearing 計算
+				double dBearing = atan2( Y0( i + 1 ) - Y0( i ), X0( i + 1 ) - X0( i ));
 				
-				for( int i = ( G_SMOOTH_NUM - 1 ) / 2; i < GetCnt() - G_SMOOTH_NUM / 2; ++i ){
-					if( i < 2 || i >= GetCnt() - 2 ) continue;
-					
+				// 横 G 計算
+				// Gx / Gy を作る
+				SetGy( i,
+					( Speed( i + 1 ) - Speed( i ))
+					* ( 1 / 3.600 / GRAVITY )
+					/ ( Time( i + 1 ) - Time( i ))
+				);
+				
+				// 横G = vω
+				double dBearingDelta = dBearing - dBearingPrev;
+				if     ( dBearingDelta >  M_PI ) dBearingDelta -= M_PI * 2;
+				else if( dBearingDelta < -M_PI ) dBearingDelta += M_PI * 2;
+				
+				SetGx( i,
+					dBearingDelta / GRAVITY
+					/ ( Time( i + 1 ) - Time( i ))
+					* ( Speed( i ) / 3.600 )
+				);
+				
+				// ±5G 以上は，削除
+				if( Gx( i ) < -3 || Gx( i ) > 3 ){
+					SetGx( i, Gx( i - 1 ));
+				}
+				
+				dBearingPrev = dBearing;
+				
+				// 5km/h 以上の時のみ，ログ Freq を計算する
+				/* ★暫定
+				if( Speed( i ) >= 5 ){
+					m_dFreq += Time( i ) - Time( i - 1 );
+					++iFreqCnt;
+				}
+				*/
+			}
+			SetGx( GetCnt() - 1, 0 );
+			SetGy( GetCnt() - 1, 0 );
+			
+			// スムージング
+			#define G_SMOOTH_NUM	3
+			double	dGx0, dGx1 = 0;
+			double	dGy0, dGy1 = 0;
+			
+			m_pLogGx->InitMinMax();
+			m_pLogGy->InitMinMax();
+			
+			for( int i = ( G_SMOOTH_NUM - 1 ) / 2; i < GetCnt() - G_SMOOTH_NUM / 2; ++i ){
+				if( i < 2 || i >= GetCnt() - 2 ) continue;
+				
+				if( Speed( i ) == 0 ){
+					SetGx( i, 0 );
+					SetGy( i, 0 );
+				}else{
 					SetGx( i, dGx0 = (
 						( G_SMOOTH_NUM >= 7 ? Gx( i - 3 ) : 0 ) +
 						( G_SMOOTH_NUM >= 6 ? Gx( i + 3 ) : 0 ) +
@@ -318,7 +353,7 @@ double CVsdLog::GPSLogGetLength(
 int CVsdLog::ReadGPSLog( const char *szFileName ){
 	{
 		// JavaScript オブジェクト初期化
-		CScript Script;
+		CScript Script( m_pVsd );
 		Script.Initialize();
 		if( Script.RunFile( L"log_reader\\nmea.js" ) != ERR_OK ){
 			// エラー
@@ -475,7 +510,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 					double dDiffTime = Time( iCnt ) - Time( iCnt - 1 );
 					if(
 						dDiffTime >= TIME_STOP &&
-						Distance( iCnt ) / dDiffTime < ( 5.0 /*[km/h]*/ * 1000 / 3600 )
+						( Distance( iCnt ) - Distance( iCnt - 1 )) / dDiffTime < ( 5.0 /*[km/h]*/ * 1000 / 3600 )
 					){
 						// -1 -0
 						// A  B
