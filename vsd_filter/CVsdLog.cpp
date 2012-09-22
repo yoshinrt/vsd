@@ -147,6 +147,7 @@ void CVsdLog::CopyRecord( int iTo, int iFrom ){
 		VSD_LOG_t *pLog = it->second;
 		pLog->Set( iTo, pLog->Get( iFrom ));
 	}
+	if( m_iCnt <= iTo ) m_iCnt = iTo + 1;
 }
 
 /*** 番犬追加 ***************************************************************/
@@ -163,82 +164,35 @@ void CVsdLog::AddWatchDog( void ){
 
 UINT CVsdLog::GPSLogRescan( void ){
 	
-	if( GetCnt() == 0 ) return 0;			// 2個データがなければ終了
-	
-	double	dDistance = 0;
-	
 	/*** VSD_LOG_t の方を走査して，いろいろ補正 *****************************/
-	
-	// 緯度経度→メートル 変換定数
-	double dLong2Meter = GPSLogGetLength( m_dLong0, m_dLati0, m_dLong0 + 1.0 / 3600, m_dLati0 ) * 3600;
-	double dLati2Meter = GPSLogGetLength( m_dLong0, m_dLati0, m_dLong0, m_dLati0 + 1.0 / 3600 ) * 3600;
 	
 	m_dFreq = 0;
 	int		iFreqCnt = 0;
-	int		iSameCnt = 0;
-	
-	// 同じ時間が連続する場合の時刻調整と，
-	for( int i = 1; i < GetCnt(); ++i ){
-		if( Time( i - 1 ) == Time( i )){
-			// 時刻が同じログが続くときそのカウントをする
-			++iSameCnt;
-		}else if( iSameCnt ){
-			// 時刻が同じログが途切れたので，時間を補正する
-			++iSameCnt;
-			
-			// -4 -3 -2 -1 +0
-			//  A  A  A  A  B
-			//u =  1  2  3
-			
-			for( int j = 1; j < iSameCnt; ++j ){
-				SetTime(
-					i - iSameCnt + j,
-					Time( i - iSameCnt ) + 
-					( Time( i ) - Time( i - iSameCnt )) / iSameCnt * j
-				);
-			}
-			iSameCnt = 0;
-		}
-	}
 	
 	#ifdef _OPENMP
 		#pragma omp parallel
 	#endif
 	{
-		if( m_pLogX0 && m_pLogY0 ){
-			// 緯度・経度→メートル
-			#ifdef _OPENMP
-				#pragma omp for
-			#endif
-			for( int i = 0; i < GetCnt(); ++i ){
-				SetX0( i, X0( i ) * dLong2Meter );
-				SetY0( i, Y0( i ) * dLati2Meter );
-			}
-			
-			// 走行距離算出	(並列化不可能)
-			if( !m_pLogDistance ){
-				for( int i = 1; i < GetCnt(); ++i ){
-					double x = X0( i - 1 ) - X0( i ); x *= x;
-					double y = Y0( i - 1 ) - Y0( i ); y *= y;
-					
-					dDistance += sqrt( x + y );
-					SetDistance( i, dDistance );
-				}
-			}
-			
+		if( m_pLogX0 != 0 && m_pLogY0 != 0 ){
 			// スピード生成
 			if( !m_pLogSpeed ){
 				#ifdef _OPENMP
 					#pragma omp for
 				#endif
 				for( int i = 0; i < GetCnt() - 1; ++i ){
-					SetSpeed( i,
-						( Distance( i + 1 ) - Distance( i ))
-						* ( 3600.0 / 1000 ) /
-						( Time( i + 1 ) - Time( i ))
-					);
+					if( Time( i + 1 ) - Time( i ) >= ( TIME_STOP - TIME_STOP_MARGIN * 2 )){
+						// 時間が開いている停止ログ
+						SetSpeed( i++, 0 );
+						SetSpeed( i,   0 );
+					}else{
+						SetSpeed( i,
+							( Distance( i + 1 ) - Distance( i ))
+							* ( 3600.0 / 1000 ) /
+							( Time( i + 1 ) - Time( i ))
+						);
+					}
 				}
-				SetSpeed( GetCnt() - 1, 0 );
+				// 番犬はすでに 0 → SetSpeed( GetCnt() - 1, 0 );
 			}
 			
 			// G 計算
@@ -361,21 +315,6 @@ double CVsdLog::GPSLogGetLength(
 /*** ログリード by JavaScript **********************************************/
 
 int CVsdLog::ReadGPSLog( const char *szFileName ){
-	TCHAR	szCurDir[ MAX_PATH + 1 ];
-	TCHAR	szBuf[ BUF_SIZE ];
-	
-	getcwd( szCurDir, MAX_PATH );	// カレント dir
-	
-	// マルチファイルの場合，1個目は dir 名なのでそこに cd
-	char const *p;
-	if( p = strchr( szFileName, '/' )){
-		strncpy( szBuf, szFileName, p - szFileName );
-		*( szBuf + ( p - szFileName )) = '\0';
-		chdir( szBuf );
-		
-		szFileName = p + 1;
-	}
-	
 	{
 		// JavaScript オブジェクト初期化
 		CScript Script;
@@ -384,24 +323,10 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 			return 0;	// エラー
 		}
 		
-		while( *szFileName ){
-			
-			// ファイル名を / で分解
-			p = szFileName;
-			if( !( p = strchr( szFileName, '/' ))) p = strchr( szFileName, '\0' );
-			strncpy( szBuf, szFileName, p - szFileName );
-			*( szBuf + ( p - szFileName )) = '\0';
-			szFileName = *p ? p + 1 : p;	// p == '/' ならスキップ
-			
-			// スクリプト実行
-			LPWSTR pStr = NULL;
-			StringNew( pStr, szBuf );
-			
-			Script.Run_s( L"ReadLog", pStr );
-			delete [] pStr;
-		}
-		
-		chdir( szCurDir );	// pwd を元に戻す
+		// スクリプト実行
+		LPWSTR pStr = NULL;
+		Script.Run_s( L"ReadLog", StringNew( pStr, szFileName ));
+		delete [] pStr;
 		
 		/*** JS の Log にアクセス *******************************************/
 		
@@ -412,13 +337,150 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 			v8::HandleScope handle_scope;
 			v8::Context::Scope context_scope( Script.m_Context );
 			
-			v8::Local<v8::Array> hArray = v8::Local<v8::Array>::Cast( Script.m_Context->Global()->Get( v8::String::New(( uint16_t *)L"Log" )));
-			if( !hArray->IsArray()) return 0;
+			// "Log" 取得
+			v8::Local<v8::Array> hLog = v8::Local<v8::Array>::Cast(
+				Script.m_Context->Global()->Get( v8::String::New(( uint16_t *)L"Log" ))
+			);
+			if( !hLog->IsArray()) return 0;
 			
-			v8::Local<v8::Array> Keys = hArray->GetPropertyNames();
+			// Log の key 取得
+			v8::Local<v8::Array> Keys = hLog->GetPropertyNames();
+			
+			// JavaScript Array の vector
+			std::vector<v8::Local<v8::Array> >	JSArrays;
+			
+			// VSD_LOG_t * の vector
+			std::vector<VSD_LOG_t *>	CArrays;
+			
+			UINT	uIdxTime	= ~0;
+			UINT	uIdxDistance= ~0;
+			UINT	uIdxX0		= ~0;
+			UINT	uIdxY0		= ~0;
+			
 			
 			for( UINT u = 0; u < Keys->Length(); ++u ){
-				v8::String::Value str0( Keys->Get( u ));
+				v8::String::AsciiValue strKey( Keys->Get( u ));
+				char *pKey = *strKey;
+				
+				v8::Local<v8::Array> ArrayTmp = v8::Local<v8::Array>::Cast( hLog->Get( Keys->Get( u )));
+				if( ArrayTmp->IsArray()){
+					if     ( !strcmp( *strKey, "Time"      )) uIdxTime		= u;
+					else if( !strcmp( *strKey, "Distance"  )) uIdxDistance	= u;
+					else if( !strcmp( *strKey, "Longitude" )){ uIdxX0		= u; pKey = "X0"; }
+					else if( !strcmp( *strKey, "Latitude"  )){ uIdxY0		= u; pKey = "Y0"; }
+					
+					// strKey で vector 作成
+					CArrays.push_back( GetElement( pKey, TRUE ));
+					
+					// JS の property 名解決後の Array の vector を作る
+					JSArrays.push_back( ArrayTmp );
+				}
+			}
+			
+			// Distance が無いときは，作る
+			BOOL bExistDistance = TRUE;
+			if( uIdxDistance == ~0 ){
+				uIdxDistance = CArrays.size();
+				CArrays.push_back( GetElement( "Distance", TRUE ));
+				bExistDistance = FALSE;
+			}
+			
+			// Time 存在確認
+			if( uIdxTime == ~0 ) return 0;
+			m_dLogStartTime = JSArrays[ uIdxTime ]->Get( 0 )->NumberValue() / 1000.0;
+			
+			// 緯度経度→メートル 変換定数
+			double dLong2Meter = 0;
+			double dLati2Meter = 0;
+			
+			if( uIdxX0 != ~0 && uIdxY0 != ~0 ){
+				m_dLong0 = JSArrays[ uIdxX0 ]->Get( 0 )->NumberValue();
+				m_dLati0 = JSArrays[ uIdxY0 ]->Get( 0 )->NumberValue();
+				
+				dLong2Meter = GPSLogGetLength( m_dLong0, m_dLati0, m_dLong0 + 1.0 / 3600, m_dLati0 ) * 3600;
+				dLati2Meter = GPSLogGetLength( m_dLong0, m_dLati0, m_dLong0, m_dLati0 + 1.0 / 3600 ) * 3600;
+			}
+			
+			// vector に積む
+			double	dDistance = 0;
+			int		iSameCnt = 0;
+			
+			for( UINT uIdx = 0; uIdx < JSArrays[ uIdxTime ]->Length(); ++uIdx ){
+				int iCnt = GetCnt();
+				
+				for( UINT uKey = 0; uKey < Keys->Length(); ++uKey ){
+					
+					double dVal = JSArrays[ uKey ]->Get( uIdx )->NumberValue();
+					
+					if( uKey == uIdxTime ){
+						if( dVal < m_dLogStartTime ) dVal += 24 * 3600;
+						SetTime( iCnt, dVal / 1000.0 - m_dLogStartTime );
+					}else if( uKey == uIdxX0 ){
+						SetX0( iCnt, ( dVal - m_dLong0 ) * dLong2Meter );
+					}else if( uKey == uIdxY0 ){
+						SetY0( iCnt, ( m_dLati0 - dVal ) * dLati2Meter );
+					}else{
+						CArrays[ uKey ]->Set( iCnt, dVal );
+					}
+				}
+				
+				if( iCnt == 0 ){
+					// 番犬作成
+					SetDistance( 0, 0 );
+					CopyRecord( 1, 0 );
+					CopyRecord( 2, 0 );
+					AddStopRecord( 0, -WATCHDOG_TIME );
+					AddStopRecord( 1, -TIME_STOP_MARGIN );
+				}else{
+					// 同じ時間が連続する場合の時刻調整
+					if( Time( iCnt - 1 ) == Time( iCnt )){
+						// 時刻が同じログが続くときそのカウントをする
+						++iSameCnt;
+					}else if( iSameCnt ){
+						// 時刻が同じログが途切れたので，時間を補正する
+						++iSameCnt;
+						
+						// -4 -3 -2 -1 +0
+						//  A  A  A  A  B
+						//u =  1  2   3
+						
+						for( int j = 1; j < iSameCnt; ++j ){
+							SetTime(
+								iCnt - iSameCnt + j,
+								Time( iCnt - iSameCnt ) + 
+								( Time( iCnt ) - Time( iCnt - iSameCnt )) / iSameCnt * j
+							);
+						}
+						iSameCnt = 0;
+					}
+					
+					// 走行距離を作る
+					if( !bExistDistance ){
+						double x = X0( iCnt - 1 ) - X0( iCnt ); x *= x;
+						double y = Y0( iCnt - 1 ) - Y0( iCnt ); y *= y;
+						
+						dDistance += sqrt( x + y );
+						SetDistance( iCnt, dDistance );
+					}
+					
+					// 前のログから TIME_STOP 離れていてかつ 指定km/h 以下なら，停止とみなす
+					double dDiffTime = Time( iCnt ) - Time( iCnt - 1 );
+					if(
+						dDiffTime >= TIME_STOP &&
+						Distance( iCnt ) / dDiffTime < ( 5.0 /*[km/h]*/ * 1000 / 3600 )
+					){
+						// -1 -0
+						// A  B
+						//     ↓
+						// -1 -0 +1 +2
+						// A  A' B' B
+						CopyRecord( iCnt + 1, iCnt     ); // B'
+						CopyRecord( iCnt + 2, iCnt     ); // B
+						CopyRecord( iCnt,     iCnt - 1 ); // A'
+						AddStopRecord( iCnt,     Time( iCnt - 1 ) + TIME_STOP_MARGIN ); // A'
+						AddStopRecord( iCnt + 1, Time( iCnt + 2 ) - TIME_STOP_MARGIN ); // B'
+					}
+				}
 			}
 		}
 	}
@@ -426,7 +488,14 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 	/************************************************************************/
 	
 	if( GetCnt()){
-		AddWatchDog();
+		int iCnt = GetCnt();
+		
+		// 終端側の番犬
+		CopyRecord( iCnt,     iCnt - 1 );
+		CopyRecord( iCnt + 1, iCnt - 1 );
+		AddStopRecord( iCnt,     Time( iCnt - 1 ) + TIME_STOP_MARGIN );
+		AddStopRecord( iCnt + 1, WATCHDOG_TIME );
+		
 		
 		#define DUMP_LOG
 		#if defined DEBUG && defined DUMP_LOG
@@ -444,178 +513,6 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 	}
 	return GetCnt();
 }
-
-/*** GPS ログリード ********************************************************/
-
-#if 0
-int CVsdLog::ReadGPSLog( const char *szFileName ){
-	TCHAR	szCurDir[ MAX_PATH + 1 ];
-	TCHAR	szBuf[ BUF_SIZE ];
-	
-	double	dLati;
-	double	dLong;
-	double	dSpeed;
-	double	dTime;
-	gzFile	fp;
-	
-	UINT	u;
-	int		iCnt = WATCHDOG_REC_NUM;
-	
-	getcwd( szCurDir, MAX_PATH );	// カレント dir
-	
-	// マルチファイルの場合，1個目は dir 名なのでそこに cd
-	char const *p;
-	if( p = strchr( szFileName, '/' )){
-		strncpy( szBuf, szFileName, p - szFileName );
-		*( szBuf + ( p - szFileName )) = '\0';
-		chdir( szBuf );
-		
-		szFileName = p + 1;
-	}
-	
-	while( *szFileName ){
-		
-		// ファイル名を / で分解
-		p = szFileName;
-		if( !( p = strchr( szFileName, '/' ))) p = strchr( szFileName, '\0' );
-		strncpy( szBuf, szFileName, p - szFileName );
-		*( szBuf + ( p - szFileName )) = '\0';
-		szFileName = *p ? p + 1 : p;	// p == '/' ならスキップ
-		
-		if(( fp = gzopen(( char *)szBuf, "rb" )) == NULL ) return 0;
-		
-		/*** dp3 ****************************************************************/
-		
-		if( IsExt(( char *)szBuf, "dp3" )){
-			
-			gzseek( fp, 0x100, SEEK_CUR );
-			
-			#define BigEndianI( p )	( \
-				( *(( UCHAR *)szBuf + p + 0 ) << 24 ) | \
-				( *(( UCHAR *)szBuf + p + 1 ) << 16 ) | \
-				( *(( UCHAR *)szBuf + p + 2 ) <<  8 ) | \
-				( *(( UCHAR *)szBuf + p + 3 )       ))
-			
-			#define BigEndianS( p )	( \
-				( *(( UCHAR *)szBuf + p + 0 ) <<  8 ) | \
-				( *(( UCHAR *)szBuf + p + 1 )       ))
-			
-			while( gzread( fp, szBuf, 16 )){
-				// 値補正
-				// 2254460 → 22:54:46.0
-				u = BigEndianI( 0 ) & 0x3FFFFF;
-				SetDateTime( iCnt,
-					u / 100000 * 3600 +
-					u / 1000 % 100 * 60 +
-					( u % 1000 ) / 10.0
-				);
-				
-				// 速度
-				SetSpeed( iCnt, BigEndianS( 12 ) / 10.0 );
-				SetLongitude( iCnt, BigEndianI( 4 ) / 460800.0 );
-				SetLatitude(  iCnt, BigEndianI( 8 ) / 460800.0 );
-				
-				++iCnt;
-			}
-		}
-		
-		/*** dp3x ***************************************************************/
-		
-		if( IsExt(( char *)szBuf, "dp3x" )){
-			
-			// 原点取得
-			gzread( fp, szBuf, 0x78 );
-			double dLatiBase = *( int *)( szBuf + 0x54 ) / 460800.0;
-			double dLongBase = *( int *)( szBuf + 0x50 ) / 460800.0;
-			
-			// 時間取得 UTC * 1000
-			dTime = fmod(( double )*( __int64 *)( szBuf + 0x48 ) / 1000, 3600 * 24 )
-				+ 9 * 3600; // なぜか UTC-9 の時間なので，補正
-			
-			while( gzread( fp, szBuf, 18 )){
-				SetDateTime( iCnt, dTime + ( GetCnt() - 2 ) / 5 );	// 5Hz 固定らしい
-				
-				// 速度
-				SetSpeed( iCnt, *( short int *)( szBuf + 0x4 ) / 10.0 );
-				SetLongitude( iCnt, *( short int *)( szBuf + 0x0 ) / 460800.0 + dLongBase );
-				SetLatitude(  iCnt, *( short int *)( szBuf + 0x2 ) / 460800.0 + dLatiBase );
-				
-				++iCnt;
-			}
-		}
-		
-		/*** nmea ***************************************************************/
-		
-		else while( gzgets( fp, szBuf, BUF_SIZE ) != Z_NULL ){
-			
-			char	cNorthSouth;
-			char	cEastWest;
-			UINT	uParamCnt;
-			
-			uParamCnt = sscanf( szBuf,
-				"$GPRMC,"
-				"%lg,%*c,"	// time
-				"%lg,%c,"	// lat
-				"%lg,%c,"	// long
-				"%lg,",		// speed
-				// 1	2		3				4		5			6
-				&dTime, &dLati, &cNorthSouth, &dLong, &cEastWest, &dSpeed
-			);
-			
-			// $GPRMC センテンス以外はスキップ
-			if( uParamCnt < 5 ) continue;
-			
-			// 値補正
-			// 225446.00 → 22:54:46.00
-			dTime =	( int )dTime / 10000 * 3600 +
-					( int )dTime / 100 % 100 * 60 +
-					fmod( dTime, 100 );
-			
-			// 緯度経度の変換: 4916.452653 → 49度16.45分
-			dLong = ( int )dLong / 100 + fmod( dLong, 100 ) / 60;
-			dLati = ( int )dLati / 100 + fmod( dLati, 100 ) / 60;
-			
-			// 海外対応w
-			if( cEastWest   == 'W' ) dLong = -dLong;
-			if( cNorthSouth == 'S' ) dLati = -dLati;
-			
-			SetDateTime( iCnt, dTime );
-			
-			// 速度
-			if( uParamCnt >= 6 ) SetSpeed( iCnt, dSpeed * 1.852 ); // knot/h → km/h
-			SetLongitude( iCnt, dLong );
-			SetLatitude(  iCnt, dLati );
-			
-			++iCnt;
-		}
-		
-		gzclose( fp );
-	}
-	
-	chdir( szCurDir );	// pwd を元に戻す
-	
-	/************************************************************************/
-	
-	if( GetCnt()){
-		AddWatchDog();
-		
-		#define DUMP_LOG
-		#if defined DEBUG && defined DUMP_LOG
-			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_raw.txt" );
-		#endif
-		
-		// ログ再スキャン
-		GPSLogRescan();
-		
-		#if defined DEBUG && defined DUMP_LOG
-			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_upcon.txt" );
-		#endif
-		
-		m_dLogStartTime += 9 * 3600;
-	}
-	return GetCnt();
-}
-#endif
 
 /*** ログリード *************************************************************/
 

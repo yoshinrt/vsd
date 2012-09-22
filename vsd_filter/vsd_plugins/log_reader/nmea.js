@@ -26,9 +26,12 @@ function Read_nmea( Files ){
 	Log.Longitude	= new Array();
 	Log.Latitude	= new Array();
 	
-	for( var FileName in Files ){
+	for( var i = 0; i < Files.length; ++i ){
 		var file = new File();
-		if( file.Open( FileName, "zr" )) return 0;
+		if( file.Open( Files[ i ], "zr" )){
+			MessageBox( "Can't open file: " + Files[ i ] );
+			return 0;
+		}
 		
 		var	Cnt = 0;
 		var Line;
