@@ -78,29 +78,9 @@ class CVsdFilterIF {
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->MaxLapCnt() ) : v8::Undefined();
 	}
-	static v8::Handle<v8::Value> Get_Width( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Integer::New( obj->GetWidth() ) : v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Get_Height( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Integer::New( obj->GetHeight() ) : v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Get_MaxFrameCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Integer::New( obj->GetFrameMax() ) : v8::Undefined();
-	}
 	static v8::Handle<v8::Value> Get_FrameCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->GetFrameCnt() ) : v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Get_SkinDir( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::String::New(( uint16_t *) obj->m_szSkinDirW ) : v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Get_VsdRootDir( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::String::New(( uint16_t *) obj->m_szPluginDirW ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_Speed( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
@@ -117,22 +97,6 @@ class CVsdFilterIF {
 	static v8::Handle<v8::Value> Get_Gy( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Number::New( obj->m_dGy ) : v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Get_MaxGx( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Number::New( obj->MaxGx() ) : v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Get_MaxGy( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Number::New( obj->MaxGy() ) : v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Get_MaxSpeed( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Number::New( obj->GetMaxSpeed() ) : v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Get_MaxTacho( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Number::New( obj->GetMaxTacho() ) : v8::Undefined();
 	}
 
 	///// メャbドコールバック /////
@@ -546,20 +510,11 @@ class CVsdFilterIF {
 		inst->SetAccessor( v8::String::New( "LapTime" ), Get_LapTime );
 		inst->SetAccessor( v8::String::New( "LapCnt" ), Get_LapCnt );
 		inst->SetAccessor( v8::String::New( "MaxLapCnt" ), Get_MaxLapCnt );
-		inst->SetAccessor( v8::String::New( "Width" ), Get_Width );
-		inst->SetAccessor( v8::String::New( "Height" ), Get_Height );
-		inst->SetAccessor( v8::String::New( "MaxFrameCnt" ), Get_MaxFrameCnt );
 		inst->SetAccessor( v8::String::New( "FrameCnt" ), Get_FrameCnt );
-		inst->SetAccessor( v8::String::New( "SkinDir" ), Get_SkinDir );
-		inst->SetAccessor( v8::String::New( "VsdRootDir" ), Get_VsdRootDir );
 		inst->SetAccessor( v8::String::New( "Speed" ), Get_Speed );
 		inst->SetAccessor( v8::String::New( "Tacho" ), Get_Tacho );
 		inst->SetAccessor( v8::String::New( "Gx" ), Get_Gx );
 		inst->SetAccessor( v8::String::New( "Gy" ), Get_Gy );
-		inst->SetAccessor( v8::String::New( "MaxGx" ), Get_MaxGx );
-		inst->SetAccessor( v8::String::New( "MaxGy" ), Get_MaxGy );
-		inst->SetAccessor( v8::String::New( "MaxSpeed" ), Get_MaxSpeed );
-		inst->SetAccessor( v8::String::New( "MaxTacho" ), Get_MaxTacho );
 
 		// メャbドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
@@ -583,6 +538,14 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawLapTimeLog" ), v8::FunctionTemplate::New( Func_DrawLapTimeLog ));
 		proto->Set( v8::String::New( "DrawNeedle" ), v8::FunctionTemplate::New( Func_DrawNeedle ));
 		proto->Set( v8::String::New( "FormatTime" ), v8::FunctionTemplate::New( Func_FormatTime ));
+
+		proto->Set( v8::String::New( "Width" ), v8::Integer::New( CScript::m_pVsd->GetWidth() ));
+		proto->Set( v8::String::New( "Height" ), v8::Integer::New( CScript::m_pVsd->GetHeight() ));
+		proto->Set( v8::String::New( "MaxFrameCnt" ), v8::Integer::New( CScript::m_pVsd->GetFrameMax() ));
+		proto->Set( v8::String::New( "SkinDir" ), v8::String::New(( uint16_t *) CScript::m_pVsd->m_szSkinDirW ));
+		proto->Set( v8::String::New( "VsdRootDir" ), v8::String::New(( uint16_t *) CScript::m_pVsd->m_szPluginDirW ));
+
+		CScript::m_pVsd->InitJS( tmpl );
 
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "__VSD_System__" ), tmpl );
@@ -766,6 +729,8 @@ class CVsdImageIF {
 		proto->Set( v8::String::New( "Resize" ), v8::FunctionTemplate::New( Func_Resize ));
 		proto->Set( v8::String::New( "Rotate" ), v8::FunctionTemplate::New( Func_Rotate ));
 
+
+
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "Image" ), tmpl );
 	}
@@ -907,6 +872,8 @@ class CVsdFontIF {
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
 		proto->Set( v8::String::New( "Dispose" ), v8::FunctionTemplate::New( Func_Dispose ));
 		proto->Set( v8::String::New( "GetTextWidth" ), v8::FunctionTemplate::New( Func_GetTextWidth ));
+
+
 
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "Font" ), tmpl );
@@ -1071,6 +1038,8 @@ class CVsdFileIF {
 		proto->Set( v8::String::New( "Close" ), v8::FunctionTemplate::New( Func_Close ));
 		proto->Set( v8::String::New( "ReadLine" ), v8::FunctionTemplate::New( Func_ReadLine ));
 		proto->Set( v8::String::New( "IsEOF" ), v8::FunctionTemplate::New( Func_IsEOF ));
+
+
 
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "File" ), tmpl );

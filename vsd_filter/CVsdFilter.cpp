@@ -344,6 +344,40 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	return pLapLog;
 }
 
+/*** JavaScript IF 追加の初期化 *********************************************/
+
+void CVsdFilter::InitJS_Sub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl ){
+	if( !pLog ) return;
+	
+	char szBuf[ 256 ];
+	
+	v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
+	std::map<std::string, VSD_LOG_t *>::iterator it;
+	
+	for( it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it ){
+		if( pLog == m_VsdLog || m_VsdLog->GetElement( it->first.c_str()) == NULL ){
+			// Max 登録
+			sprintf( szBuf, "Max%s", it->first.c_str());
+			proto->Set(
+				v8::String::New( szBuf ),
+				v8::Number::New( pLog->GetMax( it->first.c_str()))
+			);
+			
+			// Min 登録
+			sprintf( szBuf, "Min%s", it->first.c_str());
+			proto->Set(
+				v8::String::New( szBuf ),
+				v8::Number::New( pLog->GetMin( it->first.c_str()))
+			);
+		}
+	}
+}
+
+void CVsdFilter::InitJS( v8::Local<v8::FunctionTemplate> tmpl ){
+	InitJS_Sub( m_VsdLog, tmpl );
+	InitJS_Sub( m_GPSLog, tmpl );
+}
+
 /*** ファイルリスト取得 *****************************************************/
 
 // szPath は [ MAX_PATH + 1 ] の配列で，work に使用される

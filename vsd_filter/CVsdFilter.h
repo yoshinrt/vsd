@@ -269,9 +269,9 @@ class CVsdFilter {
 	};
 	
 	// 仮想関数
-	virtual int	GetWidth( void )	= 0;	// !js_var:Width
-	virtual int	GetHeight( void )	= 0;	// !js_var:Height
-	virtual int	GetFrameMax( void )	= 0;	// !js_var:MaxFrameCnt
+	virtual int	GetWidth( void )	= 0;	// !js_const:Width
+	virtual int	GetHeight( void )	= 0;	// !js_const:Height
+	virtual int	GetFrameMax( void )	= 0;	// !js_const:MaxFrameCnt
 	virtual int	GetFrameCnt( void )	= 0;	// !js_var:FrameCnt
 	virtual double GetFPS( void )	= 0;
 	
@@ -279,9 +279,9 @@ class CVsdFilter {
 	char	*m_szGPSLogFile;
 	char	*m_szSkinFile;
 	char	*m_szSkinDirA;
-	LPWSTR	m_szSkinDirW;	// !js_var:SkinDir
+	LPWSTR	m_szSkinDirW;	// !js_const:SkinDir
 	char	*m_szPluginDirA;
-	LPWSTR	m_szPluginDirW;	// !js_var:VsdRootDir
+	LPWSTR	m_szPluginDirW;	// !js_const:VsdRootDir
 	
 	// ログリードヘルパ
 	int ReadLog( CVsdLog *&pLog, const char *szFileName );
@@ -342,15 +342,9 @@ class CVsdFilter {
 	double	m_dTacho;		// !js_var:Tacho
 	double	m_dGx;			// !js_var:Gx
 	double	m_dGy;			// !js_var:Gy
-	double MaxGx( void ){ return m_CurLog ? m_CurLog->MaxGx() : 0; } // !js_var:MaxGx
-	double MaxGy( void ){ return m_CurLog ? m_CurLog->MaxGy() : 0; } // !js_var:MaxGy
 	
-	double	GetMaxSpeed( void ){ // !js_var:MaxSpeed
-		return m_CurLog ? m_CurLog->MaxSpeed() : 180;
-	}
-	double	GetMaxTacho( void ){ // !js_var:MaxTacho
-		return m_CurLog && m_CurLog->m_pLogTacho ? m_CurLog->MaxTacho() : 0;
-	}
+	void InitJS( v8::Local<v8::FunctionTemplate> tmpl );
+	void InitJS_Sub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl );
 	
 	static HINSTANCE	m_hInst;	// dll handle
 	

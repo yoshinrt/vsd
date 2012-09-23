@@ -12,7 +12,7 @@ $ENV{ 'PATH' } = "$ENV{ 'HOME' }/bin:" . $ENV{ 'PATH' };
 
 open( fpOut, "| nkf -s > ScriptIF.h" );
 
-MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----' );
+MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
 		CVsdFilter* obj = CScript::m_pVsd;
 -----
 	/*** DrawArc ****************************************************************/
@@ -61,8 +61,10 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----' );
 	}
 	
 -----
+		CScript::m_pVsd->InitJS( tmpl );
+-----
 
-MakeJsIF( 'CVsdImage', 'Image', << '-----', '' );
+MakeJsIF( 'CVsdImage', 'Image', << '-----' );
 		// 引数チェック
 		if ( args.Length() <= 0 ) return v8::Undefined();
 		
@@ -93,7 +95,7 @@ MakeJsIF( 'CVsdImage', 'Image', << '-----', '' );
 		}
 -----
 
-MakeJsIF( 'CVsdFont', 'Font', << '-----', '' );
+MakeJsIF( 'CVsdFont', 'Font', << '-----' );
 		// 引数チェック
 		if ( args.Length() < 2 ) return v8::Undefined();
 		
@@ -105,16 +107,20 @@ MakeJsIF( 'CVsdFont', 'Font', << '-----', '' );
 		);
 -----
 
-MakeJsIF( 'CVsdFile', 'File', << '-----', '' );
+MakeJsIF( 'CVsdFile', 'File', << '-----' );
 		CVsdFile *obj = new CVsdFile();
 -----
 
 sub MakeJsIF {
-	my( $Class, $JsClass, $NewObject, $FunctionIF ) = @_;
+	my( $Class, $JsClass, $NewObject, $FunctionIF, $ExtraInit ) = @_;
+	
+	$FunctionIF = '' if( !defined( $FunctionIF ));
+	$ExtraInit  = '' if( !defined( $ExtraInit ));
 	
 	$Accessor	= '';
 	$AccessorIF	= '';
 	$Function	= '';
+	$Const	= '';
 	
 	$IfNotVsd = $Class eq 'CVsdFilter' ? 'if( 0 )' : '';
 	
@@ -301,6 +307,34 @@ sub MakeJsIF {
 	}
 -----
 		}
+		
+		elsif( /!js_const:(\w+)/ ){
+			# CVsdFilter 専用
+			$JSvar = $1;
+			
+			s/[\x0D\x0A]//g;
+			s/\s*[{=;].*//;
+			s/\(.*\)/()/;
+			/(\w+\W*)$/;
+			
+			$RealVar = $1;
+			
+			$Type =
+				/\b(?:int|UINT)\b/	? "Integer" :
+				/\bdouble\b/		? "Number" :
+				/\bchar\b/			? "String" :
+				/\bLPC?WSTR\b/		? "String" :
+									  "???";
+			
+			$Cast = '';
+			if( /\bLPC?WSTR\b/ ){
+				$Cast	= '( uint16_t *)';
+			}
+#-----
+			$Const .= << "-----";
+		proto->Set( v8::String::New( "$JSvar" ), v8::${Type}::New($Cast CScript::m_pVsd->$RealVar ));
+-----
+		}
 	}
 	close( fpIn );
 	
@@ -412,6 +446,8 @@ $Accessor
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
 		proto->Set( v8::String::New( "Dispose" ), v8::FunctionTemplate::New( Func_Dispose ));
 $Function
+$Const
+$ExtraInit
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "$JsClass" ), tmpl );
 	}

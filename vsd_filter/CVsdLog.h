@@ -108,9 +108,9 @@ class VSD_LOG_t {
 	void Resize( int iCnt, double dVal ){ m_Log.resize( iCnt, ( float )dVal ); }
 	
   private:
+	std::vector<float>	m_Log;
 	float	m_fMin;
 	float	m_fMax;
-	std::vector<float>	m_Log;
 };
 
 class CVsdFilter;
