@@ -15,13 +15,13 @@ class CScript {
 	CScript( CVsdFilter *pVsd );
 	~CScript( void );
 	
+	void Dispose( void );
 	void Initialize( void );
 	UINT RunFile( LPCWSTR szFileName );
-	UINT Run( LPCWSTR szFunc );
-	UINT Run_s( LPCWSTR szFunc, LPCWSTR str0 );
-	UINT RunArg( LPCWSTR szFunc, int iArgNum, v8::Handle<v8::Value> Args[] );
+	UINT Run( LPCWSTR szFunc, BOOL bNoFunc = FALSE );
+	UINT Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc = FALSE );
+	UINT RunArg( LPCWSTR szFunc, int iArgNum, v8::Handle<v8::Value> Args[], BOOL bNoFunc = FALSE );
 	
-	const char* ToCString( const v8::String::Utf8Value& value );
 	void ReportException( v8::TryCatch* try_catch );
 	
 	static CVsdFilter	*m_pVsd;	// ÉGÅc

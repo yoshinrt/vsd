@@ -356,6 +356,7 @@ class CVsdFilter {
 	
 	void ReloadScript( void ){
 		if( m_Script ){
+			m_Script->Dispose();
 			delete m_Script;
 			m_Script = NULL;
 		}

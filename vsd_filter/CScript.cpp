@@ -74,8 +74,8 @@ void CScript::ReportException( TryCatch* try_catch ){
 		/*
 		String::Utf8Value stack_trace( try_catch->StackTrace());
 		if ( stack_trace.length() > 0 ){
-			const char* stack_trace_string = ToCString( stack_trace );
-			sprintf( p, "%s\n", stack_trace_string );
+			String::Value stack_trace_string( stack_trace );
+			swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s\n", *stack_trace_string );
 			p = wcschr( p, '\0' );
 		}
 		*/
@@ -107,10 +107,6 @@ CScript::~CScript(){
 	DebugMsgD( ":CScript::~CScript():%X\n", GetCurrentThreadId());
 	DebugMsgD( ":CScript::~CScript():m_pIsolate = %X\n", m_pIsolate );
 	
-	if( Run( L"DisposeAll" )){
-		m_pVsd->DispErrorMessage( GetErrorMessage());
-	}
-	
 	{
 		v8::Isolate::Scope IsolateScope( m_pIsolate );
 		m_Context.Dispose();
@@ -119,6 +115,14 @@ CScript::~CScript(){
 	m_pIsolate->Dispose();
 	
 	delete [] m_szErrorMsg;
+}
+
+/*** JavaScript オブジェクトディスポーザ ************************************/
+
+void CScript::Dispose( void ){
+	if( Run( L"DisposeAll", TRUE )){
+		m_pVsd->DispErrorMessage( GetErrorMessage());
+	}
 }
 
 /*** デバッグ用 *************************************************************/
@@ -216,21 +220,11 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 	// とりあえず初期化処理
 	Handle<Value> result = script->Run();
 	
-	if( result.IsEmpty()){
-		assert( try_catch.HasCaught());
-		// Print errors that happened during execution.
+	if( try_catch.HasCaught()){
 		ReportException( &try_catch );
 		return m_uError = ERR_SCRIPT;
 	}
 	
-	assert( !try_catch.HasCaught());
-	/*
-	if( !result->IsUndefined()) {
-		// If all went well and the result wasn't undefined then print
-		// the returned value.
-		return m_uError = result->Int32Value();
-	}
-	*/
 	// ガーベッジコレクション?
 	//while( !v8::V8::IdleNotification());
 	
@@ -239,29 +233,29 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 
 /*** function 名指定実行，引数なし ******************************************/
 
-UINT CScript::Run( LPCWSTR szFunc ){
+UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_Context );
 	
-	return RunArg( szFunc, 0, NULL );
+	return RunArg( szFunc, 0, NULL, bNoFunc );
 }
 
-UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0 ){
+UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_Context );
 	
 	Handle<Value> Args[] = { String::New(( uint16_t *)str0 ) };
-	return RunArg( szFunc, 1, Args );
+	return RunArg( szFunc, 1, Args, bNoFunc );
 }
 
-UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[] ){
+UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bNoFunc ){
 	TryCatch try_catch;
 	
 	Local<Function> hFunction = Local<Function>::Cast( m_Context->Global()->Get( String::New(( uint16_t *)szFunc )));
 	if( hFunction->IsUndefined()){
-		
+		if( bNoFunc ) return ERR_OK;
 		if( !m_szErrorMsg ) m_szErrorMsg = new WCHAR[ MSGBUF_SIZE ];
 		
 		swprintf( m_szErrorMsg, MSGBUF_SIZE, L"Undefined function \"%s()\"", szFunc );
@@ -269,15 +263,11 @@ UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[] ){
 	}
 	Handle<Value> result = hFunction->Call( hFunction, iArgNum, Args );
 	
-	if( result.IsEmpty()){
-		//assert( try_catch.HasCaught());
-		try_catch.HasCaught();
-		// Print errors that happened during execution.
+	if( try_catch.HasCaught()){
 		ReportException( &try_catch );
 		return m_uError = ERR_SCRIPT;
 	}
 	
-	assert( !try_catch.HasCaught());
 	/*
 	if( !result->IsUndefined()) {
 		// If all went well and the result wasn't undefined then print

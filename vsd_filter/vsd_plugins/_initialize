@@ -54,7 +54,6 @@ GlobalInstance = this;
 function DisposeAll(){
 	if( typeof GlobalInstance[ "Dispose" ] == 'function' ){
 		Dispose();
-		delete( GlobalInstance[ "Dispose" ] );
 	}
 	
 	for( var obj in GlobalInstance ){
