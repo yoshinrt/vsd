@@ -26,6 +26,7 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include <limits>
 
 #ifdef _OPENMP
 	#include <omp.h>
@@ -37,6 +38,7 @@
 #define BUF_SIZE	1024
 #define ToRAD		( M_PI / 180 )
 #define SLIDER_TIME	LOG_FREQ
+#define NaN			std::numeric_limits<double>::quiet_NaN()
 
 #define	getcwd	_getcwd
 #define	chdir	_chdir

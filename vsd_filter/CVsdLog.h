@@ -183,7 +183,7 @@ class CVsdLog {
 	double Get( const char *szKey, T Index ){
 		std::string strKey( szKey );
 		if( m_Logs.find( strKey ) == m_Logs.end()){
-			return 0;	// —v‘f‚È‚µ
+			return NaN;	// —v‘f‚È‚µ
 		}
 		return m_Logs[ strKey ]->Get( Index );
 	}
@@ -192,12 +192,12 @@ class CVsdLog {
 	
 	double GetMin( const char *szKey ){
 		VSD_LOG_t	*pLog = GetElement( szKey );
-		return pLog ? pLog->GetMin() : 0;
+		return pLog ? pLog->GetMin() : NaN;
 	}
 	
 	double GetMax( const char *szKey ){
 		VSD_LOG_t	*pLog = GetElement( szKey );
-		return pLog ? pLog->GetMax() : 0;
+		return pLog ? pLog->GetMax() : NaN;
 	}
 	
 	#define DEF_LOG( name ) VSD_LOG_t	*m_pLog##name;

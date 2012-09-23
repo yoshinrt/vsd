@@ -338,10 +338,22 @@ class CVsdFilter {
 	BOOL		m_bCalcLapTimeReq;
 	
 	// JavaScript 用パラメータ
-	double	m_dSpeed;		// !js_var:Speed
-	double	m_dTacho;		// !js_var:Tacho
-	double	m_dGx;			// !js_var:Gx
-	double	m_dGy;			// !js_var:Gy
+	
+	#define DEF_LOG( name ) double Get##name( void ){ \
+		if( m_VsdLog && m_VsdLog->m_pLog##name )	return m_VsdLog->name(); \
+		return m_GPSLog->name(); \
+	}
+	#include "def_log.h"
+	
+	double GetValue( char *szKey ){
+		double dRet;
+		if( m_VsdLog && !_isnan( dRet = m_VsdLog->Get( szKey, m_VsdLog->m_dLogNum )))
+			return dRet;
+		if( m_GPSLog && !_isnan( dRet = m_GPSLog->Get( szKey, m_GPSLog->m_dLogNum )))
+			return dRet;
+		
+		return NaN;
+	}
 	
 	void InitJS( v8::Local<v8::FunctionTemplate> tmpl );
 	void InitJS_Sub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl );

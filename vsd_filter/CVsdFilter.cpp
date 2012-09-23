@@ -21,6 +21,9 @@
 #include "pixel.h"
 #include "CVsdImage.h"
 #include "CVsdFilter.h"
+#include "CVsdFile.h"
+#include "error_code.h"
+#include "ScriptIF.h"
 
 /*** macros *****************************************************************/
 
@@ -352,6 +355,7 @@ void CVsdFilter::InitJS_Sub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl
 	char szBuf[ 256 ];
 	
 	v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
+	v8::Handle<v8::ObjectTemplate> inst  = tmpl->InstanceTemplate();
 	std::map<std::string, VSD_LOG_t *>::iterator it;
 	
 	for( it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it ){
@@ -369,6 +373,17 @@ void CVsdFilter::InitJS_Sub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl
 				v8::String::New( szBuf ),
 				v8::Number::New( pLog->GetMin( it->first.c_str()))
 			);
+			
+			// Œ»Ý’l“o˜^
+			if( 0 );
+			#define DEF_LOG( name ) \
+			else if( strcmp( it->first.c_str(), #name ) == 0 ){ \
+				inst->SetAccessor( v8::String::New( #name ), CVsdFilterIF::Get_##name ); \
+			}
+			#include "def_log.h"
+			else{
+				inst->SetAccessor( v8::String::New( it->first.c_str()), CVsdFilterIF::Get_Value );
+			}
 		}
 	}
 }

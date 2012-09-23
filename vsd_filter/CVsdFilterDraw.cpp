@@ -1293,20 +1293,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 	// ラップタイム等再計算
 	if( m_LapLog ) CalcLapTime();
 	
-	// JavaScript 用ログデータ計算
-	SelectLogVsd;
-	if( m_CurLog ){
-		m_dSpeed	= m_CurLog->Speed();
-		m_dTacho	= m_CurLog->m_pLogTacho ? m_CurLog->Tacho() : 0;
-		m_dGx		= m_CurLog->Gx();
-		m_dGy		= m_CurLog->Gy();
-	}else{
-		m_dSpeed	=
-		m_dTacho	=
-		m_dGx		=
-		m_dGy		= 0;
-	}
-	
 	// スクリプト実行
 	DebugMsgD( ":DrawVSD():Running script... %X\n", GetCurrentThreadId());
 	if( !m_Script && m_szSkinFile ){

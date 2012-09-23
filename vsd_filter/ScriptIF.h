@@ -1,7 +1,7 @@
 /****************************************************************************/
 
 class CVsdFilterIF {
-  private:
+  public:
 	// クラスコンストラクタ
 	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
 		
@@ -16,7 +16,7 @@ class CVsdFilterIF {
 		objectHolder.MakeWeak( obj, Dispose );
 		
 		#ifdef DEBUG
-			DebugMsgD( ">>>new js obj CVsdFilter:%d:%X\n", ++m_iCnt, obj );
+			DebugMsgD( ">>>new js obj CVsdFilter:%X\n", obj );
 		#endif
 		// コンストラクタは this を返すこと。
 		return thisObject;
@@ -30,7 +30,7 @@ class CVsdFilterIF {
 			if( thisObj ){
 				delete static_cast<CVsdFilter*>( thisObj );
 				#ifdef DEBUG
-					DebugMsgD( "<<<del js obj CVsdFilter:%d:%X\n", m_iCnt--, thisObj );
+					DebugMsgD( "<<<del js obj CVsdFilter:%X\n", thisObj );
 				#endif
 			}
 		}
@@ -44,7 +44,7 @@ class CVsdFilterIF {
 		if( 0 ) if( thisObj ){
 			delete thisObj;
 			#ifdef DEBUG
-				DebugMsgD( "<<<DISPOSE js obj CVsdFilter:%d:%X\n", m_iCnt--, thisObj );
+				DebugMsgD( "<<<DISPOSE js obj CVsdFilter:%X\n", thisObj );
 			#endif
 			
 			// internalfield を null っぽくする
@@ -82,22 +82,6 @@ class CVsdFilterIF {
 		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->GetFrameCnt() ) : v8::Undefined();
 	}
-	static v8::Handle<v8::Value> Get_Speed( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Number::New( obj->m_dSpeed ) : v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Get_Tacho( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Number::New( obj->m_dTacho ) : v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Get_Gx( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Number::New( obj->m_dGx ) : v8::Undefined();
-	}
-	static v8::Handle<v8::Value> Get_Gy( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Number::New( obj->m_dGy ) : v8::Undefined();
-	}
 
 	///// メャbドコールバック /////
 	/*** DrawArc ****************************************************************/
@@ -134,6 +118,21 @@ class CVsdFilterIF {
 			);
 		}
 		return v8::Undefined();
+	}
+	
+	/*** ログデータ取得用 *******************************************************/
+	
+	#define DEF_LOG( name ) \
+		static v8::Handle<v8::Value> Get_##name( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){ \
+			CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder()); \
+			return obj ? v8::Number::New( obj->Get##name() ) : v8::Undefined(); \
+		}
+	#include "def_log.h"
+	
+	static v8::Handle<v8::Value> Get_Value( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		v8::String::AsciiValue str( propertyName );
+		return obj ? v8::Number::New( obj->GetValue( *str )) : v8::Undefined();
 	}
 	
 	/*** デバッグ用 *************************************************************/
@@ -511,10 +510,6 @@ class CVsdFilterIF {
 		inst->SetAccessor( v8::String::New( "LapCnt" ), Get_LapCnt );
 		inst->SetAccessor( v8::String::New( "MaxLapCnt" ), Get_MaxLapCnt );
 		inst->SetAccessor( v8::String::New( "FrameCnt" ), Get_FrameCnt );
-		inst->SetAccessor( v8::String::New( "Speed" ), Get_Speed );
-		inst->SetAccessor( v8::String::New( "Tacho" ), Get_Tacho );
-		inst->SetAccessor( v8::String::New( "Gx" ), Get_Gx );
-		inst->SetAccessor( v8::String::New( "Gy" ), Get_Gy );
 
 		// メャbドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
@@ -550,18 +545,11 @@ class CVsdFilterIF {
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "__VSD_System__" ), tmpl );
 	}
-	
-	#ifdef DEBUG
-	static int m_iCnt;
-	#endif
 };
-#ifdef DEBUG
-int CVsdFilterIF::m_iCnt = 0;
-#endif
 /****************************************************************************/
 
 class CVsdImageIF {
-  private:
+  public:
 	// クラスコンストラクタ
 	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
 		
@@ -603,7 +591,7 @@ class CVsdImageIF {
 		objectHolder.MakeWeak( obj, Dispose );
 		
 		#ifdef DEBUG
-			DebugMsgD( ">>>new js obj CVsdImage:%d:%X\n", ++m_iCnt, obj );
+			DebugMsgD( ">>>new js obj CVsdImage:%X\n", obj );
 		#endif
 		// コンストラクタは this を返すこと。
 		return thisObject;
@@ -617,7 +605,7 @@ class CVsdImageIF {
 			if( thisObj ){
 				delete static_cast<CVsdImage*>( thisObj );
 				#ifdef DEBUG
-					DebugMsgD( "<<<del js obj CVsdImage:%d:%X\n", m_iCnt--, thisObj );
+					DebugMsgD( "<<<del js obj CVsdImage:%X\n", thisObj );
 				#endif
 			}
 		}
@@ -631,7 +619,7 @@ class CVsdImageIF {
 		 if( thisObj ){
 			delete thisObj;
 			#ifdef DEBUG
-				DebugMsgD( "<<<DISPOSE js obj CVsdImage:%d:%X\n", m_iCnt--, thisObj );
+				DebugMsgD( "<<<DISPOSE js obj CVsdImage:%X\n", thisObj );
 			#endif
 			
 			// internalfield を null っぽくする
@@ -734,18 +722,11 @@ class CVsdImageIF {
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "Image" ), tmpl );
 	}
-	
-	#ifdef DEBUG
-	static int m_iCnt;
-	#endif
 };
-#ifdef DEBUG
-int CVsdImageIF::m_iCnt = 0;
-#endif
 /****************************************************************************/
 
 class CVsdFontIF {
-  private:
+  public:
 	// クラスコンストラクタ
 	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
 		
@@ -768,7 +749,7 @@ class CVsdFontIF {
 		objectHolder.MakeWeak( obj, Dispose );
 		
 		#ifdef DEBUG
-			DebugMsgD( ">>>new js obj CVsdFont:%d:%X\n", ++m_iCnt, obj );
+			DebugMsgD( ">>>new js obj CVsdFont:%X\n", obj );
 		#endif
 		// コンストラクタは this を返すこと。
 		return thisObject;
@@ -782,7 +763,7 @@ class CVsdFontIF {
 			if( thisObj ){
 				delete static_cast<CVsdFont*>( thisObj );
 				#ifdef DEBUG
-					DebugMsgD( "<<<del js obj CVsdFont:%d:%X\n", m_iCnt--, thisObj );
+					DebugMsgD( "<<<del js obj CVsdFont:%X\n", thisObj );
 				#endif
 			}
 		}
@@ -796,7 +777,7 @@ class CVsdFontIF {
 		 if( thisObj ){
 			delete thisObj;
 			#ifdef DEBUG
-				DebugMsgD( "<<<DISPOSE js obj CVsdFont:%d:%X\n", m_iCnt--, thisObj );
+				DebugMsgD( "<<<DISPOSE js obj CVsdFont:%X\n", thisObj );
 			#endif
 			
 			// internalfield を null っぽくする
@@ -878,18 +859,11 @@ class CVsdFontIF {
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "Font" ), tmpl );
 	}
-	
-	#ifdef DEBUG
-	static int m_iCnt;
-	#endif
 };
-#ifdef DEBUG
-int CVsdFontIF::m_iCnt = 0;
-#endif
 /****************************************************************************/
 
 class CVsdFileIF {
-  private:
+  public:
 	// クラスコンストラクタ
 	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
 		
@@ -904,7 +878,7 @@ class CVsdFileIF {
 		objectHolder.MakeWeak( obj, Dispose );
 		
 		#ifdef DEBUG
-			DebugMsgD( ">>>new js obj CVsdFile:%d:%X\n", ++m_iCnt, obj );
+			DebugMsgD( ">>>new js obj CVsdFile:%X\n", obj );
 		#endif
 		// コンストラクタは this を返すこと。
 		return thisObject;
@@ -918,7 +892,7 @@ class CVsdFileIF {
 			if( thisObj ){
 				delete static_cast<CVsdFile*>( thisObj );
 				#ifdef DEBUG
-					DebugMsgD( "<<<del js obj CVsdFile:%d:%X\n", m_iCnt--, thisObj );
+					DebugMsgD( "<<<del js obj CVsdFile:%X\n", thisObj );
 				#endif
 			}
 		}
@@ -932,7 +906,7 @@ class CVsdFileIF {
 		 if( thisObj ){
 			delete thisObj;
 			#ifdef DEBUG
-				DebugMsgD( "<<<DISPOSE js obj CVsdFile:%d:%X\n", m_iCnt--, thisObj );
+				DebugMsgD( "<<<DISPOSE js obj CVsdFile:%X\n", thisObj );
 			#endif
 			
 			// internalfield を null っぽくする
@@ -1044,11 +1018,4 @@ class CVsdFileIF {
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "File" ), tmpl );
 	}
-	
-	#ifdef DEBUG
-	static int m_iCnt;
-	#endif
 };
-#ifdef DEBUG
-int CVsdFileIF::m_iCnt = 0;
-#endif

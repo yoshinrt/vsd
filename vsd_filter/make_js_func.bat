@@ -51,6 +51,21 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
 		return v8::Undefined();
 	}
 	
+	/*** ログデータ取得用 *******************************************************/
+	
+	#define DEF_LOG( name ) \
+		static v8::Handle<v8::Value> Get_##name( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){ \
+			CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder()); \
+			return obj ? v8::Number::New( obj->Get##name() ) : v8::Undefined(); \
+		}
+	#include "def_log.h"
+	
+	static v8::Handle<v8::Value> Get_Value( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		v8::String::AsciiValue str( propertyName );
+		return obj ? v8::Number::New( obj->GetValue( *str )) : v8::Undefined();
+	}
+	
 	/*** デバッグ用 *************************************************************/
 	
 	// 関数オブジェクト print の実体
@@ -345,7 +360,7 @@ sub MakeJsIF {
 /****************************************************************************/
 
 class ${Class}IF {
-  private:
+  public:
 	// クラスコンストラクタ
 	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
 		
@@ -359,7 +374,7 @@ $NewObject
 		objectHolder.MakeWeak( obj, Dispose );
 		
 		#ifdef DEBUG
-			DebugMsgD( ">>>new js obj $Class:%d:%X\\n", ++m_iCnt, obj );
+			DebugMsgD( ">>>new js obj $Class:%X\\n", obj );
 		#endif
 		// コンストラクタは this を返すこと。
 		return thisObject;
@@ -373,7 +388,7 @@ $NewObject
 			if( thisObj ){
 				delete static_cast<$Class*>( thisObj );
 				#ifdef DEBUG
-					DebugMsgD( "<<<del js obj $Class:%d:%X\\n", m_iCnt--, thisObj );
+					DebugMsgD( "<<<del js obj $Class:%X\\n", thisObj );
 				#endif
 			}
 		}
@@ -387,7 +402,7 @@ $NewObject
 		$IfNotVsd if( thisObj ){
 			delete thisObj;
 			#ifdef DEBUG
-				DebugMsgD( "<<<DISPOSE js obj $Class:%d:%X\\n", m_iCnt--, thisObj );
+				DebugMsgD( "<<<DISPOSE js obj $Class:%X\\n", thisObj );
 			#endif
 			
 			// internalfield を null っぽくする
@@ -451,14 +466,7 @@ $ExtraInit
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "$JsClass" ), tmpl );
 	}
-	
-	#ifdef DEBUG
-	static int m_iCnt;
-	#endif
 };
-#ifdef DEBUG
-int ${Class}IF::m_iCnt = 0;
-#endif
 -----
 }
 
