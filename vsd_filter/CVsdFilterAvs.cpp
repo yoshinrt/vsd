@@ -136,7 +136,7 @@ CVsdFilterAvs::CVsdFilterAvs(
 	
 	// ƒƒOƒŠ[ƒh
 	#ifndef GPS_ONLY
-		if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )) if( !ReadLog( m_VSDLog, p ))
+		if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )) if( !ReadLog( m_VsdLog, p ))
 			env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
 	#endif
 	
