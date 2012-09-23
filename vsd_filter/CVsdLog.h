@@ -155,7 +155,6 @@ class CVsdLog {
 		return 0 <= iLogNum && iLogNum < GetCnt();
 	}
 	
-	int ReadGPSLog( const char *szFileName );
 	int ReadLog( const char *szFileName, CLapLog *&pLapLog );
 	
 	double GPSLogGetLength(

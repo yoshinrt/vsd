@@ -5,7 +5,7 @@ class CVsdFilterIF {
 	// クラスコンストラクタ
 	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
 		
-		CVsdFilter* obj = CScript::m_Vsd;
+		CVsdFilter* obj = CScript::m_pVsd;
 
 		// internal field にバックエンドオブジェクトを設定
 		v8::Local<v8::Object> thisObject = args.This();

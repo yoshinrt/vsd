@@ -87,31 +87,18 @@ CVsdFilter::~CVsdFilter (){
 
 /*** ƒƒOƒŠ[ƒh ************************************************************/
 
-int CVsdFilter::ReadLog( const char *szFileName ){
-	if( m_VsdLog ) delete m_VsdLog;
-	m_VsdLog = new CVsdLog( this );
+int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName ){
+	if( pLog ) delete pLog;
+	pLog = new CVsdLog( this );
 	if( m_LapLog ) delete m_LapLog;
 	m_LapLog = NULL;
-	int iRet = m_VsdLog->ReadGPSLog( szFileName /*, m_LapLog*/ );
+	int iRet = pLog->ReadLog( szFileName, m_LapLog );
 	if( iRet ){
-		//m_VsdLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
+		if( pLog->m_pLogX0 )
+			pLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	}else{
-		delete m_VsdLog;
-		m_VsdLog = NULL;
-	}
-	
-	return iRet;
-}
-
-int CVsdFilter::ReadGPSLog( const char *szFileName ){
-	if( m_GPSLog ) delete m_GPSLog;
-	m_GPSLog = new CVsdLog( this );
-	int iRet = m_GPSLog->ReadGPSLog( szFileName );
-	if( iRet ){
-		m_GPSLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
-	}else{
-		delete m_GPSLog;
-		m_GPSLog = NULL;
+		delete pLog;
+		pLog = NULL;
 	}
 	
 	return iRet;

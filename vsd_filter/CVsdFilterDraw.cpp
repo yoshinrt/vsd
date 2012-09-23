@@ -112,7 +112,7 @@ void CVsdFilter::DrawLine(
 	
 	PIXEL_YCA yc( uColor );
 	
-	#ifdef _OPENMP
+	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 		for( int i = 0; i < width * width; ++i ){
 			int x = i % width - width / 2;
@@ -147,7 +147,7 @@ void CVsdFilter::DrawRect(
 	if( x1 > x2 ) SWAP( x1, x2, y );
 	
 	if( uFlag & IMG_FILL ){
-		#ifdef _OPENMP
+		#ifdef _OPENMP_AVS
 			#pragma omp parallel for
 		#endif
 		for( y = y1; y <= y2; ++y ){
@@ -379,7 +379,7 @@ int CVsdFilter::DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, tRABY uColor )
 	if( !Font.IsNoAntialias()){
 		int iBmpW = ( FontGlyph.iW + 3 ) & ~3;
 		
-		#ifdef _OPENMP
+		#ifdef _OPENMP_AVS
 			#pragma omp parallel for
 		#endif
 		for( int j = 0; j < FontGlyph.iH; ++j ) for( int i = 0; i < FontGlyph.iW; ++i ){
@@ -408,12 +408,12 @@ int CVsdFilter::DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, tRABY uColor )
 	}else{
 		int iBmpW = (( FontGlyph.iW + 31 ) & ~31 ) / 8;
 		
-		#ifdef _OPENMP
+		#ifdef _OPENMP_AVS
 			#pragma omp parallel
 		#endif
 		{
 			UINT uBitmap;
-			#ifdef _OPENMP
+			#ifdef _OPENMP_AVS
 				#pragma omp for
 			#endif
 			for( int j = 0; j < FontGlyph.iH; ++j ) for( int i = 0; i < FontGlyph.iW; ++i ){
@@ -535,7 +535,7 @@ inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc
 /*** ƒ|ƒŠƒSƒ“•`‰æ ***********************************************************/
 
 inline void CVsdFilter::InitPolygon( void ){
-	#ifdef _OPENMP
+	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 	#endif
 	for( int y = 0; y < GetHeight(); ++y ){
@@ -545,7 +545,7 @@ inline void CVsdFilter::InitPolygon( void ){
 }
 
 inline void CVsdFilter::DrawPolygon( const PIXEL_YCA_ARG yc ){
-	#ifdef _OPENMP
+	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 	#endif
 	for( int y = 0; y < GetHeight(); ++y ) if( m_Polygon[ y ].iLeft <= m_Polygon[ y ].iRight ){

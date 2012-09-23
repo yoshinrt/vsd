@@ -29,6 +29,9 @@
 
 #ifdef _OPENMP
 	#include <omp.h>
+	#ifdef AVS_PLUGIN
+		#define _OPENMP_AVS
+	#endif
 #endif
 
 #define BUF_SIZE	1024

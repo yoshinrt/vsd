@@ -25,7 +25,7 @@ using namespace v8;
 
 /*** static メンバ（；´д⊂）***********************************************/
 
-CVsdFilter *CScript::m_Vsd;
+CVsdFilter *CScript::m_pVsd;
 
 LPCWSTR CScript::m_szErrorMsgID[] = {
 	#define DEF_ERROR( id, msg )	L##msg,
@@ -87,17 +87,15 @@ void CScript::ReportException( TryCatch* try_catch ){
 CScript::CScript( CVsdFilter *pVsd ){
 	DebugMsgD( ":CScript::CScript():%X\n", GetCurrentThreadId());
 	
-	#ifdef AVS_PLUGIN
-		m_pIsolate = v8::Isolate::New();
-		v8::Isolate::Scope IsolateScope( m_pIsolate );
-	#endif
+	m_pIsolate = v8::Isolate::New();
+	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	
 	DebugMsgD( ":CScript::CScript():m_pIsolate = %X\n", m_pIsolate );
 	
 	DebugMsgD( ":CScript::CScript():m_Context\n" );
 	m_Context.Clear();
 	
-	if( pVsd ) m_Vsd = pVsd;
+	if( pVsd ) m_pVsd = pVsd;
 	
 	m_szErrorMsg	= NULL;
 	m_uError		= ERR_OK;
@@ -110,9 +108,7 @@ CScript::~CScript(){
 	DebugMsgD( ":CScript::~CScript():m_pIsolate = %X\n", m_pIsolate );
 	
 	{
-		#ifdef AVS_PLUGIN
-			v8::Isolate::Scope IsolateScope( m_pIsolate );
-		#endif
+		v8::Isolate::Scope IsolateScope( m_pIsolate );
 		m_Context.Dispose();
 		while( !v8::V8::IdleNotification());
 	}
@@ -145,9 +141,7 @@ static v8::Handle<v8::Value> Func_DebugPrintW( const v8::Arguments& args ){
 /*** JavaScript interface のセットアップ ************************************/
 
 void CScript::Initialize( void ){
-	#ifdef AVS_PLUGIN
-		v8::Isolate::Scope IsolateScope( m_pIsolate );
-	#endif
+	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	
 	// 準備
 	HandleScope handle_scope;
@@ -172,9 +166,7 @@ void CScript::Initialize( void ){
 /*** スクリプトファイルの実行 ***********************************************/
 
 UINT CScript::RunFile( LPCWSTR szFileName ){
-	#ifdef AVS_PLUGIN
-		v8::Isolate::Scope IsolateScope( m_pIsolate );
-	#endif
+	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	
 	HandleScope handle_scope;
 	
@@ -186,7 +178,7 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 	// PluginDir に cd
 	TCHAR	szCurDir[ MAX_PATH ];
 	getcwd( szCurDir, MAX_PATH );	// カレント dir
-	chdir( m_Vsd->m_szPluginDirA );
+	chdir( m_pVsd->m_szPluginDirA );
 	
 	// スクリプト ロード
 	FILE *fp;
@@ -246,9 +238,7 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 /*** function 名指定実行，引数なし ******************************************/
 
 UINT CScript::Run( LPCWSTR szFunc ){
-	#ifdef AVS_PLUGIN
-		v8::Isolate::Scope IsolateScope( m_pIsolate );
-	#endif
+	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_Context );
 	
@@ -256,9 +246,7 @@ UINT CScript::Run( LPCWSTR szFunc ){
 }
 
 UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0 ){
-	#ifdef AVS_PLUGIN
-		v8::Isolate::Scope IsolateScope( m_pIsolate );
-	#endif
+	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_Context );
 	

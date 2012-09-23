@@ -24,7 +24,7 @@ class CScript {
 	const char* ToCString( const v8::String::Utf8Value& value );
 	void ReportException( v8::TryCatch* try_catch );
 	
-	static CVsdFilter	*m_Vsd;	// エ…
+	static CVsdFilter	*m_pVsd;	// エ…
 	
 	v8::Persistent<v8::Context> m_Context;
 	v8::Isolate	*m_pIsolate;

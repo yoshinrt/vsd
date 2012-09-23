@@ -393,7 +393,7 @@ UINT CVsdFilterAvu::PutImage( int x, int y, CVsdImage &img, UINT uAlign ){
 	int xed = x + img.m_iOffsX + img.m_iRawWidth  <= GetWidth()  ? img.m_iOffsX + img.m_iRawWidth  : GetWidth()  - x;
 	int yed = y + img.m_iOffsY + img.m_iRawHeight <= GetHeight() ? img.m_iOffsY + img.m_iRawHeight : GetHeight() - y;
 	
-	#ifdef _OPENMP
+	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 	#endif
 	for( int y1 = yst; y1 < yed; ++y1 ){
@@ -458,15 +458,7 @@ BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
 	//char szMsg[ BUF_SIZE ];
 	int iCnt;
 	
-	if( !( iCnt = CVsdFilter::ReadLog( szFileName ))){
-		/*
-		sprintf( szMsg, "ファイルがロードできません\n%s", szFileName );
-		MessageBox( NULL,
-			szMsg,
-			"VSD",
-			MB_OK | MB_ICONWARNING
-		);
-		*/
+	if( !( iCnt = CVsdFilter::ReadLog( m_VsdLog, szFileName ))){
 		return FALSE;
 	}
 	
@@ -488,15 +480,7 @@ BOOL CVsdFilterAvu::ReadGPSLog( const char *szFileName, HWND hwnd ){
 	//char szMsg[ BUF_SIZE ];
 	
 	int iCnt;
-	if( !( iCnt = CVsdFilter::ReadGPSLog( szFileName ))){
-		/*
-		sprintf( szMsg, "ファイルがロードできません\n%s", szFileName );
-		MessageBox( NULL,
-			szMsg,
-			"VSD",
-			MB_OK | MB_ICONWARNING
-		);
-		*/
+	if( !( iCnt = CVsdFilter::ReadLog( m_GPSLog, szFileName ))){
 		return FALSE;
 	}
 	
@@ -1105,13 +1089,24 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				// ログリード
 			#ifndef GPS_ONLY
 				if( g_Vsd->m_szLogFile ){
+					DebugCmd(
+						UINT	uTimer = GetTickCount();
+						DebugMsgD( "VSD Log read start\n" );
+					);
+					
 					g_Vsd->ReadLog(
 						GetFullPathWithCDir( szBuf2, g_Vsd->m_szLogFile, szBuf ),
 						hwnd
 					);
+					
+					DebugCmd( DebugMsgD( "VSD Log read time = %d\n", GetTickCount() - uTimer ); )
 				}
 			#endif
 				if( g_Vsd->m_szGPSLogFile ){
+					DebugCmd(
+						UINT	uTimer = GetTickCount();
+						DebugMsgD( "GPS Log read start\n" );
+					);
 					if( strchr( g_Vsd->m_szGPSLogFile, '/' )){
 						// 複数ファイル
 						g_Vsd->ReadGPSLog( g_Vsd->m_szGPSLogFile, hwnd );
@@ -1122,6 +1117,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 							hwnd
 						);
 					}
+					DebugCmd( DebugMsgD( "GPS Log read time = %d\n", GetTickCount() - uTimer ); )
 				}
 				
 				if( g_Vsd->m_szSkinFile ){

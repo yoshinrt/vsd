@@ -284,8 +284,7 @@ class CVsdFilter {
 	LPWSTR	m_szPluginDirW;	// !js_var:VsdRootDir
 	
 	// ログリードヘルパ
-	int ReadGPSLog( const char *szFileName );
-	int ReadLog( const char *szFileName );
+	int ReadLog( CVsdLog *&pLog, const char *szFileName );
 	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
 	CLapLog *CreateLapTime( int iLapMode );
 	CLapLog *CreateLapTimeAuto( void );

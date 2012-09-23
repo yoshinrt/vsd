@@ -13,7 +13,7 @@ $ENV{ 'PATH' } = "$ENV{ 'HOME' }/bin:" . $ENV{ 'PATH' };
 open( fpOut, "| nkf -s > ScriptIF.h" );
 
 MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----' );
-		CVsdFilter* obj = CScript::m_Vsd;
+		CVsdFilter* obj = CScript::m_pVsd;
 -----
 	/*** DrawArc ****************************************************************/
 	

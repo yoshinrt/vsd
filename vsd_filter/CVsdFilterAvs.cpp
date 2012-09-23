@@ -141,7 +141,7 @@ CVsdFilterAvs::CVsdFilterAvs(
 	#endif
 	
 	// GPS ログリード
-	if( p = args[ ARGID_STRPARAM_GPSFILE ].AsString( NULL )) if( !ReadGPSLog( p ))
+	if( p = args[ ARGID_STRPARAM_GPSFILE ].AsString( NULL )) if( !ReadLog( m_GPSLog, p ))
 		env->ThrowError( PROG_NAME ": read GPS log \"%s\" failed.", p );
 	
 	// スキンロード
@@ -249,7 +249,7 @@ UINT CVsdFilterAvs::PutImage(
 	int xed = x + img.m_iOffsX + img.m_iRawWidth  <= GetWidth()  ? img.m_iOffsX + img.m_iRawWidth  : GetWidth()  - x;
 	int yed = y + img.m_iOffsY + img.m_iRawHeight <= GetHeight() ? img.m_iOffsY + img.m_iRawHeight : GetHeight() - y;
 	
-	#ifdef _OPENMP
+	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 	#endif
 	for( int y1 = yst; y1 < yed; ++y1 ){

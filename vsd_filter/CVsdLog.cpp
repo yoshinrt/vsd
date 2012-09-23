@@ -364,14 +364,16 @@ BOOL LogReaderCallback( const char *szPath, const char *szFile, void *pParam ){
 	
 	if( Script.m_uError ){
 		// エラー
-		Script.m_Vsd->DispErrorMessage( Script.GetErrorMessage());
+		Script.m_pVsd->DispErrorMessage( Script.GetErrorMessage());
 		return FALSE;
 	}
 	
 	return TRUE;
 }
 
-int CVsdLog::ReadGPSLog( const char *szFileName ){
+/*** ログリード *************************************************************/
+
+int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
 	{
 		// JavaScript オブジェクト初期化
 		CScript Script( m_pVsd );
@@ -398,9 +400,7 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
-			#ifdef AVS_PLUGIN
-				v8::Isolate::Scope IsolateScope( Script.m_pIsolate );
-			#endif
+			v8::Isolate::Scope IsolateScope( Script.m_pIsolate );
 			v8::HandleScope handle_scope;
 			v8::Context::Scope context_scope( Script.m_Context );
 			
@@ -579,12 +579,6 @@ int CVsdLog::ReadGPSLog( const char *szFileName ){
 		m_dLogStartTime += 9 * 3600;
 	}
 	return GetCnt();
-}
-
-/*** ログリード *************************************************************/
-
-int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
-	return 0;
 }
 
 /*** ログリード *************************************************************/

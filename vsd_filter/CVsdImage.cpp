@@ -319,7 +319,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 		
 		if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 		
-		#ifdef _OPENMP
+		#ifdef _OPENMP_AVS
 			#pragma omp parallel for
 		#endif
 		for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
@@ -350,7 +350,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 			
 			if( iWidth > m_iWidth ){
 				// x Šg‘å
-				#ifdef _OPENMP
+				#ifdef _OPENMP_AVS
 					#pragma omp parallel for
 				#endif
 				for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
@@ -366,7 +366,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 				}
 			}else{
 				// x k¬
-				#ifdef _OPENMP
+				#ifdef _OPENMP_AVS
 					#pragma omp parallel for
 				#endif
 				for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
@@ -406,7 +406,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 			
 			if( iHeight > m_iHeight ){
 				// y Šg‘å
-				#ifdef _OPENMP
+				#ifdef _OPENMP_AVS
 					#pragma omp parallel for
 				#endif
 				for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
@@ -422,7 +422,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 				}
 			}else{
 				// y k¬
-				#ifdef _OPENMP
+				#ifdef _OPENMP_AVS
 					#pragma omp parallel for
 				#endif
 				for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
@@ -473,7 +473,7 @@ UINT CVsdImage::Rotate( int cx, int cy, double dAngle ){
 	
 	UINT	raby;
 	
-	#ifdef _OPENMP
+	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 	#endif
 	for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < m_iWidth; ++x ){
@@ -512,7 +512,7 @@ UINT CVsdImage::Clip( int x1, int y1, int x2, int y2 ){
 	PIXEL_RABY *pNewBuf = new PIXEL_RABY[ iNewWidth * iNewHeight ];
 	if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 	
-	#ifdef _OPENMP
+	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 	#endif
 	for( int y = 0; y < iNewHeight; ++y ) for( int x = 0; x < iNewWidth; ++x ){
