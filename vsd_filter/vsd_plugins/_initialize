@@ -48,3 +48,23 @@ function GetGear( GearRatio ){
 	if( GearRatio > GEAR_RATIO6 ) return 6;
 	return 7;
 }
+
+GlobalInstance = this;
+
+function DisposeAll(){
+	if( typeof GlobalInstance[ "Dispose" ] == 'function' ){
+		Dispose();
+		delete( GlobalInstance[ "Dispose" ] );
+	}
+	
+	for( var obj in GlobalInstance ){
+		if(
+			obj != "GlobalInstance" &&
+			typeof( GlobalInstance[ obj ] ) == 'object' &&
+			typeof( GlobalInstance[ obj ].Dispose ) == 'function'
+		){
+			GlobalInstance[ obj ].Dispose();
+			GlobalInstance[ obj ] = null;
+		}
+	}
+}

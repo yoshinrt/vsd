@@ -24,11 +24,33 @@ class CVsdFilterIF {
 	
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
-	//	delete static_cast<CVsdFilter*>( pVoid );
-		#ifdef DEBUG
-			DebugMsgD( "<<<del js obj CVsdFilter:%d:%X\n", m_iCnt--, pVoid );
-		#endif
+		if( 0 ) {
+			v8::HandleScope handle_scope;
+			CVsdFilter *thisObj = GetThis<CVsdFilter>( handle->ToObject());
+			if( thisObj ){
+				delete static_cast<CVsdFilter*>( thisObj );
+				#ifdef DEBUG
+					DebugMsgD( "<<<del js obj CVsdFilter:%d:%X\n", m_iCnt--, thisObj );
+				#endif
+			}
+		}
 		handle.Dispose();
+	}
+	
+	// JavaScript からの明示的な破棄
+	static v8::Handle<v8::Value> Func_Dispose( const v8::Arguments& args ){
+		// obj の Dispose() を呼ぶ
+		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		if( 0 ) if( thisObj ){
+			delete thisObj;
+			#ifdef DEBUG
+				DebugMsgD( "<<<DISPOSE js obj CVsdFilter:%d:%X\n", m_iCnt--, thisObj );
+			#endif
+			
+			// internalfield を null っぽくする
+			args.This()->SetInternalField( 0, v8::External::New( NULL ));
+		}
+		return v8::Undefined();
 	}
 	
 	///// プロパティアクセサ /////
@@ -541,6 +563,7 @@ class CVsdFilterIF {
 
 		// メャbドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
+		proto->Set( v8::String::New( "Dispose" ), v8::FunctionTemplate::New( Func_Dispose ));
 		proto->Set( v8::String::New( "DrawArc" ), v8::FunctionTemplate::New( Func_DrawArc ));
 		proto->Set( v8::String::New( "print" ), v8::FunctionTemplate::New( Func_print ));
 		proto->Set( v8::String::New( "PutPixel" ), v8::FunctionTemplate::New( Func_PutPixel ));
@@ -625,11 +648,33 @@ class CVsdImageIF {
 	
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
-		delete static_cast<CVsdImage*>( pVoid );
-		#ifdef DEBUG
-			DebugMsgD( "<<<del js obj CVsdImage:%d:%X\n", m_iCnt--, pVoid );
-		#endif
+		 {
+			v8::HandleScope handle_scope;
+			CVsdImage *thisObj = GetThis<CVsdImage>( handle->ToObject());
+			if( thisObj ){
+				delete static_cast<CVsdImage*>( thisObj );
+				#ifdef DEBUG
+					DebugMsgD( "<<<del js obj CVsdImage:%d:%X\n", m_iCnt--, thisObj );
+				#endif
+			}
+		}
 		handle.Dispose();
+	}
+	
+	// JavaScript からの明示的な破棄
+	static v8::Handle<v8::Value> Func_Dispose( const v8::Arguments& args ){
+		// obj の Dispose() を呼ぶ
+		CVsdImage *thisObj = GetThis<CVsdImage>( args.This());
+		 if( thisObj ){
+			delete thisObj;
+			#ifdef DEBUG
+				DebugMsgD( "<<<DISPOSE js obj CVsdImage:%d:%X\n", m_iCnt--, thisObj );
+			#endif
+			
+			// internalfield を null っぽくする
+			args.This()->SetInternalField( 0, v8::External::New( NULL ));
+		}
+		return v8::Undefined();
 	}
 	
 	///// プロパティアクセサ /////
@@ -717,6 +762,7 @@ class CVsdImageIF {
 
 		// メャbドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
+		proto->Set( v8::String::New( "Dispose" ), v8::FunctionTemplate::New( Func_Dispose ));
 		proto->Set( v8::String::New( "Resize" ), v8::FunctionTemplate::New( Func_Resize ));
 		proto->Set( v8::String::New( "Rotate" ), v8::FunctionTemplate::New( Func_Rotate ));
 
@@ -765,11 +811,33 @@ class CVsdFontIF {
 	
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
-		delete static_cast<CVsdFont*>( pVoid );
-		#ifdef DEBUG
-			DebugMsgD( "<<<del js obj CVsdFont:%d:%X\n", m_iCnt--, pVoid );
-		#endif
+		 {
+			v8::HandleScope handle_scope;
+			CVsdFont *thisObj = GetThis<CVsdFont>( handle->ToObject());
+			if( thisObj ){
+				delete static_cast<CVsdFont*>( thisObj );
+				#ifdef DEBUG
+					DebugMsgD( "<<<del js obj CVsdFont:%d:%X\n", m_iCnt--, thisObj );
+				#endif
+			}
+		}
 		handle.Dispose();
+	}
+	
+	// JavaScript からの明示的な破棄
+	static v8::Handle<v8::Value> Func_Dispose( const v8::Arguments& args ){
+		// obj の Dispose() を呼ぶ
+		CVsdFont *thisObj = GetThis<CVsdFont>( args.This());
+		 if( thisObj ){
+			delete thisObj;
+			#ifdef DEBUG
+				DebugMsgD( "<<<DISPOSE js obj CVsdFont:%d:%X\n", m_iCnt--, thisObj );
+			#endif
+			
+			// internalfield を null っぽくする
+			args.This()->SetInternalField( 0, v8::External::New( NULL ));
+		}
+		return v8::Undefined();
 	}
 	
 	///// プロパティアクセサ /////
@@ -837,6 +905,7 @@ class CVsdFontIF {
 
 		// メャbドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
+		proto->Set( v8::String::New( "Dispose" ), v8::FunctionTemplate::New( Func_Dispose ));
 		proto->Set( v8::String::New( "GetTextWidth" ), v8::FunctionTemplate::New( Func_GetTextWidth ));
 
 		// グローバルオブジェクトにクラスを定義
@@ -876,11 +945,33 @@ class CVsdFileIF {
 	
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
-		delete static_cast<CVsdFile*>( pVoid );
-		#ifdef DEBUG
-			DebugMsgD( "<<<del js obj CVsdFile:%d:%X\n", m_iCnt--, pVoid );
-		#endif
+		 {
+			v8::HandleScope handle_scope;
+			CVsdFile *thisObj = GetThis<CVsdFile>( handle->ToObject());
+			if( thisObj ){
+				delete static_cast<CVsdFile*>( thisObj );
+				#ifdef DEBUG
+					DebugMsgD( "<<<del js obj CVsdFile:%d:%X\n", m_iCnt--, thisObj );
+				#endif
+			}
+		}
 		handle.Dispose();
+	}
+	
+	// JavaScript からの明示的な破棄
+	static v8::Handle<v8::Value> Func_Dispose( const v8::Arguments& args ){
+		// obj の Dispose() を呼ぶ
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		 if( thisObj ){
+			delete thisObj;
+			#ifdef DEBUG
+				DebugMsgD( "<<<DISPOSE js obj CVsdFile:%d:%X\n", m_iCnt--, thisObj );
+			#endif
+			
+			// internalfield を null っぽくする
+			args.This()->SetInternalField( 0, v8::External::New( NULL ));
+		}
+		return v8::Undefined();
 	}
 	
 	///// プロパティアクセサ /////
@@ -975,6 +1066,7 @@ class CVsdFileIF {
 
 		// メャbドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
+		proto->Set( v8::String::New( "Dispose" ), v8::FunctionTemplate::New( Func_Dispose ));
 		proto->Set( v8::String::New( "Open" ), v8::FunctionTemplate::New( Func_Open ));
 		proto->Set( v8::String::New( "Close" ), v8::FunctionTemplate::New( Func_Close ));
 		proto->Set( v8::String::New( "ReadLine" ), v8::FunctionTemplate::New( Func_ReadLine ));

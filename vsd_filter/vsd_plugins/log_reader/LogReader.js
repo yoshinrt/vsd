@@ -1,3 +1,5 @@
+GlobalInstance = this;
+
 function ReadLog( FileName ){
 	
 	// '/' で連結された複数ファイルを配列化
@@ -16,7 +18,7 @@ function ReadLog( FileName ){
 	var Ext = Files[ 0 ].toLowerCase().replace( /\.gz$/, '' );
 	Ext.match( /([^\.]+)$/ );
 	
-	var Cnt = eval( "Read_" + RegExp.$1 + "( Files )" );
+	var Cnt = GlobalInstance[ "Read_" + RegExp.$1 ]( Files );
 	
 	if( typeof( Log ) != 'object' ){
 		MessageBox( Files.join( "\n" ) + "\nArray 型の変数 'Log' を定義してください" );

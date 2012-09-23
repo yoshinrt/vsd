@@ -107,14 +107,16 @@ CScript::~CScript(){
 	DebugMsgD( ":CScript::~CScript():%X\n", GetCurrentThreadId());
 	DebugMsgD( ":CScript::~CScript():m_pIsolate = %X\n", m_pIsolate );
 	
+	if( Run( L"DisposeAll" )){
+		m_pVsd->DispErrorMessage( GetErrorMessage());
+	}
+	
 	{
 		v8::Isolate::Scope IsolateScope( m_pIsolate );
 		m_Context.Dispose();
 		while( !v8::V8::IdleNotification());
 	}
-	#ifdef AVS_PLUGIN
-		m_pIsolate->Dispose();
-	#endif
+	m_pIsolate->Dispose();
 	
 	delete [] m_szErrorMsg;
 }
