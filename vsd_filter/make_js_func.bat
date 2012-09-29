@@ -12,6 +12,18 @@ $ENV{ 'PATH' } = "$ENV{ 'HOME' }/bin:" . $ENV{ 'PATH' };
 
 open( fpOut, "| nkf -s > ScriptIF.h" );
 
+print fpOut << "-----";
+/*****************************************************************************
+	
+	VSD -- vehicle data logger system  Copyright(C) by DDS
+	
+	ScriptIF.h - C<-->JavaScript interface
+	
+*****************************************************************************/
+
+#pragma once
+-----
+
 MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
 		CVsdFilter* obj = CScript::m_pVsd;
 -----

@@ -1,3 +1,13 @@
+/*****************************************************************************
+	
+	VSD -- vehicle data logger system  Copyright(C) by DDS
+	
+	CVsdFile.h - JavaScript File
+	
+*****************************************************************************/
+
+#pragma once
+
 class CVsdFile {
   public:
 	CVsdFile(){
