@@ -1,6 +1,7 @@
+LogReaderInfo = new Array();
 GlobalInstance = this;
 
-function ReadLog( FileName ){
+function ReadLog( FileName, ReaderFunc ){
 	
 	// '/' で連結された複数ファイルを配列化
 	var Files = FileName.split( "/" );
@@ -14,11 +15,38 @@ function ReadLog( FileName ){
 		}
 	}
 	
-	// Read_拡張子 を呼ぶ
-	var Ext = Files[ 0 ].toLowerCase().replace( /\.gz$/, '' );
-	Ext.match( /([^\.]+)$/ );
+	// ReaderFunc 自動判別
+	ExitLoop: if( typeof( ReaderFunc ) == 'undefined' ){
+		for( var i = 0; i + 2 < LogReaderInfo.length; i += 3 ){
+			// *.hoge;*.fuga のようなリストを ; で split
+			var Filters = LogReaderInfo[ i + 1 ].split( ";" );
+			for( var j = 0; j < Filters.length; ++j ){
+				
+				// ワイルドカード形式から RegExp オブジェクト作成
+				var re = new RegExp( "^" + Filters[ j ]
+					.replace( /\./g, "\\." )	// . -> \.
+					.replace( /\?/g, "." )		// ? -> .
+					.replace( /\*/g, ".*" )		// * -> .*
+					+ "$", "i"
+				);
+				
+				// RE にマッチしたら，リーダ関数名を取得
+				if( Files[ 0 ].match( re )){
+					ReaderFunc = LogReaderInfo[ i + 2 ];
+					break ExitLoop;
+				}
+			}
+		}
+	}
 	
-	var Cnt = GlobalInstance[ "Read_" + RegExp.$1 ]( Files );
+	// ReaderFunc を呼ぶ
+	if( typeof( GlobalInstance[ ReaderFunc ] ) == 'undefined' ){
+		MessageBox( ReaderFunc + "() は定義されていません" );
+		delete( Log );
+		return 0;
+	}
+	
+	var Cnt = GlobalInstance[ ReaderFunc ]( Files );
 	
 	if( typeof( Log ) != 'object' ){
 		MessageBox( Files.join( "\n" ) + "\nArray 型の変数 'Log' を定義してください" );

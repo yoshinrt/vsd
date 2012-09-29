@@ -173,16 +173,13 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 	
 	TryCatch try_catch;
 	
-	// PluginDir に cd
-	TCHAR	szCurDir[ MAX_PATH ];
-	getcwd( szCurDir, MAX_PATH );	// カレント dir
-	chdir( m_pVsd->m_szPluginDirA );
-	
-	// スクリプト ロード
 	FILE *fp;
-	fp = _wfopen( szFileName, L"r" );
+	{
+		// スクリプト ロード
+		CPushDir push_dir( m_pVsd->m_szPluginDirA );
+		fp = _wfopen( szFileName, L"r" );
+	}
 	
-	chdir( szCurDir );	// pwd を元に戻す
 	if( fp == NULL ) return m_uError = ERR_FILE_NOT_FOUND;
 	
 	// ファイルサイズ取得
@@ -233,13 +230,16 @@ UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
 	return RunArg( szFunc, 0, NULL, bNoFunc );
 }
 
-UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
+UINT CScript::Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc ){
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_Context );
 	
-	Handle<Value> Args[] = { String::New(( uint16_t *)str0 ) };
-	return RunArg( szFunc, 1, Args, bNoFunc );
+	Handle<Value> Args[] = {
+		str0 ? String::New(( uint16_t *)str0 ) : v8::Undefined(),
+		str1 ? String::New(( uint16_t *)str1 ) : v8::Undefined()
+	};
+	return RunArg( szFunc, 2, Args, bNoFunc );
 }
 
 UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bNoFunc ){
@@ -272,4 +272,41 @@ UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bN
 	//v8::V8::IdleNotification();
 	
 	return m_uError = ERR_OK;
+}
+
+/*** ログリード by JavaScript **********************************************/
+
+BOOL LogReaderCallback( const char *szPath, const char *szFile, void *pParam ){
+	if( !IsExt( szFile, "js" )) return TRUE;
+	
+	CScript &Script = *( CScript *)pParam;
+	
+	char szBuf[ MAX_PATH + 1 ];
+	strcat( strcpy( szBuf, szPath ), szFile );
+	
+	LPWSTR pFile = NULL;
+	Script.RunFile( StringNew( pFile, szBuf ));
+	delete pFile;
+	
+	if( Script.m_uError ){
+		// エラー
+		Script.m_pVsd->DispErrorMessage( Script.GetErrorMessage());
+		return FALSE;
+	}
+	
+	return TRUE;
+}
+
+UINT CScript::InitLogReader( void ){
+	Initialize();
+	
+	// スクリプトロード
+	char szBuf[ MAX_PATH + 1 ];
+	strcpy( szBuf, m_pVsd->m_szSkinDirA );
+	strcat( szBuf, LOG_READER_DIR "\\" );
+	if( !ListTree( szBuf, "*", LogReaderCallback, this )){
+		return ERR_FILE_NOT_FOUND;
+	}
+	
+	return ERR_OK;
 }

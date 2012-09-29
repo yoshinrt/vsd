@@ -34,7 +34,9 @@ CVsdFilter::CVsdFilter (){
 	m_pFont				= NULL;
 	
 	m_szLogFile			= NULL;
+	m_szLogFileReader	= NULL;
 	m_szGPSLogFile		= NULL;
+	m_szGPSLogFileReader= NULL;
 	m_szSkinFile		= NULL;
 	m_szSkinDirA		= NULL;
 	m_szPluginDirA		= NULL;
@@ -64,7 +66,9 @@ CVsdFilter::~CVsdFilter (){
 	delete m_GPSLog;
 	delete m_LapLog;
 	delete [] m_szLogFile;
+	delete [] m_szLogFileReader;
 	delete [] m_szGPSLogFile;
+	delete [] m_szGPSLogFileReader;
 	delete [] m_szSkinFile;
 	delete [] m_szSkinDirA;
 	delete [] m_szPluginDirA;
@@ -77,12 +81,12 @@ CVsdFilter::~CVsdFilter (){
 
 /*** ƒƒOƒŠ[ƒh ************************************************************/
 
-int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName ){
+int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc ){
 	if( pLog ) delete pLog;
 	pLog = new CVsdLog( this );
 	if( m_LapLog ) delete m_LapLog;
 	m_LapLog = NULL;
-	int iRet = pLog->ReadLog( szFileName, m_LapLog );
+	int iRet = pLog->ReadLog( szFileName, szReaderFunc, m_LapLog );
 	if( iRet ){
 		if( pLog->m_pLogX0 )
 			pLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
@@ -346,7 +350,11 @@ void CVsdFilter::InitJS_Sub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl
 	std::map<std::string, VSD_LOG_t *>::iterator it;
 	
 	for( it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it ){
-		if( pLog == m_VsdLog || m_VsdLog->GetElement( it->first.c_str()) == NULL ){
+		if(
+			m_VsdLog && (
+				pLog == m_VsdLog || m_VsdLog->GetElement( it->first.c_str()) == NULL
+			)
+		){
 			// Max “o˜^
 			sprintf( szBuf, "Max%s", it->first.c_str());
 			proto->Set(

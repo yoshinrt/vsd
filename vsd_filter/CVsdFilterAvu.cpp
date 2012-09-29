@@ -23,8 +23,6 @@
 	#define CONFIG_EXT		"avs"
 #endif
 
-#define	FILE_LOG_EXT	"log file (*.log)\0*.log; *.gz\0AllFile (*.*)\0*.*\0"
-#define	FILE_GPS_EXT	"GPS file (*.nme* *.dp3*)\0*.nme*; *.dp3*; *.gz\0AllFile (*.*)\0*.*\0"
 #define	FILE_CFG_EXT	"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
 #define	FILE_SKIN_EXT	"Skin File (*.js)\0*.js\0AllFile (*.*)\0*.*\0"
 
@@ -227,14 +225,20 @@ class CVsdFilterAvu : public CVsdFilter {
 	BOOL ConfigSave( const char *szFileName );
 	
 #ifndef GPS_ONLY
-	BOOL ReadLog( const char *szFileName, HWND hwnd );
+	BOOL ReadLog( HWND hwnd );
 #endif
-	BOOL ReadGPSLog( const char *szFileName, HWND hwnd );
-		
+	BOOL ReadGPSLog( HWND hwnd );
+	
 	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *&szDst );
 	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
 	BOOL ConfigLoad( const char *szFileName );
 	void SetSkinName( char *szSkinFile, HWND hwnd );
+	
+	// ログリーダ用
+	BOOL CreateFilter( void );
+	BOOL FileOpenDialog( char *&szOut, char *&szReaderFunc );
+	char *m_szLogFilter;
+	std::vector<std::string> m_vecReaderFunc;
 	
 	// 仮想関数
 	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
@@ -299,10 +303,13 @@ CVsdFilterAvu::CVsdFilterAvu( FILTER *filter, void *editp ) :
 	m_iAdjustPointNum = 0;
 	m_iAdjustPointVid[ 0 ] =
 	m_iAdjustPointVid[ 1 ] = INVALID_INT;
+	
+	m_szLogFilter	= NULL;
 }
 
 CVsdFilterAvu::~CVsdFilterAvu(){
 	delete fileinfo;
+	if( m_szLogFilter ) delete [] m_szLogFilter;
 }
 
 /*** PutPixel ***************************************************************/
@@ -448,21 +455,21 @@ int CVsdFilterAvu::GetFrameMark( int iFrame ){
 /*** ログリード *************************************************************/
 
 #ifndef GPS_ONLY
-BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
+BOOL CVsdFilterAvu::ReadLog( HWND hwnd ){
 	
 	//char szMsg[ BUF_SIZE ];
 	int iCnt;
 	
-	if( !( iCnt = CVsdFilter::ReadLog( m_VsdLog, szFileName ))){
+	if( !( iCnt = CVsdFilter::ReadLog( m_VsdLog, m_szLogFile, m_szLogFileReader ))){
 		return FALSE;
 	}
 	
-	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_LOG ), szFileName );
+	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_LOG ), m_szLogFile );
 	
 	// trackbar 設定
 	track_e[ PARAM_LSt ] =
 	track_e[ PARAM_LEd ] =
-		( int )( g_Vsd->m_VsdLog->Time( g_Vsd->m_VsdLog->GetCnt() - 2 ) * SLIDER_TIME );
+		( int )( m_VsdLog->Time( m_VsdLog->GetCnt() - 2 ) * SLIDER_TIME );
 	
 	return TRUE;
 }
@@ -470,27 +477,27 @@ BOOL CVsdFilterAvu::ReadLog( const char *szFileName, HWND hwnd ){
 
 /*** GPS ログリード ********************************************************/
 
-BOOL CVsdFilterAvu::ReadGPSLog( const char *szFileName, HWND hwnd ){
+BOOL CVsdFilterAvu::ReadGPSLog( HWND hwnd ){
 	
 	//char szMsg[ BUF_SIZE ];
 	
 	int iCnt;
-	if( !( iCnt = CVsdFilter::ReadLog( m_GPSLog, szFileName ))){
+	if( !( iCnt = CVsdFilter::ReadLog( m_GPSLog, m_szGPSLogFile, m_szGPSLogFileReader ))){
 		return FALSE;
 	}
 	
-	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_GPS ), szFileName );
+	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_GPS ), m_szGPSLogFile );
 	
 	// trackbar 設定
 	#ifdef GPS_ONLY
 		if( GPSSt == INVALID_INT ){
 			GPSSt	= 0;
-			GPSEd	= ( int )( g_Vsd->m_GPSLog->Time( g_Vsd->m_GPSLog->GetCnt() - 1 ) * SLIDER_TIME );
+			GPSEd	= ( int )( m_GPSLog->Time( m_GPSLog->GetCnt() - 1 ) * SLIDER_TIME );
 		}
 	#else
 		track_e[ PARAM_GSt ] =
 		track_e[ PARAM_GEd ] =
-			( int )( g_Vsd->m_GPSLog->Time( g_Vsd->m_GPSLog->GetCnt() - 2 ) * SLIDER_TIME );
+			( int )( m_GPSLog->Time( m_GPSLog->GetCnt() - 2 ) * SLIDER_TIME );
 	#endif
 
 	return TRUE;
@@ -499,28 +506,6 @@ BOOL CVsdFilterAvu::ReadGPSLog( const char *szFileName, HWND hwnd ){
 /*** func_proc **************************************************************/
 
 BOOL func_proc( FILTER *fp, FILTER_PROC_INFO *fpip ){
-//
-//	fp->track[n]			: トラックバーの数値
-//	fp->check[n]			: チェックボックスの数値
-//	fpip->w 				: 実際の画像の横幅
-//	fpip->h 				: 実際の画像の縦幅
-//	fpip->w					: 画像領域の横幅
-//	fpip->h					: 画像領域の縦幅
-//	fpip->ycp_edit			: 画像領域へのポインタ
-//	fpip->ycp_temp			: テンポラリ領域へのポインタ
-//	fpip->ycp_edit[n].y		: 画素(輝度    )データ (     0 ～ 4095 )
-//	fpip->ycp_edit[n].cb	: 画素(色差(青))データ ( -2048 ～ 2047 )
-//	fpip->ycp_edit[n].cr	: 画素(色差(赤))データ ( -2048 ～ 2047 )
-//
-//  画素データは範囲外に出ていることがあります。
-//  また範囲内に収めなくてもかまいません。
-//
-//	画像サイズを変えたいときは fpip->w や fpip->h を変えます。
-//
-//	テンポラリ領域に処理した画像を格納したいときは
-//	fpip->ycp_edit と fpip->ycp_temp を入れ替えます。
-//
-	
 	if( !g_Vsd ) return 0;
 	// クラスに変換
 	g_Vsd->fpip		= fpip;
@@ -733,17 +718,83 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 }
 
+/*** OpenDialog 用フィルタ作成 **********************************************/
+
+BOOL CVsdFilterAvu::CreateFilter( void ){
+	char	szBuf[ BUF_SIZE ];
+	char	*pBuf;
+	
+	{
+		// JavaScript オブジェクト初期化
+		CScript Script( this );
+		if( Script.InitLogReader() != ERR_OK ){
+			return FALSE;
+		}
+		
+		/*** JS の Log にアクセス *******************************************/
+		
+		{
+			v8::Isolate::Scope IsolateScope( Script.m_pIsolate );
+			v8::HandleScope handle_scope;
+			v8::Context::Scope context_scope( Script.m_Context );
+			
+			// "LogReaderInfo" 取得
+			v8::Local<v8::Array> hFilter = v8::Local<v8::Array>::Cast(
+				Script.m_Context->Global()->Get( v8::String::New(( uint16_t *)L"LogReaderInfo" ))
+			);
+			if( !hFilter->IsArray()) return FALSE;
+			
+			m_vecReaderFunc.clear();
+			
+			pBuf = szBuf;
+			// 表示名と filter 文字列を \0 で cat
+			strcpy( pBuf, "自動判別 (*.*)" );
+			pBuf = strchr( pBuf, '\0' ) + 1;
+			strcpy( pBuf, "*" );
+			pBuf = strchr( pBuf, '\0' ) + 1;
+			
+			for( UINT u = 0; u + 2 < hFilter->Length(); u += 3 ){
+				v8::String::AsciiValue strName( hFilter->Get( u ));
+				v8::String::AsciiValue strExt ( hFilter->Get( u + 1 ));
+				v8::String::AsciiValue strFunc( hFilter->Get( u + 2 ));
+				
+				strncpy( pBuf, *strName, BUF_SIZE - ( pBuf - szBuf ));
+				pBuf = strchr( pBuf, '\0' ) + 1;
+				strncpy( pBuf, *strExt, BUF_SIZE - ( pBuf - szBuf ));
+				pBuf = strchr( pBuf, '\0' ) + 1;
+				m_vecReaderFunc.push_back( *strFunc );
+			}
+			
+			*( pBuf++ ) = '\0';
+		}
+	}
+	
+	if( m_szLogFilter ) delete [] m_szLogFilter;
+	int iSize = pBuf - szBuf;
+	m_szLogFilter = new char[ iSize ];
+	memcpy_s( m_szLogFilter, iSize, szBuf, iSize );
+	
+	return TRUE;
+}
+
 /*** ログリード複数ファイル対応版 *******************************************/
 
-BOOL FileOpenDialog( char *&szOut, char *szExt ){
+#define FILTERBUF_SIZE	128
+
+BOOL CVsdFilterAvu::FileOpenDialog( char *&szOut, char *&szReaderFunc ){
 	
 	char szBuf[ BUF_SIZE ];
+	
+	// ログリーダ用フィルタ作成
+	if( m_szLogFilter == NULL && CreateFilter() != TRUE ){
+		return FALSE;
+	}
 	
 	OPENFILENAME	ofn;
 	memset( &ofn, 0, sizeof( ofn ));
 	
 	ofn.lStructSize	= sizeof( ofn );
-	ofn.lpstrFilter	= szExt;
+	ofn.lpstrFilter	= m_szLogFilter;
 	ofn.lpstrFile	= szBuf;
 	ofn.nMaxFile	= BUF_SIZE;
 	ofn.Flags		= OFN_EXPLORER | OFN_ALLOWMULTISELECT | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
@@ -762,6 +813,11 @@ BOOL FileOpenDialog( char *&szOut, char *szExt ){
 	}
 	
 	StringNew( szOut, szBuf );
+	StringNew(
+		szReaderFunc,
+		ofn.nFilterIndex >= 2 ? m_vecReaderFunc[ ofn.nFilterIndex - 2 ].c_str() :
+								NULL
+	);
 	return TRUE;
 }
 
@@ -1089,10 +1145,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 						DebugMsgD( "VSD Log read start\n" );
 					);
 					
-					g_Vsd->ReadLog(
-						GetFullPathWithCDir( szBuf2, g_Vsd->m_szLogFile, szBuf ),
-						hwnd
-					);
+					g_Vsd->ReadLog( hwnd );
 					
 					DebugCmd( DebugMsgD( "VSD Log read time = %d\n", GetTickCount() - uTimer ); )
 				}
@@ -1102,16 +1155,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 						UINT	uTimer = GetTickCount();
 						DebugMsgD( "GPS Log read start\n" );
 					);
-					if( strchr( g_Vsd->m_szGPSLogFile, '/' )){
-						// 複数ファイル
-						g_Vsd->ReadGPSLog( g_Vsd->m_szGPSLogFile, hwnd );
-					}else{
-						// 単発ファイル
-						g_Vsd->ReadGPSLog(
-							GetFullPathWithCDir( szBuf2, g_Vsd->m_szGPSLogFile, szBuf ),
-							hwnd
-						);
-					}
+					// 単発ファイル
+					g_Vsd->ReadGPSLog( hwnd );
+					
 					DebugCmd( DebugMsgD( "GPS Log read time = %d\n", GetTickCount() - uTimer ); )
 				}
 				
@@ -1134,9 +1180,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			
 		#ifndef GPS_ONLY // {
 		  Case ID_BUTT_LOAD_LOG:	// .log ロード
-			if( filter->exfunc->dlg_get_load_name( szBuf, FILE_LOG_EXT, NULL )){
-				StringNew( g_Vsd->m_szLogFile, szBuf );
-				if( g_Vsd->ReadLog( g_Vsd->m_szLogFile, hwnd )){
+			if( g_Vsd->FileOpenDialog( g_Vsd->m_szGPSLogFile, g_Vsd->m_szGPSLogFileReader )){
+				if( g_Vsd->ReadLog( hwnd )){
 					g_Vsd->ReloadScript();
 					// 設定再描画
 					filter->exfunc->filter_window_update( filter );
@@ -1150,8 +1195,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		#endif // }
 			
 		  Case ID_BUTT_LOAD_GPS:	// GPS ログロード
-			if( FileOpenDialog( g_Vsd->m_szGPSLogFile, FILE_GPS_EXT )){
-				if( g_Vsd->ReadGPSLog( g_Vsd->m_szGPSLogFile, hwnd )){
+			if( g_Vsd->FileOpenDialog( g_Vsd->m_szGPSLogFile, g_Vsd->m_szGPSLogFileReader )){
+				if( g_Vsd->ReadGPSLog( hwnd )){
 					g_Vsd->ReloadScript();
 					// 設定再描画
 					filter->exfunc->filter_window_update( filter );

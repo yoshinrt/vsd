@@ -21,7 +21,7 @@ class CScript {
 	void Initialize( void );
 	UINT RunFile( LPCWSTR szFileName );
 	UINT Run( LPCWSTR szFunc, BOOL bNoFunc = FALSE );
-	UINT Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc = FALSE );
+	UINT Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc = FALSE );
 	UINT RunArg( LPCWSTR szFunc, int iArgNum, v8::Handle<v8::Value> Args[], BOOL bNoFunc = FALSE );
 	
 	void ReportException( v8::TryCatch* try_catch );
@@ -37,6 +37,8 @@ class CScript {
 	LPCWSTR GetErrorMessage( void ){
 		return m_szErrorMsg ? m_szErrorMsg : m_szErrorMsgID[ m_uError ];
 	}
+	
+	UINT InitLogReader( void );
 	
   private:
 	

@@ -340,53 +340,29 @@ double CVsdLog::GPSLogGetLength(
 	return	sqrt( dy * dy * M * M + pow( dx * N * cos( uy ), 2 ));
 }
 
-/*** ログリード by JavaScript **********************************************/
-
-BOOL LogReaderCallback( const char *szPath, const char *szFile, void *pParam ){
-	if( !IsExt( szFile, "js" )) return TRUE;
-	
-	CScript &Script = *( CScript *)pParam;
-	
-	char szBuf[ MAX_PATH + 1 ];
-	strcat( strcpy( szBuf, szPath ), szFile );
-	
-	LPWSTR pFile = NULL;
-	Script.RunFile( StringNew( pFile, szBuf ));
-	delete pFile;
-	
-	if( Script.m_uError ){
-		// エラー
-		Script.m_pVsd->DispErrorMessage( Script.GetErrorMessage());
-		return FALSE;
-	}
-	
-	return TRUE;
-}
-
 /*** ログリード *************************************************************/
 
-int CVsdLog::ReadLog( const char *szFileName, CLapLog *&pLapLog ){
+int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog *&pLapLog ){
 	{
 		// JavaScript オブジェクト初期化
 		CScript Script( m_pVsd );
-		Script.Initialize();
-		
-		// スクリプトロード
-		char szBuf[ MAX_PATH + 1 ];
-		strcpy( szBuf, m_pVsd->m_szSkinDirA );
-		strcat( szBuf, LOG_READER_DIR "\\" );
-		if( !ListTree( szBuf, "*", LogReaderCallback, &Script )){
+		if( Script.InitLogReader() != ERR_OK ){
 			return 0;
 		}
 		
 		// スクリプト実行
 		LPWSTR pStr = NULL;
-		Script.Run_s( L"ReadLog", StringNew( pStr, szFileName ));
+		LPWSTR pReader = NULL;
+		Script.Run_ss( L"ReadLog",
+			StringNew( pStr, szFileName ),
+			StringNew( pReader, szReaderFunc )
+		);
 		delete [] pStr;
+		delete [] pReader;
 		
 		if( Script.m_uError != ERR_OK ){
 			m_pVsd->DispErrorMessage( Script.GetErrorMessage());
-			return 0;
+			return ERR_SCRIPT;
 		}
 		
 		/*** JS の Log にアクセス *******************************************/

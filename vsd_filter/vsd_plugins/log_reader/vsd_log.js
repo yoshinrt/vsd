@@ -1,4 +1,6 @@
-function Read_log( Files ){
+LogReaderInfo.push( "VSD log (*.log)", "*.log*", "ReadVsdLog" );
+
+function ReadVsdLog( Files ){
 	
 	Log				= new Array();
 	Log.Time		= new Array();

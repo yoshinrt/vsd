@@ -284,7 +284,9 @@ class CVsdFilter {
 	virtual double GetFPS( void )	= 0;
 	
 	char	*m_szLogFile;
+	char	*m_szLogFileReader;
 	char	*m_szGPSLogFile;
+	char	*m_szGPSLogFileReader;
 	char	*m_szSkinFile;
 	char	*m_szSkinDirA;
 	LPWSTR	m_szSkinDirW;	// !js_const:SkinDir
@@ -292,7 +294,7 @@ class CVsdFilter {
 	LPWSTR	m_szPluginDirW;	// !js_const:VsdRootDir
 	
 	// ログリードヘルパ
-	int ReadLog( CVsdLog *&pLog, const char *szFileName );
+	int ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc );
 	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
 	CLapLog *CreateLapTime( int iLapMode );
 	CLapLog *CreateLapTimeAuto( void );
@@ -401,3 +403,21 @@ class CVsdFilter {
 };
 
 BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, LPCTSTR, void * ), void *pParam );
+
+class CPushDir {
+  public:
+	CPushDir( char *szPath ){
+		int iBufSize = GetCurrentDirectory( 0, NULL );
+		m_szCurDir = new char[ iBufSize ];
+		GetCurrentDirectory( iBufSize, m_szCurDir );
+		SetCurrentDirectory( szPath );
+	}
+	
+	~CPushDir(){
+		SetCurrentDirectory( m_szCurDir );
+		delete [] m_szCurDir;
+	}
+	
+  private:
+	char	*m_szCurDir;
+};

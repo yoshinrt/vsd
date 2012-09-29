@@ -48,9 +48,6 @@
 #define SLIDER_TIME	LOG_FREQ
 #define NaN			std::numeric_limits<double>::quiet_NaN()
 
-#define	getcwd	_getcwd
-#define	chdir	_chdir
-
 static char *StringNew( char *&szDst, const char *szSrc ){
 	if( szDst == szSrc ) return( szDst );
 	if( szDst ) delete [] szDst;
