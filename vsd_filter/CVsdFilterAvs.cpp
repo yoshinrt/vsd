@@ -9,17 +9,7 @@
 #include "StdAfx.h"
 
 #include "avisynth.h"
-
-#include "dds.h"
-#include "dds_lib/dds_lib.h"
-#include "../vsd/main.h"
-#include "CVsdLog.h"
-#include "CVsdFont.h"
-#include "CScript.h"
-#include "pixel.h"
-#include "CVsdImage.h"
 #include "CVsdFilter.h"
-#include "error_code.h"
 
 /****************************************************************************/
 

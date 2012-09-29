@@ -8,7 +8,6 @@
 
 #include "StdAfx.h"
 
-#include "dds.h"
 #include "CVsdFont.h"
 
 /*** macros *****************************************************************/

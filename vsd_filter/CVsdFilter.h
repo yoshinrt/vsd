@@ -8,6 +8,14 @@
 
 #pragma once
 
+#include "CVsdLog.h"
+#include "CVsdFont.h"
+#include "CScript.h"
+#include "CVsdImage.h"
+#include "pixel.h"
+
+/****************************************************************************/
+
 #define PROG_NAME		"VSDFilter"
 #define PROG_NAME_J		"VSDメーター合成"
 #define PROG_NAME_J_W	L"VSDメーター合成"

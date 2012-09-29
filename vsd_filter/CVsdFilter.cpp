@@ -8,21 +8,8 @@
 
 #include "StdAfx.h"
 
-#include "dds.h"
-#include "../vsd/main.h"
-#include "dds_lib/dds_lib.h"
-
-#ifndef AVS_PLUGIN
-	#include "filter.h"
-#endif
-#include "CVsdLog.h"
-#include "CVsdFont.h"
-#include "CScript.h"
-#include "pixel.h"
-#include "CVsdImage.h"
 #include "CVsdFilter.h"
 #include "CVsdFile.h"
-#include "error_code.h"
 #include "ScriptIF.h"
 
 /*** macros *****************************************************************/

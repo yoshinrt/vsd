@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "error_code.h"
+
 class CVsdFilter;
 
 class CScript {

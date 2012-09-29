@@ -28,6 +28,14 @@
 #include <functional>
 #include <limits>
 
+#ifndef AVS_PLUGIN
+	#include "filter.h"
+#endif
+
+#include "dds.h"
+#include "dds_lib/dds_lib.h"
+#include "../vsd/main.h"
+
 #ifdef _OPENMP
 	#include <omp.h>
 	#ifdef AVS_PLUGIN
