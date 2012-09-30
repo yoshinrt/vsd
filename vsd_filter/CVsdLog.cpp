@@ -544,7 +544,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_upcon.txt" );
 		#endif
 		
-		m_dLogStartTime += 9 * 3600;
+		m_dLogStartTime;
 	}
 	return GetCnt();
 }

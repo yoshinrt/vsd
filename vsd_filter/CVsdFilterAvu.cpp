@@ -1181,7 +1181,6 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		  Case ID_BUTT_LOAD_LOG:	// .log ロード
 			if( g_Vsd->FileOpenDialog( g_Vsd->m_szGPSLogFile, g_Vsd->m_szGPSLogFileReader )){
 				if( g_Vsd->ReadLog( hwnd )){
-					g_Vsd->ReloadScript();
 					// 設定再描画
 					filter->exfunc->filter_window_update( filter );
 					
@@ -1190,16 +1189,17 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 						func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
 					#endif
 				}
+				g_Vsd->ReloadScript();
 			}
 		#endif // }
 			
 		  Case ID_BUTT_LOAD_GPS:	// GPS ログロード
 			if( g_Vsd->FileOpenDialog( g_Vsd->m_szGPSLogFile, g_Vsd->m_szGPSLogFileReader )){
 				if( g_Vsd->ReadGPSLog( hwnd )){
-					g_Vsd->ReloadScript();
 					// 設定再描画
 					filter->exfunc->filter_window_update( filter );
 				}
+				g_Vsd->ReloadScript();
 			}
 			
 		  Case ( CBN_SELCHANGE << 16 ) | ID_COMBO_SEL_SKIN:	// スキン選択

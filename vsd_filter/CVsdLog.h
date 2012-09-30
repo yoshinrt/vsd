@@ -219,6 +219,10 @@ class CVsdLog {
 	#define DEF_LOG( name ) double Min##name( void ){ return m_pLog##name->GetMin(); }
 	#include "def_log.h"
 	
+	double DateTime( void ){
+		return ( m_pLogTime->Get( m_dLogNum ) + m_dLogStartTime ) * 1000;
+	}
+	
   private:
 	int	m_iCnt;
 	CVsdFilter	*m_pVsd;

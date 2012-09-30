@@ -355,6 +355,11 @@ class CVsdFilter {
 	}
 	#include "def_log.h"
 	
+	double DateTime( void ){	// !js_func
+		if( m_VsdLog )	return m_VsdLog->DateTime();
+		return m_GPSLog->DateTime();
+	}
+	
 	double GetValue( char *szKey ){
 		double dRet;
 		if( m_VsdLog && !_isnan( dRet = m_VsdLog->Get( szKey, m_VsdLog->m_dLogNum )))

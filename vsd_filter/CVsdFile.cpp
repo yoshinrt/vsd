@@ -79,14 +79,14 @@ int CVsdFile::Seek( int iOffs, int iOrg ){
 /*** バイナリリード *********************************************************/
 
 UCHAR *CVsdFile::ReadBin( int iSize ){
-	UCHAR cBuf[ 8 ];
+	static UCHAR cBuf[ 8 ];
 	
 	*( int *)cBuf = *( int *)( cBuf + 4 ) = 0;
 	
 	if( m_gzfp ){
 		gzread( m_gzfp, cBuf, iSize );
 	}else if( m_fp ){
-		fread( cBuf, iSize, 1, m_fp );
+		fread( cBuf, 1, iSize, m_fp );
 	}
 	return cBuf;
 }

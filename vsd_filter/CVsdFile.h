@@ -28,8 +28,8 @@ class CVsdFile {
 	// バイナリリーダ
 	UCHAR *ReadBin( int iSize );
 	
-	int ReadByte	( void ){ return *( char *)ReadBin( 1 ); }	// !js_func
-	int ReadUByte	( void ){ return *( UCHAR *)ReadBin( 1 ); }	// !js_func
+	int ReadChar	( void ){ return *( char *)ReadBin( 1 ); }	// !js_func
+	int ReadUChar	( void ){ return *( UCHAR *)ReadBin( 1 ); }	// !js_func
 	int ReadShortL	( void ){ return *( short *)ReadBin( 2 ); }	// !js_func
 	int ReadUShortL	( void ){ return *( USHORT *)ReadBin( 2 ); } // !js_func
 	int ReadIntL	( void ){ return *( int *)ReadBin( 4 ); }	// !js_func
