@@ -1034,7 +1034,6 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
 	
 	TCHAR	szBuf[ MAX_PATH + 1 ];
-	TCHAR	szBuf2[ MAX_PATH + 1 ];
 	int		iFrame;
 	
 	//	TRUE‚ğ•Ô‚·‚Æ‘S‘Ì‚ªÄ•`‰æ‚³‚ê‚é

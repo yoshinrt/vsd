@@ -300,6 +300,16 @@ BOOL LogReaderCallback( const char *szPath, const char *szFile, void *pParam ){
 UINT CScript::InitLogReader( void ){
 	Initialize();
 	
+	{
+		v8::Isolate::Scope IsolateScope( m_pIsolate );
+		v8::HandleScope handle_scope;
+		v8::Context::Scope context_scope( m_Context );
+		
+		// log 用の global array 登録
+		m_Context->Global()->Set( v8::String::New( "Log" ), v8::Array::New( 0 ));
+		m_Context->Global()->Set( v8::String::New( "LogReaderInfo" ), v8::Array::New( 0 ));
+	}
+	
 	// スクリプトロード
 	char szBuf[ MAX_PATH + 1 ];
 	strcpy( szBuf, m_pVsd->m_szSkinDirA );

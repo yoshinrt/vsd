@@ -1,4 +1,3 @@
-LogReaderInfo = new Array();
 GlobalInstance = this;
 
 function ReadLog( FileName, ReaderFunc ){

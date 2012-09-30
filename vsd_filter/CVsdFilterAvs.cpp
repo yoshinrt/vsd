@@ -126,13 +126,17 @@ CVsdFilterAvs::CVsdFilterAvs(
 	
 	// ログリード
 	#ifndef GPS_ONLY
-		if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )) if( !ReadLog( m_VsdLog, p ))
-			env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
+		if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )){
+			const char *szReader = args[ ARGID_STRPARAM_LOGFILE_READER ].AsString( NULL );
+			if( !ReadLog( m_VsdLog, p, szReader )) env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
+		}
 	#endif
 	
 	// GPS ログリード
-	if( p = args[ ARGID_STRPARAM_GPSFILE ].AsString( NULL )) if( !ReadLog( m_GPSLog, p ))
-		env->ThrowError( PROG_NAME ": read GPS log \"%s\" failed.", p );
+	if( p = args[ ARGID_STRPARAM_GPSFILE ].AsString( NULL )){
+			const char *szReader = args[ ARGID_STRPARAM_GPSFILE_READER ].AsString( NULL );
+		if( !ReadLog( m_GPSLog, p, szReader )) env->ThrowError( PROG_NAME ": read GPS log \"%s\" failed.", p );
+	}
 	
 	// スキンロード
 	if( p = args[ ARGID_STRPARAM_SKINFILE ].AsString( NULL )){

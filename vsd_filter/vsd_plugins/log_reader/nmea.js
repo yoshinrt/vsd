@@ -4,7 +4,6 @@ LogReaderInfo.push( "NMEA-0183 (*.nme*)", "*.hoge;*.nme*", "Read_nmea" );
 
 function Read_nmea( Files ){
 	
-	Log				= new Array();
 	Log.Time		= new Array();
 	Log.Longitude	= new Array();
 	Log.Latitude	= new Array();

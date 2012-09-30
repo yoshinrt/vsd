@@ -350,11 +350,7 @@ void CVsdFilter::InitJS_Sub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl
 	std::map<std::string, VSD_LOG_t *>::iterator it;
 	
 	for( it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it ){
-		if(
-			m_VsdLog && (
-				pLog == m_VsdLog || m_VsdLog->GetElement( it->first.c_str()) == NULL
-			)
-		){
+		if( m_VsdLog == NULL || pLog == m_VsdLog || m_VsdLog->GetElement( it->first.c_str()) == NULL ){
 			// Max “o˜^
 			sprintf( szBuf, "Max%s", it->first.c_str());
 			proto->Set(

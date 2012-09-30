@@ -24,6 +24,8 @@ print fpOut << "-----";
 #pragma once
 -----
 
+### CVsdFilter ###############################################################
+
 MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
 		CVsdFilter* obj = CScript::m_pVsd;
 -----
@@ -91,6 +93,8 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
 		CScript::m_pVsd->InitJS( tmpl );
 -----
 
+### CVsdImage ################################################################
+
 MakeJsIF( 'CVsdImage', 'Image', << '-----' );
 		// 引数チェック
 		if ( args.Length() <= 0 ) return v8::Undefined();
@@ -122,6 +126,8 @@ MakeJsIF( 'CVsdImage', 'Image', << '-----' );
 		}
 -----
 
+### CVsdFont #################################################################
+
 MakeJsIF( 'CVsdFont', 'Font', << '-----' );
 		// 引数チェック
 		if ( args.Length() < 2 ) return v8::Undefined();
@@ -134,9 +140,13 @@ MakeJsIF( 'CVsdFont', 'Font', << '-----' );
 		);
 -----
 
+### CVsdFile #################################################################
+
 MakeJsIF( 'CVsdFile', 'File', << '-----' );
 		CVsdFile *obj = new CVsdFile();
 -----
+
+##############################################################################
 
 sub MakeJsIF {
 	my( $Class, $JsClass, $NewObject, $FunctionIF, $ExtraInit ) = @_;
