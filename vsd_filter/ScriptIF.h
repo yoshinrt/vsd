@@ -971,6 +971,126 @@ class CVsdFileIF {
 		
 		return v8::Integer::New( ret );
 	}
+	static v8::Handle<v8::Value> Func_ReadByte( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->ReadByte();
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_ReadUByte( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->ReadUByte();
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_ReadShortL( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->ReadShortL();
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_ReadUShortL( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->ReadUShortL();
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_ReadIntL( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->ReadIntL();
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_ReadUIntL( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		double ret = thisObj->ReadUIntL();
+		
+		return v8::Number::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_ReadFloat( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		double ret = thisObj->ReadFloat();
+		
+		return v8::Number::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_ReadDouble( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		double ret = thisObj->ReadDouble();
+		
+		return v8::Number::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_ReadShortB( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->ReadShortB();
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_ReadUShortB( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->ReadUShortB();
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_ReadIntB( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->ReadIntB();
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_ReadUIntB( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		double ret = thisObj->ReadUIntB();
+		
+		return v8::Number::New( ret );
+	}
 
   public:
 	// this へのアクセスヘルパ
@@ -1021,6 +1141,18 @@ class CVsdFileIF {
 		proto->Set( v8::String::New( "Close" ), v8::FunctionTemplate::New( Func_Close ));
 		proto->Set( v8::String::New( "ReadLine" ), v8::FunctionTemplate::New( Func_ReadLine ));
 		proto->Set( v8::String::New( "IsEOF" ), v8::FunctionTemplate::New( Func_IsEOF ));
+		proto->Set( v8::String::New( "ReadByte" ), v8::FunctionTemplate::New( Func_ReadByte ));
+		proto->Set( v8::String::New( "ReadUByte" ), v8::FunctionTemplate::New( Func_ReadUByte ));
+		proto->Set( v8::String::New( "ReadShortL" ), v8::FunctionTemplate::New( Func_ReadShortL ));
+		proto->Set( v8::String::New( "ReadUShortL" ), v8::FunctionTemplate::New( Func_ReadUShortL ));
+		proto->Set( v8::String::New( "ReadIntL" ), v8::FunctionTemplate::New( Func_ReadIntL ));
+		proto->Set( v8::String::New( "ReadUIntL" ), v8::FunctionTemplate::New( Func_ReadUIntL ));
+		proto->Set( v8::String::New( "ReadFloat" ), v8::FunctionTemplate::New( Func_ReadFloat ));
+		proto->Set( v8::String::New( "ReadDouble" ), v8::FunctionTemplate::New( Func_ReadDouble ));
+		proto->Set( v8::String::New( "ReadShortB" ), v8::FunctionTemplate::New( Func_ReadShortB ));
+		proto->Set( v8::String::New( "ReadUShortB" ), v8::FunctionTemplate::New( Func_ReadUShortB ));
+		proto->Set( v8::String::New( "ReadIntB" ), v8::FunctionTemplate::New( Func_ReadIntB ));
+		proto->Set( v8::String::New( "ReadUIntB" ), v8::FunctionTemplate::New( Func_ReadUIntB ));
 
 
 

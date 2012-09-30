@@ -1,6 +1,6 @@
 // NMEA-0183 リーダ
 
-LogReaderInfo.push( "NMEA-0183 (*.nme*)", "*.hoge;*.nme*", "Read_nmea" );
+LogReaderInfo.push( "NMEA-0183 (*.nme*)", "*.nme*", "Read_nmea" );
 
 function Read_nmea( Files ){
 	

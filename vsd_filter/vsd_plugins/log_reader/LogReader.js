@@ -1,5 +1,9 @@
 GlobalInstance = this;
 
+SEEK_SET	= 0;
+SEEK_CUR	= 1;
+SEEK_END	= 2;
+
 function ReadLog( FileName, ReaderFunc ){
 	
 	// '/' で連結された複数ファイルを配列化
