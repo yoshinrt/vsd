@@ -1,4 +1,4 @@
-LogReaderInfo.push( "VSD log (*.log)", "*.log*", "ReadVsdLog" );
+LogReaderInfo.push( "VSD log (*.log)", "*.log;*.log.gz", "ReadVsdLog" );
 
 function ReadVsdLog( Files ){
 	

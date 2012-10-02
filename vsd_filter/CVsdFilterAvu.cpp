@@ -1179,7 +1179,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			
 		#ifndef GPS_ONLY // {
 		  Case ID_BUTT_LOAD_LOG:	// .log ƒ[ƒh
-			if( g_Vsd->FileOpenDialog( g_Vsd->m_szGPSLogFile, g_Vsd->m_szGPSLogFileReader )){
+			if( g_Vsd->FileOpenDialog( g_Vsd->m_szLogFile, g_Vsd->m_szLogFileReader )){
 				if( g_Vsd->ReadLog( hwnd )){
 					// Ý’èÄ•`‰æ
 					filter->exfunc->filter_window_update( filter );
