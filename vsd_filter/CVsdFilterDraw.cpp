@@ -780,7 +780,7 @@ void CVsdFilter::DrawMap(
 	
 	SelectLogGPS;
 	
-	if( !LineTrace || !m_CurLog ) return;
+	if( !LineTrace || !m_CurLog || !m_CurLog->m_pLogX0 ) return;
 	
 	double dMapSizeX = m_CurLog->m_pLogX->GetMax() - m_CurLog->m_pLogX->GetMin();
 	double dMapOffsX = m_CurLog->m_pLogX->GetMin();

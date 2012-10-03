@@ -1,4 +1,4 @@
-// NMEA-0183 リーダ
+// LAP+ ログリーダ
 
 LogReaderInfo.push( "LAP+ (*.dp3)", "*.dp3", "Read_dp3" );
 

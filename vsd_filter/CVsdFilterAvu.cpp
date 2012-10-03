@@ -754,11 +754,20 @@ BOOL CVsdFilterAvu::CreateFilter( void ){
 			pBuf = strchr( pBuf, '\0' ) + 1;
 			
 			for( UINT u = 0; u + 2 < hFilter->Length(); u += 3 ){
-				v8::String::AsciiValue strName( hFilter->Get( u ));
+				v8::String::Value strName( hFilter->Get( u ));
 				v8::String::AsciiValue strExt ( hFilter->Get( u + 1 ));
 				v8::String::AsciiValue strFunc( hFilter->Get( u + 2 ));
 				
-				strncpy( pBuf, *strName, BUF_SIZE - ( pBuf - szBuf ));
+				WideCharToMultiByte(
+					CP_ACP,					// コードページ
+					0,						// 文字の種類を指定するフラグ
+					( LPCWSTR )*strName,	// マップ元文字列のアドレス
+					-1,						// マップ元文字列のバイト数
+					pBuf,					// マップ先ワイド文字列を入れるバッファのアドレス
+					BUF_SIZE - ( pBuf - szBuf ),	// バッファのサイズ
+					NULL, NULL
+				);
+				
 				pBuf = strchr( pBuf, '\0' ) + 1;
 				strncpy( pBuf, *strExt, BUF_SIZE - ( pBuf - szBuf ));
 				pBuf = strchr( pBuf, '\0' ) + 1;

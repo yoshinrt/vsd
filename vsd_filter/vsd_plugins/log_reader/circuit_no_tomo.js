@@ -1,8 +1,8 @@
 // VSD log reader
 
-LogReaderInfo.push( "VSD log (*.log)", "*.log;*.log.gz", "ReadVsdLog" );
+LogReaderInfo.push( "サーキットの友 (*.ptd)", "*.ptd", "ReadTomoLog" );
 
-function ReadVsdLog( Files ){
+function ReadTomoLog( Files ){
 	
 	Log.Time		= new Array();
 	Log.Speed		= new Array();
