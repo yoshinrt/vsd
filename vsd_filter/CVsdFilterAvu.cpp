@@ -531,7 +531,7 @@ BOOL ListTreeCallback( const char *szPath, const char *szFile, void *pParam ){
 void SetSkinFileList( HWND hwnd ){
 	char szBuf[ MAX_PATH + 1 ];
 	
-	if( SendMessage( hwnd, CB_GETCOUNT,  0, 0 ) > 0 ) return;
+	if( SendMessage( hwnd, CB_GETCOUNT, 0, 0 ) > 0 ) return;
 	
 	strcpy( szBuf, g_Vsd->m_szPluginDirA );
 	ListTree( szBuf, "*", ListTreeCallback, hwnd );

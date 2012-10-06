@@ -65,7 +65,7 @@ class CVsdFile {
 		);
 	}
 	
-	static const int BUF_LEN = 1024;
+	static const int BUF_LEN = 10240;
 	
   private:
 	gzFile	m_gzfp;

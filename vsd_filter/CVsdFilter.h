@@ -46,7 +46,7 @@
 #endif
 
 #define PLUGIN_DIR		"vsd_plugins"
-#define LOG_READER_DIR	"log_reader"
+#define LOG_READER_DIR	"_log_reader"
 
 // ƒpƒ‰ƒ[ƒ^‚ğ•ÏŠ·
 #define GetLogIndex( frame, to, prev ) \

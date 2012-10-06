@@ -724,7 +724,7 @@ void CVsdFilter::DrawGSnake(
 	
 	iR = iR * INVERT_G;
 	
-	if( m_CurLog ){
+	if( m_CurLog && m_CurLog->m_pLogGx ){
 		if( dLength > 0 ){
 			
 			int iGxPrev = INVALID_POS_I, iGyPrev;
@@ -1287,7 +1287,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_Script = new CScript( this );
 		m_Script->Initialize();
 		
-		if( m_Script->RunFile( L"_initialize" ) == ERR_OK ){
+		if( m_Script->RunFile( L"_initialize.js" ) == ERR_OK ){
 			LPWSTR p = NULL;
 			StringNew( p, m_szSkinFile );
 			m_Script->RunFile( p );

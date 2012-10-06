@@ -1,7 +1,7 @@
 // LAP+Android ログリーダ
 
-LogReaderInfo.push( "LAP+Android 5Hz (*.dp3x)", "*.dp3x", "Read_dp3x_5Hz" );
-LogReaderInfo.push( "LAP+Android 10Hz (*.dp3x)", "*.dp3x", "Read_dp3x_10Hz" );
+LogReaderInfo.push( "LAP+Android (*.dp3x)", "*.dp3x", "Read_dp3x_5Hz" );
+//LogReaderInfo.push( "LAP+Android 10Hz (*.dp3x)", "*.dp3x", "Read_dp3x_10Hz" );
 
 // dp3x フォーマット
 // 0x48-0x4F: ログ開始時刻,ms (GMT-9h, 日本時間に直すためには +18h)
@@ -12,14 +12,14 @@ LogReaderInfo.push( "LAP+Android 10Hz (*.dp3x)", "*.dp3x", "Read_dp3x_10Hz" );
 // +0x00-0x01: 原点からの経度
 // +0x02-0x03: 原点からの緯度
 // +0x04-0x05: 速度			1km/h = 10
-// +0x06-0x08: G センサー	1G = 0x40(?)
+// +0x06-0x08: G センサー	1G = 40(?)
 // +0x09-0x0B: 磁気センサー?
 // +0x0C～   : 不明 (all 0)
 
-function Read_dp3x_5Hz( Files, Hz ){
+function Read_dp3x_5Hz( Files ){
 	return Read_dp3x( Files, 5 );
 }
-function Read_dp3x_10Hz( Files, Hz ){
+function Read_dp3x_10Hz( Files ){
 	return Read_dp3x( Files, 10 );
 }
 function Read_dp3x( Files, Hz ){

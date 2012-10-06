@@ -31,6 +31,8 @@ function ReadVsdLog( Files ){
 		var Mon		= ~~( DateTime / 100 ) % 100;
 		var Year	= ~~( DateTime / 10000 );
 		
+		var Time0 = Date.UTC( Year, Mon - 1, Day, Hour, Min, Sec ) - ( 9 * 3600 * 1000 );
+		
 		while( !file.IsEOF()){
 			Line = file.ReadLine();
 			
@@ -60,7 +62,7 @@ function ReadVsdLog( Files ){
 			
 			var DateTime= ~~Param[ 9 ];
 			
-			Log.Time[ Cnt ]	= Date.UTC( Year, Mon - 1, Day, Hour, Min, Sec ) + Cnt * 1000 / 16;
+			Log.Time[ Cnt ]	= Time0 + Cnt * 1000 / 16;
 			++Cnt;
 		}
 		file.Close();

@@ -347,7 +347,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		
 		if( Script.m_uError != ERR_OK ){
 			m_pVsd->DispErrorMessage( Script.GetErrorMessage());
-			return ERR_SCRIPT;
+			return 0;
 		}
 		
 		/*** JS の Log にアクセス *******************************************/
@@ -377,22 +377,25 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			UINT	uIdxX0		= ~0;
 			UINT	uIdxY0		= ~0;
 			
+			UINT	uIdx = 0;
 			for( UINT u = 0; u < Keys->Length(); ++u ){
 				v8::String::AsciiValue strKey( Keys->Get( u ));
 				char *pKey = *strKey;
 				
 				v8::Local<v8::Array> ArrayTmp = v8::Local<v8::Array>::Cast( hLog->Get( Keys->Get( u )));
 				if( ArrayTmp->IsArray()){
-					if     ( !strcmp( *strKey, "Time"      )) uIdxTime		= u;
-					else if( !strcmp( *strKey, "Distance"  )) uIdxDistance	= u;
-					else if( !strcmp( *strKey, "Longitude" )){ uIdxX0		= u; pKey = "X0"; }
-					else if( !strcmp( *strKey, "Latitude"  )){ uIdxY0		= u; pKey = "Y0"; }
+					if     ( !strcmp( *strKey, "Time"      )) uIdxTime		= uIdx;
+					else if( !strcmp( *strKey, "Distance"  )) uIdxDistance	= uIdx;
+					else if( !strcmp( *strKey, "Longitude" )){ uIdxX0		= uIdx; pKey = "X0"; }
+					else if( !strcmp( *strKey, "Latitude"  )){ uIdxY0		= uIdx; pKey = "Y0"; }
 					
 					// strKey で vector 作成
 					CArrays.push_back( GetElement( pKey, TRUE ));
 					
 					// JS の property 名解決後の Array の vector を作る
 					JSArrays.push_back( ArrayTmp );
+					
+					++uIdx;
 				}
 			}
 			

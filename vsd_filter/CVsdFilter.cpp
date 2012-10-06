@@ -406,14 +406,13 @@ BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, L
 	
 	if(( hFindFile = FindFirstFile( szPath, &FindData )) != INVALID_HANDLE_VALUE ){
 		do{
-			if( _tcscmp( FindData.cFileName, _T( "." ))&&
+			if( *FindData.cFileName != _T( '_' ) &&
+				_tcscmp( FindData.cFileName, _T( "." ))&&
 				_tcscmp( FindData.cFileName, _T( ".." ))){
 				
 				if( FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ){
-					if( _tcscmp( FindData.cFileName, LOG_READER_DIR ) != 0 ){
-						_tcscpy_s( &szPath[ iFileIdx ], MAX_PATH - iFileIdx, FindData.cFileName );
-						ListTree( szPath, szFile, CallbackFunc, pParam );
-					}
+					_tcscpy_s( &szPath[ iFileIdx ], MAX_PATH - iFileIdx, FindData.cFileName );
+					ListTree( szPath, szFile, CallbackFunc, pParam );
 				}else{
 					szPath[ iFileIdx ] = _T( '\0' );
 					if( !CallbackFunc( szPath, FindData.cFileName, pParam )){

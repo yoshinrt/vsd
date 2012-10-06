@@ -17,7 +17,7 @@ xcopy /i/s "D:\Program Files\AVIUTL\vsd_plugins" vsd_plugins
 
 rmdir /s/q vsd_plugins\negi
 rmdir /s/q vsd_plugins\新しいフォルダー
-del vsd_plugins\log_reader\circuit_no_tomo.js
+del vsd_plugins\_log_reader\circuit_no_tomo.js
 
 d:\dds\bin\lha a -d ..\vsd_filter_gps.lzh *
 
