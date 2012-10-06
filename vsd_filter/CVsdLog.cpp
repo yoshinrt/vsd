@@ -40,7 +40,7 @@ double CVsdLog::GetIndex(
 	int iLogSt, int iLogEd,
 	int iPrevIdx
 ){
-	if( iVidSt == iVidEd ) return 0;
+	if( iVidSt == iVidEd ) return 2;	// 番犬を除いた Time=0 のログ
 	return GetIndex(
 		( iLogSt + ( iLogEd - iLogSt ) * ( dFrame - iVidSt ) / ( double )( iVidEd - iVidSt )) / SLIDER_TIME,
 		iPrevIdx
@@ -168,9 +168,6 @@ UINT CVsdLog::GPSLogRescan( void ){
 	
 	/*** VSD_LOG_t の方を走査して，いろいろ補正 *****************************/
 	
-	m_dFreq = 0;
-	int		iFreqCnt = 0;
-	
 	BOOL	bCreateSpeed	= FALSE;
 	BOOL	bCreateG		= FALSE;
 	
@@ -254,14 +251,6 @@ UINT CVsdLog::GPSLogRescan( void ){
 				}
 				
 				dBearingPrev = dBearing;
-				
-				// 5km/h 以上の時のみ，ログ Freq を計算する
-				/* ★暫定
-				if( Speed( i ) >= 5 ){
-					m_dFreq += Time( i ) - Time( i - 1 );
-					++iFreqCnt;
-				}
-				*/
 			}
 			SetGx( GetCnt() - 1, 0 );
 			SetGy( GetCnt() - 1, 0 );
@@ -311,10 +300,6 @@ UINT CVsdLog::GPSLogRescan( void ){
 			}
 		}
   	}
-	
-	// ★暫定
-	//m_dFreq = iFreqCnt / m_dFreq;
-	m_dFreq = 10;
 	
 	return GetCnt();
 }
@@ -392,7 +377,6 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			UINT	uIdxX0		= ~0;
 			UINT	uIdxY0		= ~0;
 			
-			
 			for( UINT u = 0; u < Keys->Length(); ++u ){
 				v8::String::AsciiValue strKey( Keys->Get( u ));
 				char *pKey = *strKey;
@@ -439,6 +423,9 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			// vector に積む
 			double	dDistance = 0;
 			int		iSameCnt = 0;
+			
+			double	dLogHzTime	= 0;
+			double	iLogHzCnt	= 0;
 			
 			for( UINT uIdx = 0; uIdx < JSArrays[ uIdxTime ]->Length(); ++uIdx ){
 				int iCnt = GetCnt();
@@ -514,9 +501,15 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						CopyRecord( iCnt,     iCnt - 1 ); // A'
 						AddStopRecord( iCnt,     Time( iCnt - 1 ) + TIME_STOP_MARGIN ); // A'
 						AddStopRecord( iCnt + 1, Time( iCnt + 2 ) - TIME_STOP_MARGIN ); // B'
+					}else{
+						// 停止期間でなければ，ログ Hz を計算する
+						dLogHzTime += dDiffTime;
+						++iLogHzCnt;
 					}
 				}
 			}
+			// ログ Hz 最終集計
+			m_dFreq = iLogHzCnt / dLogHzTime;
 		}
 	}
 	
@@ -552,6 +545,12 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 /*** MAP 回転処理 ***********************************************************/
 
 void CVsdLog::RotateMap( double dAngle ){
+	
+	if( m_pLogX ){
+		m_pLogX->InitMinMax();
+		m_pLogY->InitMinMax();
+	}
+	
 	for( int i = 0; i < GetCnt(); ++i ){
 		SetX( i,  cos( dAngle ) * X0( i ) + sin( dAngle ) * Y0( i ));
 		SetY( i, -sin( dAngle ) * X0( i ) + cos( dAngle ) * Y0( i ));

@@ -18,6 +18,7 @@
 #include <limits.h>
 #include <direct.h>
 #include <tchar.h>
+#include <time.h>
 #include <v8.h>
 #include <zconf.h>
 #include <zlib.h>

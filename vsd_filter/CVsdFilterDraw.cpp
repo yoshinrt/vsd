@@ -1316,14 +1316,23 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_iTextPosY = GetHeight() / 3;
 		
 		if( m_GPSLog ){
-			int i = ( int )(( m_GPSLog->m_dLogStartTime + m_GPSLog->Time()) * 100 ) % ( 24 * 3600 * 100 );
-			swprintf(
-				szBuf, sizeof( szBuf ), L"GPS time: %02d:%02d:%02d.%02d",
-				i / 360000,
-				i / 6000 % 60,
-				i /  100 % 60,
-				i        % 100
+			struct tm	tmLocal;
+			time_t		utc = ( time_t )( m_GPSLog->m_dLogStartTime + m_GPSLog->Time());
+			
+			localtime_s( &tmLocal, &utc );
+			
+			wcsftime(
+				szBuf, sizeof( szBuf ),
+				L"GPS Time: %Y/%m/%d %H:%M:%S",
+				&tmLocal
 			);
+			
+			LPWSTR	p = wcschr( szBuf, '\0' );
+			swprintf(
+				p, sizeof( szBuf ) - ( p - szBuf ), L".%02d",
+				( UINT )(( m_GPSLog->m_dLogStartTime + m_GPSLog->Time()) * 100 ) % 100
+			);
+			
 			DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
 		}
 		
