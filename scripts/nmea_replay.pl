@@ -2,7 +2,7 @@
 
 use Time::HiRes qw(sleep);
 
-open( fpCom, "> /dev/ttyS4" ) || die( "Can't open COM\n" );
+open( fpCom, "> /dev/ttyS3" ) || die( "Can't open COM\n" );
 
 $PrevTime = 0;
 
