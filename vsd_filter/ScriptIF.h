@@ -35,7 +35,7 @@ class CVsdFilterIF {
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 		if( 0 ) {
 			v8::HandleScope handle_scope;
-			CVsdFilter *thisObj = GetThis<CVsdFilter>( handle->ToObject());
+			CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( handle->ToObject());
 			if( thisObj ){
 				delete static_cast<CVsdFilter*>( thisObj );
 				#ifdef DEBUG
@@ -49,7 +49,7 @@ class CVsdFilterIF {
 	// JavaScript からの明示的な破棄
 	static v8::Handle<v8::Value> Func_Dispose( const v8::Arguments& args ){
 		// obj の Dispose() を呼ぶ
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( 0 ) if( thisObj ){
 			delete thisObj;
 			#ifdef DEBUG
@@ -64,31 +64,31 @@ class CVsdFilterIF {
 	
 	///// プロパティアクセサ /////
 	static v8::Handle<v8::Value> Get_ElapsedTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->CurTime() ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_BestLapTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->BestLapTime() ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_DiffTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->DiffTime() ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_LapTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->LapTime() ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_LapCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->LapCnt() ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_MaxLapCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->MaxLapCnt() ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_FrameCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->GetFrameCnt() ) : v8::Undefined();
 	}
 
@@ -97,9 +97,9 @@ class CVsdFilterIF {
 	
 	static v8::Handle<v8::Value> Func_DrawArc( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 7 <= iLen && iLen <= 9 )) return v8::Undefined();
+		if( CScript::CheckArgs( 7 <= iLen && iLen <= 9 )) return v8::Undefined();
 		
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		
 		if( iLen >= 9 ){
@@ -133,13 +133,13 @@ class CVsdFilterIF {
 	
 	#define DEF_LOG( name ) \
 		static v8::Handle<v8::Value> Get_##name( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){ \
-			CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder()); \
+			CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder()); \
 			return obj ? v8::Number::New( obj->Get##name() ) : v8::Undefined(); \
 		}
 	#include "def_log.h"
 	
 	static v8::Handle<v8::Value> Get_Value( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		v8::String::AsciiValue str( propertyName );
 		return obj ? v8::Number::New( obj->GetValue( *str )) : v8::Undefined();
 	}
@@ -155,9 +155,9 @@ class CVsdFilterIF {
 	
 	static v8::Handle<v8::Value> Func_PutPixel( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 3 <= iLen && iLen <= 4 )) return v8::Undefined();
+		if( CScript::CheckArgs( 3 <= iLen && iLen <= 4 )) return v8::Undefined();
 		
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->PutPixel(
 			args[ 0 ]->Int32Value(),
@@ -170,12 +170,12 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_PutImage( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 3 <= iLen && iLen <= 4 )) return v8::Undefined();
+		if( CScript::CheckArgs( 3 <= iLen && iLen <= 4 )) return v8::Undefined();
 		v8::Local<v8::Object> Image2 = args[ 2 ]->ToObject();
-		if( CheckClass( Image2, "Image", "arg[ 3 ] must be Image" )) return v8::Undefined();
-		CVsdImage *obj2 = GetThis<CVsdImage>( Image2 );
+		if( CScript::CheckClass( Image2, "Image", "arg[ 3 ] must be Image" )) return v8::Undefined();
+		CVsdImage *obj2 = CScript::GetThis<CVsdImage>( Image2 );
 		if( !obj2 ) return v8::Undefined();
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->PutImage(
 			args[ 0 ]->Int32Value(),
@@ -188,9 +188,9 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawLine( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 5 <= iLen && iLen <= 7 )) return v8::Undefined();
+		if( CScript::CheckArgs( 5 <= iLen && iLen <= 7 )) return v8::Undefined();
 		
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawLine(
 			args[ 0 ]->Int32Value(),
@@ -206,9 +206,9 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawRect( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 5 <= iLen && iLen <= 6 )) return v8::Undefined();
+		if( CScript::CheckArgs( 5 <= iLen && iLen <= 6 )) return v8::Undefined();
 		
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawRect(
 			args[ 0 ]->Int32Value(),
@@ -223,9 +223,9 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawCircle( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 4 <= iLen && iLen <= 5 )) return v8::Undefined();
+		if( CScript::CheckArgs( 4 <= iLen && iLen <= 5 )) return v8::Undefined();
 		
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawCircle(
 			args[ 0 ]->Int32Value(),
@@ -239,13 +239,13 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawText( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 4 <= iLen && iLen <= 6 )) return v8::Undefined();
+		if( CScript::CheckArgs( 4 <= iLen && iLen <= 6 )) return v8::Undefined();
 		v8::String::Value str2( args[ 2 ] );
 		v8::Local<v8::Object> Font3 = args[ 3 ]->ToObject();
-		if( CheckClass( Font3, "Font", "arg[ 4 ] must be Font" )) return v8::Undefined();
-		CVsdFont *obj3 = GetThis<CVsdFont>( Font3 );
+		if( CScript::CheckClass( Font3, "Font", "arg[ 4 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj3 = CScript::GetThis<CVsdFont>( Font3 );
 		if( !obj3 ) return v8::Undefined();
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawText(
 			args[ 0 ]->Int32Value(),
@@ -260,13 +260,13 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawTextAlign( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 5 <= iLen && iLen <= 7 )) return v8::Undefined();
+		if( CScript::CheckArgs( 5 <= iLen && iLen <= 7 )) return v8::Undefined();
 		v8::String::Value str3( args[ 3 ] );
 		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
-		if( CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
-		CVsdFont *obj4 = GetThis<CVsdFont>( Font4 );
+		if( CScript::CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj4 = CScript::GetThis<CVsdFont>( Font4 );
 		if( !obj4 ) return v8::Undefined();
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawTextAlign(
 			args[ 0 ]->Int32Value(),
@@ -282,12 +282,12 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawGraph( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 5 <= iLen && iLen <= 6 )) return v8::Undefined();
+		if( CScript::CheckArgs( 5 <= iLen && iLen <= 6 )) return v8::Undefined();
 		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
-		if( CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
-		CVsdFont *obj4 = GetThis<CVsdFont>( Font4 );
+		if( CScript::CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj4 = CScript::GetThis<CVsdFont>( Font4 );
 		if( !obj4 ) return v8::Undefined();
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawGraph(
 			args[ 0 ]->Int32Value(),
@@ -302,9 +302,9 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_InitPolygon( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->InitPolygon();
 		
@@ -312,9 +312,9 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawPolygon( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 1 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
 		
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawPolygon(
 			PIXEL_RABY::Argb2Raby( args[ 0 ]->Int32Value())
@@ -324,9 +324,9 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawGSnake( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 7 <= iLen && iLen <= 8 )) return v8::Undefined();
+		if( CScript::CheckArgs( 7 <= iLen && iLen <= 8 )) return v8::Undefined();
 		
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawGSnake(
 			args[ 0 ]->Int32Value(),
@@ -343,12 +343,12 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawMeterScale( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 17 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 17 )) return v8::Undefined();
 		v8::Local<v8::Object> Font16 = args[ 16 ]->ToObject();
-		if( CheckClass( Font16, "Font", "arg[ 17 ] must be Font" )) return v8::Undefined();
-		CVsdFont *obj16 = GetThis<CVsdFont>( Font16 );
+		if( CScript::CheckClass( Font16, "Font", "arg[ 17 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj16 = CScript::GetThis<CVsdFont>( Font16 );
 		if( !obj16 ) return v8::Undefined();
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawMeterScale(
 			args[ 0 ]->Int32Value(),
@@ -374,9 +374,9 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawMap( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 11 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 11 )) return v8::Undefined();
 		
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawMap(
 			args[ 0 ]->Int32Value(),
@@ -396,12 +396,12 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawLapTime( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 4 <= iLen && iLen <= 8 )) return v8::Undefined();
+		if( CScript::CheckArgs( 4 <= iLen && iLen <= 8 )) return v8::Undefined();
 		v8::Local<v8::Object> Font3 = args[ 3 ]->ToObject();
-		if( CheckClass( Font3, "Font", "arg[ 4 ] must be Font" )) return v8::Undefined();
-		CVsdFont *obj3 = GetThis<CVsdFont>( Font3 );
+		if( CScript::CheckClass( Font3, "Font", "arg[ 4 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj3 = CScript::GetThis<CVsdFont>( Font3 );
 		if( !obj3 ) return v8::Undefined();
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawLapTime(
 			args[ 0 ]->Int32Value(),
@@ -418,12 +418,12 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawLapTimeLog( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 5 <= iLen && iLen <= 8 )) return v8::Undefined();
+		if( CScript::CheckArgs( 5 <= iLen && iLen <= 8 )) return v8::Undefined();
 		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
-		if( CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
-		CVsdFont *obj4 = GetThis<CVsdFont>( Font4 );
+		if( CScript::CheckClass( Font4, "Font", "arg[ 5 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj4 = CScript::GetThis<CVsdFont>( Font4 );
 		if( !obj4 ) return v8::Undefined();
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawLapTimeLog(
 			args[ 0 ]->Int32Value(),
@@ -440,9 +440,9 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DrawNeedle( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 8 <= iLen && iLen <= 9 )) return v8::Undefined();
+		if( CScript::CheckArgs( 8 <= iLen && iLen <= 9 )) return v8::Undefined();
 		
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->DrawNeedle(
 			args[ 0 ]->Int32Value(),
@@ -460,9 +460,9 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_FormatTime( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 1 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
 		
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		LPCWSTR ret = thisObj->FormatTime(
 			args[ 0 ]->Int32Value()
@@ -472,9 +472,9 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_DateTime( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		double ret = thisObj->DateTime();
 		
@@ -482,37 +482,6 @@ class CVsdFilterIF {
 	}
 
   public:
-	// this へのアクセスヘルパ
-	template<typename T>
-	static T* GetThis( v8::Local<v8::Object> handle ){
-		if( handle->GetInternalField( 0 )->IsUndefined()){
-			v8::ThrowException( v8::Exception::TypeError( v8::String::New( "Invalid object ( maybe \"new\" failed )" )));
-			return NULL;
-		}
-		
-		void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
-		return static_cast<T*>( pThis );
-	}
-	
-	// 引数の数チェック
-	static BOOL CheckArgs( BOOL cond ){
-		if( !( cond )){
-			v8::ThrowException( v8::Exception::Error( v8::String::New(
-				"invalid number of args"
-			)));
-			return TRUE;
-		}
-		return FALSE;
-	}
-	
-	static BOOL CheckClass( v8::Local<v8::Object> obj, char *name, char *msg ){
-		if( strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name )){
-			v8::ThrowException( v8::Exception::TypeError( v8::String::New( msg )));
-			return TRUE;
-		}
-		return FALSE;
-	}
-	
 	// クラステンプレートの初期化
 	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
 		// コンストラクタを作成
@@ -582,7 +551,7 @@ class CVsdImageIF {
 		if( args[ 0 ]->IsObject()){
 			v8::Local<v8::Object> Image0 = args[ 0 ]->ToObject();
 			if( strcmp( *( v8::String::AsciiValue )( Image0->GetConstructorName()), "Image" ) == 0 ){
-				CVsdImage *obj0 = GetThis<CVsdImage>( Image0 );
+				CVsdImage *obj0 = CScript::GetThis<CVsdImage>( Image0 );
 				if( !obj0 ) return v8::Undefined();
 				
 				obj = new CVsdImage( *obj0 );
@@ -621,7 +590,7 @@ class CVsdImageIF {
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 		 {
 			v8::HandleScope handle_scope;
-			CVsdImage *thisObj = GetThis<CVsdImage>( handle->ToObject());
+			CVsdImage *thisObj = CScript::GetThis<CVsdImage>( handle->ToObject());
 			if( thisObj ){
 				delete static_cast<CVsdImage*>( thisObj );
 				#ifdef DEBUG
@@ -635,7 +604,7 @@ class CVsdImageIF {
 	// JavaScript からの明示的な破棄
 	static v8::Handle<v8::Value> Func_Dispose( const v8::Arguments& args ){
 		// obj の Dispose() を呼ぶ
-		CVsdImage *thisObj = GetThis<CVsdImage>( args.This());
+		CVsdImage *thisObj = CScript::GetThis<CVsdImage>( args.This());
 		 if( thisObj ){
 			delete thisObj;
 			#ifdef DEBUG
@@ -650,20 +619,20 @@ class CVsdImageIF {
 	
 	///// プロパティアクセサ /////
 	static v8::Handle<v8::Value> Get_Width( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdImage *obj = GetThis<CVsdImage>( info.Holder());
+		CVsdImage *obj = CScript::GetThis<CVsdImage>( info.Holder());
 		return obj ? v8::Integer::New( obj->m_iWidth ) : v8::Undefined();
 	}
 	static v8::Handle<v8::Value> Get_Height( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdImage *obj = GetThis<CVsdImage>( info.Holder());
+		CVsdImage *obj = CScript::GetThis<CVsdImage>( info.Holder());
 		return obj ? v8::Integer::New( obj->m_iHeight ) : v8::Undefined();
 	}
 
 	///// メャbドコールバック /////
 	static v8::Handle<v8::Value> Func_Resize( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 2 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 2 )) return v8::Undefined();
 		
-		CVsdImage *thisObj = GetThis<CVsdImage>( args.This());
+		CVsdImage *thisObj = CScript::GetThis<CVsdImage>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->Resize(
 			args[ 0 ]->Int32Value(),
@@ -674,9 +643,9 @@ class CVsdImageIF {
 	}
 	static v8::Handle<v8::Value> Func_Rotate( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 3 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 3 )) return v8::Undefined();
 		
-		CVsdImage *thisObj = GetThis<CVsdImage>( args.This());
+		CVsdImage *thisObj = CScript::GetThis<CVsdImage>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->Rotate(
 			args[ 0 ]->Int32Value(),
@@ -688,37 +657,6 @@ class CVsdImageIF {
 	}
 
   public:
-	// this へのアクセスヘルパ
-	template<typename T>
-	static T* GetThis( v8::Local<v8::Object> handle ){
-		if( handle->GetInternalField( 0 )->IsUndefined()){
-			v8::ThrowException( v8::Exception::TypeError( v8::String::New( "Invalid object ( maybe \"new\" failed )" )));
-			return NULL;
-		}
-		
-		void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
-		return static_cast<T*>( pThis );
-	}
-	
-	// 引数の数チェック
-	static BOOL CheckArgs( BOOL cond ){
-		if( !( cond )){
-			v8::ThrowException( v8::Exception::Error( v8::String::New(
-				"invalid number of args"
-			)));
-			return TRUE;
-		}
-		return FALSE;
-	}
-	
-	static BOOL CheckClass( v8::Local<v8::Object> obj, char *name, char *msg ){
-		if( strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name )){
-			v8::ThrowException( v8::Exception::TypeError( v8::String::New( msg )));
-			return TRUE;
-		}
-		return FALSE;
-	}
-	
 	// クラステンプレートの初期化
 	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
 		// コンストラクタを作成
@@ -779,7 +717,7 @@ class CVsdFontIF {
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 		 {
 			v8::HandleScope handle_scope;
-			CVsdFont *thisObj = GetThis<CVsdFont>( handle->ToObject());
+			CVsdFont *thisObj = CScript::GetThis<CVsdFont>( handle->ToObject());
 			if( thisObj ){
 				delete static_cast<CVsdFont*>( thisObj );
 				#ifdef DEBUG
@@ -793,7 +731,7 @@ class CVsdFontIF {
 	// JavaScript からの明示的な破棄
 	static v8::Handle<v8::Value> Func_Dispose( const v8::Arguments& args ){
 		// obj の Dispose() を呼ぶ
-		CVsdFont *thisObj = GetThis<CVsdFont>( args.This());
+		CVsdFont *thisObj = CScript::GetThis<CVsdFont>( args.This());
 		 if( thisObj ){
 			delete thisObj;
 			#ifdef DEBUG
@@ -808,16 +746,16 @@ class CVsdFontIF {
 	
 	///// プロパティアクセサ /////
 	static v8::Handle<v8::Value> Get_Height( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFont *obj = GetThis<CVsdFont>( info.Holder());
+		CVsdFont *obj = CScript::GetThis<CVsdFont>( info.Holder());
 		return obj ? v8::Integer::New( obj->GetHeight() ) : v8::Undefined();
 	}
 
 	///// メャbドコールバック /////
 	static v8::Handle<v8::Value> Func_GetTextWidth( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 1 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
 		v8::String::Value str0( args[ 0 ] );
-		CVsdFont *thisObj = GetThis<CVsdFont>( args.This());
+		CVsdFont *thisObj = CScript::GetThis<CVsdFont>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->GetTextWidth(
 			( LPCWSTR )*str0
@@ -827,37 +765,6 @@ class CVsdFontIF {
 	}
 
   public:
-	// this へのアクセスヘルパ
-	template<typename T>
-	static T* GetThis( v8::Local<v8::Object> handle ){
-		if( handle->GetInternalField( 0 )->IsUndefined()){
-			v8::ThrowException( v8::Exception::TypeError( v8::String::New( "Invalid object ( maybe \"new\" failed )" )));
-			return NULL;
-		}
-		
-		void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
-		return static_cast<T*>( pThis );
-	}
-	
-	// 引数の数チェック
-	static BOOL CheckArgs( BOOL cond ){
-		if( !( cond )){
-			v8::ThrowException( v8::Exception::Error( v8::String::New(
-				"invalid number of args"
-			)));
-			return TRUE;
-		}
-		return FALSE;
-	}
-	
-	static BOOL CheckClass( v8::Local<v8::Object> obj, char *name, char *msg ){
-		if( strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name )){
-			v8::ThrowException( v8::Exception::TypeError( v8::String::New( msg )));
-			return TRUE;
-		}
-		return FALSE;
-	}
-	
 	// クラステンプレートの初期化
 	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
 		// コンストラクタを作成
@@ -908,7 +815,7 @@ class CVsdFileIF {
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 		 {
 			v8::HandleScope handle_scope;
-			CVsdFile *thisObj = GetThis<CVsdFile>( handle->ToObject());
+			CVsdFile *thisObj = CScript::GetThis<CVsdFile>( handle->ToObject());
 			if( thisObj ){
 				delete static_cast<CVsdFile*>( thisObj );
 				#ifdef DEBUG
@@ -922,7 +829,7 @@ class CVsdFileIF {
 	// JavaScript からの明示的な破棄
 	static v8::Handle<v8::Value> Func_Dispose( const v8::Arguments& args ){
 		// obj の Dispose() を呼ぶ
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		 if( thisObj ){
 			delete thisObj;
 			#ifdef DEBUG
@@ -940,10 +847,10 @@ class CVsdFileIF {
 	///// メャbドコールバック /////
 	static v8::Handle<v8::Value> Func_Open( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 2 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 2 )) return v8::Undefined();
 		v8::String::Value str0( args[ 0 ] );
 		v8::String::Value str1( args[ 1 ] );
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->Open(
 			( LPCWSTR )*str0,
@@ -954,9 +861,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_Close( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		thisObj->Close();
 		
@@ -964,9 +871,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_ReadLine( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		char *ret = thisObj->ReadLine();
 		
@@ -974,9 +881,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_Seek( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 2 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 2 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->Seek(
 			args[ 0 ]->Int32Value(),
@@ -987,9 +894,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_IsEOF( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->IsEOF();
 		
@@ -997,9 +904,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_ReadChar( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->ReadChar();
 		
@@ -1007,9 +914,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_ReadUChar( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->ReadUChar();
 		
@@ -1017,9 +924,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_ReadShortL( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->ReadShortL();
 		
@@ -1027,9 +934,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_ReadUShortL( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->ReadUShortL();
 		
@@ -1037,9 +944,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_ReadIntL( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->ReadIntL();
 		
@@ -1047,9 +954,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_ReadUIntL( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		double ret = thisObj->ReadUIntL();
 		
@@ -1057,9 +964,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_ReadFloat( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		double ret = thisObj->ReadFloat();
 		
@@ -1067,9 +974,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_ReadDouble( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		double ret = thisObj->ReadDouble();
 		
@@ -1077,9 +984,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_ReadShortB( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->ReadShortB();
 		
@@ -1087,9 +994,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_ReadUShortB( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->ReadUShortB();
 		
@@ -1097,9 +1004,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_ReadIntB( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		int ret = thisObj->ReadIntB();
 		
@@ -1107,9 +1014,9 @@ class CVsdFileIF {
 	}
 	static v8::Handle<v8::Value> Func_ReadUIntB( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 0 )) return v8::Undefined();
+		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
 		
-		CVsdFile *thisObj = GetThis<CVsdFile>( args.This());
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		double ret = thisObj->ReadUIntB();
 		
@@ -1117,37 +1024,6 @@ class CVsdFileIF {
 	}
 
   public:
-	// this へのアクセスヘルパ
-	template<typename T>
-	static T* GetThis( v8::Local<v8::Object> handle ){
-		if( handle->GetInternalField( 0 )->IsUndefined()){
-			v8::ThrowException( v8::Exception::TypeError( v8::String::New( "Invalid object ( maybe \"new\" failed )" )));
-			return NULL;
-		}
-		
-		void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
-		return static_cast<T*>( pThis );
-	}
-	
-	// 引数の数チェック
-	static BOOL CheckArgs( BOOL cond ){
-		if( !( cond )){
-			v8::ThrowException( v8::Exception::Error( v8::String::New(
-				"invalid number of args"
-			)));
-			return TRUE;
-		}
-		return FALSE;
-	}
-	
-	static BOOL CheckClass( v8::Local<v8::Object> obj, char *name, char *msg ){
-		if( strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name )){
-			v8::ThrowException( v8::Exception::TypeError( v8::String::New( msg )));
-			return TRUE;
-		}
-		return FALSE;
-	}
-	
 	// クラステンプレートの初期化
 	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
 		// コンストラクタを作成

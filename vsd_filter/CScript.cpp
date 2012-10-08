@@ -136,6 +136,23 @@ static v8::Handle<v8::Value> Func_DebugPrintW( const v8::Arguments& args ){
 	return v8::Undefined();
 }
 
+/*** include ****************************************************************/
+
+static v8::Handle<v8::Value> Func_Include( const v8::Arguments& args ){
+	v8::String::Value str( args[ 0 ] );
+	
+	/*
+	UINT uRet = RunFileCore( *str );
+	
+	if( uRet == ERR_FILE_NOT_FOUND ){
+		return v8::ThrowException( v8::Exception::Error( v8::String::New(
+			"Include: file not found"
+		)));
+	}
+	*/
+	return v8::Undefined();
+}
+
 /*** JavaScript interface のセットアップ ************************************/
 
 void CScript::Initialize( void ){
@@ -154,8 +171,10 @@ void CScript::Initialize( void ){
 	CVsdFileIF::InitializeClass( global );
 	
 	// デバッグ用の DebugPrint* 登録
-	global->Set( v8::String::New( "DebugPrintD" ),  v8::FunctionTemplate::New( Func_DebugPrintD ));
-	global->Set( v8::String::New( "MessageBox" ),  v8::FunctionTemplate::New( Func_DebugPrintW ));
+	global->Set( v8::String::New( "DebugPrintD" ), v8::FunctionTemplate::New( Func_DebugPrintD ));
+	global->Set( v8::String::New( "MessageBox" ), v8::FunctionTemplate::New( Func_DebugPrintW ));
+	global->Set( v8::String::New( "Include" ), v8::FunctionTemplate::New( Func_Include ));
+	//global->Set( v8::String::New( "__CScript_this" ), v8::External::New( this ));
 	
 	// グローバルオブジェクトから環境を生成
 	m_Context = Context::New( NULL, global );
@@ -172,6 +191,19 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 	Context::Scope context_scope( m_Context );
 	
 	TryCatch try_catch;
+	
+	UINT uRet = RunFileCore( szFileName );
+	
+	if( uRet == ERR_SCRIPT || try_catch.HasCaught()){
+		// Print errors that happened during compilation.
+		ReportException( &try_catch );
+		return m_uError = ERR_SCRIPT;
+	}
+	
+	return uRet;
+}
+
+UINT CScript::RunFileCore( LPCWSTR szFileName ){
 	
 	FILE *fp;
 	{
@@ -202,20 +234,11 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 	
 	if( script.IsEmpty()){
 		// Print errors that happened during compilation.
-		ReportException( &try_catch );
 		return m_uError = ERR_SCRIPT;
 	}
 	
 	// とりあえず初期化処理
 	Handle<Value> result = script->Run();
-	
-	if( try_catch.HasCaught()){
-		ReportException( &try_catch );
-		return m_uError = ERR_SCRIPT;
-	}
-	
-	// ガーベッジコレクション?
-	//while( !v8::V8::IdleNotification());
 	
 	return m_uError = ERR_OK;
 }

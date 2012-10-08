@@ -4,10 +4,10 @@ LogReaderInfo.push( "VSD log (*.log)", "*.log;*.log.gz", "ReadVsdLog" );
 
 function ReadVsdLog( Files ){
 	
-	Log.Time		= new Array();
-	Log.Speed		= new Array();
-	Log.Tacho		= new Array();
-	Log.Distance	= new Array();
+	Log.Time		= [];
+	Log.Speed		= [];
+	Log.Tacho		= [];
+	Log.Distance	= [];
 	
 	var	Cnt = 0;
 	var Line;
@@ -49,8 +49,8 @@ function ReadVsdLog( Files ){
 			// Speed がある場合は Array 作成
 			if( Param.length >= 5 ){
 				if( !bG ){
-					Log.Gx = new Array();
-					Log.Gy = new Array();
+					Log.Gx = [];
+					Log.Gy = [];
 					bG = true;
 				}
 				Log.Gy[ Cnt ] = Param[ 3 ];

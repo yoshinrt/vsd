@@ -50,7 +50,7 @@ function GetGear( GearRatio ){
 	if( GearRatio > GEAR_RATIO4 ) return 4;
 	if( GearRatio > GEAR_RATIO5 ) return 5;
 	if( GearRatio > GEAR_RATIO6 ) return 6;
-	return 7;
+	return 1;
 }
 
 GlobalInstance = this;

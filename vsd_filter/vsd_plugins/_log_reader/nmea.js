@@ -4,9 +4,9 @@ LogReaderInfo.push( "NMEA-0183 (*.nme*)", "*.nmea;*.nme;*.nmea.gz;*.nme.gz", "Re
 
 function Read_nmea( Files ){
 	
-	Log.Time		= new Array();
-	Log.Longitude	= new Array();
-	Log.Latitude	= new Array();
+	Log.Time		= [];
+	Log.Longitude	= [];
+	Log.Latitude	= [];
 	
 	var	Cnt = 0;
 	var Line;
@@ -33,7 +33,7 @@ function Read_nmea( Files ){
 				// Speed がある場合は Array 作成
 				if( Param[ 7 ] != '' ){
 					if( !bSpeed ){
-						Log.Speed = new Array();
+						Log.Speed = [];
 						bSpeed = true;
 					}
 					Log.Speed[ Cnt ] = +Param[ 7 ] * 1.85200;

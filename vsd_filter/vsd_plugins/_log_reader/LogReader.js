@@ -44,7 +44,10 @@ function ReadLog( FileName, ReaderFunc ){
 	
 	// ReaderFunc を呼ぶ
 	if( typeof( GlobalInstance[ ReaderFunc ] ) == 'undefined' ){
-		MessageBox( Files[ 0 ] + " はリードできません\n拡張子を適切に変更することでリードできる場合があります" );
+		MessageBox( Files[ 0 ] + " はリードできません．次のことを試してください\n" +
+			"・拡張子を適切に変更する\n" +
+			"・ファイルを開く ダイアログでファイル形式を「自動判別」以外に設定する\n"
+		);
 		delete( Log );
 		return 0;
 	}

@@ -6,7 +6,7 @@ var ImgG     = new Image( ImgMeter );
 
 var FontS = new Font( "Impact", Vsd.Height / 30 );
 var FontM = new Font( "Impact", Vsd.Height / 23 );
-var FontG = new Font( "Impact", Vsd.Height / 20 );
+var FontG = new Font( "Impact", Vsd.Height / 18 );
 var FontL = new Font( "Impact", Vsd.Height / 12 );
 var FontM_Outline = new Font( "Impact", Vsd.Height / 20, FONT_FIXED | FONT_OUTLINE );
 

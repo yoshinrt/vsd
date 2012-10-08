@@ -4,10 +4,10 @@ LogReaderInfo.push( "LAP+ (*.dp3)", "*.dp3", "Read_dp3" );
 
 function Read_dp3( Files ){
 	
-	Log.Time		= new Array();
-	Log.Speed		= new Array();
-	Log.Longitude	= new Array();
-	Log.Latitude	= new Array();
+	Log.Time		= [];
+	Log.Speed		= [];
+	Log.Longitude	= [];
+	Log.Latitude	= [];
 	
 	var	Cnt = 0;
 	var Line;

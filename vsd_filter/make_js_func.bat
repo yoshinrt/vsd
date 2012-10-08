@@ -33,9 +33,9 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
 	
 	static v8::Handle<v8::Value> Func_DrawArc( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( 7 <= iLen && iLen <= 9 )) return v8::Undefined();
+		if( CScript::CheckArgs( 7 <= iLen && iLen <= 9 )) return v8::Undefined();
 		
-		CVsdFilter *thisObj = GetThis<CVsdFilter>( args.This());
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		
 		if( iLen >= 9 ){
@@ -69,13 +69,13 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
 	
 	#define DEF_LOG( name ) \
 		static v8::Handle<v8::Value> Get_##name( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){ \
-			CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder()); \
+			CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder()); \
 			return obj ? v8::Number::New( obj->Get##name() ) : v8::Undefined(); \
 		}
 	#include "def_log.h"
 	
 	static v8::Handle<v8::Value> Get_Value( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = GetThis<CVsdFilter>( info.Holder());
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		v8::String::AsciiValue str( propertyName );
 		return obj ? v8::Number::New( obj->GetValue( *str )) : v8::Undefined();
 	}
@@ -105,7 +105,7 @@ MakeJsIF( 'CVsdImage', 'Image', << '-----' );
 		if( args[ 0 ]->IsObject()){
 			v8::Local<v8::Object> Image0 = args[ 0 ]->ToObject();
 			if( strcmp( *( v8::String::AsciiValue )( Image0->GetConstructorName()), "Image" ) == 0 ){
-				CVsdImage *obj0 = GetThis<CVsdImage>( Image0 );
+				CVsdImage *obj0 = CScript::GetThis<CVsdImage>( Image0 );
 				if( !obj0 ) return v8::Undefined();
 				
 				obj = new CVsdImage( *obj0 );
@@ -204,8 +204,8 @@ sub MakeJsIF {
 					
 					$ArgPos_p1 = $ArgPos + 1;
 					push( @Defs, "v8::Local<v8::Object> $_$ArgNum = args[ $ArgPos ]->ToObject();" );
-					push( @Defs, "if( CheckClass( $_$ArgNum, \"$_\", \"arg[ $ArgPos_p1 ] must be $_\" )) return v8::Undefined();" );
-					push( @Defs, "$Type *obj$ArgNum = GetThis<$Type>( $_$ArgNum );" );
+					push( @Defs, "if( CScript::CheckClass( $_$ArgNum, \"$_\", \"arg[ $ArgPos_p1 ] must be $_\" )) return v8::Undefined();" );
+					push( @Defs, "$Type *obj$ArgNum = CScript::GetThis<$Type>( $_$ArgNum );" );
 					push( @Defs, "if( !obj$ArgNum ) return v8::Undefined();" );
 					$Args[ $ArgNum ] = "*obj$ArgNum";
 				}
@@ -304,9 +304,9 @@ sub MakeJsIF {
 			$FunctionIF .= << "-----";
 	static v8::Handle<v8::Value> Func_$FuncName( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CheckArgs( $Len )) return v8::Undefined();
+		if( CScript::CheckArgs( $Len )) return v8::Undefined();
 		$Defs
-		$Class *thisObj = GetThis<$Class>( args.This());
+		$Class *thisObj = CScript::GetThis<$Class>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		${RetVar}thisObj->$FuncName($Args);
 		
@@ -339,7 +339,7 @@ sub MakeJsIF {
 #-----
 			$AccessorIF .= << "-----";
 	static v8::Handle<v8::Value> Get_$JSvar( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		$Class *obj = GetThis<$Class>( info.Holder());
+		$Class *obj = CScript::GetThis<$Class>( info.Holder());
 		return obj ? v8::${Type}::New($Cast obj->$RealVar ) : v8::Undefined();
 	}
 -----
@@ -406,7 +406,7 @@ $NewObject
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 		$IfNotVsd {
 			v8::HandleScope handle_scope;
-			$Class *thisObj = GetThis<$Class>( handle->ToObject());
+			$Class *thisObj = CScript::GetThis<$Class>( handle->ToObject());
 			if( thisObj ){
 				delete static_cast<$Class*>( thisObj );
 				#ifdef DEBUG
@@ -420,7 +420,7 @@ $NewObject
 	// JavaScript からの明示的な破棄
 	static v8::Handle<v8::Value> Func_Dispose( const v8::Arguments& args ){
 		// obj の Dispose() を呼ぶ
-		$Class *thisObj = GetThis<$Class>( args.This());
+		$Class *thisObj = CScript::GetThis<$Class>( args.This());
 		$IfNotVsd if( thisObj ){
 			delete thisObj;
 			#ifdef DEBUG
@@ -438,37 +438,6 @@ $AccessorIF
 	///// メソッドコールバック /////
 $FunctionIF
   public:
-	// this へのアクセスヘルパ
-	template<typename T>
-	static T* GetThis( v8::Local<v8::Object> handle ){
-		if( handle->GetInternalField( 0 )->IsUndefined()){
-			v8::ThrowException( v8::Exception::TypeError( v8::String::New( "Invalid object ( maybe \\"new\\" failed )" )));
-			return NULL;
-		}
-		
-		void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
-		return static_cast<T*>( pThis );
-	}
-	
-	// 引数の数チェック
-	static BOOL CheckArgs( BOOL cond ){
-		if( !( cond )){
-			v8::ThrowException( v8::Exception::Error( v8::String::New(
-				"invalid number of args"
-			)));
-			return TRUE;
-		}
-		return FALSE;
-	}
-	
-	static BOOL CheckClass( v8::Local<v8::Object> obj, char *name, char *msg ){
-		if( strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name )){
-			v8::ThrowException( v8::Exception::TypeError( v8::String::New( msg )));
-			return TRUE;
-		}
-		return FALSE;
-	}
-	
 	// クラステンプレートの初期化
 	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
 		// コンストラクタを作成

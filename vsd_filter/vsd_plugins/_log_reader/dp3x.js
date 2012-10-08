@@ -24,12 +24,12 @@ function Read_dp3x_10Hz( Files ){
 }
 function Read_dp3x( Files, Hz ){
 	
-	Log.Time		= new Array();
-	Log.Speed		= new Array();
-	Log.Longitude	= new Array();
-	Log.Latitude	= new Array();
-	Log.Gx			= new Array();
-	Log.Gy			= new Array();
+	Log.Time		= [];
+	Log.Speed		= [];
+	Log.Longitude	= [];
+	Log.Latitude	= [];
+	Log.Gx			= [];
+	Log.Gy			= [];
 	
 	var	Cnt = 0;
 	var Line;
