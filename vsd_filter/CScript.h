@@ -27,7 +27,7 @@ class CScript {
 	
 	void ReportException( v8::TryCatch* try_catch );
 	
-	static CVsdFilter	*m_pVsd;	// エ…
+	CVsdFilter	*m_pVsd;	// エ…
 	
 	v8::Persistent<v8::Context> m_Context;
 	v8::Isolate	*m_pIsolate;
@@ -40,6 +40,19 @@ class CScript {
 	}
 	
 	UINT InitLogReader( void );
+	
+	// Global オブジェクト
+	static void DebugMsg( LPCWSTR strMsg ){	// !js_func
+		DebugMsgD( "%s\n", strMsg );
+	}
+	
+	static void MessageBox( LPCWSTR strMsg ){	// !js_func
+		MessageBoxW(
+			NULL, strMsg,
+			L"VSD filter JavaScript message",
+			MB_OK
+		);
+	}
 	
 	// this へのアクセスヘルパ
 	template<typename T>

@@ -14,7 +14,11 @@ class CVsdFilterIF {
 	// クラスコンストラクタ
 	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
 		
-		CVsdFilter* obj = CScript::m_pVsd;
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		
+		CVsdFilter *obj = static_cast<CVsdFilter *>( v8::Local<v8::External>::Cast( args[ 0 ] )->Value());
+		if( !obj ) return v8::Undefined();
 
 		// internal field にバックエンドオブジェクトを設定
 		v8::Local<v8::Object> thisObject = args.This();
@@ -483,7 +487,7 @@ class CVsdFilterIF {
 
   public:
 	// クラステンプレートの初期化
-	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
+	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global, void *pClass = NULL ){
 		// コンストラクタを作成
 		v8::Local<v8::FunctionTemplate> tmpl = v8::FunctionTemplate::New( New );
 		tmpl->SetClassName( v8::String::New( "__VSD_System__" ));
@@ -523,13 +527,13 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "FormatTime" ), v8::FunctionTemplate::New( Func_FormatTime ));
 		proto->Set( v8::String::New( "DateTime" ), v8::FunctionTemplate::New( Func_DateTime ));
 
-		proto->Set( v8::String::New( "Width" ), v8::Integer::New( CScript::m_pVsd->GetWidth() ));
-		proto->Set( v8::String::New( "Height" ), v8::Integer::New( CScript::m_pVsd->GetHeight() ));
-		proto->Set( v8::String::New( "MaxFrameCnt" ), v8::Integer::New( CScript::m_pVsd->GetFrameMax() ));
-		proto->Set( v8::String::New( "SkinDir" ), v8::String::New(( uint16_t *) CScript::m_pVsd->m_szSkinDirW ));
-		proto->Set( v8::String::New( "VsdRootDir" ), v8::String::New(( uint16_t *) CScript::m_pVsd->m_szPluginDirW ));
+		proto->Set( v8::String::New( "Width" ), v8::Integer::New((( CVsdFilter *)pClass )->GetWidth() ));
+		proto->Set( v8::String::New( "Height" ), v8::Integer::New((( CVsdFilter *)pClass )->GetHeight() ));
+		proto->Set( v8::String::New( "MaxFrameCnt" ), v8::Integer::New((( CVsdFilter *)pClass )->GetFrameMax() ));
+		proto->Set( v8::String::New( "SkinDir" ), v8::String::New(( uint16_t *)(( CVsdFilter *)pClass )->m_szSkinDirW ));
+		proto->Set( v8::String::New( "VsdRootDir" ), v8::String::New(( uint16_t *)(( CVsdFilter *)pClass )->m_szPluginDirW ));
 
-		CScript::m_pVsd->InitJS( tmpl );
+		(( CVsdFilter *)pClass )->InitJS( tmpl );
 
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "__VSD_System__" ), tmpl );
@@ -658,7 +662,7 @@ class CVsdImageIF {
 
   public:
 	// クラステンプレートの初期化
-	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
+	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global, void *pClass = NULL ){
 		// コンストラクタを作成
 		v8::Local<v8::FunctionTemplate> tmpl = v8::FunctionTemplate::New( New );
 		tmpl->SetClassName( v8::String::New( "Image" ));
@@ -766,7 +770,7 @@ class CVsdFontIF {
 
   public:
 	// クラステンプレートの初期化
-	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
+	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global, void *pClass = NULL ){
 		// コンストラクタを作成
 		v8::Local<v8::FunctionTemplate> tmpl = v8::FunctionTemplate::New( New );
 		tmpl->SetClassName( v8::String::New( "Font" ));
@@ -1025,7 +1029,7 @@ class CVsdFileIF {
 
   public:
 	// クラステンプレートの初期化
-	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
+	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global, void *pClass = NULL ){
 		// コンストラクタを作成
 		v8::Local<v8::FunctionTemplate> tmpl = v8::FunctionTemplate::New( New );
 		tmpl->SetClassName( v8::String::New( "File" ));
@@ -1059,5 +1063,50 @@ class CVsdFileIF {
 
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "File" ), tmpl );
+	}
+};
+/****************************************************************************/
+
+class CScriptIF {
+  public:
+	///// プロパティアクセサ /////
+
+	///// メャbドコールバック /////
+	static v8::Handle<v8::Value> Func_DebugMsg( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		v8::String::Value str0( args[ 0 ] );
+		CScript::DebugMsg(
+			( LPCWSTR )*str0
+		);
+		
+		return v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Func_MessageBox( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		v8::String::Value str0( args[ 0 ] );
+		CScript::MessageBox(
+			( LPCWSTR )*str0
+		);
+		
+		return v8::Undefined();
+	}
+
+  public:
+	// クラステンプレートの初期化
+	static void InitializeClass( v8::Handle<v8::ObjectTemplate> GlobalTmpl ){
+		#define inst	GlobalTmpl
+		#define proto	GlobalTmpl
+		// フィールドなどはこちらに
+
+		// メャbドはこちらに
+		proto->Set( v8::String::New( "DebugMsg" ), v8::FunctionTemplate::New( Func_DebugMsg ));
+		proto->Set( v8::String::New( "MessageBox" ), v8::FunctionTemplate::New( Func_MessageBox ));
+
+
+
+		#undef inst
+		#undef GlobalTmpl
 	}
 };

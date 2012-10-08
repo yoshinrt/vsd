@@ -17,8 +17,6 @@ using namespace v8;
 
 /*** static メンバ（；´д⊂）***********************************************/
 
-CVsdFilter *CScript::m_pVsd;
-
 LPCWSTR CScript::m_szErrorMsgID[] = {
 	#define DEF_ERROR( id, msg )	L##msg,
 	#include "def_error.h"
@@ -117,39 +115,24 @@ void CScript::Dispose( void ){
 	}
 }
 
-/*** デバッグ用 *************************************************************/
-
-static v8::Handle<v8::Value> Func_DebugPrintD( const v8::Arguments& args ){
-	v8::String::AsciiValue str( args[ 0 ] );
-	DebugMsgD( "%s\n", *str );
-	return v8::Undefined();
-}
-
-static v8::Handle<v8::Value> Func_DebugPrintW( const v8::Arguments& args ){
-	v8::String::Value str( args[ 0 ] );
-	
-	MessageBoxW(
-		NULL, ( LPCWSTR )*str,
-		L"VSD filter JavaScript message",
-		MB_OK
-	);
-	return v8::Undefined();
-}
-
 /*** include ****************************************************************/
 
 static v8::Handle<v8::Value> Func_Include( const v8::Arguments& args ){
-	v8::String::Value str( args[ 0 ] );
 	
-	/*
-	UINT uRet = RunFileCore( *str );
+	int iLen = args.Length();
+	if( CScript::CheckArgs( iLen == 2 )) return v8::Undefined();
+	
+	CScript *obj = static_cast<CScript *>( v8::Local<v8::External>::Cast( args[ 1 ] )->Value());
+	if( !obj ) return v8::Undefined();
+	
+	v8::String::Value str( args[ 0 ] );
+	UINT uRet = obj->RunFileCore(( LPCWSTR )*str );
 	
 	if( uRet == ERR_FILE_NOT_FOUND ){
 		return v8::ThrowException( v8::Exception::Error( v8::String::New(
 			"Include: file not found"
 		)));
 	}
-	*/
 	return v8::Undefined();
 }
 
@@ -167,14 +150,13 @@ void CScript::Initialize( void ){
 	// Image クラス登録
 	CVsdImageIF::InitializeClass( global );
 	CVsdFontIF::InitializeClass( global );
-	CVsdFilterIF::InitializeClass( global );
+	CVsdFilterIF::InitializeClass( global, m_pVsd );
 	CVsdFileIF::InitializeClass( global );
+	CScriptIF::InitializeClass( global );
 	
-	// デバッグ用の DebugPrint* 登録
-	global->Set( v8::String::New( "DebugPrintD" ), v8::FunctionTemplate::New( Func_DebugPrintD ));
-	global->Set( v8::String::New( "MessageBox" ), v8::FunctionTemplate::New( Func_DebugPrintW ));
-	global->Set( v8::String::New( "Include" ), v8::FunctionTemplate::New( Func_Include ));
-	//global->Set( v8::String::New( "__CScript_this" ), v8::External::New( this ));
+	global->Set( v8::String::New( "__CVsdFilter" ), v8::External::New( m_pVsd ));
+//	global->Set( v8::String::New( "__CScript" ), v8::External::New( this ));
+//	global->Set( v8::String::New( "__Include" ), v8::FunctionTemplate::New( Func_Include ));
 	
 	// グローバルオブジェクトから環境を生成
 	m_Context = Context::New( NULL, global );

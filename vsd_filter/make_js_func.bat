@@ -27,7 +27,11 @@ print fpOut << "-----";
 ### CVsdFilter ###############################################################
 
 MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
-		CVsdFilter* obj = CScript::m_pVsd;
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		
+		CVsdFilter *obj = static_cast<CVsdFilter *>( v8::Local<v8::External>::Cast( args[ 0 ] )->Value());
+		if( !obj ) return v8::Undefined();
 -----
 	/*** DrawArc ****************************************************************/
 	
@@ -90,7 +94,7 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
 	}
 	
 -----
-		CScript::m_pVsd->InitJS( tmpl );
+		(( CVsdFilter *)pClass )->InitJS( tmpl );
 -----
 
 ### CVsdImage ################################################################
@@ -146,10 +150,16 @@ MakeJsIF( 'CVsdFile', 'File', << '-----' );
 		CVsdFile *obj = new CVsdFile();
 -----
 
+### Global ###################################################################
+
+MakeJsIF( 'CScript' );
+
 ##############################################################################
 
 sub MakeJsIF {
 	my( $Class, $JsClass, $NewObject, $FunctionIF, $ExtraInit ) = @_;
+	
+	$bGlobal = !defined( $JsClass );
 	
 	$FunctionIF = '' if( !defined( $FunctionIF ));
 	$ExtraInit  = '' if( !defined( $ExtraInit ));
@@ -301,7 +311,7 @@ sub MakeJsIF {
 				$RetValue = '???';
 			}
 #-----
-			$FunctionIF .= << "-----";
+			$FunctionIF .= << "-----" if( !$bGlobal );
 	static v8::Handle<v8::Value> Func_$FuncName( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CScript::CheckArgs( $Len )) return v8::Undefined();
@@ -309,6 +319,16 @@ sub MakeJsIF {
 		$Class *thisObj = CScript::GetThis<$Class>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		${RetVar}thisObj->$FuncName($Args);
+		
+		return $RetValue;
+	}
+-----
+			$FunctionIF .= << "-----" if( $bGlobal );
+	static v8::Handle<v8::Value> Func_$FuncName( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( $Len )) return v8::Undefined();
+		$Defs
+		CScript::$FuncName($Args);
 		
 		return $RetValue;
 	}
@@ -369,7 +389,7 @@ sub MakeJsIF {
 			}
 #-----
 			$Const .= << "-----";
-		proto->Set( v8::String::New( "$JSvar" ), v8::${Type}::New($Cast CScript::m_pVsd->$RealVar ));
+		proto->Set( v8::String::New( "$JSvar" ), v8::${Type}::New($Cast(( $Class *)pClass )->$RealVar ));
 -----
 		}
 	}
@@ -378,7 +398,7 @@ sub MakeJsIF {
 	$AccessorIF =~ s/Get_(\w+)/AddAccessor( $1, $Class )/ge;
 	$FunctionIF =~ s/Func_(\w+)/AddFunction( $1, $Class )/ge;
 	
-	print fpOut << "-----";
+	print fpOut << "-----" if( !$bGlobal );
 /****************************************************************************/
 
 class ${Class}IF {
@@ -439,7 +459,7 @@ $AccessorIF
 $FunctionIF
   public:
 	// クラステンプレートの初期化
-	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global ){
+	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global, void *pClass = NULL ){
 		// コンストラクタを作成
 		v8::Local<v8::FunctionTemplate> tmpl = v8::FunctionTemplate::New( New );
 		tmpl->SetClassName( v8::String::New( "$JsClass" ));
@@ -456,6 +476,32 @@ $Const
 $ExtraInit
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "$JsClass" ), tmpl );
+	}
+};
+-----
+	
+	print fpOut << "-----" if( $bGlobal );
+/****************************************************************************/
+
+class ${Class}IF {
+  public:
+	///// プロパティアクセサ /////
+$AccessorIF
+	///// メソッドコールバック /////
+$FunctionIF
+  public:
+	// クラステンプレートの初期化
+	static void InitializeClass( v8::Handle<v8::ObjectTemplate> GlobalTmpl ){
+		#define inst	GlobalTmpl
+		#define proto	GlobalTmpl
+		// フィールドなどはこちらに
+$Accessor
+		// メソッドはこちらに
+$Function
+$Const
+$ExtraInit
+		#undef inst
+		#undef GlobalTmpl
 	}
 };
 -----
