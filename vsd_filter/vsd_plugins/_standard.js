@@ -90,9 +90,9 @@ function Draw(){
 			MeterR2 * 0.1,  2, 0xFFFFFF,
 			MeterR2 * 0.05, 1, 0xFFFFFF,
 			5, 135, 45,
-			MeterR2 * 0.75,
+			MeterR2 * 0.78,
 			MaxSpeed, 12, 0xFFFFFF,
-			FontM
+			FontS
 		);
 	}
 	

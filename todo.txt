@@ -5,7 +5,7 @@
 
 ● vsd_filter
 ・ログファイル形式
-　・GPS babel コール
+　・GPS babel コール→ActiveXObject 実装
 ・VSD ログラップタイム表示
 ・GPS ログ・その他歯抜け log 補完
 ・buildin コード

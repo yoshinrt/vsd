@@ -42,7 +42,7 @@ class CScript {
 	UINT InitLogReader( void );
 	
 	// Global オブジェクト
-	static void DebugMsg( LPCWSTR strMsg ){	// !js_func
+	static void DebugPrint( LPCWSTR strMsg ){	// !js_func
 		OutputDebugStringW( strMsg );
 		OutputDebugStringW( L"\n" );
 	}

@@ -1072,11 +1072,11 @@ class CScriptIF {
 	///// プロパティアクセサ /////
 
 	///// メャbドコールバック /////
-	static v8::Handle<v8::Value> Func_DebugMsg( const v8::Arguments& args ){
+	static v8::Handle<v8::Value> Func_DebugPrint( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
 		v8::String::Value str0( args[ 0 ] );
-		CScript::DebugMsg(
+		CScript::DebugPrint(
 			( LPCWSTR )*str0
 		);
 		
@@ -1101,7 +1101,7 @@ class CScriptIF {
 		// フィールドなどはこちらに
 
 		// メャbドはこちらに
-		proto->Set( v8::String::New( "DebugMsg" ), v8::FunctionTemplate::New( Func_DebugMsg ));
+		proto->Set( v8::String::New( "DebugPrint" ), v8::FunctionTemplate::New( Func_DebugPrint ));
 		proto->Set( v8::String::New( "MessageBox" ), v8::FunctionTemplate::New( Func_MessageBox ));
 
 

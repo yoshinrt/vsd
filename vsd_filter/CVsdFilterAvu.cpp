@@ -245,8 +245,8 @@ class CVsdFilterAvu : public CVsdFilter {
 	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
 	virtual UINT PutImage( int x, int y, CVsdImage &img, UINT uAlign );
 	
-	virtual int	GetWidth( void ){ return fpip->w; }
-	virtual int	GetHeight( void ){ return fpip->h; }
+	virtual int	GetWidth( void ){ return fpip ? fpip->w : 0; }
+	virtual int	GetHeight( void ){ return fpip ? fpip->h : 0; }
 	virtual int	GetFrameMax( void ){ return fileinfo->frame_n; }
 	virtual int	GetFrameCnt( void ){ return fpip->frame; }
 	virtual double	GetFPS( void ){ return ( double )fileinfo->video_rate / fileinfo->video_scale; }
@@ -305,6 +305,7 @@ CVsdFilterAvu::CVsdFilterAvu( FILTER *filter, void *editp ) :
 	m_iAdjustPointVid[ 1 ] = INVALID_INT;
 	
 	m_szLogFilter	= NULL;
+	fpip			= NULL;
 }
 
 CVsdFilterAvu::~CVsdFilterAvu(){
