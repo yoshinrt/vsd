@@ -1292,6 +1292,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 			StringNew( p, m_szSkinFile );
 			m_Script->RunFile( p );
 			delete [] p;
+			
+			if( m_Script->m_uError == ERR_OK ){
+				m_Script->Run( L"Initialize" );
+			}
 		}
 		
 		if( m_Script->m_uError ){

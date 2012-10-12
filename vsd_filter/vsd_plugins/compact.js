@@ -1,22 +1,24 @@
 //*** 初期化処理 ************************************************************
 
-var Scale = Vsd.Height / 720;
-
-// 使用する画像・フォントの宣言
-var FontS = new Font( "Arial Black", 20 * Scale );
-var FontM = new Font( "Arial Black", 44 * Scale );
-var FontL = new Font( "Arial Black", 90 * Scale );
-
-var GCx = 540 * Scale;
-var GCy = 60 * Scale;
-var GR  = 55 * Scale;
-
-var BackImg = new Image( Vsd.SkinDir + "compact.png" );
-BackImg.Resize( Vsd.Width, 120 * Scale );
+function Initialize(){
+	Scale = Vsd.Height / 720;
+	
+	// 使用する画像・フォントの宣言
+	FontS = new Font( "Arial Black", 20 * Scale );
+	FontM = new Font( "Arial Black", 44 * Scale );
+	FontL = new Font( "Arial Black", 90 * Scale );
+	
+	GCx = 540 * Scale;
+	GCy = 60 * Scale;
+	GR  = 55 * Scale;
+	
+	BackImg = new Image( Vsd.SkinDir + "compact.png" );
+	BackImg.Resize( Vsd.Width, 120 * Scale );
+	
+	Color = 0x00FF00;
+}
 
 //*** メーター描画処理 ******************************************************
-
-var Color = 0x00FF00;
 
 function Draw(){
 	// 背景

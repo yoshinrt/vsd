@@ -43,7 +43,8 @@ class CScript {
 	
 	// Global オブジェクト
 	static void DebugMsg( LPCWSTR strMsg ){	// !js_func
-		DebugMsgD( "%s\n", strMsg );
+		OutputDebugStringW( strMsg );
+		OutputDebugStringW( L"\n" );
 	}
 	
 	static void MessageBox( LPCWSTR strMsg ){	// !js_func

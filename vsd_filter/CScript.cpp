@@ -185,6 +185,7 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 	return uRet;
 }
 
+#define INCLUDE_CMD	"//#include"
 UINT CScript::RunFileCore( LPCWSTR szFileName ){
 	
 	FILE *fp;
@@ -207,6 +208,47 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 	int iReadSize = fread( szBuf, 1, ( size_t )Size, fp );
 	fclose( fp );
 	szBuf[ iReadSize ] = '\0';
+	
+	// '//#include' 検索
+	for( char *p = szBuf; p < szBuf + iReadSize; ){
+		
+		// skip space
+		while( *p == ' ' || *p == '\t' ) ++p;
+		
+		if( strncmp( p, INCLUDE_CMD, sizeof( INCLUDE_CMD ) - 1 ) == 0 ){
+			p += sizeof( INCLUDE_CMD ) - 1;
+			// skip space
+			while( *p == ' ' || *p == '\t' ) ++p;
+			
+			if( *p == '"' ){
+				++p;
+				
+				// 終端 " を探す
+				char *q;
+				for( q = p; *q != '"' && *q != '\0' && *q != 0xA; ++q );
+				
+				if( *q == '"' ){
+					WCHAR wszIncFile[ MAX_PATH + 1 ];
+					
+					UINT uSize = MultiByteToWideChar(
+						CP_UTF8,		// コードページ
+						0,				// 文字の種類を指定するフラグ
+						p,				// マップ元文字列のアドレス
+						q - p,			// マップ元文字列のバイト数
+						wszIncFile,		// マップ先ワイド文字列を入れるバッファのアドレス
+						MAX_PATH * sizeof( WCHAR )	// バッファのサイズ
+					);
+					
+					wszIncFile[ uSize ] = 0;
+					wprintf( L"include: \"%s\"\n", wszIncFile );
+					RunFileCore( wszIncFile );
+				}
+			}
+		}
+		
+		// 0xA まで skip
+		while( *p != '\0' && *p++ != 0xA );
+	}
 	
 	Handle<Script> script = Script::Compile(
 		String::New( szBuf ), String::New(( uint16_t *)szFileName )
