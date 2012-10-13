@@ -45,8 +45,6 @@ class CLapLog {
 		m_iBestLogNumRunning	= 0;
 	}
 	
-	~CLapLog(){}
-	
 	std::vector<LAP_t>	m_Lap;
 	int	m_iLapMode;
 	int	m_iLapNum;
@@ -67,8 +65,6 @@ class VSD_LOG_t {
 		m_fMin =  FLT_MAX;
 		m_fMax = -FLT_MAX;
 	}
-	
-	~VSD_LOG_t(){}
 	
 	// 値取得
 	double Get( int    iIndex ){ return m_Log[ iIndex ]; }
@@ -140,7 +136,6 @@ class CVsdLog {
 	
 	// コンストラクタ・デストラクタ
 	CVsdLog( CVsdFilter *pVsd );
-	~CVsdLog(){}
 	
 	UINT GPSLogRescan();
 	void RotateMap( double dAngle );
