@@ -84,8 +84,18 @@ CVsdFilter::~CVsdFilter (){
 int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc ){
 	if( pLog ) delete pLog;
 	pLog = new CVsdLog( this );
-	if( m_LapLog ) delete m_LapLog;
-	m_LapLog = NULL;
+	
+	if(
+		#ifdef GPS_ONLY
+			TRUE
+		#else
+			pLog == m_VsdLog
+		#endif
+	){
+		if( m_LapLog ) delete m_LapLog;
+		m_LapLog = NULL;
+	}
+	
 	int iRet = pLog->ReadLog( szFileName, szReaderFunc, m_LapLog );
 	if( iRet ){
 		if( pLog->m_pLogX0 )
@@ -131,7 +141,7 @@ double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 		
 		// 一旦ビデオフレームに変換
 		dFrame =
-			( Log->Time( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME - VsdSt ) /
+			( m_VsdLog->Time( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME - VsdSt ) /
 			( VsdEd - VsdSt ) * ( VideoEd - VideoSt ) + VideoSt;
 		
 		return Log->GetIndex( dFrame, VideoSt, VideoEd, GPSSt, GPSEd, -1 );

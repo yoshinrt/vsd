@@ -6,6 +6,7 @@
 ● vsd_filter
 ・ログファイル形式
 　・GPS babel コール→ActiveXObject 実装
+・VSD ログ位置自動認識が削れてた
 ・GPS ログ・その他歯抜け log 補完
 ・buildin コード
 ・描画グラフをパラメータ名で指定
