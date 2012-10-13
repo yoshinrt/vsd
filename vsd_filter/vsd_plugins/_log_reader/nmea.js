@@ -19,8 +19,9 @@ function Read_nmea( Files ){
 			return 0;
 		}
 		
-		while( !file.IsEOF()){
+		while( 1 ){
 			Line = file.ReadLine();
+			if( file.IsEOF()) break;
 			
 			if( Line.substr( 0, 6 ) == "$GPRMC" ){
 				

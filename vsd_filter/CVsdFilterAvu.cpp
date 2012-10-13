@@ -1044,6 +1044,7 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter ){
 	
 	TCHAR	szBuf[ MAX_PATH + 1 ];
+	TCHAR	szBuf2[ MAX_PATH + 1 ];
 	int		iFrame;
 	
 	//	TRUEを返すと全体が再描画される
@@ -1146,6 +1147,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				filter->exfunc->dlg_get_load_name( szBuf, FILE_CFG_EXT, NULL ) &&
 				g_Vsd->ConfigLoad( szBuf )
 			){
+				StrTokFile( szBuf2, szBuf, STF_PATH2 );
+				CPushDir push_dir( szBuf2 );
+				
 				// ログリード
 			#ifndef GPS_ONLY
 				if( g_Vsd->m_szLogFile ){

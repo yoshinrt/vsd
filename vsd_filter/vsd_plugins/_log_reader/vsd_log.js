@@ -8,6 +8,7 @@ function ReadVsdLog( Files ){
 	Log.Speed		= [];
 	Log.Tacho		= [];
 	Log.Distance	= [];
+	Log.LapTime		= [];
 	
 	var	Cnt = 0;
 	var Line;
@@ -33,8 +34,18 @@ function ReadVsdLog( Files ){
 		
 		var Time0 = Date.UTC( Year, Mon - 1, Day, Hour, Min, Sec ) - ( 9 * 3600 * 1000 );
 		
-		while( !file.IsEOF()){
+		while( 1 ){
 			Line = file.ReadLine();
+			if( file.IsEOF()) break;
+			
+			// ラップタイム検出
+			if( Line.match( /LAP/ )){
+				if( Line.match( /LAP\d+\s+(\d+):(\d+)\.(\d+)/ )){
+					Log.LapTime[ Cnt ] = ( RegExp.$1 * 60 + ~~RegExp.$2 ) * 1000 + ~~RegExp.$3;
+				}else{
+					Log.LapTime[ Cnt ] = 0;
+				}
+			}
 			
 			//tacho spd		distance	Gy		Gx
 			// 0	1		2			3		4

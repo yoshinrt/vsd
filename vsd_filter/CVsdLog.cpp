@@ -373,6 +373,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			std::vector<VSD_LOG_t *>	CArrays;
 			
 			UINT	uIdxTime	= ~0;
+			UINT	uIdxLapTime	= ~0;
 			UINT	uIdxDistance= ~0;
 			UINT	uIdxX0		= ~0;
 			UINT	uIdxY0		= ~0;
@@ -388,10 +389,16 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					else if( !strcmp( *strKey, "Distance"  )) uIdxDistance	= uIdx;
 					else if( !strcmp( *strKey, "Longitude" )){ uIdxX0		= uIdx; pKey = "X0"; }
 					else if( !strcmp( *strKey, "Latitude"  )){ uIdxY0		= uIdx; pKey = "Y0"; }
+					else if( !strcmp( *strKey, "LapTime"   )){
+						uIdxLapTime	= uIdx;
+						CArrays.push_back( NULL );
+						goto Skip;	// LapTime は CVsdLog には積まない
+					}
 					
 					// strKey で vector 作成
 					CArrays.push_back( GetElement( pKey, TRUE ));
 					
+				  Skip:
 					// JS の property 名解決後の Array の vector を作る
 					JSArrays.push_back( ArrayTmp );
 					
@@ -430,8 +437,11 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			double	dLogHzTime	= 0;
 			double	iLogHzCnt	= 0;
 			
+			UINT	uLapCnt	= 1;
+			
 			for( UINT uIdx = 0; uIdx < JSArrays[ uIdxTime ]->Length(); ++uIdx ){
 				int iCnt = GetCnt();
+				int	iLapTime = -1;
 				
 				for( UINT uKey = 0; uKey < Keys->Length(); ++uKey ){
 					
@@ -444,6 +454,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						SetX0( iCnt, ( dVal - m_dLong0 ) * dLong2Meter );
 					}else if( uKey == uIdxY0 ){
 						SetY0( iCnt, ( m_dLati0 - dVal ) * dLati2Meter );
+					}else if( uKey == uIdxLapTime ){
+						if( !_isnan( dVal )) iLapTime = ( int )dVal;
 					}else{
 						CArrays[ uKey ]->Set( iCnt, dVal );
 					}
@@ -510,6 +522,31 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						++iLogHzCnt;
 					}
 				}
+				
+				// ラップタイムを積む
+				if( iLapTime >= 0 ){
+					if( pLapLog == NULL ){
+						pLapLog = new CLapLog();
+						pLapLog->m_iLapMode = LAPMODE_MAGNET;
+					}
+					LAP_t	LapTime;
+					
+					LapTime.uLap	= uLapCnt;
+					LapTime.fLogNum	= ( float )( GetCnt() - 1 );
+					LapTime.iTime	= iLapTime;
+					pLapLog->m_Lap.push_back( LapTime );
+					
+					if( iLapTime ) ++uLapCnt;
+					
+					if(
+						iLapTime > 0 &&
+						( pLapLog->m_iBestTime == TIME_NONE || pLapLog->m_iBestTime > iLapTime )
+					){
+						pLapLog->m_iBestTime	= iLapTime;
+						pLapLog->m_iBestLap	= pLapLog->m_iLapNum - 1;
+					}
+					++pLapLog->m_iLapNum;
+				}
 			}
 			// ログ Hz 最終集計
 			m_dFreq = iLogHzCnt / dLogHzTime;
@@ -542,6 +579,15 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		
 		m_dLogStartTime;
 	}
+	
+	// Lap log の番犬
+	if( pLapLog ){
+		LAP_t	LapTime;
+		LapTime.fLogNum	= FLT_MAX;	// 番犬
+		LapTime.iTime	= 0;		// 番犬
+		pLapLog->m_Lap.push_back( LapTime );
+	}
+	
 	return GetCnt();
 }
 
