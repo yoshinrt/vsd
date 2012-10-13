@@ -24,6 +24,7 @@ import android.view.WindowManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.hardware.Camera;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -103,6 +104,16 @@ public class Vsdroid extends Activity {
 	// config
 	SharedPreferences Pref;
 
+	// カメラ
+	Camera Cam;
+	Camera.Parameters CamParam;
+	
+	enum FLASH_STATE {
+		OFF,
+		ON,
+		BLINK,
+	};
+	
 	//*** utils **************************************************************
 
 	String FormatTime( int iTime ){
@@ -125,6 +136,24 @@ public class Vsdroid extends Activity {
 		try{ Thread.sleep( ms ); }catch( InterruptedException e ){}
 	}
 
+	//*** カメラフラッシュ設定 ***********************************************
+	
+	boolean bToggle = false;
+	public void SetFlash( FLASH_STATE Switch ){
+		
+		// フラッシュモードを設定
+		CamParam.setFlashMode(
+			Switch == FLASH_STATE.ON ||
+			Switch == FLASH_STATE.BLINK && bToggle ?
+				Camera.Parameters.FLASH_MODE_TORCH :
+				Camera.Parameters.FLASH_MODE_OFF
+		);
+		bToggle = !bToggle;
+		
+		// パラメータを設定
+		Cam.setParameters( CamParam );
+	}
+	
 	//*** VSD アクセス *******************************************************
 
 	class VsdInterface implements Runnable {
@@ -145,6 +174,7 @@ public class Vsdroid extends Activity {
 		double	dGcx, dGcy;
 		double	dGymkhaStart	= 1;
 		boolean	bEcoMode		= false;
+		boolean	bRevWarn		= false;
 
 		LAP_STATE	LapState	= LAP_STATE.NONE;
 		int		iGCaribCnt		= iGCaribCntMax;
@@ -175,7 +205,7 @@ public class Vsdroid extends Activity {
 		volatile boolean bKillThread = false;
 
 		Handler	DrawHandler;
-
+		
 		// コンストラクタ - 変数の初期化だけやってる
 		public VsdInterface(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::constructor" );
@@ -345,7 +375,7 @@ public class Vsdroid extends Activity {
 
 				// ここで描画要求
 				DrawHandler.sendEmptyMessage( 0 );
-
+				
 				if( iBufPtr < iEOLPos ){
 					iMileage16	= Unpack();
 					iTSCRaw		= Unpack();
@@ -627,8 +657,8 @@ public class Vsdroid extends Activity {
 				dGymkhaStart = 1.0;
 			}
 
-			// エコモードw
-			bEcoMode = Pref.getBoolean( "key_eco_mode", false );
+			bEcoMode = Pref.getBoolean( "key_eco_mode", false );	// エコモードw
+			bRevWarn = Pref.getBoolean( "key_flash", false );		// レブリミット警告
 
 			// メインモード
 			try{
@@ -675,7 +705,15 @@ public class Vsdroid extends Activity {
 				OpenLog()		>= 0
 			){
 				SetupMode();
+
+				Cam = Camera.open();			//カメラを取得
+				CamParam = Cam.getParameters();	//カメラのパラメータを取得
+				Cam.startPreview();				//プレビューをしないと光らない
+
 				while( !bKillThread && Read() >= 0 );
+				
+				SetFlash( FLASH_STATE.OFF );
+				Cam.release();
 			}
 
 			Close();
@@ -1039,6 +1077,7 @@ public class Vsdroid extends Activity {
 
 			// メーターパネル
 			canvas.drawBitmap( bitmap[ iBarLv ], 0, 0, null );
+			SetFlash( iBarLv >= 1 ? FLASH_STATE.ON : FLASH_STATE.OFF );
 
 			// Vsd.iTacho 針
 			paint.setColor( Color.RED );
@@ -1139,8 +1178,8 @@ public class Vsdroid extends Activity {
 			Vsd.KillThread();
 			CreateVsdInterface( Integer.parseInt( Pref.getString( "key_connection_mode", "0" )));
 		}else if( VsdThread.isAlive()){
+			// 設定メニューから帰ってきた (?)
 			Vsd.SetupMode();
-
 			if( Pref.getBoolean( "key_reopen_log", false )){
 				Vsd.CloseLog();
 				Vsd.OpenLog();
