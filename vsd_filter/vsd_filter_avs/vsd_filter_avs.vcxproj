@@ -120,6 +120,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\COle.cpp" />
     <ClCompile Include="..\CScript.cpp" />
     <ClCompile Include="..\CVsdFile.cpp" />
     <ClCompile Include="..\CVsdFilter.cpp" />
@@ -136,6 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\avisynth.h" />
+    <ClInclude Include="..\COle.h" />
     <ClInclude Include="..\CScript.h" />
     <ClInclude Include="..\CVsdFile.h" />
     <ClInclude Include="..\CVsdFilter.h" />

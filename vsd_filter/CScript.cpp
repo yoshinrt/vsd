@@ -9,8 +9,6 @@
 #include "StdAfx.h"
 
 #include "CScript.h"
-#include "CVsdFilter.h"
-#include "CVsdFile.h"
 #include "ScriptIF.h"
 
 using namespace v8;
@@ -153,6 +151,7 @@ void CScript::Initialize( void ){
 	CVsdFilterIF::InitializeClass( global, m_pVsd );
 	CVsdFileIF::InitializeClass( global );
 	CScriptIF::InitializeClass( global );
+	COleIF::InitializeClass( global );
 	
 	global->Set( v8::String::New( "__CVsdFilter" ), v8::External::New( m_pVsd ));
 //	global->Set( v8::String::New( "__CScript" ), v8::External::New( this ));

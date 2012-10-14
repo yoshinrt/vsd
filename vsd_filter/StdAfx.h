@@ -22,6 +22,7 @@
 #include <v8.h>
 #include <zconf.h>
 #include <zlib.h>
+#include <ole2.h>
 
 #include <string>
 #include <vector>
