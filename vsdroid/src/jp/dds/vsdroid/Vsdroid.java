@@ -107,6 +107,7 @@ public class Vsdroid extends Activity {
 	// カメラ
 	Camera Cam;
 	Camera.Parameters CamParam;
+	boolean	bRevWarn		= false;
 	
 	enum FLASH_STATE {
 		OFF,
@@ -143,8 +144,7 @@ public class Vsdroid extends Activity {
 		
 		// フラッシュモードを設定
 		CamParam.setFlashMode(
-			Switch == FLASH_STATE.ON ||
-			Switch == FLASH_STATE.BLINK && bToggle ?
+			bRevWarn && Switch == FLASH_STATE.ON ?
 				Camera.Parameters.FLASH_MODE_TORCH :
 				Camera.Parameters.FLASH_MODE_OFF
 		);
@@ -174,7 +174,6 @@ public class Vsdroid extends Activity {
 		double	dGcx, dGcy;
 		double	dGymkhaStart	= 1;
 		boolean	bEcoMode		= false;
-		boolean	bRevWarn		= false;
 
 		LAP_STATE	LapState	= LAP_STATE.NONE;
 		int		iGCaribCnt		= iGCaribCntMax;
