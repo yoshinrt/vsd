@@ -196,15 +196,15 @@ UINT CVsdLog::GPSLogRescan( void ){
 			#ifdef _OPENMP
 				#pragma omp for
 			#endif
-			for( int i = 0; i < GetCnt() - 1; ++i ){
-				if( Time( i + 1 ) - Time( i ) >= ( TIME_STOP - TIME_STOP_MARGIN * 2 )){
+			for( int i = 1; i < GetCnt(); ++i ){
+				if( Time( i ) - Time( i - 1 ) >= ( TIME_STOP - TIME_STOP_MARGIN * 2 )){
 					// 時間が開いている停止ログ
 					SetSpeed( i, 0 );
 				}else{
 					SetSpeed( i,
-						( Distance( i + 1 ) - Distance( i ))
+						( Distance( i ) - Distance( i - 1 ))
 						* ( 3600.0 / 1000 ) /
-						( Time( i + 1 ) - Time( i ))
+						( Time( i ) - Time( i - 1 ))
 					);
 				}
 			}
@@ -229,9 +229,9 @@ UINT CVsdLog::GPSLogRescan( void ){
 				// 横 G 計算
 				// Gx / Gy を作る
 				SetGy( i,
-					( Speed( i + 1 ) - Speed( i ))
+					( Speed( i ) - Speed( i - 1 ))
 					* ( 1 / 3.600 / GRAVITY )
-					/ ( Time( i + 1 ) - Time( i ))
+					/ ( Time( i ) - Time( i - 1 ))
 				);
 				
 				// 横G = vω
@@ -241,7 +241,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 				
 				SetGx( i,
 					dBearingDelta / GRAVITY
-					/ ( Time( i + 1 ) - Time( i ))
+					/ ( Time( i ) - Time( i - 1 ))
 					* ( Speed( i ) / 3.600 )
 				);
 				
@@ -256,46 +256,41 @@ UINT CVsdLog::GPSLogRescan( void ){
 			SetGy( GetCnt() - 1, 0 );
 			
 			// スムージング
-			#define G_SMOOTH_NUM	3
-			double	dGx0, dGx1 = 0;
-			double	dGy0, dGy1 = 0;
-			
-			m_pLogGx->InitMinMax();
-			m_pLogGy->InitMinMax();
-			
-			for( int i = ( G_SMOOTH_NUM - 1 ) / 2; i < GetCnt() - G_SMOOTH_NUM / 2; ++i ){
-				if( i < 2 || i >= GetCnt() - 2 ) continue;
+			if( m_dFreq > 5 ){	// 5Hz より上のログのみスムージング
+				#define G_SMOOTH_NUM	3
 				
-				if( Speed( i ) == 0 ){
-					SetGx( i, 0 );
-					SetGy( i, 0 );
-				}else{
-					SetGx( i, dGx0 = (
-						( G_SMOOTH_NUM >= 7 ? Gx( i - 3 ) : 0 ) +
-						( G_SMOOTH_NUM >= 6 ? Gx( i + 3 ) : 0 ) +
-						( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
-						( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
-						( G_SMOOTH_NUM >= 3 ? Gx( i - 1 ) : 0 ) +
-						( G_SMOOTH_NUM >= 2 ? Gx( i + 1 ) : 0 ) +
-						Gx( i + 0 )
-					) / G_SMOOTH_NUM );
-					SetGy( i, dGy0 = (
-						( G_SMOOTH_NUM >= 7 ? Gy( i - 3 ) : 0 ) +
-						( G_SMOOTH_NUM >= 6 ? Gy( i + 3 ) : 0 ) +
-						( G_SMOOTH_NUM >= 5 ? Gy( i - 2 ) : 0 ) +
-						( G_SMOOTH_NUM >= 4 ? Gy( i + 2 ) : 0 ) +
-						( G_SMOOTH_NUM >= 3 ? Gy( i - 1 ) : 0 ) +
-						( G_SMOOTH_NUM >= 2 ? Gy( i + 1 ) : 0 ) +
-						Gy( i + 0 )
-					) / G_SMOOTH_NUM );
+				m_pLogGx->InitMinMax();
+				m_pLogGy->InitMinMax();
+				
+				#ifdef _OPENMP
+					#pragma omp for
+				#endif
+				for( int i = ( G_SMOOTH_NUM - 1 ) / 2; i < GetCnt() - G_SMOOTH_NUM / 2; ++i ){
+					if( i < 2 || i >= GetCnt() - 2 ) continue;
 					
-					dGx1 = dGx1 * 0.9 + dGx0 * 0.1;
-					dGy1 = dGy1 * 0.9 + dGy0 * 0.1;
-					/* ★暫定
-					if( MaxGx() < fabs( dGx1 )) MaxGx() = fabs( dGx1 );
-					if( MaxGy() < dGy1 ) MaxGy() = dGy1;
-					if( MinGy() > dGy1 ) MinGy() = dGy1;
-					*/
+					if( Speed( i ) == 0 ){
+						SetGx( i, 0 );
+						SetGy( i, 0 );
+					}else{
+						SetGx( i, (
+							( G_SMOOTH_NUM >= 7 ? Gx( i - 3 ) : 0 ) +
+							( G_SMOOTH_NUM >= 6 ? Gx( i + 3 ) : 0 ) +
+							( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
+							( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
+							( G_SMOOTH_NUM >= 3 ? Gx( i - 1 ) : 0 ) +
+							( G_SMOOTH_NUM >= 2 ? Gx( i + 1 ) : 0 ) +
+							Gx( i + 0 )
+						) / G_SMOOTH_NUM );
+						SetGy( i, (
+							( G_SMOOTH_NUM >= 7 ? Gy( i - 3 ) : 0 ) +
+							( G_SMOOTH_NUM >= 6 ? Gy( i + 3 ) : 0 ) +
+							( G_SMOOTH_NUM >= 5 ? Gy( i - 2 ) : 0 ) +
+							( G_SMOOTH_NUM >= 4 ? Gy( i + 2 ) : 0 ) +
+							( G_SMOOTH_NUM >= 3 ? Gy( i - 1 ) : 0 ) +
+							( G_SMOOTH_NUM >= 2 ? Gy( i + 1 ) : 0 ) +
+							Gy( i + 0 )
+						) / G_SMOOTH_NUM );
+					}
 				}
 			}
 		}
