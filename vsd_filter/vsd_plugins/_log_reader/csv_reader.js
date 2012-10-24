@@ -1,4 +1,4 @@
-// torque log
+/// torque log リーダ ////////////////////////////////////////////////////////
 
 LogReaderInfo.push( "Torque log (*.csv)", "*.csv;*.csv.gz", "ReadTorqueLog" );
 
@@ -17,6 +17,21 @@ function ReadTorqueLog( Files ){
 		"Acceleration Sensor(X axis)(g)"	: [ "Gx",			1 ],
 	};
 	
+	return ReadCSV( Files, ParamDef );
+	
+	function StrToUTC( str ){
+		// 08-9-2012 11:02:36 (JST)
+		str.match( /(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)(\.\d+)/ );
+		return Date.UTC(
+			RegExp.$3, RegExp.$2 - 1, RegExp.$1,
+			RegExp.$4, RegExp.$5, RegExp.$6, RegExp.$7 * 1000
+		) - 9 * 3600 * 1000;
+	}
+}
+
+/// 汎用 CSV リーダ //////////////////////////////////////////////////////////
+
+function ReadCSV( Files, ParamDef ){
 	var ParamUsed = [];
 	
 	var	Cnt = 0;
@@ -68,13 +83,4 @@ function ReadTorqueLog( Files ){
 		file.Close();
 	}
 	return Cnt;
-	
-	function StrToUTC( str ){
-		// 08-9-2012 11:02:36 (JST)
-		str.match( /(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)(\.\d+)/ );
-		return Date.UTC(
-			RegExp.$3, RegExp.$2 - 1, RegExp.$1,
-			RegExp.$4, RegExp.$5, RegExp.$6, RegExp.$7 * 1000
-		) - 9 * 3600 * 1000;
-	}
 }

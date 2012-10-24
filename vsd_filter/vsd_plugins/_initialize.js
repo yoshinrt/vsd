@@ -14,7 +14,7 @@ REV_LIMIT = 6500;
 
 //*** 設定ここまで ***********************************************************
 
-Vsd = new __VSD_System__(  __CVsdFilter );
+Vsd = new __VSD_System__( __CVsdFilter );
 
 DRAW_FILL			= 1;
 FONT_BOLD			= 1 << 0;
