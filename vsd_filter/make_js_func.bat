@@ -25,7 +25,7 @@ print fpOut << "-----";
 
 #include "CVsdFilter.h"
 #include "CVsdFile.h"
-#include "COle.h"
+//#include "COle.h"
 -----
 
 ### CVsdFilter ###############################################################
@@ -154,17 +154,17 @@ MakeJsIF( 'CVsdFile', 'File' );
 
 ### COle #####################################################################
 
-MakeJsIF( 'COle', 'ActiveXObject', << '-----', undef, << '-----' );
-		COle *obj = new COle();
-		
-		// 引数チェック
-		if ( args.Length() >= 1 ){
-			v8::String::Value strServer( args[ 0 ] );
-			obj->CreateInstance(( LPCWSTR )*strServer );
-		}
------
-		COle::InitJS( tmpl );
------
+#MakeJsIF( 'COle', 'ActiveXObject', << '-----', undef, << '-----' );
+#		COle *obj = new COle();
+#		
+#		// 引数チェック
+#		if ( args.Length() >= 1 ){
+#			v8::String::Value strServer( args[ 0 ] );
+#			obj->CreateInstance(( LPCWSTR )*strServer );
+#		}
+#-----
+#		COle::InitJS( tmpl );
+#-----
 
 ### Global ###################################################################
 

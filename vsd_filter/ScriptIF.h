@@ -10,7 +10,7 @@
 
 #include "CVsdFilter.h"
 #include "CVsdFile.h"
-#include "COle.h"
+//#include "COle.h"
 /****************************************************************************/
 
 class CVsdFilterIF {
@@ -1067,93 +1067,6 @@ class CVsdFileIF {
 
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "File" ), tmpl );
-	}
-};
-/****************************************************************************/
-
-class COleIF {
-  public:
-	// クラスコンストラクタ
-	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
-		
-		COle *obj = new COle();
-		
-		// 引数チェック
-		if ( args.Length() >= 1 ){
-			v8::String::Value strServer( args[ 0 ] );
-			obj->CreateInstance(( LPCWSTR )*strServer );
-		}
-
-		// internal field にバックエンドオブジェクトを設定
-		v8::Local<v8::Object> thisObject = args.This();
-		thisObject->SetInternalField( 0, v8::External::New( obj ));
-		
-		// JS オブジェクトが GC されるときにデストラクタが呼ばれるおまじない
-		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
-		objectHolder.MakeWeak( obj, Dispose );
-		
-		#ifdef DEBUG
-			DebugMsgD( ">>>new js obj COle:%X\n", obj );
-		#endif
-		// コンストラクタは this を返すこと。
-		return thisObject;
-	}
-	
-	// クラスデストラクタ
-	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
-		 {
-			v8::HandleScope handle_scope;
-			COle *thisObj = CScript::GetThis<COle>( handle->ToObject());
-			if( thisObj ){
-				delete static_cast<COle*>( thisObj );
-				#ifdef DEBUG
-					DebugMsgD( "<<<del js obj COle:%X\n", thisObj );
-				#endif
-			}
-		}
-		handle.Dispose();
-	}
-	
-	// JavaScript からの明示的な破棄
-	static v8::Handle<v8::Value> Func_Dispose( const v8::Arguments& args ){
-		// obj の Dispose() を呼ぶ
-		COle *thisObj = CScript::GetThis<COle>( args.This());
-		 if( thisObj ){
-			delete thisObj;
-			#ifdef DEBUG
-				DebugMsgD( "<<<DISPOSE js obj COle:%X\n", thisObj );
-			#endif
-			
-			// internalfield を null っぽくする
-			args.This()->SetInternalField( 0, v8::External::New( NULL ));
-		}
-		return v8::Undefined();
-	}
-	
-	///// プロパティアクセサ /////
-
-	///// メャbドコールバック /////
-
-  public:
-	// クラステンプレートの初期化
-	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global, void *pClass = NULL ){
-		// コンストラクタを作成
-		v8::Local<v8::FunctionTemplate> tmpl = v8::FunctionTemplate::New( New );
-		tmpl->SetClassName( v8::String::New( "ActiveXObject" ));
-		
-		// フィールドなどはこちらに
-		v8::Handle<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
-		inst->SetInternalFieldCount( 1 );
-
-		// メャbドはこちらに
-		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
-		proto->Set( v8::String::New( "Dispose" ), v8::FunctionTemplate::New( Func_Dispose ));
-
-
-		COle::InitJS( tmpl );
-
-		// グローバルオブジェクトにクラスを定義
-		global->Set( v8::String::New( "ActiveXObject" ), tmpl );
 	}
 };
 /****************************************************************************/
