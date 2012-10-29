@@ -256,7 +256,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 			SetGy( GetCnt() - 1, 0 );
 			
 			// スムージング
-			if( m_dFreq > 5 ){	// 5Hz より上のログのみスムージング
+			{	// 5Hz より上のログのみスムージング
 				#define G_SMOOTH_NUM	3
 				
 				m_pLogGx->InitMinMax();
