@@ -782,7 +782,7 @@ public class Vsdroid extends Activity {
 			// given BluetoothDevice
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket" );
 			try{
-				BTSock = device.createRfcommSocketToServiceRecord( BT_UUID );
+				BTSock = device.createInsecureRfcommSocketToServiceRecord( BT_UUID );
 			}catch( IOException e ){
 				if( BTSock != null ) try{
 					BTSock.close();
