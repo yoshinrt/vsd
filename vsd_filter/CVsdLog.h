@@ -77,12 +77,19 @@ class VSD_LOG_t {
 	
 	double GetMin(){ return m_fMin; }
 	double GetMax(){ return m_fMax; }
+	void SetMaxMin( double dMaxVal, double dMinVal ){
+		if( m_fMin > dMinVal ) m_fMin = ( float )dMinVal;
+		if( m_fMax < dMaxVal ) m_fMax = ( float )dMaxVal;
+	}
 	
 	// 値設定
 	void Set( int iIndex, double dVal ){
 		if(      m_fMin > dVal ) m_fMin = ( float )dVal;
 		else if( m_fMax < dVal ) m_fMax = ( float )dVal;
-		
+		SetRaw( iIndex, dVal );
+	}
+	
+	void SetRaw( int iIndex, double dVal ){
 		// ★無い値を線形補間する必要あり
 		if( GetCnt() > iIndex ) m_Log[ iIndex ] = ( float )dVal;
 		else while( GetCnt() <= iIndex ) Push( dVal );
@@ -209,9 +216,17 @@ class CVsdLog {
 		if( m_iCnt <= iIndex ) m_iCnt = iIndex + 1; \
 	}
 	#include "def_log.h"
+	#define DEF_LOG( name ) void SetRaw##name( int iIndex, double dVal ){ \
+		if( !m_pLog##name ) m_pLog##name = GetElement( #name, TRUE ); \
+		m_pLog##name->SetRaw( iIndex, dVal ); \
+		if( m_iCnt <= iIndex ) m_iCnt = iIndex + 1; \
+	}
+	#include "def_log.h"
 	#define DEF_LOG( name ) double Max##name( void ){ return m_pLog##name->GetMax(); }
 	#include "def_log.h"
 	#define DEF_LOG( name ) double Min##name( void ){ return m_pLog##name->GetMin(); }
+	#include "def_log.h"
+	#define DEF_LOG( name ) void SetMaxMin##name( double dMax, double dMin ){ m_pLog##name->SetMaxMin( dMax, dMin ); }
 	#include "def_log.h"
 	
 	double DateTime( void ){

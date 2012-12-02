@@ -82,5 +82,12 @@ function ReadCSV( Files, ParamDef ){
 		}
 		file.Close();
 	}
+	
+	// 最後まで GPS が捕捉できなければ，Long Lati を削除
+	if( !GPSValid ){
+		delete Log.Longitude;
+		delete Log.Latitude;
+	}
+	
 	return Cnt;
 }

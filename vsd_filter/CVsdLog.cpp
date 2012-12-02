@@ -187,37 +187,48 @@ UINT CVsdLog::GPSLogRescan( void ){
 		}
 	}
 	
-	#ifdef _OPENMP
-		#pragma omp parallel
-	#endif
+	#pragma omp parallel
 	{
+		double dMaxSpeed, dMinSpeed;
+		double dMaxGx, dMinGx;
+		double dMaxGy, dMinGy;
+		
+		dMaxSpeed = dMaxGx = dMaxGy = -FLT_MAX;
+		dMinSpeed = dMinGx = dMinGy =  FLT_MAX;
+		
 		// スピード生成
 		if( bCreateSpeed ){
-			#ifdef _OPENMP
-				#pragma omp for
-			#endif
+			#pragma omp for
 			for( int i = 1; i < GetCnt(); ++i ){
 				if( Time( i ) - Time( i - 1 ) >= ( TIME_STOP - TIME_STOP_MARGIN * 2 )){
 					// 時間が開いている停止ログ
-					SetSpeed( i, 0 );
+					SetRawSpeed( i, 0 );
+					if( dMaxSpeed < 0 ) dMaxSpeed = 0;
+					if( dMinSpeed > 0 ) dMinSpeed = 0;
 				}else{
-					SetSpeed( i,
-						( Distance( i ) - Distance( i - 1 ))
+					double d;
+					SetRawSpeed( i,
+						d = ( Distance( i ) - Distance( i - 1 ))
 						* ( 3600.0 / 1000 ) /
 						( Time( i ) - Time( i - 1 ))
 					);
+					if( dMaxSpeed < d ) dMaxSpeed = d;
+					if( dMinSpeed > d ) dMinSpeed = d;
 				}
 			}
-			// 番犬はすでに 0 → SetSpeed( GetCnt() - 1, 0 );
+			// 番犬はすでに 0 → SetRawSpeed( GetCnt() - 1, 0 );
+			
+			#pragma omp critical
+			{
+				SetMaxMinSpeed( dMaxSpeed, dMinSpeed );
+			}
 		}
 		
 		// G 計算
 		if( bCreateG ){
 			double	dBearingPrev = 100;
 			
-			#ifdef _OPENMP
-				#pragma omp for
-			#endif
+			#pragma omp for
 			for( int i = 1; i < GetCnt() - 1; ++i ){
 				if( dBearingPrev = 100 ){
 					dBearingPrev = atan2( Y0( i ) - Y0( i - 1 ), X0( i ) - X0( i - 1 ));
@@ -228,7 +239,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 				
 				// 横 G 計算
 				// Gx / Gy を作る
-				SetGy( i,
+				SetRawGy( i,
 					( Speed( i ) - Speed( i - 1 ))
 					* ( 1 / 3.600 / GRAVITY )
 					/ ( Time( i ) - Time( i - 1 ))
@@ -239,7 +250,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 				if     ( dBearingDelta >  M_PI ) dBearingDelta -= M_PI * 2;
 				else if( dBearingDelta < -M_PI ) dBearingDelta += M_PI * 2;
 				
-				SetGx( i,
+				SetRawGx( i,
 					dBearingDelta / GRAVITY
 					/ ( Time( i ) - Time( i - 1 ))
 					* ( Speed( i ) / 3.600 )
@@ -247,51 +258,72 @@ UINT CVsdLog::GPSLogRescan( void ){
 				
 				// ±5G 以上は，削除
 				if( Gx( i ) < -3 || Gx( i ) > 3 ){
-					SetGx( i, Gx( i - 1 ));
+					SetRawGx( i, Gx( i - 1 ));
 				}
 				
 				dBearingPrev = dBearing;
 			}
-			SetGx( GetCnt() - 1, 0 );
-			SetGy( GetCnt() - 1, 0 );
+			
+			#pragma omp single
+			{
+				SetRawGx( GetCnt() - 1, 0 );
+				SetRawGy( GetCnt() - 1, 0 );
+			}
 			
 			// スムージング
-			{	// 5Hz より上のログのみスムージング
-				#define G_SMOOTH_NUM	3
-				
+			#define G_SMOOTH_NUM	3
+			
+			#pragma omp single
+			{
 				m_pLogGx->InitMinMax();
 				m_pLogGy->InitMinMax();
+			}
+			
+			#pragma omp for
+			for( int i = ( G_SMOOTH_NUM - 1 ) / 2; i < GetCnt() - G_SMOOTH_NUM / 2; ++i ){
+				if( i < 2 || i >= GetCnt() - 2 ) continue;
 				
-				#ifdef _OPENMP
-					#pragma omp for
-				#endif
-				for( int i = ( G_SMOOTH_NUM - 1 ) / 2; i < GetCnt() - G_SMOOTH_NUM / 2; ++i ){
-					if( i < 2 || i >= GetCnt() - 2 ) continue;
+				if( Speed( i ) == 0 ){
+					SetRawGx( i, 0 );
+					SetRawGy( i, 0 );
 					
-					if( Speed( i ) == 0 ){
-						SetGx( i, 0 );
-						SetGy( i, 0 );
-					}else{
-						SetGx( i, (
-							( G_SMOOTH_NUM >= 7 ? Gx( i - 3 ) : 0 ) +
-							( G_SMOOTH_NUM >= 6 ? Gx( i + 3 ) : 0 ) +
-							( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
-							( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
-							( G_SMOOTH_NUM >= 3 ? Gx( i - 1 ) : 0 ) +
-							( G_SMOOTH_NUM >= 2 ? Gx( i + 1 ) : 0 ) +
-							Gx( i + 0 )
-						) / G_SMOOTH_NUM );
-						SetGy( i, (
-							( G_SMOOTH_NUM >= 7 ? Gy( i - 3 ) : 0 ) +
-							( G_SMOOTH_NUM >= 6 ? Gy( i + 3 ) : 0 ) +
-							( G_SMOOTH_NUM >= 5 ? Gy( i - 2 ) : 0 ) +
-							( G_SMOOTH_NUM >= 4 ? Gy( i + 2 ) : 0 ) +
-							( G_SMOOTH_NUM >= 3 ? Gy( i - 1 ) : 0 ) +
-							( G_SMOOTH_NUM >= 2 ? Gy( i + 1 ) : 0 ) +
-							Gy( i + 0 )
-						) / G_SMOOTH_NUM );
-					}
+					if( dMaxGx < 0 ) dMaxGx = 0;
+					if( dMinGx > 0 ) dMinGx = 0;
+					if( dMaxGy < 0 ) dMaxGy = 0;
+					if( dMinGy > 0 ) dMinGy = 0;
+				}else{
+					double dx, dy;
+					
+					SetRawGx( i, dx = (
+						( G_SMOOTH_NUM >= 7 ? Gx( i - 3 ) : 0 ) +
+						( G_SMOOTH_NUM >= 6 ? Gx( i + 3 ) : 0 ) +
+						( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
+						( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
+						( G_SMOOTH_NUM >= 3 ? Gx( i - 1 ) : 0 ) +
+						( G_SMOOTH_NUM >= 2 ? Gx( i + 1 ) : 0 ) +
+						Gx( i + 0 )
+					) / G_SMOOTH_NUM );
+					SetRawGy( i, dy = (
+						( G_SMOOTH_NUM >= 7 ? Gy( i - 3 ) : 0 ) +
+						( G_SMOOTH_NUM >= 6 ? Gy( i + 3 ) : 0 ) +
+						( G_SMOOTH_NUM >= 5 ? Gy( i - 2 ) : 0 ) +
+						( G_SMOOTH_NUM >= 4 ? Gy( i + 2 ) : 0 ) +
+						( G_SMOOTH_NUM >= 3 ? Gy( i - 1 ) : 0 ) +
+						( G_SMOOTH_NUM >= 2 ? Gy( i + 1 ) : 0 ) +
+						Gy( i + 0 )
+					) / G_SMOOTH_NUM );
+					
+					if( dMaxGx < dx ) dMaxGx = dx;
+					if( dMinGx > dx ) dMinGx = dx;
+					if( dMaxGy < dy ) dMaxGy = dy;
+					if( dMinGy > dy ) dMinGy = dy;
 				}
+			}
+			
+			#pragma omp critical
+			{
+				SetMaxMinGx( dMaxGx, dMinGx );
+				SetMaxMinGy( dMaxGy, dMinGy );
 			}
 		}
   	}
@@ -402,11 +434,11 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			}
 			
 			// Distance が無いときは，作る
-			BOOL bExistDistance = TRUE;
-			if( uIdxDistance == ~0 ){
+			BOOL bCreateDistance = FALSE;
+			if( uIdxDistance == ~0 && uIdxX0 != ~0 && uIdxY0 != ~0 ){
 				uIdxDistance = CArrays.size();
 				CArrays.push_back( GetElement( "Distance", TRUE ));
-				bExistDistance = FALSE;
+				bCreateDistance = TRUE;
 			}
 			
 			// Time 存在確認
@@ -458,7 +490,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				
 				if( iCnt == 0 ){
 					// 番犬作成
-					SetDistance( 0, 0 );
+					if( uIdxDistance != ~0 ) SetDistance( 0, 0 );
 					CopyRecord( 1, 0 );
 					CopyRecord( 2, 0 );
 					AddStopRecord( 0, -WATCHDOG_TIME );
@@ -487,7 +519,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					}
 					
 					// 走行距離を作る
-					if( !bExistDistance ){
+					if( bCreateDistance ){
 						double x = X0( iCnt - 1 ) - X0( iCnt ); x *= x;
 						double y = Y0( iCnt - 1 ) - Y0( iCnt ); y *= y;
 						
@@ -498,6 +530,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					// 前のログから TIME_STOP 離れていてかつ 指定km/h 以下なら，停止とみなす
 					double dDiffTime = Time( iCnt ) - Time( iCnt - 1 );
 					if(
+						uIdxDistance != ~0 &&
 						dDiffTime >= TIME_STOP &&
 						( Distance( iCnt ) - Distance( iCnt - 1 )) / dDiffTime < ( 5.0 /*[km/h]*/ * 1000 / 3600 )
 					){

@@ -243,9 +243,7 @@ UINT CVsdFilterAvs::PutImage(
 	int xed = x + img.m_iOffsX + img.m_iRawWidth  <= GetWidth()  ? img.m_iOffsX + img.m_iRawWidth  : GetWidth()  - x;
 	int yed = y + img.m_iOffsY + img.m_iRawHeight <= GetHeight() ? img.m_iOffsY + img.m_iRawHeight : GetHeight() - y;
 	
-	#ifdef _OPENMP_AVS
-		#pragma omp parallel for
-	#endif
+	#pragma omp parallel for
 	for( int y1 = yst; y1 < yed; ++y1 ){
 		
 		int	iIndex = GetIndex( x + xst, y + y1 );
