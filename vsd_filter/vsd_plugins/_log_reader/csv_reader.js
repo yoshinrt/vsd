@@ -45,7 +45,7 @@ function ReadCSV( Files, ParamDef ){
 		}
 		
 		// ヘッダリード
-		var Header = file.ReadLine().split( /\s*,\s*/ );
+		var Header = file.ReadLine().replace( /[\x0D\x0A]/g, '' ).split( / *[,\t] */ );
 		
 		for( var i = 0; i < Header.length; ++i ){
 			if( typeof ParamDef[ Header[ i ]] != "undefined" ){
@@ -58,14 +58,23 @@ function ReadCSV( Files, ParamDef ){
 		}
 		
 		while( 1 ){
-			var Param = file.ReadLine().split( "," );
+			var Param = file.ReadLine().split( /[,\t]/ );
 			if( file.IsEOF()) break;
 			
 			for( var j = 0; j < ParamUsed.length; ++j ){
-				Log[ ParamUsed[ j ][ 0 ]][ Cnt ] =
-					typeof( ParamUsed[ j ][ 1 ] ) == 'function' ?
-						ParamUsed[ j ][ 1 ]( Param[ ParamUsed[ j ][ 2 ]] ) :
+				if( typeof( ParamUsed[ j ][ 1 ] ) == 'function' ){
+					// function なら，それを実行
+					Log[ ParamUsed[ j ][ 0 ]][ Cnt ] =
+						ParamUsed[ j ][ 1 ]( Param[ ParamUsed[ j ][ 2 ]] );
+				}else if( Param[ ParamUsed[ j ][ 2 ]] != '' && !isNaN( Param[ ParamUsed[ j ][ 2 ]] )){
+					// 係数なら，param に掛ける
+					Log[ ParamUsed[ j ][ 0 ]][ Cnt ] =
 						Param[ ParamUsed[ j ][ 2 ]] * ParamUsed[ j ][ 1 ];
+				}else if( Cnt ){
+					// データがない場合，1個前をコピー
+					Log[ ParamUsed[ j ][ 0 ]][ Cnt ] =
+						Log[ ParamUsed[ j ][ 0 ]][ Cnt -1 ];
+				}
 			}
 			
 			// GPS が補足できるまでのデータを補正
