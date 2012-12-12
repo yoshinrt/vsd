@@ -23,10 +23,11 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 	private ListPreference		ListRoms;
 	private EditTextPreference	EditGymkhaStart;
 	private EditTextPreference	EditIPAddr;
-	
+	private EditTextPreference	EditSystemDir;
+
 	static final int	RESULT_OK		= 0;
 	static final int	RESULT_RENEW	= 1;
-	
+
 	// create
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -40,6 +41,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		ListRoms		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_roms" );
 		EditGymkhaStart	= ( EditTextPreference )getPreferenceScreen().findPreference( "key_gymkha_start" );
 		EditIPAddr		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_ip_addr" );
+		EditSystemDir	= ( EditTextPreference )getPreferenceScreen().findPreference( "key_system_dir" );
 
 		Bundle extras = getIntent().getExtras();
 		if( extras != null ){
@@ -48,7 +50,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		}
 
 		setResult( RESULT_OK );
-		
+
 		//////////////////////////////////////////////////////////////////////
 		// BT デバイスリストの作成
 		// http://web.dimension-maker.info/archives/2010/11/22163814.html
@@ -75,7 +77,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 
 		/*** ROM リストの作成 ***********************************************/
 
-		File file = new File( Vsdroid.VSD_ROOT );
+		File file = new File( getPreferenceScreen().getSharedPreferences().getString( "key_system_dir", null ));
 		String[] RomFiles = file.list( getFileExtensionFilter( ".mot" ));
 		Arrays.sort( RomFiles );
 		ListRoms.setEntries( RomFiles );
@@ -135,7 +137,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		}
 
 		if( key == null || key.equals( "key_gymkha_start" )){
-			String s = sharedPreferences.getString( "key_gymkha_start", "1.0" );
+			String s = sharedPreferences.getString( "key_gymkha_start", null );
 			try{
 				Double.parseDouble( s );
 			}catch( NumberFormatException e ){
@@ -161,7 +163,11 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		}
 
 		if( key == null || key.equals( "key_ip_addr" )){
-			EditIPAddr.setSummary( sharedPreferences.getString( "key_ip_addr", "192.168.0.1" ));
+			EditIPAddr.setSummary( sharedPreferences.getString( "key_ip_addr", null ));
+		}
+
+		if( key == null || key.equals( "key_system_dir" )){
+			EditSystemDir.setSummary( sharedPreferences.getString( "key_system_dir", null ));
 		}
 
 		if( key == null || key.equals( "key_bt_devices" )){
@@ -179,7 +185,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 			return;
 		}
 		SetupSummery( sharedPreferences, key );
-		
+
 		if( key.equals( "key_connection_mode" ) || key.equals( "key_roms" )){
 			setResult( RESULT_RENEW );
 		}

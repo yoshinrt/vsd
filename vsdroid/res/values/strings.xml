@@ -12,7 +12,7 @@
 	<string name="pref_eco_mode">エコモード</string>
 	<string name="pref_summery_eco_mode">エコ運転を促す</string><string name="pref_replay_log">ログ再生モード</string><string name="pref_roms">VSDファームウェア</string>
 	
-	<string name="pref_flash">レブリミット警告灯</string><string name="mode_laptime">ラップタイム</string>
+	<string name="pref_flash">レブリミット警告灯</string><string name="pref_system_dir">VSD ディレクトリ</string><string name="mode_laptime">ラップタイム</string>
 	<string name="mode_gymkhana">ジムカーナ</string>
 	<string name="mode_0_400">0-400m</string>
 	<string name="mode_0_100">0-100km/h</string>
@@ -32,6 +32,7 @@
 	<string name="statmsg_bluetooth_server_error">Bluetooth サーバーエラー</string>
 	<string name="statmsg_bluetooth_device_not_selected">Bluetoothデバイスを選択して下さい</string>
 	<string name="statmsg_bluetooth_connection_failed">Bluetooth接続エラー</string>
+	
 	
 	
 </resources>

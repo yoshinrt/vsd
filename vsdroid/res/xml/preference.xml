@@ -2,15 +2,16 @@
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
 	<Preference android:title="Status" android:key="key_status" android:selectable="false" android:summary="@string/pref_summery_status"></Preference>
-	<CheckBoxPreference android:key="key_reopen_log" android:title="@string/pref_reopen_log"></CheckBoxPreference><CheckBoxPreference android:key="key_caribration" android:title="@string/pref_caribration"></CheckBoxPreference><CheckBoxPreference android:key="key_flash" android:title="@string/pref_flash"/><ListPreference
-		android:key="key_vsd_mode" android:defaultValue="0" android:dialogTitle="@string/pref_vsd_mode" android:title="@string/pref_vsd_mode" android:entryValues="@array/list_vsd_mode_values" android:entries="@array/list_vsd_mode"/>
-	
-	<ListPreference android:key="key_sectors" android:title="@string/pref_sectors" android:dialogTitle="@string/pref_sectors" android:entries="@array/list_sectors" android:entryValues="@array/list_sectors"></ListPreference><EditTextPreference android:defaultValue="1.0" android:title="@string/pref_gymkhana_start" android:dialogTitle="@string/pref_gymkhana_start" android:key="key_gymkha_start"></EditTextPreference>
-	<ListPreference android:title="@string/pref_roms" android:key="key_roms" android:dialogTitle="@string/pref_roms"/><ListPreference android:entryValues="@array/list_connection_mode_values" android:entries="@array/list_connection_mode" android:dialogTitle="@string/pref_connection_mode" android:key="key_connection_mode" android:title="@string/pref_connection_mode"/><ListPreference android:key="key_bt_devices" android:dialogTitle="@string/pref_bt_devices" android:title="@string/pref_bt_devices"/><EditTextPreference android:key="key_ip_addr" android:defaultValue="192.168.0.1" android:title="@string/pref_ip_addr" android:dialogTitle="@string/pref_ip_addr"></EditTextPreference>
-<CheckBoxPreference android:key="key_eco_mode" android:summary="@string/pref_summery_eco_mode" android:title="@string/pref_eco_mode"></CheckBoxPreference>
-
-
-
-
-
+	<CheckBoxPreference android:key="key_reopen_log" android:title="@string/pref_reopen_log"></CheckBoxPreference>
+	<CheckBoxPreference android:key="key_caribration" android:title="@string/pref_caribration"></CheckBoxPreference>
+	<CheckBoxPreference android:key="key_flash" android:title="@string/pref_flash"/>
+	<ListPreference android:key="key_vsd_mode" android:defaultValue="0" android:dialogTitle="@string/pref_vsd_mode" android:title="@string/pref_vsd_mode" android:entryValues="@array/list_vsd_mode_values" android:entries="@array/list_vsd_mode"/>
+	<ListPreference android:key="key_sectors" android:title="@string/pref_sectors" android:dialogTitle="@string/pref_sectors" android:entries="@array/list_sectors" android:entryValues="@array/list_sectors"></ListPreference>
+	<EditTextPreference android:defaultValue="1.0" android:title="@string/pref_gymkhana_start" android:dialogTitle="@string/pref_gymkhana_start" android:key="key_gymkha_start"></EditTextPreference>
+	<ListPreference android:title="@string/pref_roms" android:key="key_roms" android:dialogTitle="@string/pref_roms" android:defaultValue="vsd.mot"/>
+	<ListPreference android:entryValues="@array/list_connection_mode_values" android:entries="@array/list_connection_mode" android:dialogTitle="@string/pref_connection_mode" android:key="key_connection_mode" android:title="@string/pref_connection_mode"/>
+	<ListPreference android:key="key_bt_devices" android:dialogTitle="@string/pref_bt_devices" android:title="@string/pref_bt_devices"/>
+	<EditTextPreference android:key="key_ip_addr" android:defaultValue="192.168.0.1" android:title="@string/pref_ip_addr" android:dialogTitle="@string/pref_ip_addr" android:inputType="text"></EditTextPreference>
+	<CheckBoxPreference android:key="key_eco_mode" android:summary="@string/pref_summery_eco_mode" android:title="@string/pref_eco_mode"></CheckBoxPreference>
+	<EditTextPreference android:key="key_system_dir" android:dialogTitle="@string/pref_system_dir" android:title="@string/pref_system_dir" android:defaultValue="/sdcard/vsd" android:inputType="text"/>
 </PreferenceScreen>

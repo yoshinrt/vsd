@@ -52,7 +52,7 @@ public class Vsdroid extends Activity {
 
 	//private static final double H8HZ			= 16030000;
 	//private static final double SERIAL_DIVCNT	= 16;		// シリアル出力を行う周期
-	//private static final double LOG_FREQ		= 16;
+	private static final double LOG_FREQ		= 16;
 
 	// スピード * 100/Taco 比
 	// ELISE
@@ -76,9 +76,6 @@ public class Vsdroid extends Activity {
 	// モード・config
 	int		iMainMode	= MODE_LAPTIME;
 	int		iConnMode	= CONN_MODE_ETHER;
-
-	static final String VSD_ROOT = "/sdcard/vsd";
-	private static final String VSD_LOG  = VSD_ROOT + "/log";
 
 	private static final UUID BT_UUID = UUID.fromString( "00001101-0000-1000-8000-00805F9B34FB" );
 
@@ -108,13 +105,13 @@ public class Vsdroid extends Activity {
 	Camera Cam;
 	Camera.Parameters CamParam;
 	boolean	bRevWarn		= false;
-	
+
 	enum FLASH_STATE {
 		OFF,
 		ON,
 		BLINK,
 	};
-	
+
 	//*** utils **************************************************************
 
 	String FormatTime( int iTime ){
@@ -138,10 +135,10 @@ public class Vsdroid extends Activity {
 	}
 
 	//*** カメラフラッシュ設定 ***********************************************
-	
+
 	boolean bToggle = false;
 	public void SetFlash( FLASH_STATE Switch ){
-		
+
 		// フラッシュモードを設定
 		CamParam.setFlashMode(
 			bRevWarn && Switch == FLASH_STATE.ON ?
@@ -149,11 +146,11 @@ public class Vsdroid extends Activity {
 				Camera.Parameters.FLASH_MODE_OFF
 		);
 		bToggle = !bToggle;
-		
+
 		// パラメータを設定
 		Cam.setParameters( CamParam );
 	}
-	
+
 	//*** VSD アクセス *******************************************************
 
 	class VsdInterface implements Runnable {
@@ -165,11 +162,11 @@ public class Vsdroid extends Activity {
 		int		iRtcPrevRaw		= 0;
 		int		iMileageRaw		= 0;
 		int		iTSCRaw			= 0;
+		int		iIRCnt			= 0;
 		int 	iSectorCnt		= 0;
 		int 	iSectorCntMax	= 1;
-		long	iTime;
 		Calendar	Cal;
-		
+
 		double	dGx, dGy;
 		double	dGcx, dGcy;
 		double	dGymkhaStart	= 1;
@@ -204,7 +201,7 @@ public class Vsdroid extends Activity {
 		volatile boolean bKillThread = false;
 
 		Handler	DrawHandler;
-		
+
 		// コンストラクタ - 変数の初期化だけやってる
 		public VsdInterface(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::constructor" );
@@ -214,12 +211,13 @@ public class Vsdroid extends Activity {
 			iRtcPrevRaw		= 0;
 			iMileageRaw		= 0;
 			iTSCRaw			= 0;
+			iIRCnt			= 0;
 			iSectorCnt		= 0;
 			iSectorCntMax	= 1;
 			dGymkhaStart	= 1;
-			
+
 			Cal				= Calendar.getInstance();
-			
+
 			LapState		= LAP_STATE.NONE;
 
 			// レコード
@@ -248,6 +246,10 @@ public class Vsdroid extends Activity {
 					if( VsdScreen != null ) VsdScreen.Draw();
 				}
 			};
+
+			// log dir 作成
+			File dir = new File( Pref.getString( "key_system_dir", null ) + "/log" );
+			dir.mkdirs();
 		}
 
 		// 2byte を 16bit int にアンパックする
@@ -277,7 +279,8 @@ public class Vsdroid extends Activity {
 			// 日付
 			Calendar Now = Calendar.getInstance();
 			String s = String.format(
-				"/vsd%04d%02d%02d_%02d%02d%02d",
+				"%s/log/vsd%04d%02d%02d_%02d%02d%02d.log",
+				Pref.getString( "key_system_dir", null ),
 				Now.get( Calendar.YEAR ),
 				Now.get( Calendar.MONTH ) + 1,
 				Now.get( Calendar.DAY_OF_MONTH ),
@@ -288,12 +291,17 @@ public class Vsdroid extends Activity {
 
 			// ログファイルオープン
 			try{
-				fsLog    = new BufferedWriter( new FileWriter( VSD_LOG + s + ".log" ));
-				//fsBinLog = new BufferedOutputStream( new FileOutputStream( VSD_LOG + s + "bin.log" ));
+				fsLog    = new BufferedWriter( new FileWriter( s ));
+				//fsBinLog = new BufferedOutputStream( new FileOutputStream( s + ".bin" ));
 			}catch( Exception e ){
 				iMessage = R.string.statmsg_log_open_failed;
 				return -1;
 			}
+
+			// ヘッダ
+			try{
+				if( fsLog != null ) fsLog.write( "Date/Time\tTacho\tSpeed\tDistance\tGy\tGx\tAuxInfo\tLapTime\tSectorTime\r\n" );
+			}catch( IOException e ){}
 
 			return 0;
 		}
@@ -305,7 +313,7 @@ public class Vsdroid extends Activity {
 				try{
 					// ソケットの作成
 					Sock = new Socket();
-					SocketAddress adr = new InetSocketAddress( Pref.getString( "key_ip_addr", "192.168.0.1" ), 12345 );
+					SocketAddress adr = new InetSocketAddress( Pref.getString( "key_ip_addr", null ), 12345 );
 					Sock.connect( adr, 1000 );
 					if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:connected" );
 					InStream	= Sock.getInputStream();
@@ -368,16 +376,17 @@ public class Vsdroid extends Activity {
 
 				++iRet;
 				// 0xFF が見つかったので，データ変換
-				iTime		= System.currentTimeMillis();	// ここで時刻取得
 				iTacho		= Unpack();
 				iSpeedRaw	= Unpack();
 
 				// ここで描画要求
 				DrawHandler.sendEmptyMessage( 0 );
-				
+
 				if( iBufPtr < iEOLPos ){
 					iMileage16	= Unpack();
 					iTSCRaw		= Unpack();
+					iIRCnt		= iTSCRaw;
+					iTSCRaw		>>= 8;
 
 					dGx			= Unpack();
 					dGy			= Unpack();
@@ -462,38 +471,63 @@ public class Vsdroid extends Activity {
 			return iRet;
 		}
 
+		long	iLogTimeMilli;
+		int		iLogTSC;
+
 		public void WriteLog(){
 			String s;
 
-			if( iSpeedRaw > 0 ) bLogStart = true;
-			if( !bLogStart ) return;
-			
-			Cal.setTimeInMillis( iTime );
-			
+			if( !bLogStart ){
+				if( iSpeedRaw > 0 ){
+					// 動いたので Log 開始
+					bLogStart = true;
+
+					//iLogTSC			= iTSCRaw;
+					iLogTimeMilli	= System.currentTimeMillis()
+						- iTSCRaw * 1000 / ( int )LOG_FREQ;
+				}else{
+					// まだ動いていないので，Log 保留
+					return;
+				}
+			}
+
+			// iTSCRaw から時刻算出
+			// ★ iLogTSC は ( 2 << 31 ) / 1000 / 16 / 3600 = 37時間，が max
+			//if( iTSCRaw < ( iLogTSC & 0xFF )) iLogTSC += 0x100;
+			//iLogTSC = ( iLogTSC & ~0xFF ) | iTSCRaw;
+			// ★よくわからないが iTSCRaw が信用出来ない
+			++iLogTSC;
+			Cal.setTimeInMillis( iLogTimeMilli + iLogTSC * 1000 / ( int )LOG_FREQ );
+
 			// 基本データ
 			s = String.format(
-				"%d\t%.2f\t%.2f\t%.4f\t%.4f\t%d\t%2d:%02d:%02d.%03d",
-				iTacho, ( double )iSpeedRaw / 100,
-				( double )iMileageRaw / PULSE_PER_1KM * 1000,
-				dGy, dGx, iTSCRaw,
+				"%04d-%02d-%02d" +
+				"T%02d:%02d:%02d.%03dZ\t" +
+				"%d\t%.2f\t%.2f\t%.4f\t%.4f\t%d",
+				Cal.get( Calendar.YEAR ),
+				Cal.get( Calendar.MONTH ) + 1,
+				Cal.get( Calendar.DATE ),
 				Cal.get( Calendar.HOUR_OF_DAY ),
 				Cal.get( Calendar.MINUTE ),
 				Cal.get( Calendar.SECOND ),
-				Cal.get( Calendar.MILLISECOND )
+				Cal.get( Calendar.MILLISECOND ),
+				iTacho, ( double )iSpeedRaw / 100,
+				( double )iMileageRaw / PULSE_PER_1KM * 1000,
+				dGy, dGx, iIRCnt
 			);
 
 			// ラップタイム
 			switch( LapState ){
 			  case UPDATE:
-				s += String.format( "\tLAP%d\t", iLapNum ) + FormatTime2( iTimeLastRaw );
+				s += "\t" + FormatTime2( iTimeLastRaw ) + "\t";
 				break;
 
 			  case START:
-				s += String.format( "\tLAP%d start", iLapNum + 1 );
+				s += "\t0:00.000\t";
 				break;
 
 			  case SECTOR:
-				s += String.format( "\tSector%d\t", iSectorCnt ) + FormatTime2( iRtcPrevRaw - iRtcRaw );
+				s += "\t\t" + FormatTime2( iRtcPrevRaw - iRtcRaw );
 			}
 
 			try{
@@ -574,7 +608,10 @@ public class Vsdroid extends Activity {
 
 				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware" );
 				try{
-					fsFirm = new FileInputStream( VSD_ROOT + "/" + Pref.getString( "key_roms", "vsd.mot" ));
+					fsFirm = new FileInputStream(
+						Pref.getString( "key_system_dir", null )
+						+ "/" + Pref.getString( "key_roms", null )
+					);
 
 					WaitChar( ':' ); SendCmd( "l\r" );	// FW があったときだけ l コマンド
 
@@ -710,7 +747,7 @@ public class Vsdroid extends Activity {
 				Cam.startPreview();				//プレビューをしないと光らない
 
 				while( !bKillThread && Read() >= 0 );
-				
+
 				SetFlash( FLASH_STATE.OFF );
 				Cam.release();
 			}
@@ -865,7 +902,7 @@ public class Vsdroid extends Activity {
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::Open" );
 
 			try{
-				brEmuLog = new BufferedReader( new FileReader( VSD_ROOT + "/vsd.log" ));
+				brEmuLog = new BufferedReader( new FileReader( Pref.getString( "key_system_dir", null ) + "/vsd.log" ));
 			}catch( FileNotFoundException e ){
 				iMessage = R.string.statmsg_emulog_open_failed;
 				return -1;
@@ -943,7 +980,7 @@ public class Vsdroid extends Activity {
 					Now.get( Calendar.MILLISECOND );
 
 				if( dOutputWaitTime == 0 ) dOutputWaitTime = NowMs;
-				dOutputWaitTime += 1000.0 / 16;
+				dOutputWaitTime += 1000.0 / LOG_FREQ;
 				i = ( int )( dOutputWaitTime - NowMs );
 				if( i > 0 ) Sleep( i );
 
@@ -1231,16 +1268,16 @@ public class Vsdroid extends Activity {
 
 		setContentView( new VsdSurfaceView( this ));
 
-		// log dir 作成
-		File dir;
-		dir = new File( VSD_ROOT ); dir.mkdir();
-		dir = new File( VSD_LOG  ); dir.mkdir();
-
 		// preference 参照
 		Pref = PreferenceManager.getDefaultSharedPreferences( this );
 
-		iConnMode = Integer.parseInt( Pref.getString( "key_connection_mode", "0" ));
-		CreateVsdInterface( iConnMode );
+		if( Pref.getString( "key_system_dir", null ) == null ){
+			// 初回起動時は config を起動して pref を初期化
+			Config();
+		}else{
+			iConnMode = Integer.parseInt( Pref.getString( "key_connection_mode", "0" ));
+			CreateVsdInterface( iConnMode );
+		}
 	}
 
 	void CreateVsdInterface( int iNewMode ){
