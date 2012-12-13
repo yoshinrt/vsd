@@ -887,6 +887,18 @@ class CVsdFileIF {
 		
 		return v8::String::New( ret );
 	}
+	static v8::Handle<v8::Value> Func_WriteLine( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		v8::String::AsciiValue str0( args[ 0 ] );
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->WriteLine(
+			*str0
+		);
+		
+		return v8::Integer::New( ret );
+	}
 	static v8::Handle<v8::Value> Func_Seek( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CScript::CheckArgs( iLen == 2 )) return v8::Undefined();
@@ -1030,6 +1042,90 @@ class CVsdFileIF {
 		
 		return v8::Number::New( ret );
 	}
+	static v8::Handle<v8::Value> Func_WriteChar( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->WriteChar(
+			args[ 0 ]->Int32Value()
+		);
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_WriteShortL( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->WriteShortL(
+			args[ 0 ]->Int32Value()
+		);
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_WriteIntL( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->WriteIntL(
+			args[ 0 ]->NumberValue()
+		);
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_WriteFloat( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->WriteFloat(
+			args[ 0 ]->NumberValue()
+		);
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_WriteDouble( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->WriteDouble(
+			args[ 0 ]->NumberValue()
+		);
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_WriteShortB( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->WriteShortB(
+			args[ 0 ]->Int32Value()
+		);
+		
+		return v8::Integer::New( ret );
+	}
+	static v8::Handle<v8::Value> Func_WriteIntB( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		
+		CVsdFile *thisObj = CScript::GetThis<CVsdFile>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		int ret = thisObj->WriteIntB(
+			args[ 0 ]->NumberValue()
+		);
+		
+		return v8::Integer::New( ret );
+	}
 
   public:
 	// クラステンプレートの初期化
@@ -1048,6 +1144,7 @@ class CVsdFileIF {
 		proto->Set( v8::String::New( "Open" ), v8::FunctionTemplate::New( Func_Open ));
 		proto->Set( v8::String::New( "Close" ), v8::FunctionTemplate::New( Func_Close ));
 		proto->Set( v8::String::New( "ReadLine" ), v8::FunctionTemplate::New( Func_ReadLine ));
+		proto->Set( v8::String::New( "WriteLine" ), v8::FunctionTemplate::New( Func_WriteLine ));
 		proto->Set( v8::String::New( "Seek" ), v8::FunctionTemplate::New( Func_Seek ));
 		proto->Set( v8::String::New( "IsEOF" ), v8::FunctionTemplate::New( Func_IsEOF ));
 		proto->Set( v8::String::New( "ReadChar" ), v8::FunctionTemplate::New( Func_ReadChar ));
@@ -1062,6 +1159,13 @@ class CVsdFileIF {
 		proto->Set( v8::String::New( "ReadUShortB" ), v8::FunctionTemplate::New( Func_ReadUShortB ));
 		proto->Set( v8::String::New( "ReadIntB" ), v8::FunctionTemplate::New( Func_ReadIntB ));
 		proto->Set( v8::String::New( "ReadUIntB" ), v8::FunctionTemplate::New( Func_ReadUIntB ));
+		proto->Set( v8::String::New( "WriteChar" ), v8::FunctionTemplate::New( Func_WriteChar ));
+		proto->Set( v8::String::New( "WriteShortL" ), v8::FunctionTemplate::New( Func_WriteShortL ));
+		proto->Set( v8::String::New( "WriteIntL" ), v8::FunctionTemplate::New( Func_WriteIntL ));
+		proto->Set( v8::String::New( "WriteFloat" ), v8::FunctionTemplate::New( Func_WriteFloat ));
+		proto->Set( v8::String::New( "WriteDouble" ), v8::FunctionTemplate::New( Func_WriteDouble ));
+		proto->Set( v8::String::New( "WriteShortB" ), v8::FunctionTemplate::New( Func_WriteShortB ));
+		proto->Set( v8::String::New( "WriteIntB" ), v8::FunctionTemplate::New( Func_WriteIntB ));
 
 
 

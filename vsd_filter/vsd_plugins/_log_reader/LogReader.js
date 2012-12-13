@@ -78,5 +78,31 @@ function ReadLog( FileName, ReaderFunc ){
 		return 0;
 	}
 	
+	//DumpLog( "dump.csv" );
+	
 	return Cnt;
+}
+
+function DumpLog( FileName ){
+	var file = new File();
+	if( file.Open( FileName, "w" )){
+		MessageBox( "ファイルが開けません: " + FileName );
+		return 0;
+	}
+	
+	// ヘッダ
+	for( var obj in Log ){
+		file.WriteLine( obj + "," );
+	}
+	file.WriteLine( "\n" );
+	
+	// 要素出力
+	for( var i = 0; i < Log.Time.length; ++i ){
+		for( var obj in Log ){
+			file.WriteLine( Log[ obj ][ i ] + "," );
+		}
+		file.WriteLine( "\n" );
+	}
+	
+	file.Close();
 }

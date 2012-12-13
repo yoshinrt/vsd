@@ -64,6 +64,19 @@ char *CVsdFile::ReadLine( void ){
 	return m_cBuf;
 }
 
+/*** ラインリード ***********************************************************/
+
+int CVsdFile::WriteLine( char *str ){
+	
+	if( m_gzfp ){
+		return gzputs( m_gzfp, str );
+	}else if( m_fp ){
+		return fputs( str, m_fp );
+	}
+
+	return -1;
+}
+
 /*** seek *******************************************************************/
 
 int CVsdFile::Seek( int iOffs, int iOrg ){
@@ -89,6 +102,17 @@ UCHAR *CVsdFile::ReadBin( int iSize ){
 		fread( cBuf, 1, iSize, m_fp );
 	}
 	return cBuf;
+}
+
+/*** バイナリリード *********************************************************/
+
+int CVsdFile::WriteBin( void *pBuf, int iSize ){
+	if( m_gzfp ){
+		return gzread( m_gzfp, pBuf, iSize );
+	}else if( m_fp ){
+		return fwrite( pBuf, 1, iSize, m_fp );
+	}
+	return 0;
 }
 
 /*** eof チェック ***********************************************************/

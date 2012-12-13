@@ -58,7 +58,7 @@ function ReadCSV( Files, ParamDef ){
 		}
 		
 		while( 1 ){
-			var Param = file.ReadLine().split( /[,\t]/ );
+			var Param = file.ReadLine().replace( /[\x0D\x0A]/g, '' ).split( /[,\t]/ );
 			if( file.IsEOF()) break;
 			
 			for( var j = 0; j < ParamUsed.length; ++j ){
