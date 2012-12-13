@@ -11,7 +11,7 @@
 /*** macros *****************************************************************/
 
 #define TIME_NONE	(( int )0x80000000 )
-#define WATCHDOG_TIME	1E+12
+#define WATCHDOG_TIME	( 1E+12 )
 
 #define WATCHDOG_REC_NUM	2	// ログ先頭の番犬分のレコード数
 #define TIME_STOP			3	// 停車とみなす Log 時間間隔

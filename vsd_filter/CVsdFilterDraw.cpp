@@ -1340,6 +1340,27 @@ BOOL CVsdFilter::DrawVSD( void ){
 			DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
 		}
 		
+		if( m_VsdLog ){
+			struct tm	tmLocal;
+			time_t		utc = ( time_t )( m_VsdLog->m_dLogStartTime + m_VsdLog->Time());
+			
+			localtime_s( &tmLocal, &utc );
+			
+			wcsftime(
+				szBuf, sizeof( szBuf ),
+				L"Vsd Time: %Y/%m/%d %H:%M:%S",
+				&tmLocal
+			);
+			
+			LPWSTR	p = wcschr( szBuf, '\0' );
+			swprintf(
+				p, sizeof( szBuf ) - ( p - szBuf ), L".%02d",
+				( UINT )(( m_VsdLog->m_dLogStartTime + m_VsdLog->Time()) * 100 ) % 100
+			);
+			
+			DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
+		}
+		
 		#ifndef GPS_ONLY
 			DrawText( POS_DEFAULT, POS_DEFAULT, L"        start       end     range cur.pos", *m_pFont, color_white );
 			
