@@ -43,12 +43,20 @@ function Initialize(){
 	SpdY2 = Vsd.Height - 8;
 	
 	// スピードメータ用最高速計算
-	
 	if( Vsd.MaxTacho > 0 ){
 		MaxTacho = Math.ceil( Vsd.MaxTacho / 1000 ) * 1000;
 	}else{
 		MaxSpeed = Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
 	}
+	
+	// グラフ用パラメータ生成
+	GraphParam = [
+		"Speed",	"%.0f km/h",	0x00FFFF,
+		"Tacho",	"%.0f rpm",		0xFF4000,
+		"Gx",		"%.2f G[lon]",	0x00FF00,
+		"Gy",		"%.2f G[lat]",	0xFF00FF,
+	];
+	Vsd.MakeGraphParam( GraphParam );
 }
 
 //*** メーター描画処理 ******************************************************
@@ -153,10 +161,5 @@ function Draw(){
 	Vsd.DrawLapTime( Vsd.Width - 1, 0, ALIGN_TOP | ALIGN_RIGHT, FontM_Outline );
 	
 	// グラフ
-	Vsd.DrawGraph(
-		SpdX1, SpdY1, SpdX2, SpdY2, FontM,
-		Vsd.MaxTacho > 0 ?
-			GRAPH_SPEED | GRAPH_TACHO | GRAPH_GX | GRAPH_GY | GRAPH_VTILE :
-			GRAPH_SPEED |               GRAPH_GX | GRAPH_GY | GRAPH_VTILE
-	);
+	Vsd.DrawGraph( SpdX1, SpdY1, SpdX2, SpdY2, FontM, GRAPH_VTILE, GraphParam );
 }

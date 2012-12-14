@@ -180,6 +180,15 @@ class CVsdLog {
 	// レコードコピー
 	void CopyRecord( int iTo, int iFrom );
 	
+	// VSD_LOG_t 取得
+	VSD_LOG_t *GetLog( const char *szKey ){
+		std::string strKey( szKey );
+		if( m_Logs.find( strKey ) == m_Logs.end()){
+			return NULL;
+		}
+		return m_Logs[ strKey ];
+	}
+	
 	// set / get 関数
 	template<typename T>
 	double Get( const char *szKey, T Index ){

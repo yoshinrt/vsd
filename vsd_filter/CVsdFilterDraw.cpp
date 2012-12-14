@@ -569,8 +569,33 @@ inline UINT CVsdFilter::BlendColor(
 #define GRAPH_SCALE	( 1.0 / SLIDER_TIME * 2 )	// 1dot あたりの log 時間
 #define GRAPH_STEP	1						// x をこれ dot ずつのステップで描く
 
+void CVsdFilter::DrawGraphSingle(
+	int x1, int y1, int x2, int y2,
+	char *szKey,
+	LPCWSTR szFormat,
+	CVsdFont &Font,
+	tRABY uColor
+){
+	CVsdLog 	*pLog;
+	VSD_LOG_t	*pData;
+	
+	// key から log を探す
+	if( m_VsdLog && ( pData = m_VsdLog->GetLog( szKey ))){
+		pLog = m_VsdLog;
+	}else if( m_GPSLog && ( pData = m_GPSLog->GetLog( szKey ))){
+		pLog = m_GPSLog;
+	}else{
+		// 有効な Log がないので帰る
+		return;
+	}
+	
+	DrawGraphSub(
+		x1, y1, x2, y2,
+		szFormat, Font, uColor, *pLog, *pData
+	);
+}
 
-void CVsdFilter::DrawGraph(
+void CVsdFilter::DrawGraphSub(
 	int x1, int y1, int x2, int y2,
 	LPCWSTR szFormat,
 	CVsdFont &Font,
@@ -630,7 +655,7 @@ void CVsdFilter::DrawGraph(
 }
 
 // スピード・タコグラフ
-void CVsdFilter::DrawGraph(
+void CVsdFilter::DrawGraphMulti(
 	int x1, int y1, int x2, int y2,
 	CVsdFont &Font,
 	UINT uFlag
@@ -662,7 +687,7 @@ void CVsdFilter::DrawGraph(
 		
 		if( uFlag & GRAPH_SPEED && ( pLog = m_CurLog->m_pLogSpeed )){
 			CalcGpaphPos();
-			DrawGraph(
+			DrawGraphSub(
 				iX1, iY1, iX2, iY2,
 				L"%.0f km/h", Font, color_orange,
 				*m_CurLog,
@@ -671,7 +696,7 @@ void CVsdFilter::DrawGraph(
 		}
 		if( uFlag & GRAPH_TACHO && ( pLog = m_CurLog->m_pLogTacho )){
 			CalcGpaphPos();
-			DrawGraph(
+			DrawGraphSub(
 				iX1, iY1, iX2, iY2,
 				L"%.0f rpm", Font, color_cyan,
 				*m_CurLog,
@@ -680,7 +705,7 @@ void CVsdFilter::DrawGraph(
 		}
 		if( uFlag & GRAPH_GX && ( pLog = m_CurLog->m_pLogGx )){
 			CalcGpaphPos();
-			DrawGraph(
+			DrawGraphSub(
 				iX1, iY1, iX2, iY2,
 				L"%.2f G(lon)", Font, color_green,
 				*m_CurLog,
@@ -689,7 +714,7 @@ void CVsdFilter::DrawGraph(
 		}
 		if( uFlag & GRAPH_GY && ( pLog = m_CurLog->m_pLogGy )){
 			CalcGpaphPos();
-			DrawGraph(
+			DrawGraphSub(
 				iX1, iY1, iX2, iY2,
 				L"%.2f G(lat)", Font, color_masenta,
 				*m_CurLog,
@@ -699,7 +724,7 @@ void CVsdFilter::DrawGraph(
 		
 		#ifndef GPS_ONLY
 			if( DispSyncInfo && m_GPSLog && ( pLog = m_GPSLog->m_pLogSpeed )){
-				DrawGraph(
+				DrawGraphSub(
 					x1, y1, x2, y2,
 					L"%.0f km/h", Font, color_cyan,
 					*m_GPSLog,

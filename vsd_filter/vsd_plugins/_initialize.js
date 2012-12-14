@@ -71,3 +71,48 @@ function DisposeAll(){
 		}
 	}
 }
+
+//*** グラフ描画 *************************************************************
+
+Vsd.MakeGraphParam = function( params ){
+	for( var i = 0; i < params.length; ){
+		if( typeof( Vsd[ params[ i ]] ) == "undefined" ){
+			params.splice( i, 3 );	// データがない要素を削除
+		}else{
+			i += 3;
+		}
+	}
+}
+
+Vsd.DrawGraph = function( x1, y1, x2, y2, font, flags, params ){
+	if( typeof( params ) == 'undefined' ){
+		return Vsd.DrawGraphMulti( x1, y1, x2, y2, font, flags );
+	}
+	
+	var GrpNum = ~~( params.length / 3 );
+	var Width  = x2 - x1 + 1;
+	var Height = y2 - y1 + 1;
+	
+	var X1 = x1;
+	var X2 = ( flags & GRAPH_HTILE ) ? x1 - 1 : x2;
+	var Y1 = y1;
+	var Y2 = ( flags & GRAPH_VTILE ) ? y1 - 1 : y2;
+	
+	for( var i = 0; i < GrpNum; ++i ){
+		if( flags & GRAPH_HTILE ){
+			X1 = X2 + 1;
+			X2 = x1 - 1 + ~~( Width * ( i + 1 ) / GrpNum );
+		}else if( flags & GRAPH_VTILE ){
+			Y1 = Y2 + 1;
+			Y2 = y1 - 1 + ~~( Height * ( i + 1 ) / GrpNum );
+		}
+		
+		Vsd.DrawGraphSingle(
+			X1, Y1, X2, Y2,
+			params[ i * 3 + 0 ],	// key
+			params[ i * 3 + 1 ],	// unit
+			font,					// font
+			params[ i * 3 + 2 ]		// color
+		);
+	}
+}

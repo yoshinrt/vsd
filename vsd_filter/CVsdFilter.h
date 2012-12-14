@@ -158,7 +158,15 @@ class CVsdFilter {
 		tRABY uColorOutline = color_black	// !default:color_black
 	);
 	
-	void DrawGraph(
+	void DrawGraphSingle(	// !js_func
+		int x1, int y1, int x2, int y2,
+		char *szKey,
+		LPCWSTR szFormat,
+		CVsdFont &Font,
+		tRABY uColor
+	);
+	
+	void DrawGraphSub(
 		int x1, int y1, int x2, int y2,
 		LPCWSTR szFormat,
 		CVsdFont &Font,
@@ -176,7 +184,7 @@ class CVsdFilter {
 		GRAPH_VTILE	= 1 << 31,
 	};
 	
-	void DrawGraph(	// !js_func
+	void DrawGraphMulti(	// !js_func
 		int x1, int y1, int x2, int y2,
 		CVsdFont &Font,
 		UINT uFlag = GRAPH_SPEED		// !default:1

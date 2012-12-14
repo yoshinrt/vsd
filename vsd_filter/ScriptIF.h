@@ -288,7 +288,31 @@ class CVsdFilterIF {
 		
 		return v8::Undefined();
 	}
-	static v8::Handle<v8::Value> Func_DrawGraph( const v8::Arguments& args ){
+	static v8::Handle<v8::Value> Func_DrawGraphSingle( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 8 )) return v8::Undefined();
+		v8::String::AsciiValue str4( args[ 4 ] );
+		v8::String::Value str5( args[ 5 ] );
+		v8::Local<v8::Object> Font6 = args[ 6 ]->ToObject();
+		if( CScript::CheckClass( Font6, "Font", "arg[ 7 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj6 = CScript::GetThis<CVsdFont>( Font6 );
+		if( !obj6 ) return v8::Undefined();
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawGraphSingle(
+			args[ 0 ]->Int32Value(),
+			args[ 1 ]->Int32Value(),
+			args[ 2 ]->Int32Value(),
+			args[ 3 ]->Int32Value(),
+			*str4,
+			( LPCWSTR )*str5,
+			*obj6,
+			PIXEL_RABY::Argb2Raby( args[ 7 ]->Int32Value())
+		);
+		
+		return v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Func_DrawGraphMulti( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CScript::CheckArgs( 5 <= iLen && iLen <= 6 )) return v8::Undefined();
 		v8::Local<v8::Object> Font4 = args[ 4 ]->ToObject();
@@ -297,7 +321,7 @@ class CVsdFilterIF {
 		if( !obj4 ) return v8::Undefined();
 		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
-		thisObj->DrawGraph(
+		thisObj->DrawGraphMulti(
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			args[ 2 ]->Int32Value(),
@@ -519,7 +543,8 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawCircle" ), v8::FunctionTemplate::New( Func_DrawCircle ));
 		proto->Set( v8::String::New( "DrawText" ), v8::FunctionTemplate::New( Func_DrawText ));
 		proto->Set( v8::String::New( "DrawTextAlign" ), v8::FunctionTemplate::New( Func_DrawTextAlign ));
-		proto->Set( v8::String::New( "DrawGraph" ), v8::FunctionTemplate::New( Func_DrawGraph ));
+		proto->Set( v8::String::New( "DrawGraphSingle" ), v8::FunctionTemplate::New( Func_DrawGraphSingle ));
+		proto->Set( v8::String::New( "DrawGraphMulti" ), v8::FunctionTemplate::New( Func_DrawGraphMulti ));
 		proto->Set( v8::String::New( "InitPolygon" ), v8::FunctionTemplate::New( Func_InitPolygon ));
 		proto->Set( v8::String::New( "DrawPolygon" ), v8::FunctionTemplate::New( Func_DrawPolygon ));
 		proto->Set( v8::String::New( "DrawGSnake" ), v8::FunctionTemplate::New( Func_DrawGSnake ));
