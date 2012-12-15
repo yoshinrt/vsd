@@ -85,10 +85,15 @@ Vsd.MakeGraphParam = function( params ){
 }
 
 Vsd.DrawGraph = function( x1, y1, x2, y2, font, flags, params ){
-	if( typeof( params ) == 'undefined' ){
+	// グラフを表示しない条件
+	if( !Vsd.Config_sync_mode && !Vsd.Config_graph ) return;
+	
+	// 同期情報表示時は，旧グラフ表示
+	if( Vsd.Config_sync_mode || typeof( params ) == 'undefined' ){
 		return Vsd.DrawGraphMulti( x1, y1, x2, y2, font, flags );
 	}
 	
+	// 以下，新グラフ表示
 	var GrpNum = ~~( params.length / 3 );
 	var Width  = x2 - x1 + 1;
 	var Height = y2 - y1 + 1;

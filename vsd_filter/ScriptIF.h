@@ -95,6 +95,22 @@ class CVsdFilterIF {
 		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->MaxLapCnt() ) : v8::Undefined();
 	}
+	static v8::Handle<v8::Value> Get_Config_map_length( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->LineTrace() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_Config_lap_time( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->DispLap() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_Config_graph( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->DispGraph() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_Config_sync_mode( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->DispSyncInfo() ) : v8::Undefined();
+	}
 	static v8::Handle<v8::Value> Get_FrameCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->GetFrameCnt() ) : v8::Undefined();
@@ -529,6 +545,10 @@ class CVsdFilterIF {
 		inst->SetAccessor( v8::String::New( "LapTime" ), Get_LapTime );
 		inst->SetAccessor( v8::String::New( "LapCnt" ), Get_LapCnt );
 		inst->SetAccessor( v8::String::New( "MaxLapCnt" ), Get_MaxLapCnt );
+		inst->SetAccessor( v8::String::New( "Config_map_length" ), Get_Config_map_length );
+		inst->SetAccessor( v8::String::New( "Config_lap_time" ), Get_Config_lap_time );
+		inst->SetAccessor( v8::String::New( "Config_graph" ), Get_Config_graph );
+		inst->SetAccessor( v8::String::New( "Config_sync_mode" ), Get_Config_sync_mode );
 		inst->SetAccessor( v8::String::New( "FrameCnt" ), Get_FrameCnt );
 
 		// ÉÅÉÉbÉhÇÕÇ±ÇøÇÁÇ…

@@ -623,6 +623,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 
 void CVsdLog::RotateMap( double dAngle ){
 	
+	if( !m_pLogX0 ) return;
+	
 	if( m_pLogX ){
 		m_pLogX->InitMinMax();
 		m_pLogY->InitMinMax();

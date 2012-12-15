@@ -16,17 +16,7 @@
 #define SPRINTF_BUF		128
 
 #define INVALID_POS_I	0x7FFFFFFF
-
-#define LineTrace		m_piParamT[ TRACK_LineTrace ]
-#define DispLap			m_piParamC[ CHECK_LAP ]
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] * ( INVERT_G / 1000.0 ))
-#define DispGraph		m_piParamC[ CHECK_GRAPH ]
-
-#ifdef AVS_PLUGIN
-	#define DispSyncInfo	0
-#else
-	#define DispSyncInfo	m_piParamC[ CHECK_SYNCINFO ]
-#endif
 
 #ifdef GPS_ONLY
 	#define GPSPriority		FALSE
@@ -660,12 +650,12 @@ void CVsdFilter::DrawGraphMulti(
 	CVsdFont &Font,
 	UINT uFlag
 ){
-	if( DispGraph || DispSyncInfo ){
+	if( DispGraph() || DispSyncInfo()){
 		SelectLogVsd;
 		if( !m_CurLog ) return;
 		
 		// 同期情報時はスピードのみ
-		if( DispSyncInfo || uFlag == 0 ) uFlag = GRAPH_SPEED;
+		if( DispSyncInfo() || uFlag == 0 ) uFlag = GRAPH_SPEED;
 		
 		int iGraphNum = 0;
 		if( uFlag & ( GRAPH_HTILE | GRAPH_VTILE )){
@@ -723,7 +713,7 @@ void CVsdFilter::DrawGraphMulti(
 		}
 		
 		#ifndef GPS_ONLY
-			if( DispSyncInfo && m_GPSLog && ( pLog = m_GPSLog->m_pLogSpeed )){
+			if( DispSyncInfo() && m_GPSLog && ( pLog = m_GPSLog->m_pLogSpeed )){
 				DrawGraphSub(
 					x1, y1, x2, y2,
 					L"%.0f km/h", Font, color_cyan,
@@ -805,7 +795,7 @@ void CVsdFilter::DrawMap(
 	
 	SelectLogGPS;
 	
-	if( !LineTrace || !m_CurLog || !m_CurLog->m_pLogX0 ) return;
+	if( !LineTrace() || !m_CurLog || !m_CurLog->m_pLogX ) return;
 	
 	double dMapSizeX = m_CurLog->m_pLogX->GetMax() - m_CurLog->m_pLogX->GetMin();
 	double dMapOffsX = m_CurLog->m_pLogX->GetMin();
@@ -850,11 +840,11 @@ void CVsdFilter::DrawMap(
 		iLineEd = m_CurLog->GetCnt() - 1;
 	}
 	
-	if( m_CurLog->m_iLogNum - iLineSt > ( int )( LineTrace * m_CurLog->m_dFreq ))
-		iLineSt = m_CurLog->m_iLogNum - ( int )( LineTrace * m_CurLog->m_dFreq );
+	if( m_CurLog->m_iLogNum - iLineSt > ( int )( LineTrace() * m_CurLog->m_dFreq ))
+		iLineSt = m_CurLog->m_iLogNum - ( int )( LineTrace() * m_CurLog->m_dFreq );
 	
-	if( iLineEd - m_CurLog->m_iLogNum > ( int )( LineTrace * m_CurLog->m_dFreq ))
-		iLineEd = m_CurLog->m_iLogNum + ( int )( LineTrace * m_CurLog->m_dFreq );
+	if( iLineEd - m_CurLog->m_iLogNum > ( int )( LineTrace() * m_CurLog->m_dFreq ))
+		iLineEd = m_CurLog->m_iLogNum + ( int )( LineTrace() * m_CurLog->m_dFreq );
 	
 	for( i = iLineSt; i <= iLineEd ; ++i ){
 		#define GetMapPos( p, a ) ((( p ) - dMapOffs ## a ) * dScale )
@@ -903,7 +893,7 @@ void CVsdFilter::DrawMap(
 	);
 	
 	// スタートライン表示
-	if( DispSyncInfo && m_LapLog && m_LapLog->m_iLapMode == LAPMODE_GPS ){
+	if( DispSyncInfo() && m_LapLog && m_LapLog->m_iLapMode == LAPMODE_GPS ){
 		double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
 		
 		int xs1 = x1 + ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - dMapOffsX ) * dScale );
@@ -1048,7 +1038,7 @@ void CVsdFilter::DrawLapTime(
 ){
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
-	if( !DispLap || !m_LapLog ) return;
+	if( !DispLap() || !m_LapLog ) return;
 	
 	SelectLogForLapTime;
 	
@@ -1128,7 +1118,7 @@ void CVsdFilter::DrawLapTimeLog(
 	int	i;
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
-	if( !DispLap || !m_LapLog ) return;
+	if( !DispLap() || !m_LapLog ) return;
 	
 	SelectLogForLapTime;
 	
@@ -1279,7 +1269,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	// ラップタイムの再生成
 	if(
-		DispLap && m_bCalcLapTimeReq &&
+		DispLap() && m_bCalcLapTimeReq &&
 		( m_LapLog == NULL || m_LapLog->m_iLapMode != LAPMODE_MAGNET )
 	){
 		m_bCalcLapTimeReq	= FALSE;
@@ -1339,7 +1329,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	
 	#define Float2Time( n )	( int )( n ) / 60, ( int )(( n ) * 1000 ) % 60000 / 1000.0
 	
-	if( DispSyncInfo ){
+	if( DispSyncInfo()){
 		
 		m_iTextPosX = 0;
 		m_iTextPosY = GetHeight() / 3;

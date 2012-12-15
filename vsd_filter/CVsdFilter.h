@@ -284,6 +284,20 @@ class CVsdFilter {
 		ALIGN_BOTTOM	= 8,
 	};
 	
+	// ダイアログ設定リード
+	
+	int LineTrace( void ){ return m_piParamT[ TRACK_LineTrace ]; }	// !js_var:Config_map_length
+	int DispLap( void ){ return m_piParamC[ CHECK_LAP ]; }			// !js_var:Config_lap_time
+	int DispGraph( void ){ return m_piParamC[ CHECK_GRAPH ]; }		// !js_var:Config_graph
+	
+	int DispSyncInfo( void ){	// !js_var:Config_sync_mode
+		#ifdef AVS_PLUGIN
+			return 0;
+		#else
+			return m_piParamC[ CHECK_SYNCINFO ];
+		#endif
+	}
+	
 	// 仮想関数
 	virtual int	GetWidth( void )	= 0;	// !js_const:Width
 	virtual int	GetHeight( void )	= 0;	// !js_const:Height

@@ -1315,19 +1315,17 @@ void SetupLogOffset( FILTER *filter ){
 BOOL func_update( FILTER *filter, int status ){
 	static	BOOL	bReEnter = FALSE;
 	
-	if( bReEnter ) return TRUE;
+	if( !g_Vsd || bReEnter ) return TRUE;
 	
 	bReEnter = TRUE;
 	
 	if(
-		g_Vsd && (
-			#ifndef GPS_ONLY
-				status >= FILTER_UPDATE_STATUS_TRACK + PARAM_VSt &&
-				status <= FILTER_UPDATE_STATUS_TRACK + PARAM_GSt ||
-			#endif
-			status == FILTER_UPDATE_STATUS_TRACK + TRACK_LogOffset ||
-			status == FILTER_UPDATE_STATUS_TRACK + TRACK_SLineWidth
-		)
+		#ifndef GPS_ONLY
+			status >= FILTER_UPDATE_STATUS_TRACK + PARAM_VSt &&
+			status <= FILTER_UPDATE_STATUS_TRACK + PARAM_GSt ||
+		#endif
+		status == FILTER_UPDATE_STATUS_TRACK + TRACK_LogOffset ||
+		status == FILTER_UPDATE_STATUS_TRACK + TRACK_SLineWidth
 	) g_Vsd->m_bCalcLapTimeReq = TRUE;
 	
 	#ifndef GPS_ONLY
