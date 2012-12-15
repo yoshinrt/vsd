@@ -97,8 +97,8 @@ void CVsdFilter::DrawLine(
 			int y = i / width - width / 2;
 			
 			DrawLine(
-				x1 + x - width / 2, y1 + y - width / 2,
-				x2 + x - width / 2, y2 + y - width / 2,
+				x1 + x, y1 + y,
+				x2 + x, y2 + y,
 				yc, uFlag
 			);
 		}

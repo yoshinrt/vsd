@@ -53,8 +53,9 @@ function Initialize(){
 	GraphParam = [
 		"Speed",	"%.0f km/h",	0x00FFFF,
 		"Tacho",	"%.0f rpm",		0xFF4000,
-		"Gx",		"%.2f G[lon]",	0x00FF00,
-		"Gy",		"%.2f G[lat]",	0xFF00FF,
+		"Accel",	"%.0f %%",		0x00FF00,
+	//	"Gx",		"%.2f G[lon]",	0x00FF00,
+	//	"Gy",		"%.2f G[lat]",	0xFF00FF,
 	];
 	Vsd.MakeGraphParam( GraphParam );
 }
@@ -128,6 +129,24 @@ function Draw(){
 		Vsd.DrawNeedle(
 			MeterCx, MeterCy, MeterR2 * 0.95, MeterR2 * -0.1,
 			135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
+		);
+	}
+	
+	// アクセル
+	if( Vsd.MaxAccel > 0 ){
+		Vsd.DrawLine(
+			MeterCx - MeterR * 0.45,
+			MeterCy + MeterR * 0.65,
+			MeterCx + MeterR * 0.45,
+			MeterCy + MeterR * 0.65,
+			0x404040, 4 * Scale
+		);
+		Vsd.DrawLine(
+			MeterCx - MeterR * 0.45,
+			MeterCy + MeterR * 0.65,
+			MeterCx + MeterR * 0.45 * ( 2 * Vsd.Accel / Vsd.MaxAccel - 1 ),
+			MeterCy + MeterR * 0.65,
+			0x00C0C0, 4 * Scale
 		);
 	}
 	
