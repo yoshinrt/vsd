@@ -6,3 +6,9 @@
 ・USB 再初期化
 ----完了----
 ・FLASH のルーチンを SRAM プログラムからコールする仕組みを確立
+
+メモ:
+vsd2.eww の Release が Flash 用
+            exec_sram が SRAM 実行用
+vsd2_sram.eww の Release は動かないっぽい
+                 exec_sram が Flash リンク SRAM 実行用

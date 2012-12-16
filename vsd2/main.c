@@ -14,7 +14,7 @@
 *******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
-#include <ST\iostm32f10x.h>
+#include <ST\iostm32f10xxB.h>
 #include <string.h>
 #include <stdio.h>
 #include "stm32f10x_lib.h"
@@ -50,12 +50,14 @@ void USBComPuts( char* buf ){
 }
 #endif
 
-__INTRINSIC putchar( int c ){
+__INTRINSIC int putchar( int c ){
 	if( c == '\n' ) putchar( '\r' );
 	while( GetEPTxStatus( ENDP1 ) == EP_TX_VALID );
 	UserToPMABufferCopy(( UCHAR *)&c, ENDP1_TXADDR, 1 );
 	SetEPTxCount( ENDP1, 1 );
 	SetEPTxValid( ENDP1 );
+        
+        return 0;
 }
 
 /*******************************************************************************

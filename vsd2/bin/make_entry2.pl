@@ -94,7 +94,7 @@ while( <> ){
 }
 $_ = <>; # ÆÉ¤ß¼Î¤Æ
 
-open( fpOut, "> rom_entry.s" );
+open( fpOut, "| nkf -Lw > rom_entry.s" );
 
 $IdString = '$I' . 'd$';
 
