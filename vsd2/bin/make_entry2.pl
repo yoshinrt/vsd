@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id$
+# $Id: make_entry2.pl 89 2008-06-20 01:34:15Z yoshi $
 
 my( $ExceptList );
 my( %ExceptList );
