@@ -42,7 +42,7 @@ extern u8 buffer_out[VIRTUAL_COM_PORT_DATA_SIZE];
 
 #ifndef EXEC_SRAM
 void USBComPuts( char* buf ){
-	while( GetEPTxStatus( ENDP1 ) == EP_TX_VALID );
+	while( GetEPTxStatus( ENDP1 ) != EP_TX_VALID );
 	count_in = strlen( buf );
 	UserToPMABufferCopy(( u8 * )buf, ENDP1_TXADDR, count_in );
 	SetEPTxCount( ENDP1, count_in );
@@ -50,16 +50,28 @@ void USBComPuts( char* buf ){
 }
 #endif
 
+#ifdef EXEC_SRAM
+#define count_in ( *( volatile u32 *)0x20004fc4 )
+#endif
+
 __INTRINSIC int putchar( int c ){
 	if( c == '\n' ) putchar( '\r' );
-	while( GetEPTxStatus( ENDP1 ) == EP_TX_VALID );
+	
+	while( count_in );
 	UserToPMABufferCopy(( UCHAR *)&c, ENDP1_TXADDR, 1 );
-	SetEPTxCount( ENDP1, 1 );
+	SetEPTxCount( ENDP1, count_in = 1 );
 	SetEPTxValid( ENDP1 );
-        
-        return 0;
+	
+	return c;
 }
 
+void PutStr( char *buf ){
+	while( count_in );
+	count_in = strlen( buf );
+	UserToPMABufferCopy(( u8 * )buf, ENDP1_TXADDR, count_in );
+	SetEPTxCount( ENDP1, count_in );
+	SetEPTxValid( ENDP1 );
+}
 /*******************************************************************************
 * Function Name  : DFU_Button_Config.
 * Description    : Configures the DFU selector Button to enter DFU Mode.
@@ -129,21 +141,18 @@ __noreturn int main( void ){
 	char	szBuf[ 512 ];
 	int		i;
 	
+	RCC_APB2ENR |= 0x10;     // CPIOCを使用できるようにする。
+	GPIOC_CRL = 0x43444444;   // PC6を出力にする。　　
+
 #ifdef DEBUG
 	debug();
 #endif
-	
-	printf( "init system\n" );
 	MSD_Init();
 	
 #ifdef EXEC_SRAM
 	unsigned long t;
 	int	res;
 	
-	RCC_APB2ENR |= 0x10;     // CPIOCを使用できるようにする。
-	GPIOC_CRL = 0x43444444;   // PC6を出力にする。　　
-	
-	/*
 	sMSD_CSD MSD_csd;
 	res = MSD_GetCSDRegister( &MSD_csd );
 	printf( "%04X:return code\n", res );
@@ -184,7 +193,8 @@ __noreturn int main( void ){
 	printf( "%04X:ECC code\n", MSD_csd.ECC );
 	printf( "%04X:CRC\n", MSD_csd.CRC );
 	printf( "%04X:always 1\n", MSD_csd.Reserved4 );
-	*/
+	
+	GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
 	
 	FIL	fp;
 	FATFS fatfs;				/* File system object */

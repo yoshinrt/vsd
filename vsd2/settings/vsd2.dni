@@ -15,13 +15,6 @@ NumStates=_ 1
 State 1=_ 1
 [Profiling]
 Enabled=0
-[Log file]
-LoggingEnabled=_ 0
-LogFile=_ ""
-Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
 [Breakpoints]
 Count=0
 [TraceHelper]
@@ -37,6 +30,30 @@ UseTrigger=1
 TriggerName=main
 LimitSize=0
 ByteLimit=50
+[DebugChecksum]
+Checksum=1571094909
+[Exceptions]
+StopOnUncaught=_ 0
+StopOnThrow=_ 0
+[CallStack]
+ShowArgs=0
+[Disassembly]
+MixedMode=1
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[CallStackLog]
+Enabled=0
+[DriverProfiling]
+Enabled=0
+Mode=1
+Graph=0
+Symbiont=0
+Exclusions=
 [InterruptLog]
 LogEnabled=0
 SumEnabled=0
@@ -53,7 +70,9 @@ ShowTimeSum=1
 [Disassemble mode]
 mode=1
 [Breakpoints2]
-Count=0
+Bp0=_ 0 "STD_CODE2" "0x2000309E" 0 0 1 "" 0 ""
+Bp1=_ 1 "STD_CODE2" "0x20003582" 0 0 1 "" 0 ""
+Count=2
 [Interrupts]
 Enabled=1
 [MemoryMap]
