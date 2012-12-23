@@ -4,6 +4,8 @@ SEEK_SET	= 0;
 SEEK_CUR	= 1;
 SEEK_END	= 2;
 
+INVALID_FORMAT	= -1;
+
 //*** ログファイルリーダ エントリ関数 ****************************************
 
 function ReadLog( FileName, ReaderFunc ){
@@ -20,8 +22,8 @@ function ReadLog( FileName, ReaderFunc ){
 		}
 	}
 	
-	// ReaderFunc 自動判別
-	ExitLoop: if( typeof( ReaderFunc ) == 'undefined' ){
+	if( typeof( ReaderFunc ) == 'undefined' ){
+		// ReaderFunc 自動判別
 		for( var i = 0; i < LogReaderInfo.length; ++i ){
 			// *.hoge;*.fuga のようなリストを ; で split
 			var Filters = LogReaderInfo[ i ].Filter.split( ";" );
@@ -38,51 +40,70 @@ function ReadLog( FileName, ReaderFunc ){
 				// RE にマッチしたら，リーダ関数名を取得
 				if( Files[ 0 ].match( re )){
 					ReaderFunc = LogReaderInfo[ i ].ReaderFunc;
-					break ExitLoop;
+					var Cnt = ReadLog0( 1 );
+					if( Cnt >= 0 ) return Cnt;
 				}
 			}
 		}
-	}
-	
-	// ReaderFunc を呼ぶ
-	if( typeof( ReaderFunc ) == 'undefined' ){
-		MessageBox( Files[ 0 ] + " はリードできません．次のことを試してください\n" +
+		
+		MessageBox( Files[ 0 ] + "\nはリードできません．次のことを試してください\n" +
 			"・拡張子を適切に変更する\n" +
-			"・ファイルを開く ダイアログでファイル形式を「自動判別」以外に設定する\n"
+			"・ファイルを開く ダイアログでファイル形式を「自動判別」以外に設定する"
 		);
 		delete( Log );
 		return 0;
+	}else{
+		// フォーマット指定オープン
+		return ReadLog0( 0 );
 	}
 	
-	if( typeof( GlobalInstance[ ReaderFunc ] ) == 'undefined' ){
-		MessageBox( ReaderFunc + "() は定義されていません" );
-		delete( Log );
-		return 0;
+	function ReadLog0( bAuto ){
+		// ReaderFunc を呼ぶ
+		if( typeof( ReaderFunc ) == 'undefined' ){
+			MessageBox( Files[ 0 ] + "\nはリードできません．次のことを試してください\n" +
+				"・拡張子を適切に変更する\n" +
+				"・ファイルを開く ダイアログでファイル形式を「自動判別」以外に設定する"
+			);
+			delete( Log );
+			return 0;
+		}
+		
+		if( typeof( GlobalInstance[ ReaderFunc ] ) == 'undefined' ){
+			MessageBox( ReaderFunc + "() は定義されていません" );
+			delete( Log );
+			return 0;
+		}
+		
+		Log = [];
+		var Cnt = GlobalInstance[ ReaderFunc ]( Files );
+		
+		if( Cnt == INVALID_FORMAT && bAuto ){
+			// 自動モードで，フォーマットが違うなら次のフォーマット
+			return Cnt;
+		}
+		
+		if( Cnt <= 0 ){
+			MessageBox( Files[ 0 ] + "\n有効なログが見つかりませんでした" );
+			delete( Log );
+			return 0;
+		}
+		
+		if( typeof( Log ) != 'object' ){
+			MessageBox( Files[ 0 ] + "\nArray 型の変数 'Log' を定義してください" );
+			delete( Log );
+			return 0;
+		}
+		
+		if( typeof( Log.Time ) != 'object' ){
+			MessageBox( Files[ 0 ] + "\nArray 型の変数 'Log.Time' を定義してください" );
+			delete( Log );
+			return 0;
+		}
+		
+		//DumpLog( "dump.csv" );
+		
+		return Cnt;
 	}
-	
-	var Cnt = GlobalInstance[ ReaderFunc ]( Files );
-	
-	if( Cnt == 0 ){
-		MessageBox( Files.join( "\n" ) + "\n有効なログが見つかりませんでした" );
-		delete( Log );
-		return 0;
-	}
-	
-	if( typeof( Log ) != 'object' ){
-		MessageBox( Files.join( "\n" ) + "\nArray 型の変数 'Log' を定義してください" );
-		delete( Log );
-		return 0;
-	}
-	
-	if( typeof( Log.Time ) != 'object' ){
-		MessageBox( Files.join( "\n" ) + "\nArray 型の変数 'Log.Time' を定義してください" );
-		delete( Log );
-		return 0;
-	}
-	
-	//DumpLog( "dump.csv" );
-	
-	return Cnt;
 }
 
 //*** LogReaderInfo ソート ***************************************************

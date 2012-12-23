@@ -378,8 +378,9 @@ class CVsdFilter {
 	#include "def_log.h"
 	
 	double DateTime( void ){	// !js_func
-		if( m_VsdLog )	return m_VsdLog->DateTime();
-		return m_GPSLog->DateTime();
+		if( m_VsdLog ) return m_VsdLog->DateTime();
+		if( m_GPSLog ) return m_GPSLog->DateTime();
+		return 0;
 	}
 	
 	double GetValue( char *szKey ){
