@@ -1,6 +1,10 @@
 /// VSD log リーダ ///////////////////////////////////////////////////////////
 
-LogReaderInfo.push( "VSD log (*.log)", "*.log;*.log.gz", "ReadVsdLog" );
+LogReaderInfo.push({
+	Caption:	"VSD log (*.log)",
+	Filter:		"*.log;*.log.gz",
+	ReaderFunc:	"ReadVsdLog",
+});
 
 function ReadVsdLog( Files ){
 	

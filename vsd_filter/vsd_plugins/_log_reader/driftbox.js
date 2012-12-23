@@ -1,6 +1,10 @@
 // Driftbox ログリーダ
 
-LogReaderInfo.push( "Driftbox (*.dbn)", "*.dbn", "Read_dbn" );
+LogReaderInfo.push({
+	Caption:	"Driftbox (*.dbn)",
+	Filter:		"*.dbn",
+	ReaderFunc:	"Read_dbn"
+});
 
 // dbn フォーマット (ほとんど [HEADER] に書いてある)
 // 1レコード: 33バイト  big endian

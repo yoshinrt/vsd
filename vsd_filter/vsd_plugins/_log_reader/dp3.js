@@ -1,6 +1,10 @@
 // LAP+ ログリーダ
 
-LogReaderInfo.push( "LAP+ (*.dp3)", "*.dp3", "Read_dp3" );
+LogReaderInfo.push({
+	Caption:	"LAP+ (*.dp3)",
+	Filter:		"*.dp3",
+	ReaderFunc:	"Read_dp3"
+});
 
 function Read_dp3( Files ){
 	

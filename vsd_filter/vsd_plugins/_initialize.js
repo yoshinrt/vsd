@@ -43,14 +43,13 @@ GEAR_RATIO5 = ( GEAR_RATIO5 + GEAR_RATIO6 ) / 2;
 GEAR_RATIO6 = ( GEAR_RATIO6 + GEAR_RATIO7 ) / 2;
 
 function GetGear( GearRatio ){
-	if( GearRatio <= 0 ) return 'N';
 	if( GearRatio > GEAR_RATIO1 ) return 1;
 	if( GearRatio > GEAR_RATIO2 ) return 2;
 	if( GearRatio > GEAR_RATIO3 ) return 3;
 	if( GearRatio > GEAR_RATIO4 ) return 4;
 	if( GearRatio > GEAR_RATIO5 ) return 5;
 	if( GearRatio > GEAR_RATIO6 ) return 6;
-	return 1;
+	return 7;
 }
 
 GlobalInstance = this;

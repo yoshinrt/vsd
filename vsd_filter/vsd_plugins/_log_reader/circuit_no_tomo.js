@@ -1,6 +1,10 @@
 // VSD log reader
 
-LogReaderInfo.push( "サーキットの友 (*.ptd)", "*.ptd", "ReadTomoLog" );
+LogReaderInfo.push({
+	Caption:	"サーキットの友 (*.ptd)",
+	Filter:		"*.ptd",
+	ReaderFunc:	"ReadTomoLog"
+});
 
 function ReadTomoLog( Files ){
 	

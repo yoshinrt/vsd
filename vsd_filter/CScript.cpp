@@ -364,5 +364,12 @@ UINT CScript::InitLogReader( void ){
 		return ERR_FILE_NOT_FOUND;
 	}
 	
+	Run( L"SortLogReaderInfo", TRUE );
+	if( m_uError ){
+		// ƒGƒ‰[
+		m_pVsd->DispErrorMessage( GetErrorMessage());
+		return m_uError;
+	}
+	
 	return ERR_OK;
 }

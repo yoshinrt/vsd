@@ -1,6 +1,10 @@
 /// torque log リーダ ////////////////////////////////////////////////////////
 
-LogReaderInfo.push( "Torque log (*.csv)", "*.csv;*.csv.gz", "ReadTorqueLog" );
+LogReaderInfo.push({
+	Caption:	"Torque log (*.csv)",
+	Filter:		"*.csv;*.csv.gz",
+	ReaderFunc:	"ReadTorqueLog"
+});
 
 function ReadTorqueLog( Files ){
 	

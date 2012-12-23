@@ -738,7 +738,7 @@ BOOL CVsdFilterAvu::CreateFilter( void ){
 			
 			// "LogReaderInfo" 取得
 			v8::Local<v8::Array> hFilter = v8::Local<v8::Array>::Cast(
-				Script.m_Context->Global()->Get( v8::String::New(( uint16_t *)L"LogReaderInfo" ))
+				Script.m_Context->Global()->Get( v8::String::New( "LogReaderInfo" ))
 			);
 			if( !hFilter->IsArray()) return FALSE;
 			
@@ -751,10 +751,10 @@ BOOL CVsdFilterAvu::CreateFilter( void ){
 			strcpy( pBuf, "*" );
 			pBuf = strchr( pBuf, '\0' ) + 1;
 			
-			for( UINT u = 0; u + 2 < hFilter->Length(); u += 3 ){
-				v8::String::Value strName( hFilter->Get( u ));
-				v8::String::AsciiValue strExt ( hFilter->Get( u + 1 ));
-				v8::String::AsciiValue strFunc( hFilter->Get( u + 2 ));
+			for( UINT u = 0; u < hFilter->Length(); ++u ){
+				v8::String::Value      strName( v8::Local<v8::Array>::Cast( hFilter->Get( u ))->Get( v8::String::New( "Caption" )));
+				v8::String::AsciiValue strExt ( v8::Local<v8::Array>::Cast( hFilter->Get( u ))->Get( v8::String::New( "Filter" )));
+				v8::String::AsciiValue strFunc( v8::Local<v8::Array>::Cast( hFilter->Get( u ))->Get( v8::String::New( "ReaderFunc" )));
 				
 				WideCharToMultiByte(
 					CP_ACP,					// コードページ

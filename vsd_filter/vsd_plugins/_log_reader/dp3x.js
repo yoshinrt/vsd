@@ -1,7 +1,16 @@
 // LAP+Android ログリーダ
 
-LogReaderInfo.push( "LAP+Android (*.dp3x)", "*.dp3x", "Read_dp3x_5Hz" );
-//LogReaderInfo.push( "LAP+Android 10Hz (*.dp3x)", "*.dp3x", "Read_dp3x_10Hz" );
+LogReaderInfo.push({
+	Caption:	"LAP+Android (*.dp3x)",
+	Filter:		"*.dp3x",
+	ReaderFunc:	"Read_dp3x_5Hz"
+});
+
+//LogReaderInfo.push({
+//	Caption:	"LAP+Android 10Hz (*.dp3x)",
+//	Filter:		"*.dp3x",
+//	ReaderFunc:	"Read_dp3x_10Hz"
+//});
 
 // dp3x フォーマット
 // 0x48-0x4F: ログ開始時刻,ms (GMT-9h, 日本時間に直すためには +18h)
