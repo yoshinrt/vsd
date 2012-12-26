@@ -16,7 +16,6 @@ mkdir vsd_plugins
 xcopy /i/s "D:\Program Files\AVIUTL\vsd_plugins" vsd_plugins
 
 rmdir /s/q vsd_plugins\negi
-rmdir /s/q vsd_plugins\新しいフォルダー
 del vsd_plugins\_log_reader\circuit_no_tomo.js
 del vsd_plugins\_log_reader\gpsbabel.js
 del vsd_plugins\_log_reader\vsd_log.js
