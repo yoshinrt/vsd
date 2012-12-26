@@ -13,7 +13,6 @@ function Read_gpx( Files ){
 	Log.Latitude	= [];
 	
 	var	Cnt = 0;
-	var Line = '';
 	var bSpeed = false;
 	
 	for( var i = 0; i < Files.length; ++i ){
@@ -22,6 +21,8 @@ function Read_gpx( Files ){
 			MessageBox( "ファイルが開けません: " + Files[ i ] );
 			return 0;
 		}
+		
+		var Line = '';
 		
 	  NextFile:
 		while( 1 ){
@@ -38,7 +39,7 @@ function Read_gpx( Files ){
 			}
 			
 			// trkpt 先頭が見つかったので，それ以前を破棄
-			Line = RegExp.lastMatch ; + RegExp.rightContext;
+			Line = RegExp.lastMatch + RegExp.rightContext;
 			
 			// trkpt 終了サーチ
 			while( !Line.match( /<\/trkpt>/ )){
@@ -49,7 +50,7 @@ function Read_gpx( Files ){
 			// 1つの point に分解
 			var Point = RegExp.leftContext + RegExp.lastMatch;
 			Line = RegExp.rightContext;
-			Point.replace( /[\x0D\x0A]/g, "" );
+			Point = Point.replace( /[\x0D\x0A]/g, "" );
 			
 			// 時間
 			if( !Point.match( /<time>(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)/ )){
