@@ -130,7 +130,7 @@ int		shadow_param[] = {
 	#include "def_shadow.h"
 };
 
-char g_szDescription[] = PROG_NAME_J " " PROG_VERSION;
+char g_szDescription[] = PROG_NAME_J " " PROG_REVISION;
 
 FILTER_DLL filter = {
 	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_MAIN_MESSAGE | FILTER_FLAG_EX_INFORMATION,

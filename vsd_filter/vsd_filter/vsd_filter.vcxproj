@@ -82,6 +82,11 @@
       <AdditionalDependencies>../lib/$(IntDir)/zlib.lib;../$(IntDir)/dds_lib.lib;../v8/$(IntDir)/v8_base.lib;../v8/$(IntDir)/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
+    <PreBuildEvent>
+      <Command>cd ..\
+rev_num.bat
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -108,6 +113,11 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
+    <PreBuildEvent>
+      <Command>cd ..\
+rev_num.bat
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
     <ClCompile>
@@ -133,6 +143,11 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
+    <PreBuildEvent>
+      <Command>cd ..\
+rev_num.bat
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\CScript.h" />
@@ -151,6 +166,7 @@
     <ClInclude Include="..\error_code.h" />
     <ClInclude Include="..\filter.h" />
     <ClInclude Include="..\pixel.h" />
+    <ClInclude Include="..\rev_num.h" />
     <ClInclude Include="..\ScriptIF.h" />
     <ClInclude Include="..\StdAfx.h" />
   </ItemGroup>

@@ -73,6 +73,11 @@
       <AdditionalDependencies>../lib/$(IntDir)/zlib.lib;../$(IntDir)/dds_lib.lib;../v8/$(IntDir)/v8_base.lib;../v8/$(IntDir)/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>D:\Program Files\AviSynth 2.5\plugins\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
+    <PreBuildEvent>
+      <Command>cd ..\
+rev_num.bat
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -94,6 +99,11 @@
       <AdditionalDependencies>../lib/$(IntDir)/zlib.lib;../$(IntDir)/dds_lib.lib;../v8/$(IntDir)/v8_base.lib;../v8/$(IntDir)/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>D:\Program Files\AviSynth 2.5\plugins\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
+    <PreBuildEvent>
+      <Command>cd ..\
+rev_num.bat
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
     <ClCompile>
@@ -115,6 +125,11 @@
       <AdditionalDependencies>../lib/$(IntDir)/zlib.lib;../$(IntDir)/dds_lib.lib;../v8/$(IntDir)/v8_base.lib;../v8/$(IntDir)/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>D:\Program Files\AviSynth 2.5\plugins\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
+    <PreBuildEvent>
+      <Command>cd ..\
+rev_num.bat
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\COle.cpp" />
