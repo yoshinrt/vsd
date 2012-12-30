@@ -89,7 +89,6 @@ rev_num.bat
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;VSD_FILTER_AVS_EXPORTS;AVS_PLUGIN;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../v8/include;../lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -114,7 +113,6 @@ rev_num.bat
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;VSD_FILTER_AVS_EXPORTS;AVS_PLUGIN;_CRT_SECURE_NO_WARNINGS;GPS_ONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../v8/include;../lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OpenMPSupport>true</OpenMPSupport>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>

@@ -5,14 +5,15 @@ function Initialize(){
 	ImgMeter = new Image( Vsd.SkinDir + "standard.png" );
 	ImgG     = new Image( ImgMeter );
 	
-	FontS = new Font( "Impact", Vsd.Height / 30 );
-	FontM = new Font( "Impact", Vsd.Height / 23 );
-	FontG = new Font( "Impact", Vsd.Height / 18 );
-	FontL = new Font( "Impact", Vsd.Height / 12 );
-	FontM_Outline = new Font( "Impact", Vsd.Height / 20, FONT_FIXED | FONT_OUTLINE );
+	Scale = Vsd.Height / 720;
+	
+	FontS = new Font( "Impact", 24 * Scale );
+	FontM = new Font( "Impact", 31 * Scale );
+	FontG = new Font( "Impact", 40 * Scale );
+	FontL = new Font( "Impact", 60 * Scale );
+	FontM_Outline = new Font( "Impact", 36 * Scale, FONT_FIXED | FONT_OUTLINE );
 	
 	// 動画サイズに応じてメーター画像をリサイズ
-	Scale = Vsd.Height / 720;
 	if( Scale != 1 ){
 		ImgMeter.Resize( ImgMeter.Width * Scale, ImgMeter.Height * Scale );
 	}
