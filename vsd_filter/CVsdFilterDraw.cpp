@@ -1203,6 +1203,8 @@ void CVsdFilter::DrawMeterScale(
 		iStep = ( iStep + 9 ) / 10 * 10;
 	}
 	
+	if( iLine2Cnt < 1 ) iLine2Cnt = 1;
+	
 	for( i = 0; i <= iMaxVal * iLine2Cnt / iStep; ++i ){
 		double dAngle = ( iDegRange * i * iStep / ( double )iLine2Cnt / iMaxVal + iMinDeg ) * ToRAD;
 		
