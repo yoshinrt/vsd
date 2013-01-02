@@ -219,6 +219,9 @@ void CVsdFilter::DrawArc(
 	double dStart, double dEnd,
 	tRABY uColor, UINT uFlag
 ){
+	dStart = fmod( dStart, 360 ); if( dStart < 0 ) dStart += 360;
+	dEnd   = fmod( dEnd  , 360 ); if( dEnd   < 0 ) dEnd   += 360;
+	
 	int		i	= a;
 	int		j	= 0;
 	int		a2	= b * b;
@@ -291,6 +294,9 @@ void CVsdFilter::DrawArc(
 	double dStart, double dEnd,
 	tRABY uColor
 ){
+	dStart = fmod( dStart, 360 ); if( dStart < 0 ) dStart += 360;
+	dEnd   = fmod( dEnd  , 360 ); if( dEnd   < 0 ) dEnd   += 360;
+	
 	int		iStX = ( int )( 1024 * a * abs( cos( ToRAD * dStart )));
 	int		iStY = ( int )( 1024 * b * abs( sin( ToRAD * dStart )));
 	int		iEdX = ( int )( 1024 * a * abs( cos( ToRAD * dEnd )));
