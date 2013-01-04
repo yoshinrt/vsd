@@ -193,8 +193,8 @@ UINT CVsdLog::GPSLogRescan( void ){
 		double dMaxGx, dMinGx;
 		double dMaxGy, dMinGy;
 		
-		dMaxSpeed = dMaxGx = dMaxGy = -FLT_MAX;
-		dMinSpeed = dMinGx = dMinGy =  FLT_MAX;
+		dMaxSpeed = -FLT_MAX;
+		dMinSpeed =  FLT_MAX;
 		
 		// スピード生成
 		if( bCreateSpeed ){
@@ -229,13 +229,13 @@ UINT CVsdLog::GPSLogRescan( void ){
 			double	dBearingPrev = 100;
 			
 			#pragma omp for
-			for( int i = 1; i < GetCnt() - 1; ++i ){
+			for( int i = 2; i < GetCnt() - 1; ++i ){
 				if( dBearingPrev = 100 ){
-					dBearingPrev = atan2( Y0( i ) - Y0( i - 1 ), X0( i ) - X0( i - 1 ));
+					dBearingPrev = atan2( Y0( i ) - Y0( i - 2 ), X0( i ) - X0( i - 2 ));
 				}
 				
 				// bearing 計算
-				double dBearing = atan2( Y0( i + 1 ) - Y0( i ), X0( i + 1 ) - X0( i ));
+				double dBearing = atan2( Y0( i + 1 ) - Y0( i - 1 ), X0( i + 1 ) - X0( i - 1 ));
 				
 				// 横 G 計算
 				// Gx / Gy を作る
@@ -264,59 +264,76 @@ UINT CVsdLog::GPSLogRescan( void ){
 				dBearingPrev = dBearing;
 			}
 			
+			// スムージング
+			#define G_SMOOTH_NUM	3	// 平均化する要素数
+			#define G_SMOOTH_CNT	( m_dFreq > 5 ? 2 : 1 )	// スムージング回数
+			#define G_SMOOTH_RATIO	0.3	// min/max 計算用係数
+			
 			#pragma omp single
 			{
+				// 番犬の G 初期化
+				SetRawGx( 0, 0 );
+				SetRawGy( 1, 0 );
 				SetRawGx( GetCnt() - 1, 0 );
 				SetRawGy( GetCnt() - 1, 0 );
-			}
-			
-			// スムージング
-			#define G_SMOOTH_NUM	3
-			
-			#pragma omp single
-			{
+				
+				// min max リセット
 				m_pLogGx->InitMinMax();
 				m_pLogGy->InitMinMax();
 			}
 			
-			#pragma omp for
-			for( int i = ( G_SMOOTH_NUM - 1 ) / 2; i < GetCnt() - G_SMOOTH_NUM / 2; ++i ){
-				if( i < 2 || i >= GetCnt() - 2 ) continue;
+			for( UINT v = G_SMOOTH_CNT; v; --v ){
+				dMaxGx = dMaxGy = -FLT_MAX;
+				dMinGx = dMinGy =  FLT_MAX;
+				double dx0, dy0;
+				dx0 = dy0 = 0;
 				
-				if( Speed( i ) == 0 ){
-					SetRawGx( i, 0 );
-					SetRawGy( i, 0 );
+				#pragma omp for
+				for( int i = ( G_SMOOTH_NUM - 1 ) / 2; i < GetCnt() - G_SMOOTH_NUM / 2; ++i ){
 					
-					if( dMaxGx < 0 ) dMaxGx = 0;
-					if( dMinGx > 0 ) dMinGx = 0;
-					if( dMaxGy < 0 ) dMaxGy = 0;
-					if( dMinGy > 0 ) dMinGy = 0;
-				}else{
-					double dx, dy;
+					// 番犬分は処理スキップ
+					if( i < 2 || i >= GetCnt() - 2 ) continue;
 					
-					SetRawGx( i, dx = (
-						( G_SMOOTH_NUM >= 7 ? Gx( i - 3 ) : 0 ) +
-						( G_SMOOTH_NUM >= 6 ? Gx( i + 3 ) : 0 ) +
-						( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
-						( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
-						( G_SMOOTH_NUM >= 3 ? Gx( i - 1 ) : 0 ) +
-						( G_SMOOTH_NUM >= 2 ? Gx( i + 1 ) : 0 ) +
-						Gx( i + 0 )
-					) / G_SMOOTH_NUM );
-					SetRawGy( i, dy = (
-						( G_SMOOTH_NUM >= 7 ? Gy( i - 3 ) : 0 ) +
-						( G_SMOOTH_NUM >= 6 ? Gy( i + 3 ) : 0 ) +
-						( G_SMOOTH_NUM >= 5 ? Gy( i - 2 ) : 0 ) +
-						( G_SMOOTH_NUM >= 4 ? Gy( i + 2 ) : 0 ) +
-						( G_SMOOTH_NUM >= 3 ? Gy( i - 1 ) : 0 ) +
-						( G_SMOOTH_NUM >= 2 ? Gy( i + 1 ) : 0 ) +
-						Gy( i + 0 )
-					) / G_SMOOTH_NUM );
-					
-					if( dMaxGx < dx ) dMaxGx = dx;
-					if( dMinGx > dx ) dMinGx = dx;
-					if( dMaxGy < dy ) dMaxGy = dy;
-					if( dMinGy > dy ) dMinGy = dy;
+					if( Speed( i ) == 0 ){
+						SetRawGx( i, 0 );
+						SetRawGy( i, 0 );
+						
+						if( dMaxGx < 0 ) dMaxGx = 0;
+						if( dMinGx > 0 ) dMinGx = 0;
+						if( dMaxGy < 0 ) dMaxGy = 0;
+						if( dMinGy > 0 ) dMinGy = 0;
+					}else{
+						double dx, dy;
+						
+						SetRawGx( i, dx = (
+							( G_SMOOTH_NUM >= 7 ? Gx( i - 3 ) : 0 ) +
+							( G_SMOOTH_NUM >= 6 ? Gx( i + 3 ) : 0 ) +
+							( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
+							( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
+							( G_SMOOTH_NUM >= 3 ? Gx( i - 1 ) : 0 ) +
+							( G_SMOOTH_NUM >= 2 ? Gx( i + 1 ) : 0 ) +
+							Gx( i + 0 )
+						) / G_SMOOTH_NUM );
+						SetRawGy( i, dy = (
+							( G_SMOOTH_NUM >= 7 ? Gy( i - 3 ) : 0 ) +
+							( G_SMOOTH_NUM >= 6 ? Gy( i + 3 ) : 0 ) +
+							( G_SMOOTH_NUM >= 5 ? Gy( i - 2 ) : 0 ) +
+							( G_SMOOTH_NUM >= 4 ? Gy( i + 2 ) : 0 ) +
+							( G_SMOOTH_NUM >= 3 ? Gy( i - 1 ) : 0 ) +
+							( G_SMOOTH_NUM >= 2 ? Gy( i + 1 ) : 0 ) +
+							Gy( i + 0 )
+						) / G_SMOOTH_NUM );
+						
+						if( v == 1 ){
+							dx0 = dx * G_SMOOTH_RATIO + dx0 * ( 1 - G_SMOOTH_RATIO );
+							dy0 = dy * G_SMOOTH_RATIO + dy0 * ( 1 - G_SMOOTH_RATIO );
+							
+							if( dMaxGx < dx0 ) dMaxGx = dx0;
+							if( dMinGx > dx0 ) dMinGx = dx0;
+							if( dMaxGy < dy0 ) dMaxGy = dy0;
+							if( dMinGy > dy0 ) dMinGy = dy0;
+						}
+					}
 				}
 			}
 			

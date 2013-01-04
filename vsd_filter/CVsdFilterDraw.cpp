@@ -869,9 +869,9 @@ void CVsdFilter::DrawMap(
 				tRABY uColorLine;
 				
 				if( dG >= 0.0 ){
-					uColorLine = BlendColor( uColorG0, uColorGPlus,  dG / m_CurLog->MaxGy() / 0.7 );
+					uColorLine = BlendColor( uColorG0, uColorGPlus,  dG / m_CurLog->MaxGy());
 				}else{
-					uColorLine = BlendColor( uColorG0, uColorGMinus, dG / m_CurLog->MinGy() / 0.7 );
+					uColorLine = BlendColor( uColorG0, uColorGMinus, dG / m_CurLog->MinGy());
 				}
 				
 				// Line ‚ðˆø‚­

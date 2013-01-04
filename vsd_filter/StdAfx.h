@@ -41,7 +41,7 @@
 #ifdef _OPENMP
 	#include <omp.h>
 	#ifdef AVS_PLUGIN
-		#define _OPENMP_AVS
+//		#define _OPENMP_AVS
 	#endif
 #endif
 
