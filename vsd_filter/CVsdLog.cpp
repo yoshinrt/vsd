@@ -14,7 +14,8 @@
 
 /*** macros *****************************************************************/
 
-#define GRAVITY			9.80665
+#define GRAVITY				9.80665
+#define CALIB_MARK_SPEED	300
 
 /*** コンストラクタ *********************************************************/
 
@@ -499,8 +500,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						if( dVal < m_dLogStartTime ) dVal += 24 * 3600;
 						SetTime( iCnt, dVal / 1000.0 - m_dLogStartTime );
 					}else if( uKey == uIdxSpeed ){
-						// キャリブレーション中は，速度を 0 にする
-						if( dVal >= 600 ){
+						// キャリブレーション中は，一旦 0km/h にする
+						if( dVal >= CALIB_MARK_SPEED ){
 							++uCalibrating;
 							dVal = 0;
 						}else{
@@ -607,9 +608,13 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				}
 				
 				// キャリブレーション時の時間を記録
-				if( uCalibrating == 1 ){
-					m_dCalibStart = m_dCalibStop;
-					m_dCalibStop  = Time( GetCnt() - 1 );
+				if( uCalibrating ){
+					if( uCalibrating == 1 ){
+						m_dCalibStart = m_dCalibStop;
+						m_dCalibStop  = Time( GetCnt() - 1 );
+					}
+					// 300km/h に戻す
+					SetRawSpeed( GetCnt() - 1, CALIB_MARK_SPEED );
 				}
 			}
 			// ログ Hz 最終集計

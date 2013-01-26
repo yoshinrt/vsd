@@ -15,7 +15,7 @@
 
 #define WATCHDOG_REC_NUM	2	// ログ先頭の番犬分のレコード数
 #define TIME_STOP			3	// 停車とみなす Log 時間間隔
-#define TIME_STOP_MARGIN	0.5	// 停車とみなす Log に付加する Log の時間差分
+#define TIME_STOP_MARGIN	0.03	// 停車とみなす Log に付加する Log の時間差分
 
 /*** Lap Time ***************************************************************/
 
