@@ -20,7 +20,6 @@ function Initialize(){
 	MeterX	= MeterRight ? Vsd.Width  - ImgMeter.Width : 0;
 	MeterY	= Vsd.Height - ImgMeter.Height;
 	MeterR  = 150 * Scale;
-	MeterR2 = 126 * Scale;
 	MeterCx = MeterX + MeterR;
 	MeterCy = MeterY + MeterR;
 	
@@ -123,7 +122,7 @@ function Draw(){
 		Vsd.DrawMeterScale(
 			MeterCx, MeterCy, 120 * Scale,
 			10 * Scale, 2, 0xFFFFFF,
-			MeterR2 * 0.05, 1, 0xFFFFFF,
+			MeterR * 0.05, 1, 0xFFFFFF,
 			1, 135, 45,
 			135 * Scale,
 			MaxTacho / 1000, 12, 0x808080,
@@ -141,7 +140,7 @@ function Draw(){
 		Vsd.DrawMeterScale(
 			MeterCx, MeterCy, 120 * Scale,
 			10 * Scale, 2, 0xFFFFFF,
-			MeterR2 * 0.05, 1, 0xFFFFFF,
+			MeterR * 0.05, 1, 0xFFFFFF,
 			1, 135, 45,
 			135 * Scale,
 			MaxSpeed / 10, 12, 0x808080,

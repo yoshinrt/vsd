@@ -21,7 +21,20 @@ function ReadVsdLog( Files ){
 		"LapTime"		: [ "LapTime",		StrToLapTime ],
 	};
 	
-	return ReadCSV( Files, ParamDef );
+	var Ret = ReadCSV( Files, ParamDef );
+	
+	// Accel 偽造
+	Log.Accel = [ 0 ];
+	
+	for( var i = 1; i < Ret; ++i ){
+		Accel = Log.Tacho[ i + 1 ] - Log.Tacho[ i - 1 ];
+		if( Accel < 0 ) Accel = 0;
+		else if( Log.Gy[ i ] < -0.4 ) Accel *= 0.1;
+		if( Accel > 50 ) Accel = 50;
+		Log.Accel[ i ] = Accel;
+	}
+	
+	return Ret;
 	
 	function StrToUTC( str ){
 		// 2012-01-23T11:02:36.789Z (GMT)

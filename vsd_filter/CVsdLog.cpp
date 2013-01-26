@@ -419,6 +419,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			UINT	uIdxTime	= ~0;
 			UINT	uIdxLapTime	= ~0;
 			UINT	uIdxDistance= ~0;
+			UINT	uIdxSpeed	= ~0;
 			UINT	uIdxX0		= ~0;
 			UINT	uIdxY0		= ~0;
 			
@@ -431,6 +432,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				if( ArrayTmp->IsArray()){
 					if     ( !strcmp( *strKey, "Time"      )) uIdxTime		= uIdx;
 					else if( !strcmp( *strKey, "Distance"  )) uIdxDistance	= uIdx;
+					else if( !strcmp( *strKey, "Speed"     )) uIdxSpeed		= uIdx;
 					else if( !strcmp( *strKey, "Longitude" )){ uIdxX0		= uIdx; pKey = "X0"; }
 					else if( !strcmp( *strKey, "Latitude"  )){ uIdxY0		= uIdx; pKey = "Y0"; }
 					else if( !strcmp( *strKey, "LapTime"   )){
@@ -483,6 +485,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			
 			UINT	uLapCnt	= 1;
 			
+			UINT	uCalibrating = 0;
+			
 			for( UINT uIdx = 0; uIdx < JSArrays[ uIdxTime ]->Length(); ++uIdx ){
 				int iCnt = GetCnt();
 				int	iLapTime = -1;
@@ -494,6 +498,15 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					if( uKey == uIdxTime ){
 						if( dVal < m_dLogStartTime ) dVal += 24 * 3600;
 						SetTime( iCnt, dVal / 1000.0 - m_dLogStartTime );
+					}else if( uKey == uIdxSpeed ){
+						// キャリブレーション中は，速度を 0 にする
+						if( dVal >= 600 ){
+							++uCalibrating;
+							dVal = 0;
+						}else{
+							uCalibrating = 0;
+						}
+						CArrays[ uKey ]->Set( iCnt, dVal );
 					}else if( uKey == uIdxX0 ){
 						SetX0( iCnt, ( dVal - m_dLong0 ) * dLong2Meter );
 					}else if( uKey == uIdxY0 ){
@@ -591,6 +604,12 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						pLapLog->m_iBestLap	= pLapLog->m_iLapNum - 1;
 					}
 					++pLapLog->m_iLapNum;
+				}
+				
+				// キャリブレーション時の時間を記録
+				if( uCalibrating == 1 ){
+					m_dCalibStart = m_dCalibStop;
+					m_dCalibStop  = Time( GetCnt() - 1 );
 				}
 			}
 			// ログ Hz 最終集計

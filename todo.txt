@@ -4,16 +4,20 @@
 ・ファームロードを独自に作る・モニターのコード削除
 
 ● vsd_filter
+・Image 領域指定コピー new
+・Image をフォントにする
+・グラフ表示・同期情報表示制御をスクリプトで制御
+・サウンドレーサーテクノロジ
+・standard に accel, brake 追加
+・ドロップダウンリストでファイル名を指定した場合，ファイル名が表示されてない
 ・馬力計測スキン
-・ログファイル形式
-　・GPS babel コール→ActiveXObject 実装
+・GPS babel コール→ActiveXObject 実装
 ・GPS ログ・その他歯抜け log 補完
 ・buildin コード
 ・GPS_ONLY でログオフセット 2本対応
 ・VSD log の時刻を入れて GPS ログと自動同期
 　・GPS/VSD の波形マッチング
   ・なんか !GPS_ONLY 時に，log offset スライダの動きがおかしい
-・ドロップダウンリストでファイル名を指定した場合，ファイル名が表示されてない
 ・同期モードを削除して同期専用スキン
 ・エラーメッセージ vararg 化
 ・Font outline フォント事前作成

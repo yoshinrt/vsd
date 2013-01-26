@@ -135,8 +135,8 @@ class CVsdLog {
 	double	m_dLati0;
 	
 	// VSD ログ位置自動認識用
-	int		m_iLogStart;
-	int		m_iLogStop;
+	double	m_dCalibStart;
+	double	m_dCalibStop;
 	
 	// ログの map
 	std::map<std::string, VSD_LOG_t *> m_Logs;

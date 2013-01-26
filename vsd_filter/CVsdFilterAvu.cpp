@@ -1334,8 +1334,8 @@ BOOL func_update( FILTER *filter, int status ){
 			filter->check[ CHECK_LOGPOS ] &&
 			g_Vsd->m_VsdLog
 		){
-			filter->track[ PARAM_LSt ] = g_Vsd->m_VsdLog->m_iLogStart;
-			filter->track[ PARAM_LEd ] = g_Vsd->m_VsdLog->m_iLogStop;
+			filter->track[ PARAM_LSt ] = ( int )( g_Vsd->m_VsdLog->m_dCalibStart * SLIDER_TIME );
+			filter->track[ PARAM_LEd ] = ( int )( g_Vsd->m_VsdLog->m_dCalibStop  * SLIDER_TIME );
 			
 			// Ý’èÄ•`‰æ
 			filter->exfunc->filter_window_update( filter );
