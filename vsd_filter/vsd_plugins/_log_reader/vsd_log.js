@@ -47,7 +47,7 @@ function ReadVsdLog( Files ){
 	
 	function StrToLapTime( str ){
 		// 1:23.456
-		if( typeof( str ) == "string" && str.match( /(\d+):([\d\.]+)/ )){
+		if( typeof( str ) == "string" && str.match( /(?:(\d+):)?([\d\.]+)/ )){
 			return RegExp.$1 * 60000 + RegExp.$2 * 1000;
 		}
 		return -1;

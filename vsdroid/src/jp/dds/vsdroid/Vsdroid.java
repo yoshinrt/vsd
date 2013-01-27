@@ -216,7 +216,7 @@ public class Vsdroid extends Activity {
 			iSectorCntMax	= 1;
 			dGymkhaStart	= 1;
 
-			Cal				= Calendar.getInstance();
+			Cal				= Calendar.getInstance( TimeZone.getTimeZone( "GMT+0" ));
 
 			LapState		= LAP_STATE.NONE;
 
@@ -1113,7 +1113,7 @@ public class Vsdroid extends Activity {
 
 			// メーターパネル
 			canvas.drawBitmap( bitmap[ iBarLv ], 0, 0, null );
-			SetFlash( iBarLv >= 1 ? FLASH_STATE.ON : FLASH_STATE.OFF );
+			SetFlash( iBarLv >= 2 ? FLASH_STATE.ON : FLASH_STATE.OFF );
 
 			// Vsd.iTacho 針
 			paint.setColor( Color.RED );
