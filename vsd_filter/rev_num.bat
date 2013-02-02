@@ -26,3 +26,7 @@ if( $OldNum != $NewNum ){
 	open( FP, "> rev_num.h" );
 	print( FP "#define PROG_REVISION\t\"r$1\"\n" );
 }
+
+if( $#ARGV >= 0 ){
+	system( join( " ", @ARGV ));
+}

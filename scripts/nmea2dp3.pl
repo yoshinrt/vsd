@@ -10,8 +10,14 @@ substr( $Buf, 0x88, 6 )		= "\xFF\xDE\x32\x01\x00\x01";
 
 $FileName = $ARGV[ 0 ];
 
+if( $FileName =~ /\.gz$/ ){
+	open( fpIn, "gunzip -c $FileName |" );
+}else{
+	open( fpIn, "< $FileName" );
+}
+
 # データ変換
-while( <> ){
+while( <fpIn> ){
 	if( /GPRMC/ ){
 		# $GPRMC,042246.600,A, 3604.729800,N,13631.146238,E,0.763,  153.25,   031111,,,A*56
 		( undef, $Time, undef, $Lati, undef, $Long, undef,  $Speed, $Bearing ) = split( /,/, $_ );

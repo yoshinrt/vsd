@@ -14,6 +14,7 @@
 #include "pixel.h"
 #include "CVsdImage.h"
 #include "CVsdFilter.h"
+#include "rev_num.h"
 
 /*** macros *****************************************************************/
 

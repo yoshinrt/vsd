@@ -10,6 +10,7 @@
 
 #include "avisynth.h"
 #include "CVsdFilter.h"
+#include "rev_num.h"
 
 /****************************************************************************/
 

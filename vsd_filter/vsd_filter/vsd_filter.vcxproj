@@ -84,7 +84,7 @@
     </Link>
     <PreBuildEvent>
       <Command>cd ..\
-rev_num.bat
+rev_num.bat ./make_js_func.bat
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -115,7 +115,7 @@ rev_num.bat
     </Link>
     <PreBuildEvent>
       <Command>cd ..\
-rev_num.bat
+rev_num.bat ./make_js_func.bat
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -145,7 +145,7 @@ rev_num.bat
     </Link>
     <PreBuildEvent>
       <Command>cd ..\
-rev_num.bat
+rev_num.bat ./make_js_func.bat
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>

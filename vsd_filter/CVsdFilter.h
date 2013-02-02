@@ -20,7 +20,6 @@
 #define PROG_NAME_J		"VSDメーター合成"
 #define PROG_NAME_J_W	L"VSDメーター合成"
 #define PROG_NAME_LONG	"`VSDFilter' vehicle data logger overlay plugin"
-#include "rev_num.h"
 
 #define MAX_LAP		200
 
