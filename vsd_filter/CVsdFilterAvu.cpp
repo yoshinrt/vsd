@@ -1027,11 +1027,17 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 		fputc( '"', fp );
 	}
 	
-	fprintf( fp, " \\\n)\n"
+	fprintf( fp, " \\\n)\n" );
 	#ifndef GPS_ONLY
-		"# Amplify( 0.2 )\n"
+		//fprintf( fp, "# Amplify( 0.2 )\n" );
+		
+		int iSelStart, iSelEnd;
+		if( filter->exfunc->get_select_frame( editp, &iSelStart, &iSelEnd )){
+			if( iSelEnd == GetFrameMax() - 1 ) iSelEnd = 0;
+			if( iSelStart != 0 || iSelEnd != 0 )
+				fprintf( fp, "Trim( %d, %d )\n", iSelStart, iSelEnd );
+		}
 	#endif
-	);
 	
 	fclose( fp );
 	return TRUE;
