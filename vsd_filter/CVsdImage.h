@@ -17,10 +17,10 @@ class PIXEL_RABY {
 	union {
 		UINT	raby;
 		struct {
-			UCHAR	y;
-			UCHAR	b;
-			UCHAR	a;
-			UCHAR	r;
+			UCHAR	y;	// UCHAR
+			UCHAR	b;	// * alfa çœÇ›ÅCsigned ÇæÇØÇ« +128 offset çœÇ›
+			UCHAR	a;	// * alfa çœÇ›ÅCUCHAR
+			UCHAR	r;	// * alfa çœÇ›ÅCsigned ÇæÇØÇ« +128 offset çœÇ›
 		};
 	};
 	

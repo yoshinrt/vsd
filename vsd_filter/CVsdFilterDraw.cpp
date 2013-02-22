@@ -556,6 +556,7 @@ inline UINT CVsdFilter::BlendColor(
 	
 	return
 		(( UINT )(( uColor1 & 0xFF000000 ) * dAlfa + ( uColor0 & 0xFF000000 ) * ( 1 - dAlfa )) & 0xFF000000 ) +
+		(( UINT )(( uColor1 & 0x00FF0000 ) * dAlfa + ( uColor0 & 0x00FF0000 ) * ( 1 - dAlfa )) & 0x00FF0000 ) +
 		(( UINT )(( uColor1 & 0x0000FF00 ) * dAlfa + ( uColor0 & 0x0000FF00 ) * ( 1 - dAlfa )) & 0x0000FF00 ) +
 		(( UINT )(( uColor1 & 0x000000FF ) * dAlfa + ( uColor0 & 0x000000FF ) * ( 1 - dAlfa )) & 0x000000FF );
 }
@@ -609,6 +610,14 @@ void CVsdFilter::DrawGraphSub(
 	double	dTime0 = Log.Time() - ( iWidth / 2 ) * GRAPH_SCALE;
 	int		iIndex = -1;
 	double	dIndex;
+	
+	// 0 ƒ‰ƒCƒ“‚ğ•`‚­
+	if( Data.GetMax() >= 0 && Data.GetMin() <= 0 ){
+		tRABY uColor0 = BlendColor( uColor, PIXEL_RABY::Argb2Raby( 0xFF000000 ), 0.75 );
+		
+		int iPosY = y2 - ( int )( -Data.GetMin() * iHeight / ( Data.GetMax() - Data.GetMin()));
+		DrawLine( x1, iPosY, x2, iPosY, 1, uColor0, 0 );
+	}
 	
 	for( int x = 0; x < iWidth; x += GRAPH_STEP ){
 		dIndex = Log.GetIndex( dTime0 + x * GRAPH_SCALE, iIndex );
