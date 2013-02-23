@@ -9,14 +9,14 @@ goto :EOF
 # .tab=4
 
 $ENV{ 'LANG' } = 'C';
-$_ = `svn info`;
+$_ = `svn info -r HEAD`;
 /^Revision: (\d+)/m;
 
 $NewNum = $1;
 
 if( -e "rev_num.h" ){
 	$_ = `cat rev_num.h`;
-	/"(\d+)"/;
+	/"r(\d+)"/;
 	$OldNum = $1;
 }else{
 	$OldNum = -1;
