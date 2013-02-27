@@ -421,6 +421,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			UINT	uIdxLapTime	= ~0;
 			UINT	uIdxDistance= ~0;
 			UINT	uIdxSpeed	= ~0;
+			UINT	uIdxLong	= ~0;
+			UINT	uIdxLati	= ~0;
 			UINT	uIdxX0		= ~0;
 			UINT	uIdxY0		= ~0;
 			
@@ -434,8 +436,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					if     ( !strcmp( *strKey, "Time"      )) uIdxTime		= uIdx;
 					else if( !strcmp( *strKey, "Distance"  )) uIdxDistance	= uIdx;
 					else if( !strcmp( *strKey, "Speed"     )) uIdxSpeed		= uIdx;
-					else if( !strcmp( *strKey, "Longitude" )){ uIdxX0		= uIdx; pKey = "X0"; }
-					else if( !strcmp( *strKey, "Latitude"  )){ uIdxY0		= uIdx; pKey = "Y0"; }
+					else if( !strcmp( *strKey, "Longitude" )) uIdxLong		= uIdx;
+					else if( !strcmp( *strKey, "Latitude"  )) uIdxLati		= uIdx;
 					else if( !strcmp( *strKey, "LapTime"   )){
 						uIdxLapTime	= uIdx;
 						CArrays.push_back( NULL );
@@ -453,25 +455,33 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				}
 			}
 			
-			// Distance が無いときは，作る
-			BOOL bCreateDistance = FALSE;
-			if( uIdxDistance == ~0 && uIdxX0 != ~0 && uIdxY0 != ~0 ){
-				uIdxDistance = CArrays.size();
-				CArrays.push_back( GetElement( "Distance", TRUE ));
-				bCreateDistance = TRUE;
-			}
-			
 			// Time 存在確認
 			if( uIdxTime == ~0 ) return 0;
 			m_dLogStartTime = JSArrays[ uIdxTime ]->Get( 0 )->NumberValue() / 1000.0;
 			
-			// 緯度経度→メートル 変換定数
 			double dLong2Meter = 0;
 			double dLati2Meter = 0;
 			
-			if( uIdxX0 != ~0 && uIdxY0 != ~0 ){
-				m_dLong0 = JSArrays[ uIdxX0 ]->Get( 0 )->NumberValue();
-				m_dLati0 = JSArrays[ uIdxY0 ]->Get( 0 )->NumberValue();
+			BOOL bCreateDistance = FALSE;
+			
+			if( uIdxLong != ~0 && uIdxLati != ~0 ){
+				// Distance が無いときは，作る
+				if( uIdxDistance == ~0 ){
+					uIdxDistance = uIdx++;
+					CArrays.push_back( GetElement( "Distance", TRUE ));
+					bCreateDistance = TRUE;
+				}
+				
+				uIdxX0 = uIdx++;
+				CArrays.push_back( GetElement( "X0", TRUE ));
+				uIdxY0 = uIdx++;
+				CArrays.push_back( GetElement( "Y0", TRUE ));
+				
+				// 緯度経度→メートル 変換定数
+				m_dLong0 = JSArrays[ uIdxLong ]->Get( 0 )->NumberValue();
+				CArrays[ uIdxLong ]->SetBaseVal( m_dLong0 );
+				m_dLati0 = JSArrays[ uIdxLati ]->Get( 0 )->NumberValue();
+				CArrays[ uIdxLati ]->SetBaseVal( m_dLati0 );
 				
 				dLong2Meter = GPSLogGetLength( m_dLong0, m_dLati0, m_dLong0 + 1.0 / 3600, m_dLati0 ) * 3600;
 				dLati2Meter = GPSLogGetLength( m_dLong0, m_dLati0, m_dLong0, m_dLati0 + 1.0 / 3600 ) * 3600;
@@ -508,9 +518,11 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 							uCalibrating = 0;
 						}
 						CArrays[ uKey ]->Set( iCnt, dVal );
-					}else if( uKey == uIdxX0 ){
+					}else if( uKey == uIdxLong ){
+						CArrays[ uKey ]->Set( iCnt, dVal );
 						SetX0( iCnt, ( dVal - m_dLong0 ) * dLong2Meter );
-					}else if( uKey == uIdxY0 ){
+					}else if( uKey == uIdxLati ){
+						CArrays[ uKey ]->Set( iCnt, dVal );
 						SetY0( iCnt, ( m_dLati0 - dVal ) * dLati2Meter );
 					}else if( uKey == uIdxLapTime ){
 						if( !_isnan( dVal )) iLapTime = ( int )dVal;

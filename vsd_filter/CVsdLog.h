@@ -61,35 +61,41 @@ class CLapLog {
 class VSD_LOG_t {
 	
   public:
-	VSD_LOG_t(){
-		m_fMin =  FLT_MAX;
-		m_fMax = -FLT_MAX;
+	VSD_LOG_t( double dBaseVal = 0 ){
+		m_fMin 		=  FLT_MAX;
+		m_fMax 		= -FLT_MAX;
+		m_dBaseVal	= dBaseVal;
 	}
 	
 	// 値取得
-	double Get( int    iIndex ){ return m_Log[ iIndex ]; }
+	double Get( int    iIndex ){ return m_Log[ iIndex ] + m_dBaseVal; }
 	double Get( double dIndex ){
 		double alfa = dIndex - ( UINT )dIndex;
 		return
 			m_Log[ ( UINT )dIndex     ] * ( 1 - alfa ) +
-			m_Log[ ( UINT )dIndex + 1 ] * (     alfa );
+			m_Log[ ( UINT )dIndex + 1 ] * (     alfa ) +
+			m_dBaseVal;
 	}
 	
-	double GetMin(){ return m_fMin; }
-	double GetMax(){ return m_fMax; }
+	double GetMin(){ return m_fMin + m_dBaseVal; }
+	double GetMax(){ return m_fMax + m_dBaseVal; }
 	void SetMaxMin( double dMaxVal, double dMinVal ){
+		dMaxVal -= m_dBaseVal;
+		dMinVal -= m_dBaseVal;
 		if( m_fMin > dMinVal ) m_fMin = ( float )dMinVal;
 		if( m_fMax < dMaxVal ) m_fMax = ( float )dMaxVal;
 	}
 	
 	// 値設定
 	void Set( int iIndex, double dVal ){
-		if(      m_fMin > dVal ) m_fMin = ( float )dVal;
-		else if( m_fMax < dVal ) m_fMax = ( float )dVal;
+		double dValTmp = dVal - m_dBaseVal;
+		if(      m_fMin > dValTmp ) m_fMin = ( float )dValTmp;
+		else if( m_fMax < dValTmp ) m_fMax = ( float )dValTmp;
 		SetRaw( iIndex, dVal );
 	}
 	
 	void SetRaw( int iIndex, double dVal ){
+		dVal -= m_dBaseVal;
 		// ★無い値を線形補間する必要あり
 		if( GetCnt() > iIndex ) m_Log[ iIndex ] = ( float )dVal;
 		else while( GetCnt() <= iIndex ) Push( dVal );
@@ -100,6 +106,7 @@ class VSD_LOG_t {
 	}
 	
 	void Push( double dVal ){
+		dVal -= m_dBaseVal;
 		m_Log.push_back(( float )dVal );
 	}
 	
@@ -108,9 +115,17 @@ class VSD_LOG_t {
 		m_fMax = -FLT_MAX;
 	}
 	
-	void Resize( int iCnt, double dVal ){ m_Log.resize( iCnt, ( float )dVal ); }
+	void Resize( int iCnt, double dVal ){
+		dVal -= m_dBaseVal;
+		m_Log.resize( iCnt, ( float )dVal );
+	}
+	
+	void SetBaseVal( double dVal ){
+		m_dBaseVal = dVal;
+	}
 	
   private:
+	double	m_dBaseVal;
 	std::vector<float>	m_Log;
 	float	m_fMin;
 	float	m_fMax;
