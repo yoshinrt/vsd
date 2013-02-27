@@ -65,7 +65,7 @@ function Draw(){
 		// タコメーター針
 		Vsd.DrawArc(
 			MeterCx, MeterCy, 120 * Scale, 120 * Scale, 80 * Scale, 80 * Scale,
-			135, 135 + 270 * Vsd.Tacho / Vsd.MaxTacho, GauageColor
+			135, 135 + 270 * Vsd.Tacho / MaxTacho, GauageColor
 		);
 	}else if( Vsd.Speed >= 1 ){
 		// スピードメーター針

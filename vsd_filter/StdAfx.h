@@ -23,6 +23,7 @@
 #include <zconf.h>
 #include <zlib.h>
 #include <ole2.h>
+#include <Wininet.h>
 
 #include <string>
 #include <vector>

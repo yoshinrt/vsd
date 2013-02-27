@@ -37,27 +37,6 @@ CVsdImage::~CVsdImage(){
 /*** イメージのロード *******************************************************/
 
 UINT CVsdImage::Load( LPCWSTR szFileName ){
-#if 0
-	// 文字コードをワイド文字列に変換
-	// 【注意】本来はこの箇所は文字列バッファ長の考慮の他に文字列終端コードを処理するよりセキュアな対応が好ましいです。
-	wchar_t	path[ MAX_PATH + 1 ];
-	size_t	pathLength = 0;
-	
-	if(
-		mbstowcs_s(
-			&pathLength,	// [out]	変換された文字数
-			&path[0],		// [out]	変換されたワイド文字列を格納するバッファのアドレス(変換先)
-			MAX_PATH,		// [in]	 出力側のバッファのサイズ(単位:文字数)
-			szFileName,		// [in]	 マルチバイト文字列のアドレス(変換元)
-			_TRUNCATE		// [in]	 出力先に格納するワイド文字の最大数
-		) != 0
-	){
-		return ERR_MBSTOWCS;
-	}
-#else
-	LPCWSTR	path = szFileName;
-#endif
-	
 	// GDI+オブジェクト（画像展開に必要）
 	Gdiplus::GdiplusStartupInput	gdiplusStartupInput;
 	ULONG_PTR						gdiplusToken;
@@ -82,10 +61,85 @@ UINT CVsdImage::Load( LPCWSTR szFileName ){
 	int iMaxY = MININT;
 	
 	UINT	raby;
+	Gdiplus::Bitmap*	pBitmap;
 	
-	//--- 画像ファイルを開く
-	//  【対応画像形式】  BMP, JPEG, PNG, GIF, TIFF, WMF, EMF
-	Gdiplus::Bitmap*	pBitmap = Gdiplus::Bitmap::FromFile( path );
+	if(
+		wcsncmp( szFileName, L"http://",  7 ) == 0 ||
+		wcsncmp( szFileName, L"https://", 8 ) == 0
+	){
+		// URL で開く
+		HINTERNET	hInternet	= NULL;
+		HINTERNET	hFile		= NULL;
+		HGLOBAL		hBuffer		= NULL;
+		void*		pBuffer		= NULL;
+		
+		DWORD		dwReadSize;
+		BOOL		bResult;
+		
+		do{
+			if(
+				!(
+					(
+						/* WININET初期化 */
+						hInternet = InternetOpen(
+							"WININET Sample Program",
+							INTERNET_OPEN_TYPE_PRECONFIG,
+							NULL, NULL, 0
+						)
+					) && (
+						/* URLのオープン */
+						hFile = InternetOpenUrlW( hInternet, szFileName, NULL, 0, 0, 0 )
+					)
+				)
+			){
+				result = ERR_WININET;
+				break;
+			}
+			
+			// グローバルメモリ確保
+			#define IMG_BUF_SIZE ( 512 * 1024 )
+			
+			if(
+				!(
+					(
+						hBuffer = GlobalAlloc( GMEM_MOVEABLE, IMG_BUF_SIZE )
+					) && (
+						pBuffer = GlobalLock( hBuffer )
+					)
+				)
+			){
+				result = ERR_GLOBAL_MEM;
+				break;
+			}
+			
+			/* オープンしたURLからデータを(BUF_SIZEバイトずつ)読み込む */
+			UINT	uTotalSize = 0;
+			
+			for(;;){
+				bResult = InternetReadFile( hFile, ( char *)pBuffer + uTotalSize, IMG_BUF_SIZE - uTotalSize, &dwReadSize );
+				
+				/* 全て読み込んだらループを抜ける */
+				if( bResult && ( dwReadSize == 0 )) break;
+				uTotalSize += dwReadSize;
+			}
+			
+	        IStream* pIStream;
+			if( CreateStreamOnHGlobal( hBuffer, FALSE, &pIStream ) == S_OK )
+			pBitmap = Gdiplus::Bitmap::FromStream( pIStream );
+		}while( 0 );
+		
+		/* 後処理 */
+		if( hFile )		InternetCloseHandle( hFile );
+		if( hInternet )	InternetCloseHandle( hInternet );
+		if( pBuffer )	GlobalUnlock( hBuffer );
+		if( hBuffer )	GlobalFree( hBuffer );
+		
+	}else{
+		//--- 画像ファイルを開く
+		//  【対応画像形式】  BMP, JPEG, PNG, GIF, TIFF, WMF, EMF
+		pBitmap = Gdiplus::Bitmap::FromFile( szFileName );
+	}
+	
 	if( pBitmap && pBitmap->GetLastStatus() == Gdiplus::Ok ){
 		//---- 画像サイズ分の領域確保
 		m_iWidth  = pBitmap->GetWidth();

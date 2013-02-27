@@ -106,13 +106,13 @@ function Draw(){
 	if( Vsd.MaxTacho > 0 ){
 		// タコメーター針
 		Vsd.DrawNeedle(
-			MeterCx, MeterCy, MeterR * 0.95, MeterR * -0.1,
+			MeterCx, MeterCy, MeterR * 0.95, 0,
 			135, 45, Vsd.Tacho / MaxTacho, 0xFF0000, 3
 		);
 	}else{
 		// スピードメーター針
 		Vsd.DrawNeedle(
-			MeterCx, MeterCy, MeterR * 0.95, MeterR * -0.1,
+			MeterCx, MeterCy, MeterR * 0.95, 0,
 			135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
 		);
 	}

@@ -79,7 +79,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>D:\Program Files\AVIUTL\vsd_filter.auf</OutputFile>
-      <AdditionalDependencies>../lib/$(IntDir)/zlib.lib;../$(IntDir)/dds_lib.lib;../v8/$(IntDir)/v8_base.lib;../v8/$(IntDir)/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../lib/$(IntDir)/zlib.lib;../$(IntDir)/dds_lib.lib;../v8/$(IntDir)/v8_base.lib;../v8/$(IntDir)/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
     <PreBuildEvent>
@@ -109,7 +109,7 @@ rev_num.bat ./make_js_func.bat
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>D:\Program Files\AVIUTL\vsd_filter.auf</OutputFile>
-      <AdditionalDependencies>../lib/$(IntDir)/zlib.lib;../$(IntDir)/dds_lib.lib;../v8/$(IntDir)/v8_base.lib;../v8/$(IntDir)/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../lib/$(IntDir)/zlib.lib;../$(IntDir)/dds_lib.lib;../v8/$(IntDir)/v8_base.lib;../v8/$(IntDir)/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
@@ -139,7 +139,7 @@ rev_num.bat ./make_js_func.bat
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>D:\Program Files\AVIUTL\vsd_filter.auf</OutputFile>
-      <AdditionalDependencies>../lib/$(IntDir)/zlib.lib;../$(IntDir)/dds_lib.lib;../v8/$(IntDir)/v8_base.lib;../v8/$(IntDir)/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../lib/$(IntDir)/zlib.lib;../$(IntDir)/dds_lib.lib;../v8/$(IntDir)/v8_base.lib;../v8/$(IntDir)/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
