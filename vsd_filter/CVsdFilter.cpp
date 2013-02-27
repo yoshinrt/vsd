@@ -98,7 +98,7 @@ int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szR
 	
 	int iRet = pLog->ReadLog( szFileName, szReaderFunc, m_LapLog );
 	if( iRet ){
-		if( pLog->m_pLogX0 )
+		if( pLog->m_pLogLongitude )
 			pLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	}else{
 		delete pLog;

@@ -61,10 +61,10 @@ class CLapLog {
 class VSD_LOG_t {
 	
   public:
-	VSD_LOG_t( double dBaseVal = 0 ){
+	VSD_LOG_t(){
 		m_fMin 		=  FLT_MAX;
 		m_fMax 		= -FLT_MAX;
-		m_dBaseVal	= dBaseVal;
+		m_dBaseVal	= 0;
 	}
 	
 	// 値取得
@@ -75,6 +75,14 @@ class VSD_LOG_t {
 			m_Log[ ( UINT )dIndex     ] * ( 1 - alfa ) +
 			m_Log[ ( UINT )dIndex + 1 ] * (     alfa ) +
 			m_dBaseVal;
+	}
+	
+	double GetDiff( int    iIndex ){ return m_Log[ iIndex ]; }
+	double GetDiff( double dIndex ){
+		double alfa = dIndex - ( UINT )dIndex;
+		return
+			m_Log[ ( UINT )dIndex     ] * ( 1 - alfa ) +
+			m_Log[ ( UINT )dIndex + 1 ] * (     alfa );
 	}
 	
 	double GetMin(){ return m_fMin + m_dBaseVal; }
@@ -95,9 +103,11 @@ class VSD_LOG_t {
 	}
 	
 	void SetRaw( int iIndex, double dVal ){
-		dVal -= m_dBaseVal;
 		// ★無い値を線形補間する必要あり
-		if( GetCnt() > iIndex ) m_Log[ iIndex ] = ( float )dVal;
+		if( GetCnt() > iIndex ){
+			double dValTmp = dVal - m_dBaseVal;
+			m_Log[ iIndex ] = ( float )dValTmp;
+		}
 		else while( GetCnt() <= iIndex ) Push( dVal );
 	}
 	
@@ -144,10 +154,6 @@ class CVsdLog {
 	
 	double	m_dFreq;
 	double	m_dLogStartTime;	// ログ開始時間
-	
-	// 緯度経度→メートル 変換用
-	double	m_dLong0;
-	double	m_dLati0;
 	
 	// VSD ログ位置自動認識用
 	double	m_dCalibStart;
@@ -257,7 +263,15 @@ class CVsdLog {
 		return ( m_pLogTime->Get( m_dLogNum ) + m_dLogStartTime ) * 1000;
 	}
 	
+	double X0( int    iIndex ){ return m_pLogLongitude->GetDiff( iIndex ) * m_dLong2Meter; }
+	double X0( double dIndex ){ return m_pLogLongitude->GetDiff( dIndex ) * m_dLong2Meter; }
+	double Y0( int    iIndex ){ return m_pLogLatitude->GetDiff( iIndex ) * m_dLati2Meter; }
+	double Y0( double dIndex ){ return m_pLogLatitude->GetDiff( dIndex ) * m_dLati2Meter; }
+	
   private:
+	double m_dLong2Meter;
+	double m_dLati2Meter;
+	
 	int	m_iCnt;
 	CVsdFilter	*m_pVsd;
 };

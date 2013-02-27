@@ -7,8 +7,6 @@ DEF_LOG( Longitude )
 DEF_LOG( Latitude )
 DEF_LOG( X )
 DEF_LOG( Y )
-DEF_LOG( X0 )
-DEF_LOG( Y0 )
 DEF_LOG( Gx )
 DEF_LOG( Gy )
 

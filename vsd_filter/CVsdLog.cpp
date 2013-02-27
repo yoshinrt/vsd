@@ -24,8 +24,8 @@ CVsdLog::CVsdLog( CVsdFilter *pVsd ){
 	
 	m_dLogStartTime	= -1;
 	
-	m_dLong0	=
-	m_dLati0	= 0;
+	m_dLong2Meter = 0;
+	m_dLati2Meter = 0;
 	m_iCnt		= 0;
 	m_pVsd		= pVsd;
 	
@@ -172,7 +172,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 	BOOL	bCreateSpeed	= FALSE;
 	BOOL	bCreateG		= FALSE;
 	
-	if( m_pLogX0 != 0 && m_pLogY0 != 0 ){
+	if( m_pLogLongitude != NULL && m_pLogLatitude != NULL ){
 		if( !m_pLogSpeed ){
 			bCreateSpeed = TRUE;
 			m_pLogSpeed = GetElement( "Speed", TRUE );
@@ -423,8 +423,6 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			UINT	uIdxSpeed	= ~0;
 			UINT	uIdxLong	= ~0;
 			UINT	uIdxLati	= ~0;
-			UINT	uIdxX0		= ~0;
-			UINT	uIdxY0		= ~0;
 			
 			UINT	uIdx = 0;
 			for( UINT u = 0; u < Keys->Length(); ++u ){
@@ -459,9 +457,6 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			if( uIdxTime == ~0 ) return 0;
 			m_dLogStartTime = JSArrays[ uIdxTime ]->Get( 0 )->NumberValue() / 1000.0;
 			
-			double dLong2Meter = 0;
-			double dLati2Meter = 0;
-			
 			BOOL bCreateDistance = FALSE;
 			
 			if( uIdxLong != ~0 && uIdxLati != ~0 ){
@@ -472,19 +467,17 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					bCreateDistance = TRUE;
 				}
 				
-				uIdxX0 = uIdx++;
-				CArrays.push_back( GetElement( "X0", TRUE ));
-				uIdxY0 = uIdx++;
-				CArrays.push_back( GetElement( "Y0", TRUE ));
-				
 				// 緯度経度→メートル 変換定数
-				m_dLong0 = JSArrays[ uIdxLong ]->Get( 0 )->NumberValue();
-				CArrays[ uIdxLong ]->SetBaseVal( m_dLong0 );
-				m_dLati0 = JSArrays[ uIdxLati ]->Get( 0 )->NumberValue();
-				CArrays[ uIdxLati ]->SetBaseVal( m_dLati0 );
+				double	dLong0;
+				double	dLati0;
 				
-				dLong2Meter = GPSLogGetLength( m_dLong0, m_dLati0, m_dLong0 + 1.0 / 3600, m_dLati0 ) * 3600;
-				dLati2Meter = GPSLogGetLength( m_dLong0, m_dLati0, m_dLong0, m_dLati0 + 1.0 / 3600 ) * 3600;
+				dLong0 = JSArrays[ uIdxLong ]->Get( 0 )->NumberValue();
+				CArrays[ uIdxLong ]->SetBaseVal( dLong0 );
+				dLati0 = JSArrays[ uIdxLati ]->Get( 0 )->NumberValue();
+				CArrays[ uIdxLati ]->SetBaseVal( dLati0 );
+				
+				m_dLong2Meter =  GPSLogGetLength( dLong0, dLati0, dLong0 + 1.0 / 3600, dLati0 ) * 3600;
+				m_dLati2Meter = -GPSLogGetLength( dLong0, dLati0, dLong0, dLati0 + 1.0 / 3600 ) * 3600;
 			}
 			
 			// vector に積む
@@ -518,12 +511,6 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 							uCalibrating = 0;
 						}
 						CArrays[ uKey ]->Set( iCnt, dVal );
-					}else if( uKey == uIdxLong ){
-						CArrays[ uKey ]->Set( iCnt, dVal );
-						SetX0( iCnt, ( dVal - m_dLong0 ) * dLong2Meter );
-					}else if( uKey == uIdxLati ){
-						CArrays[ uKey ]->Set( iCnt, dVal );
-						SetY0( iCnt, ( m_dLati0 - dVal ) * dLati2Meter );
 					}else if( uKey == uIdxLapTime ){
 						if( !_isnan( dVal )) iLapTime = ( int )dVal;
 					}else{
@@ -676,7 +663,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 
 void CVsdLog::RotateMap( double dAngle ){
 	
-	if( !m_pLogX0 ) return;
+	if( !m_pLogLongitude ) return;
 	
 	if( m_pLogX ){
 		m_pLogX->InitMinMax();
