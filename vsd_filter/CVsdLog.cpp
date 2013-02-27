@@ -171,6 +171,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 	
 	BOOL	bCreateSpeed	= FALSE;
 	BOOL	bCreateG		= FALSE;
+	BOOL	bCreateDir		= FALSE;
 	
 	if( m_pLogLongitude != NULL && m_pLogLatitude != NULL ){
 		if( !m_pLogSpeed ){
@@ -185,6 +186,12 @@ UINT CVsdLog::GPSLogRescan( void ){
 			m_pLogGx->Resize( GetCnt(), 0 );
 			m_pLogGy = GetElement( "Gy", TRUE );
 			m_pLogGy->Resize( GetCnt(), 0 );
+		}
+		
+		if( !m_pLogDirection ){
+			bCreateDir = TRUE;
+			m_pLogDirection = GetElement( "Direction", TRUE );
+			m_pLogDirection->Resize( GetCnt(), 0 );
 		}
 	}
 	
@@ -237,6 +244,12 @@ UINT CVsdLog::GPSLogRescan( void ){
 				
 				// bearing ŒvŽZ
 				double dBearing = atan2( Y0( i + 1 ) - Y0( i - 1 ), X0( i + 1 ) - X0( i - 1 ));
+				
+				if( bCreateDir ){
+					double dDir = dBearing / ToRAD + 90;
+					if( dDir < 0 ) dDir += 360;
+					SetDirection( i, dDir );
+				}
 				
 				// ‰¡ G ŒvŽZ
 				// Gx / Gy ‚ðì‚é
@@ -417,12 +430,12 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			// VSD_LOG_t * ‚Ì vector
 			std::vector<VSD_LOG_t *>	CArrays;
 			
-			UINT	uIdxTime	= ~0;
-			UINT	uIdxLapTime	= ~0;
-			UINT	uIdxDistance= ~0;
-			UINT	uIdxSpeed	= ~0;
-			UINT	uIdxLong	= ~0;
-			UINT	uIdxLati	= ~0;
+			UINT	uIdxTime		= ~0;
+			UINT	uIdxLapTime		= ~0;
+			UINT	uIdxDistance	= ~0;
+			UINT	uIdxSpeed		= ~0;
+			UINT	uIdxLong		= ~0;
+			UINT	uIdxLati		= ~0;
 			
 			UINT	uIdx = 0;
 			for( UINT u = 0; u < Keys->Length(); ++u ){
