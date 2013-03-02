@@ -376,6 +376,11 @@ class CVsdFilter {
 	}
 	#include "def_log.h"
 	
+	double GetDirectionAdjust( void ){
+		if( m_VsdLog && m_VsdLog->m_pLogDirection )	return m_VsdLog->DirectionAdjust();
+		return m_GPSLog->DirectionAdjust();
+	}
+	
 	double DateTime( void ){	// !js_func
 		if( m_VsdLog ) return m_VsdLog->DateTime();
 		if( m_GPSLog ) return m_GPSLog->DateTime();

@@ -680,6 +680,10 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_upcon.txt" );
 		#endif
 		
+		// Time ‚Ì Max Min Ý’è
+		m_pLogTime->InitMinMax();
+		m_pLogTime->SetMaxMin( Time( GetCnt() - 2 ), 0 );
+		
 		m_dLogStartTime;
 	}
 	

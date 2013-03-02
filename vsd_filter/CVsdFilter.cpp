@@ -382,7 +382,9 @@ void CVsdFilter::InitJS_Sub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl
 			);
 			
 			// Œ»Ý’l“o˜^
-			if( 0 );
+			if( strcmp( it->first.c_str(), "Direction" ) == 0 ){
+				inst->SetAccessor( v8::String::New( "Direction" ), CVsdFilterIF::Get_DirectionAdjust );
+			}
 			#define DEF_LOG( name ) \
 			else if( strcmp( it->first.c_str(), #name ) == 0 ){ \
 				inst->SetAccessor( v8::String::New( #name ), CVsdFilterIF::Get_##name ); \

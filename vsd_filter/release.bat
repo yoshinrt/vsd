@@ -18,6 +18,7 @@ xcopy /i/s "D:\Program Files\AVIUTL\vsd_plugins" vsd_plugins
 rmdir /s/q vsd_plugins\negi
 del vsd_plugins\_log_reader\vsd_log.js
 move vsd_plugins\google_maps_release.js vsd_plugins\google_maps.js
+move vsd_plugins\textonly.js vsd_plugins\_textonly.js
 
 d:\dds\bin\lha a -d ..\vsd_filter_gps.lzh *
 

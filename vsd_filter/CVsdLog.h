@@ -77,6 +77,20 @@ class VSD_LOG_t {
 			m_dBaseVal;
 	}
 	
+	double GetDirectionAdjust( double dIndex ){
+		double alfa = dIndex - ( UINT )dIndex;
+		double a = m_Log[ ( UINT )dIndex     ];
+		double b = m_Log[ ( UINT )dIndex + 1 ];
+		
+		if     ( a - b >= 180 ) a -= 360;
+		else if( a - b < -180 ) b -= 360;
+		
+		double dResult = a * ( 1 - alfa ) + b * ( alfa );
+		if( dResult < 0 ) dResult += 360;
+		
+		return dResult;
+	}
+	
 	double GetDiff( int    iIndex ){ return m_Log[ iIndex ]; }
 	double GetDiff( double dIndex ){
 		double alfa = dIndex - ( UINT )dIndex;
@@ -261,6 +275,10 @@ class CVsdLog {
 	
 	double DateTime( void ){
 		return ( m_pLogTime->Get( m_dLogNum ) + m_dLogStartTime ) * 1000;
+	}
+	
+	double DirectionAdjust( void ){
+		return m_pLogDirection->GetDirectionAdjust( m_dLogNum );
 	}
 	
 	double X0( int    iIndex ){ return m_pLogLongitude->GetDiff( iIndex ) * m_dLong2Meter; }

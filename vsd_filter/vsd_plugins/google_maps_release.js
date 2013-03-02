@@ -63,6 +63,18 @@ function Initialize(){
 //*** メーター描画処理 ******************************************************
 
 function Draw(){
+	if( typeof( Vsd.Longitude ) == 'undefined' ){
+		Vsd.DrawTextAlign(
+			Vsd.Width / 2, ( Vsd.Height - Font.Height ) / 2, ALIGN_HCENTER | ALIGN_VCENTER,
+			"GPS データが読み込まれていません", Font, 0xFFFFFF
+		);
+		Vsd.DrawTextAlign(
+			Vsd.Width / 2, ( Vsd.Height + Font.Height ) / 2, ALIGN_HCENTER | ALIGN_VCENTER,
+			"同期作業は他のスキンで行なってください", Font, 0xFFFFFF
+		);
+		return;
+	}
+	
 	if( typeof( MapImg ) == 'undefined' ){
 		MapImg = new Image( GMapURL + Vsd.Latitude + "," + Vsd.Longitude );
 		Dir		= Vsd.Direction;
@@ -71,7 +83,6 @@ function Draw(){
 		Lati	= Vsd.Latitude;
 	}
 	
-//	MessageBox( GetDistance( Vsd.Longitude, Vsd.Latitude, Long, Lati ));
 	if(
 		Math.abs( Frame - Vsd.FrameCnt ) >= 30 &&
 		GetDistance( Vsd.Longitude, Vsd.Latitude, Long, Lati ) >= 5
