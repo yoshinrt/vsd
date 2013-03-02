@@ -9,6 +9,7 @@
 #pragma once
 
 #define RABY_TRANSPARENT	0x80FF8000
+#define IMG_INET_ASYNC		0x1
 
 typedef UINT	tRABY;
 
@@ -56,7 +57,7 @@ class CVsdImage {
 	CVsdImage( CVsdImage &Org );
 	~CVsdImage();
 	
-	UINT Load( LPCWSTR szFileName );
+	UINT Load( LPCWSTR szFileName, UINT uFlag = 0 );
 	
 	inline UINT GetPixel0( int x, int y ){
 		return m_pBuf[ ( x - m_iOffsX ) + ( y - m_iOffsY ) * m_iRawWidth ].raby;
@@ -83,10 +84,20 @@ class CVsdImage {
 	int m_iWidth;	// !js_var:Width
 	int m_iHeight;	// !js_var:Height
 	
+	int	m_iStatus;	// !js_var:Status
+	enum {
+		IMG_STATUS_LOAD_COMPLETE,
+		IMG_STATUS_LOAD_INCOMPLETE,
+		IMG_STATUS_LOAD_FAILED,
+		IMG_STATUS_OBJ_DESTROYED,
+	};
+	
 	int m_iRawWidth;
 	int m_iRawHeight;
 	int m_iOffsX;
 	int m_iOffsY;
+	
+	LPWSTR		m_pFileName;
   private:
 	PIXEL_RABY	*m_pBuf;
 };

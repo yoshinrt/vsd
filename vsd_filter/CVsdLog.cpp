@@ -172,6 +172,9 @@ UINT CVsdLog::GPSLogRescan( void ){
 	BOOL	bCreateSpeed	= FALSE;
 	BOOL	bCreateG		= FALSE;
 	BOOL	bCreateDir		= FALSE;
+#ifdef USE_TURN_R
+	BOOL	bCreateTurnR	= FALSE;
+#endif
 	
 	if( m_pLogLongitude != NULL && m_pLogLatitude != NULL ){
 		if( !m_pLogSpeed ){
@@ -193,6 +196,14 @@ UINT CVsdLog::GPSLogRescan( void ){
 			m_pLogDirection = GetElement( "Direction", TRUE );
 			m_pLogDirection->Resize( GetCnt(), 0 );
 		}
+		
+		#ifdef USE_TURN_R
+			if( !m_pLogTurnR ){
+				bCreateTurnR = TRUE;
+				m_pLogTurnR = GetElement( "TurnR", TRUE );
+				m_pLogTurnR->Resize( GetCnt(), 0 );
+			}
+		#endif
 	}
 	
 	#pragma omp parallel
@@ -269,6 +280,16 @@ UINT CVsdLog::GPSLogRescan( void ){
 					/ ( Time( i ) - Time( i - 1 ))
 					* ( Speed( i ) / 3.600 )
 				);
+				
+				#ifdef USE_TURN_R
+					// r = v / ƒÖ
+					double dTurnR = 
+						( Speed( i ) / 3.600 ) /
+						( dBearingDelta / ( Time( i ) - Time( i - 1 )));
+					
+					if( dTurnR > 100 ) dTurnR = 100;
+					SetTurnR( i, dTurnR );
+				#endif
 				
 				// }5G ˆÈã‚ÍCíœ
 				if( Gx( i ) < -3 || Gx( i ) > 3 ){

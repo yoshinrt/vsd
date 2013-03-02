@@ -20,6 +20,9 @@ CVsdImage::CVsdImage(){
 	m_iWidth  = 0;	// 画像の幅
 	m_iHeight = 0;	//  〃  高さ
 	m_iOffsX = m_iOffsY = 0;
+	
+	m_iStatus	= IMG_STATUS_LOAD_INCOMPLETE;
+	m_pFileName	= NULL;
 }
 
 CVsdImage::CVsdImage( CVsdImage &Org ){
@@ -31,20 +34,25 @@ CVsdImage::CVsdImage( CVsdImage &Org ){
 
 CVsdImage::~CVsdImage(){
 	DebugMsgD( "delete CVsdImage %X\n", this );
+	
+	if( m_pFileName ) delete [] m_pFileName;
 	delete [] m_pBuf;
 }
 
 /*** イメージのロード *******************************************************/
 
-UINT CVsdImage::Load( LPCWSTR szFileName ){
-	// GDI+オブジェクト（画像展開に必要）
-	Gdiplus::GdiplusStartupInput	gdiplusStartupInput;
-	ULONG_PTR						gdiplusToken;
-	
-	//---- GDI+の初期設定
-	if( Gdiplus::GdiplusStartup( &gdiplusToken, &gdiplusStartupInput, NULL ) != Gdiplus::Ok ){
-		return ERR_GDIPLUS;
-	}
+DWORD WINAPI CVsdImage_LoadAsync(
+	LPVOID lpParameter   // スレッドのデータ
+){
+	CVsdImage *pImg = reinterpret_cast<CVsdImage *>( lpParameter );
+	pImg->Load( pImg->m_pFileName );
+	delete [] pImg->m_pFileName;
+	pImg->m_pFileName = NULL;
+
+	return 0;
+}
+
+UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 	
 	//-------------------------------------------------------------
 	// 画像の読み込み
@@ -67,6 +75,24 @@ UINT CVsdImage::Load( LPCWSTR szFileName ){
 		wcsncmp( szFileName, L"http://",  7 ) == 0 ||
 		wcsncmp( szFileName, L"https://", 8 ) == 0
 	){
+		if( uFlag & IMG_INET_ASYNC ){
+			// 非同期読み込みなのでスレッド起動
+			UINT uSize = wcslen( szFileName ) + 1;
+			m_pFileName = new WCHAR[ uSize ];
+			wcscpy_s( m_pFileName, uSize, szFileName );
+			
+			CreateThread(
+				NULL,					// セキュリティ記述子
+				0,						// 初期のスタックサイズ
+				CVsdImage_LoadAsync,	// スレッドの機能
+				this,					// スレッドの引数
+				0,						// 作成オプション
+				NULL					// スレッド識別子
+			);
+			
+			return result;
+		}
+		
 		// URL で開く
 		HINTERNET	hInternet	= NULL;
 		HINTERNET	hFile		= NULL;
@@ -92,7 +118,8 @@ UINT CVsdImage::Load( LPCWSTR szFileName ){
 					)
 				)
 			){
-				result = ERR_WININET;
+				result		= ERR_WININET;
+				m_iStatus	= IMG_STATUS_LOAD_FAILED;
 				break;
 			}
 			
@@ -108,7 +135,8 @@ UINT CVsdImage::Load( LPCWSTR szFileName ){
 					)
 				)
 			){
-				result = ERR_GLOBAL_MEM;
+				result		= ERR_GLOBAL_MEM;
+				m_iStatus	= IMG_STATUS_LOAD_FAILED;
 				break;
 			}
 			
@@ -149,7 +177,8 @@ UINT CVsdImage::Load( LPCWSTR szFileName ){
 		m_pBuf = new PIXEL_RABY[ m_iWidth * m_iHeight ];
 		
 		if( !m_pBuf ){
-			result = ERR_NOT_ENOUGH_MEMORY;
+			result		= ERR_NOT_ENOUGH_MEMORY;
+			m_iStatus	= IMG_STATUS_LOAD_FAILED;
 		}else{
 			//---- 画像イメージの読み込み
 			for( int y = 0; y < m_iHeight; ++y ){
@@ -174,16 +203,15 @@ UINT CVsdImage::Load( LPCWSTR szFileName ){
 			}
 		}
 	}else{
-		result = ERR_FILE_NOT_FOUND;
+		result		= ERR_FILE_NOT_FOUND;
+		m_iStatus	= IMG_STATUS_LOAD_FAILED;
 	}
 	
 	delete pBitmap;
 	
-	//---- GDI+の解放
-	Gdiplus::GdiplusShutdown( gdiplusToken );
-	
 	Clip( iMinX, iMinY, iMaxX, iMaxY );
 	
+	if( result == ERR_OK ) m_iStatus	= IMG_STATUS_LOAD_COMPLETE;
 	return result;
 }
 

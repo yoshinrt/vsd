@@ -9,5 +9,8 @@ DEF_LOG( X )
 DEF_LOG( Y )
 DEF_LOG( Gx )
 DEF_LOG( Gy )
+#ifdef USE_TURN_R
+DEF_LOG( TurnR )
+#endif
 
 #undef DEF_LOG

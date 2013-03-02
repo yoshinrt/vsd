@@ -410,6 +410,9 @@ class CVsdFilter {
 	CScript	*m_Script;
 	
   private:
+	// GDI+オブジェクト（画像展開に必要）
+	Gdiplus::GdiplusStartupInput	m_gdiplusStartupInput;
+	ULONG_PTR						m_gdiplusToken;
 	
 	// スタートライン@GPS 計測モード
 	double	m_dStartLineX1;

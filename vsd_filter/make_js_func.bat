@@ -155,7 +155,10 @@ MakeJsIF( 'CVsdImage', 'Image', << '-----' );
 			obj = new CVsdImage();
 			v8::String::Value FileName( args[ 0 ] );
 			
-			if( obj->Load(( LPCWSTR )*FileName ) != ERR_OK ){
+			if( obj->Load(
+				( LPCWSTR )*FileName,
+				args.Length() <= 1 ? 0 : args[ 1 ]->Int32Value()
+			) != ERR_OK ){
 				delete obj;
 				return v8::Undefined();
 			}

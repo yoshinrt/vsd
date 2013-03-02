@@ -57,11 +57,17 @@ CVsdFilter::CVsdFilter (){
 	
 	m_iWidth	=
 	m_iHeight	= 0;
+	
+	//---- GDI+の初期設定
+	Gdiplus::GdiplusStartup( &m_gdiplusToken, &m_gdiplusStartupInput, NULL );
 }
 
 /*** デストラクタ ***********************************************************/
 
 CVsdFilter::~CVsdFilter (){
+	//---- GDI+の解放
+	Gdiplus::GdiplusShutdown( m_gdiplusToken );
+	
 	delete m_VsdLog;
 	delete m_GPSLog;
 	delete m_LapLog;

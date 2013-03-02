@@ -618,7 +618,10 @@ class CVsdImageIF {
 			obj = new CVsdImage();
 			v8::String::Value FileName( args[ 0 ] );
 			
-			if( obj->Load(( LPCWSTR )*FileName ) != ERR_OK ){
+			if( obj->Load(
+				( LPCWSTR )*FileName,
+				args.Length() <= 1 ? 0 : args[ 1 ]->Int32Value()
+			) != ERR_OK ){
 				delete obj;
 				return v8::Undefined();
 			}
@@ -679,6 +682,10 @@ class CVsdImageIF {
 		CVsdImage *obj = CScript::GetThis<CVsdImage>( info.Holder());
 		return obj ? v8::Integer::New( obj->m_iHeight ) : v8::Undefined();
 	}
+	static v8::Handle<v8::Value> Get_Status( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdImage *obj = CScript::GetThis<CVsdImage>( info.Holder());
+		return obj ? v8::Integer::New( obj->m_iStatus ) : v8::Undefined();
+	}
 
 	///// メャbドコールバック /////
 	static v8::Handle<v8::Value> Func_Resize( const v8::Arguments& args ){
@@ -721,6 +728,7 @@ class CVsdImageIF {
 		inst->SetInternalFieldCount( 1 );
 		inst->SetAccessor( v8::String::New( "Width" ), Get_Width );
 		inst->SetAccessor( v8::String::New( "Height" ), Get_Height );
+		inst->SetAccessor( v8::String::New( "Status" ), Get_Status );
 
 		// メャbドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();

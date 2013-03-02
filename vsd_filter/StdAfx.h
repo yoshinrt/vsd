@@ -50,6 +50,7 @@
 #define ToRAD		( M_PI / 180 )
 #define SLIDER_TIME	LOG_FREQ
 #define NaN			std::numeric_limits<double>::quiet_NaN()
+//#define USE_TURN_R
 
 static char *StringNew( char *&szDst, const char *szSrc ){
 	if( szDst == szSrc ) return( szDst );
