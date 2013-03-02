@@ -282,16 +282,6 @@ UINT CVsdLog::GPSLogRescan( void ){
 					* ( Speed( i ) / 3.600 )
 				);
 				
-				#ifdef USE_TURN_R
-					// r = v / É÷
-					double dTurnR = ( dBearingDelta == 0 || Speed( i ) < 1 ) ? MAX_TURN_R :
-						( Speed( i ) / 3.600 ) /
-						fabs( dBearingDelta ) * ( Time( i ) - Time( i - 1 ));
-					
-					if( dTurnR > MAX_TURN_R ) dTurnR = 100;
-					SetTurnR( i, dTurnR );
-				#endif
-				
 				// Å}5G à»è„ÇÕÅCçÌèú
 				if( Gx( i ) < -3 || Gx( i ) > 3 ){
 					SetRawGx( i, Gx( i - 1 ));
@@ -378,6 +368,21 @@ UINT CVsdLog::GPSLogRescan( void ){
 				SetMaxMinGx( dMaxGx, dMinGx );
 				SetMaxMinGy( dMaxGy, dMinGy );
 			}
+			
+			#ifdef USE_TURN_R
+				if( bCreateTurnR ){
+					#pragma omp for
+					for( int i = 2; i < GetCnt(); ++i ){
+						// r = v * v / G
+						double dTurnR = Gx( i ) == 0 || Speed( i ) < 1 ?
+							MAX_TURN_R :
+							pow( Speed( i ) * ( 1000.0 / 3600 ), 2 ) / ( fabs( Gx( i )) * GRAVITY );
+						
+						if( dTurnR > MAX_TURN_R ) dTurnR = MAX_TURN_R;
+						SetTurnR( i, dTurnR );
+					}
+				}
+			#endif
 		}
   	}
 	
