@@ -23,7 +23,7 @@ function Initialize(){
 	APIKey		= "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg";
 	
 	// ズームレベルを 1～21 で指定します
-	Zoom		= 15;
+	Zoom		= 14;
 	
 	// 地図タイプ
 	// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:航空写真
@@ -63,20 +63,27 @@ function Initialize(){
 //*** メーター描画処理 ******************************************************
 
 function Draw(){
-	// 背景
 	if( typeof( MapImg ) == 'undefined' ){
 		MapImg = new Image( GMapURL + Vsd.Latitude + "," + Vsd.Longitude );
-		Dir = Vsd.Direction;
+		Dir		= Vsd.Direction;
+		Frame	= Vsd.FrameCnt;
+		Long	= Vsd.Longitude;
+		Lati	= Vsd.Latitude;
 	}
 	
-	if( Vsd.FrameCnt % ( 30 * 1 ) == 0 ){
-		if( Vsd.Speed >= 1 ){
-			MapImgNext = new Image(
-				GMapURL + Vsd.Latitude + "," + Vsd.Longitude,
-				IMG_INET_ASYNC
-			);
-			NextDir = Vsd.Direction;
-		}
+//	MessageBox( GetDistance( Vsd.Longitude, Vsd.Latitude, Long, Lati ));
+	if(
+		Math.abs( Frame - Vsd.FrameCnt ) >= 30 &&
+		GetDistance( Vsd.Longitude, Vsd.Latitude, Long, Lati ) >= 5
+	){
+		MapImgNext = new Image(
+			GMapURL + Vsd.Latitude + "," + Vsd.Longitude,
+			IMG_INET_ASYNC
+		);
+		Frame	= Vsd.FrameCnt;
+		Long	= Vsd.Longitude;
+		Lati	= Vsd.Latitude;
+		NextDir = Vsd.Direction;
 		
 		Caption =
 			"緯度:" + Vsd.Latitude.toFixed( 6 ) +
@@ -90,9 +97,9 @@ function Draw(){
 		MapImgNext.Status == IMG_STATUS_LOAD_COMPLETE
 	){
 		MapImg.Dispose();
-		MapImg = MapImgNext;
-		MapImgNext = undefined;
-		Dir = NextDir;
+		MapImg		= MapImgNext;
+		MapImgNext	= undefined;
+		Dir			= NextDir;
 	}
 	
 	Vsd.PutImage( 0, 0, MapImg );
@@ -105,6 +112,7 @@ function Draw(){
 	);
 }
 
+// 自車マーク描画
 function DrawArrow( x, y, angle, scale ){
 	angle *= Math.PI / 180;
 	var cos = Math.cos( angle ) * Scale;
@@ -121,4 +129,21 @@ function DrawArrow( x, y, angle, scale ){
 	Vsd.DrawLine( x + x1, y + y1, x + x2, y + y2, 0, 1, DRAW_FILL );
 	Vsd.DrawLine( x + x2, y + y2, x + x0, y + y0, 0, 1, DRAW_FILL );
 	Vsd.DrawPolygon( 0x0080FF );
+}
+
+// 緯度・経度から距離算出
+function GetDistance( dLong0, dLati0, dLong1, dLati1 ){
+	var a	= 6378137.000;
+	var b	= 6356752.314245;
+	var e2	= ( a * a - b * b ) / ( a * a );
+	var ToRAD = Math.PI / 180;
+	
+	var dx	= ( dLong1 - dLong0 ) * ToRAD;
+	var dy	= ( dLati1 - dLati0 ) * ToRAD;
+	var uy	= ( dLati0 + dLati1 ) / 2 * ToRAD;
+	var W	= Math.sqrt( 1 - e2 * Math.sin( uy ) * Math.sin( uy ));
+	var M	= a * ( 1 - e2 ) / Math.pow( W, 3 );
+	var N	= a / W;
+	
+	return	Math.sqrt( dy * dy * M * M + Math.pow( dx * N * Math.cos( uy ), 2 ));
 }

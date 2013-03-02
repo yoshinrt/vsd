@@ -16,9 +16,8 @@ mkdir vsd_plugins
 xcopy /i/s "D:\Program Files\AVIUTL\vsd_plugins" vsd_plugins
 
 rmdir /s/q vsd_plugins\negi
-del vsd_plugins\_log_reader\circuit_no_tomo.js
-del vsd_plugins\_log_reader\gpsbabel.js
 del vsd_plugins\_log_reader\vsd_log.js
+move vsd_plugins\google_maps_release.js vsd_plugins\google_maps.js
 
 d:\dds\bin\lha a -d ..\vsd_filter_gps.lzh *
 
@@ -27,3 +26,5 @@ popd
 rmdir /s/q zrelease
 
 perl -ne 'rename( "vsd_filter_gps.lzh", "vsd_filter_gps_$1.lzh" ) if( /#define\s+PROG_REVISION\s+"(r\d+)"/ );' rev_num.h
+
+pause

@@ -16,6 +16,7 @@
 
 #define GRAVITY				9.80665
 #define CALIB_MARK_SPEED	300
+#define MAX_TURN_R			100
 
 /*** コンストラクタ *********************************************************/
 
@@ -201,7 +202,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 			if( !m_pLogTurnR ){
 				bCreateTurnR = TRUE;
 				m_pLogTurnR = GetElement( "TurnR", TRUE );
-				m_pLogTurnR->Resize( GetCnt(), 0 );
+				m_pLogTurnR->Resize( GetCnt(), MAX_TURN_R );
 			}
 		#endif
 	}
@@ -283,11 +284,11 @@ UINT CVsdLog::GPSLogRescan( void ){
 				
 				#ifdef USE_TURN_R
 					// r = v / ω
-					double dTurnR = 
+					double dTurnR = ( dBearingDelta == 0 || Speed( i ) < 1 ) ? MAX_TURN_R :
 						( Speed( i ) / 3.600 ) /
-						( dBearingDelta / ( Time( i ) - Time( i - 1 )));
+						fabs( dBearingDelta ) * ( Time( i ) - Time( i - 1 ));
 					
-					if( dTurnR > 100 ) dTurnR = 100;
+					if( dTurnR > MAX_TURN_R ) dTurnR = 100;
 					SetTurnR( i, dTurnR );
 				#endif
 				
