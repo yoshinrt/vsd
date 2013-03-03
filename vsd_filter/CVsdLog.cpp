@@ -16,7 +16,7 @@
 
 #define GRAVITY				9.80665
 #define CALIB_MARK_SPEED	300
-#define MAX_TURN_R			100
+#define MAX_TURN_R			200
 
 /*** コンストラクタ *********************************************************/
 
