@@ -143,3 +143,40 @@ function DumpLog( FileName ){
 	
 	file.Close();
 }
+
+//*** ログスムージング *******************************************************
+// ログ記録 Hz よりログ実効 Hz が低い場合，同じデータが連続で記録され
+// 表示がカクカクになってしまうので，そのようなデータは捨てて
+// ログを線形補間する
+
+function SmoothLowFreqLog( Cnt ){
+	
+	var PrevVal;
+	
+	for( var v in Log ) if( v != 'Time' ){
+		for( var i = 0; i < Cnt; ++i ){
+			if( i == 0 ){
+				PrevIdx = 0;
+				PrevVal = Log[ v ][ 0 ];
+			}else{
+				if( PrevVal != Log[ v ][ i ] ){
+					if(
+						// 2個以上同じデータが連続する
+						i - PrevIdx >= 2 &&
+						// データが連続時間が 1秒以内
+						Log.Time[ i ] - Log.Time[ PrevIdx ] <= 1000
+					){
+						for( var j = PrevIdx + 1; j < i; ++j ){
+							Log[ v ][ j ] = Log[ v ][ PrevIdx ] +
+								( Log[ v ][ i ] - Log[ v ][ PrevIdx ] ) /
+								( Log.Time[ i ] - Log.Time[ PrevIdx ] ) *
+								( Log.Time[ j ] - Log.Time[ PrevIdx ] );
+						}
+					}
+					PrevVal = Log[ v ][ i ];
+					PrevIdx = i;
+				}
+			}
+		}
+	}
+}

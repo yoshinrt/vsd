@@ -1,12 +1,20 @@
 /// torque log リーダ ////////////////////////////////////////////////////////
 
 LogReaderInfo.push({
-	Caption:	"Torque log (*.csv)",
+	Caption:	"Torque Lite (スムージング無) (*.csv)",
 	Filter:		"*.csv;*.csv.gz",
-	ReaderFunc:	"ReadTorqueLog"
+	ReaderFunc:	"ReadTorqueLiteLog",
+	Priority:	0x11000001,
 });
 
-function ReadTorqueLog( Files ){
+LogReaderInfo.push({
+	Caption:	"Torque Lite (スムージング有) (*.csv)",
+	Filter:		"*.csv;*.csv.gz",
+	ReaderFunc:	"ReadTorqueLiteLogSmooth",
+	Priority:	0x11000000,
+});
+
+function ReadTorqueLiteLog( Files ){
 	
 	var ParamDef = {
 		// csv 項目名							Vsd 変数名		function or 乗数
@@ -31,6 +39,12 @@ function ReadTorqueLog( Files ){
 			RegExp.$4, RegExp.$5, RegExp.$6, RegExp.$7 * 1000
 		) - 9 * 3600 * 1000;
 	}
+}
+
+function ReadTorqueLiteLogSmooth( Files ){
+	var Cnt = ReadTorqueLiteLog( Files );
+	if( Cnt > 0 ) SmoothLowFreqLog( Cnt );
+	return Cnt;
 }
 
 /// 汎用 CSV リーダ //////////////////////////////////////////////////////////
