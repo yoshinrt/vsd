@@ -10,7 +10,7 @@ function Initialize(){
 	
 	// 座標等を予め計算しておく
 	MeterR = 150 * Scale;
-	MeterX	= MeterRight ? Vsd.Width  - MeterR * 2: 0;
+	MeterX	= MeterRight ? Vsd.Width  - MeterR * 2 : 0;
 	MeterY	= Vsd.Height - MeterR * 2;
 	MeterCx = MeterX + MeterR;
 	MeterCy = MeterY + MeterR;

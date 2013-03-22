@@ -16,14 +16,18 @@
 #define SPRINTF_BUF		128
 
 #define INVALID_POS_I	0x7FFFFFFF
-#define GScale			( m_piParamS[ SHADOW_G_SCALE ] * ( INVERT_G / 1000.0 ))
+#define GScale			( m_piParamS[ SHADOW_G_SCALE ] * ( G_MULT / 1000.0 ))
 
 #ifdef GPS_ONLY
 	#define GPSPriority		FALSE
-	#define INVERT_G		(-1)
 #else
 	#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
-	#define INVERT_G		1
+#endif
+
+#if defined GPS_ONLY || defined INVERT_G
+	#define G_MULT			(-1)
+#else
+	#define G_MULT			1
 #endif
 
 #define DEFAULT_FONT	"‚l‚r ƒSƒVƒbƒN"
@@ -752,7 +756,7 @@ void CVsdFilter::DrawGSnake(
 	
 	SelectLogVsd;
 	
-	iR = iR * INVERT_G;
+	iR = iR * G_MULT;
 	
 	if( m_CurLog && m_CurLog->m_pLogGx ){
 		if( dLength > 0 ){
