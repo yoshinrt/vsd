@@ -3,7 +3,7 @@
 //				|				|		config –¼
 //				|				|		|
 
-#ifdef GPS_ONLY
+#ifdef PUBLIC_MODE
 DEF_SHADOW(	PARAM_VSt,			0,		"video_start"	)
 DEF_SHADOW(	PARAM_VEd,			0,		"video_end"		)
 DEF_SHADOW(	PARAM_GSt,			0,		"gps_start"		)

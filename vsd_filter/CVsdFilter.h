@@ -26,7 +26,7 @@
 #define G_CX_CNT		30
 #define POS_DEFAULT		0x80000000
 
-#ifdef GPS_ONLY
+#ifdef PUBLIC_MODE
 	#define VideoSt			m_piParamS[ PARAM_VSt ]
 	#define VideoEd			m_piParamS[ PARAM_VEd ]
 	#define VsdSt			0

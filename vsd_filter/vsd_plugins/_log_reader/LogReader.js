@@ -100,7 +100,7 @@ function ReadLog( FileName, ReaderFunc ){
 			return 0;
 		}
 		
-		DumpLog( "dump.csv" );
+		//DumpLog( "dump.csv" );
 		
 		return Cnt;
 	}

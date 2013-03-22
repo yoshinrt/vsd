@@ -10,7 +10,7 @@
 //				|					|		|		|		|						config ñº
 //				|					|		|		|		|						|
 DEF_TRACKBAR_N(	TRACK_LogOffset,	0,		-9999,	9999,	"ÉçÉOà íuí≤êÆ",		NULL	)
-#ifndef GPS_ONLY
+#ifndef PUBLIC_MODE
 DEF_TRACKBAR(	PARAM_VSt,			0,		0,		9999,	"VideoêÊì™",		"video_start"	)
 DEF_TRACKBAR(	PARAM_VEd,			0,		0,		9999,	"Videoç≈å„",		"video_end"		)
 DEF_TRACKBAR(	PARAM_LSt,			0,		0,		9999,	"ÉçÉOêÊì™",			"log_start"		)

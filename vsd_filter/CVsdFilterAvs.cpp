@@ -126,7 +126,7 @@ CVsdFilterAvs::CVsdFilterAvs(
 	if( p = args[ ARGID_MARK ].AsString( NULL )) ParseMarkStr( p );
 	
 	// ƒƒOƒŠ[ƒh
-	#ifndef GPS_ONLY
+	#ifndef PUBLIC_MODE
 		if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )){
 			const char *szReader = args[ ARGID_STRPARAM_LOGFILE_READER ].AsString( NULL );
 			if( !ReadLog( m_VsdLog, p, szReader )) env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );

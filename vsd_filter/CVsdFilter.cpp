@@ -92,7 +92,7 @@ int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szR
 	pLog = new CVsdLog( this );
 	
 	if(
-		#ifdef GPS_ONLY
+		#ifdef PUBLIC_MODE
 			TRUE
 		#else
 			pLog == m_VsdLog

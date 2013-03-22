@@ -18,13 +18,13 @@
 #define INVALID_POS_I	0x7FFFFFFF
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] * ( G_MULT / 1000.0 ))
 
-#ifdef GPS_ONLY
+#ifdef PUBLIC_MODE
 	#define GPSPriority		FALSE
 #else
 	#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
 #endif
 
-#if defined GPS_ONLY || defined INVERT_G
+#if defined PUBLIC_MODE || defined INVERT_G
 	#define G_MULT			(-1)
 #else
 	#define G_MULT			1
@@ -731,7 +731,7 @@ void CVsdFilter::DrawGraphMulti(
 			);
 		}
 		
-		#ifndef GPS_ONLY
+		#ifndef PUBLIC_MODE
 			if( DispSyncInfo() && m_GPSLog && ( pLog = m_GPSLog->m_pLogSpeed )){
 				DrawGraphSub(
 					x1, y1, x2, y2,
@@ -1397,7 +1397,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 			DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
 		}
 		
-		#ifndef GPS_ONLY
+		#ifndef PUBLIC_MODE
 			DrawText( POS_DEFAULT, POS_DEFAULT, L"        start       end     range cur.pos", *m_pFont, color_white );
 			
 			swprintf(
@@ -1430,7 +1430,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 				);
 				DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
 			}
-		#endif	// !GPS_ONLY
+		#endif	// !PUBLIC_MODE
 	}
 	
 	return TRUE;

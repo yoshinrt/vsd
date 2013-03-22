@@ -50,7 +50,7 @@
 #define ToRAD		( M_PI / 180 )
 #define SLIDER_TIME	LOG_FREQ
 #define NaN			std::numeric_limits<double>::quiet_NaN()
-#ifdef GPS_ONLY
+#ifdef PUBLIC_MODE
 	#define USE_TURN_R
 #endif
 

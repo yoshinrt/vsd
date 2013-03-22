@@ -8,7 +8,7 @@
 //				|				|	|						config 名
 //				|				|	|						|
 DEF_CHECKBOX(	CHECK_LAP,		1,	"ラップタイム表示",		"lap_time"	)
-#ifndef GPS_ONLY
+#ifndef PUBLIC_MODE
 DEF_CHECKBOX_N(	CHECK_GPS_PRIO,	0,	"GPSログ優先",			NULL		)
 DEF_CHECKBOX_N(	CHECK_LOGPOS,	0,	"ログ位置自動認識",		NULL		)
 #endif

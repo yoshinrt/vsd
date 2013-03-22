@@ -3,7 +3,7 @@
 //				|							|						èâä˙íl
 //				|							|						|				config ñº
 //				|							|						|				|
-#ifndef GPS_ONLY
+#ifndef PUBLIC_MODE
 DEF_STR_PARAM(	STRPARAM_LOGFILE,			m_szLogFile,			NULL,			"log_file"	)			// VSD ÉçÉO
 DEF_STR_PARAM(	STRPARAM_LOGFILE_READER,	m_szLogFileReader,		NULL,			"log_file_reader"	)	// VSD ÉçÉO
 #endif
