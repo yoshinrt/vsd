@@ -358,7 +358,7 @@ UINT CScript::InitLogReader( void ){
 	
 	// スクリプトロード
 	char szBuf[ MAX_PATH + 1 ];
-	strcpy( szBuf, m_pVsd->m_szSkinDirA );
+	strcpy( szBuf, m_pVsd->m_szPluginDirA );
 	strcat( szBuf, LOG_READER_DIR "\\" );
 	if( !ListTree( szBuf, "*", LogReaderCallback, this )){
 		return ERR_FILE_NOT_FOUND;
