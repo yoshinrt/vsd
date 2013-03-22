@@ -1109,7 +1109,7 @@ void CVsdFilter::DrawLapTime(
 	
 	if( m_LapLog->m_iBestTime >= 0 ){
 		m_iTextPosY += Font.GetHeight() / 4;
-	
+		
 		// Best 表示
 		swprintf(
 			szBuf, sizeof( szBuf ), L"Best%2d'%02d.%03d",
@@ -1118,7 +1118,7 @@ void CVsdFilter::DrawLapTime(
 			m_LapLog->m_iBestTime % 1000
 		);
 		DrawTextAlign( POS_DEFAULT, POS_DEFAULT, uAlign, szBuf, Font, uColor, uColorOutline );
-	
+		
 		// Lapタイム表示
 		DrawLapTimeLog(
 			m_iTextPosX, m_iTextPosY, uAlign,

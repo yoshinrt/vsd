@@ -58,9 +58,13 @@
 #define SelectLogGPS ( m_CurLog = m_GPSLog ? m_GPSLog : m_VsdLog )
 
 // Laptime ŒvŽZ—p
-#define SelectLogForLapTime	( m_CurLog = \
-	m_LapLog && m_LapLog->m_iLapMode == LAPMODE_MAGNET \
-	? m_VsdLog : m_GPSLog )
+#ifdef PUBLIC_MODE
+	#define SelectLogForLapTime	( m_CurLog = m_GPSLog )
+#else
+	#define SelectLogForLapTime	( m_CurLog = \
+		m_LapLog && m_LapLog->m_iLapMode == LAPMODE_MAGNET \
+		? m_VsdLog : m_GPSLog )
+#endif
 
 /*** track / check ID *******************************************************/
 

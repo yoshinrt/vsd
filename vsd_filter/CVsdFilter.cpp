@@ -141,22 +141,28 @@ double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 	if( iLapNum < 0 ) return 0;
 	
 	if( m_LapLog->m_iLapMode == LAPMODE_MAGNET ){
-		// fLogNum は VSD ログ番号
-		if( Log == m_VsdLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
-		if( VsdSt == VsdEd )  return 0;
-		
-		// 一旦ビデオフレームに変換
-		dFrame =
-			( m_VsdLog->Time( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME - VsdSt ) /
-			( VsdEd - VsdSt ) * ( VideoEd - VideoSt ) + VideoSt;
-		
-		return Log->GetIndex( dFrame, VideoSt, VideoEd, GPSSt, GPSEd, -1 );
-		
+		#ifdef PUBLIC_MODE
+			// ここを通るのは ラップ番号(GPS)→GPS ログ番号 しかありえない
+			return m_LapLog->m_Lap[ iLapNum ].fLogNum;
+		#else
+			// fLogNum は VSD ログ番号
+			if( Log == m_VsdLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
+			if( VsdSt == VsdEd )  return 0;
+			
+			// ラップ番号(VSD)→GPS ログ番号に変換
+			// 一旦ビデオフレームに変換
+			dFrame =
+				( m_VsdLog->Time( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME - VsdSt ) /
+				( VsdEd - VsdSt ) * ( VideoEd - VideoSt ) + VideoSt;
+			
+			return Log->GetIndex( dFrame, VideoSt, VideoEd, GPSSt, GPSEd, -1 );
+		#endif
 	}else if( m_LapLog->m_iLapMode != LAPMODE_HAND_VIDEO ){
 		// fLogNum は GPS ログ番号
 		if( Log == m_GPSLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
 		if( GPSSt == GPSEd )  return 0;
 		
+		// ラップ番号(GPS)→VSD ログ番号に変換
 		// 一旦ビデオフレームに変換
 		dFrame =
 			( Log->Time( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME - VsdSt ) /
