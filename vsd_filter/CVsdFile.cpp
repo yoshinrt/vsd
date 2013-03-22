@@ -10,11 +10,25 @@
 
 #include "CVsdFile.h"
 
+#ifdef GPS_ONLY
+	BOOL IsFileWriteEnabled( void );
+#endif
+
 /*** ファイルオープン *******************************************************/
 
 int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 	
 	LPCWSTR pMode = szMode;
+	
+	#ifdef GPS_ONLY
+		// ファイルライト不許可時は失敗コードを返す
+		if(
+			wcschr( szMode, L'w' ) != NULL &&
+			!IsFileWriteEnabled()
+		){
+			return 1;
+		}
+	#endif
 	
 	// gz open
 	if( *pMode == 'z' ){
