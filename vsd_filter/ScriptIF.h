@@ -115,6 +115,10 @@ class CVsdFilterIF {
 		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->GetFrameCnt() ) : v8::Undefined();
 	}
+	static v8::Handle<v8::Value> Get_DateTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Number::New( obj->DateTime() ) : v8::Undefined();
+	}
 
 	///// メャbドコールバック /////
 	/*** DrawArc ****************************************************************/
@@ -523,16 +527,6 @@ class CVsdFilterIF {
 		
 		return v8::String::New(( uint16_t *)ret );
 	}
-	static v8::Handle<v8::Value> Func_DateTime( const v8::Arguments& args ){
-		int iLen = args.Length();
-		if( CScript::CheckArgs( iLen == 0 )) return v8::Undefined();
-		
-		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
-		if( !thisObj ) return v8::Undefined();
-		double ret = thisObj->DateTime();
-		
-		return v8::Number::New( ret );
-	}
 
   public:
 	// クラステンプレートの初期化
@@ -555,6 +549,7 @@ class CVsdFilterIF {
 		inst->SetAccessor( v8::String::New( "Config_graph" ), Get_Config_graph );
 		inst->SetAccessor( v8::String::New( "Config_sync_mode" ), Get_Config_sync_mode );
 		inst->SetAccessor( v8::String::New( "FrameCnt" ), Get_FrameCnt );
+		inst->SetAccessor( v8::String::New( "DateTime" ), Get_DateTime );
 
 		// メャbドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
@@ -579,7 +574,6 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawLapTimeLog" ), v8::FunctionTemplate::New( Func_DrawLapTimeLog ));
 		proto->Set( v8::String::New( "DrawNeedle" ), v8::FunctionTemplate::New( Func_DrawNeedle ));
 		proto->Set( v8::String::New( "FormatTime" ), v8::FunctionTemplate::New( Func_FormatTime ));
-		proto->Set( v8::String::New( "DateTime" ), v8::FunctionTemplate::New( Func_DateTime ));
 
 		proto->Set( v8::String::New( "Width" ), v8::Integer::New((( CVsdFilter *)pClass )->GetWidth() ));
 		proto->Set( v8::String::New( "Height" ), v8::Integer::New((( CVsdFilter *)pClass )->GetHeight() ));

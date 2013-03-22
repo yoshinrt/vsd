@@ -381,7 +381,7 @@ class CVsdFilter {
 		return m_GPSLog->DirectionAdjust();
 	}
 	
-	double DateTime( void ){	// !js_func
+	double DateTime( void ){	// !js_var:DateTime
 		if( m_VsdLog ) return m_VsdLog->DateTime();
 		if( m_GPSLog ) return m_GPSLog->DateTime();
 		return 0;

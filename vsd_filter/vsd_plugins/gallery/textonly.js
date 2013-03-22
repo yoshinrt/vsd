@@ -30,7 +30,7 @@ function Draw(){
 	}
 	
 	var date = new Date();
-	date.setTime( Vsd.DateTime());
+	date.setTime( Vsd.DateTime );
 	print( date.toLocaleString());
 	Vsd.DrawLapTimeLog( Vsd.Width - 1, 0, ALIGN_TOP | ALIGN_RIGHT, 10, FontM );
 }
