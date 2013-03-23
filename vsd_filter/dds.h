@@ -8,7 +8,7 @@
 #ifndef _DDS_H
 #define _DDS_H
 
-//#define PUBLIC_MODE
+#define PUBLIC_MODE
 
 #define	Case		break; case
 #define Default		break; default

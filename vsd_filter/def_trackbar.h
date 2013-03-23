@@ -9,7 +9,8 @@
 //				|					|		|		|	トラックバーの名前
 //				|					|		|		|		|						config 名
 //				|					|		|		|		|						|
-DEF_TRACKBAR_N(	TRACK_LogOffset,	0,		-9999,	9999,	"ログ位置調整",		NULL	)
+DEF_TRACKBAR_N(	TRACK_VsdLogOffset,	0,		-9999,	9999,	"車両ログ位置調整",	NULL	)
+DEF_TRACKBAR_N(	TRACK_GPSLogOffset,	0,		-9999,	9999,	"GPSログ位置調整",	NULL	)
 #ifndef PUBLIC_MODE
 DEF_TRACKBAR(	PARAM_VSt,			0,		0,		9999,	"Video先頭",		"video_start"	)
 DEF_TRACKBAR(	PARAM_VEd,			0,		0,		9999,	"Video最後",		"video_end"		)

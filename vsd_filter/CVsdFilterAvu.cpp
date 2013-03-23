@@ -34,16 +34,12 @@
 enum {
 	ID_BUTT_SET_VSt = 0xFF00,
 	ID_BUTT_SET_VEd,
-#ifndef PUBLIC_MODE
 	ID_BUTT_SET_LSt,
 	ID_BUTT_SET_LEd,
-#endif
 	ID_BUTT_SET_GSt,
 	ID_BUTT_SET_GEd,
-#ifndef PUBLIC_MODE
 	ID_EDIT_LOAD_LOG,
 	ID_BUTT_LOAD_LOG,
-#endif
 	ID_EDIT_LOAD_GPS,
 	ID_BUTT_LOAD_GPS,
 	ID_COMBO_SEL_SKIN,
@@ -63,8 +59,10 @@ enum {
 
 #ifdef PUBLIC_MODE
 	#define POS_SET_BUTT_SIZE		0
+	#define POS_HEIGHT_ADD			10
 #else
 	#define POS_SET_BUTT_SIZE		30
+	#define POS_HEIGHT_ADD			0
 #endif
 
 #define POS_FILE_CAPTION_SIZE	70
@@ -73,14 +71,12 @@ enum {
 #define POS_FILE_CAPTION_POS	150
 #define POS_FILE_HEIGHT			21
 #define POS_FILE_HEIGHT_MARGIN	2
-
-#ifdef PUBLIC_MODE
-	#define POS_FILE_NUM	3
-#else
-	#define POS_FILE_NUM	4
-#endif
+#define POS_FILE_NUM			4
 
 #define INVALID_INT		0x80000000
+
+#define OFFSET_ADJUST_WIDTH	( 60 * 10 )	// 10分
+
 
 /****************************************************************************/
 //---------------------------------------------------------------------
@@ -135,25 +131,6 @@ char g_szDescription[] = PROG_NAME_J " " PROG_REVISION;
 
 FILTER_DLL filter = {
 	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_MAIN_MESSAGE | FILTER_FLAG_EX_INFORMATION,
-								//	フィルタのフラグ
-								//	FILTER_FLAG_ALWAYS_ACTIVE		: フィルタを常にアクティブにします
-								//	FILTER_FLAG_CONFIG_POPUP		: 設定をポップアップメニューにします
-								//	FILTER_FLAG_CONFIG_CHECK		: 設定をチェックボックスメニューにします
-								//	FILTER_FLAG_CONFIG_RADIO		: 設定をラジオボタンメニューにします
-								//	FILTER_FLAG_EX_DATA				: 拡張データを保存出来るようにします。
-								//	FILTER_FLAG_PRIORITY_HIGHEST	: フィルタのプライオリティを常に最上位にします
-								//	FILTER_FLAG_PRIORITY_LOWEST		: フィルタのプライオリティを常に最下位にします
-								//	FILTER_FLAG_WINDOW_THICKFRAME	: サイズ変更可能なウィンドウを作ります
-								//	FILTER_FLAG_WINDOW_SIZE			: 設定ウィンドウのサイズを指定出来るようにします
-								//	FILTER_FLAG_DISP_FILTER			: 表示フィルタにします
-								//	FILTER_FLAG_EX_INFORMATION		: フィルタの拡張情報を設定できるようにします
-								//	FILTER_FLAG_NO_CONFIG			: 設定ウィンドウを表示しないようにします
-								//	FILTER_FLAG_AUDIO_FILTER		: オーディオフィルタにします
-								//	FILTER_FLAG_RADIO_BUTTON		: チェックボックスをラジオボタンにします
-								//	FILTER_FLAG_WINDOW_HSCROLL		: 水平スクロールバーを持つウィンドウを作ります
-								//	FILTER_FLAG_WINDOW_VSCROLL		: 垂直スクロールバーを持つウィンドウを作ります
-								//	FILTER_FLAG_IMPORT				: インポートメニューを作ります
-								//	FILTER_FLAG_EXPORT				: エクスポートメニューを作ります
 	0,0,						//	設定ウインドウのサイズ (FILTER_FLAG_WINDOW_SIZEが立っている時に有効)
 	PROG_NAME_J,				//	フィルタの名前
 	TRACK_N,					//	トラックバーの数 (0なら名前初期値等もNULLでよい)
@@ -225,9 +202,7 @@ class CVsdFilterAvu : public CVsdFilter {
 	int GetIndex( int x, int y ){ return fpip->max_w * y + x; }
 	BOOL ConfigSave( const char *szFileName );
 	
-#ifndef PUBLIC_MODE
 	BOOL ReadLog( HWND hwnd );
-#endif
 	BOOL ReadGPSLog( HWND hwnd );
 	
 	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *&szDst );
@@ -260,6 +235,7 @@ class CVsdFilterAvu : public CVsdFilter {
 	// 1スライダ調整用パラメータ
 	int	m_iAdjustPointNum;
 	int	m_iAdjustPointVid[ 2 ];
+	int	m_iAdjustPointVsd[ 2 ];
 	int	m_iAdjustPointGPS[ 2 ];
 	
 	static const char *m_szTrackbarName[];
@@ -299,6 +275,8 @@ CVsdFilterAvu::CVsdFilterAvu( FILTER *filter, void *editp ) :
 	m_piParamS	= shadow_param;
 	
 #ifdef PUBLIC_MODE
+	VsdSt = GPSSt = 0;
+	VsdEd = GPSEd = ( int )( OFFSET_ADJUST_WIDTH * SLIDER_TIME );
 	VideoSt = VideoEd = INVALID_INT;
 #endif
 	m_iAdjustPointNum = 0;
@@ -453,7 +431,6 @@ int CVsdFilterAvu::GetFrameMark( int iFrame ){
 
 /*** ログリード *************************************************************/
 
-#ifndef PUBLIC_MODE
 BOOL CVsdFilterAvu::ReadLog( HWND hwnd ){
 	
 	//char szMsg[ BUF_SIZE ];
@@ -466,13 +443,14 @@ BOOL CVsdFilterAvu::ReadLog( HWND hwnd ){
 	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_LOG ), m_szLogFile );
 	
 	// trackbar 設定
-	track_e[ PARAM_LSt ] =
-	track_e[ PARAM_LEd ] =
-		( int )( m_VsdLog->Time( m_VsdLog->GetCnt() - 2 ) * SLIDER_TIME );
+	#ifndef PUBLIC_MODE
+		track_e[ PARAM_LSt ] =
+		track_e[ PARAM_LEd ] =
+			( int )( m_VsdLog->Time( m_VsdLog->GetCnt() - 2 ) * SLIDER_TIME );
+	#endif
 	
 	return TRUE;
 }
-#endif
 
 /*** GPS ログリード ********************************************************/
 
@@ -488,10 +466,7 @@ BOOL CVsdFilterAvu::ReadGPSLog( HWND hwnd ){
 	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_GPS ), m_szGPSLogFile );
 	
 	// trackbar 設定
-	#ifdef PUBLIC_MODE
-		GPSSt	= 0;
-		GPSEd	= 0;
-	#else
+	#ifndef PUBLIC_MODE
 		track_e[ PARAM_GSt ] =
 		track_e[ PARAM_GEd ] =
 			( int )( m_GPSLog->Time( m_GPSLog->GetCnt() - 2 ) * SLIDER_TIME );
@@ -621,7 +596,7 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	MoveWindow( hwnd,
 		rectClient.left, rectClient.top,
 		rectClient.right  - rectClient.left + POS_ADD_LABEL + POS_ADD_SLIDER + POS_ADD_EDIT + POS_SET_BUTT_SIZE,
-		rectClient.bottom - rectClient.top,
+		rectClient.bottom - rectClient.top + POS_HEIGHT_ADD,
 		TRUE
 	);
 	
@@ -683,9 +658,7 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	i = ID_BUTT_SET_GEd + 1;
 	int y = rectClient.bottom - ( POS_FILE_HEIGHT + POS_FILE_HEIGHT_MARGIN ) * POS_FILE_NUM + POS_FILE_HEIGHT_MARGIN;
 	
-#ifndef PUBLIC_MODE
-	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "VSDログ",	"",		"開く" );
-#endif
+	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "車両ログ",	"",		"開く" );
 	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "GPSログ",	"",		"開く" );
 	CreateControlSkinName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "スキン",	"" );
 	
@@ -976,9 +949,7 @@ BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
 		if(
 			m_szTrackbarName[ i ] == NULL ||
 			i >= TRACK_LineTrace && m_piParamT[ i ] == track_default[ i ] ||
-			#ifndef PUBLIC_MODE
-				( i == PARAM_LSt || i == PARAM_LEd ) && !( uStrParamFlag & ( 1 << STRPARAM_LOGFILE )) ||
-			#endif
+			( i == PARAM_LSt || i == PARAM_LEd ) && !( uStrParamFlag & ( 1 << STRPARAM_LOGFILE )) ||
 			( i == PARAM_GSt || i == PARAM_GEd ) && !( uStrParamFlag & ( 1 << STRPARAM_GPSFILE ))
 		) continue;
 		
@@ -1063,8 +1034,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 		// trackbar 設定
 		#ifdef PUBLIC_MODE
-			g_Vsd->VideoSt	= 0;
-			g_Vsd->VideoEd	= filter->exfunc->get_frame_n( editp );
+			g_Vsd->VideoSt = 0;
+			g_Vsd->VideoEd = ( int )( g_Vsd->GetFPS() * OFFSET_ADJUST_WIDTH );
 		#else
 			track_e[ PARAM_VSt ] =
 			track_e[ PARAM_VEd ] = filter->exfunc->get_frame_n( editp );
@@ -1120,7 +1091,8 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			g_Vsd->m_iAdjustPointNum == 1 && g_Vsd->m_iAdjustPointVid[ 0 ] != iFrame ||
 			g_Vsd->m_iAdjustPointNum == 2 && g_Vsd->m_iAdjustPointVid[ 0 ] != iFrame && g_Vsd->m_iAdjustPointVid[ 1 ] != iFrame
 		){
-			g_Vsd->m_piParamT[ TRACK_LogOffset ] = 0;
+			g_Vsd->m_piParamT[ TRACK_VsdLogOffset ] = 0;
+			g_Vsd->m_piParamT[ TRACK_GPSLogOffset ] = 0;
 			filter->exfunc->filter_window_update( filter );
 		}
 		
@@ -1151,7 +1123,6 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				CPushDir push_dir( szBuf2 );
 				
 				// ログリード
-			#ifndef PUBLIC_MODE
 				if( g_Vsd->m_szLogFile ){
 					DebugCmd(
 						UINT	uTimer = GetTickCount();
@@ -1162,7 +1133,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 					
 					DebugCmd( DebugMsgD( "VSD Log read time = %d\n", GetTickCount() - uTimer ); )
 				}
-			#endif
+				
 				if( g_Vsd->m_szGPSLogFile ){
 					DebugCmd(
 						UINT	uTimer = GetTickCount();
@@ -1191,7 +1162,6 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			if( filter->exfunc->dlg_get_save_name( szBuf, FILE_CFG_EXT, NULL ))
 				return g_Vsd->ConfigSave( szBuf );
 			
-		#ifndef PUBLIC_MODE // {
 		  Case ID_BUTT_LOAD_LOG:	// .log ロード
 			if( g_Vsd->FileOpenDialog( g_Vsd->m_szLogFile, g_Vsd->m_szLogFileReader )){
 				if( g_Vsd->ReadLog( hwnd )){
@@ -1205,7 +1175,6 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				}
 				g_Vsd->ReloadScript();
 			}
-		#endif // }
 			
 		  Case ID_BUTT_LOAD_GPS:	// GPS ログロード
 			if( g_Vsd->FileOpenDialog( g_Vsd->m_szGPSLogFile, g_Vsd->m_szGPSLogFileReader )){
@@ -1282,33 +1251,41 @@ void SetupLogOffset( FILTER *filter ){
 	// フレーム位置が前回と違っていれば，GPS ログ位置再取得
 	// m_iAdjustPointNum = 0 時にはここを通ることはない
 	if( g_Vsd->m_iAdjustPointVid[ iPoint ] != iFrame ){
+		g_Vsd->m_iAdjustPointVsd[ iPoint ] =
+			g_Vsd->VideoEd == g_Vsd->VideoSt ? 0
+			: ( int )(
+				( double )( g_Vsd->VsdEd - g_Vsd->VsdSt )
+				* ( iFrame - g_Vsd->VideoSt ) 
+				/ ( g_Vsd->VideoEd - g_Vsd->VideoSt )
+				+ g_Vsd->VsdSt
+			);
+		g_Vsd->m_piParamT[ TRACK_VsdLogOffset ] = 0;
+		
 		g_Vsd->m_iAdjustPointGPS[ iPoint ] =
 			g_Vsd->VideoEd == g_Vsd->VideoSt ? 0
-			: ( int )(( double )
-				( g_Vsd->GPSEd - g_Vsd->GPSSt )
+			: ( int )(
+				( double )( g_Vsd->GPSEd - g_Vsd->GPSSt )
 				* ( iFrame - g_Vsd->VideoSt ) 
 				/ ( g_Vsd->VideoEd - g_Vsd->VideoSt )
 				+ g_Vsd->GPSSt
 			);
+		g_Vsd->m_piParamT[ TRACK_GPSLogOffset ] = 0;
 		
 		g_Vsd->m_iAdjustPointVid[ iPoint ] =
 		( iPoint ? g_Vsd->VideoEd : g_Vsd->VideoSt ) = iFrame;
-		g_Vsd->m_piParamT[ TRACK_LogOffset ] = 0;
 	}
 	
 	// 対象調整ポイントの設定
+	( iPoint ? g_Vsd->VsdEd : g_Vsd->VsdSt ) =
+		g_Vsd->m_iAdjustPointVsd[ iPoint ] - g_Vsd->m_piParamT[ TRACK_VsdLogOffset ];
 	( iPoint ? g_Vsd->GPSEd : g_Vsd->GPSSt ) =
-		g_Vsd->m_iAdjustPointGPS[ iPoint ] - g_Vsd->m_piParamT[ TRACK_LogOffset ];
+		g_Vsd->m_iAdjustPointGPS[ iPoint ] - g_Vsd->m_piParamT[ TRACK_GPSLogOffset ];
 	
 	// iPoint == 1 時は，後ろの調整点を FPS に応じて自動調整
 	if( g_Vsd->m_iAdjustPointNum == 1 ){
-		#define ADJUST_WIDTH	( 60 * 10 )	// 10分
-		
-		g_Vsd->VideoEd =
-			g_Vsd->VideoSt + ( int )( g_Vsd->GetFPS() * ADJUST_WIDTH );
-		
-		g_Vsd->GPSEd =
-			g_Vsd->GPSSt + ( int )( SLIDER_TIME * ADJUST_WIDTH );
+		g_Vsd->VideoEd = g_Vsd->VideoSt + ( int )( g_Vsd->GetFPS() * OFFSET_ADJUST_WIDTH );
+		g_Vsd->VsdEd   = g_Vsd->VsdSt + ( int )( SLIDER_TIME * OFFSET_ADJUST_WIDTH );
+		g_Vsd->GPSEd   = g_Vsd->GPSSt + ( int )( SLIDER_TIME * OFFSET_ADJUST_WIDTH );
 		
 		#ifndef PUBLIC_MODE
 			// スライダ設定値がスライダバーの設定範囲を超えている場合，
@@ -1316,6 +1293,10 @@ void SetupLogOffset( FILTER *filter ){
 			if( g_Vsd->VideoEd > filter->track_e[ PARAM_VSt ] ){
 				filter->track_e[ PARAM_VSt ] =
 				filter->track_e[ PARAM_VEd ] = g_Vsd->VideoEd;
+			}
+			if( g_Vsd->VsdEd > filter->track_e[ PARAM_GSt ] ){
+				filter->track_e[ PARAM_GSt ] =
+				filter->track_e[ PARAM_GEd ] = g_Vsd->VsdEd;
 			}
 			if( g_Vsd->GPSEd > filter->track_e[ PARAM_GSt ] ){
 				filter->track_e[ PARAM_GSt ] =
@@ -1337,15 +1318,17 @@ BOOL func_update( FILTER *filter, int status ){
 	bReEnter = TRUE;
 	
 	if(
-		#ifndef PUBLIC_MODE
-			status >= FILTER_UPDATE_STATUS_TRACK + PARAM_VSt &&
-			status <= FILTER_UPDATE_STATUS_TRACK + PARAM_GSt ||
-		#endif
-		status == FILTER_UPDATE_STATUS_TRACK + TRACK_LogOffset ||
+		status >= FILTER_UPDATE_STATUS_TRACK + TRACK_VsdLogOffset &&
+	#ifdef PUBLIC_MODE
+		status <= FILTER_UPDATE_STATUS_TRACK + TRACK_GPSLogOffset ||
+	#else
+		status <= FILTER_UPDATE_STATUS_TRACK + PARAM_GEd ||
+	#endif
 		status == FILTER_UPDATE_STATUS_TRACK + TRACK_SLineWidth
 	) g_Vsd->m_bCalcLapTimeReq = TRUE;
 	
 	#ifndef PUBLIC_MODE
+		// ログ位置自動認識モードの設定変更
 		if(
 			status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS ) &&
 			filter->check[ CHECK_LOGPOS ] &&
@@ -1367,7 +1350,10 @@ BOOL func_update( FILTER *filter, int status ){
 			g_Vsd->m_GPSLog->RotateMap( filter->track[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	}
 	
-	if( status == FILTER_UPDATE_STATUS_TRACK + TRACK_LogOffset ){
+	if(
+		status == FILTER_UPDATE_STATUS_TRACK + TRACK_VsdLogOffset ||
+		status == FILTER_UPDATE_STATUS_TRACK + TRACK_GPSLogOffset
+	){
 		SetupLogOffset( filter );
 	}
 	

@@ -17,12 +17,7 @@
 
 #define INVALID_POS_I	0x7FFFFFFF
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] * ( G_MULT / 1000.0 ))
-
-#ifdef PUBLIC_MODE
-	#define GPSPriority		FALSE
-#else
-	#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
-#endif
+#define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
 
 #if defined PUBLIC_MODE || defined INVERT_G
 	#define G_MULT			(-1)
@@ -731,16 +726,14 @@ void CVsdFilter::DrawGraphMulti(
 			);
 		}
 		
-		#ifndef PUBLIC_MODE
-			if( DispSyncInfo() && m_GPSLog && ( pLog = m_GPSLog->m_pLogSpeed )){
-				DrawGraphSub(
-					x1, y1, x2, y2,
-					L"%.0f km/h", Font, color_cyan,
-					*m_GPSLog,
-					*pLog
-				);
-			}
-		#endif
+		if( DispSyncInfo() && m_GPSLog && ( pLog = m_GPSLog->m_pLogSpeed )){
+			DrawGraphSub(
+				x1, y1, x2, y2,
+				L"%.0f km/h", Font, color_cyan,
+				*m_GPSLog,
+				*pLog
+			);
+		}
 	}
 }
 

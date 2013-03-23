@@ -126,12 +126,10 @@ CVsdFilterAvs::CVsdFilterAvs(
 	if( p = args[ ARGID_MARK ].AsString( NULL )) ParseMarkStr( p );
 	
 	// ログリード
-	#ifndef PUBLIC_MODE
-		if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )){
-			const char *szReader = args[ ARGID_STRPARAM_LOGFILE_READER ].AsString( NULL );
-			if( !ReadLog( m_VsdLog, p, szReader )) env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
-		}
-	#endif
+	if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )){
+		const char *szReader = args[ ARGID_STRPARAM_LOGFILE_READER ].AsString( NULL );
+		if( !ReadLog( m_VsdLog, p, szReader )) env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
+	}
 	
 	// GPS ログリード
 	if( p = args[ ARGID_STRPARAM_GPSFILE ].AsString( NULL )){

@@ -6,6 +6,8 @@
 #ifdef PUBLIC_MODE
 DEF_SHADOW(	PARAM_VSt,			0,		"video_start"	)
 DEF_SHADOW(	PARAM_VEd,			0,		"video_end"		)
+DEF_SHADOW(	PARAM_LSt,			0,		"log_start"		)
+DEF_SHADOW(	PARAM_LEd,			0,		"log_end"		)
 DEF_SHADOW(	PARAM_GSt,			0,		"gps_start"		)
 DEF_SHADOW(	PARAM_GEd,			0,		"gps_end"		)
 #endif

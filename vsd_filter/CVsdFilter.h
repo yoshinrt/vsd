@@ -29,8 +29,8 @@
 #ifdef PUBLIC_MODE
 	#define VideoSt			m_piParamS[ PARAM_VSt ]
 	#define VideoEd			m_piParamS[ PARAM_VEd ]
-	#define VsdSt			0
-	#define VsdEd			0
+	#define VsdSt			m_piParamS[ PARAM_LSt ]
+	#define VsdEd			m_piParamS[ PARAM_LEd ]
 	#define GPSSt			m_piParamS[ PARAM_GSt ]
 	#define GPSEd			m_piParamS[ PARAM_GEd ]
 	#define DEFAULT_SKIN	"standard_l.js"
