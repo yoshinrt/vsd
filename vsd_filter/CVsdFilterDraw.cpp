@@ -912,7 +912,7 @@ void CVsdFilter::DrawMap(
 	);
 	
 	// スタートライン表示
-	if( DispSyncInfo() && m_LapLog && m_LapLog->m_iLapMode == LAPMODE_GPS ){
+	if( DispSyncInfo() && m_LapLog && m_LapLog->m_iLapMode == LAPMODE_AUTO ){
 		double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
 		
 		int xs1 = x1 + ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - dMapOffsX ) * dScale );
@@ -971,7 +971,7 @@ void CVsdFilter::CalcLapTime( void ){
 	// ラップインデックスを求める
 	// VSD/GPS 両方のログがなければ，手動計測での m_LapLog[].fLogNum はフレーム# なので
 	// m_LapLog[].fLogNum と精度をあわせるため，m_dLogNum はいったん float に落とす
-	float fLogNum = m_LapLog->m_iLapMode != LAPMODE_HAND_VIDEO ? ( float )m_CurLog->m_dLogNum : GetFrameCnt();
+	float fLogNum = m_LapLog->m_iLapSrc == LAPSRC_VIDEO ? GetFrameCnt() : ( float )m_CurLog->m_dLogNum;
 	
 	// カレントポインタがおかしいときは，-1 にリセット
 	if(
@@ -985,12 +985,12 @@ void CVsdFilter::CalcLapTime( void ){
 	m_LapLog->m_iCurTime = TIME_NONE;
 	
 	if( m_LapLog->m_iLapIdx >= 0 && m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime != 0 ){
-		if( m_LapLog->m_iLapMode != LAPMODE_HAND_VIDEO ){
-			// 自動計測時は，タイム / ログ数 から計算
-			m_LapLog->m_iCurTime = ( int )(( m_CurLog->Time() - m_CurLog->Time( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum )) * 1000 );
-		}else{
+		if( m_LapLog->m_iLapSrc == LAPSRC_VIDEO ){
 			// 手動計測モードのときは，フレーム数から計算
 			m_LapLog->m_iCurTime = ( int )(( GetFrameCnt() - m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum ) * 1000.0 / GetFPS());
+		}else{
+			// 自動計測時は，タイム / ログ数 から計算
+			m_LapLog->m_iCurTime = ( int )(( m_CurLog->Time() - m_CurLog->Time( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum )) * 1000 );
 		}
 	}
 	
@@ -1307,9 +1307,9 @@ BOOL CVsdFilter::DrawVSD( void ){
 		
 		// できなかったので手動で
 		if( !m_LapLog ){
-			m_LapLog = CreateLapTime(
-				m_GPSLog ? LAPMODE_HAND_GPS :
-						   LAPMODE_HAND_VIDEO
+			m_LapLog = CreateLapTimeHand(
+				m_GPSLog ? LAPSRC_GPS :
+						   LAPSRC_VIDEO
 			);
 		}
 	}

@@ -58,13 +58,9 @@
 #define SelectLogGPS ( m_CurLog = m_GPSLog ? m_GPSLog : m_VsdLog )
 
 // Laptime 計算用
-#ifdef PUBLIC_MODE
-	#define SelectLogForLapTime	( m_CurLog = m_GPSLog )
-#else
-	#define SelectLogForLapTime	( m_CurLog = \
-		m_LapLog && m_LapLog->m_iLapMode == LAPMODE_MAGNET \
-		? m_VsdLog : m_GPSLog )
-#endif
+#define SelectLogForLapTime	( m_CurLog = \
+	m_LapLog && m_LapLog->m_iLapSrc == LAPSRC_VSD \
+	? m_VsdLog : m_GPSLog )
 
 /*** track / check ID *******************************************************/
 
@@ -321,7 +317,7 @@ class CVsdFilter {
 	// ログリードヘルパ
 	int ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc );
 	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
-	CLapLog *CreateLapTime( int iLapMode );
+	CLapLog *CreateLapTimeHand( int iLapSrc );
 	CLapLog *CreateLapTimeAuto( void );
 	void CalcLapTime( void );
 	

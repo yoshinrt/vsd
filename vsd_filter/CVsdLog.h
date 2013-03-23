@@ -20,10 +20,14 @@
 /*** Lap Time ***************************************************************/
 
 enum {
-	LAPMODE_HAND_VIDEO,		// 手動計測モード，時計は Video フレーム
-	LAPMODE_HAND_GPS,		// 手動計測モード，時計は GPS ログ時計
-	LAPMODE_GPS,			// GPS 自動計測モード
-	LAPMODE_MAGNET,			// 磁気センサー自動計測モード
+	LAPMODE_HAND,		// 手動計測モード
+	LAPMODE_AUTO,		// GPS 自動計測モード
+	LAPMODE_MAGNET,		// 磁気センサー自動計測モード
+};
+enum {
+	LAPSRC_VIDEO,		// 時計は Video フレーム
+	LAPSRC_VSD,			// 時計は VSD ログ時計
+	LAPSRC_GPS,			// 時計は GPS ログ時計
 };
 
 typedef struct {
@@ -40,13 +44,15 @@ class CLapLog {
 		m_iLapNum		= 0;
 		m_iBestTime		= TIME_NONE;
 		m_iBestLap		= 0;
-		m_iLapMode		= LAPMODE_HAND_VIDEO;
+		m_iLapMode		= LAPMODE_HAND;
+		m_iLapSrc		= LAPSRC_VIDEO;
 		m_iLapIdx		= -1;
 		m_iBestLogNumRunning	= 0;
 	}
 	
 	std::vector<LAP_t>	m_Lap;
 	int	m_iLapMode;
+	int	m_iLapSrc;
 	int	m_iLapNum;
 	int	m_iBestTime;
 	int	m_iBestLap;

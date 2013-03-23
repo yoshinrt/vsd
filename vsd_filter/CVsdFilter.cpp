@@ -91,24 +91,31 @@ int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szR
 	if( pLog ) delete pLog;
 	pLog = new CVsdLog( this );
 	
-	if(
-		#ifdef PUBLIC_MODE
-			TRUE
-		#else
-			pLog == m_VsdLog
-		#endif
-	){
-		if( m_LapLog ) delete m_LapLog;
-		m_LapLog = NULL;
-	}
+	CLapLog *pLapLog = NULL;
 	
-	int iRet = pLog->ReadLog( szFileName, szReaderFunc, m_LapLog );
+	int iRet = pLog->ReadLog( szFileName, szReaderFunc, pLapLog );
 	if( iRet ){
 		if( pLog->m_pLogLongitude )
 			pLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	}else{
 		delete pLog;
 		pLog = NULL;
+	}
+	
+	if( pLapLog ){
+		pLapLog->m_iLapSrc = pLog == m_VsdLog ? LAPSRC_VSD : LAPSRC_GPS;
+		
+		if( m_LapLog ){
+			// 重複しているので，VSD の方を優先
+			if( pLog == m_VsdLog ){
+				delete m_LapLog;
+				m_LapLog = pLapLog;
+			}else{
+				delete pLapLog;
+			}
+		}else{
+			m_LapLog = pLapLog;
+		}
 	}
 	
 	return iRet;
@@ -138,21 +145,16 @@ double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 	// iLapNum がおかしいときは 0 を返しとく
 	if( iLapNum < 0 ) return 2;	// 番犬を除いた Time=0 のログ
 	
-	if( m_LapLog->m_iLapMode == LAPMODE_MAGNET ){
-		#ifdef PUBLIC_MODE
-			// ここを通るのは ラップ番号(GPS)→GPS ログ番号 しかありえない
-			return m_LapLog->m_Lap[ iLapNum ].fLogNum;
-		#else
-			// fLogNum は VSD ログ番号
-			if( Log == m_VsdLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
-			
-			// ラップ番号(VSD)→GPS ログ番号に変換
-			return Log->GetIndex(
-				m_VsdLog->Time( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME,
-				&VsdSt, &GPSSt
-			);
-		#endif
-	}else if( m_LapLog->m_iLapMode != LAPMODE_HAND_VIDEO ){
+	if( m_LapLog->m_iLapSrc == LAPSRC_VSD ){
+		// fLogNum は VSD ログ番号
+		if( Log == m_VsdLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
+		
+		// ラップ番号(VSD)→GPS ログ番号に変換
+		return Log->GetIndex(
+			m_VsdLog->Time( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME,
+			&VsdSt, &GPSSt
+		);
+	}else if( m_LapLog->m_iLapSrc == LAPSRC_GPS ){
 		// fLogNum は GPS ログ番号
 		if( Log == m_GPSLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
 		
@@ -172,7 +174,7 @@ double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 
 /*** ラップタイム再生成 (手動) **********************************************/
 
-CLapLog *CVsdFilter::CreateLapTime( int iLapMode ){
+CLapLog *CVsdFilter::CreateLapTimeHand( int iLapSrc ){
 	
 	int		iTime, iPrevTime;
 	int		iFrame = 0;
@@ -180,16 +182,17 @@ CLapLog *CVsdFilter::CreateLapTime( int iLapMode ){
 	LAP_t	LapTime;
 	
 	CLapLog *pLapLog = new CLapLog();
-	pLapLog->m_iLapMode = iLapMode;
+	pLapLog->m_iLapMode = LAPMODE_HAND;
+	pLapLog->m_iLapSrc  = iLapSrc;
 	
 	while(( iFrame = GetFrameMark( iFrame )) >= 0 ){
 		
-		if( pLapLog->m_iLapMode == LAPMODE_HAND_GPS ){
+		if( pLapLog->m_iLapSrc == LAPSRC_GPS ){
 			dLogNum	= GetLogIndex( iFrame, GPS, -1 );
 			iTime	= ( int )( m_GPSLog->Time( dLogNum ) * 1000 );
 			LapTime.fLogNum	= ( float )dLogNum;
 		}else{
-			// LAPMODE_HAND_VIDEO
+			// LAPSRC_VIDEO
 			iTime	= ( int )( iFrame * 1000.0 / GetFPS());
 			LapTime.fLogNum	= ( float )iFrame;
 		}
@@ -273,7 +276,8 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	/*****/
 	
 	CLapLog *pLapLog = new CLapLog();
-	pLapLog->m_iLapMode = LAPMODE_GPS;
+	pLapLog->m_iLapMode = LAPMODE_AUTO;
+	pLapLog->m_iLapSrc  = LAPSRC_GPS;
 	
 	int iTime, iPrevTime;
 	int	iLapNum = 0;
