@@ -73,7 +73,7 @@
       </ForcedUsingFiles>
       <ForcedIncludeFiles>
       </ForcedIncludeFiles>
-      <OpenMPSupport>true</OpenMPSupport>
+      <OpenMPSupport>false</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

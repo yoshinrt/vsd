@@ -59,10 +59,8 @@ enum {
 
 #ifdef PUBLIC_MODE
 	#define POS_SET_BUTT_SIZE		0
-	#define POS_HEIGHT_ADD			10
 #else
 	#define POS_SET_BUTT_SIZE		30
-	#define POS_HEIGHT_ADD			0
 #endif
 
 #define POS_FILE_CAPTION_SIZE	70
@@ -202,7 +200,7 @@ class CVsdFilterAvu : public CVsdFilter {
 	int GetIndex( int x, int y ){ return fpip->max_w * y + x; }
 	BOOL ConfigSave( const char *szFileName );
 	
-	BOOL ReadLog( HWND hwnd );
+	BOOL ReadVsdLog( HWND hwnd );
 	BOOL ReadGPSLog( HWND hwnd );
 	
 	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *&szDst );
@@ -241,6 +239,14 @@ class CVsdFilterAvu : public CVsdFilter {
 	static const char *m_szTrackbarName[];
 	static const char *m_szCheckboxName[];
 	static const char *m_szShadowParamName[];
+	
+#ifdef PUBLIC_MODE
+	void GetFileCreationTime( void );
+	void AutoSync( CVsdLog *pLog, int *piParam );
+	
+  private:
+	int		m_iVideoStartTime;
+#endif
 };
 
 CVsdFilterAvu	*g_Vsd;
@@ -278,6 +284,8 @@ CVsdFilterAvu::CVsdFilterAvu( FILTER *filter, void *editp ) :
 	VsdSt = GPSSt = 0;
 	VsdEd = GPSEd = ( int )( OFFSET_ADJUST_WIDTH * SLIDER_TIME );
 	VideoSt = VideoEd = INVALID_INT;
+	
+	m_iVideoStartTime = -1;
 #endif
 	m_iAdjustPointNum = 0;
 	m_iAdjustPointVid[ 0 ] =
@@ -429,9 +437,79 @@ int CVsdFilterAvu::GetFrameMark( int iFrame ){
 	return -1;
 }
 
+/*** ファイル作成日時取得 ***************************************************/
+
+#ifdef PUBLIC_MODE
+void CVsdFilterAvu::GetFileCreationTime( void ){
+	FILETIME	ft;
+	SYSTEMTIME	st;
+	
+	HANDLE hFile = CreateFile(
+		fileinfo->name,			// ファイル名
+		GENERIC_READ,			// アクセスモード
+		FILE_SHARE_READ,		// 共有モード
+		NULL,					// セキュリティ記述子
+		OPEN_EXISTING,			// 作成方法
+		FILE_ATTRIBUTE_NORMAL,	// ファイル属性
+		NULL					// テンプレートファイルのハンドル
+	);
+	
+	if( hFile == NULL ) return;
+	
+	if( GetFileTime( hFile, &ft, NULL, NULL )){
+		FileTimeToSystemTime( &ft, &st );
+		m_iVideoStartTime = (( st.wHour * 60 + st.wMinute ) * 60 + st.wSecond ) * 1000 + st.wMilliseconds;
+	}
+	
+	CloseHandle( hFile );
+}
+
+/*** ビデオ時刻とログ時刻の初期同期 *****************************************/
+
+#define InRange( a, b, v ) ( \
+	(( a ) < ( b )) ? (( a ) <= ( v ) && ( v ) <= ( b )) : \
+	                  (( a ) <= ( v ) || ( v ) <= ( b )) \
+)
+
+void CVsdFilterAvu::AutoSync( CVsdLog *pLog, int *piParam ){
+	// filetime が取得できていない
+	if(
+		pLog == NULL ||
+		m_piParamC[ CHECK_LOGPOS ] == 0 ||
+		m_iVideoStartTime < 0
+	) return;
+	
+	// ビデオ終了時刻 (24H 以内)
+	int iVideoEndTime =
+		( m_iVideoStartTime + ( int )( GetFrameMax() * 1000 / GetFPS()))
+		% ( 24 * 3600 * 1000 );
+	
+	// ログ開始・終了時刻 (24H 以内)
+	int iLogStartTime = ( int )fmod( pLog->m_dLogStartTime * 1000, 24 * 3600 * 1000 );
+	int iLogEndTime   = (( int )( pLog->MaxTime() * 1000 ) + iLogStartTime ) % ( 24 * 3600 * 1000 );
+	
+	if(
+		InRange( m_iVideoStartTime, iVideoEndTime, iLogStartTime ) ||
+		InRange( m_iVideoStartTime, iVideoEndTime, iLogEndTime ) ||
+		InRange( iLogStartTime, iLogEndTime, m_iVideoStartTime ) ||
+		InRange( iLogStartTime, iLogEndTime, iVideoEndTime )
+	){
+		// ビデオは 10分に初期化する
+		VideoSt = 0;
+		VideoEd = ( int )( OFFSET_ADJUST_WIDTH * GetFPS());
+		
+		piParam[ 0 ] = ( int )(( m_iVideoStartTime - iLogStartTime ) % ( 24 * 3600 * 1000 ) * SLIDER_TIME ) / 1000;
+		piParam[ 1 ] = piParam[ 0 ] + ( int )( OFFSET_ADJUST_WIDTH * SLIDER_TIME );
+	}
+}
+
+#undef InRange
+
+#endif // PUBLIC_MODE
+
 /*** ログリード *************************************************************/
 
-BOOL CVsdFilterAvu::ReadLog( HWND hwnd ){
+BOOL CVsdFilterAvu::ReadVsdLog( HWND hwnd ){
 	
 	//char szMsg[ BUF_SIZE ];
 	int iCnt;
@@ -443,7 +521,9 @@ BOOL CVsdFilterAvu::ReadLog( HWND hwnd ){
 	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_LOG ), m_szLogFile );
 	
 	// trackbar 設定
-	#ifndef PUBLIC_MODE
+	#ifdef PUBLIC_MODE
+		AutoSync( m_VsdLog, &VsdSt );
+	#else
 		track_e[ PARAM_LSt ] =
 		track_e[ PARAM_LEd ] =
 			( int )( m_VsdLog->Time( m_VsdLog->GetCnt() - 2 ) * SLIDER_TIME );
@@ -466,12 +546,14 @@ BOOL CVsdFilterAvu::ReadGPSLog( HWND hwnd ){
 	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_GPS ), m_szGPSLogFile );
 	
 	// trackbar 設定
-	#ifndef PUBLIC_MODE
+	#ifdef PUBLIC_MODE
+		AutoSync( m_GPSLog, &GPSSt );
+	#else
 		track_e[ PARAM_GSt ] =
 		track_e[ PARAM_GEd ] =
 			( int )( m_GPSLog->Time( m_GPSLog->GetCnt() - 2 ) * SLIDER_TIME );
 	#endif
-
+	
 	return TRUE;
 }
 
@@ -596,7 +678,7 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	MoveWindow( hwnd,
 		rectClient.left, rectClient.top,
 		rectClient.right  - rectClient.left + POS_ADD_LABEL + POS_ADD_SLIDER + POS_ADD_EDIT + POS_SET_BUTT_SIZE,
-		rectClient.bottom - rectClient.top + POS_HEIGHT_ADD,
+		rectClient.bottom - rectClient.top,
 		TRUE
 	);
 	
@@ -646,7 +728,7 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 		for( i = 0; i <= ( ID_BUTT_SET_GEd - ID_BUTT_SET_VSt ); ++i ){
 			hwndChild = CreateWindow(
 				"BUTTON", "set", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-				rectClient.right - POS_SET_BUTT_SIZE, 14 + ( i + 1 ) * 24,
+				rectClient.right - POS_SET_BUTT_SIZE, 14 + ( i + 2 ) * 24,
 				POS_SET_BUTT_SIZE, 16,
 				hwnd, ( HMENU )( ID_BUTT_SET_VSt + i ), hInst, NULL
 			);
@@ -1044,6 +1126,11 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		// リストボックスアイテム追加
 		SetSkinFileList( GetDlgItem( hwnd, ID_COMBO_SEL_SKIN ));
 		
+		// ファイルタイム取得
+		#ifdef PUBLIC_MODE
+			g_Vsd->GetFileCreationTime();
+		#endif
+		
 		// 設定再描画
 		filter->exfunc->filter_window_update( filter );
 		
@@ -1129,7 +1216,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 						DebugMsgD( "VSD Log read start\n" );
 					);
 					
-					g_Vsd->ReadLog( hwnd );
+					g_Vsd->ReadVsdLog( hwnd );
 					
 					DebugCmd( DebugMsgD( "VSD Log read time = %d\n", GetTickCount() - uTimer ); )
 				}
@@ -1164,7 +1251,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			
 		  Case ID_BUTT_LOAD_LOG:	// .log ロード
 			if( g_Vsd->FileOpenDialog( g_Vsd->m_szLogFile, g_Vsd->m_szLogFileReader )){
-				if( g_Vsd->ReadLog( hwnd )){
+				if( g_Vsd->ReadVsdLog( hwnd )){
 					// 設定再描画
 					filter->exfunc->filter_window_update( filter );
 					
@@ -1327,30 +1414,34 @@ BOOL func_update( FILTER *filter, int status ){
 		status == FILTER_UPDATE_STATUS_TRACK + TRACK_SLineWidth
 	) g_Vsd->m_bCalcLapTimeReq = TRUE;
 	
-	#ifndef PUBLIC_MODE
-		// ログ位置自動認識モードの設定変更
-		if(
-			status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS ) &&
-			filter->check[ CHECK_LOGPOS ] &&
-			g_Vsd->m_VsdLog
-		){
-			filter->track[ PARAM_LSt ] = ( int )( g_Vsd->m_VsdLog->m_dCalibStart * SLIDER_TIME );
-			filter->track[ PARAM_LEd ] = ( int )( g_Vsd->m_VsdLog->m_dCalibStop  * SLIDER_TIME );
-			
-			// 設定再描画
-			filter->exfunc->filter_window_update( filter );
-		}
-	#endif
+	// ログ位置自動認識モードの設定変更
+	if( status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS )){
+		
+		#ifdef PUBLIC_MODE
+			if( filter->check[ CHECK_LOGPOS ] ){
+				g_Vsd->AutoSync( g_Vsd->m_VsdLog, &g_Vsd->VsdSt );
+				g_Vsd->AutoSync( g_Vsd->m_GPSLog, &g_Vsd->GPSSt );
+			}
+		#else
+			if( filter->check[ CHECK_LOGPOS ] && g_Vsd->m_VsdLog ){
+				filter->track[ PARAM_LSt ] = ( int )( g_Vsd->m_VsdLog->m_dCalibStart * SLIDER_TIME );
+				filter->track[ PARAM_LEd ] = ( int )( g_Vsd->m_VsdLog->m_dCalibStop  * SLIDER_TIME );
+				
+				// 設定再描画
+				filter->exfunc->filter_window_update( filter );
+			}
+		#endif
+	}
 	
 	// マップ回転
-	if( status == ( FILTER_UPDATE_STATUS_TRACK + TRACK_MapAngle )){
+	else if( status == ( FILTER_UPDATE_STATUS_TRACK + TRACK_MapAngle )){
 		if( g_Vsd->m_VsdLog )
 			g_Vsd->m_VsdLog->RotateMap( filter->track[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 		if( g_Vsd->m_GPSLog )
 			g_Vsd->m_GPSLog->RotateMap( filter->track[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	}
 	
-	if(
+	else if(
 		status == FILTER_UPDATE_STATUS_TRACK + TRACK_VsdLogOffset ||
 		status == FILTER_UPDATE_STATUS_TRACK + TRACK_GPSLogOffset
 	){
