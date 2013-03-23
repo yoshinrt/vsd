@@ -36,15 +36,14 @@ CVsdLog::CVsdLog( CVsdFilter *pVsd ){
 
 /*** frame# ‚É‘Î‰‚·‚éƒƒO index ‚ğ“¾‚é *************************************/
 
-double CVsdLog::GetIndex(
-	double	dFrame,
-	int iVidSt, int iVidEd,
-	int iLogSt, int iLogEd,
-	int iPrevIdx
-){
-	if( iVidSt == iVidEd ) return 2;	// ”ÔŒ¢‚ğœ‚¢‚½ Time=0 ‚ÌƒƒO
+double CVsdLog::GetIndex( double dFromVal, int *piFrom, int *piLog, int iPrevIdx ){
+	if( piFrom[ 0 ] == piFrom[ 1 ] ) return 2;	// ”ÔŒ¢‚ğœ‚¢‚½ Time=0 ‚ÌƒƒO
 	return GetIndex(
-		( iLogSt + ( iLogEd - iLogSt ) * ( dFrame - iVidSt ) / ( double )( iVidEd - iVidSt )) / SLIDER_TIME,
+		(
+			piLog[ 0 ] +
+			( piLog[ 1 ] - piLog[ 0 ] ) * ( dFromVal - piFrom[ 0 ] ) /
+			( double )( piFrom[ 1 ] - piFrom[ 0 ] )
+		) / SLIDER_TIME,
 		iPrevIdx
 	);
 }

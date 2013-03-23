@@ -49,7 +49,7 @@
 
 // パラメータを変換
 #define GetLogIndex( frame, to, prev ) \
-	m_##to##Log->GetIndex( frame, VideoSt, VideoEd, to##St, to##Ed, prev )
+	m_##to##Log->GetIndex( frame, &VideoSt, &to##St, prev )
 
 // VSD log を優先，ただしチェックボックスでオーバーライドできる
 #define SelectLogVsd ( m_CurLog = ( GPSPriority && m_GPSLog || !m_VsdLog ) ? m_GPSLog : m_VsdLog )

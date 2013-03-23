@@ -155,7 +155,7 @@ double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 				( m_VsdLog->Time( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME - VsdSt ) /
 				( VsdEd - VsdSt ) * ( VideoEd - VideoSt ) + VideoSt;
 			
-			return Log->GetIndex( dFrame, VideoSt, VideoEd, GPSSt, GPSEd, -1 );
+			return Log->GetIndex( dFrame, &VideoSt, &GPSSt );
 		#endif
 	}else if( m_LapLog->m_iLapMode != LAPMODE_HAND_VIDEO ){
 		// fLogNum は GPS ログ番号
@@ -168,16 +168,14 @@ double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 			( Log->Time( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME - VsdSt ) /
 			( VsdEd - VsdSt ) * ( VideoEd - VideoSt ) + VideoSt;
 		
-		return Log->GetIndex( dFrame, VideoSt, VideoEd, VsdSt, VsdEd, -1 );
+		return Log->GetIndex( dFrame, &VideoSt, &VsdSt );
 	}
 	
 	// fLogNum はビデオフレーム番号
 	if( VideoSt == VideoEd ) return 0;
 	dFrame = m_LapLog->m_Lap[ iLapNum ].fLogNum;
 	
-	return Log == m_VsdLog ?
-		Log->GetIndex( dFrame, VideoSt, VideoEd, VsdSt, VsdEd, -1 ) :
-		Log->GetIndex( dFrame, VideoSt, VideoEd, GPSSt, GPSEd, -1 );
+	return Log->GetIndex( dFrame, &VideoSt, Log == m_VsdLog ? &VsdSt : &GPSSt );
 }
 
 /*** ラップタイム再生成 (手動) **********************************************/
