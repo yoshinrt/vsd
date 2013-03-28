@@ -16,6 +16,7 @@ $OutputFile = 'ScriptIF.h';
 
 @InputFiles = (
 	'CVsdFilter.cpp',
+	'CVsdFilterDraw.cpp',
 	'CVsdImage.cpp',
 	'CVsdFont.cpp',
 	'CVsdFile.cpp',

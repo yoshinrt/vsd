@@ -124,3 +124,18 @@ Vsd.DrawGraph = function( x1, y1, x2, y2, font, flags, params ){
 		);
 	}
 }
+
+//*** 多角形描画 *************************************************************
+
+Vsd.DrawPolygon = function( points, color ){
+	for( var i = 0; i < points.length; i += 2 ){
+		Vsd.DrawLine(
+			points[ i + 0 ],
+			points[ i + 1 ],
+			points[ ( i + 2 ) % points.length ],
+			points[ ( i + 3 ) % points.length ],
+			0, 1, DRAW_FILL
+		);
+	}
+	Vsd.FillPolygon( color );
+}

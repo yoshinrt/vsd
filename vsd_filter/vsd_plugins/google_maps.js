@@ -129,17 +129,16 @@ function DrawArrow( x, y, angle, scale ){
 	var cos = Math.cos( angle ) * Scale;
 	var sin = Math.sin( angle ) * Scale;
 	
-	var x0 =  0 * cos - 15 * -sin;
-	var y0 =  0 * sin - 15 *  cos;
-	var x1 =  6 * cos +  8 * -sin;
-	var y1 =  6 * sin +  8 *  cos;
-	var x2 = -6 * cos +  8 * -sin;
-	var y2 = -6 * sin +  8 *  cos;
-	
-	Vsd.DrawLine( x + x0, y + y0, x + x1, y + y1, 0, 1, DRAW_FILL );
-	Vsd.DrawLine( x + x1, y + y1, x + x2, y + y2, 0, 1, DRAW_FILL );
-	Vsd.DrawLine( x + x2, y + y2, x + x0, y + y0, 0, 1, DRAW_FILL );
-	Vsd.DrawPolygon( 0x0080FF );
+	Vsd.DrawPolygon(
+		[
+			x + 0 * cos - 15 * -sin,
+			y + 0 * sin - 15 *  cos,
+			x + 6 * cos +  8 * -sin,
+			y + 6 * sin +  8 *  cos,
+			x - 6 * cos +  8 * -sin,
+			y - 6 * sin +  8 *  cos,
+		], 0x0080FF
+	);
 }
 
 // 緯度・経度から距離算出

@@ -168,7 +168,7 @@ void CVsdFilter::DrawCircle(
 	}
 	
 	// Polygon çáê¨
-	if( uFlag & IMG_FILL ) DrawPolygon( yc );
+	if( uFlag & IMG_FILL ) FillPolygon( yc );
 }
 
 // http://fussy.web.fc2.com/algo/algo2-2.htm
@@ -209,7 +209,7 @@ void CVsdFilter::DrawCircle( int x, int y, int a, int b, tRABY uColor, UINT uFla
 	}
 	
 	// Polygon çáê¨
-	if( uFlag & IMG_FILL ) DrawPolygon( yc );
+	if( uFlag & IMG_FILL ) FillPolygon( yc );
 }
 
 void CVsdFilter::DrawArc(
@@ -283,7 +283,7 @@ void CVsdFilter::DrawArc(
 	}
 	
 	// Polygon çáê¨
-	if( uFlag & IMG_FILL ) DrawPolygon( yc );
+	if( uFlag & IMG_FILL ) FillPolygon( yc );
 }
 
 void CVsdFilter::DrawArc(
@@ -527,7 +527,7 @@ inline void CVsdFilter::InitPolygon( void ){
 	}
 }
 
-inline void CVsdFilter::DrawPolygon( const PIXEL_YCA_ARG yc ){
+inline void CVsdFilter::FillPolygon( const PIXEL_YCA_ARG yc ){
 	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 	#endif
@@ -538,9 +538,9 @@ inline void CVsdFilter::DrawPolygon( const PIXEL_YCA_ARG yc ){
 	InitPolygon();
 }
 
-void CVsdFilter::DrawPolygon( tRABY uColor ){
+void CVsdFilter::FillPolygon( tRABY uColor ){
 	PIXEL_YCA	yc( uColor );
-	DrawPolygon( yc );
+	FillPolygon( yc );
 }
 
 /*** ÉJÉâÅ[Çç¨Ç∫ÇÈ *********************************************************/

@@ -367,13 +367,13 @@ class CVsdFilterIF {
 		
 		return v8::Undefined();
 	}
-	static v8::Handle<v8::Value> Func_DrawPolygon( const v8::Arguments& args ){
+	static v8::Handle<v8::Value> Func_FillPolygon( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
 		
 		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
 		if( !thisObj ) return v8::Undefined();
-		thisObj->DrawPolygon(
+		thisObj->FillPolygon(
 			PIXEL_RABY::Argb2Raby( args[ 0 ]->Int32Value())
 		);
 		
@@ -566,7 +566,7 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawGraphSingle" ), v8::FunctionTemplate::New( Func_DrawGraphSingle ));
 		proto->Set( v8::String::New( "DrawGraphMulti" ), v8::FunctionTemplate::New( Func_DrawGraphMulti ));
 		proto->Set( v8::String::New( "InitPolygon" ), v8::FunctionTemplate::New( Func_InitPolygon ));
-		proto->Set( v8::String::New( "DrawPolygon" ), v8::FunctionTemplate::New( Func_DrawPolygon ));
+		proto->Set( v8::String::New( "FillPolygon" ), v8::FunctionTemplate::New( Func_FillPolygon ));
 		proto->Set( v8::String::New( "DrawGSnake" ), v8::FunctionTemplate::New( Func_DrawGSnake ));
 		proto->Set( v8::String::New( "DrawMeterScale" ), v8::FunctionTemplate::New( Func_DrawMeterScale ));
 		proto->Set( v8::String::New( "DrawMap" ), v8::FunctionTemplate::New( Func_DrawMap ));
