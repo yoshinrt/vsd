@@ -2,17 +2,12 @@
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
-	vsd_filter.cpp - VSD filter for AviUti
+	vsd_filter.cpp - VSD filter for AviUtl
 	
 *****************************************************************************/
 
 #include "StdAfx.h"
 
-#include "CVsdLog.h"
-#include "CVsdFont.h"
-#include "CScript.h"
-#include "pixel.h"
-#include "CVsdImage.h"
 #include "CVsdFilter.h"
 #include "rev_num.h"
 
@@ -215,18 +210,18 @@ class CVsdFilterAvu : public CVsdFilter {
 	std::vector<std::string> m_vecReaderFunc;
 	
 	// 仮想関数
-	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
-	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
-	virtual UINT PutImage( int x, int y, CVsdImage &img, UINT uAlign );
+	void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
+	void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
+	UINT PutImage( int x, int y, CVsdImage &img, UINT uAlign );
 	
-	virtual int	GetWidth( void ){ return fpip ? fpip->w : 0; }
-	virtual int	GetHeight( void ){ return fpip ? fpip->h : 0; }
-	virtual int	GetFrameMax( void ){ return fileinfo->frame_n; }
-	virtual int	GetFrameCnt( void ){ return fpip->frame; }
-	virtual double	GetFPS( void ){ return ( double )fileinfo->video_rate / fileinfo->video_scale; }
+	int	GetWidth( void ){ return fpip ? fpip->w : 0; }
+	int	GetHeight( void ){ return fpip ? fpip->h : 0; }
+	int	GetFrameMax( void ){ return fileinfo->frame_n; }
+	int	GetFrameCnt( void ){ return fpip->frame; }
+	double	GetFPS( void ){ return ( double )fileinfo->video_rate / fileinfo->video_scale; }
 	
-	virtual void SetFrameMark( int iFrame );
-	virtual int  GetFrameMark( int iFrame );
+	void SetFrameMark( int iFrame );
+	int  GetFrameMark( int iFrame );
 	
 	void DispErrorMessage( LPCWSTR szMsg );
 	
@@ -297,7 +292,7 @@ CVsdFilterAvu::CVsdFilterAvu( FILTER *filter, void *editp ) :
 
 CVsdFilterAvu::~CVsdFilterAvu(){
 	delete fileinfo;
-	if( m_szLogFilter ) delete [] m_szLogFilter;
+	delete [] m_szLogFilter;
 }
 
 /*** PutPixel ***************************************************************/
@@ -988,7 +983,7 @@ BOOL CVsdFilterAvu::ConfigLoad( const char *szFileName ){
 }
 
 void CVsdFilterAvu::SetSkinName( char *szSkinFile, HWND hwnd ){
-	ReloadScript();
+	DeleteScript();
 	SetSkinFile( szSkinFile );
 	
 	// skin 名をダイアログに設定
@@ -1260,7 +1255,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 						func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
 					#endif
 				}
-				g_Vsd->ReloadScript();
+				g_Vsd->DeleteScript();
 			}
 			
 		  Case ID_BUTT_LOAD_GPS:	// GPS ログロード
@@ -1269,7 +1264,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 					// 設定再描画
 					filter->exfunc->filter_window_update( filter );
 				}
-				g_Vsd->ReloadScript();
+				g_Vsd->DeleteScript();
 			}
 			
 		  Case ( CBN_SELCHANGE << 16 ) | ID_COMBO_SEL_SKIN:	// スキン選択

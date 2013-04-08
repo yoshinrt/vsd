@@ -1,16 +1,15 @@
 //*** 設定ここから ***********************************************************
 
 // ギア比の設定  各ギアの エンジン回転[rpm]／スピード[km/h] を設定
-GEAR_RATIO1 = 101.9192993;
-GEAR_RATIO2 = 61.08177186;
-GEAR_RATIO3 = 45.72406922;
-GEAR_RATIO4 = 35.95098573;
-GEAR_RATIO5 = 29.66828919;
-GEAR_RATIO6 = 0;
-GEAR_RATIO7 = 0;
+GEAR_RATIO = [
+	101.9192993,	// 1速
+	61.08177186,	// 2速
+	45.72406922,	// 3速
+	35.95098573,	// 4速
+	29.66828919,	// 5速  6速以降がある場合は同じように追加
+];
 
-// レブリミット
-REV_LIMIT = 6500;
+REV_LIMIT		= 6500;	// レブリミット (上限)
 
 //*** 設定ここまで ***********************************************************
 
@@ -38,22 +37,18 @@ IMG_INET_ASYNC				= 1 << 0;
 IMG_STATUS_LOAD_COMPLETE	= 0;
 IMG_STATUS_LOAD_INCOMPLETE	= 1;
 IMG_STATUS_LOAD_FAILED		= 2;
-
-GEAR_RATIO1 = ( GEAR_RATIO1 + GEAR_RATIO2 ) / 2;
-GEAR_RATIO2 = ( GEAR_RATIO2 + GEAR_RATIO3 ) / 2;
-GEAR_RATIO3 = ( GEAR_RATIO3 + GEAR_RATIO4 ) / 2;
-GEAR_RATIO4 = ( GEAR_RATIO4 + GEAR_RATIO5 ) / 2;
-GEAR_RATIO5 = ( GEAR_RATIO5 + GEAR_RATIO6 ) / 2;
-GEAR_RATIO6 = ( GEAR_RATIO6 + GEAR_RATIO7 ) / 2;
+SEEK_SET	= 0;
+SEEK_CUR	= 1;
+SEEK_END	= 2;
 
 function GetGear( GearRatio ){
-	if( GearRatio > GEAR_RATIO1 ) return 1;
-	if( GearRatio > GEAR_RATIO2 ) return 2;
-	if( GearRatio > GEAR_RATIO3 ) return 3;
-	if( GearRatio > GEAR_RATIO4 ) return 4;
-	if( GearRatio > GEAR_RATIO5 ) return 5;
-	if( GearRatio > GEAR_RATIO6 ) return 6;
-	return 7;
+	var Gear;
+	for( Gear = 1; Gear < GEAR_RATIO.length; ++Gear ){
+		if( GearRatio > ( GEAR_RATIO[ Gear - 1 ] + GEAR_RATIO[ Gear ] ) / 2 ){
+			break;
+		}
+	}
+	return Gear;
 }
 
 GlobalInstance = this;

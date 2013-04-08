@@ -8,9 +8,9 @@
 //				|				|	|						config 名
 //				|				|	|						|
 DEF_CHECKBOX(	CHECK_LAP,		1,	"ラップタイム表示",		"lap_time"	)
+DEF_CHECKBOX(	CHECK_GRAPH,	0,	"グラフ表示",			"graph"		)
 DEF_CHECKBOX_N(	CHECK_GPS_PRIO,	0,	"GPSログ優先",			NULL		)
 DEF_CHECKBOX_N(	CHECK_LOGPOS,	1,	"半自動同期",			NULL		)
-DEF_CHECKBOX(	CHECK_GRAPH,	0,	"グラフ表示",			"graph"		)
 DEF_CHECKBOX_N(	CHECK_SYNCINFO,	0,	"同期情報表示",			NULL		)
 
 #undef DEF_CHECKBOX

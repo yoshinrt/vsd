@@ -7,7 +7,6 @@
 *****************************************************************************/
 
 #include "StdAfx.h"
-
 #include "CVsdFile.h"
 
 #ifdef PUBLIC_MODE

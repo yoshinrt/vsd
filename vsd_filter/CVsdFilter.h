@@ -371,7 +371,7 @@ class CVsdFilter {
 	// JavaScript 用パラメータ
 	
 	#define DEF_LOG( name ) double Get##name( void ){ \
-		if( m_VsdLog && m_VsdLog->m_pLog##name )	return m_VsdLog->name(); \
+		if( m_VsdLog && m_VsdLog->m_pLog##name ) return m_VsdLog->name(); \
 		return m_GPSLog->name(); \
 	}
 	#include "def_log.h"
@@ -384,7 +384,7 @@ class CVsdFilter {
 	double DateTime( void ){	// !js_var:DateTime
 		if( m_VsdLog ) return m_VsdLog->DateTime();
 		if( m_GPSLog ) return m_GPSLog->DateTime();
-		return 0;
+		return NaN;
 	}
 	
 	double GetValue( char *szKey ){
@@ -402,7 +402,7 @@ class CVsdFilter {
 	
 	static HINSTANCE	m_hInst;	// dll handle
 	
-	void ReloadScript( void ){
+	void DeleteScript( void ){
 		if( m_Script ){
 			m_Script->Dispose();
 			delete m_Script;

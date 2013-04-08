@@ -7,8 +7,6 @@
 *****************************************************************************/
 
 #include "StdAfx.h"
-
-#include "pixel.h"
 #include "CVsdFilter.h"
 
 /*** macros *****************************************************************/
@@ -1264,7 +1262,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		InitPolygon();
 		
 		// JavaScript 再起動用に削除
-		if( m_Script ) ReloadScript();
+		if( m_Script ) DeleteScript();
 		
 		// フォントサイズ初期化
 		if( m_pFont ) delete m_pFont;

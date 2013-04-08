@@ -49,18 +49,18 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	
 	// âºëzä÷êî
 	void         PutPixel( int iIndex, const PIXEL_YCA_ARG yc, int iAlfa );
-	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
-	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
-	virtual UINT PutImage( int x, int y, CVsdImage &img, UINT uAlign );
+	void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
+	void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
+	UINT PutImage( int x, int y, CVsdImage &img, UINT uAlign );
 	
-	virtual int	GetWidth( void )	{ return m_iWidth; }
-	virtual int	GetHeight( void )	{ return m_iHeight; }
-	virtual int	GetFrameMax( void )	{ return vi.num_frames; }
-	virtual int	GetFrameCnt( void )	{ return m_iFrameCnt; }
-	virtual double	GetFPS( void )	{ return ( double )vi.fps_numerator / vi.fps_denominator; }
+	int	GetWidth( void )	{ return m_iWidth; }
+	int	GetHeight( void )	{ return m_iHeight; }
+	int	GetFrameMax( void )	{ return vi.num_frames; }
+	int	GetFrameCnt( void )	{ return m_iFrameCnt; }
+	double	GetFPS( void )	{ return ( double )vi.fps_numerator / vi.fps_denominator; }
 	
-	virtual void SetFrameMark( int iFrame );
-	virtual int  GetFrameMark( int iFrame );
+	void SetFrameMark( int iFrame );
+	int  GetFrameMark( int iFrame );
 	
 	void DispErrorMessage( LPCWSTR szMsg );
 	
