@@ -18,26 +18,36 @@ function Initialize(){
 	// また，マップデータの取得は Google によって
 	// 1日あたり 25,000 枚に制限されています．
 	
-	// Google Maps の API キーを指定します．
-	// 例: APIKey = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	APIKey		= "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg";
-	
-	// ズームレベルを 1～21 で指定します
-	Zoom		= 14;
-	
-	// 地図タイプ
-	// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:航空写真
-	Maptype		= "roadmap";
-	
-	// 地図サイズ
-	Width		= 400 * Scale;
-	Height		= 300 * Scale;
+	GoogleMapsParam = {
+		// Google Maps の API キーを指定します．
+		// 例: APIKey: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+		APIKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
+		
+		// ズームレベルを 1～21 で指定します
+		Zoom: 14,
+		
+		// 地図タイプ
+		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:航空写真
+		Maptype: "roadmap",
+		
+		// 地図表示位置，サイズ
+		X:		0,
+		Y:		0,
+		Width:	400 * Scale,
+		Height:	300 * Scale,
+		
+		// 地図更新間隔
+		// 前回地図更新時から指定秒以上経過し，
+		// また指定距離以上移動した場合のみ地図を更新します
+		UpdateTime:		1000,	// [ミリ秒]
+		UpdateDistance:	5,		// [m]
+	};
 	
 	//////////////////////////////////////////////////////////////////////////
 	/// ↑↑↑↑↑Google Maps の設定 ここまで↑↑↑↑↑ //////////////////////
 	//////////////////////////////////////////////////////////////////////////
 	
-	if( APIKey == '' ){
+	if( GoogleMapsParam.APIKey == '' ){
 		MessageBox(
 			"google_maps.js スキンを使用するためには初期設定が必要です．詳しくは\n" +
 			Vsd.SkinDir + "google_maps.js\n" +
@@ -46,18 +56,8 @@ function Initialize(){
 		);
 	}
 	
-	Width = Math.floor( Width );
-	Height = Math.floor( Height );
-	
 	// 使用する画像・フォントの宣言
 	Font = new Font( "ＭＳ ゴシック", 24 * Scale, FONT_OUTLINE );
-	
-	GMapURL = "http://maps.googleapis.com/maps/api/staticmap?sensor=false&language=ja" +
-		( APIKey != '' ? "&key=" + APIKey : '' ) +
-		"&maptype=" + Maptype +
-		"&zoom=" + Zoom +
-		"&size=" + Width + "x" + Height +
-		"&center=";
 }
 
 //*** メーター描画処理 ******************************************************
@@ -75,85 +75,16 @@ function Draw(){
 		return;
 	}
 	
-	if( typeof( MapImg ) == 'undefined' ){
-		MapImg = new Image( GMapURL + Vsd.Latitude + "," + Vsd.Longitude );
-		Dir		= Vsd.Direction;
-		Frame	= Vsd.FrameCnt;
-		Long	= Vsd.Longitude;
-		Lati	= Vsd.Latitude;
-	}
+	// Google マップ表示
+	Vsd.DrawGoogleMaps( GoogleMapsParam );
 	
-	if(
-		Math.abs( Frame - Vsd.FrameCnt ) >= 30 &&
-		GetDistance( Vsd.Longitude, Vsd.Latitude, Long, Lati ) >= 5
-	){
-		MapImgNext = new Image(
-			GMapURL + Vsd.Latitude + "," + Vsd.Longitude,
-			IMG_INET_ASYNC
-		);
-		Frame	= Vsd.FrameCnt;
-		Long	= Vsd.Longitude;
-		Lati	= Vsd.Latitude;
-		NextDir = Vsd.Direction;
-		
-		Caption =
-			"緯度:" + Vsd.Latitude.toFixed( 6 ) +
-			"  経度:" + Vsd.Longitude.toFixed( 6 ) +
-			"  距離:" + ( Vsd.Distance / 1000 ).toFixed( 2 ) + "km" +
-			"  速度:" + Vsd.Speed.toFixed( 0 ) + "km/h";
-	}
-	
-	if(
-		typeof( MapImgNext ) != 'undefined' &&
-		MapImgNext.Status == IMG_STATUS_LOAD_COMPLETE
-	){
-		MapImg.Dispose();
-		MapImg		= MapImgNext;
-		MapImgNext	= undefined;
-		Dir			= NextDir;
-	}
-	
-	Vsd.PutImage( 0, 0, MapImg );
-	DrawArrow( Width / 2, Height / 2, Dir, Scale );
-	
-	if( typeof( Caption ) == 'undefined' ) Caption = '';
+	// 文字データ
 	Vsd.DrawTextAlign(
 		0, Vsd.Height - 1, ALIGN_BOTTOM,
-		Caption, Font, 0xFFFFFF
+		"緯度:" + Vsd.Latitude.toFixed( 6 ) +
+		"  経度:" + Vsd.Longitude.toFixed( 6 ) +
+		"  距離:" + ( Vsd.Distance / 1000 ).toFixed( 2 ) + "km" +
+		"  速度:" + Vsd.Speed.toFixed( 0 ) + "km/h",
+		Font, 0xFFFFFF
 	);
-}
-
-// 自車マーク描画
-function DrawArrow( x, y, angle, scale ){
-	angle *= Math.PI / 180;
-	var cos = Math.cos( angle ) * Scale;
-	var sin = Math.sin( angle ) * Scale;
-	
-	Vsd.DrawPolygon(
-		[
-			x + 0 * cos - 15 * -sin,
-			y + 0 * sin - 15 *  cos,
-			x + 6 * cos +  8 * -sin,
-			y + 6 * sin +  8 *  cos,
-			x - 6 * cos +  8 * -sin,
-			y - 6 * sin +  8 *  cos,
-		], 0x0080FF
-	);
-}
-
-// 緯度・経度から距離算出
-function GetDistance( dLong0, dLati0, dLong1, dLati1 ){
-	var a	= 6378137.000;
-	var b	= 6356752.314245;
-	var e2	= ( a * a - b * b ) / ( a * a );
-	var ToRAD = Math.PI / 180;
-	
-	var dx	= ( dLong1 - dLong0 ) * ToRAD;
-	var dy	= ( dLati1 - dLati0 ) * ToRAD;
-	var uy	= ( dLati0 + dLati1 ) / 2 * ToRAD;
-	var W	= Math.sqrt( 1 - e2 * Math.sin( uy ) * Math.sin( uy ));
-	var M	= a * ( 1 - e2 ) / Math.pow( W, 3 );
-	var N	= a / W;
-	
-	return	Math.sqrt( dy * dy * M * M + Math.pow( dx * N * Math.cos( uy ), 2 ));
 }

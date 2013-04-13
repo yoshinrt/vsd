@@ -134,3 +134,89 @@ Vsd.DrawPolygon = function( points, color ){
 	}
 	Vsd.FillPolygon( color );
 }
+
+//*** Google Map 描画 ********************************************************
+
+Vsd.DrawGoogleMaps = function( param ){
+	if( typeof( Vsd.Longitude ) == 'undefined' ) return;
+	
+	GMapURL = "http://maps.googleapis.com/maps/api/staticmap?sensor=false&language=ja" +
+		( param.APIKey != '' ? "&key=" + param.APIKey : '' ) +
+		"&maptype=" + param.Maptype +
+		"&zoom=" + param.Zoom +
+		"&size=" + Math.floor( param.Width ) + "x" + Math.floor( param.Height ) +
+		"&center=";
+	
+	// 一番最初の地図データを同期モードで取得
+	if( typeof( param.MapImg ) == 'undefined' ){
+		param.MapImg	= new Image( GMapURL + Vsd.Latitude + "," + Vsd.Longitude );
+		param.Dir		= Vsd.Direction;
+		param.Time		= Vsd.DateTime;
+		param.Long		= Vsd.Longitude;
+		param.Lati		= Vsd.Latitude;
+	}
+	
+	// 次のマップデータを非同期モードで取得
+	if(
+		Math.abs( param.Time - Vsd.DateTime ) >= param.UpdateTime &&
+		GetDistance( Vsd.Longitude, Vsd.Latitude, param.Long, param.Lati ) >= param.UpdateDistance
+	){
+		param.MapImgNext = new Image(
+			GMapURL + Vsd.Latitude + "," + Vsd.Longitude,
+			IMG_INET_ASYNC
+		);
+		param.Time		= Vsd.DateTime;
+		param.Long		= Vsd.Longitude;
+		param.Lati		= Vsd.Latitude;
+		param.NextDir	= Vsd.Direction;
+	}
+	
+	// 次のマップデータ取得が完了した
+	if(
+		typeof( param.MapImgNext ) != 'undefined' &&
+		param.MapImgNext.Status == IMG_STATUS_LOAD_COMPLETE
+	){
+		param.MapImg.Dispose();
+		param.MapImg		= param.MapImgNext;
+		param.MapImgNext	= undefined;
+		param.Dir			= param.NextDir;
+	}
+	
+	Vsd.PutImage( param.X, param.Y, param.MapImg );
+	DrawArrow( param.X + param.Width / 2, param.Y + param.Height / 2, param.Dir, Scale );
+	
+	// 自車マーク描画
+	function DrawArrow( x, y, angle, scale ){
+		angle *= Math.PI / 180;
+		var cos = Math.cos( angle ) * Scale;
+		var sin = Math.sin( angle ) * Scale;
+		
+		Vsd.DrawPolygon(
+			[
+				x + 0 * cos - 15 * -sin,
+				y + 0 * sin - 15 *  cos,
+				x + 6 * cos +  8 * -sin,
+				y + 6 * sin +  8 *  cos,
+				x - 6 * cos +  8 * -sin,
+				y - 6 * sin +  8 *  cos,
+			], 0x0080FF
+		);
+	}
+	
+	// 緯度・経度から距離算出
+	function GetDistance( dLong0, dLati0, dLong1, dLati1 ){
+		var a	= 6378137.000;
+		var b	= 6356752.314245;
+		var e2	= ( a * a - b * b ) / ( a * a );
+		var ToRAD = Math.PI / 180;
+		
+		var dx	= ( dLong1 - dLong0 ) * ToRAD;
+		var dy	= ( dLati1 - dLati0 ) * ToRAD;
+		var uy	= ( dLati0 + dLati1 ) / 2 * ToRAD;
+		var W	= Math.sqrt( 1 - e2 * Math.sin( uy ) * Math.sin( uy ));
+		var M	= a * ( 1 - e2 ) / Math.pow( W, 3 );
+		var N	= a / W;
+		
+		return	Math.sqrt( dy * dy * M * M + Math.pow( dx * N * Math.cos( uy ), 2 ));
+	}
+}
