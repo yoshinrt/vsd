@@ -15,6 +15,7 @@ $OutputFile = 'ScriptIF.h';
 # make の必要があるかどうかチェック
 
 @InputFiles = (
+	$0,
 	'CVsdFilter.cpp',
 	'CVsdFilterDraw.cpp',
 	'CVsdImage.cpp',
@@ -243,15 +244,17 @@ sub MakeJsIF {
 			
 			$Line = $_;
 			
-			# 引数
+			# 引数， ); まで読み込む
 			if( $Line !~ /\)(?:\s*=\s*0\s*)?;/ ){
 				while( <fpIn> ){
 					$Line .= $_;
 					last if( $Line =~ /\)(?:\s*=\s*0\s*)?;/ );
 				}
 			}
+			
 			$_ = $Line;
 			s/[\x0D]//g;
+			s/\bconst\b//;
 			s/^.*?\([^\)]*?\n// || s/^.*?\(//;
 			s/[\n\s]*\).*$//s;
 			s/,\s*/\n/g;
@@ -318,13 +321,18 @@ sub MakeJsIF {
 					}
 				}
 				
+				elsif( $Type eq 'v8Array' ){
+					# V8 array object 
+					$Args[ $ArgNum ] = "v8::Local<v8::Array>::Cast( args[ $ArgPos ] )";
+				}
+				
 				elsif( $Type eq 'void' ){
 					next;
 				}
 				
-				#else{
-				#	$Args[ $ArgNum ] = "????";
-				#}
+				else{
+					$Args[ $ArgNum ] = "????";
+				}
 				++$ArgMin;
 				++$ArgNum;
 			}

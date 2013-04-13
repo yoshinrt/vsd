@@ -13,7 +13,7 @@
 
 #define SPRINTF_BUF		128
 
-#define INVALID_POS_I	0x7FFFFFFF
+#define INVALID_INT		0x7FFFFFFF
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] * ( G_MULT / 1000.0 ))
 #define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
 
@@ -513,7 +513,7 @@ inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc
 	}
 }
 
-/*** ポリゴン描画 ***********************************************************/
+/*** ポリゴン描画 (今は DrawCircle の fill にしか使ってないはず *************/
 
 inline void CVsdFilter::InitPolygon( void ){
 	#ifdef _OPENMP_AVS
@@ -539,6 +539,157 @@ inline void CVsdFilter::FillPolygon( const PIXEL_YCA_ARG yc ){
 void CVsdFilter::FillPolygon( tRABY uColor ){
 	PIXEL_YCA	yc( uColor );
 	FillPolygon( yc );
+}
+
+/*** まともなポリゴン描画 ***************************************************/
+
+template<class T> struct Coord {
+	T x;
+	T y;
+	
+	// コンストラクタ
+	Coord( T _x = 0, T _y = 0 ) : x( _x ), y ( _y ){}
+	
+	// 演算子の多重定義
+	bool operator==( const Coord& c ) const { return( x == c.x && y == c.y ); }
+	bool operator!=( const Coord& c ) const { return( x != c.x || y != c.y ); }
+};
+
+/* 辺の定義 */
+struct Edge {
+	double x;       // 交点のX座標(初期値は始点のX座標)
+	int    y0;      // 始点のY座標
+	int    y1;      // 終点のY座標(必ずy0<y1)
+	double a;       // 傾き dX/dY
+};
+
+typedef std::vector< Coord<int> > VecCoord; // 座標の配列の型定義
+typedef std::vector<Edge> VecEdge; // 辺リストの型定義
+
+/*
+	PolyFill : 多角形描画(アクティブ・非アクティブの判断をフラグで行う)
+	
+	DrawingArea_IF& draw : 描画領域
+	GPixelOp& pset : 点描画に使う関数オブジェクト
+	VecEdge& edgeList : 生成した辺リスト
+*/
+void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
+	PIXEL_YCA	yc( uColor );
+	#define GetCoordinate( n ) ( pixs->Get( n )->Int32Value())
+	
+	if( !( uFlag & IMG_FILL )){
+		v8::Isolate::Scope IsolateScope( m_Script->m_pIsolate );
+		v8::HandleScope handle_scope;
+		v8::Context::Scope context_scope( m_Script->m_Context );
+		
+		int uCnt = pixs->Length();
+		for( int i = 0; i < uCnt; i = i + 2 ){
+			DrawLine(
+				GetCoordinate( i ),
+				GetCoordinate( i + 1 ),
+				GetCoordinate(( i + 2 ) % uCnt ),
+				GetCoordinate(( i + 3 ) % uCnt ),
+				uColor, 0
+			);
+		}
+		return;
+	}
+	
+	/*  辺リストの生成
+		const VecCoord& clippedVertex : クリッピング後の頂点座標
+		VecEdge& edgeList : 生成する辺リスト
+	*/
+	VecEdge edgeList;
+	{
+		v8::Isolate::Scope IsolateScope( m_Script->m_pIsolate );
+		v8::HandleScope handle_scope;
+		v8::Context::Scope context_scope( m_Script->m_Context );
+		
+		edgeList.clear();
+		if( pixs->Length() == 0 ) return;
+		unsigned int vertexCnt = pixs->Length() / 2; // 頂点の個数
+		
+		for( unsigned int i = 0 ; i < vertexCnt ; ++i ){
+			int	x0 = GetCoordinate( i * 2 );
+			int	y0 = GetCoordinate( i * 2 + 1 );
+			int	x1 = GetCoordinate(( i + 1 ) % vertexCnt * 2 );
+			int	y1 = GetCoordinate(( i + 1 ) % vertexCnt * 2 + 1 );
+			
+			// 終点の次の点
+			int	y2 = GetCoordinate(( i + 2 ) % vertexCnt * 2 + 1 );
+			
+			Edge edge; // 辺データ用バッファ
+			
+			if( y0 != y1 ){
+				edge.x = ( y1 > y0 ) ? x0 : x1;
+				edge.a = (double)( x1 - x0 ) / (double)( y1 - y0 );
+				
+				// 終点が左右向きの場合、終点のY座標をひとつずらす
+				if(( y1 - y0 ) * ( y1 - y2 ) <= 0 ){
+					if( y1 > y0 ){
+						--( y1 ); // 終点が辺の下側なら上側にずらす
+					} else {
+						++( y1 ); // 終点が辺の上側なら下側にずらす
+						edge.x += edge.a; // X座標の初期値を補正する
+					}
+				}
+				
+				edge.y0 = ( y1 > y0 ) ? y0 : y1;
+				edge.y1 = ( y1 > y0 ) ? y1 : y0;
+			}else{
+				// 水平線だった場合，a に x1 を入れる
+				edge.x = x0;
+				edge.a = ( x0 < x1 ) ? --x1 : ++x1;
+				edge.y0 = y0;
+				edge.y1 = INVALID_INT;
+			}
+			edgeList.push_back( edge );
+		}
+	}
+	
+	/************************************************************************/
+	
+	unsigned int edgeSize = edgeList.size(); // 辺リストのサイズ
+	std::vector<int> vec_x( edgeSize + 2 ); // X 座標のリスト
+	
+	for( int y = 0 ; y < GetHeight() ; ++y ){
+		std::vector<int>::iterator ep = vec_x.begin(); // 抽出した X 座標の末尾(開始位置で初期化)
+		for( unsigned int i = 0 ; i < edgeSize ; ++i ){
+			// アクティブな辺の X 座標を抽出
+			if( edgeList[i].y0 == y && edgeList[i].y1 == INVALID_INT ){
+				// 水平線
+				*ep++ = ( int )( edgeList[i].x + 0.5 );
+				*ep++ = ( int )( edgeList[i].a + 0.5 );
+			}else if( edgeList[i].y0 <= y && y <= edgeList[i].y1 ){
+				// 斜め線
+				*ep++ = ( int )( edgeList[i].x + 0.5 );
+				edgeList[i].x += edgeList[i].a; // X座標の更新
+			}
+		}
+		
+		// 交点のソート
+		std::sort( vec_x.begin(), ep );
+		
+		if(( ep - vec_x.begin()) & 1 ){
+			int a = 0;
+		}
+		
+		// クリッピング・エリア外の交点をチェックしながらライン描画
+		for( std::vector<int>::iterator sp = vec_x.begin() + 1;
+			sp < ep; sp += 2
+		){
+			int x0 = *( sp - 1 );	// 左端の点のX座標
+			int x1 = *sp;			// 右端の点のX座標
+			
+			// X座標のクリッピング
+			if( x1 < 0 || x0 >= GetWidth()) continue;
+			if( x0 < 0 ) x0 = 0;
+			if( x1 >= GetWidth()) x1 = GetWidth() - 1;
+			
+			// 直線の描画
+			FillLine( x0, y, x1, yc );
+		}
+	}
 }
 
 /*** カラーを混ぜる *********************************************************/
@@ -600,7 +751,7 @@ void CVsdFilter::DrawGraphSub(
 	int	iWidth  = x2 - x1 + 1;
 	int iHeight = y2 - y1 + 1;
 	
-	int		iPrevY = INVALID_POS_I;
+	int		iPrevY = INVALID_INT;
 	double	dVal;
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
@@ -623,7 +774,7 @@ void CVsdFilter::DrawGraphSub(
 		dVal = Data.Get( dIndex );
 		
 		int iPosY = y2 - ( int )(( dVal - Data.GetMin()) * iHeight / ( Data.GetMax() - Data.GetMin()));
-		if( iPrevY != INVALID_POS_I )
+		if( iPrevY != INVALID_INT )
 			DrawLine( x1 + x - GRAPH_STEP, iPrevY, x1 + x, iPosY, 1, uColor, 0 );
 		
 		iPrevY = iPosY;
@@ -752,7 +903,7 @@ void CVsdFilter::DrawGSnake(
 	if( m_CurLog && m_CurLog->m_pLogGx ){
 		if( dLength > 0 ){
 			
-			int iGxPrev = INVALID_POS_I, iGyPrev;
+			int iGxPrev = INVALID_INT, iGyPrev;
 			
 			for( i = -( int )( dLength * m_CurLog->m_dFreq ) ; i <= 1 ; ++i ){
 				
@@ -763,7 +914,7 @@ void CVsdFilter::DrawGSnake(
 					
 					iGx = ( int )( iGx );
 					
-					if( iGxPrev != INVALID_POS_I ) DrawLine(
+					if( iGxPrev != INVALID_INT ) DrawLine(
 						iCx + iGx, iCy - iGy, iCx + iGxPrev, iCy - iGyPrev,
 						iWidth, uColorLine, 0
 					);
@@ -836,7 +987,7 @@ void CVsdFilter::DrawMap(
 		}
 	}
 	
-	int iGxPrev = INVALID_POS_I, iGyPrev;
+	int iGxPrev = INVALID_INT, iGyPrev;
 	
 	int iLineSt, iLineEd;
 	
@@ -861,7 +1012,7 @@ void CVsdFilter::DrawMap(
 		iGx = x1 + ( int )GetMapPos( m_CurLog->X( i ), X );
 		iGy = y1 + ( int )GetMapPos( m_CurLog->Y( i ), Y );
 		
-		if( iGxPrev != INVALID_POS_I ){
+		if( iGxPrev != INVALID_INT ){
 			if(
 				( iGx - iGxPrev ) * ( iGx - iGxPrev ) +
 				( iGy - iGyPrev ) * ( iGy - iGyPrev ) >= ( 25 )

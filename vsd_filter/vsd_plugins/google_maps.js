@@ -36,9 +36,13 @@ function Initialize(){
 		Width:	400 * Scale,
 		Height:	300 * Scale,
 		
+		// 自車インジケータ
+		IndicatorSize:	12 * Scale,		// サイズ
+		IndicatorColor:	0x0080FF,		// 色
+		
 		// 地図更新間隔
 		// 前回地図更新時から指定秒以上経過し，
-		// また指定距離以上移動した場合のみ地図を更新します
+		// かつ指定距離以上移動した場合のみ地図を更新します
 		UpdateTime:		1000,	// [ミリ秒]
 		UpdateDistance:	5,		// [m]
 	};

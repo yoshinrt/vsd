@@ -10,6 +10,8 @@
 
 #include "error_code.h"
 
+typedef v8::Local<v8::Array> v8Array;
+
 class CVsdFilter;
 
 class CScript {

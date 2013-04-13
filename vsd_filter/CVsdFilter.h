@@ -190,9 +190,14 @@ class CVsdFilter {
 	);
 	
 	// ƒ|ƒŠƒSƒ“•`ŽÊ
-	void InitPolygon( void );			// !js_func
-	void FillPolygon( tRABY uColor );	// !js_func
+	void InitPolygon( void );
+	void FillPolygon( tRABY uColor );
 	void FillPolygon( const PIXEL_YCA_ARG yc );
+	void DrawPolygon( // !js_func
+		v8Array pixs,
+		tRABY uColor,
+		UINT uFlag	// !default:0
+	);
 	
 	UINT BlendColor(
 		tRABY uColor0,

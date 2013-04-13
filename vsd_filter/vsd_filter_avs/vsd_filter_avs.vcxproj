@@ -132,7 +132,6 @@ rev_num.bat ./make_js_func.bat
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\COle.cpp" />
     <ClCompile Include="..\CScript.cpp" />
     <ClCompile Include="..\CVsdFile.cpp" />
     <ClCompile Include="..\CVsdFilter.cpp" />

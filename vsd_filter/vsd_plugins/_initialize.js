@@ -120,21 +120,6 @@ Vsd.DrawGraph = function( x1, y1, x2, y2, font, flags, params ){
 	}
 }
 
-//*** 多角形描画 *************************************************************
-
-Vsd.DrawPolygon = function( points, color ){
-	for( var i = 0; i < points.length; i += 2 ){
-		Vsd.DrawLine(
-			points[ i + 0 ],
-			points[ i + 1 ],
-			points[ ( i + 2 ) % points.length ],
-			points[ ( i + 3 ) % points.length ],
-			0, 1, DRAW_FILL
-		);
-	}
-	Vsd.FillPolygon( color );
-}
-
 //*** Google Map 描画 ********************************************************
 
 Vsd.DrawGoogleMaps = function( param ){
@@ -183,24 +168,32 @@ Vsd.DrawGoogleMaps = function( param ){
 	}
 	
 	Vsd.PutImage( param.X, param.Y, param.MapImg );
-	DrawArrow( param.X + param.Width / 2, param.Y + param.Height / 2, param.Dir, Scale );
+	DrawArrow( param.X + param.Width / 2, param.Y + param.Height / 2, param.Dir, param.IndicatorSize );
 	
 	// 自車マーク描画
-	function DrawArrow( x, y, angle, scale ){
+	function DrawArrow( cx, cy, angle, size ){
+//		angle = 34.85257193;
 		angle *= Math.PI / 180;
-		var cos = Math.cos( angle ) * Scale;
-		var sin = Math.sin( angle ) * Scale;
+		var cos = Math.cos( angle ) * size;
+		var sin = Math.sin( angle ) * size;
 		
-		Vsd.DrawPolygon(
-			[
-				x + 0 * cos - 15 * -sin,
-				y + 0 * sin - 15 *  cos,
-				x + 6 * cos +  8 * -sin,
-				y + 6 * sin +  8 *  cos,
-				x - 6 * cos +  8 * -sin,
-				y - 6 * sin +  8 *  cos,
-			], 0x0080FF
-		);
+		apex = [
+			0, -1,
+			0.707, 0.707,
+			0, 0.25,
+			-0.707, 0.707,
+		];
+		
+		// 回転 + x,y 座標加算
+		for( var i = 0; i < apex.length; i += 2 ){
+			var x = cx + apex[ i ] * cos - apex[ i + 1 ] * sin;
+			var y = cy + apex[ i ] * sin + apex[ i + 1 ] * cos;
+			apex[ i     ] = x;
+			apex[ i + 1 ] = y;
+		}
+		
+		Vsd.DrawPolygon( apex, param.IndicatorColor, DRAW_FILL );
+		Vsd.DrawCircle( cx, cy, size, param.IndicatorColor );
 	}
 	
 	// 緯度・経度から距離算出
