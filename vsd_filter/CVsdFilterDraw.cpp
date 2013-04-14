@@ -622,14 +622,14 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 			
 			if( y0 != y1 ){
 				edge.x = ( y1 > y0 ) ? x0 : x1;
-				edge.a = (double)( x1 - x0 ) / (double)( y1 - y0 );
+				edge.a = ( double )( x1 - x0 ) / ( double )( y1 - y0 );
 				
 				// 終点が左右向きの場合、終点のY座標をひとつずらす
 				if(( y1 - y0 ) * ( y1 - y2 ) <= 0 ){
 					if( y1 > y0 ){
-						--( y1 ); // 終点が辺の下側なら上側にずらす
+						--y1; // 終点が辺の下側なら上側にずらす
 					} else {
-						++( y1 ); // 終点が辺の上側なら下側にずらす
+						++y1; // 終点が辺の上側なら下側にずらす
 						edge.x += edge.a; // X座標の初期値を補正する
 					}
 				}
@@ -656,10 +656,12 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 		std::vector<int>::iterator ep = vec_x.begin(); // 抽出した X 座標の末尾(開始位置で初期化)
 		for( unsigned int i = 0 ; i < edgeSize ; ++i ){
 			// アクティブな辺の X 座標を抽出
-			if( edgeList[i].y0 == y && edgeList[i].y1 == INVALID_INT ){
-				// 水平線
-				*ep++ = ( int )( edgeList[i].x + 0.5 );
-				*ep++ = ( int )( edgeList[i].a + 0.5 );
+			if( edgeList[i].y1 == INVALID_INT ){
+				if( edgeList[i].y0 == y ){
+					// 水平線
+					*ep++ = ( int )( edgeList[i].x + 0.5 );
+				//	*ep++ = ( int )( edgeList[i].a + 0.5 );
+				}
 			}else if( edgeList[i].y0 <= y && y <= edgeList[i].y1 ){
 				// 斜め線
 				*ep++ = ( int )( edgeList[i].x + 0.5 );

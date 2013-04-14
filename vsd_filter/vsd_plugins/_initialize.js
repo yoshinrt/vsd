@@ -172,7 +172,6 @@ Vsd.DrawGoogleMaps = function( param ){
 	
 	// 自車マーク描画
 	function DrawArrow( cx, cy, angle, size ){
-//		angle = 34.85257193;
 		angle *= Math.PI / 180;
 		var cos = Math.cos( angle ) * size;
 		var sin = Math.sin( angle ) * size;
