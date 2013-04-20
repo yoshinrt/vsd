@@ -37,6 +37,7 @@
 #endif
 
 #include "dds.h"
+#include <assert.h>
 #include "dds_lib/dds_lib.h"
 #include "../vsd/main.h"
 

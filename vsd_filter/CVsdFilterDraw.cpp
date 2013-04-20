@@ -557,10 +557,14 @@ template<class T> struct Coord {
 
 /* 辺の定義 */
 struct Edge {
-	double x;       // 交点のX座標(初期値は始点のX座標)
-	int    y0;      // 始点のY座標
-	int    y1;      // 終点のY座標(必ずy0<y1)
-	double a;       // 傾き dX/dY
+	USHORT	x, y;	// 始点座標
+	USHORT	Flag;		// 傾き
+};
+
+enum {
+	EDGE_DEL_END	= 1,
+	EDGE_H			= 2,
+	EDGE_H_DEL_END	= 3,
 };
 
 typedef std::vector< Coord<int> > VecCoord; // 座標の配列の型定義
@@ -571,11 +575,11 @@ typedef std::vector<Edge> VecEdge; // 辺リストの型定義
 	
 	DrawingArea_IF& draw : 描画領域
 	GPixelOp& pset : 点描画に使う関数オブジェクト
-	VecEdge& edgeList : 生成した辺リスト
+	VecEdge& EdgeList : 生成した辺リスト
 */
 void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 	PIXEL_YCA	yc( uColor );
-	#define GetCoordinate( n ) ( pixs->Get( n )->Int32Value())
+	#define GetCoordinate( n ) (( int )( pixs->Get( n )->NumberValue() + 0.5 ))
 	
 	if( !( uFlag & IMG_FILL )){
 		v8::Isolate::Scope IsolateScope( m_Script->m_pIsolate );
@@ -597,85 +601,98 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 	
 	/*  辺リストの生成
 		const VecCoord& clippedVertex : クリッピング後の頂点座標
-		VecEdge& edgeList : 生成する辺リスト
+		VecEdge& EdgeList : 生成する辺リスト
 	*/
-	VecEdge edgeList;
-	{
-		v8::Isolate::Scope IsolateScope( m_Script->m_pIsolate );
-		v8::HandleScope handle_scope;
-		v8::Context::Scope context_scope( m_Script->m_Context );
+	v8::Isolate::Scope IsolateScope( m_Script->m_pIsolate );
+	v8::HandleScope handle_scope;
+	v8::Context::Scope context_scope( m_Script->m_Context );
+	
+	UINT uEdgeCnt = pixs->Length() / 2; // 頂点の個数
+	if( uEdgeCnt < 3 ) return;
+	
+	VecEdge EdgeList;
+	Edge edge;
+	int	iMinY = 0x7FFFFFFF;
+	int	iMaxY = 0x80000000;
+	
+	
+	// 頂点リストを格納
+	for( UINT u = 0; u < uEdgeCnt; ++u ){
+		edge.x = GetCoordinate( u * 2 );
+		edge.y = GetCoordinate( u * 2 + 1 );
+		EdgeList.push_back( edge );
 		
-		edgeList.clear();
-		if( pixs->Length() == 0 ) return;
-		unsigned int vertexCnt = pixs->Length() / 2; // 頂点の個数
+		if( iMaxY < edge.y ) iMaxY = edge.y;
+		if( iMinY > edge.y ) iMinY = edge.y;
+	}
+	
+	// 傾き計算
+	int	a = EdgeList[ 0 ].y - EdgeList[ uEdgeCnt - 1 ].y;
+	
+	for( UINT u = 0; u < uEdgeCnt; ++u ){
+		UINT v = ( u + 1 ) % uEdgeCnt;
+		UINT w = ( u + 2 ) % uEdgeCnt;
 		
-		for( unsigned int i = 0 ; i < vertexCnt ; ++i ){
-			int	x0 = GetCoordinate( i * 2 );
-			int	y0 = GetCoordinate( i * 2 + 1 );
-			int	x1 = GetCoordinate(( i + 1 ) % vertexCnt * 2 );
-			int	y1 = GetCoordinate(( i + 1 ) % vertexCnt * 2 + 1 );
+		if( EdgeList[ u ].y == EdgeList[ v ].y ){
+			// 水平線，直前の傾きを継承
+			// それが次の辺と同じ傾きなら，次辺の始点が余計なので，
+			//   それを打ち消すために終点削除しない
+			// 違う傾きなら，終点削除
+			EdgeList[ u ].Flag = 
+				( EdgeList[ w ].y - EdgeList[ v ].y ) * a >= 0 ? EDGE_H : EDGE_H_DEL_END;
+		}else{
+			// 斜め線
+			a = EdgeList[ v ].y - EdgeList[ u ].y;
 			
-			// 終点の次の点
-			int	y2 = GetCoordinate(( i + 2 ) % vertexCnt * 2 + 1 );
-			
-			Edge edge; // 辺データ用バッファ
-			
-			if( y0 != y1 ){
-				edge.x = ( y1 > y0 ) ? x0 : x1;
-				edge.a = ( double )( x1 - x0 ) / ( double )( y1 - y0 );
-				
-				// 終点が左右向きの場合、終点のY座標をひとつずらす
-				if(( y1 - y0 ) * ( y1 - y2 ) <= 0 ){
-					if( y1 > y0 ){
-						--y1; // 終点が辺の下側なら上側にずらす
-					} else {
-						++y1; // 終点が辺の上側なら下側にずらす
-						edge.x += edge.a; // X座標の初期値を補正する
-					}
-				}
-				
-				edge.y0 = ( y1 > y0 ) ? y0 : y1;
-				edge.y1 = ( y1 > y0 ) ? y1 : y0;
-			}else{
-				// 水平線だった場合，a に x1 を入れる
-				edge.x = x0;
-				edge.a = ( x0 < x1 ) ? --x1 : ++x1;
-				edge.y0 = y0;
-				edge.y1 = INVALID_INT;
-			}
-			edgeList.push_back( edge );
+			//   次の辺が同じ傾き or 水平線なら，終点削除
+			EdgeList[ u ].Flag =
+				( EdgeList[ w ].y - EdgeList[ v ].y ) * a >= 0 ? EDGE_DEL_END : 0;
 		}
 	}
 	
-	/************************************************************************/
+	// 描画開始
+	std::vector<int> vec_x( uEdgeCnt + 2 ); // X 座標のリスト
 	
-	unsigned int edgeSize = edgeList.size(); // 辺リストのサイズ
-	std::vector<int> vec_x( edgeSize + 2 ); // X 座標のリスト
-	
-	for( int y = 0 ; y < GetHeight() ; ++y ){
+	for( int y = iMinY ; y <= iMaxY ; ++y ){
 		// 抽出した X 座標の末尾(開始位置で初期化)
 		std::vector<int>::iterator ep = vec_x.begin();
 		
-		for( unsigned int i = 0 ; i < edgeSize ; ++i ){
-			// アクティブな辺の X 座標を抽出
-			if( edgeList[i].y1 == INVALID_INT ){
-				if( edgeList[i].y0 == y ){
-					// 水平線
-					*ep++ = ( int )( edgeList[i].x + 0.5 );
-				//	*ep++ = ( int )( edgeList[i].a + 0.5 );
-				}
-			}else if( edgeList[i].y0 <= y && y <= edgeList[i].y1 ){
-				// 斜め線
-				*ep++ = ( int )( edgeList[i].x + 0.5 );
-				edgeList[i].x += edgeList[i].a; // X座標の更新
+		for( UINT u = 0 ; u < uEdgeCnt ; ++u ){
+			UINT v = ( u + 1 ) % uEdgeCnt;
+			
+			if(( EdgeList[ u ].Flag & EDGE_H ) && EdgeList[ u ].y == y ){
+				*ep++ = EdgeList[ u ].x;
+				FillLine( EdgeList[ u ].x, y, EdgeList[ v ].x, yc );
+			}
+			
+			if( EdgeList[ v ].y == y ){
+				// 終点，削除対象でなければ積む
+				if( !( EdgeList[ u ].Flag & EDGE_DEL_END )) *ep++ = EdgeList[ v ].x;
+			}else if(
+				( EdgeList[ u ].y < EdgeList[ v ].y ) ?
+					( EdgeList[ u ].y <= y && y <= EdgeList[ v ].y ) :
+					( EdgeList[ v ].y <= y && y <= EdgeList[ u ].y )
+			){
+				// ここは斜め線かつ終点以外しか通らないはず
+				// シフトは 0.5 の四捨五入
+				*ep++ =
+					((
+						(( EdgeList[ v ].x - EdgeList[ u ].x ) << 1 ) *
+						( y               - EdgeList[ u ].y ) /
+						( EdgeList[ v ].y - EdgeList[ u ].y ) + 1
+					) >> 1 ) + EdgeList[ u ].x;
 			}
 		}
 		
 		// 交点のソート
 		std::sort( vec_x.begin(), ep );
 		
-		// x 座標リストは偶数でなければおかしい
-		//ASSERT((( ep - vec_x.begin()) & 1 ) == 0 );
+		#ifdef DEBUG
+			// x 座標リストは偶数でなければおかしい
+			if(( ep - vec_x.begin()) & 1 ){
+				int a = 0;
+			}
+		#endif
 		
 		// クリッピング・エリア外の交点をチェックしながらライン描画
 		for( std::vector<int>::iterator sp = vec_x.begin() + 1;
