@@ -89,7 +89,7 @@ function Draw(){
 		Vsd.DrawRect(
 			MeterCx - 70 * Scale,
 			MeterCy + 80 * Scale,
-			MeterCx + ( -70 + 140 * Vsd.Gy / Vsd.MaxGy ) * Scale,
+			MeterCx + ( -70 + 140 * ( Vsd.Gy < Vsd.MaxGy ? Vsd.Gy : Vsd.MaxGy ) / Vsd.MaxGy ) * Scale,
 			MeterCy + 100 * Scale - 1,
 			0x00FF00, DRAW_FILL
 		);
@@ -107,7 +107,7 @@ function Draw(){
 		Vsd.DrawRect(
 			MeterCx - 70 * Scale,
 			MeterCy + 100 * Scale,
-			MeterCx + ( -70 + 140 * Vsd.Gy / Vsd.MinGy ) * Scale,
+			MeterCx + ( -70 + 140 * ( Vsd.Gy > Vsd.MinGy ? Vsd.Gy : Vsd.MinGy ) / Vsd.MinGy ) * Scale,
 			MeterCy + 120 * Scale - 1,
 			0xFF0000, DRAW_FILL
 		);
