@@ -62,6 +62,8 @@
 	m_LapLog && m_LapLog->m_iLapSrc == LAPSRC_VSD \
 	? m_VsdLog : m_GPSLog )
 
+#define TIMEZONE	( +9 )	// 日本専用w
+
 /*** track / check ID *******************************************************/
 
 enum {
@@ -175,19 +177,19 @@ class CVsdFilter {
 	);
 	
 	enum {
-		GRAPH_SPEED	= 1 << 0,
-		GRAPH_TACHO	= 1 << 1,
-		GRAPH_GX	= 1 << 2,
-		GRAPH_GY	= 1 << 3,
 		GRAPH_HTILE	= 1 << 30,
 		GRAPH_VTILE	= 1 << 31,
 	};
 	
-	void DrawGraphMulti(	// !js_func
+	void DrawSyncGraph(	// !js_func
 		int x1, int y1, int x2, int y2,
-		CVsdFont &Font,
-		UINT uFlag = GRAPH_SPEED		// !default:1
+		CVsdFont &Font
 	);
+	
+	virtual void DrawSyncInfo( // !js_func
+		int x, int y, CVsdFont &Font,
+		UINT uAlign = 0	// !default:0
+	) = 0;
 	
 	// ポリゴン描写
 	void InitPolygon( void );
@@ -282,10 +284,11 @@ class CVsdFilter {
 	enum {
 		ALIGN_LEFT		= 0,
 		ALIGN_TOP		= 0,
-		ALIGN_HCENTER	= 1,
-		ALIGN_RIGHT		= 2,
-		ALIGN_VCENTER	= 4,
-		ALIGN_BOTTOM	= 8,
+		ALIGN_HCENTER	= 1 << 0,
+		ALIGN_RIGHT		= 1 << 1,
+		ALIGN_VCENTER	= 1 << 2,
+		ALIGN_BOTTOM	= 1 << 3,
+		DRAW_MAP_START	= 1 << 4,	// DrawMap 専用フラグ
 	};
 	
 	// ダイアログ設定リード
@@ -293,14 +296,6 @@ class CVsdFilter {
 	int LineTrace( void ){ return m_piParamT[ TRACK_LineTrace ]; }	// !js_var:Config_map_length
 	int DispLap( void ){ return m_piParamC[ CHECK_LAP ]; }			// !js_var:Config_lap_time
 	int DispGraph( void ){ return m_piParamC[ CHECK_GRAPH ]; }		// !js_var:Config_graph
-	
-	int DispSyncInfo( void ){	// !js_var:Config_sync_mode
-		#ifdef AVS_PLUGIN
-			return 0;
-		#else
-			return m_piParamC[ CHECK_SYNCINFO ];
-		#endif
-	}
 	
 	// 仮想関数
 	virtual int	GetWidth( void )	= 0;	// !js_const:Width
@@ -418,6 +413,7 @@ class CVsdFilter {
   protected:
 	
 	CScript	*m_Script;
+	int m_iTextPosX, m_iTextPosY;
 	
   private:
 	// GDI+オブジェクト（画像展開に必要）
@@ -432,8 +428,6 @@ class CVsdFilter {
 	
 	virtual void SetFrameMark( int iFrame ) = 0;
 	virtual int  GetFrameMark( int iFrame ) = 0;
-	
-	int m_iTextPosX, m_iTextPosY;
 	
 	PolygonData_t	*m_Polygon;
 	

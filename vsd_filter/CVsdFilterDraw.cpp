@@ -653,7 +653,9 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 	std::vector<int> vec_x( edgeSize + 2 ); // X 座標のリスト
 	
 	for( int y = 0 ; y < GetHeight() ; ++y ){
-		std::vector<int>::iterator ep = vec_x.begin(); // 抽出した X 座標の末尾(開始位置で初期化)
+		// 抽出した X 座標の末尾(開始位置で初期化)
+		std::vector<int>::iterator ep = vec_x.begin();
+		
 		for( unsigned int i = 0 ; i < edgeSize ; ++i ){
 			// アクティブな辺の X 座標を抽出
 			if( edgeList[i].y1 == INVALID_INT ){
@@ -672,9 +674,8 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 		// 交点のソート
 		std::sort( vec_x.begin(), ep );
 		
-		if(( ep - vec_x.begin()) & 1 ){
-			int a = 0;
-		}
+		// x 座標リストは偶数でなければおかしい
+		//ASSERT((( ep - vec_x.begin()) & 1 ) == 0 );
 		
 		// クリッピング・エリア外の交点をチェックしながらライン描画
 		for( std::vector<int>::iterator sp = vec_x.begin() + 1;
@@ -799,92 +800,26 @@ void CVsdFilter::DrawGraphSub(
 	}
 }
 
-#define CalcGpaphPos() { \
-	if( uFlag & GRAPH_HTILE ){ \
-		iX1 = x1 + ( x2 - x1 + 1 ) * j   / iGraphNum; \
-		iX2 = x1 + ( x2 - x1 + 1 ) * ++j / iGraphNum - 1; \
-	}else if( uFlag & GRAPH_VTILE ){ \
-		iY1 = y1 + ( y2 - y1 + 1 ) * j   / iGraphNum; \
-		iY2 = y1 + ( y2 - y1 + 1 ) * ++j / iGraphNum - 1; \
-	} \
-}
-
 // スピード・タコグラフ
-void CVsdFilter::DrawGraphMulti(
-	int x1, int y1, int x2, int y2,
-	CVsdFont &Font,
-	UINT uFlag
-){
-	if( DispGraph() || DispSyncInfo()){
-		SelectLogVsd;
-		if( !m_CurLog ) return;
-		
-		// 同期情報時はスピードのみ
-		if( DispSyncInfo() || uFlag == 0 ) uFlag = GRAPH_SPEED;
-		
-		int iGraphNum = 0;
-		if( uFlag & ( GRAPH_HTILE | GRAPH_VTILE )){
-			// タイル時の座標を求める
-			UINT	uFlagTmp = uFlag & ~( GRAPH_HTILE | GRAPH_VTILE );
-			for( ; uFlagTmp; uFlagTmp >>= 1 ){
-				if( uFlagTmp & 1 ) ++iGraphNum;
-			}
-		}
-		
-		int iX1 = x1;
-		int iX2 = x2;
-		int iY1 = y1;
-		int iY2 = y2;
-		
-		int j = 0;
-		
-		VSD_LOG_t	*pLog;
-		
-		if( uFlag & GRAPH_SPEED && ( pLog = m_CurLog->m_pLogSpeed )){
-			CalcGpaphPos();
-			DrawGraphSub(
-				iX1, iY1, iX2, iY2,
-				L"%.0f km/h", Font, color_orange,
-				*m_CurLog,
-				*pLog
-			);
-		}
-		if( uFlag & GRAPH_TACHO && ( pLog = m_CurLog->m_pLogTacho )){
-			CalcGpaphPos();
-			DrawGraphSub(
-				iX1, iY1, iX2, iY2,
-				L"%.0f rpm", Font, color_cyan,
-				*m_CurLog,
-				*pLog
-			);
-		}
-		if( uFlag & GRAPH_GX && ( pLog = m_CurLog->m_pLogGx )){
-			CalcGpaphPos();
-			DrawGraphSub(
-				iX1, iY1, iX2, iY2,
-				L"%.2f G(lon)", Font, color_green,
-				*m_CurLog,
-				*pLog
-			);
-		}
-		if( uFlag & GRAPH_GY && ( pLog = m_CurLog->m_pLogGy )){
-			CalcGpaphPos();
-			DrawGraphSub(
-				iX1, iY1, iX2, iY2,
-				L"%.2f G(lat)", Font, color_masenta,
-				*m_CurLog,
-				*pLog
-			);
-		}
-		
-		if( DispSyncInfo() && m_GPSLog && ( pLog = m_GPSLog->m_pLogSpeed )){
-			DrawGraphSub(
-				x1, y1, x2, y2,
-				L"%.0f km/h", Font, color_cyan,
-				*m_GPSLog,
-				*pLog
-			);
-		}
+void CVsdFilter::DrawSyncGraph( int x1, int y1, int x2, int y2, CVsdFont &Font ){
+	VSD_LOG_t	*pLog;
+	
+	if( m_VsdLog && ( pLog = m_VsdLog->m_pLogSpeed )){
+		DrawGraphSub(
+			x1, y1, x2, y2,
+			L"%.0f km/h", Font, color_orange,
+			*m_CurLog,
+			*pLog
+		);
+	}
+	
+	if( m_GPSLog && ( pLog = m_GPSLog->m_pLogSpeed )){
+		DrawGraphSub(
+			x1, y1, x2, y2,
+			L"%.0f km/h", Font, color_cyan,
+			*m_GPSLog,
+			*pLog
+		);
 	}
 }
 
@@ -959,6 +894,9 @@ void CVsdFilter::DrawMap(
 	SelectLogGPS;
 	
 	if( !LineTrace() || !m_CurLog || !m_CurLog->m_pLogX ) return;
+	
+	if( iLineWidth  < 1 ) iLineWidth  = 1;
+	if( iIndicatorR < 1 ) iIndicatorR = 1;
 	
 	double dMapSizeX = m_CurLog->m_pLogX->GetMax() - m_CurLog->m_pLogX->GetMin();
 	double dMapOffsX = m_CurLog->m_pLogX->GetMin();
@@ -1056,7 +994,7 @@ void CVsdFilter::DrawMap(
 	);
 	
 	// スタートライン表示
-	if( DispSyncInfo() && m_LapLog && m_LapLog->m_iLapMode == LAPMODE_AUTO ){
+	if(( uAlign & DRAW_MAP_START ) && m_LapLog && m_LapLog->m_iLapMode == LAPMODE_AUTO ){
 		double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
 		
 		int xs1 = x1 + ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - dMapOffsX ) * dScale );
@@ -1402,8 +1340,6 @@ void CVsdFilter::DrawMeterScale(
 
 BOOL CVsdFilter::DrawVSD( void ){
 	
-	WCHAR	szBuf[ MAX_PATH + 1 ];
-	
 	// 解像度変更
 	if( m_iWidth != GetWidth() || m_iHeight != GetHeight()){
 		m_iWidth  = GetWidth();
@@ -1488,93 +1424,6 @@ BOOL CVsdFilter::DrawVSD( void ){
 		if( m_Script->m_uError ) DispErrorMessage( m_Script->GetErrorMessage());
 	}else{
 		DrawText( 0, 0, L"Skin not loaded.", *m_pFont, color_white );
-	}
-	
-	// フレーム表示
-	
-	#define Float2Time( n )	( int )( n ) / 60, ( int )(( n ) * 1000 ) % 60000 / 1000.0
-	
-	if( DispSyncInfo()){
-		
-		m_iTextPosX = 0;
-		m_iTextPosY = GetHeight() / 3;
-		
-		if( m_GPSLog ){
-			struct tm	tmLocal;
-			time_t		utc = ( time_t )( m_GPSLog->m_dLogStartTime + m_GPSLog->Time());
-			
-			localtime_s( &tmLocal, &utc );
-			
-			wcsftime(
-				szBuf, sizeof( szBuf ),
-				L"GPS Time: %Y/%m/%d %H:%M:%S",
-				&tmLocal
-			);
-			
-			LPWSTR	p = wcschr( szBuf, '\0' );
-			swprintf(
-				p, sizeof( szBuf ) - ( p - szBuf ), L".%02d",
-				( UINT )(( m_GPSLog->m_dLogStartTime + m_GPSLog->Time()) * 100 ) % 100
-			);
-			
-			DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
-		}
-		
-		if( m_VsdLog ){
-			struct tm	tmLocal;
-			time_t		utc = ( time_t )( m_VsdLog->m_dLogStartTime + m_VsdLog->Time());
-			
-			localtime_s( &tmLocal, &utc );
-			
-			wcsftime(
-				szBuf, sizeof( szBuf ),
-				L"Vsd Time: %Y/%m/%d %H:%M:%S",
-				&tmLocal
-			);
-			
-			LPWSTR	p = wcschr( szBuf, '\0' );
-			swprintf(
-				p, sizeof( szBuf ) - ( p - szBuf ), L".%02d",
-				( UINT )(( m_VsdLog->m_dLogStartTime + m_VsdLog->Time()) * 100 ) % 100
-			);
-			
-			DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
-		}
-		
-		#ifndef PUBLIC_MODE
-			DrawText( POS_DEFAULT, POS_DEFAULT, L"        start       end     range cur.pos", *m_pFont, color_white );
-			
-			swprintf(
-				szBuf, sizeof( szBuf ), L"Vid%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
-				Float2Time( VideoSt / GetFPS()),
-				Float2Time( VideoEd / GetFPS()),
-				Float2Time(( VideoEd - VideoSt ) / GetFPS()),
-				GetFrameCnt()
-			);
-			DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
-			
-			if( m_VsdLog ){
-				swprintf(
-					szBuf, sizeof( szBuf ), L"Log%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
-					Float2Time( VsdSt / ( double )SLIDER_TIME ),
-					Float2Time( VsdEd / ( double )SLIDER_TIME ),
-					Float2Time(( VsdEd - VsdSt ) / ( double )SLIDER_TIME ),
-					( int )( m_VsdLog->Time() * SLIDER_TIME )
-				);
-				DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
-			}
-			
-			if( m_GPSLog ){
-				swprintf(
-					szBuf, sizeof( szBuf ), L"GPS%4d:%05.2f%4d:%05.2f%4d:%05.2f%7d",
-					Float2Time( GPSSt / ( double )SLIDER_TIME ),
-					Float2Time( GPSEd / ( double )SLIDER_TIME ),
-					Float2Time(( GPSEd - GPSSt ) / ( double )SLIDER_TIME ),
-					( int )( m_GPSLog->Time() * SLIDER_TIME )
-				);
-				DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, *m_pFont, color_white );
-			}
-		#endif	// !PUBLIC_MODE
 	}
 	
 	return TRUE;

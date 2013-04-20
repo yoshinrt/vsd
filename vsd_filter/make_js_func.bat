@@ -372,7 +372,7 @@ sub MakeJsIF {
 			}
 			
 			else{
-				$RetVar   = '??? = ';
+				$RetVar   = "unknown type:$RetType = ";
 				$RetValue = '???';
 			}
 #-----

@@ -51,6 +51,7 @@ enum {
 #define POS_ADD_EDIT			16
 #define POS_CHK_LABEL_L			36
 #define POS_CHK_LABEL_R			186
+#define POS_ADD_DIALOG_HEIGHT	10
 
 #ifdef PUBLIC_MODE
 	#define POS_SET_BUTT_SIZE		0
@@ -142,7 +143,7 @@ FILTER_DLL filter = {
 	NULL,						//  拡張データ領域へのポインタ (FILTER_FLAG_EX_DATAが立っている時に有効)
 	NULL,						//  拡張データサイズ (FILTER_FLAG_EX_DATAが立っている時に有効)
 	g_szDescription,			//  フィルタ情報へのポインタ (FILTER_FLAG_EX_INFORMATIONが立っている時に有効)
-	func_save_start,			//	セーブが開始される直前に呼ばれる関数へのポインタ (NULLなら呼ばれません)
+	NULL,						//	セーブが開始される直前に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 	NULL,						//	セーブが終了した直前に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 };
 
@@ -225,6 +226,19 @@ class CVsdFilterAvu : public CVsdFilter {
 	
 	void DispErrorMessage( LPCWSTR szMsg );
 	
+	// 同期情報表示
+	WCHAR *DrawSyncInfoFormatTime(
+		WCHAR	*pBuf, UINT uBufSize, double dTime
+	);
+	void DrawSyncInfoSub(
+		int x, int y, CVsdFont &Font,
+		LPCWSTR	szCaption,
+		double	CurTime,
+		double	StartTime,
+		double	EndTime
+	);
+	void DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign );
+	
 	// 1スライダ調整用パラメータ
 	int	m_iAdjustPointNum;
 	int	m_iAdjustPointVid[ 2 ];
@@ -235,13 +249,13 @@ class CVsdFilterAvu : public CVsdFilter {
 	static const char *m_szCheckboxName[];
 	static const char *m_szShadowParamName[];
 	
-#ifdef PUBLIC_MODE
 	void GetFileCreationTime( void );
+#ifdef PUBLIC_MODE
 	void AutoSync( CVsdLog *pLog, int *piParam );
+#endif
 	
   private:
-	int		m_iVideoStartTime;
-#endif
+	double	m_dVideoStartTime;
 };
 
 CVsdFilterAvu	*g_Vsd;
@@ -279,9 +293,9 @@ CVsdFilterAvu::CVsdFilterAvu( FILTER *filter, void *editp ) :
 	VsdSt = GPSSt = 0;
 	VsdEd = GPSEd = ( int )( OFFSET_ADJUST_WIDTH * SLIDER_TIME );
 	VideoSt = VideoEd = INVALID_INT;
-	
-	m_iVideoStartTime = -1;
 #endif
+	
+	m_dVideoStartTime = -1;
 	m_iAdjustPointNum = 0;
 	m_iAdjustPointVid[ 0 ] =
 	m_iAdjustPointVid[ 1 ] = INVALID_INT;
@@ -402,6 +416,138 @@ UINT CVsdFilterAvu::PutImage( int x, int y, CVsdImage &img, UINT uAlign ){
 	return ERR_OK;
 }
 
+/*** 同期情報描画 ***********************************************************/
+
+WCHAR *CVsdFilterAvu::DrawSyncInfoFormatTime(
+	WCHAR	*pBuf, UINT uBufSize, double dTime
+){
+	struct tm	tmLocal;
+	time_t	time = ( time_t )dTime;
+	localtime_s( &tmLocal, &time );
+	
+	wcsftime( pBuf, uBufSize, L"%H:%M:%S", &tmLocal );
+	
+	LPWSTR	p = wcschr( pBuf, '\0' );
+	swprintf(
+		p, uBufSize - ( p - pBuf ), L".%02d",
+		( UINT )( dTime * 100 ) % 100
+	);
+	
+	return pBuf;
+}
+
+void CVsdFilterAvu::DrawSyncInfoSub(
+	int x, int y, CVsdFont &Font,
+	LPCWSTR	szCaption,
+	double	CurTime,
+	double	StartTime,
+	double	EndTime
+){
+	WCHAR	szBuf[ 32 ];
+	
+	// キャプション
+	DrawText( x, y, szCaption, Font, color_white );
+	
+	// 日付
+	struct tm	tmLocal;
+	time_t time	= ( time_t )CurTime;
+	
+	localtime_s( &tmLocal, &time );
+	wcsftime( szBuf, sizeof( szBuf ), L"%Y/%m/%d", &tmLocal );
+	DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, Font, color_white );
+	
+	// 時間 x 3
+	DrawText(
+		POS_DEFAULT, POS_DEFAULT,
+		DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), CurTime ),
+		Font, color_white
+	);
+	DrawText(
+		POS_DEFAULT, POS_DEFAULT,
+		DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), StartTime ),
+		Font, color_white
+	);
+	DrawText(
+		POS_DEFAULT, POS_DEFAULT,
+		DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), EndTime ),
+		Font, color_white
+	);
+	DrawText(
+		POS_DEFAULT, POS_DEFAULT,
+		DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), ( EndTime - StartTime ) + ( 2400 - TIMEZONE ) * 3600 ),
+		Font, color_white
+	);
+}
+
+void CVsdFilterAvu::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
+	
+	// フレーム表示
+	
+	#define Float2Time( n )	( int )( n ) / 60, ( int )(( n ) * 1000 ) % 60000 / 1000.0
+	
+	#ifdef PUBLIC_MODE
+		#define SYNC_INFO_LINES	3
+	#else
+		#define SYNC_INFO_LINES	6
+	#endif
+	
+	if( uAlign & ALIGN_HCENTER ){
+		x -= Font.GetWidth() * 40 / 2;
+	}else if( uAlign & ALIGN_RIGHT ){
+		x -= Font.GetWidth() * 40;
+	}
+	
+	if( uAlign & ALIGN_VCENTER ){
+		y -= Font.GetHeight() * SYNC_INFO_LINES / 2;
+	}else if( uAlign & ALIGN_BOTTOM ){
+		y -= Font.GetHeight() * SYNC_INFO_LINES;
+	}
+	
+	m_iTextPosX = x;
+	m_iTextPosY = y;
+	
+	m_iTextPosY += Font.GetHeight();
+	DrawText( POS_DEFAULT, POS_DEFAULT, L"時刻", Font, color_white );
+	#ifndef PUBLIC_MODE
+	m_iTextPosY += Font.GetHeight();
+		DrawText( POS_DEFAULT, POS_DEFAULT, L"開始", Font, color_white );
+		DrawText( POS_DEFAULT, POS_DEFAULT, L"終了", Font, color_white );
+		DrawText( POS_DEFAULT, POS_DEFAULT, L"範囲", Font, color_white );
+	#endif
+	
+	x += Font.GetWidth() * 5;
+	
+	if( m_dVideoStartTime > 0 ){
+		DrawSyncInfoSub(
+			x, y, Font, L"ビデオ",
+			m_dVideoStartTime + ( double )GetFrameCnt() / GetFrameMax(),
+			m_dVideoStartTime + VideoSt / ( double )SLIDER_TIME,
+			m_dVideoStartTime + VideoEd / ( double )SLIDER_TIME
+		);
+		x += Font.GetWidth() * 12;
+	}
+	
+	if( m_VsdLog ){
+		DrawSyncInfoSub(
+			x, y, Font, L"車両ログ",
+			m_VsdLog->m_dLogStartTime + m_VsdLog->Time(),
+			m_VsdLog->m_dLogStartTime + VsdSt / ( double )SLIDER_TIME,
+			m_VsdLog->m_dLogStartTime + VsdEd / ( double )SLIDER_TIME
+		);
+		x += Font.GetWidth() * 12;
+	}
+	
+	if( m_GPSLog ){
+		DrawSyncInfoSub(
+			x, y, Font, L"GPSログ",
+			m_GPSLog->m_dLogStartTime + m_GPSLog->Time(),
+			m_GPSLog->m_dLogStartTime + GPSSt / ( double )SLIDER_TIME,
+			m_GPSLog->m_dLogStartTime + GPSEd / ( double )SLIDER_TIME
+		);
+		x += Font.GetWidth() * 12;
+	}
+}
+
 /*** エラーメッセージ *******************************************************/
 
 void CVsdFilterAvu::DispErrorMessage( LPCWSTR szMsg ){
@@ -434,10 +580,8 @@ int CVsdFilterAvu::GetFrameMark( int iFrame ){
 
 /*** ファイル作成日時取得 ***************************************************/
 
-#ifdef PUBLIC_MODE
 void CVsdFilterAvu::GetFileCreationTime( void ){
 	FILETIME	ft;
-	SYSTEMTIME	st;
 	
 	HANDLE hFile = CreateFile(
 		fileinfo->name,			// ファイル名
@@ -452,8 +596,11 @@ void CVsdFilterAvu::GetFileCreationTime( void ){
 	if( hFile == NULL ) return;
 	
 	if( GetFileTime( hFile, &ft, NULL, NULL )){
-		FileTimeToSystemTime( &ft, &st );
-		m_iVideoStartTime = (( st.wHour * 60 + st.wMinute ) * 60 + st.wSecond ) * 1000 + st.wMilliseconds;
+		m_dVideoStartTime =
+			( double )(
+				((( LONGLONG )ft.dwHighDateTime << 32 ) + ft.dwLowDateTime ) -
+				116444736000000000
+			) / 10000000.0;
 	}
 	
 	CloseHandle( hFile );
@@ -461,6 +608,7 @@ void CVsdFilterAvu::GetFileCreationTime( void ){
 
 /*** ビデオ時刻とログ時刻の初期同期 *****************************************/
 
+#ifdef PUBLIC_MODE
 #define InRange( a, b, v ) ( \
 	(( a ) < ( b )) ? (( a ) <= ( v ) && ( v ) <= ( b )) : \
 	                  (( a ) <= ( v ) || ( v ) <= ( b )) \
@@ -471,12 +619,13 @@ void CVsdFilterAvu::AutoSync( CVsdLog *pLog, int *piParam ){
 	if(
 		pLog == NULL ||
 		m_piParamC[ CHECK_LOGPOS ] == 0 ||
-		m_iVideoStartTime < 0
+		m_dVideoStartTime < 0
 	) return;
 	
 	// ビデオ終了時刻 (24H 以内)
+	int iVideoStartTime = ( int )fmod( m_dVideoStartTime, 24 * 3600 );
 	int iVideoEndTime =
-		( m_iVideoStartTime + ( int )( GetFrameMax() * 1000 / GetFPS()))
+		( iVideoStartTime + ( int )( GetFrameMax() * 1000 / GetFPS()))
 		% ( 24 * 3600 * 1000 );
 	
 	// ログ開始・終了時刻 (24H 以内)
@@ -484,16 +633,16 @@ void CVsdFilterAvu::AutoSync( CVsdLog *pLog, int *piParam ){
 	int iLogEndTime   = (( int )( pLog->MaxTime() * 1000 ) + iLogStartTime ) % ( 24 * 3600 * 1000 );
 	
 	if(
-		InRange( m_iVideoStartTime, iVideoEndTime, iLogStartTime ) ||
-		InRange( m_iVideoStartTime, iVideoEndTime, iLogEndTime ) ||
-		InRange( iLogStartTime, iLogEndTime, m_iVideoStartTime ) ||
+		InRange( iVideoStartTime, iVideoEndTime, iLogStartTime ) ||
+		InRange( iVideoStartTime, iVideoEndTime, iLogEndTime ) ||
+		InRange( iLogStartTime, iLogEndTime, iVideoStartTime ) ||
 		InRange( iLogStartTime, iLogEndTime, iVideoEndTime )
 	){
 		// ビデオは 10分に初期化する
 		VideoSt = 0;
 		VideoEd = ( int )( OFFSET_ADJUST_WIDTH * GetFPS());
 		
-		piParam[ 0 ] = ( int )(( m_iVideoStartTime - iLogStartTime ) % ( 24 * 3600 * 1000 ) * SLIDER_TIME ) / 1000;
+		piParam[ 0 ] = ( int )(( iVideoStartTime - iLogStartTime ) % ( 24 * 3600 * 1000 ) * SLIDER_TIME ) / 1000;
 		piParam[ 1 ] = piParam[ 0 ] + ( int )( OFFSET_ADJUST_WIDTH * SLIDER_TIME );
 	}
 }
@@ -673,7 +822,7 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	MoveWindow( hwnd,
 		rectClient.left, rectClient.top,
 		rectClient.right  - rectClient.left + POS_ADD_LABEL + POS_ADD_SLIDER + POS_ADD_EDIT + POS_SET_BUTT_SIZE,
-		rectClient.bottom - rectClient.top,
+		rectClient.bottom - rectClient.top + POS_ADD_DIALOG_HEIGHT,
 		TRUE
 	);
 	
@@ -1122,9 +1271,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		SetSkinFileList( GetDlgItem( hwnd, ID_COMBO_SEL_SKIN ));
 		
 		// ファイルタイム取得
-		#ifdef PUBLIC_MODE
-			g_Vsd->GetFileCreationTime();
-		#endif
+		g_Vsd->GetFileCreationTime();
 		
 		// 設定再描画
 		filter->exfunc->filter_window_update( filter );
@@ -1445,13 +1592,6 @@ BOOL func_update( FILTER *filter, int status ){
 	
 	bReEnter = FALSE;
 	
-	return TRUE;
-}
-
-/*** save 開始前に同期情報 off **********************************************/
-
-BOOL func_save_start( FILTER *filter,int s,int e,void *editp ){
-	filter->check[ CHECK_SYNCINFO ] = 0;
 	return TRUE;
 }
 

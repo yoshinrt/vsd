@@ -63,6 +63,7 @@ class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
 	int  GetFrameMark( int iFrame );
 	
 	void DispErrorMessage( LPCWSTR szMsg );
+	void DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign = 0 ){}
 	
 	// ƒpƒ‰ƒ[ƒ^
 	int	m_iWidth, m_iHeight, m_iFrameCnt, m_iFrameMax;
