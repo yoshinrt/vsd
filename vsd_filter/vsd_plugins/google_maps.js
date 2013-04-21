@@ -69,12 +69,8 @@ function Initialize(){
 function Draw(){
 	if( typeof( Vsd.Longitude ) == 'undefined' ){
 		Vsd.DrawTextAlign(
-			Vsd.Width / 2, ( Vsd.Height - Font.Height ) / 2, ALIGN_HCENTER | ALIGN_VCENTER,
+			Vsd.Width, ( Vsd.Height - Font.Height ) / 2, ALIGN_HCENTER | ALIGN_VCENTER,
 			"GPS データが読み込まれていません", Font, 0xFFFFFF
-		);
-		Vsd.DrawTextAlign(
-			Vsd.Width / 2, ( Vsd.Height + Font.Height ) / 2, ALIGN_HCENTER | ALIGN_VCENTER,
-			"同期作業は他のスキンで行なってください", Font, 0xFFFFFF
 		);
 		return;
 	}

@@ -1420,7 +1420,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				int i = SendMessage( hWndCombo, CB_GETCURSEL, 0, 0 );
 				
 				// ファイルを開くが選択された?
-				if( SendMessage( hWndCombo, CB_GETCOUNT,  0, 0 ) - 1 == i ){
+				if( SendMessage( hWndCombo, CB_GETCOUNT, 0, 0 ) - 1 == i ){
 					
 					// ダイアログがキャンセルされた
 					if( !filter->exfunc->dlg_get_load_name( szBuf, FILE_SKIN_EXT, NULL )){
@@ -1430,6 +1430,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 						// 何しても無駄だった...
 						return TRUE;
 					}
+					
+					SendMessage( hWndCombo, CB_INSERTSTRING, 0, ( LPARAM )szBuf );
+					SendMessage( hWndCombo, CB_SETCURSEL, 0, 0 );
 				}else{
 					// スキンがドロップダウンリストから選択された
 					SendMessage( hWndCombo, CB_GETLBTEXT, i, ( LPARAM )szBuf );
