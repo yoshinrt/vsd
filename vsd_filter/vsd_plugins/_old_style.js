@@ -84,7 +84,7 @@ function Draw(){
 	}
 	
 	// G スネーク・数値
-	if( typeof Vsd.Gx != 'undefined' ){
+	if( Vsd.Gx !== undefined ){
 		Vsd.DrawGSnake(	MeterCx, MeterCy, MeterR / 1.5, 5, 2, 0x00FF00, 0x008000 );
 		var Accel = Math.sqrt( Vsd.Gx * Vsd.Gx + Vsd.Gy * Vsd.Gy ).toFixed( 1 ) + "G";
 		Vsd.DrawText(

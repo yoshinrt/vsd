@@ -58,8 +58,8 @@ function DisposeAll(){
 	for( var obj in GlobalInstance ){
 		if(
 			obj != "GlobalInstance" &&
-			typeof( GlobalInstance[ obj ] ) == 'object' &&
-			typeof( GlobalInstance[ obj ].Dispose ) == 'function'
+			typeof GlobalInstance[ obj ] == 'object' &&
+			typeof GlobalInstance[ obj ].Dispose == 'function'
 		){
 			GlobalInstance[ obj ].Dispose();
 			GlobalInstance[ obj ] = null;
@@ -71,7 +71,7 @@ function DisposeAll(){
 
 Vsd.MakeGraphParam = function( params ){
 	for( var i = 0; i < params.length; ){
-		if( typeof( Vsd[ params[ i ]] ) == "undefined" ){
+		if( Vsd[ params[ i ]] === undefined ){
 			params.splice( i, 3 );	// データがない要素を削除
 		}else{
 			i += 3;
@@ -81,14 +81,8 @@ Vsd.MakeGraphParam = function( params ){
 
 Vsd.DrawGraph = function( x1, y1, x2, y2, font, flags, params ){
 	// グラフを表示しない条件
-	if( !Vsd.Config_sync_mode && !Vsd.Config_graph ) return;
+	if( !Vsd.Config_graph ) return;
 	
-	// 同期情報表示時は，旧グラフ表示
-	if( Vsd.Config_sync_mode || typeof( params ) == 'undefined' ){
-		return Vsd.DrawGraphMulti( x1, y1, x2, y2, font, flags );
-	}
-	
-	// 以下，新グラフ表示
 	var GrpNum = ~~( params.length / 3 );
 	var Width  = x2 - x1 + 1;
 	var Height = y2 - y1 + 1;
@@ -120,7 +114,7 @@ Vsd.DrawGraph = function( x1, y1, x2, y2, font, flags, params ){
 //*** Google Map 描画 ********************************************************
 
 Vsd.DrawGoogleMaps = function( param ){
-	if( typeof( Vsd.Longitude ) == 'undefined' ) return;
+	if( Vsd.Longitude === undefined ) return;
 	
 	GMapURL = "http://maps.googleapis.com/maps/api/staticmap?sensor=false&language=ja" +
 		( param.APIKey != '' ? "&key=" + param.APIKey : '' ) +
@@ -130,7 +124,7 @@ Vsd.DrawGoogleMaps = function( param ){
 		"&center=";
 	
 	// 一番最初の地図データを同期モードで取得
-	if( typeof( param.MapImg ) == 'undefined' ){
+	if( param.MapImg === undefined ){
 		param.MapImg	= new Image( GMapURL + Vsd.Latitude + "," + Vsd.Longitude );
 		param.Dir		= Vsd.Direction;
 		param.Time		= Vsd.DateTime;
@@ -155,7 +149,7 @@ Vsd.DrawGoogleMaps = function( param ){
 	
 	// 次のマップデータ取得が完了した
 	if(
-		typeof( param.MapImgNext ) != 'undefined' &&
+		param.MapImgNext !== undefined &&
 		param.MapImgNext.Status == IMG_STATUS_LOAD_COMPLETE
 	){
 		param.MapImg.Dispose();

@@ -161,7 +161,7 @@ function Draw(){
 		"km/h", FontS, 0xFFFFFF
 	);
 	
-	if( typeof Vsd.Gx != 'undefined' ){
+	if( Vsd.Gx !== undefined ){
 		// Gメーターパネル画像描画
 		Vsd.DrawCircle( MeterGCx, MeterGCy, MeterGR, 0x80000000, DRAW_FILL );
 		Vsd.DrawLine( MeterGCx - MeterGR, MeterGCy, MeterGCx + MeterGR, MeterGCy, 0x606060 );

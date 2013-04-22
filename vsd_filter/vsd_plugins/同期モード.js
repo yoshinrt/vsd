@@ -4,7 +4,7 @@ function Initialize(){
 	// 使用する画像・フォントの宣言
 	Scale = Vsd.Width / 1280;
 	
-	Font = new Font( "ＭＳ　ゴシック", 36 * Scale, FONT_OUTLINE );
+	font = new Font( "ＭＳ　ゴシック", 36 * Scale, FONT_OUTLINE );
 }
 
 //*** メーター描画処理 ******************************************************
@@ -19,9 +19,9 @@ function print( msg, param ){
 		if( param.y !== undefined ) Y = param.y;
 		if( param.align !== undefined ) Align = param.align;
 	}
-	Vsd.DrawTextAlign( X, Y, Align, msg, Font );
+	Vsd.DrawTextAlign( X, Y, Align, msg, font );
 	
-	Y += Font.Height;
+	Y += font.Height;
 }
 
 function Draw(){
@@ -39,12 +39,12 @@ function Draw(){
 		print( "スタート地点の映像を表示し", { x: Vsd.Width - 1, y: 0, align: ALIGN_RIGHT | ALIGN_TOP } );
 		print( "Mキーでラップタイム計測" );
 	}else{
-		Vsd.DrawLapTimeLog( Vsd.Width - 1, 0, ALIGN_RIGHT | ALIGN_TOP, 10, Font );
+		Vsd.DrawLapTimeLog( Vsd.Width - 1, 0, ALIGN_RIGHT | ALIGN_TOP, 10, font );
 	}
 	
 	// グラフ
-	Vsd.DrawSyncGraph( Vsd.Width / 3, Vsd.Height / 2, Vsd.Width - 1, Vsd.Height - 1, Font );
+	Vsd.DrawSyncGraph( Vsd.Width / 3, Vsd.Height / 2, Vsd.Width - 1, Vsd.Height - 1, font );
 	
 	// 同期文字情報
-	Vsd.DrawSyncInfo( 0, Vsd.Height - 1, Font, ALIGN_LEFT | ALIGN_BOTTOM );
+	Vsd.DrawSyncInfo( 0, Vsd.Height - 1, font, ALIGN_LEFT | ALIGN_BOTTOM );
 }

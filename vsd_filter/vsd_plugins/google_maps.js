@@ -61,16 +61,16 @@ function Initialize(){
 	}
 	
 	// 使用する画像・フォントの宣言
-	Font = new Font( "ＭＳ ゴシック", 24 * Scale, FONT_OUTLINE );
+	font = new Font( "ＭＳ ゴシック", 24 * Scale, FONT_OUTLINE );
 }
 
 //*** メーター描画処理 ******************************************************
 
 function Draw(){
-	if( typeof( Vsd.Longitude ) == 'undefined' ){
+	if( Vsd.Longitude === undefined ){
 		Vsd.DrawTextAlign(
-			Vsd.Width, ( Vsd.Height - Font.Height ) / 2, ALIGN_HCENTER | ALIGN_VCENTER,
-			"GPS データが読み込まれていません", Font, 0xFFFFFF
+			Vsd.Width, ( Vsd.Height - font.Height ) / 2, ALIGN_HCENTER | ALIGN_VCENTER,
+			"GPS データが読み込まれていません", font, 0xFFFFFF
 		);
 		return;
 	}
@@ -85,6 +85,6 @@ function Draw(){
 		"  経度:" + Vsd.Longitude.toFixed( 6 ) +
 		"  距離:" + ( Vsd.Distance / 1000 ).toFixed( 2 ) + "km" +
 		"  速度:" + Vsd.Speed.toFixed( 0 ) + "km/h",
-		Font, 0xFFFFFF
+		font, 0xFFFFFF
 	);
 }

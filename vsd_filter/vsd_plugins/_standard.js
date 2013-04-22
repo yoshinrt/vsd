@@ -152,7 +152,7 @@ function Draw(){
 		);
 	}
 	
-	if( typeof Vsd.Gx != 'undefined' ){
+	if( Vsd.Gx !== undefined ){
 		// Gメーターパネル画像描画
 		Vsd.PutImage( MeterGX, MeterGY, ImgG );
 		Vsd.DrawLine( MeterGCx - MeterGR2, MeterGCy, MeterGCx + MeterGR2, MeterGCy, 0x802000 );
