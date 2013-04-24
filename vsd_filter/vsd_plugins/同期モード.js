@@ -4,7 +4,7 @@ function Initialize(){
 	// 使用する画像・フォントの宣言
 	Scale = Vsd.Width / 1280;
 	
-	font = new Font( "ＭＳ　ゴシック", 36 * Scale, FONT_OUTLINE );
+	font = new Font( "ＭＳ　ゴシック", 36 * Scale, FONT_OUTLINE | FONT_NOANTIALIAS );
 }
 
 //*** メーター描画処理 ******************************************************
