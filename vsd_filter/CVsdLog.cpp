@@ -293,15 +293,13 @@ UINT CVsdLog::GPSLogRescan( void ){
 			
 			#pragma omp single
 			{
-				// 番犬の G 初期化
-				SetRawGx( 0, 0 );
-				SetRawGy( 1, 0 );
-				SetRawGx( GetCnt() - 1, 0 );
-				SetRawGy( GetCnt() - 1, 0 );
-				
-				// min max リセット
-				m_pLogGx->InitMinMax();
-				m_pLogGy->InitMinMax();
+				// 番犬と，最初 / 最後の G 初期化
+				SetRawGx( 0, 0 ); SetRawGy( 0, 0 );
+				SetRawGx( 1, 0 ); SetRawGy( 1, 0 );
+				SetRawGx( 2, 0 ); SetRawGy( 2, 0 );
+				SetRawGx( GetCnt() - 3, 0 ); SetRawGy( GetCnt() - 3, 0 );
+				SetRawGx( GetCnt() - 2, 0 ); SetRawGy( GetCnt() - 2, 0 );
+				SetRawGx( GetCnt() - 1, 0 ); SetRawGy( GetCnt() - 1, 0 );
 			}
 			
 			for( UINT v = G_SMOOTH_CNT; v; --v ){

@@ -520,9 +520,9 @@ void CVsdFilterAvu::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 	if( m_dVideoStartTime > 0 ){
 		DrawSyncInfoSub(
 			x, y, Font, L"ƒrƒfƒI",
-			m_dVideoStartTime + ( double )GetFrameCnt() / GetFrameMax(),
-			m_dVideoStartTime + VideoSt / ( double )SLIDER_TIME,
-			m_dVideoStartTime + VideoEd / ( double )SLIDER_TIME
+			m_dVideoStartTime + ( double )GetFrameCnt() / GetFPS(),
+			m_dVideoStartTime + VideoSt / GetFPS(),
+			m_dVideoStartTime + VideoEd / GetFPS()
 		);
 		x += Font.GetWidth() * 12;
 	}
