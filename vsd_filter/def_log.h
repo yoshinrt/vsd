@@ -13,6 +13,8 @@ DEF_LOG( X )
 DEF_LOG( Y )
 DEF_LOG_T( Gx,			CLogShort4096 )
 DEF_LOG_T( Gy,			CLogShort4096 )
+DEF_LOG_T( Accel,		CLogAccel )
+DEF_LOG_T( Brake,		CLogAccel )
 #ifdef USE_TURN_R
 DEF_LOG( TurnR )
 #endif

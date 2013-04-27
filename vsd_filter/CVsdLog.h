@@ -83,7 +83,7 @@ class CLog {
 	virtual void Resize( int iCnt, double dVal ) = 0;
 };
 
-template <class T, int dScale>
+template <class Tint, int dScale>
 class CLogVariant : public CLog {
 	
   public:
@@ -135,11 +135,12 @@ class CLogVariant : public CLog {
 	}
 	
   protected:
-	std::vector<T>	m_Log;
-	T	m_Min;
-	T	m_Max;
+	std::vector<Tint>	m_Log;
+	Tint	m_Min;
+	Tint	m_Max;
 	
 	// ç≈ëÂÅEç≈è¨ê›íËÉwÉãÉp
+	void SetMax( UCHAR	&v ){ v = UCHAR_MAX; }	void SetMin( UCHAR	&v ){ v = 0; }
 	void SetMax( USHORT	&v ){ v = USHRT_MAX; }	void SetMin( USHORT	&v ){ v = 0; }
 	void SetMax( short	&v ){ v = SHRT_MAX; }	void SetMin( short	&v ){ v = SHRT_MIN; }
 	void SetMax( UINT	&v ){ v = UINT_MAX; }	void SetMin( UINT	&v ){ v = 0; }
@@ -147,11 +148,16 @@ class CLogVariant : public CLog {
 	void SetMax( float	&v ){ v = FLT_MAX; }	void SetMin( float	&v ){ v = -FLT_MAX; }
 	
 	// ì‡ïîå`éÆïœä∑
-	T Scaled( double d ){ return ( T )( d * dScale ); }
-	double UnScaled( T v ){ return ( double )v / dScale; }
+	Tint Scaled( double d ){ return ( Tint )( d * dScale ); }
+	double UnScaled( Tint v ){ return ( double )v / dScale; }
 };
 
-typedef CLogVariant<float, 1>	CLogFloat;
+typedef CLogVariant<float,	1>		CLogFloat;
+typedef CLogVariant<short,	4096>	CLogShort4096;
+typedef CLogVariant<USHORT,	128>	CLogUShort128;
+typedef CLogVariant<USHORT,	1>		CLogUShort;
+typedef CLogVariant<UINT,	1024>	CLogUInt1024;
+typedef CLogVariant<UCHAR,	2>		CLogUChar2;
 
 class CLogFloatOffset : public CLogFloat {
   public:
@@ -180,11 +186,6 @@ class CLogFloatOffset : public CLogFloat {
 	double	m_dBaseVal;
 };
 
-typedef CLogVariant<short, 4096>	CLogShort4096;
-typedef CLogVariant<USHORT, 128>	CLogUShort128;
-typedef CLogVariant<USHORT, 1>		CLogUShort;
-typedef CLogVariant<UINT, 1024>		CLogUInt1024;
-
 class CLogDirection : public CLogUShort128 {
   public:
 	double Get( double dIndex ){
@@ -199,6 +200,13 @@ class CLogDirection : public CLogUShort128 {
 		if( dResult < 0 ) dResult += 360;
 		
 		return dResult;
+	}
+};
+
+class CLogAccel : public CLogUChar2 {
+  public:
+	double GetRaw( int iIndex ){
+		return ( UnScaled( m_Log[ iIndex ] ) - m_Min ) / ( m_Max - m_Min ) * 100;
 	}
 };
 
