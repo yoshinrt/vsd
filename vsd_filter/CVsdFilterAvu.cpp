@@ -69,7 +69,7 @@ enum {
 
 #define INVALID_INT		0x80000000
 
-#define OFFSET_ADJUST_WIDTH	( 60 * 10 )	// 10分
+#define OFFSET_ADJUST_WIDTH	( 60 * 10 * 1000 )	// 10分
 
 
 /****************************************************************************/
@@ -228,14 +228,15 @@ class CVsdFilterAvu : public CVsdFilter {
 	
 	// 同期情報表示
 	WCHAR *DrawSyncInfoFormatTime(
-		WCHAR	*pBuf, UINT uBufSize, double dTime
+		WCHAR	*pBuf, UINT uBufSize, INT64 &iBaseTime, int iTime
 	);
 	void DrawSyncInfoSub(
 		int x, int y, CVsdFont &Font,
 		LPCWSTR	szCaption,
-		double	CurTime,
-		double	StartTime,
-		double	EndTime
+		INT64	&iBaseTime,
+		int		iCurTime,
+		int		iStartTime,
+		int		iEndTime
 	);
 	void DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign );
 	
@@ -255,7 +256,7 @@ class CVsdFilterAvu : public CVsdFilter {
 #endif
 	
   private:
-	double	m_dVideoStartTime;
+	INT64	m_iVideoStartTime;
 };
 
 CVsdFilterAvu	*g_Vsd;
@@ -295,7 +296,7 @@ CVsdFilterAvu::CVsdFilterAvu( FILTER *filter, void *editp ) :
 	VideoSt = VideoEd = INVALID_INT;
 #endif
 	
-	m_dVideoStartTime = -1;
+	m_iVideoStartTime = -1;
 	m_iAdjustPointNum = 0;
 	m_iAdjustPointVid[ 0 ] =
 	m_iAdjustPointVid[ 1 ] = INVALID_INT;
@@ -419,10 +420,10 @@ UINT CVsdFilterAvu::PutImage( int x, int y, CVsdImage &img, UINT uAlign ){
 /*** 同期情報描画 ***********************************************************/
 
 WCHAR *CVsdFilterAvu::DrawSyncInfoFormatTime(
-	WCHAR	*pBuf, UINT uBufSize, double dTime
+	WCHAR	*pBuf, UINT uBufSize, INT64 &iBaseTime, int iTime
 ){
 	struct tm	tmLocal;
-	time_t	time = ( time_t )dTime;
+	time_t	time = ( iBaseTime + iTime ) / 1000;
 	localtime_s( &tmLocal, &time );
 	
 	wcsftime( pBuf, uBufSize, L"%H:%M:%S", &tmLocal );
@@ -430,7 +431,7 @@ WCHAR *CVsdFilterAvu::DrawSyncInfoFormatTime(
 	LPWSTR	p = wcschr( pBuf, '\0' );
 	swprintf(
 		p, uBufSize - ( p - pBuf ), L".%02d",
-		( UINT )( dTime * 100 ) % 100
+		(( UINT )iBaseTime + iTime ) % 1000 / 10
 	);
 	
 	return pBuf;
@@ -439,9 +440,10 @@ WCHAR *CVsdFilterAvu::DrawSyncInfoFormatTime(
 void CVsdFilterAvu::DrawSyncInfoSub(
 	int x, int y, CVsdFont &Font,
 	LPCWSTR	szCaption,
-	double	CurTime,
-	double	StartTime,
-	double	EndTime
+	INT64	&iBaseTime,
+	int		iCurTime,
+	int		iStartTime,
+	int		iEndTime
 ){
 	WCHAR	szBuf[ 32 ];
 	
@@ -450,7 +452,7 @@ void CVsdFilterAvu::DrawSyncInfoSub(
 	
 	// 日付
 	struct tm	tmLocal;
-	time_t time	= ( time_t )CurTime;
+	time_t time	= ( time_t )( iBaseTime + iCurTime ) / 1000;
 	
 	localtime_s( &tmLocal, &time );
 	wcsftime( szBuf, sizeof( szBuf ), L"%Y/%m/%d", &tmLocal );
@@ -459,31 +461,33 @@ void CVsdFilterAvu::DrawSyncInfoSub(
 	// 時間 x 3
 	DrawText(
 		POS_DEFAULT, POS_DEFAULT,
-		DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), CurTime ),
+		DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), iBaseTime, iCurTime ),
 		Font, color_white
 	);
-	DrawText(
-		POS_DEFAULT, POS_DEFAULT,
-		DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), StartTime ),
-		Font, color_white
-	);
-	DrawText(
-		POS_DEFAULT, POS_DEFAULT,
-		DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), EndTime ),
-		Font, color_white
-	);
-	DrawText(
-		POS_DEFAULT, POS_DEFAULT,
-		DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), ( EndTime - StartTime ) + ( 2400 - TIMEZONE ) * 3600 ),
-		Font, color_white
-	);
+	#ifndef PUBLIC_MODE
+		DrawText(
+			POS_DEFAULT, POS_DEFAULT,
+			DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), iBaseTime, iStartTime ),
+			Font, color_white
+		);
+		DrawText(
+			POS_DEFAULT, POS_DEFAULT,
+			DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), iBaseTime, iEndTime ),
+			Font, color_white
+		);
+		
+		INT64 iTmp = ( 24 - TIMEZONE ) * 3600000L;
+		DrawText(
+			POS_DEFAULT, POS_DEFAULT,
+			DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), iTmp, iEndTime - iStartTime ),
+			Font, color_white
+		);
+	#endif
 }
 
 void CVsdFilterAvu::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 	
 	// フレーム表示
-	
-	#define Float2Time( n )	( int )( n ) / 60, ( int )(( n ) * 1000 ) % 60000 / 1000.0
 	
 	#ifdef PUBLIC_MODE
 		#define SYNC_INFO_LINES	3
@@ -517,12 +521,13 @@ void CVsdFilterAvu::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 	
 	x += Font.GetWidth() * 5;
 	
-	if( m_dVideoStartTime > 0 ){
+	if( m_iVideoStartTime != -1 ){
 		DrawSyncInfoSub(
 			x, y, Font, L"ビデオ",
-			m_dVideoStartTime + ( double )GetFrameCnt() / GetFPS(),
-			m_dVideoStartTime + VideoSt / GetFPS(),
-			m_dVideoStartTime + VideoEd / GetFPS()
+			m_iVideoStartTime,
+			( int )( GetFrameCnt() * 1000 / GetFPS()),
+			( int )( VideoSt * 1000 / GetFPS()),
+			( int )( VideoEd * 1000 / GetFPS())
 		);
 		x += Font.GetWidth() * 12;
 	}
@@ -530,9 +535,10 @@ void CVsdFilterAvu::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 	if( m_VsdLog ){
 		DrawSyncInfoSub(
 			x, y, Font, L"車両ログ",
-			m_VsdLog->m_dLogStartTime + m_VsdLog->Time(),
-			m_VsdLog->m_dLogStartTime + VsdSt / ( double )SLIDER_TIME,
-			m_VsdLog->m_dLogStartTime + VsdEd / ( double )SLIDER_TIME
+			m_VsdLog->m_iLogStartTime,
+			( int )( m_VsdLog->Time()),
+			( int )( VsdSt / SLIDER_TIME ),
+			( int )( VsdEd / SLIDER_TIME )
 		);
 		x += Font.GetWidth() * 12;
 	}
@@ -540,9 +546,10 @@ void CVsdFilterAvu::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 	if( m_GPSLog ){
 		DrawSyncInfoSub(
 			x, y, Font, L"GPSログ",
-			m_GPSLog->m_dLogStartTime + m_GPSLog->Time(),
-			m_GPSLog->m_dLogStartTime + GPSSt / ( double )SLIDER_TIME,
-			m_GPSLog->m_dLogStartTime + GPSEd / ( double )SLIDER_TIME
+			m_GPSLog->m_iLogStartTime,
+			( int )( m_GPSLog->Time()),
+			( int )( GPSSt / SLIDER_TIME ),
+			( int )( GPSEd / SLIDER_TIME )
 		);
 		x += Font.GetWidth() * 12;
 	}
@@ -595,12 +602,13 @@ void CVsdFilterAvu::GetFileCreationTime( void ){
 	
 	if( hFile == NULL ) return;
 	
+	//if( GetFileTime( hFile, NULL, NULL, &ft )){		// デバッグ用 ライトタイム
 	if( GetFileTime( hFile, &ft, NULL, NULL )){
-		m_dVideoStartTime =
-			( double )(
+		m_iVideoStartTime =
+			(
 				((( LONGLONG )ft.dwHighDateTime << 32 ) + ft.dwLowDateTime ) -
 				116444736000000000
-			) / 10000000.0;
+			) / 10000;
 	}
 	
 	CloseHandle( hFile );
@@ -619,18 +627,18 @@ void CVsdFilterAvu::AutoSync( CVsdLog *pLog, int *piParam ){
 	if(
 		pLog == NULL ||
 		m_piParamC[ CHECK_LOGPOS ] == 0 ||
-		m_dVideoStartTime < 0
+		m_iVideoStartTime == -1
 	) return;
 	
 	// ビデオ終了時刻 (24H 以内)
-	int iVideoStartTime = ( int )fmod( m_dVideoStartTime, 24 * 3600 );
+	int iVideoStartTime = ( int )( m_iVideoStartTime % ( 24 * 3600 * 1000 ));
 	int iVideoEndTime =
 		( iVideoStartTime + ( int )( GetFrameMax() * 1000 / GetFPS()))
 		% ( 24 * 3600 * 1000 );
 	
 	// ログ開始・終了時刻 (24H 以内)
-	int iLogStartTime = ( int )fmod( pLog->m_dLogStartTime * 1000, 24 * 3600 * 1000 );
-	int iLogEndTime   = (( int )( pLog->MaxTime() * 1000 ) + iLogStartTime ) % ( 24 * 3600 * 1000 );
+	int iLogStartTime = ( int )( pLog->m_iLogStartTime % ( 24 * 3600 * 1000 ));
+	int iLogEndTime   = (( int )( pLog->MaxTime()) + iLogStartTime ) % ( 24 * 3600 * 1000 );
 	
 	if(
 		InRange( iVideoStartTime, iVideoEndTime, iLogStartTime ) ||
@@ -640,9 +648,9 @@ void CVsdFilterAvu::AutoSync( CVsdLog *pLog, int *piParam ){
 	){
 		// ビデオは 10分に初期化する
 		VideoSt = 0;
-		VideoEd = ( int )( OFFSET_ADJUST_WIDTH * GetFPS());
+		VideoEd = ( int )(( OFFSET_ADJUST_WIDTH / 1000.0 ) * GetFPS());
 		
-		piParam[ 0 ] = ( int )(( iVideoStartTime - iLogStartTime ) % ( 24 * 3600 * 1000 ) * SLIDER_TIME ) / 1000;
+		piParam[ 0 ] = ( int )(( iVideoStartTime - iLogStartTime ) % ( 24 * 3600 * 1000 ) * SLIDER_TIME );
 		piParam[ 1 ] = piParam[ 0 ] + ( int )( OFFSET_ADJUST_WIDTH * SLIDER_TIME );
 	}
 }
@@ -1261,7 +1269,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		// trackbar 設定
 		#ifdef PUBLIC_MODE
 			g_Vsd->VideoSt = 0;
-			g_Vsd->VideoEd = ( int )( g_Vsd->GetFPS() * OFFSET_ADJUST_WIDTH );
+			g_Vsd->VideoEd = ( int )( g_Vsd->GetFPS() * ( OFFSET_ADJUST_WIDTH / 1000.0 ));
 		#else
 			track_e[ PARAM_VSt ] =
 			track_e[ PARAM_VEd ] = filter->exfunc->get_frame_n( editp );
@@ -1515,7 +1523,7 @@ void SetupLogOffset( FILTER *filter ){
 	
 	// iPoint == 1 時は，後ろの調整点を FPS に応じて自動調整
 	if( g_Vsd->m_iAdjustPointNum == 1 ){
-		g_Vsd->VideoEd = g_Vsd->VideoSt + ( int )( g_Vsd->GetFPS() * OFFSET_ADJUST_WIDTH );
+		g_Vsd->VideoEd = g_Vsd->VideoSt + ( int )( g_Vsd->GetFPS() * ( OFFSET_ADJUST_WIDTH / 1000.0 ));
 		g_Vsd->VsdEd   = g_Vsd->VsdSt + ( int )( SLIDER_TIME * OFFSET_ADJUST_WIDTH );
 		g_Vsd->GPSEd   = g_Vsd->GPSSt + ( int )( SLIDER_TIME * OFFSET_ADJUST_WIDTH );
 		

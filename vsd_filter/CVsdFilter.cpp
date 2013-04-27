@@ -189,7 +189,7 @@ CLapLog *CVsdFilter::CreateLapTimeHand( int iLapSrc ){
 		
 		if( pLapLog->m_iLapSrc == LAPSRC_GPS ){
 			dLogNum	= GetLogIndex( iFrame, GPS, -1 );
-			iTime	= ( int )( m_GPSLog->Time( dLogNum ) * 1000 );
+			iTime	= ( int )m_GPSLog->Time( dLogNum );
 			LapTime.fLogNum	= ( float )dLogNum;
 		}else{
 			// LAPSRC_VIDEO
@@ -319,7 +319,7 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 		
 		// ”¼’[‚È LogNum
 		dLogNum = i + a;
-		iTime = ( int )( m_GPSLog->Time( dLogNum ) * 1000 );
+		iTime = ( int )m_GPSLog->Time( dLogNum );
 		
 		if( m_piParamS[ SHADOW_LAP_START ] - 1 <= iLapNum && iLapNum <= m_piParamS[ SHADOW_LAP_END ] ){
 			LapTime.uLap	= pLapLog->m_iLapNum;

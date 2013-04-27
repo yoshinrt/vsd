@@ -11,11 +11,11 @@
 /*** macros *****************************************************************/
 
 #define TIME_NONE	(( int )0x80000000 )
-#define WATCHDOG_TIME	( 1E+12 )
+#define WATCHDOG_TIME	( 0x70000000 )
 
-#define WATCHDOG_REC_NUM	2	// ログ先頭の番犬分のレコード数
-#define TIME_STOP			3	// 停車とみなす Log 時間間隔
-#define TIME_STOP_MARGIN	0.03	// 停車とみなす Log に付加する Log の時間差分
+#define WATCHDOG_REC_NUM	2		// ログ先頭の番犬分のレコード数
+#define TIME_STOP			3000	// 停車とみなす Log 時間間隔
+#define TIME_STOP_MARGIN	30		// 停車とみなす Log に付加する Log の時間差分
 
 /*** Lap Time ***************************************************************/
 
@@ -169,7 +169,12 @@ class CLogFloatOffset : public CLogFloat {
 	double GetRaw( int    iIndex ){ return CLogFloat::GetRaw( iIndex ) + m_dBaseVal; }
 	
 	double GetDiff( int    iIndex ){ return CLogFloat::GetRaw( iIndex ); }
-	double GetDiff( double dIndex ){ return CLogFloat::Get( dIndex ); }
+	double GetDiff( double dIndex ){
+		double alfa = dIndex - ( UINT )dIndex;
+		return
+			GetDiff(( int )dIndex ) +
+			( GetDiff(( int )dIndex + 1 ) - GetDiff(( int )dIndex )) * alfa;
+	}
 	
 	double GetMin(){ return CLogFloat::GetMin() + m_dBaseVal; }
 	double GetMax(){ return CLogFloat::GetMax() + m_dBaseVal; }
@@ -224,7 +229,7 @@ class CVsdLog {
 	double	m_dLogNum;
 	
 	double	m_dFreq;
-	double	m_dLogStartTime;	// ログ開始時間
+	INT64	m_iLogStartTime;	// ログ開始時間
 	
 	// VSD ログ位置自動認識用
 	double	m_dCalibStart;
@@ -335,7 +340,7 @@ class CVsdLog {
 	#include "def_log.h"
 	
 	double DateTime( void ){
-		return ( m_pLogTime->Get( m_dLogNum ) + m_dLogStartTime ) * 1000;
+		return ( m_pLogTime->Get( m_dLogNum ) + m_iLogStartTime );
 	}
 	
 	double X0( int    iIndex ){ return m_pLogLongitude->GetDiff( iIndex ) * m_dLong2Meter; }

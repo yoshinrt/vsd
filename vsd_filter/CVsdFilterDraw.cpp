@@ -1089,7 +1089,7 @@ void CVsdFilter::CalcLapTime( void ){
 			m_LapLog->m_iCurTime = ( int )(( GetFrameCnt() - m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum ) * 1000.0 / GetFPS());
 		}else{
 			// 自動計測時は，タイム / ログ数 から計算
-			m_LapLog->m_iCurTime = ( int )(( m_CurLog->Time() - m_CurLog->Time( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum )) * 1000 );
+			m_LapLog->m_iCurTime = ( int )( m_CurLog->Time() - m_CurLog->Time( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum ));
 		}
 	}
 	
@@ -1140,10 +1140,8 @@ void CVsdFilter::CalcLapTime( void ){
 			( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning + 1 ) - m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ));
 		
 		m_LapLog->m_iDiffTime = ( int )(
-			(
-				( m_CurLog->Time() - m_CurLog->Time( dCurLapLogNumStart )) -
-				( m_CurLog->Time( dBestLapLogNumRunning ) - m_CurLog->Time( dBestLapLogNumStart ))
-			) * 1000.0
+			( m_CurLog->Time() - m_CurLog->Time( dCurLapLogNumStart )) -
+			( m_CurLog->Time( dBestLapLogNumRunning ) - m_CurLog->Time( dBestLapLogNumStart ))
 		);
 	}
 }

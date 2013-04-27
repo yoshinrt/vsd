@@ -51,7 +51,7 @@
 
 #define BUF_SIZE	1024
 #define ToRAD		( M_PI / 180 )
-#define SLIDER_TIME	LOG_FREQ
+#define SLIDER_TIME	( LOG_FREQ / 1000.0 )
 #define NaN			std::numeric_limits<double>::quiet_NaN()
 #ifdef PUBLIC_MODE
 	#define USE_TURN_R

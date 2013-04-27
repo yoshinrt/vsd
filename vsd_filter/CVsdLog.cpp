@@ -20,7 +20,7 @@
 CVsdLog::CVsdLog( CVsdFilter *pVsd ){
 	m_dFreq	= LOG_FREQ;
 	
-	m_dLogStartTime	= -1;
+	m_iLogStartTime	= -1;
 	
 	m_dLong2Meter = 0;
 	m_dLati2Meter = 0;
@@ -102,7 +102,7 @@ void CVsdLog::Dump( char *szFileName ){
 		BOOL bFirst = TRUE;
 		for( it = m_Logs.begin(); it != m_Logs.end(); ++it ){
 			if( !bFirst ) fputs( "\t", fp ); bFirst = FALSE;
-			fprintf( fp, "%f", it->second->Get( i ));
+			fprintf( fp, "%f", it->second->GetRaw( i ));
 		}
 		fputs( "\n", fp );
 	}
@@ -162,8 +162,8 @@ void CVsdLog::CopyRecord( int iTo, int iFrom ){
 void CVsdLog::AddWatchDog( void ){
 	int iCnt = GetCnt() - 1;
 	CopyRecord( 0, 2 );           AddStopRecord( 0, -WATCHDOG_TIME );
-	CopyRecord( 1, 2 );           AddStopRecord( 1, Time( 2 ) - 0.5 );
-	CopyRecord( iCnt + 1, iCnt ); AddStopRecord( iCnt + 1, Time( iCnt ) + 0.5 );
+	CopyRecord( 1, 2 );           AddStopRecord( 1, Time( 2 ) - 500 );
+	CopyRecord( iCnt + 1, iCnt ); AddStopRecord( iCnt + 1, Time( iCnt ) + 500 );
 	CopyRecord( iCnt + 2, iCnt ); AddStopRecord( iCnt + 2, WATCHDOG_TIME );
 }
 
@@ -232,7 +232,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 					double d;
 					SetRawSpeed( i,
 						d = ( Distance( i ) - Distance( i - 1 ))
-						* ( 3600.0 / 1000 ) /
+						* ( 3600.0 / 1000 * 1000 ) /
 						( Time( i ) - Time( i - 1 ))
 					);
 					if( dMaxSpeed < d ) dMaxSpeed = d;
@@ -270,7 +270,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 				// Gx / Gy を作る
 				SetRawGy( i,
 					( Speed( i ) - Speed( i - 1 ))
-					* ( 1 / 3.600 / GRAVITY )
+					* ( 1000 / 3.600 / GRAVITY )
 					/ ( Time( i ) - Time( i - 1 ))
 				);
 				
@@ -280,7 +280,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 				else if( dBearingDelta < -M_PI ) dBearingDelta += M_PI * 2;
 				
 				SetRawGx( i,
-					dBearingDelta / GRAVITY
+					dBearingDelta * ( 1000 / GRAVITY )
 					/ ( Time( i ) - Time( i - 1 ))
 					* ( Speed( i ) / 3.600 )
 				);
@@ -496,7 +496,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			
 			// Time 存在確認
 			if( uIdxTime == ~0 ) return 0;
-			m_dLogStartTime = JSArrays[ uIdxTime ]->Get( 0 )->NumberValue() / 1000.0;
+			m_iLogStartTime = ( time_t )JSArrays[ uIdxTime ]->Get( 0 )->NumberValue();
 			
 			BOOL bCreateDistance = FALSE;
 			
@@ -541,8 +541,9 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					double dVal = JSArrays[ uKey ]->Get( uIdx )->NumberValue();
 					
 					if( uKey == uIdxTime ){
-						if( dVal < m_dLogStartTime ) dVal += 24 * 3600;
-						SetTime( iCnt, dVal / 1000.0 - m_dLogStartTime );
+						time_t t = ( time_t )dVal;
+						if( t < m_iLogStartTime ) t += 24 * 3600 * 1000;
+						SetTime( iCnt, ( double )( t - m_iLogStartTime ));
 					}else if( uKey == uIdxSpeed ){
 						// キャリブレーション中は，一旦 0km/h にする
 						if( dVal >= CALIB_MARK_SPEED ){
@@ -658,7 +659,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				}
 			}
 			// ログ Hz 最終集計
-			m_dFreq = iLogHzCnt / dLogHzTime;
+			m_dFreq = iLogHzCnt / dLogHzTime * 1000;
 		}
 	}
 	
@@ -689,8 +690,6 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		// Time の Max Min 設定
 		m_pLogTime->InitMinMax();
 		m_pLogTime->SetMaxMin( Time( GetCnt() - 2 ), 0 );
-		
-		m_dLogStartTime;
 	}
 	
 	// Lap log の番犬
