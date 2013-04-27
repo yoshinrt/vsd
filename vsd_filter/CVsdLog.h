@@ -62,104 +62,147 @@ class CLapLog {
 	int m_iBestLogNumRunning;
 };
 
-/*** new type ***************************************************************/
+/*** ログ 1項目 *************************************************************/
 
-class VSD_LOG_t {
+class CLog {
 	
   public:
-	VSD_LOG_t(){
-		m_fMin 		=  FLT_MAX;
-		m_fMax 		= -FLT_MAX;
-		m_dBaseVal	= 0;
+	// 値取得
+	virtual double GetRaw( int    iIndex ) = 0;
+	virtual double Get( double dIndex ) = 0;
+	
+	virtual double GetMin() = 0;
+	virtual double GetMax() = 0;
+	virtual void SetMaxMin( double dMaxVal, double dMinVal ) = 0;
+	
+	// 値設定
+	virtual void Set( int iIndex, double dVal ) = 0;
+	virtual void SetRaw( int iIndex, double dVal ) = 0;
+	virtual void InitMinMax( void ) = 0;
+	virtual int GetCnt( void ) = 0;
+	virtual void Resize( int iCnt, double dVal ) = 0;
+};
+
+template <class T, int dScale>
+class CLogVariant : public CLog {
+	
+  public:
+	CLogVariant(){
+		SetMax( m_Min );
+		SetMin( m_Max );
 	}
 	
 	// 値取得
-	double Get( int    iIndex ){ return m_Log[ iIndex ] + m_dBaseVal; }
+	double GetRaw( int    iIndex ){ return UnScaled( m_Log[ iIndex ] ); }
 	double Get( double dIndex ){
 		double alfa = dIndex - ( UINT )dIndex;
 		return
-			m_Log[ ( UINT )dIndex     ] * ( 1 - alfa ) +
-			m_Log[ ( UINT )dIndex + 1 ] * (     alfa ) +
-			m_dBaseVal;
+			GetRaw(( int )dIndex ) +
+			( GetRaw(( int )dIndex + 1 ) - GetRaw(( int )dIndex )) * alfa;
 	}
 	
-	double GetDirectionAdjust( double dIndex ){
-		double alfa = dIndex - ( UINT )dIndex;
-		double a = m_Log[ ( UINT )dIndex     ];
-		double b = m_Log[ ( UINT )dIndex + 1 ];
-		
-		if     ( a - b >= 180 ) a -= 360;
-		else if( a - b < -180 ) b -= 360;
-		
-		double dResult = a * ( 1 - alfa ) + b * ( alfa );
-		if( dResult < 0 ) dResult += 360;
-		
-		return dResult;
-	}
+	double GetMin(){ return UnScaled( m_Min ); }
+	double GetMax(){ return UnScaled( m_Max ); }
+	virtual void SetMinRaw( double d ){ m_Min = Scaled( d ); }
+	virtual void SetMaxRaw( double d ){ m_Max = Scaled( d ); }
 	
-	double GetDiff( int    iIndex ){ return m_Log[ iIndex ]; }
-	double GetDiff( double dIndex ){
-		double alfa = dIndex - ( UINT )dIndex;
-		return
-			m_Log[ ( UINT )dIndex     ] * ( 1 - alfa ) +
-			m_Log[ ( UINT )dIndex + 1 ] * (     alfa );
-	}
-	
-	double GetMin(){ return m_fMin + m_dBaseVal; }
-	double GetMax(){ return m_fMax + m_dBaseVal; }
 	void SetMaxMin( double dMaxVal, double dMinVal ){
-		dMaxVal -= m_dBaseVal;
-		dMinVal -= m_dBaseVal;
-		if( m_fMin > dMinVal ) m_fMin = ( float )dMinVal;
-		if( m_fMax < dMaxVal ) m_fMax = ( float )dMaxVal;
+		if( GetMin() > dMinVal ) SetMinRaw( dMinVal );
+		if( GetMax() < dMaxVal ) SetMaxRaw( dMaxVal );
 	}
 	
 	// 値設定
 	void Set( int iIndex, double dVal ){
-		double dValTmp = dVal - m_dBaseVal;
-		if(      m_fMin > dValTmp ) m_fMin = ( float )dValTmp;
-		else if( m_fMax < dValTmp ) m_fMax = ( float )dValTmp;
+		SetMaxMin( dVal, dVal );
 		SetRaw( iIndex, dVal );
 	}
 	
 	void SetRaw( int iIndex, double dVal ){
 		// ★無い値を線形補間する必要あり
-		if( GetCnt() > iIndex ){
-			double dValTmp = dVal - m_dBaseVal;
-			m_Log[ iIndex ] = ( float )dValTmp;
-		}
-		else while( GetCnt() <= iIndex ) Push( dVal );
+		if( GetCnt() > iIndex ) m_Log[ iIndex ] = Scaled( dVal );
+		else while( GetCnt() <= iIndex ) m_Log.push_back( Scaled( dVal ));
 	}
 	
-	int GetCnt( void ){
-		return m_Log.size();
-	}
-	
-	void Push( double dVal ){
-		dVal -= m_dBaseVal;
-		m_Log.push_back(( float )dVal );
-	}
+	int GetCnt( void ){ return m_Log.size(); }
 	
 	void InitMinMax( void ){
-		m_fMin =  FLT_MAX;
-		m_fMax = -FLT_MAX;
+		SetMax( m_Min );
+		SetMin( m_Max );
 	}
 	
 	void Resize( int iCnt, double dVal ){
-		dVal -= m_dBaseVal;
-		m_Log.resize( iCnt, ( float )dVal );
+		m_Log.resize( iCnt, Scaled( dVal ));
 	}
 	
-	void SetBaseVal( double dVal ){
-		m_dBaseVal = dVal;
-	}
+  protected:
+	std::vector<T>	m_Log;
+	T	m_Min;
+	T	m_Max;
 	
-  private:
-	double	m_dBaseVal;
-	std::vector<float>	m_Log;
-	float	m_fMin;
-	float	m_fMax;
+	// 最大・最小設定ヘルパ
+	void SetMax( USHORT	&v ){ v = USHRT_MAX; }	void SetMin( USHORT	&v ){ v = 0; }
+	void SetMax( short	&v ){ v = SHRT_MAX; }	void SetMin( short	&v ){ v = SHRT_MIN; }
+	void SetMax( UINT	&v ){ v = UINT_MAX; }	void SetMin( UINT	&v ){ v = 0; }
+	void SetMax( int	&v ){ v = INT_MAX; }	void SetMin( int	&v ){ v = INT_MIN; }
+	void SetMax( float	&v ){ v = FLT_MAX; }	void SetMin( float	&v ){ v = -FLT_MAX; }
+	
+	// 内部形式変換
+	T Scaled( double d ){ return ( T )( d * dScale ); }
+	double UnScaled( T v ){ return ( double )v / dScale; }
 };
+
+typedef CLogVariant<float, 1>	CLogFloat;
+
+class CLogFloatOffset : public CLogFloat {
+  public:
+	CLogFloatOffset(){
+		m_dBaseVal	= 0;
+	}
+	
+	// 値取得
+	double GetRaw( int    iIndex ){ return CLogFloat::GetRaw( iIndex ) + m_dBaseVal; }
+	
+	double GetDiff( int    iIndex ){ return CLogFloat::GetRaw( iIndex ); }
+	double GetDiff( double dIndex ){ return CLogFloat::Get( dIndex ); }
+	
+	double GetMin(){ return CLogFloat::GetMin() + m_dBaseVal; }
+	double GetMax(){ return CLogFloat::GetMax() + m_dBaseVal; }
+	void SetMinRaw( double d ){ CLogFloat::SetMinRaw( d - m_dBaseVal ); }
+	void SetMaxRaw( double d ){ CLogFloat::SetMaxRaw( d - m_dBaseVal ); }
+	
+	void SetRaw( int iIndex, double dVal ){
+		CLogFloat::SetRaw( iIndex, dVal - m_dBaseVal );
+	}
+	
+	void SetBaseVal( double dVal ){ m_dBaseVal = dVal; }
+	
+  protected:
+	double	m_dBaseVal;
+};
+
+typedef CLogVariant<short, 4096>	CLogShort4096;
+typedef CLogVariant<USHORT, 128>	CLogUShort128;
+typedef CLogVariant<USHORT, 1>		CLogUShort;
+typedef CLogVariant<UINT, 1024>		CLogUInt1024;
+
+class CLogDirection : public CLogUShort128 {
+  public:
+	double Get( double dIndex ){
+		double alfa = dIndex - ( int )dIndex;
+		double a = GetRaw(( int )dIndex );
+		double b = GetRaw(( int )dIndex + 1 );
+		
+		if     ( a - b >= 180 ) a -= 360;
+		else if( a - b < -180 ) b -= 360;
+		
+		double dResult = a + ( b - a )* alfa;
+		if( dResult < 0 ) dResult += 360;
+		
+		return dResult;
+	}
+};
+
+/*** 1個のログセット ********************************************************/
 
 class CVsdFilter;
 class CVsdLog {
@@ -180,7 +223,7 @@ class CVsdLog {
 	double	m_dCalibStop;
 	
 	// ログの map
-	std::map<std::string, VSD_LOG_t *> m_Logs;
+	std::map<std::string, CLog *> m_Logs;
 	
 	// コンストラクタ・デストラクタ
 	CVsdLog( CVsdFilter *pVsd );
@@ -216,13 +259,13 @@ class CVsdLog {
 	
 	// key の存在確認
 	
-	VSD_LOG_t *GetElement( const char *szKey, BOOL bCreate = FALSE );
+	CLog *GetElement( const char *szKey, BOOL bCreate = FALSE );
 	
 	// レコードコピー
 	void CopyRecord( int iTo, int iFrom );
 	
-	// VSD_LOG_t 取得
-	VSD_LOG_t *GetLog( const char *szKey ){
+	// CLog 取得
+	CLog *GetLog( const char *szKey ){
 		std::string strKey( szKey );
 		if( m_Logs.find( strKey ) == m_Logs.end()){
 			return NULL;
@@ -231,47 +274,51 @@ class CVsdLog {
 	}
 	
 	// set / get 関数
-	template<typename T>
-	double Get( const char *szKey, T Index ){
+	double Get( const char *szKey, double dIndex ){
 		std::string strKey( szKey );
 		if( m_Logs.find( strKey ) == m_Logs.end()){
 			return NaN;	// 要素なし
 		}
-		return m_Logs[ strKey ]->Get( Index );
+		return m_Logs[ strKey ]->Get( dIndex );
 	}
 	
 	void Set( const char *szKey, int iIndex, double dVal );
 	
 	double GetMin( const char *szKey ){
-		VSD_LOG_t	*pLog = GetElement( szKey );
+		CLog	*pLog = GetElement( szKey );
 		return pLog ? pLog->GetMin() : NaN;
 	}
 	
 	double GetMax( const char *szKey ){
-		VSD_LOG_t	*pLog = GetElement( szKey );
+		CLog	*pLog = GetElement( szKey );
 		return pLog ? pLog->GetMax() : NaN;
 	}
 	
-	#define DEF_LOG( name ) VSD_LOG_t	*m_pLog##name;
+	#define DEF_LOG( name )	DEF_LOG_T( name, CLogFloat )
+	#define DEF_LOG_T( name, type )	type	*m_pLog##name;
 	#include "def_log.h"
+	
 	#define DEF_LOG( name ) double name( void          ){ return m_pLog##name->Get( m_dLogNum ); }
 	#include "def_log.h"
-	#define DEF_LOG( name ) double name( int    iIndex ){ return m_pLog##name->Get( iIndex ); }
+	#define DEF_LOG( name ) double name( int    iIndex ){ return m_pLog##name->GetRaw( iIndex ); }
 	#include "def_log.h"
 	#define DEF_LOG( name ) double name( double dIndex ){ return m_pLog##name->Get( dIndex ); }
 	#include "def_log.h"
-	#define DEF_LOG( name ) void Set##name( int iIndex, double dVal ){ \
-		if( !m_pLog##name ) m_pLog##name = GetElement( #name, TRUE ); \
+	
+	#define DEF_LOG( name )	void Set##name( int iIndex, double dVal ){ \
+		if( !m_pLog##name ) GetElement( #name, TRUE ); \
 		m_pLog##name->Set( iIndex, dVal ); \
 		if( m_iCnt <= iIndex ) m_iCnt = iIndex + 1; \
 	}
 	#include "def_log.h"
-	#define DEF_LOG( name ) void SetRaw##name( int iIndex, double dVal ){ \
-		if( !m_pLog##name ) m_pLog##name = GetElement( #name, TRUE ); \
+	
+	#define DEF_LOG( name )	void SetRaw##name( int iIndex, double dVal ){ \
+		if( !m_pLog##name ) GetElement( #name, TRUE ); \
 		m_pLog##name->SetRaw( iIndex, dVal ); \
 		if( m_iCnt <= iIndex ) m_iCnt = iIndex + 1; \
 	}
 	#include "def_log.h"
+	
 	#define DEF_LOG( name ) double Max##name( void ){ return m_pLog##name->GetMax(); }
 	#include "def_log.h"
 	#define DEF_LOG( name ) double Min##name( void ){ return m_pLog##name->GetMin(); }
@@ -281,10 +328,6 @@ class CVsdLog {
 	
 	double DateTime( void ){
 		return ( m_pLogTime->Get( m_dLogNum ) + m_dLogStartTime ) * 1000;
-	}
-	
-	double DirectionAdjust( void ){
-		return m_pLogDirection->GetDirectionAdjust( m_dLogNum );
 	}
 	
 	double X0( int    iIndex ){ return m_pLogLongitude->GetDiff( iIndex ) * m_dLong2Meter; }

@@ -162,11 +162,6 @@ class CVsdFilterIF {
 		}
 	#include "def_log.h"
 	
-	static v8::Handle<v8::Value> Get_DirectionAdjust( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Number::New( obj->GetDirectionAdjust() ) : v8::Undefined();
-	}
-	
 	static v8::Handle<v8::Value> Get_Value( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		v8::String::AsciiValue str( propertyName );

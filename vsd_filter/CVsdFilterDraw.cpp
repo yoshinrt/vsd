@@ -742,7 +742,7 @@ void CVsdFilter::DrawGraphSingle(
 	tRABY uColor
 ){
 	CVsdLog 	*pLog;
-	VSD_LOG_t	*pData;
+	CLog	*pData;
 	
 	// key から log を探す
 	if( m_VsdLog && ( pData = m_VsdLog->GetLog( szKey ))){
@@ -766,7 +766,7 @@ void CVsdFilter::DrawGraphSub(
 	CVsdFont &Font,
 	tRABY uColor,
 	CVsdLog& Log,
-	VSD_LOG_t	&Data
+	CLog	&Data
 ){
 	int	iWidth  = x2 - x1 + 1;
 	int iHeight = y2 - y1 + 1;
@@ -819,7 +819,7 @@ void CVsdFilter::DrawGraphSub(
 
 // スピード・タコグラフ
 void CVsdFilter::DrawSyncGraph( int x1, int y1, int x2, int y2, CVsdFont &Font ){
-	VSD_LOG_t	*pLog;
+	CLog	*pLog;
 	
 	if( m_VsdLog && ( pLog = m_VsdLog->m_pLogSpeed )){
 		DrawGraphSub(

@@ -89,7 +89,7 @@ void CVsdLog::Dump( char *szFileName ){
 	FILE *fp = fopen( szFileName, "w" );
 	
 	BOOL bFirst = TRUE;
-	std::map<std::string, VSD_LOG_t *>::iterator it;
+	std::map<std::string, CLog *>::iterator it;
 	
 	// ヘッダ出力
 	for( it = m_Logs.begin(); it != m_Logs.end(); ++it ){
@@ -112,20 +112,27 @@ void CVsdLog::Dump( char *szFileName ){
 
 /*** key の存在確認 *********************************************************/
 
-VSD_LOG_t *CVsdLog::GetElement( const char *szKey, BOOL bCreate ){
+CLog *CVsdLog::GetElement( const char *szKey, BOOL bCreate ){
 	std::string strKey( szKey );
-	std::map<std::string, VSD_LOG_t *>::iterator itr;
+	std::map<std::string, CLog *>::iterator itr;
 	
 	if(( itr = m_Logs.find( strKey )) != m_Logs.end()){
 		return itr->second;
 	}
 	if( bCreate ){
-		VSD_LOG_t *p;
-		m_Logs[ strKey ] = p = new VSD_LOG_t();
+		CLog *p;
 		
 		// Speed とか基本データの参照用ポインタに代入
-		#define DEF_LOG( name )	if( strKey == #name ) m_pLog##name = p;
+		if( 0 );
+		#define DEF_LOG( name )	DEF_LOG_T( name, CLogFloat )
+		#define DEF_LOG_T( name, type )	\
+			else if( strKey == #name ) p = m_pLog##name = new type();
 		#include "def_log.h"
+		else{
+			p = new CLogFloat();
+		}
+		
+		m_Logs[ strKey ] = p;
 		return p;
 	}
 	return NULL;
@@ -141,11 +148,11 @@ void CVsdLog::Set( const char *szKey, int iIndex, double dVal ){
 /*** 1レコードコピー ********************************************************/
 
 void CVsdLog::CopyRecord( int iTo, int iFrom ){
-	std::map<std::string, VSD_LOG_t *>::iterator it;
+	std::map<std::string, CLog *>::iterator it;
 	
 	for( it = m_Logs.begin(); it != m_Logs.end(); ++it ){
-		VSD_LOG_t *pLog = it->second;
-		pLog->Set( iTo, pLog->Get( iFrom ));
+		CLog *pLog = it->second;
+		pLog->Set( iTo, pLog->GetRaw( iFrom ));
 	}
 	if( m_iCnt <= iTo ) m_iCnt = iTo + 1;
 }
@@ -164,7 +171,7 @@ void CVsdLog::AddWatchDog( void ){
 
 UINT CVsdLog::GPSLogRescan( void ){
 	
-	/*** VSD_LOG_t の方を走査して，いろいろ補正 *****************************/
+	/*** CLog の方を走査して，いろいろ補正 *****************************/
 	
 	BOOL	bCreateSpeed	= FALSE;
 	BOOL	bCreateG		= FALSE;
@@ -176,28 +183,28 @@ UINT CVsdLog::GPSLogRescan( void ){
 	if( m_pLogLongitude != NULL && m_pLogLatitude != NULL ){
 		if( !m_pLogSpeed ){
 			bCreateSpeed = TRUE;
-			m_pLogSpeed = GetElement( "Speed", TRUE );
+			GetElement( "Speed", TRUE );
 			m_pLogSpeed->Resize( GetCnt(), 0 );
 		}
 		
 		if( !m_pLogGx ){
 			bCreateG = TRUE;
-			m_pLogGx = GetElement( "Gx", TRUE );
+			GetElement( "Gx", TRUE );
 			m_pLogGx->Resize( GetCnt(), 0 );
-			m_pLogGy = GetElement( "Gy", TRUE );
+			GetElement( "Gy", TRUE );
 			m_pLogGy->Resize( GetCnt(), 0 );
 		}
 		
 		if( !m_pLogDirection ){
 			bCreateDir = TRUE;
-			m_pLogDirection = GetElement( "Direction", TRUE );
+			GetElement( "Direction", TRUE );
 			m_pLogDirection->Resize( GetCnt(), 0 );
 		}
 		
 		#ifdef USE_TURN_R
 			if( !m_pLogTurnR ){
 				bCreateTurnR = TRUE;
-				m_pLogTurnR = GetElement( "TurnR", TRUE );
+				GetElement( "TurnR", TRUE );
 				m_pLogTurnR->Resize( GetCnt(), MAX_TURN_R );
 			}
 		#endif
@@ -448,8 +455,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			// JavaScript Array の vector
 			std::vector<v8::Local<v8::Array> >	JSArrays;
 			
-			// VSD_LOG_t * の vector
-			std::vector<VSD_LOG_t *>	CArrays;
+			// CLog * の vector
+			std::vector<CLog *>	CArrays;
 			
 			UINT	uIdxTime		= ~0;
 			UINT	uIdxLapTime		= ~0;
@@ -506,9 +513,9 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				double	dLati0;
 				
 				dLong0 = JSArrays[ uIdxLong ]->Get( 0 )->NumberValue();
-				CArrays[ uIdxLong ]->SetBaseVal( dLong0 );
+				m_pLogLongitude->SetBaseVal( dLong0 );
 				dLati0 = JSArrays[ uIdxLati ]->Get( 0 )->NumberValue();
-				CArrays[ uIdxLati ]->SetBaseVal( dLati0 );
+				m_pLogLatitude->SetBaseVal( dLati0 );
 				
 				m_dLong2Meter =  GPSLogGetLength( dLong0, dLati0, dLong0 + 1.0 / 3600, dLati0 ) * 3600;
 				m_dLati2Meter = -GPSLogGetLength( dLong0, dLati0, dLong0, dLati0 + 1.0 / 3600 ) * 3600;

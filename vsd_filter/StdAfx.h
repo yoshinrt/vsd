@@ -25,6 +25,7 @@
 #include <zlib.h>
 #include <ole2.h>
 #include <Wininet.h>
+#include <limits.h>
 
 #include <string>
 #include <vector>
