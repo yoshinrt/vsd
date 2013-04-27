@@ -775,7 +775,7 @@ void CVsdFilter::DrawGraphSub(
 	double	dVal;
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
-	double	dTime0 = Log.Time() - ( iWidth / 2 ) * GRAPH_SCALE;
+	int		iTime0 = Log.GetTime() - ( int )(( iWidth / 2 ) * GRAPH_SCALE );
 	int		iIndex = -1;
 	double	dIndex;
 	
@@ -788,7 +788,7 @@ void CVsdFilter::DrawGraphSub(
 	}
 	
 	for( int x = 0; x < iWidth; x += GRAPH_STEP ){
-		dIndex = Log.GetIndex( dTime0 + x * GRAPH_SCALE, iIndex );
+		dIndex = Log.GetIndex( iTime0 + ( int )( x * GRAPH_SCALE ), iIndex );
 		iIndex = ( int )dIndex;
 		
 		dVal = Data.Get( dIndex );
@@ -1089,7 +1089,7 @@ void CVsdFilter::CalcLapTime( void ){
 			m_LapLog->m_iCurTime = ( int )(( GetFrameCnt() - m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum ) * 1000.0 / GetFPS());
 		}else{
 			// 自動計測時は，タイム / ログ数 から計算
-			m_LapLog->m_iCurTime = ( int )( m_CurLog->Time() - m_CurLog->Time( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum ));
+			m_LapLog->m_iCurTime = m_CurLog->GetTime() - m_CurLog->GetTime( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum );
 		}
 	}
 	
@@ -1139,10 +1139,9 @@ void CVsdFilter::CalcLapTime( void ){
 			// B: 最速ラップは，1/15秒の間にこの距離を走った
 			( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning + 1 ) - m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ));
 		
-		m_LapLog->m_iDiffTime = ( int )(
-			( m_CurLog->Time() - m_CurLog->Time( dCurLapLogNumStart )) -
-			( m_CurLog->Time( dBestLapLogNumRunning ) - m_CurLog->Time( dBestLapLogNumStart ))
-		);
+		m_LapLog->m_iDiffTime =
+			( m_CurLog->GetTime() - m_CurLog->GetTime( dCurLapLogNumStart )) -
+			( m_CurLog->GetTime( dBestLapLogNumRunning ) - m_CurLog->GetTime( dBestLapLogNumStart ));
 	}
 }
 

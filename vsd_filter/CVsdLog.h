@@ -83,7 +83,7 @@ class CLog {
 	virtual void Resize( int iCnt, double dVal ) = 0;
 };
 
-template <class Tint, int dScale>
+template <class T, int Scale>
 class CLogVariant : public CLog {
 	
   public:
@@ -135,9 +135,9 @@ class CLogVariant : public CLog {
 	}
 	
   protected:
-	std::vector<Tint>	m_Log;
-	Tint	m_Min;
-	Tint	m_Max;
+	std::vector<T>	m_Log;
+	T	m_Min;
+	T	m_Max;
 	
 	// 最大・最小設定ヘルパ
 	void SetMax( UCHAR	&v ){ v = UCHAR_MAX; }	void SetMin( UCHAR	&v ){ v = 0; }
@@ -148,8 +148,8 @@ class CLogVariant : public CLog {
 	void SetMax( float	&v ){ v = FLT_MAX; }	void SetMin( float	&v ){ v = -FLT_MAX; }
 	
 	// 内部形式変換
-	Tint Scaled( double d ){ return ( Tint )( d * dScale ); }
-	double UnScaled( Tint v ){ return ( double )v / dScale; }
+	T Scaled( double d ){ return ( T )( d * Scale ); }
+	double UnScaled( T v ){ return ( double )v / Scale; }
 };
 
 typedef CLogVariant<float,	1>		CLogFloat;
@@ -157,7 +157,17 @@ typedef CLogVariant<short,	4096>	CLogShort4096;
 typedef CLogVariant<USHORT,	128>	CLogUShort128;
 typedef CLogVariant<USHORT,	1>		CLogUShort;
 typedef CLogVariant<UINT,	1024>	CLogUInt1024;
-typedef CLogVariant<UCHAR,	2>		CLogUChar2;
+
+class CLogInt : public CLogVariant<int, 1> {
+  public:
+	int GetIntRaw( int iIndex ){ return m_Log[ iIndex ]; }
+	int GetInt( double dIndex ){
+		double alfa = dIndex - ( UINT )dIndex;
+		return
+			GetIntRaw(( int )dIndex ) +
+			( int )(( GetIntRaw(( int )dIndex + 1 ) - GetIntRaw(( int )dIndex )) * alfa );
+	}
+};
 
 class CLogFloatOffset : public CLogFloat {
   public:
@@ -208,13 +218,6 @@ class CLogDirection : public CLogUShort128 {
 	}
 };
 
-class CLogAccel : public CLogUChar2 {
-  public:
-	double GetRaw( int iIndex ){
-		return ( UnScaled( m_Log[ iIndex ] ) - m_Min ) / ( m_Max - m_Min ) * 100;
-	}
-};
-
 /*** 1個のログセット ********************************************************/
 
 class CVsdFilter;
@@ -232,8 +235,8 @@ class CVsdLog {
 	INT64	m_iLogStartTime;	// ログ開始時間
 	
 	// VSD ログ位置自動認識用
-	double	m_dCalibStart;
-	double	m_dCalibStop;
+	int		m_dCalibStart;
+	int		m_dCalibStop;
 	
 	// ログの map
 	std::map<std::string, CLog *> m_Logs;
@@ -244,7 +247,7 @@ class CVsdLog {
 	UINT GPSLogRescan();
 	void RotateMap( double dAngle );
 	double GetIndex( double dFromVal, int *piFrom, int *piLog, int iPrevIdx = -1 );
-	double GetIndex( double dTime, int iPrevIdx = -1 );
+	double GetIndex( int iTime, int iPrevIdx = -1 );
 	
 	#ifdef DEBUG
 		void Dump( char *szFileName );
@@ -263,11 +266,11 @@ class CVsdLog {
 	
 	// 番犬追加
 	void AddWatchDog( void );
-	void AddStopRecord( int iIndex, double dTime ){
+	void AddStopRecord( int iIndex, int iTime ){
 		if( m_pLogSpeed ) SetSpeed( iIndex, 0 );
 		if( m_pLogGx    ) SetGx(    iIndex, 0 );
 		if( m_pLogGy    ) SetGy(    iIndex, 0 );
-		SetTime( iIndex, dTime );
+		SetTime( iIndex, iTime );
 	}
 	
 	// key の存在確認
@@ -342,6 +345,10 @@ class CVsdLog {
 	double DateTime( void ){
 		return ( m_pLogTime->Get( m_dLogNum ) + m_iLogStartTime );
 	}
+	
+	int GetTime( int    iIndex ){ return m_pLogTime->GetIntRaw( iIndex ); }
+	int GetTime( double dIndex ){ return m_pLogTime->GetInt( dIndex ); }
+	int GetTime( void          ){ return m_pLogTime->GetInt( m_dLogNum ); }
 	
 	double X0( int    iIndex ){ return m_pLogLongitude->GetDiff( iIndex ) * m_dLong2Meter; }
 	double X0( double dIndex ){ return m_pLogLongitude->GetDiff( dIndex ) * m_dLong2Meter; }

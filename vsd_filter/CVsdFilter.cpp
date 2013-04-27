@@ -151,7 +151,7 @@ double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 		
 		// ラップ番号(VSD)→GPS ログ番号に変換
 		return Log->GetIndex(
-			m_VsdLog->Time( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME,
+			m_VsdLog->GetTime( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME,
 			&VsdSt, &GPSSt
 		);
 	}else if( m_LapLog->m_iLapSrc == LAPSRC_GPS ){
@@ -160,7 +160,7 @@ double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 		
 		// ラップ番号(GPS)→VSD ログ番号に変換
 		return Log->GetIndex(
-			Log->Time( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME,
+			Log->GetTime( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME,
 			&GPSSt, &VsdSt
 		);
 	}
@@ -189,7 +189,7 @@ CLapLog *CVsdFilter::CreateLapTimeHand( int iLapSrc ){
 		
 		if( pLapLog->m_iLapSrc == LAPSRC_GPS ){
 			dLogNum	= GetLogIndex( iFrame, GPS, -1 );
-			iTime	= ( int )m_GPSLog->Time( dLogNum );
+			iTime	= m_GPSLog->GetTime( dLogNum );
 			LapTime.fLogNum	= ( float )dLogNum;
 		}else{
 			// LAPSRC_VIDEO
@@ -319,7 +319,7 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 		
 		// 半端な LogNum
 		dLogNum = i + a;
-		iTime = ( int )m_GPSLog->Time( dLogNum );
+		iTime = m_GPSLog->GetTime( dLogNum );
 		
 		if( m_piParamS[ SHADOW_LAP_START ] - 1 <= iLapNum && iLapNum <= m_piParamS[ SHADOW_LAP_END ] ){
 			LapTime.uLap	= pLapLog->m_iLapNum;

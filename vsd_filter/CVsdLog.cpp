@@ -36,23 +36,23 @@ CVsdLog::CVsdLog( CVsdFilter *pVsd ){
 double CVsdLog::GetIndex( double dFromVal, int *piFrom, int *piLog, int iPrevIdx ){
 	if( piFrom[ 0 ] == piFrom[ 1 ] ) return 2;	// 番犬を除いた Time=0 のログ
 	return GetIndex(
-		(
+		( int )((
 			piLog[ 0 ] +
 			( piLog[ 1 ] - piLog[ 0 ] ) * ( dFromVal - piFrom[ 0 ] ) /
 			( double )( piFrom[ 1 ] - piFrom[ 0 ] )
-		) / SLIDER_TIME,
+		) / SLIDER_TIME ),
 		iPrevIdx
 	);
 }
 
-double CVsdLog::GetIndex( double dTime, int iPrevIdx ){
+double CVsdLog::GetIndex( int iTime, int iPrevIdx ){
 	int idx;
 	
-	// Time( idx ) <= dTime < Time( idx + 1 )
+	// Time( idx ) <= iTime < Time( idx + 1 )
 	// となる idx を見つける
 	if(
 		iPrevIdx < 0 || iPrevIdx >= GetCnt() ||
-		Time( iPrevIdx ) > dTime
+		GetTime( iPrevIdx ) > iTime
 	){
 		// iPrevIdx がおかしいので，binary serch する
 		int iSt = 0;
@@ -61,9 +61,9 @@ double CVsdLog::GetIndex( double dTime, int iPrevIdx ){
 			idx = ( iSt + iEd ) / 2;
 			if( iSt == iEd ) break;
 			
-			if( Time( idx ) > dTime ){
+			if( GetTime( idx ) > iTime ){
 				iEd = idx - 1;
-			}else if( Time( idx + 1 ) <= dTime ){
+			}else if( GetTime( idx + 1 ) <= iTime ){
 				iSt = idx + 1;
 			}else{
 				// ヒット
@@ -73,13 +73,13 @@ double CVsdLog::GetIndex( double dTime, int iPrevIdx ){
 	}else{
 		// iPrevIdx は正常なので，これを起点に単純サーチする
 		idx = iPrevIdx;
-		while( Time( idx + 1 ) <= dTime ) ++idx;
+		while( GetTime( idx + 1 ) <= iTime ) ++idx;
 	}
 	
 	// index の端数を求める
 	return idx +
-		( dTime           - Time( idx )) /
-		( Time( idx + 1 ) - Time( idx ));
+		( double )( iTime    - GetTime( idx )) /
+		( GetTime( idx + 1 ) - GetTime( idx ));
 }
 
 /*** GPS ログのダンプ *******************************************************/
@@ -162,8 +162,8 @@ void CVsdLog::CopyRecord( int iTo, int iFrom ){
 void CVsdLog::AddWatchDog( void ){
 	int iCnt = GetCnt() - 1;
 	CopyRecord( 0, 2 );           AddStopRecord( 0, -WATCHDOG_TIME );
-	CopyRecord( 1, 2 );           AddStopRecord( 1, Time( 2 ) - 500 );
-	CopyRecord( iCnt + 1, iCnt ); AddStopRecord( iCnt + 1, Time( iCnt ) + 500 );
+	CopyRecord( 1, 2 );           AddStopRecord( 1, GetTime( 2 ) - 500 );
+	CopyRecord( iCnt + 1, iCnt ); AddStopRecord( iCnt + 1, GetTime( iCnt ) + 500 );
 	CopyRecord( iCnt + 2, iCnt ); AddStopRecord( iCnt + 2, WATCHDOG_TIME );
 }
 
@@ -223,7 +223,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 		if( bCreateSpeed ){
 			#pragma omp for
 			for( int i = 1; i < GetCnt(); ++i ){
-				if( Time( i ) - Time( i - 1 ) >= ( TIME_STOP - TIME_STOP_MARGIN * 2 )){
+				if( GetTime( i ) - GetTime( i - 1 ) >= ( TIME_STOP - TIME_STOP_MARGIN * 2 )){
 					// 時間が開いている停止ログ
 					SetRawSpeed( i, 0 );
 					if( dMaxSpeed < 0 ) dMaxSpeed = 0;
@@ -233,7 +233,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 					SetRawSpeed( i,
 						d = ( Distance( i ) - Distance( i - 1 ))
 						* ( 3600.0 / 1000 * 1000 ) /
-						( Time( i ) - Time( i - 1 ))
+						( GetTime( i ) - GetTime( i - 1 ))
 					);
 					if( dMaxSpeed < d ) dMaxSpeed = d;
 					if( dMinSpeed > d ) dMinSpeed = d;
@@ -271,7 +271,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 				SetRawGy( i,
 					( Speed( i ) - Speed( i - 1 ))
 					* ( 1000 / 3.600 / GRAVITY )
-					/ ( Time( i ) - Time( i - 1 ))
+					/ ( GetTime( i ) - GetTime( i - 1 ))
 				);
 				
 				// 横G = vω
@@ -281,7 +281,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 				
 				SetRawGx( i,
 					dBearingDelta * ( 1000 / GRAVITY )
-					/ ( Time( i ) - Time( i - 1 ))
+					/ ( GetTime( i ) - GetTime( i - 1 ))
 					* ( Speed( i ) / 3.600 )
 				);
 				
@@ -525,8 +525,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			double	dDistance = 0;
 			int		iSameCnt = 0;
 			
-			double	dLogHzTime	= 0;
-			double	iLogHzCnt	= 0;
+			int		iLogHzTime	= 0;
+			int		iLogHzCnt	= 0;
 			
 			UINT	uLapCnt	= 1;
 			
@@ -569,7 +569,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					AddStopRecord( 1, -TIME_STOP_MARGIN );
 				}else{
 					// 同じ時間が連続する場合の時刻調整
-					if( Time( iCnt - 1 ) == Time( iCnt )){
+					if( GetTime( iCnt - 1 ) == GetTime( iCnt )){
 						// 時刻が同じログが続くときそのカウントをする
 						++iSameCnt;
 					}else if( iSameCnt ){
@@ -583,8 +583,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						for( int j = 1; j < iSameCnt; ++j ){
 							SetTime(
 								iCnt - iSameCnt + j,
-								Time( iCnt - iSameCnt ) + 
-								( Time( iCnt ) - Time( iCnt - iSameCnt )) / iSameCnt * j
+								GetTime( iCnt - iSameCnt ) +
+								( GetTime( iCnt ) - GetTime( iCnt - iSameCnt )) * j / iSameCnt
 							);
 						}
 						iSameCnt = 0;
@@ -600,11 +600,11 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					}
 					
 					// 前のログから TIME_STOP 離れていてかつ 指定km/h 以下なら，停止とみなす
-					double dDiffTime = Time( iCnt ) - Time( iCnt - 1 );
+					int iDiffTime = GetTime( iCnt ) - GetTime( iCnt - 1 );
 					if(
 						uIdxDistance != ~0 &&
-						dDiffTime >= TIME_STOP &&
-						( Distance( iCnt ) - Distance( iCnt - 1 )) / dDiffTime < ( 5.0 /*[km/h]*/ * 1000 / 3600 )
+						iDiffTime >= TIME_STOP &&
+						( Distance( iCnt ) - Distance( iCnt - 1 )) * 3600 / iDiffTime < 5.0 /*[km/h]*/
 					){
 						// -1 -0
 						// A  B
@@ -614,11 +614,11 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						CopyRecord( iCnt + 1, iCnt     ); // B'
 						CopyRecord( iCnt + 2, iCnt     ); // B
 						CopyRecord( iCnt,     iCnt - 1 ); // A'
-						AddStopRecord( iCnt,     Time( iCnt - 1 ) + TIME_STOP_MARGIN ); // A'
-						AddStopRecord( iCnt + 1, Time( iCnt + 2 ) - TIME_STOP_MARGIN ); // B'
+						AddStopRecord( iCnt,     GetTime( iCnt - 1 ) + TIME_STOP_MARGIN ); // A'
+						AddStopRecord( iCnt + 1, GetTime( iCnt + 2 ) - TIME_STOP_MARGIN ); // B'
 					}else{
 						// 停止期間でなければ，ログ Hz を計算する
-						dLogHzTime += dDiffTime;
+						iLogHzTime += iDiffTime;
 						++iLogHzCnt;
 					}
 				}
@@ -652,14 +652,14 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				if( uCalibrating ){
 					if( uCalibrating == 1 ){
 						m_dCalibStart = m_dCalibStop;
-						m_dCalibStop  = Time( GetCnt() - 1 );
+						m_dCalibStop  = GetTime( GetCnt() - 1 );
 					}
 					// 300km/h に戻す
 					SetRawSpeed( GetCnt() - 1, CALIB_MARK_SPEED );
 				}
 			}
 			// ログ Hz 最終集計
-			m_dFreq = iLogHzCnt / dLogHzTime * 1000;
+			m_dFreq = 1000.0 * iLogHzCnt / iLogHzTime;
 		}
 	}
 	
@@ -671,7 +671,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		// 終端側の番犬
 		CopyRecord( iCnt,     iCnt - 1 );
 		CopyRecord( iCnt + 1, iCnt - 1 );
-		AddStopRecord( iCnt,     Time( iCnt - 1 ) + TIME_STOP_MARGIN );
+		AddStopRecord( iCnt,     GetTime( iCnt - 1 ) + TIME_STOP_MARGIN );
 		AddStopRecord( iCnt + 1, WATCHDOG_TIME );
 		
 		
@@ -689,7 +689,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		
 		// Time の Max Min 設定
 		m_pLogTime->InitMinMax();
-		m_pLogTime->SetMaxMin( Time( GetCnt() - 2 ), 0 );
+		m_pLogTime->SetMaxMin( GetTime( GetCnt() - 2 ), 0 );
 	}
 	
 	// Lap log の番犬

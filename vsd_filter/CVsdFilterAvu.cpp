@@ -536,7 +536,7 @@ void CVsdFilterAvu::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 		DrawSyncInfoSub(
 			x, y, Font, L"ŽÔ—¼ƒƒO",
 			m_VsdLog->m_iLogStartTime,
-			( int )( m_VsdLog->Time()),
+			m_VsdLog->GetTime(),
 			( int )( VsdSt / SLIDER_TIME ),
 			( int )( VsdEd / SLIDER_TIME )
 		);
@@ -547,7 +547,7 @@ void CVsdFilterAvu::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 		DrawSyncInfoSub(
 			x, y, Font, L"GPSƒƒO",
 			m_GPSLog->m_iLogStartTime,
-			( int )( m_GPSLog->Time()),
+			m_GPSLog->GetTime(),
 			( int )( GPSSt / SLIDER_TIME ),
 			( int )( GPSEd / SLIDER_TIME )
 		);
@@ -678,7 +678,7 @@ BOOL CVsdFilterAvu::ReadVsdLog( HWND hwnd ){
 	#else
 		track_e[ PARAM_LSt ] =
 		track_e[ PARAM_LEd ] =
-			( int )( m_VsdLog->Time( m_VsdLog->GetCnt() - 2 ) * SLIDER_TIME );
+			( int )( m_VsdLog->GetTime( m_VsdLog->GetCnt() - 2 ) * SLIDER_TIME );
 	#endif
 	
 	return TRUE;
@@ -703,7 +703,7 @@ BOOL CVsdFilterAvu::ReadGPSLog( HWND hwnd ){
 	#else
 		track_e[ PARAM_GSt ] =
 		track_e[ PARAM_GEd ] =
-			( int )( m_GPSLog->Time( m_GPSLog->GetCnt() - 2 ) * SLIDER_TIME );
+			( int )( m_GPSLog->GetTime( m_GPSLog->GetCnt() - 2 ) * SLIDER_TIME );
 	#endif
 	
 	return TRUE;
