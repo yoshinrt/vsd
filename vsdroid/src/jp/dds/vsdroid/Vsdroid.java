@@ -169,6 +169,7 @@ public class Vsdroid extends Activity {
 
 		double	dGx, dGy;
 		double	dGcx, dGcy;
+		int		iThrottle;
 		double	dGymkhaStart	= 1;
 		boolean	bEcoMode		= false;
 
@@ -212,6 +213,7 @@ public class Vsdroid extends Activity {
 			iMileageRaw		= 0;
 			iTSCRaw			= 0;
 			iIRCnt			= 0;
+			iThrottle		= 0;
 			iSectorCnt		= 0;
 			iSectorCntMax	= 1;
 			dGymkhaStart	= 1;
@@ -300,7 +302,7 @@ public class Vsdroid extends Activity {
 
 			// ヘッダ
 			try{
-				if( fsLog != null ) fsLog.write( "Date/Time\tTacho\tSpeed\tDistance\tGy\tGx\tAuxInfo\tLapTime\tSectorTime\r\n" );
+				if( fsLog != null ) fsLog.write( "Date/Time\tTacho\tSpeed\tDistance\tGy\tGx\tThrottle\tAuxInfo\tLapTime\tSectorTime\r\n" );
 			}catch( IOException e ){}
 
 			return 0;
@@ -380,7 +382,7 @@ public class Vsdroid extends Activity {
 				iSpeedRaw	= Unpack();
 
 				// ここで描画要求
-				DrawHandler.sendEmptyMessage( 0 );
+			//	DrawHandler.sendEmptyMessage( 0 );
 
 				if( iBufPtr < iEOLPos ){
 					iMileage16	= Unpack();
@@ -390,6 +392,11 @@ public class Vsdroid extends Activity {
 
 					dGx			= Unpack();
 					dGy			= Unpack();
+					iThrottle	= Unpack();
+					
+					iSpeedRaw = ( int )(( 1.0 / iThrottle - 7.5395E-06 ) / 2.5928E-06 * 10000 );
+					DrawHandler.sendEmptyMessage( 0 );
+					
 					if( iGCaribCnt-- > 0 ){
 						// G センサーキャリブレーション中
 						dGcx += dGx;
@@ -503,7 +510,7 @@ public class Vsdroid extends Activity {
 			s = String.format(
 				"%04d-%02d-%02d" +
 				"T%02d:%02d:%02d.%03dZ\t" +
-				"%d\t%.2f\t%.2f\t%.4f\t%.4f\t%d",
+				"%d\t%.2f\t%.2f\t%.4f\t%.4f\t%d\t%d",
 				Cal.get( Calendar.YEAR ),
 				Cal.get( Calendar.MONTH ) + 1,
 				Cal.get( Calendar.DATE ),
@@ -513,7 +520,7 @@ public class Vsdroid extends Activity {
 				Cal.get( Calendar.MILLISECOND ),
 				iTacho, ( double )iSpeedRaw / 100,
 				( double )iMileageRaw / PULSE_PER_1KM * 1000,
-				dGy, dGx, iIRCnt
+				dGy, dGx, iThrottle, iIRCnt
 			);
 
 			// ラップタイム
