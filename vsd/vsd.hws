@@ -3,13 +3,13 @@
 [DATABASE_VERSION]
 "11.0" 
 [WORKSPACE_DETAILS]
-"vsd" "Z:\vsd" "Z:\vsd\vsd.hws" "H8S,H8/300" "Hitachi H8S,H8/300 Standard" 
+"vsd" "C:\DDS\vsd\vsd" "C:\DDS\vsd\vsd\vsd.hws" "H8S,H8/300" "Hitachi H8S,H8/300 Standard" 
 [SHARED_WORKSPACE_CONTROL_STATUS]
 "" "" "" 
 "" "" "" 
 [PROJECTS]
-"monitor" "Z:\vsd\300thew3\monitor" "Z:\vsd\300thew3\monitor\monitor.hwp" 0 
-"vsd" "Z:\vsd\vsd" "Z:\vsd\vsd\vsd.hwp" 0 
+"monitor" "C:\DDS\vsd\vsd\300thew3\monitor" "C:\DDS\vsd\vsd\300thew3\monitor\monitor.hwp" 0 
+"vsd" "C:\DDS\vsd\vsd\vsd" "C:\DDS\vsd\vsd\vsd\vsd.hwp" 0 
 [INFORMATION]
 "ワークスペース情報がありません" 
 [SCRAP]

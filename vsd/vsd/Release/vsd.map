@@ -1,19 +1,19 @@
-Optimizing Linkage Editor (V.9.05.01.000)         27-Apr-2012 17:01:32
+Optimizing Linkage Editor (V.9.05.01.000)         29-Apr-2013 19:09:14
 
 *** Options ***
 
--subcommand=Z:\vsd\vsd\release\vsd.hlk
+-subcommand=C:\DDS\vsd\vsd\vsd\release\vsd.hlk
 -noprelink
 -nodebug
 -nomessage
--list="Z:\vsd\vsd\release\vsd.map"
+-list="C:\DDS\vsd\vsd\vsd\release\vsd.map"
 -optimize=safe
 -start=P,C,D,B/0F780,S/0FED6
 -nologo
--input="Z:\vsd\vsd\release\main.obj"
--input="Z:\vsd\vsd\release\rom_entry.obj"
--library="Z:\vsd\vsd\release\vsd.lib"
--output="Z:\vsd\vsd\release\vsd.abs"
+-input="C:\DDS\vsd\vsd\vsd\release\main.obj"
+-input="C:\DDS\vsd\vsd\vsd\release\rom_entry.obj"
+-library="C:\DDS\vsd\vsd\vsd\release\vsd.lib"
+-output="C:\DDS\vsd\vsd\vsd\release\vsd.abs"
 -end
 
 *** Error information ***
@@ -27,10 +27,10 @@ SECTION                            START      END         SIZE   ALIGN
 $VECT0
                                   00000000  00000001         2   2
 P
-                                  0000f780  0000f989       20a   2
+                                  0000f780  0000fa17       298   2
 C
-                                  0000f98a  0000f9c9        40   2
+                                  0000fa18  0000fa57        40   2
 B
-                                  0000f9ca  0000f9ca         0   2
+                                  0000fa58  0000fa59         2   2
 S
                                   0000fed6  0000fed6         0   2

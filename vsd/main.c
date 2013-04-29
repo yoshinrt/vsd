@@ -31,6 +31,8 @@
 /*** extern *****************************************************************/
 /*** gloval vars ************************************************************/
 
+UINT	g_uThrottle;
+
 #define rx_buffer_end	RX_BUFFER_LENGTH	// ★ROM 化では消す
 #define tx_buffer_end	TX_BUFFER_LENGTH
 
@@ -154,6 +156,7 @@ INLINE void OutputSerial( void ){
 	SerialPack(( TA.TCA << 8 ) | g_IR.uVal & 0xFF );
 	SerialPack( g_DispVal.uGy );
 	SerialPack( g_DispVal.uGx );
+	SerialPack( g_uThrottle );
 	
 	/*** ラップタイム表示 ***/
 	if( g_Flags.bNewLap ){
@@ -173,6 +176,43 @@ void ProcessUIO( void ){
 	if( g_Flags.bOutputSerial )	OutputSerial();		// serial 出力
 	while( sci_read( &c, 1 )) DoInputSerial( c );	// serial 入力
 	ProcessPushSW();								// sw 入力
+}
+
+/*** ステート変化待ち & LED 表示 ********************************************/
+
+#undef WaitStateChange
+INLINE void WaitStateChange( void ){
+	ULONG	uGx 		= 0;
+	ULONG	uGy 		= 0;
+	ULONG	uThrottle	= 0;
+	UINT	uCnt		= 0;
+	
+	UCHAR	cTimerA;
+	
+	/*** ステート変化待ち ***/
+	
+	/*** WDT ***/
+	WDT.TCSRWD.BYTE = ( 1 << 6 );	// TCWE
+	WDT.TCWD		= 0;
+	
+	cTimerA = TA.TCA & ~( CALC_DIVCNT - 1 );
+	
+	while( cTimerA == ( TA.TCA & ~( CALC_DIVCNT - 1 ))){
+		uGx			+= G_SENSOR_Z;	// 前後 G の検出軸変更
+		uGy			+= G_SENSOR_Y;
+		uThrottle	+= ADC_THROTTLE;
+		++uCnt;
+		
+		// ★とりあえず高速化のためスキップ，ROM 化の際は復活させる
+		//if( !( uCnt & ( 128 - 1 ))) LED_Driver();
+	}
+	
+	// G の計算
+	g_DispVal.uGx = ((( UINT )( uGx / uCnt )) >> 1 ) + ( g_DispVal.uGx >> 1 );
+	g_DispVal.uGy = ((( UINT )( uGy / uCnt )) >> 1 ) + ( g_DispVal.uGy >> 1 );
+	
+	// スロットル
+	g_uThrottle	= uThrottle	/ uCnt;
 }
 
 /*** main *******************************************************************/

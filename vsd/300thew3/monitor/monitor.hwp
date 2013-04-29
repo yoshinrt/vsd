@@ -3,13 +3,13 @@
 [DATABASE_VERSION]
 "2.8" 
 [PROJECT_DETAILS]
-"monitor" "Z:\vsd\300thew3\monitor" "Z:\vsd\300thew3\monitor\monitor.hwp" "H8S,H8/300" "Renesas H8S,H8/300 Standard" "Empty Application" "" "" 
+"monitor" "C:\DDS\vsd\vsd\300thew3\monitor" "C:\DDS\vsd\vsd\300thew3\monitor\monitor.hwp" "H8S,H8/300" "Renesas H8S,H8/300 Standard" "Empty Application" "" "" 
 [INFORMATION]
 "No project information available" 
 [TOOL_CHAIN]
 "Renesas H8S,H8/300 Standard Toolchain" "7.0.0.0" 
 [CONFIGURATIONS]
-"Release" "Z:\vsd\300thew3\monitor\release" 
+"Release" "C:\DDS\vsd\vsd\300thew3\monitor\release" 
 [BUILD_PHASES]
 "Renesas H8S,H8/300 Assembler" 1 
 "Renesas H8S,H8/300 C/C++ Compiler" 1 
@@ -108,13 +108,13 @@
 "Object file" "Renesas OptLinker" "Renesas H8S,H8/300 Assembler" 
 "Object file" "Renesas OptLinker" "Renesas H8S,H8/300 C/C++ Compiler" 
 [PROJECT_FILES]
-"Z:\vsd\300thew3\monitor\monitor.c" "User" "C source file" 0 
-"Z:\vsd\300thew3\monitor\monitor.sub" "User" "Object file" 0 
-"Z:\vsd\dds.h" "User" "C header file" 2 
-"Z:\vsd\int_handler.src" "User" "Assembly source file" 2 
-"Z:\vsd\main.c" "User" "C source file" 2 
-"Z:\vsd\sci.c" "User" "C source file" 2 
-"Z:\vsd\sci.h" "User" "C header file" 2 
+"C:\DDS\vsd\vsd\300thew3\monitor\monitor.c" "User" "C source file" 0 
+"C:\DDS\vsd\vsd\300thew3\monitor\monitor.sub" "User" "Object file" 0 
+"C:\DDS\vsd\vsd\dds.h" "User" "C header file" 2 
+"C:\DDS\vsd\vsd\int_handler.src" "User" "Assembly source file" 2 
+"C:\DDS\vsd\vsd\main.c" "User" "C source file" 2 
+"C:\DDS\vsd\vsd\sci.c" "User" "C source file" 2 
+"C:\DDS\vsd\vsd\sci.h" "User" "C header file" 2 
 [FOLDER]
 "Assembly source file" "Assembly source file" 
 "C header file" "C header file" 
@@ -124,18 +124,18 @@
 [ON_DEMAND_COMPONENTS_LOADED]
 [SYNC_SESSION_NAMES]
 [SESSIONS]
-"DefaultSession" "Z:\vsd\300thew3\monitor\defaultsession.hsf" 0 
+"DefaultSession" "C:\DDS\vsd\vsd\300thew3\monitor\defaultsession.hsf" 0 
 [GENERAL_DATA_SESSION_DefaultSession]
 [OPTIONS_Release_Renesas H8S,H8/300 Assembler]
 "Assembly source file" "01340f6d3211dc10" 4 
+"C:\DDS\vsd\vsd\int_handler.src" "01340f6d3211dc10" 4 
 "Linkage symbol file" "01340f6d3211dc10" 4 
-"Z:\vsd\int_handler.src" "01340f6d3211dc10" 4 
 [OPTIONS_Release_Renesas H8S,H8/300 C/C++ Compiler]
 "C source file" "01340f6d3211dc10" 2 
 "C++ source file" "0161ddd38042dc10" 3 
-"Z:\vsd\300thew3\monitor\monitor.c" "01340f6d3211dc10" 2 
-"Z:\vsd\main.c" "01340f6d3211dc10" 2 
-"Z:\vsd\sci.c" "01340f6d3211dc10" 2 
+"C:\DDS\vsd\vsd\300thew3\monitor\monitor.c" "01340f6d3211dc10" 2 
+"C:\DDS\vsd\vsd\main.c" "01340f6d3211dc10" 2 
+"C:\DDS\vsd\vsd\sci.c" "01340f6d3211dc10" 2 
 [OPTIONS_Release_Renesas H8S,H8/300 C/C++ Library Generator]
 "Single Shot" "01340f6d3211dc10" 1 
 [OPTIONS_Release_Renesas OptLinker]

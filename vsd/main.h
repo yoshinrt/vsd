@@ -76,7 +76,9 @@
 	(( FONT_ ## a << 24 ) | ( FONT_ ## b << 16 ) | ( FONT_ ## c << 8 ) | FONT_ ## d )
 
 // AD 変換機レジスタ
-#define	G_SENSOR_X	AD.ADDRC
+#define	ADC_THROTTLE	AD.ADDRD
+#define	ADC_BRAKE		AD.ADDRC
+//#define	G_SENSOR_X	AD.ADDRC
 #define	G_SENSOR_Y	AD.ADDRB
 #define	G_SENSOR_Z	AD.ADDRA
 

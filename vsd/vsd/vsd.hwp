@@ -3,14 +3,14 @@
 [DATABASE_VERSION]
 "2.8" 
 [PROJECT_DETAILS]
-"vsd" "Z:\vsd\vsd" "Z:\vsd\vsd\vsd.hwp" "H8S,H8/300" "Renesas H8S,H8/300 Standard" "Application" "" "" 
+"vsd" "C:\DDS\vsd\vsd\vsd" "C:\DDS\vsd\vsd\vsd\vsd.hwp" "H8S,H8/300" "Renesas H8S,H8/300 Standard" "Application" "" "" 
 [INFORMATION]
 "プロジェクト情報がありません" 
 [TOOL_CHAIN]
 "Renesas H8S,H8/300 Standard Toolchain" "7.0.0.0" 
 [CONFIGURATIONS]
-"Debug" "Z:\vsd\vsd\debug" 
-"Release" "Z:\vsd\vsd\release" 
+"Debug" "C:\DDS\vsd\vsd\vsd\debug" 
+"Release" "C:\DDS\vsd\vsd\vsd\release" 
 [BUILD_PHASES]
 "Renesas H8S,H8/300 Assembler" 1 
 "Renesas H8S,H8/300 C/C++ Compiler" 1 
@@ -109,8 +109,8 @@
 "Object file" "Renesas OptLinker" "Renesas H8S,H8/300 Assembler" 
 "Object file" "Renesas OptLinker" "Renesas H8S,H8/300 C/C++ Compiler" 
 [PROJECT_FILES]
-"Z:\vsd\main.c" "User" "C source file" 2 
-"Z:\vsd\rom_entry.src" "User" "Assembly source file" 2 
+"C:\DDS\vsd\vsd\main.c" "User" "C source file" 2 
+"C:\DDS\vsd\vsd\rom_entry.src" "User" "Assembly source file" 2 
 [FOLDER]
 "Assembly source file" "Assembly source file" 
 "C source file" "C source file" 
@@ -119,16 +119,16 @@
 [ON_DEMAND_COMPONENTS_LOADED]
 [SYNC_SESSION_NAMES]
 [SESSIONS]
-"DefaultSession" "Z:\vsd\vsd\defaultsession.hsf" 0 
+"DefaultSession" "C:\DDS\vsd\vsd\vsd\defaultsession.hsf" 0 
 [GENERAL_DATA_SESSION_DefaultSession]
 [OPTIONS_Debug_Renesas H8S,H8/300 Assembler]
 "Assembly source file" "0b33994d3211dc10" 4 
+"C:\DDS\vsd\vsd\rom_entry.src" "0b33994d3211dc10" 4 
 "Linkage symbol file" "0b33994d3211dc10" 4 
-"Z:\vsd\rom_entry.src" "0b33994d3211dc10" 4 
 [OPTIONS_Debug_Renesas H8S,H8/300 C/C++ Compiler]
 "C source file" "0b33994d3211dc10" 2 
 "C++ source file" "0161ddd38042dc10" 3 
-"Z:\vsd\main.c" "0b33994d3211dc10" 2 
+"C:\DDS\vsd\vsd\main.c" "0b33994d3211dc10" 2 
 [OPTIONS_Debug_Renesas H8S,H8/300 C/C++ Library Generator]
 "Single Shot" "0b33994d3211dc10" 1 
 [OPTIONS_Debug_Renesas OptLinker]
@@ -146,12 +146,12 @@
 [GENERAL_DATA_CONFIGURATION_Debug]
 [OPTIONS_Release_Renesas H8S,H8/300 Assembler]
 "Assembly source file" "026bc94d3211dc10" 4 
+"C:\DDS\vsd\vsd\rom_entry.src" "026bc94d3211dc10" 4 
 "Linkage symbol file" "026bc94d3211dc10" 4 
-"Z:\vsd\rom_entry.src" "026bc94d3211dc10" 4 
 [OPTIONS_Release_Renesas H8S,H8/300 C/C++ Compiler]
 "C source file" "043062288042dc10" 2 
 "C++ source file" "0161ddd38042dc10" 3 
-"Z:\vsd\main.c" "043062288042dc10" 2 
+"C:\DDS\vsd\vsd\main.c" "043062288042dc10" 2 
 [OPTIONS_Release_Renesas H8S,H8/300 C/C++ Library Generator]
 "Single Shot" "026bc94d3211dc10" 1 
 [OPTIONS_Release_Renesas OptLinker]
