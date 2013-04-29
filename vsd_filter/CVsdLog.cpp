@@ -309,58 +309,57 @@ UINT CVsdLog::GPSLogRescan( void ){
 				SetRawGx( GetCnt() - 1, 0 ); SetRawGy( GetCnt() - 1, 0 );
 			}
 			
+			int iStart = ( G_SMOOTH_NUM - 1 ) / 2;
+			if( iStart < 2 ) iStart = 2;
+			int iEnd = GetCnt() - G_SMOOTH_NUM / 2;
+			if( iEnd >= GetCnt() - 2 ) iEnd = GetCnt() - 2;
+			
+			double dSumGx = NaN;
+			double dSumGy;
+			float fBufGx[ G_SMOOTH_NUM ];
+			float fBufGy[ G_SMOOTH_NUM ];
+			
 			for( UINT v = G_SMOOTH_CNT; v; --v ){
-				dMaxGx = dMaxGy = -FLT_MAX;
-				dMinGx = dMinGy =  FLT_MAX;
-				double dx0, dy0;
-				dx0 = dy0 = 0;
+				dMaxGx = dMaxGy = 0;
+				dMinGx = dMinGy = 0;
 				
 				#pragma omp for
-				for( int i = ( G_SMOOTH_NUM - 1 ) / 2; i < GetCnt() - G_SMOOTH_NUM / 2; ++i ){
+				for( int i = iStart; i < iEnd; ++i ){
 					
-					// 番犬分は処理スキップ
-					if( i < 2 || i >= GetCnt() - 2 ) continue;
+					if( _isnan( dSumGx )){
+						dSumGx = 0;
+						dSumGy = 0;
+						
+						// バッファ初期化
+						for( int j = i - ( G_SMOOTH_NUM - 1 ) / 2; j < i + G_SMOOTH_NUM / 2; ++j ){
+							fBufGx[ j % G_SMOOTH_NUM ] = ( float )Gx( j ); dSumGx += Gx( j );
+							fBufGy[ j % G_SMOOTH_NUM ] = ( float )Gy( j ); dSumGy += Gy( j );
+						}
+					}
+					
+					// スムージング対象データの最後尾をロード
+					int k = i + G_SMOOTH_NUM / 2;
+					fBufGx[ k % G_SMOOTH_NUM ] = ( float )Gx( k ); dSumGx += Gx( k );
+					fBufGy[ k % G_SMOOTH_NUM ] = ( float )Gy( k ); dSumGy += Gy( k );
 					
 					if( Speed( i ) == 0 ){
 						SetRawGx( i, 0 );
 						SetRawGy( i, 0 );
-						
-						if( dMaxGx < 0 ) dMaxGx = 0;
-						if( dMinGx > 0 ) dMinGx = 0;
-						if( dMaxGy < 0 ) dMaxGy = 0;
-						if( dMinGy > 0 ) dMinGy = 0;
 					}else{
 						double dx, dy;
+						SetRawGx( i, dx = dSumGx / G_SMOOTH_NUM );
+						SetRawGy( i, dy = dSumGy / G_SMOOTH_NUM );
 						
-						SetRawGx( i, dx = (
-							( G_SMOOTH_NUM >= 7 ? Gx( i - 3 ) : 0 ) +
-							( G_SMOOTH_NUM >= 6 ? Gx( i + 3 ) : 0 ) +
-							( G_SMOOTH_NUM >= 5 ? Gx( i - 2 ) : 0 ) +
-							( G_SMOOTH_NUM >= 4 ? Gx( i + 2 ) : 0 ) +
-							( G_SMOOTH_NUM >= 3 ? Gx( i - 1 ) : 0 ) +
-							( G_SMOOTH_NUM >= 2 ? Gx( i + 1 ) : 0 ) +
-							Gx( i + 0 )
-						) / G_SMOOTH_NUM );
-						SetRawGy( i, dy = (
-							( G_SMOOTH_NUM >= 7 ? Gy( i - 3 ) : 0 ) +
-							( G_SMOOTH_NUM >= 6 ? Gy( i + 3 ) : 0 ) +
-							( G_SMOOTH_NUM >= 5 ? Gy( i - 2 ) : 0 ) +
-							( G_SMOOTH_NUM >= 4 ? Gy( i + 2 ) : 0 ) +
-							( G_SMOOTH_NUM >= 3 ? Gy( i - 1 ) : 0 ) +
-							( G_SMOOTH_NUM >= 2 ? Gy( i + 1 ) : 0 ) +
-							Gy( i + 0 )
-						) / G_SMOOTH_NUM );
-						
-						if( v == 1 ){
-							dx0 = dx * G_SMOOTH_RATIO + dx0 * ( 1 - G_SMOOTH_RATIO );
-							dy0 = dy * G_SMOOTH_RATIO + dy0 * ( 1 - G_SMOOTH_RATIO );
-							
-							if( dMaxGx < dx0 ) dMaxGx = dx0;
-							if( dMinGx > dx0 ) dMinGx = dx0;
-							if( dMaxGy < dy0 ) dMaxGy = dy0;
-							if( dMinGy > dy0 ) dMinGy = dy0;
-						}
+						if(      dMaxGx < dx ) dMaxGx = dx;
+						else if( dMinGx > dx ) dMinGx = dx;
+						if(      dMaxGy < dy ) dMaxGy = dy;
+						else if( dMinGy > dy ) dMinGy = dy;
 					}
+					
+					// スムージング対象データの先頭をアンロード
+					k = i - ( G_SMOOTH_NUM - 1 ) / 2;
+					dSumGx -= fBufGx[ k % G_SMOOTH_NUM ];
+					dSumGy -= fBufGy[ k % G_SMOOTH_NUM ];
 				}
 			}
 			
@@ -709,10 +708,11 @@ void CVsdLog::RotateMap( double dAngle ){
 	
 	if( !m_pLogLongitude ) return;
 	
-	if( m_pLogX ){
-		m_pLogX->InitMinMax();
-		m_pLogY->InitMinMax();
-	}
+	GetElement( "X", TRUE );
+	GetElement( "Y", TRUE );
+	
+	m_pLogX->InitMinMax();
+	m_pLogY->InitMinMax();
 	
 	for( int i = 0; i < GetCnt(); ++i ){
 		SetX( i,  cos( dAngle ) * X0( i ) + sin( dAngle ) * Y0( i ));

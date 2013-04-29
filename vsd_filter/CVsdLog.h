@@ -322,14 +322,12 @@ class CVsdLog {
 	#include "def_log.h"
 	
 	#define DEF_LOG( name )	void Set##name( int iIndex, double dVal ){ \
-		if( !m_pLog##name ) GetElement( #name, TRUE ); \
 		m_pLog##name->Set( iIndex, dVal ); \
 		if( m_iCnt <= iIndex ) m_iCnt = iIndex + 1; \
 	}
 	#include "def_log.h"
 	
 	#define DEF_LOG( name )	void SetRaw##name( int iIndex, double dVal ){ \
-		if( !m_pLog##name ) GetElement( #name, TRUE ); \
 		m_pLog##name->SetRaw( iIndex, dVal ); \
 		if( m_iCnt <= iIndex ) m_iCnt = iIndex + 1; \
 	}

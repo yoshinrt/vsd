@@ -34,6 +34,10 @@ function ReadVsdLog( Files ){
 		Log.Accel[ i ] = Accel;
 	}
 	
+	if( typeof Log.Longitude == 'object' ){
+		SmoothLowFreqLogSingle( Log.Longitude, Ret );
+		SmoothLowFreqLogSingle( Log.Latitude,  Ret );
+	}
 	return Ret;
 	
 	function StrToUTC( str ){

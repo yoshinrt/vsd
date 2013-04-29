@@ -53,7 +53,6 @@ function ReadCSV( Files, ParamDef ){
 	var ParamUsed = [];
 	
 	var	Cnt = 0;
-	var GPSValid = true;
 	
 	for( var i = 0; i < Files.length; ++i ){
 		var file = new File();
@@ -70,8 +69,6 @@ function ReadCSV( Files, ParamDef ){
 				ParamDef[ Header[ i ]][ 2 ] = i;
 				ParamUsed.push( ParamDef[ Header[ i ]] );
 				Log[ ParamDef[ Header[ i ]][ 0 ]] = [];
-				
-				if( ParamDef[ Header[ i ]][ 0 ] == 'Longitude' ) GPSValid = false;
 			}
 		}
 		
@@ -88,30 +85,15 @@ function ReadCSV( Files, ParamDef ){
 					// 係数なら，param に掛ける
 					Log[ ParamUsed[ j ][ 0 ]][ Cnt ] =
 						Param[ ParamUsed[ j ][ 2 ]] * ParamUsed[ j ][ 1 ];
-				}else if( Cnt ){
-					// データがない場合，1個前をコピー
-					Log[ ParamUsed[ j ][ 0 ]][ Cnt ] =
-						Log[ ParamUsed[ j ][ 0 ]][ Cnt -1 ];
 				}
 			}
-			
-			// GPS が補足できるまでのデータを補正
-			if( !GPSValid && !isNaN( Log.Longitude[ Cnt ] )){
-				GPSValid = true;
-				
-				for( var j = 0; j < Cnt; ++j ){
-					Log.Longitude[ j ] = Log.Longitude[ Cnt ];
-					Log.Latitude[ j ]  = Log.Latitude[ Cnt ];
-				}
-			}
-			
 			++Cnt;
 		}
 		file.Close();
 	}
 	
 	// 最後まで GPS が捕捉できなければ，Long Lati を削除
-	if( !GPSValid ){
+	if( typeof Log.Latitude == 'object' && Log.Latitude.length == 0 ){
 		delete Log.Longitude;
 		delete Log.Latitude;
 	}
