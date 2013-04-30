@@ -403,7 +403,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				iSpeedRaw	= Unpack();
 
 				// ここで描画要求
-			//	DrawHandler.sendEmptyMessage( 0 );
+				DrawHandler.sendEmptyMessage( 0 );
 
 				if( iBufPtr < iEOLPos ){
 					iMileage16	= Unpack();
@@ -411,8 +411,8 @@ public class Vsdroid extends Activity implements SensorEventListener {
 					iIRCnt		= iTSCRaw;
 					iTSCRaw		>>= 8;
 
-					iGy			= ( int )( Unpack() * 1000 / ACC_1G_Y );
-					iGx			= ( int )( Unpack() * 1000 / ACC_1G_Z );
+					iGy			= ( int )( Unpack() * ( 1000 / ACC_1G_Y / 0.86054332 ));	// 斜めに設置しているので補正
+					iGx			= ( int )( Unpack() * ( 1000 / ACC_1G_Z ));
 					iThrottleRaw	= 0x7FFFFFFF / Unpack();
 					
 					if( iGCaribCnt-- > 0 ){
@@ -453,8 +453,6 @@ public class Vsdroid extends Activity implements SensorEventListener {
 						if( iThrottle < 0 ) iThrottle = 0;
 						else if( iThrottle > 1000 ) iThrottle = 1000;
 					}
-
-DrawHandler.sendEmptyMessage( 0 );
 					
 					// mileage 補正
 					if(( iMileageRaw & 0xFFFF ) > iMileage16 ) iMileageRaw += 0x10000;
@@ -1226,7 +1224,7 @@ DrawHandler.sendEmptyMessage( 0 );
 			paint.setColor( Color.GRAY );
 			canvas.drawText( FormatTime( Vsd.iTimeBestRaw ), 340, 470, paint );
 			
-			{
+			if( bDebug ){
 				// デバッグ用
 				int	y = 0;
 				paint.setColor( Color.CYAN );
