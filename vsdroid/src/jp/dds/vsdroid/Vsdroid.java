@@ -1,7 +1,6 @@
 package jp.dds.vsdroid;
 
 import java.util.Calendar;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -25,17 +24,19 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.hardware.Camera;
-
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.util.UUID;
-
 import java.io.*;
 import java.util.*;
 
-public class Vsdroid extends Activity {
+public class Vsdroid extends Activity implements SensorEventListener {
 
 	private static final boolean	bDebug		= false;
 
@@ -76,12 +77,19 @@ public class Vsdroid extends Activity {
 	// モード・config
 	int		iMainMode	= MODE_LAPTIME;
 	int		iConnMode	= CONN_MODE_ETHER;
-
+	
+	private static final double GRAVITY = 9.80665;
+	
 	private static final UUID BT_UUID = UUID.fromString( "00001101-0000-1000-8000-00805F9B34FB" );
 
 	private static final int SHOW_CONFIG		= 0;
 	private static final int REQUEST_ENABLE_BT	= 1;
-
+	
+    // G センサー用
+    private SensorManager manager;
+	int	iPhoneGxRaw = 0;
+	int	iPhoneGyRaw = 0;
+	
 	enum LAP_STATE {
 		NONE,
 		START,
@@ -167,9 +175,16 @@ public class Vsdroid extends Activity {
 		int 	iSectorCntMax	= 1;
 		Calendar	Cal;
 
-		double	dGx, dGy;
-		double	dGcx, dGcy;
+		int		iGx, iGy;
+		int		iGx0, iGy0;
+		int		iPhoneGx;
+		int		iPhoneGy;
+		int		iPhoneGx0;
+		int		iPhoneGy0;
 		int		iThrottle;
+		int		iThrottleRaw;
+		int		iThrottle0;
+		int		iThrottleFull;
 		double	dGymkhaStart	= 1;
 		boolean	bEcoMode		= false;
 
@@ -213,7 +228,7 @@ public class Vsdroid extends Activity {
 			iMileageRaw		= 0;
 			iTSCRaw			= 0;
 			iIRCnt			= 0;
-			iThrottle		= 0;
+			iThrottle0		= 0;
 			iSectorCnt		= 0;
 			iSectorCntMax	= 1;
 			dGymkhaStart	= 1;
@@ -237,8 +252,10 @@ public class Vsdroid extends Activity {
 			bLogStart		= false;
 			Sock			= null;
 
-			dGcx = dGcy		= 0;
+			iGx0 = iGy0		= 0;
 			iGCaribCnt		= iGCaribCntMax;
+			iPhoneGx0		= 0;
+			iPhoneGy0		= 0;
 
 			InStream		= null;
 			OutStream		= null;
@@ -302,7 +319,11 @@ public class Vsdroid extends Activity {
 
 			// ヘッダ
 			try{
-				if( fsLog != null ) fsLog.write( "Date/Time\tTacho\tSpeed\tDistance\tGy\tGx\tThrottle\tAuxInfo\tLapTime\tSectorTime\r\n" );
+				if( fsLog != null ) fsLog.write(
+					"Date/Time\tTacho\tSpeed\tDistance\t" +
+					"Gy\tGx\tGx(Device)\tGy(Device)\tThrottle\tThrottle(raw)\t" +
+					"AuxInfo\tLapTime\tSectorTime\r\n"
+				);
 			}catch( IOException e ){}
 
 			return 0;
@@ -390,30 +411,51 @@ public class Vsdroid extends Activity {
 					iIRCnt		= iTSCRaw;
 					iTSCRaw		>>= 8;
 
-					dGx			= Unpack();
-					dGy			= Unpack();
-					iThrottle	= Unpack();
-					
-					iSpeedRaw = ( int )(( 1.0 / iThrottle - 7.5395E-06 ) / 2.5928E-06 * 10000 );
-					DrawHandler.sendEmptyMessage( 0 );
+					iGy			= ( int )( Unpack() * 1000 / ACC_1G_Y );
+					iGx			= ( int )( Unpack() * 1000 / ACC_1G_Z );
+					iThrottleRaw	= 0x7FFFFFFF / Unpack();
 					
 					if( iGCaribCnt-- > 0 ){
-						// G センサーキャリブレーション中
-						dGcx += dGx;
-						dGcy += dGy;
-
+						// センサーキャリブレーション中
+						iGx0		+= iGx;
+						iGy0		+= iGy;
+						iPhoneGx0	+= iPhoneGxRaw;
+						iPhoneGy0	+= iPhoneGyRaw;
+						iThrottle0	+= iThrottleRaw;
+						
 						if( iGCaribCnt == 0 ){
-							dGcx /= iGCaribCntMax;
-							dGcy /= iGCaribCntMax;
+							iGx0		/= iGCaribCntMax;
+							iGy0		/= iGCaribCntMax;
+							iPhoneGx0	/= iGCaribCntMax;
+							iPhoneGy0	/= iGCaribCntMax;
+							iThrottle0	/= iGCaribCntMax;
+							
+							iThrottleFull = iThrottle0 - 10000;	// スロットル全開の暫定値
 						}
-
-						dGx	= 0;
-						dGy	= 0;
+						
+						iGx			= 0;
+						iGy			= 0;
+						iPhoneGx	= 0;
+						iPhoneGy	= 0;
+						iThrottle	= 0;
 					}else{
-						dGx	= -( dGx - dGcx ) / ACC_1G_Y;
-						dGy	=  ( dGy - dGcy ) / ACC_1G_Z;
+						iGx			= iGx - iGx0;
+						iGy			= iGy - iGy0;
+						iPhoneGx	= iPhoneGxRaw - iPhoneGx0;
+						iPhoneGy	= iPhoneGyRaw - iPhoneGy0;
+						
+						// スロットル全開値補正
+						if( iThrottleRaw < iThrottleFull ){
+							iThrottleFull -= ( iThrottleFull - iThrottleRaw ) >> 4;	// 1/16 だけ補正する
+						}
+						
+						iThrottle	= ( iThrottleRaw - iThrottle0 ) * 1000 / ( iThrottleFull - iThrottle0 );
+						if( iThrottle < 0 ) iThrottle = 0;
+						else if( iThrottle > 1000 ) iThrottle = 1000;
 					}
 
+DrawHandler.sendEmptyMessage( 0 );
+					
 					// mileage 補正
 					if(( iMileageRaw & 0xFFFF ) > iMileage16 ) iMileageRaw += 0x10000;
 					iMileageRaw &= 0xFFFF0000;
@@ -510,7 +552,9 @@ public class Vsdroid extends Activity {
 			s = String.format(
 				"%04d-%02d-%02d" +
 				"T%02d:%02d:%02d.%03dZ\t" +
-				"%d\t%.2f\t%.2f\t%.4f\t%.4f\t%d\t%d",
+				"%d\t%.2f\t%.2f\t" +
+				"%.3f\t%.3f\t%.3f\t%.3f\t" +
+				"%.1f\t%d\t%d",
 				Cal.get( Calendar.YEAR ),
 				Cal.get( Calendar.MONTH ) + 1,
 				Cal.get( Calendar.DATE ),
@@ -520,7 +564,9 @@ public class Vsdroid extends Activity {
 				Cal.get( Calendar.MILLISECOND ),
 				iTacho, ( double )iSpeedRaw / 100,
 				( double )iMileageRaw / PULSE_PER_1KM * 1000,
-				dGy, dGx, iThrottle, iIRCnt
+				iGy / 1000.0, iGx / 1000.0, iPhoneGx / 1000.0, iPhoneGy / 1000.0,
+				iThrottle / 10.0, iThrottleRaw,
+				iIRCnt
 			);
 
 			// ラップタイム
@@ -1179,7 +1225,22 @@ public class Vsdroid extends Activity {
 			canvas.drawText( FormatTime( Vsd.iTimeLastRaw ), 340, 410, paint );
 			paint.setColor( Color.GRAY );
 			canvas.drawText( FormatTime( Vsd.iTimeBestRaw ), 340, 470, paint );
-
+			
+			{
+				// デバッグ用
+				int	y = 0;
+				paint.setColor( Color.CYAN );
+				paint.setTextSize( 30 );
+				canvas.drawText( String.format( "Throttle(raw): %d", Vsd.iThrottleRaw ), 0, y += 30, paint );
+				canvas.drawText( String.format( "Throttle(full): %d", Vsd.iThrottleFull ), 0, y += 30, paint );
+				canvas.drawText( String.format( "Throttle(cm): %.2f", ( Vsd.iThrottleRaw / ( double )0x7FFFFFFF - 7.5395E-06 ) / 2.5928E-06 ), 0, y += 30, paint );
+				canvas.drawText( String.format( "Throttle(%%): %.1f", Vsd.iThrottle / 10.0 ), 0, y += 30, paint );
+				canvas.drawText( String.format( "Gx: %.2f", Vsd.iGx / 1000.0 ), 0, y += 30, paint );
+				canvas.drawText( String.format( "Gy: %.2f", Vsd.iGy / 1000.0 ), 0, y += 30, paint );
+				canvas.drawText( String.format( "Gx(dev): %.2f", Vsd.iPhoneGx / 1000.0 ), 0, y += 30, paint );
+				canvas.drawText( String.format( "Gy(dev): %.2f", Vsd.iPhoneGy / 1000.0 ), 0, y += 30, paint );
+			}
+			
 			getHolder().unlockCanvasAndPost( canvas );
 		}
 	}
@@ -1274,6 +1335,7 @@ public class Vsdroid extends Activity {
 		getWindow().addFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
 
 		setContentView( new VsdSurfaceView( this ));
+		manager = ( SensorManager )getSystemService( SENSOR_SERVICE );
 
 		// preference 参照
 		Pref = PreferenceManager.getDefaultSharedPreferences( this );
@@ -1287,6 +1349,35 @@ public class Vsdroid extends Activity {
 		}
 	}
 
+	@Override
+	protected void onStop() {
+		// TODO Auto-generated method stub
+		super.onStop();
+		// Listenerの登録解除
+		manager.unregisterListener( this );
+	}
+
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		// Listenerの登録
+		List<Sensor> sensors = manager.getSensorList( Sensor.TYPE_ACCELEROMETER );
+		if( sensors.size() > 0 ){
+			Sensor s = sensors.get( 0 );
+			manager.registerListener( this, s, SensorManager.SENSOR_DELAY_UI );
+		}
+	}
+	
+	@Override
+	public void onSensorChanged( SensorEvent event ){
+		// TODO Auto-generated method stub
+		if( event.sensor.getType() == Sensor.TYPE_ACCELEROMETER ){
+			iPhoneGxRaw = ( int )( -event.values[ SensorManager.DATA_Y ] * ( 1000 / GRAVITY ));
+			iPhoneGyRaw = ( int )( -event.values[ SensorManager.DATA_Z ] * ( 1000 / GRAVITY ));
+		}
+	}
+	
 	void CreateVsdInterface( int iNewMode ){
 		// VSD コネクション
 		Vsd =	iNewMode == CONN_MODE_BLUETOOTH	? new VsdInterfaceBluetooth() :
@@ -1298,11 +1389,14 @@ public class Vsdroid extends Activity {
 		VsdThread.start();
 		iConnMode = iNewMode;
 	}
-
+	
 	@Override
 	protected void onDestroy(){
 		super.onDestroy();
 		Vsd.KillThread();
 		if( bDebug ) Log.d( "VSDroid", "Activity::onDestroy finished" );
 	}
+
+	@Override
+	public void onAccuracyChanged(Sensor arg0, int arg1) {}
 }
