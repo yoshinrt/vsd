@@ -16,6 +16,7 @@ function ReadVsdLog( Files ){
 		"Distance"		: [	"Distance",		1 ],
 		"Gy"			: [ "Gy",			1 ],
 		"Gx"			: [ "Gx",			1 ],
+		"Throttle"		: [ "Accel",		1 ],
 		"Longitude"		: [ "Longitude",	1 ],
 		"Latitude"		: [ "Latitude",		1 ],
 		"LapTime"		: [ "LapTime",		StrToLapTime ],
@@ -24,6 +25,7 @@ function ReadVsdLog( Files ){
 	var Ret = ReadCSV( Files, ParamDef );
 	
 	// Accel 偽造
+	/*
 	Log.Accel = [ 0 ];
 	
 	for( var i = 1; i < Ret; ++i ){
@@ -33,6 +35,7 @@ function ReadVsdLog( Files ){
 		if( Accel > 50 ) Accel = 50;
 		Log.Accel[ i ] = Accel;
 	}
+	*/
 	
 	if( typeof Log.Longitude == 'object' ){
 		SmoothLowFreqLogSingle( Log.Longitude, Ret );

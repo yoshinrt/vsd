@@ -47,7 +47,7 @@ function Initialize(){
 	GraphParam = [
 		"Speed",	"%.0f km/h",	0x00FFFF,
 		"Tacho",	"%.0f rpm",		0xFF4000,
-	//	"Accel",	"%.0f %%",		0x00FF00,
+		"Accel",	"%.0f %%",		0xFFFF00,
 		"Gx",		"%.2f G[lon]",	0x00FF00,
 		"Gy",		"%.2f G[lat]",	0xFF00FF,
 	];
@@ -59,8 +59,8 @@ function Initialize(){
 function Draw(){
 	Vsd.DrawCircle( MeterCx, MeterCy, 150 * Scale, 0x80000000, DRAW_FILL );
 	
-	if( Vsd.MaxTacho > 0 ){
-		var GauageColor = Vsd.Tacho > REV_LIMIT && ( Vsd.FrameCnt & 0x2 ) ? 0xFF4040 : 0x804040FF;
+	if( Vsd.Tacho >= 1 ){
+		var GauageColor = Vsd.Tacho > REV_LIMIT && ( Vsd.FrameCnt & 0x2 ) ? 0xFF4040 : 0x404040FF;
 		
 		// タコメーター針
 		Vsd.DrawArc(
