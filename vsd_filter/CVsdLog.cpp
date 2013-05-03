@@ -27,6 +27,9 @@ CVsdLog::CVsdLog( CVsdFilter *pVsd ){
 	m_iCnt		= 0;
 	m_pVsd		= pVsd;
 	
+	m_iCalibStart	=
+	m_iCalibStop	= -1;
+	
 	#define DEF_LOG( name )	m_pLog##name = NULL;
 	#include "def_log.h"
 }
@@ -650,8 +653,10 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				// キャリブレーション時の時間を記録
 				if( uCalibrating ){
 					if( uCalibrating == 1 ){
-						m_dCalibStart = m_dCalibStop;
-						m_dCalibStop  = GetTime( GetCnt() - 1 );
+						m_iCalibStart = m_iCalibStop;
+						m_iCalibStop  = GetTime( GetCnt() - 1 );
+						
+						if( m_iCalibStart < 0 ) m_iCalibStart = m_iCalibStop;
 					}
 					// 300km/h に戻す
 					SetRawSpeed( GetCnt() - 1, CALIB_MARK_SPEED );

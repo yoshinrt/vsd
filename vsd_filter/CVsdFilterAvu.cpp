@@ -1577,8 +1577,8 @@ BOOL func_update( FILTER *filter, int status ){
 			}
 		#else
 			if( filter->check[ CHECK_LOGPOS ] && g_Vsd->m_VsdLog ){
-				filter->track[ PARAM_LSt ] = ( int )( g_Vsd->m_VsdLog->m_dCalibStart * SLIDER_TIME );
-				filter->track[ PARAM_LEd ] = ( int )( g_Vsd->m_VsdLog->m_dCalibStop  * SLIDER_TIME );
+				filter->track[ PARAM_LSt ] = ( int )( g_Vsd->m_VsdLog->m_iCalibStart * SLIDER_TIME );
+				filter->track[ PARAM_LEd ] = ( int )( g_Vsd->m_VsdLog->m_iCalibStop  * SLIDER_TIME );
 				
 				// Ý’èÄ•`‰æ
 				filter->exfunc->filter_window_update( filter );

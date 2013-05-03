@@ -235,8 +235,8 @@ class CVsdLog {
 	INT64	m_iLogStartTime;	// ログ開始時間
 	
 	// VSD ログ位置自動認識用
-	int		m_dCalibStart;
-	int		m_dCalibStop;
+	int		m_iCalibStart;
+	int		m_iCalibStop;
 	
 	// ログの map
 	std::map<std::string, CLog *> m_Logs;

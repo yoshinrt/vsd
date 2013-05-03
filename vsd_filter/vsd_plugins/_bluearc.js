@@ -59,14 +59,16 @@ function Initialize(){
 function Draw(){
 	Vsd.DrawCircle( MeterCx, MeterCy, 150 * Scale, 0x80000000, DRAW_FILL );
 	
-	if( Vsd.Tacho >= 1 ){
-		var GauageColor = Vsd.Tacho > REV_LIMIT && ( Vsd.FrameCnt & 0x2 ) ? 0xFF4040 : 0x404040FF;
-		
-		// タコメーター針
-		Vsd.DrawArc(
-			MeterCx, MeterCy, 120 * Scale, 120 * Scale, 80 * Scale, 80 * Scale,
-			135, 135 + 270 * Vsd.Tacho / MaxTacho, GauageColor
-		);
+	if( MaxTacho > 0 ){
+		if( Vsd.Tacho >= 1 ){
+			var GauageColor = Vsd.Tacho > REV_LIMIT && ( Vsd.FrameCnt & 0x2 ) ? 0xFF4040 : 0x804040FF;
+			
+			// タコメーター針
+			Vsd.DrawArc(
+				MeterCx, MeterCy, 120 * Scale, 120 * Scale, 80 * Scale, 80 * Scale,
+				135, 135 + 270 * Vsd.Tacho / MaxTacho, GauageColor
+			);
+		}
 	}else if( Vsd.Speed >= 1 ){
 		// スピードメーター針
 		Vsd.DrawArc(
