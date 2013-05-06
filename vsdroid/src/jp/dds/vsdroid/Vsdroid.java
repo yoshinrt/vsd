@@ -578,7 +578,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				break;
 
 			  case SECTOR:
-				s += "\t\t" + FormatTime2( iRtcPrevRaw - iRtcRaw );
+				s += "\t\t" + FormatTime2( iRtcRaw - iRtcPrevRaw );
 			}
 
 			try{
