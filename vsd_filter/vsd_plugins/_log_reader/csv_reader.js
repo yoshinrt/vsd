@@ -17,7 +17,7 @@ LogReaderInfo.push({
 function ReadTorqueLiteLog( Files ){
 	
 	var ParamDef = {
-		// csv 項目名							Vsd 変数名		function or 乗数
+		// csv 項目名						Vsd プロパティ名	function or 乗数
 		"Device Time"						: [ "Time",			StrToUTC ],
 		"Speed (OBD)(km/h)"					: [ "Speed",		1 ],
 		"Engine RPM(rpm)"					: [ "Tacho",		1 ],

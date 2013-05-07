@@ -543,18 +543,6 @@ void CVsdFilter::FillPolygon( tRABY uColor ){
 
 /*** まともなポリゴン描画 ***************************************************/
 
-template<class T> struct Coord {
-	T x;
-	T y;
-	
-	// コンストラクタ
-	Coord( T _x = 0, T _y = 0 ) : x( _x ), y ( _y ){}
-	
-	// 演算子の多重定義
-	bool operator==( const Coord& c ) const { return( x == c.x && y == c.y ); }
-	bool operator!=( const Coord& c ) const { return( x != c.x || y != c.y ); }
-};
-
 /* 辺の定義 */
 struct Edge {
 	USHORT	x, y;	// 始点座標
@@ -567,7 +555,6 @@ enum {
 	EDGE_H_DEL_END	= 3,
 };
 
-typedef std::vector< Coord<int> > VecCoord; // 座標の配列の型定義
 typedef std::vector<Edge> VecEdge; // 辺リストの型定義
 
 /*
@@ -1098,50 +1085,54 @@ void CVsdFilter::CalcLapTime( void ){
 	
 	if( m_CurLog && m_LapLog->m_iCurTime != TIME_NONE ){
 		
-		// ベストラップ開始の LogNum
-		double dBestLapLogNumStart = LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap );
-		
-		// 現在ラップ開始の LogNum
-		double dCurLapLogNumStart = LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx );
-		
-		// この周の走行距離を求める
-		double dDistanceCurLapStart = m_CurLog->Distance( dCurLapLogNumStart );
-		double dDistance = m_CurLog->Distance() - dDistanceCurLapStart;
-		
-		// この周の 1周の走行距離から，現在の走行距離を補正する
-		double dDistanceBestLapStart = m_CurLog->Distance( dBestLapLogNumStart );
-		dDistance =
-			dDistance
-			* ( m_CurLog->Distance( LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap + 1 )) - dDistanceBestLapStart )
-			/ ( m_CurLog->Distance( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx  + 1 )) - dDistanceCurLapStart );
-		
-		// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
-		// m_LapLog->m_iBestLogNumRunning <= 最終的に求める結果 < m_LapLog->m_iBestLogNumRunning + 1  となる
-		// m_LapLog->m_iBestLogNumRunning がおかしかったら，リセット
-		if(
-			m_LapLog->m_iBestLogNumRunning < dBestLapLogNumStart ||
-			m_LapLog->m_iBestLogNumRunning >= m_CurLog->GetCnt() ||
-			( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ) - dDistanceBestLapStart ) > dDistance
-		) m_LapLog->m_iBestLogNumRunning = ( int )dBestLapLogNumStart;
-		
-		for(
-			;
-			( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning + 1 ) - dDistanceBestLapStart ) <= dDistance &&
-			m_LapLog->m_iBestLogNumRunning < m_CurLog->GetCnt();
-			++m_LapLog->m_iBestLogNumRunning
-		);
-		
-		// 最速 Lap の，1/15秒以下の値を求める = A / B
-		double dBestLapLogNumRunning =
-			( double )m_LapLog->m_iBestLogNumRunning +
-			// A: 最速ラップは，後これだけ走らないと dDistance と同じではない
-			( dDistance - ( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ) - dDistanceBestLapStart )) /
-			// B: 最速ラップは，1/15秒の間にこの距離を走った
-			( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning + 1 ) - m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ));
-		
-		m_LapLog->m_iDiffTime =
-			( m_CurLog->GetTime() - m_CurLog->GetTime( dCurLapLogNumStart )) -
-			( m_CurLog->GetTime( dBestLapLogNumRunning ) - m_CurLog->GetTime( dBestLapLogNumStart ));
+		if( m_LapLog->m_iBestLap == m_LapLog->m_iLapIdx ){
+			m_LapLog->m_iDiffTime = 0;
+		}else{
+			// ベストラップ開始の LogNum
+			double dBestLapLogNumStart = LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap );
+			
+			// 現在ラップ開始の LogNum
+			double dCurLapLogNumStart = LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx );
+			
+			// この周の走行距離を求める
+			double dDistanceCurLapStart = m_CurLog->Distance( dCurLapLogNumStart );
+			double dDistance = m_CurLog->Distance() - dDistanceCurLapStart;
+			
+			// この周の 1周の走行距離から，現在の走行距離を補正する
+			double dDistanceBestLapStart = m_CurLog->Distance( dBestLapLogNumStart );
+			dDistance =
+				dDistance
+				* ( m_CurLog->Distance( LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap + 1 )) - dDistanceBestLapStart )
+				/ ( m_CurLog->Distance( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx  + 1 )) - dDistanceCurLapStart );
+			
+			// 最速 Lap の，同一走行距離におけるタイム (=ログ番号,整数) を求める
+			// m_LapLog->m_iBestLogNumRunning <= 最終的に求める結果 < m_LapLog->m_iBestLogNumRunning + 1  となる
+			// m_LapLog->m_iBestLogNumRunning がおかしかったら，リセット
+			if(
+				m_LapLog->m_iBestLogNumRunning < dBestLapLogNumStart ||
+				m_LapLog->m_iBestLogNumRunning >= m_CurLog->GetCnt() ||
+				( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ) - dDistanceBestLapStart ) > dDistance
+			) m_LapLog->m_iBestLogNumRunning = ( int )dBestLapLogNumStart;
+			
+			for(
+				;
+				( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning + 1 ) - dDistanceBestLapStart ) <= dDistance &&
+				m_LapLog->m_iBestLogNumRunning < m_CurLog->GetCnt();
+				++m_LapLog->m_iBestLogNumRunning
+			);
+			
+			// 最速 Lap の，1/15秒以下の値を求める = A / B
+			double dBestLapLogNumRunning =
+				( double )m_LapLog->m_iBestLogNumRunning +
+				// A: 最速ラップは，後これだけ走らないと dDistance と同じではない
+				( dDistance - ( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ) - dDistanceBestLapStart )) /
+				// B: 最速ラップは，1/15秒の間にこの距離を走った
+				( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning + 1 ) - m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ));
+			
+			m_LapLog->m_iDiffTime =
+				( m_CurLog->GetTime() - m_CurLog->GetTime( dCurLapLogNumStart )) -
+				( m_CurLog->GetTime( dBestLapLogNumRunning ) - m_CurLog->GetTime( dBestLapLogNumStart ));
+		}
 	}
 }
 
