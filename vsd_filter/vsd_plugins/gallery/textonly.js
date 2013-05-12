@@ -2,7 +2,7 @@
 
 function Initialize(){
 	// 使用する画像・フォントの宣言
-	FontM = new Font( "ＭＳ ゴシック", 18, FONT_OUTLINE | FONT_NOANTIALIAS );
+	FontM = new Font( "ＭＳ ゴシック", 12, FONT_OUTLINE | FONT_NOANTIALIAS );
 }
 
 //*** メーター描画処理 ******************************************************

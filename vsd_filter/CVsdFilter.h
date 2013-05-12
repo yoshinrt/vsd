@@ -14,6 +14,12 @@
 #include "CVsdImage.h"
 #include "pixel.h"
 
+#ifdef AVS_PLUGIN
+	#include "avisynth.h"
+#else
+	#include "filter.h"
+#endif
+
 /****************************************************************************/
 
 #define PROG_NAME		"VSDFilter"
@@ -90,11 +96,15 @@ typedef struct {
 	short	iLeft, iRight;
 } PolygonData_t;
 
-class CVsdFilter {
-	
+class CVsdFilter
+	#ifdef AVS_PLUGIN
+		: public GenericVideoFilter
+	#endif
+{
   public:
-	CVsdFilter();
 	~CVsdFilter();
+	void Constructor( void );
+	void Destructor( void );
 	
 	/*** 画像オペレーション *************************************************/
 	
@@ -102,14 +112,14 @@ class CVsdFilter {
 		int x, int y, tRABY uColor,
 		UINT uFlag	// !default:0
 	);
-	void         PutPixel( int x, int y, const PIXEL_YCA_ARG yc, UINT uFlag );
-	virtual void PutPixel( int x, int y, const PIXEL_YCA_ARG yc ) = 0;
-	void         FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT uFlag );
-	virtual void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ) = 0;
-	virtual UINT PutImage(	// !js_func
+	void PutPixel( int x, int y, const PIXEL_YCA_ARG yc, UINT uFlag );
+	void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
+	void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT uFlag );
+	void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
+	UINT PutImage(	// !js_func
 		int x, int y, CVsdImage &img,
 		UINT uAlign = 0	// !default:0
-	) = 0;
+	);
 	
 	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG yc, UINT uFlag );
 	void DrawLine( int x1, int y1, int x2, int y2, tRABY uColor, UINT uFlag );
@@ -186,10 +196,10 @@ class CVsdFilter {
 		CVsdFont &Font
 	);
 	
-	virtual void DrawSyncInfo( // !js_func
+	void DrawSyncInfo( // !js_func
 		int x, int y, CVsdFont &Font,
 		UINT uAlign = 0	// !default:0
-	) = 0;
+	);
 	
 	// ポリゴン描写
 	void InitPolygon( void );
@@ -275,7 +285,7 @@ class CVsdFilter {
 		return m_LapLog ? m_LapLog->m_Lap[ m_LapLog->m_iLapNum - 1 ].uLap : 0;
 	}
 	
-	virtual void DispErrorMessage( LPCWSTR szMsg ) = 0;
+	void DispErrorMessage( LPCWSTR szMsg );
 	
 	enum {
 		IMG_FILL	= ( 1 << 0 ),
@@ -296,13 +306,6 @@ class CVsdFilter {
 	int LineTrace( void ){ return m_piParamT[ TRACK_LineTrace ]; }	// !js_var:Config_map_length
 	int DispLap( void ){ return m_piParamC[ CHECK_LAP ]; }			// !js_var:Config_lap_time
 	int DispGraph( void ){ return m_piParamC[ CHECK_GRAPH ]; }		// !js_var:Config_graph
-	
-	// 仮想関数
-	virtual int	GetWidth( void )	= 0;	// !js_const:Width
-	virtual int	GetHeight( void )	= 0;	// !js_const:Height
-	virtual int	GetFrameMax( void )	= 0;	// !js_const:MaxFrameCnt
-	virtual int	GetFrameCnt( void )	= 0;	// !js_var:FrameCnt
-	virtual double GetFPS( void )	= 0;
 	
 	char	*m_szLogFile;
 	char	*m_szLogFileReader;
@@ -421,14 +424,115 @@ class CVsdFilter {
 	double	m_dStartLineX2;
 	double	m_dStartLineY2;
 	
-	virtual void SetFrameMark( int iFrame ) = 0;
-	virtual int  GetFrameMark( int iFrame ) = 0;
+	void SetFrameMark( int iFrame );
+	int  GetFrameMark( int iFrame );
 	
 	PolygonData_t	*m_Polygon;
 	
 	// 解像度変更検出用
 	int	m_iWidth;
 	int m_iHeight;
+
+#ifdef AVS_PLUGIN
+	/*** AviSynth ***********************************************************/
+  public:
+	CVsdFilter(
+		PClip _child,
+		AVSValue args,
+		IScriptEnvironment* env
+	);
+	
+	PVideoFrame __stdcall GetFrame( int n, IScriptEnvironment* env );
+	
+	/////////////
+	
+	int GetIndex( int x, int y ){ return m_iBytesPerLine * y + x * 2; }
+	
+	// 仮想関数
+	void PutPixel( int iIndex, const PIXEL_YCA_ARG yc, int iAlfa );
+	
+	int	GetWidth( void )	{ return m_SrcFrame->GetRowSize()>>1; }	// !js_var:Width
+	int	GetHeight( void )	{ return m_SrcFrame->GetHeight(); }	// !js_var:Height
+	int	GetFrameMax( void )	{ return vi.num_frames; }	// !js_var:MaxFrameCnt
+	int	GetFrameCnt( void )	{ return m_iFrameCnt; }	// !js_var:FrameCnt
+	double	GetFPS( void )	{ return ( double )vi.fps_numerator / vi.fps_denominator; }
+	
+	// パラメータ
+	int	m_iFrameCnt, m_iFrameMax;
+	int m_iBytesPerLine;
+	int *m_piMark;
+	int m_iMarkCnt;
+	
+	BYTE	*m_pPlane;
+	const char *m_szMark;
+	IScriptEnvironment* m_env;
+	PVideoFrame	m_SrcFrame;
+#else
+	/*** AviUtl *************************************************************/
+	
+  public:
+	void				*editp;
+	FILTER				*filter;
+	FILE_INFO			*fileinfo;
+	FILTER_PROC_INFO	*fpip;
+	
+	CVsdFilter( FILTER *filter, void *editp );
+	
+	int GetIndex( int x, int y ){ return fpip->max_w * y + x; }
+	BOOL ConfigSave( const char *szFileName );
+	
+	BOOL ReadVsdLog( HWND hwnd );
+	BOOL ReadGPSLog( HWND hwnd );
+	
+	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *&szDst );
+	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
+	BOOL ConfigLoad( const char *szFileName );
+	void SetSkinName( char *szSkinFile, HWND hwnd );
+	
+	// ログリーダ用
+	BOOL CreateFilter( void );
+	BOOL FileOpenDialog( char *&szOut, char *&szReaderFunc );
+	char *m_szLogFilter;
+	std::vector<std::string> m_vecReaderFunc;
+	
+	// 仮想関数
+	int	GetWidth( void ){ return fpip ? fpip->w : 0; }
+	int	GetHeight( void ){ return fpip ? fpip->h : 0; }
+	int	GetFrameMax( void ){ return fileinfo->frame_n; }
+	int	GetFrameCnt( void ){ return fpip->frame; }
+	double	GetFPS( void ){ return ( double )fileinfo->video_rate / fileinfo->video_scale; }
+	
+	// 同期情報表示
+	WCHAR *DrawSyncInfoFormatTime(
+		WCHAR	*pBuf, UINT uBufSize, INT64 &iBaseTime, int iTime
+	);
+	void DrawSyncInfoSub(
+		int x, int y, CVsdFont &Font,
+		LPCWSTR	szCaption,
+		INT64	&iBaseTime,
+		int		iCurTime,
+		int		iStartTime,
+		int		iEndTime
+	);
+	
+	// 1スライダ調整用パラメータ
+	int	m_iAdjustPointNum;
+	int	m_iAdjustPointVid[ 2 ];
+	int	m_iAdjustPointVsd[ 2 ];
+	int	m_iAdjustPointGPS[ 2 ];
+	
+	static const char *m_szTrackbarName[];
+	static const char *m_szCheckboxName[];
+	static const char *m_szShadowParamName[];
+	
+	void GetFileCreationTime( void );
+#ifdef PUBLIC_MODE
+	void AutoSync( CVsdLog *pLog, int *piParam );
+#endif
+	
+  private:
+	INT64	m_iVideoStartTime;
+#endif
 };
 
 BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, LPCTSTR, void * ), void *pParam );

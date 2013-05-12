@@ -8,7 +8,6 @@
 
 #include "StdAfx.h"
 
-#include "avisynth.h"
 #include "CVsdFilter.h"
 #include "rev_num.h"
 
@@ -30,60 +29,16 @@ enum {
 	ARGID_NUM
 };
 
-/****************************************************************************/
-
-class CVsdFilterAvs : public GenericVideoFilter, CVsdFilter {
-  public:
-	CVsdFilterAvs(
-		PClip _child,
-		AVSValue args,
-		IScriptEnvironment* env
-	);
-	
-	~CVsdFilterAvs();
-	PVideoFrame __stdcall GetFrame( int n, IScriptEnvironment* env );
-	
-	/////////////
-	
-	int GetIndex( int x, int y ){ return m_iBytesPerLine * y + x * 2; }
-	
-	// 仮想関数
-	void         PutPixel( int iIndex, const PIXEL_YCA_ARG yc, int iAlfa );
-	void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
-	void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
-	UINT PutImage( int x, int y, CVsdImage &img, UINT uAlign );
-	
-	int	GetWidth( void )	{ return m_iWidth; }
-	int	GetHeight( void )	{ return m_iHeight; }
-	int	GetFrameMax( void )	{ return vi.num_frames; }
-	int	GetFrameCnt( void )	{ return m_iFrameCnt; }
-	double	GetFPS( void )	{ return ( double )vi.fps_numerator / vi.fps_denominator; }
-	
-	void SetFrameMark( int iFrame );
-	int  GetFrameMark( int iFrame );
-	
-	void DispErrorMessage( LPCWSTR szMsg );
-	void DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign = 0 ){}
-	
-	// パラメータ
-	int	m_iWidth, m_iHeight, m_iFrameCnt, m_iFrameMax;
-	int m_iBytesPerLine;
-	int *m_piMark;
-	int m_iMarkCnt;
-	
-	BYTE	*m_pPlane;
-	const char *m_szMark;
-	IScriptEnvironment* m_env;
-};
-
 /*** コンストラクタ・デストラクタ *******************************************/
 
 // param 指定
-CVsdFilterAvs::CVsdFilterAvs(
+CVsdFilter::CVsdFilter(
 	PClip _child,
 	AVSValue args,
 	IScriptEnvironment* env
 ) : GenericVideoFilter( _child ){
+	
+	Constructor();	// 基本クラスのコンストラクタ
 	
 	const char *p;
 	
@@ -146,7 +101,9 @@ CVsdFilterAvs::CVsdFilterAvs(
 	}
 }
 
-CVsdFilterAvs::~CVsdFilterAvs(){
+CVsdFilter::~CVsdFilter(){
+	Destructor();	// 基本クラスのデストラクタ
+	
 	delete [] m_piParamT;
 	delete [] m_piParamC;
 	delete [] m_piParamS;
@@ -165,7 +122,7 @@ G = Y-0.714Cr-0.344Cb
 B = Y+1.772Cb 
 */
 
-inline void CVsdFilterAvs::PutPixel( int iIndex, const PIXEL_YCA_ARG yc, int iAlfa ){
+inline void CVsdFilter::PutPixel( int iIndex, const PIXEL_YCA_ARG yc, int iAlfa ){
 	
 	m_pPlane[ iIndex + 0 ] = ( PIXEL_t )(
 		yc.y + ((  m_pPlane[ iIndex + 0 ] * iAlfa ) >> 8 )
@@ -175,7 +132,7 @@ inline void CVsdFilterAvs::PutPixel( int iIndex, const PIXEL_YCA_ARG yc, int iAl
 	);
 }
 
-inline void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
+void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
 	
 	int	iIndex	= GetIndex( x, y );
 	
@@ -191,7 +148,7 @@ inline void CVsdFilterAvs::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
 	}
 }
 
-inline void CVsdFilterAvs::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ){
+void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ){
 	
 	int iIndex = GetIndex( x1, y1 );
 	
@@ -223,7 +180,7 @@ inline void CVsdFilterAvs::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG
 
 /*** PutImage ***************************************************************/
 
-UINT CVsdFilterAvs::PutImage(
+UINT CVsdFilter::PutImage(
 	int x, int y, CVsdImage &img, UINT uAlign
 ){
 	if( uAlign & ALIGN_HCENTER ){
@@ -287,7 +244,7 @@ UINT CVsdFilterAvs::PutImage(
 
 /*** エラーメッセージ *******************************************************/
 
-void CVsdFilterAvs::DispErrorMessage( LPCWSTR szMsg ){
+void CVsdFilter::DispErrorMessage( LPCWSTR szMsg ){
 	if( m_env ){
 		char *p = NULL;
 		m_env->ThrowError( "%s", StringNew( p, szMsg ));
@@ -299,38 +256,40 @@ void CVsdFilterAvs::DispErrorMessage( LPCWSTR szMsg ){
 
 /*** フレームをマーク *******************************************************/
 
-void CVsdFilterAvs::SetFrameMark( int iFrame ){
+void CVsdFilter::SetFrameMark( int iFrame ){
 	m_piMark[ m_iMarkCnt++ ] = iFrame;
 	m_piMark[ m_iMarkCnt   ] = -1;
 };
 
-int CVsdFilterAvs::GetFrameMark( int iFrame ){
+int CVsdFilter::GetFrameMark( int iFrame ){
 	int	i;
 	for( i = 0; m_piMark[ i ] < iFrame && m_piMark[ i ] >= 0; ++i );
 	return m_piMark[ i ];
 }
 
+/*** DrawSyncInfo ダミー ****************************************************/
+
+void CVsdFilter::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){}
+
 /****************************************************************************/
 
-PVideoFrame __stdcall CVsdFilterAvs::GetFrame( int n, IScriptEnvironment* env ){
-	PVideoFrame src = child->GetFrame( n, env );
-	env->MakeWritable(&src);
+PVideoFrame __stdcall CVsdFilter::GetFrame( int n, IScriptEnvironment* env ){
+	m_SrcFrame = child->GetFrame( n, env );
+	env->MakeWritable(&m_SrcFrame);
 	
-	m_iBytesPerLine		= src->GetPitch();
-	m_iWidth			= src->GetRowSize()>>1; //case of YUY2
-	m_iHeight			= src->GetHeight();
+	m_iBytesPerLine		= m_SrcFrame->GetPitch();
 	m_iFrameCnt			= n;
 	m_env				= env;
 	
-	m_pPlane			= src->GetWritePtr();
+	m_pPlane			= m_SrcFrame->GetWritePtr();
 	
 	DrawVSD();
 	
-	return src;
+	return m_SrcFrame;
 }
 
 AVSValue __cdecl Create_VSDFilter( AVSValue args, void* user_data, IScriptEnvironment* env ){
-	return new CVsdFilterAvs(
+	return new CVsdFilter(
 		args[0].AsClip(),
 		args,
 		env

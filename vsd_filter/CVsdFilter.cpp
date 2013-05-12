@@ -22,7 +22,7 @@ HINSTANCE	CVsdFilter::m_hInst 	= NULL;
 
 /*** コンストラクタ *********************************************************/
 
-CVsdFilter::CVsdFilter (){
+void CVsdFilter::Constructor( void ){
 	
 	m_VsdLog 			= NULL;
 	m_GPSLog 			= NULL;
@@ -64,7 +64,7 @@ CVsdFilter::CVsdFilter (){
 
 /*** デストラクタ ***********************************************************/
 
-CVsdFilter::~CVsdFilter (){
+void CVsdFilter::Destructor( void ){
 	//---- GDI+の解放
 	Gdiplus::GdiplusShutdown( m_gdiplusToken );
 	

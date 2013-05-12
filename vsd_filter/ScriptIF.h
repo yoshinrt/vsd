@@ -107,13 +107,25 @@ class CVsdFilterIF {
 		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Integer::New( obj->DispGraph() ) : v8::Undefined();
 	}
-	static v8::Handle<v8::Value> Get_FrameCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
-		return obj ? v8::Integer::New( obj->GetFrameCnt() ) : v8::Undefined();
-	}
 	static v8::Handle<v8::Value> Get_DateTime( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		return obj ? v8::Number::New( obj->DateTime() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_Width( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->GetWidth() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_Height( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->GetHeight() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_MaxFrameCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->GetFrameMax() ) : v8::Undefined();
+	}
+	static v8::Handle<v8::Value> Get_FrameCnt( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
+		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
+		return obj ? v8::Integer::New( obj->GetFrameCnt() ) : v8::Undefined();
 	}
 
 	///// メャbドコールバック /////
@@ -547,8 +559,11 @@ class CVsdFilterIF {
 		inst->SetAccessor( v8::String::New( "Config_map_length" ), Get_Config_map_length );
 		inst->SetAccessor( v8::String::New( "Config_lap_time" ), Get_Config_lap_time );
 		inst->SetAccessor( v8::String::New( "Config_graph" ), Get_Config_graph );
-		inst->SetAccessor( v8::String::New( "FrameCnt" ), Get_FrameCnt );
 		inst->SetAccessor( v8::String::New( "DateTime" ), Get_DateTime );
+		inst->SetAccessor( v8::String::New( "Width" ), Get_Width );
+		inst->SetAccessor( v8::String::New( "Height" ), Get_Height );
+		inst->SetAccessor( v8::String::New( "MaxFrameCnt" ), Get_MaxFrameCnt );
+		inst->SetAccessor( v8::String::New( "FrameCnt" ), Get_FrameCnt );
 
 		// メャbドはこちらに
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
@@ -574,9 +589,6 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawNeedle" ), v8::FunctionTemplate::New( Func_DrawNeedle ));
 		proto->Set( v8::String::New( "FormatTime" ), v8::FunctionTemplate::New( Func_FormatTime ));
 
-		proto->Set( v8::String::New( "Width" ), v8::Integer::New((( CVsdFilter *)pClass )->GetWidth() ));
-		proto->Set( v8::String::New( "Height" ), v8::Integer::New((( CVsdFilter *)pClass )->GetHeight() ));
-		proto->Set( v8::String::New( "MaxFrameCnt" ), v8::Integer::New((( CVsdFilter *)pClass )->GetFrameMax() ));
 		proto->Set( v8::String::New( "SkinDir" ), v8::String::New(( uint16_t *)(( CVsdFilter *)pClass )->m_szSkinDirW ));
 		proto->Set( v8::String::New( "VsdRootDir" ), v8::String::New(( uint16_t *)(( CVsdFilter *)pClass )->m_szPluginDirW ));
 

@@ -180,109 +180,34 @@ BOOL func_exit( FILTER *fp ){
 //		フィルタ処理関数
 //---------------------------------------------------------------------
 
-/*** CVsdFilterAvu クラス ***************************************************/
+/*** CVsdFilter クラス ***************************************************/
 
-class CVsdFilterAvu : public CVsdFilter {
-	
-  public:
-	void				*editp;
-	FILTER				*filter;
-	FILE_INFO			*fileinfo;
-	FILTER_PROC_INFO	*fpip;
-	
-	CVsdFilterAvu( FILTER *filter, void *editp );
-	~CVsdFilterAvu();
-	
-	int GetIndex( int x, int y ){ return fpip->max_w * y + x; }
-	BOOL ConfigSave( const char *szFileName );
-	
-	BOOL ReadVsdLog( HWND hwnd );
-	BOOL ReadGPSLog( HWND hwnd );
-	
-	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *&szDst );
-	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
-	BOOL ConfigLoad( const char *szFileName );
-	void SetSkinName( char *szSkinFile, HWND hwnd );
-	
-	// ログリーダ用
-	BOOL CreateFilter( void );
-	BOOL FileOpenDialog( char *&szOut, char *&szReaderFunc );
-	char *m_szLogFilter;
-	std::vector<std::string> m_vecReaderFunc;
-	
-	// 仮想関数
-	void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
-	void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
-	UINT PutImage( int x, int y, CVsdImage &img, UINT uAlign );
-	
-	int	GetWidth( void ){ return fpip ? fpip->w : 0; }
-	int	GetHeight( void ){ return fpip ? fpip->h : 0; }
-	int	GetFrameMax( void ){ return fileinfo->frame_n; }
-	int	GetFrameCnt( void ){ return fpip->frame; }
-	double	GetFPS( void ){ return ( double )fileinfo->video_rate / fileinfo->video_scale; }
-	
-	void SetFrameMark( int iFrame );
-	int  GetFrameMark( int iFrame );
-	
-	void DispErrorMessage( LPCWSTR szMsg );
-	
-	// 同期情報表示
-	WCHAR *DrawSyncInfoFormatTime(
-		WCHAR	*pBuf, UINT uBufSize, INT64 &iBaseTime, int iTime
-	);
-	void DrawSyncInfoSub(
-		int x, int y, CVsdFont &Font,
-		LPCWSTR	szCaption,
-		INT64	&iBaseTime,
-		int		iCurTime,
-		int		iStartTime,
-		int		iEndTime
-	);
-	void DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign );
-	
-	// 1スライダ調整用パラメータ
-	int	m_iAdjustPointNum;
-	int	m_iAdjustPointVid[ 2 ];
-	int	m_iAdjustPointVsd[ 2 ];
-	int	m_iAdjustPointGPS[ 2 ];
-	
-	static const char *m_szTrackbarName[];
-	static const char *m_szCheckboxName[];
-	static const char *m_szShadowParamName[];
-	
-	void GetFileCreationTime( void );
-#ifdef PUBLIC_MODE
-	void AutoSync( CVsdLog *pLog, int *piParam );
-#endif
-	
-  private:
-	INT64	m_iVideoStartTime;
-};
-
-CVsdFilterAvu	*g_Vsd;
+CVsdFilter	*g_Vsd;
 
 /*** tarckbar / checkbox conf_name 名 ***/
 
-const char *CVsdFilterAvu::m_szTrackbarName[] = {
+const char *CVsdFilter::m_szTrackbarName[] = {
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name ) conf_name,
 	#include "def_trackbar.h"
 };
 
-const char *CVsdFilterAvu::m_szCheckboxName[] = {
+const char *CVsdFilter::m_szCheckboxName[] = {
 	#define DEF_CHECKBOX( id, init, name, conf_name ) conf_name,
 	#include "def_checkbox.h"
 };
 
-const char *CVsdFilterAvu::m_szShadowParamName[] = {
+const char *CVsdFilter::m_szShadowParamName[] = {
 	#define DEF_SHADOW( id, init, conf_name ) conf_name,
 	#include "def_shadow.h"
 };
 
 /*** コンストラクタ／デストラクタ *******************************************/
 
-CVsdFilterAvu::CVsdFilterAvu( FILTER *filter, void *editp ) :
+CVsdFilter::CVsdFilter( FILTER *filter, void *editp ) :
 	filter( filter ), editp( editp )
 {
+	Constructor();	// 基本クラスのコンストラクタ
+	
 	fileinfo = new FILE_INFO;
 	filter->exfunc->get_file_info( editp, fileinfo );
 	
@@ -305,7 +230,9 @@ CVsdFilterAvu::CVsdFilterAvu( FILTER *filter, void *editp ) :
 	fpip			= NULL;
 }
 
-CVsdFilterAvu::~CVsdFilterAvu(){
+CVsdFilter::~CVsdFilter(){
+	Destructor();	// 基本クラスのデストラクタ
+	
 	delete fileinfo;
 	delete [] m_szLogFilter;
 }
@@ -322,17 +249,7 @@ G = Y-0.714Cr-0.344Cb
 B = Y+1.772Cb 
 */
 
-/*
-inline void CVsdFilter::PutPixel( int x, int y, short iY, short iCr, short iCb ){
-	int	iIndex = GetIndex( x, y );
-	
-	fpip->ycp_edit[ iIndex ].y  = iY;
-	fpip->ycp_edit[ iIndex ].cr = iCr;
-	fpip->ycp_edit[ iIndex ].cb = iCb;
-}
-*/
-
-inline void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
+void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
 	
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
@@ -348,7 +265,7 @@ inline void CVsdFilterAvu::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
 	}
 }
 
-inline void CVsdFilterAvu::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ){
+void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ){
 	
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
@@ -373,7 +290,7 @@ inline void CVsdFilterAvu::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG
 
 /*** PutImage ***************************************************************/
 
-UINT CVsdFilterAvu::PutImage( int x, int y, CVsdImage &img, UINT uAlign ){
+UINT CVsdFilter::PutImage( int x, int y, CVsdImage &img, UINT uAlign ){
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
 	if( uAlign & ALIGN_HCENTER ){
@@ -419,7 +336,7 @@ UINT CVsdFilterAvu::PutImage( int x, int y, CVsdImage &img, UINT uAlign ){
 
 /*** 同期情報描画 ***********************************************************/
 
-WCHAR *CVsdFilterAvu::DrawSyncInfoFormatTime(
+WCHAR *CVsdFilter::DrawSyncInfoFormatTime(
 	WCHAR	*pBuf, UINT uBufSize, INT64 &iBaseTime, int iTime
 ){
 	struct tm	tmLocal;
@@ -437,7 +354,7 @@ WCHAR *CVsdFilterAvu::DrawSyncInfoFormatTime(
 	return pBuf;
 }
 
-void CVsdFilterAvu::DrawSyncInfoSub(
+void CVsdFilter::DrawSyncInfoSub(
 	int x, int y, CVsdFont &Font,
 	LPCWSTR	szCaption,
 	INT64	&iBaseTime,
@@ -485,7 +402,7 @@ void CVsdFilterAvu::DrawSyncInfoSub(
 	#endif
 }
 
-void CVsdFilterAvu::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
+void CVsdFilter::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 	
 	// フレーム表示
 	
@@ -557,13 +474,13 @@ void CVsdFilterAvu::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 
 /*** エラーメッセージ *******************************************************/
 
-void CVsdFilterAvu::DispErrorMessage( LPCWSTR szMsg ){
+void CVsdFilter::DispErrorMessage( LPCWSTR szMsg ){
 	MessageBoxW( NULL, szMsg, PROG_NAME_J_W, MB_ICONWARNING );
 }
 
 /*** フレームをマーク *******************************************************/
 
-void CVsdFilterAvu::SetFrameMark( int iFrame ){
+void CVsdFilter::SetFrameMark( int iFrame ){
 	FRAME_STATUS	fsp;
 	
 	filter->exfunc->get_frame_status( editp, iFrame, &fsp );
@@ -571,7 +488,7 @@ void CVsdFilterAvu::SetFrameMark( int iFrame ){
 	filter->exfunc->set_frame_status( editp, iFrame, &fsp );
 }
 
-int CVsdFilterAvu::GetFrameMark( int iFrame ){
+int CVsdFilter::GetFrameMark( int iFrame ){
 	
 	FRAME_STATUS	fsp;
 	
@@ -587,7 +504,7 @@ int CVsdFilterAvu::GetFrameMark( int iFrame ){
 
 /*** ファイル作成日時取得 ***************************************************/
 
-void CVsdFilterAvu::GetFileCreationTime( void ){
+void CVsdFilter::GetFileCreationTime( void ){
 	FILETIME	ft;
 	
 	HANDLE hFile = CreateFile(
@@ -622,7 +539,7 @@ void CVsdFilterAvu::GetFileCreationTime( void ){
 	                  (( a ) <= ( v ) || ( v ) <= ( b )) \
 )
 
-void CVsdFilterAvu::AutoSync( CVsdLog *pLog, int *piParam ){
+void CVsdFilter::AutoSync( CVsdLog *pLog, int *piParam ){
 	// filetime が取得できていない
 	if(
 		pLog == NULL ||
@@ -661,7 +578,7 @@ void CVsdFilterAvu::AutoSync( CVsdLog *pLog, int *piParam ){
 
 /*** ログリード *************************************************************/
 
-BOOL CVsdFilterAvu::ReadVsdLog( HWND hwnd ){
+BOOL CVsdFilter::ReadVsdLog( HWND hwnd ){
 	
 	//char szMsg[ BUF_SIZE ];
 	int iCnt;
@@ -686,7 +603,7 @@ BOOL CVsdFilterAvu::ReadVsdLog( HWND hwnd ){
 
 /*** GPS ログリード ********************************************************/
 
-BOOL CVsdFilterAvu::ReadGPSLog( HWND hwnd ){
+BOOL CVsdFilter::ReadGPSLog( HWND hwnd ){
 	
 	//char szMsg[ BUF_SIZE ];
 	
@@ -924,7 +841,7 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 
 /*** OpenDialog 用フィルタ作成 **********************************************/
 
-BOOL CVsdFilterAvu::CreateFilter( void ){
+BOOL CVsdFilter::CreateFilter( void ){
 	char	szBuf[ BUF_SIZE ];
 	char	*pBuf;
 	
@@ -994,7 +911,7 @@ BOOL CVsdFilterAvu::CreateFilter( void ){
 
 #define FILTERBUF_SIZE	128
 
-BOOL CVsdFilterAvu::FileOpenDialog( char *&szOut, char *&szReaderFunc ){
+BOOL CVsdFilter::FileOpenDialog( char *&szOut, char *&szReaderFunc ){
 	
 	char szBuf[ BUF_SIZE ];
 	
@@ -1036,7 +953,7 @@ BOOL CVsdFilterAvu::FileOpenDialog( char *&szOut, char *&szReaderFunc ){
 
 /*** 設定ロード *************************************************************/
 
-char *CVsdFilterAvu::IsConfigParam( const char *szParamName, char *szBuf, int &iVal ){
+char *CVsdFilter::IsConfigParam( const char *szParamName, char *szBuf, int &iVal ){
 	
 	int	iLen;
 	
@@ -1053,7 +970,7 @@ char *CVsdFilterAvu::IsConfigParam( const char *szParamName, char *szBuf, int &i
 	return NULL;
 }
 
-char *CVsdFilterAvu::IsConfigParamStr( const char *szParamName, char *szBuf, char *&szDst ){
+char *CVsdFilter::IsConfigParamStr( const char *szParamName, char *szBuf, char *&szDst ){
 	
 	int		iLen;
 	char	*p;
@@ -1084,7 +1001,7 @@ char *CVsdFilterAvu::IsConfigParamStr( const char *szParamName, char *szBuf, cha
 	return NULL;
 }
 
-BOOL CVsdFilterAvu::ConfigLoad( const char *szFileName ){
+BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 	
 	int 	i, iVal;
 	FILE	*fp;
@@ -1139,7 +1056,7 @@ BOOL CVsdFilterAvu::ConfigLoad( const char *szFileName ){
 	return TRUE;
 }
 
-void CVsdFilterAvu::SetSkinName( char *szSkinFile, HWND hwnd ){
+void CVsdFilter::SetSkinName( char *szSkinFile, HWND hwnd ){
 	DeleteScript();
 	SetSkinFile( szSkinFile );
 	
@@ -1154,7 +1071,7 @@ enum {
 	#include "def_str_param.h"
 };
 
-BOOL CVsdFilterAvu::ConfigSave( const char *szFileName ){
+BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	FILE	*fp;
 	int		i;
 	UINT	uStrParamFlag = 0;
@@ -1264,7 +1181,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	switch( message ) {
 	  case WM_FILTER_FILE_OPEN:
 		
-		g_Vsd = new CVsdFilterAvu( filter, editp );
+		g_Vsd = new CVsdFilter( filter, editp );
 		
 		// trackbar 設定
 		#ifdef PUBLIC_MODE

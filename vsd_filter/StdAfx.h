@@ -33,10 +33,6 @@
 #include <functional>
 #include <limits>
 
-#ifndef AVS_PLUGIN
-	#include "filter.h"
-#endif
-
 #include "dds.h"
 #include <assert.h>
 #include "dds_lib/dds_lib.h"
