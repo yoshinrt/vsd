@@ -317,6 +317,9 @@ class CVsdFilter
 	char	*m_szPluginDirA;
 	LPWSTR	m_szPluginDirW;	// !js_const:VsdRootDir
 	
+	// リビジョン番号
+	static const int	m_iRevision;	// !js_const:Revision
+	
 	// ログリードヘルパ
 	int ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc );
 	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
@@ -432,7 +435,7 @@ class CVsdFilter
 	// 解像度変更検出用
 	int	m_iWidth;
 	int m_iHeight;
-
+	
 #ifdef AVS_PLUGIN
 	/*** AviSynth ***********************************************************/
   public:

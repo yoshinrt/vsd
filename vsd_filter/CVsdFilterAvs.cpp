@@ -314,5 +314,5 @@ extern "C" __declspec( dllexport ) const char* __stdcall AvisynthPluginInit2( IS
 		Create_VSDFilter, 0
 	);
 	
-	return PROG_NAME_LONG " " PROG_REVISION;
+	return PROG_NAME_LONG " " PROG_REVISION_STR;
 }

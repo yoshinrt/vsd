@@ -591,6 +591,7 @@ class CVsdFilterIF {
 
 		proto->Set( v8::String::New( "SkinDir" ), v8::String::New(( uint16_t *)(( CVsdFilter *)pClass )->m_szSkinDirW ));
 		proto->Set( v8::String::New( "VsdRootDir" ), v8::String::New(( uint16_t *)(( CVsdFilter *)pClass )->m_szPluginDirW ));
+		proto->Set( v8::String::New( "Revision" ), v8::Integer::New((( CVsdFilter *)pClass )->m_iRevision ));
 
 		(( CVsdFilter *)pClass )->InitJS( tmpl );
 

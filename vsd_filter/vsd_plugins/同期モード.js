@@ -25,9 +25,14 @@ function print( msg, param ){
 }
 
 function Draw(){
+	// リビジョン番号表示
+	Vsd.DrawTextAlign( 0, Vsd.Height - 1, ALIGN_LEFT | ALIGN_BOTTOM,
+		"VSD for GPS rev." + Vsd.Revision, font, 0x008080
+	);
+	
 	// 走行軌跡
 	Vsd.DrawMap(
-		8 * Scale, 8 * Scale, Vsd.Width / 2, Vsd.Height / 2,
+		4, 4, Vsd.Width / 1.5, Vsd.Height / 1.5,
 		ALIGN_TOP | ALIGN_LEFT | DRAW_MAP_START,
 		3 * Scale, 6 * Scale, 0xFF0000, 0xFFFF00, 0x00FF00, 0xFF0000
 	);
@@ -46,5 +51,5 @@ function Draw(){
 	Vsd.DrawSyncGraph( Vsd.Width / 3, Vsd.Height / 2, Vsd.Width - 1, Vsd.Height - 1, font );
 	
 	// 同期文字情報
-	Vsd.DrawSyncInfo( 0, Vsd.Height - 1, font, ALIGN_LEFT | ALIGN_BOTTOM );
+	Vsd.DrawSyncInfo( 0, Vsd.Height - 1 - font.Height, font, ALIGN_LEFT | ALIGN_BOTTOM );
 }

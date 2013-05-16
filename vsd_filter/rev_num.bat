@@ -16,7 +16,7 @@ $NewNum = $1;
 
 if( -e "rev_num.h" ){
 	$_ = `cat rev_num.h`;
-	/"r(\d+)"/;
+	/(\d+)/;
 	$OldNum = $1;
 }else{
 	$OldNum = -1;
@@ -24,7 +24,10 @@ if( -e "rev_num.h" ){
 
 if( $OldNum != $NewNum ){
 	open( FP, "> rev_num.h" );
-	print( FP "#define PROG_REVISION\t\"r$1\"\n" );
+	print( FP << "EOF" );
+#define PROG_REVISION		$NewNum
+#define PROG_REVISION_STR	"r$NewNum"
+EOF
 }
 
 if( $#ARGV >= 0 ){

@@ -11,6 +11,7 @@
 #include "CVsdFilter.h"
 #include "CVsdFile.h"
 #include "ScriptIF.h"
+#include "rev_num.h"
 
 /*** macros *****************************************************************/
 
@@ -19,6 +20,7 @@
 /*** static member **********************************************************/
 
 HINSTANCE	CVsdFilter::m_hInst 	= NULL;
+const int CVsdFilter::m_iRevision = PROG_REVISION;
 
 /*** コンストラクタ *********************************************************/
 
