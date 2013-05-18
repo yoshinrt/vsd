@@ -24,6 +24,6 @@ popd
 
 rmdir /s/q zrelease
 
-perl -ne 'rename( "vsd_filter_gps.lzh", "vsd_filter_gps_$1.lzh" ) if( /#define\s+PROG_REVISION\s+"(r\d+)"/ );' rev_num.h
+perl -ne 'rename( "vsd_filter_gps.lzh", "vsd_filter_gps_$1.lzh" ) if( /#define\s+PROG_REVISION\s+(\d+)/ );' rev_num.h
 
 pause
