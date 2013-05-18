@@ -18,7 +18,7 @@ function Read_dp3( Files ){
 	
 	// 日付情報が無いので暫定的に 2012/1/1
 	// 時刻は JST らしいので -9:00 する
-	var Time0 = Date.UTC( 2012, 0, 1, 0, 0, 0 ) - ( 9 * 3600 * 1000 );
+	var Time0 = Date.UTC( 2012, 0, 1, 0, 0, 0 ) + ( new Date ).getTimezoneOffset() * 60000;
 	
 	for( var i = 0; i < Files.length; ++i ){
 		var file = new File();

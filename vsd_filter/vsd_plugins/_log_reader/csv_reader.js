@@ -46,7 +46,7 @@ function ReadTorqueLiteLog( Files ){
 		return Date.UTC(
 			RegExp.$3, RegExp.$2 - 1, RegExp.$1,
 			RegExp.$4, RegExp.$5, RegExp.$6, RegExp.$7 * 1000
-		) - 9 * 3600 * 1000;
+		) + ( new Date ).getTimezoneOffset() * 60000;
 	}
 }
 

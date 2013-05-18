@@ -2,9 +2,9 @@
 
 function Initialize(){
 	// 使用する画像・フォントの宣言
-	Scale = Vsd.Width / 1280;
+	Scale = Vsd.Height / 720;
 	
-	font = new Font( "ＭＳ　ゴシック", 36 * Scale, FONT_OUTLINE | FONT_NOANTIALIAS );
+	font = new Font( "ＭＳ　ゴシック", 28 * Scale, FONT_OUTLINE | FONT_NOANTIALIAS );
 }
 
 //*** メーター描画処理 ******************************************************
@@ -26,9 +26,9 @@ function print( msg, param ){
 
 function Draw(){
 	// リビジョン番号表示
-	Vsd.DrawTextAlign( 0, Vsd.Height - 1, ALIGN_LEFT | ALIGN_BOTTOM,
-		"VSD for GPS rev." + Vsd.Revision, font, 0x008080
-	);
+//	Vsd.DrawTextAlign( Vsd.Width - 1, Vsd.Height - 1, ALIGN_RIGHT | ALIGN_BOTTOM,
+//		"VSD for GPS rev." + Vsd.Revision, font, 0x008080
+//	);
 	
 	// 走行軌跡
 	Vsd.DrawMap(
@@ -48,8 +48,8 @@ function Draw(){
 	}
 	
 	// グラフ
-	Vsd.DrawSyncGraph( Vsd.Width / 3, Vsd.Height / 2, Vsd.Width - 1, Vsd.Height - 1, font );
+	Vsd.DrawSyncGraph( Vsd.Width / 3, Vsd.Height / 2, Vsd.Width - 2, Vsd.Height - 2, font );
 	
 	// 同期文字情報
-	Vsd.DrawSyncInfo( 0, Vsd.Height - 1 - font.Height, font, ALIGN_LEFT | ALIGN_BOTTOM );
+	Vsd.DrawSyncInfo( 0, Vsd.Height - 1, font, ALIGN_LEFT | ALIGN_BOTTOM );
 }
