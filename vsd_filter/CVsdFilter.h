@@ -68,8 +68,6 @@
 	m_LapLog && m_LapLog->m_iLapSrc == LAPSRC_VSD \
 	? m_VsdLog : m_GPSLog )
 
-#define TIMEZONE	( +9 )	// ì˙ñ{êÍópw
-
 /*** track / check ID *******************************************************/
 
 enum {

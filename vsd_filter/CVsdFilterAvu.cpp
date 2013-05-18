@@ -393,7 +393,13 @@ void CVsdFilter::DrawSyncInfoSub(
 			Font, color_white
 		);
 		
-		INT64 iTmp = ( 24 - TIMEZONE ) * 3600000L;
+		// ローカルタイムの 0:00:00 の time_t を得る
+		tmLocal.tm_sec =
+		tmLocal.tm_min =
+		tmLocal.tm_hour = 0;
+		
+		INT64 iTmp = ( INT64 )mktime( &tmLocal ) * 1000;
+		
 		DrawText(
 			POS_DEFAULT, POS_DEFAULT,
 			DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), iTmp, iEndTime - iStartTime ),
@@ -812,6 +818,15 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "車両ログ",	"",		"開く" );
 	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "GPSログ",	"",		"開く" );
 	CreateControlSkinName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "スキン",	"" );
+	
+	// rev
+	hwndChild = CreateWindow(
+		"STATIC", "VSD for GPS " PROG_REVISION_STR, WS_CHILD | WS_VISIBLE,
+		POS_FILE_CAPTION_POS + POS_FILE_CAPTION_SIZE, y,
+		POS_FILE_NAME_SIZE / 2, POS_FILE_HEIGHT,
+		hwnd, 0, hInst, NULL
+	);
+	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
 	// cfg load/save ボタン
 	hwndChild = CreateWindow(
