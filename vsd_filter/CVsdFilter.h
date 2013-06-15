@@ -309,6 +309,7 @@ class CVsdFilter
 	char	*m_szLogFileReader;
 	char	*m_szGPSLogFile;
 	char	*m_szGPSLogFileReader;
+	char	*m_szLapChart;
 	char	*m_szSkinFile;
 	char	*m_szSkinDirA;
 	LPWSTR	m_szSkinDirW;	// !js_const:SkinDir
@@ -324,6 +325,9 @@ class CVsdFilter
 	CLapLog *CreateLapTimeHand( int iLapSrc );
 	CLapLog *CreateLapTimeAuto( void );
 	void CalcLapTime( void );
+	
+	// ラップチャートリーダ
+	int LapChartRead( char *szFileName );
 	
 	// スキン dir 取得
 	char *SetSkinFile( const char *szSkinFile ){

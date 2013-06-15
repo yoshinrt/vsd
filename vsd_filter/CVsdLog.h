@@ -10,7 +10,7 @@
 
 /*** macros *****************************************************************/
 
-#define TIME_NONE	(( int )0x80000000 )
+#define TIME_NONE		(( int )0x80000000 )
 #define WATCHDOG_TIME	( 0x70000000 )
 
 #define WATCHDOG_REC_NUM	2		// ログ先頭の番犬分のレコード数
@@ -21,8 +21,9 @@
 
 enum {
 	LAPMODE_HAND,		// 手動計測モード
-	LAPMODE_AUTO,		// GPS 自動計測モード
+	LAPMODE_GPS,		// GPS 自動計測モード
 	LAPMODE_MAGNET,		// 磁気センサー自動計測モード
+	LAPMODE_CHART,		// ラップチャート
 };
 enum {
 	LAPSRC_VIDEO,		// 時計は Video フレーム
@@ -50,6 +51,21 @@ class CLapLog {
 		m_iBestLogNumRunning	= 0;
 	}
 	
+	void PushLap( LAP_t &Lap ){
+		m_Lap.push_back( Lap );
+		
+		if(
+			m_iLapNum && Lap.iTime && (
+				m_iBestTime == TIME_NONE || Lap.iTime < m_iBestTime
+			)
+		){
+			m_iBestTime	= Lap.iTime;
+			m_iBestLap	= m_iLapNum - 1;
+		}
+		
+		++m_iLapNum;
+	}
+	
 	std::vector<LAP_t>	m_Lap;
 	int	m_iLapMode;
 	int	m_iLapSrc;
@@ -60,6 +76,12 @@ class CLapLog {
 	int	m_iCurTime;		// 現在ラップ経過時間
 	int	m_iDiffTime;
 	int m_iBestLogNumRunning;
+};
+
+class CLapLogAll : public CLapLog {
+  public:
+	std::vector<std::string>		m_strName;
+	std::vector<std::vector<int> >	m_LapTime;
 };
 
 /*** ログ 1項目 *************************************************************/

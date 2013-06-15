@@ -39,6 +39,7 @@ void CVsdFilter::Constructor( void ){
 	m_szLogFileReader	= NULL;
 	m_szGPSLogFile		= NULL;
 	m_szGPSLogFileReader= NULL;
+	m_szLapChart		= NULL;
 	m_szSkinFile		= NULL;
 	m_szSkinDirA		= NULL;
 	m_szPluginDirA		= NULL;
@@ -77,6 +78,7 @@ void CVsdFilter::Destructor( void ){
 	delete [] m_szLogFileReader;
 	delete [] m_szGPSLogFile;
 	delete [] m_szGPSLogFileReader;
+	delete [] m_szLapChart;
 	delete [] m_szSkinFile;
 	delete [] m_szSkinDirA;
 	delete [] m_szPluginDirA;
@@ -108,8 +110,11 @@ int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szR
 		pLapLog->m_iLapSrc = pLog == m_VsdLog ? LAPSRC_VSD : LAPSRC_GPS;
 		
 		if( m_LapLog ){
-			// 重複しているので，VSD の方を優先
-			if( pLog == m_VsdLog ){
+			// 重複しているので，優先度の高いモードを残すか，VSD の方を優先
+			if(
+				m_LapLog->m_iLapMode <  LAPMODE_MAGNET ||
+				m_LapLog->m_iLapMode == LAPMODE_MAGNET && pLog == m_VsdLog
+			){
 				delete m_LapLog;
 				m_LapLog = pLapLog;
 			}else{
@@ -208,20 +213,10 @@ CLapLog *CVsdFilter::CreateLapTimeHand( int iLapSrc ){
 			LapTime.iTime	= pLapLog->m_iLapNum ? iTime - iPrevTime : 0;
 		}
 		
-		if(
-			pLapLog->m_iLapNum &&
-			LapTime.iTime &&
-			( pLapLog->m_iBestTime == TIME_NONE || pLapLog->m_iBestTime > LapTime.iTime )
-		){
-			pLapLog->m_iBestTime	= LapTime.iTime;
-			pLapLog->m_iBestLap		= pLapLog->m_iLapNum - 1;
-		}
-		
 		iPrevTime = iTime;
-		++pLapLog->m_iLapNum;
 		++iFrame;
 		
-		pLapLog->m_Lap.push_back( LapTime );
+		pLapLog->PushLap( LapTime );
 	}
 	
 	if( pLapLog->m_Lap.size() == 0 ){
@@ -278,7 +273,7 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	/*****/
 	
 	CLapLog *pLapLog = new CLapLog();
-	pLapLog->m_iLapMode = LAPMODE_AUTO;
+	pLapLog->m_iLapMode = LAPMODE_GPS;
 	pLapLog->m_iLapSrc  = LAPSRC_GPS;
 	
 	int iTime, iPrevTime;
@@ -328,18 +323,9 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 			LapTime.fLogNum	= ( float )dLogNum;
 			LapTime.iTime	= pLapLog->m_iLapNum ? iTime - iPrevTime : 0;
 			
-			if(
-				pLapLog->m_iLapNum &&
-				( pLapLog->m_iBestTime == TIME_NONE || pLapLog->m_iBestTime > LapTime.iTime )
-			){
-				pLapLog->m_iBestTime	= LapTime.iTime;
-				pLapLog->m_iBestLap		= pLapLog->m_iLapNum - 1;
-			}
-			
 			iPrevTime = iTime;
-			++pLapLog->m_iLapNum;
 			
-			pLapLog->m_Lap.push_back( LapTime );
+			pLapLog->PushLap( LapTime );
 		}
 		++iLapNum;
 	}
@@ -348,12 +334,120 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 		delete pLapLog;
 		return NULL;
 	}
-
+	
 	LapTime.fLogNum	= FLT_MAX;	// 番犬
 	LapTime.iTime	= 0;		// 番犬
 	pLapLog->m_Lap.push_back( LapTime );
 	
 	return pLapLog;
+}
+
+/*** チャートリード *********************************************************/
+
+#define NAME_BUF_SIZE	64
+
+int CVsdFilter::LapChartRead( char *szFileName ){
+	
+	// 既に優先度の高い Log があればリターン (今はない)
+	if( m_LapLog && m_LapLog->m_iLapMode > LAPMODE_CHART ){
+		return 0;
+	}
+	
+	// ファイルオープン
+	FILE *fp = fopen( szFileName, "r" );
+	if( !fp ) return 0;
+	
+	char	szBuf[ BUF_SIZE ];
+	char	szMainName[ NAME_BUF_SIZE ] = "";
+	char	szName[ NAME_BUF_SIZE ];
+	
+	CLapLogAll *pLapLog = new CLapLogAll();
+	pLapLog->m_iLapMode = LAPMODE_CHART;
+	pLapLog->m_iLapSrc  = LAPSRC_VIDEO;
+	
+	int iStartFrame	= 0;
+	int iEndFrame	= 0x7FFFFFFF;
+	int iMainNameIdx	= -1;
+	int iMaxMembers;
+	
+	int	iTimeSum	= 0;
+	int	iTime;
+	int i;
+	
+	LAP_t	Lap = {
+		0,	// uLap
+		0,	// fLogNum
+		0	// iTime
+	};
+	
+	// ファイルリード
+	while( fgets( szBuf, BUF_SIZE, fp )){
+		if(
+			sscanf( szBuf, "StartFrame:%u", &iStartFrame ) == 0 &&
+			sscanf( szBuf, "EndFrame:%u",   &iEndFrame ) == 0 &&
+			sscanf( szBuf, "Name:%s",       szMainName ) == 0 &&
+			strncmp( szBuf, "LapChart:", 9 ) == 0
+		){
+			// 走者一覧取得
+			if( fgets( szBuf, BUF_SIZE, fp )){
+				char *p = szBuf;
+				std::vector<int>	int_vec;	// ダミー
+				iMaxMembers = 0;
+				
+				while( StrGetParam( szName, &p )){
+					pLapLog->m_strName.push_back( szName );
+					pLapLog->m_LapTime.push_back( int_vec );
+					if( strcmp( szName, szMainName ) == 0 ) iMainNameIdx = iMaxMembers;
+					++iMaxMembers;
+				}
+			}
+			
+			// ラップチャート取得
+			// 1行目はゴール時のタイム差
+			// 2行目以降がラップタイム
+			while( fgets( szBuf, BUF_SIZE, fp )){
+				char *p = szBuf;
+				
+				for( i = 0; i < iMaxMembers; ++i ){
+					StrGetParam( szName, &p );
+					pLapLog->m_LapTime[ i ].push_back( iTime = ( int )( strtod( szName, NULL ) * 1000 ));
+					
+					// 自分のタイムなのでラップデータを構築
+					if( i == iMainNameIdx ){
+						if( Lap.uLap ) Lap.iTime = iTime;
+						iTimeSum += iTime;
+						pLapLog->PushLap( Lap );
+						++Lap.uLap;
+					}
+				}
+			}
+			break;
+		}
+	}
+	
+	fclose( fp );
+	
+	if( pLapLog->m_Lap.size() == 0 ){
+		delete pLapLog;
+		return 0;
+	}
+	
+	// Frame# を補正
+	iTime = 0;
+	for( i = 0; i < ( int )pLapLog->m_Lap.size(); ++i ){
+		iTime += pLapLog->m_Lap[ i ].iTime;
+		pLapLog->m_Lap[ i ].fLogNum = ( float )( iStartFrame + ( iEndFrame - iStartFrame ) * ( double )iTime / iTimeSum );
+	}
+	
+	Lap.fLogNum	= FLT_MAX;	// 番犬
+	Lap.iTime	= 0;		// 番犬
+	pLapLog->m_Lap.push_back( Lap );
+	
+	// ここでやっと m_LapLog を上書き
+	if( m_LapLog ) delete m_LapLog;
+	m_LapLog = pLapLog;
+	
+	return pLapLog->m_Lap.size();
 }
 
 /*** JavaScript IF 追加の初期化 *********************************************/

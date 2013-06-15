@@ -19,8 +19,9 @@
 	#define CONFIG_EXT		"avs"
 #endif
 
-#define	FILE_CFG_EXT	"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
-#define	FILE_SKIN_EXT	"Skin File (*.js)\0*.js\0AllFile (*.*)\0*.*\0"
+#define	FILE_CFG_EXT		"Config File (*." CONFIG_EXT ")\0*." CONFIG_EXT "\0AllFile (*.*)\0*.*\0"
+#define	FILE_SKIN_EXT		"Skin File (*.js)\0*.js\0AllFile (*.*)\0*.*\0"
+#define FILE_LAPCHART_EXT	"Lap Chart (*.txt)\0*.txt\0AllFile (*.*)\0*.*\0"
 
 /*** new type ***************************************************************/
 
@@ -37,6 +38,8 @@ enum {
 	ID_BUTT_LOAD_LOG,
 	ID_EDIT_LOAD_GPS,
 	ID_BUTT_LOAD_GPS,
+	ID_EDIT_LOAD_LAPCHART,
+	ID_BUTT_LOAD_LAPCHART,
 	ID_COMBO_SEL_SKIN,
 	ID_BUTT_SEL_SKIN,	// NOT USED
 	ID_BUTT_LOAD_CFG,
@@ -51,12 +54,15 @@ enum {
 #define POS_ADD_EDIT			16
 #define POS_CHK_LABEL_L			36
 #define POS_CHK_LABEL_R			186
-#define POS_ADD_DIALOG_HEIGHT	10
 
 #ifdef PUBLIC_MODE
+	#define POS_ADD_DIALOG_HEIGHT	10
 	#define POS_SET_BUTT_SIZE		0
+	#define POS_FILE_NUM			4
 #else
+	#define POS_ADD_DIALOG_HEIGHT	( 10 + POS_FILE_HEIGHT + POS_FILE_HEIGHT_MARGIN )
 	#define POS_SET_BUTT_SIZE		30
+	#define POS_FILE_NUM			5
 #endif
 
 #define POS_FILE_CAPTION_SIZE	70
@@ -65,7 +71,6 @@ enum {
 #define POS_FILE_CAPTION_POS	150
 #define POS_FILE_HEIGHT			21
 #define POS_FILE_HEIGHT_MARGIN	2
-#define POS_FILE_NUM			4
 
 #define INVALID_INT		0x80000000
 
@@ -817,6 +822,9 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	
 	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "車両ログ",	"",		"開く" );
 	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "GPSログ",	"",		"開く" );
+	#ifndef PUBLIC_MODE
+		CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "LAPチャート",	"",		"開く" );
+	#endif
 	CreateControlSkinName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "スキン",	"" );
 	
 	// rev
@@ -1147,7 +1155,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	}
 	
 	// 手動ラップ計測マーク出力
-	if( m_LapLog && m_LapLog->m_iLapMode != LAPMODE_MAGNET && m_LapLog->m_iLapNum ){
+	if( m_LapLog && m_LapLog->m_iLapMode < LAPMODE_MAGNET && m_LapLog->m_iLapNum ){
 		FRAME_STATUS	fsp;
 		BOOL			bFirst = TRUE;
 		
@@ -1351,6 +1359,16 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 					// 設定再描画
 					filter->exfunc->filter_window_update( filter );
 				}
+				g_Vsd->DeleteScript();
+			}
+			
+		  Case ID_BUTT_LOAD_LAPCHART:	// ラップチャート ロード
+			if(
+				filter->exfunc->dlg_get_load_name( szBuf, FILE_LAPCHART_EXT, NULL ) &&
+				g_Vsd->LapChartRead( szBuf )
+			){
+				filter->exfunc->filter_window_update( filter );
+				SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_LAPCHART ), szBuf );
 				g_Vsd->DeleteScript();
 			}
 			

@@ -636,18 +636,9 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					LapTime.uLap	= uLapCnt;
 					LapTime.fLogNum	= ( float )( GetCnt() - 1 );
 					LapTime.iTime	= iLapTime;
-					pLapLog->m_Lap.push_back( LapTime );
+					pLapLog->PushLap( LapTime );
 					
 					if( iLapTime ) ++uLapCnt;
-					
-					if(
-						iLapTime > 0 &&
-						( pLapLog->m_iBestTime == TIME_NONE || pLapLog->m_iBestTime > iLapTime )
-					){
-						pLapLog->m_iBestTime	= iLapTime;
-						pLapLog->m_iBestLap	= pLapLog->m_iLapNum - 1;
-					}
-					++pLapLog->m_iLapNum;
 				}
 				
 				// キャリブレーション時の時間を記録

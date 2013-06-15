@@ -883,7 +883,7 @@ void CVsdFilter::DrawGSnake(
 
 void CVsdFilter::DrawMap(
 	int x1, int y1, int x2, int y2,
-	UINT uAlign,
+	UINT uFlag,
 	int iLineWidth,
 	int iIndicatorR,
 	tRABY uColorIndicator,
@@ -916,17 +916,17 @@ void CVsdFilter::DrawMap(
 	if( dScaleX < dScaleY ){
 		// 幅律速なので y1 を再計算
 		dScale = dScaleX;
-		if( uAlign & ALIGN_HCENTER ){
+		if( uFlag & ALIGN_HCENTER ){
 			y1 = y1 + ( iHeight - ( int )( dMapSizeY * dScale )) / 2;
-		}else if( uAlign & ALIGN_BOTTOM ){
+		}else if( uFlag & ALIGN_BOTTOM ){
 			y1 = y1 + ( iHeight - ( int )( dMapSizeY * dScale ));
 		}
 	}else{
 		// 高さ律速なので x1 を再計算
 		dScale = dScaleY;
-		if( uAlign & ALIGN_HCENTER ){
+		if( uFlag & ALIGN_HCENTER ){
 			x1 = x1 + ( iWidth - ( int )( dMapSizeX * dScale )) / 2;
-		}else if( uAlign & ALIGN_BOTTOM ){
+		}else if( uFlag & ALIGN_BOTTOM ){
 			x1 = x1 + ( iWidth - ( int )( dMapSizeX * dScale ));
 		}
 	}
@@ -998,7 +998,7 @@ void CVsdFilter::DrawMap(
 	);
 	
 	// スタートライン表示
-	if(( uAlign & DRAW_MAP_START ) && m_LapLog && m_LapLog->m_iLapMode == LAPMODE_AUTO ){
+	if(( uFlag & DRAW_MAP_START ) && m_LapLog && m_LapLog->m_iLapMode == LAPMODE_GPS ){
 		double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
 		
 		int xs1 = x1 + ( int )((  cos( dAngle ) * m_dStartLineX1 + sin( dAngle ) * m_dStartLineY1 - dMapOffsX ) * dScale );
@@ -1376,7 +1376,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 	// ラップタイムの再生成
 	if(
 		DispLap() && m_bCalcLapTimeReq &&
-		( m_LapLog == NULL || m_LapLog->m_iLapMode != LAPMODE_MAGNET )
+		( m_LapLog == NULL || m_LapLog->m_iLapMode < LAPMODE_MAGNET )
 	){
 		m_bCalcLapTimeReq	= FALSE;
 		
