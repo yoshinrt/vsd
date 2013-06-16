@@ -58,8 +58,8 @@ function Draw(){
 	
 	if( Vsd.Speed < Vsd.MaxSpeed ) Vsd.DrawArc(
 		MeterCx, MeterCy,
-		MeterR * Scale, MeterR * Scale,
-		MeterR * 0.9 * Scale, MeterR * 0.9 * Scale,
+		MeterR, MeterR,
+		MeterR * 0.9, MeterR * 0.9,
 		240 + 60 * Vsd.Speed / Vsd.MaxSpeed, 300, 0x004040
 	);
 	
@@ -107,7 +107,7 @@ function Draw(){
 	Vsd.DrawMap(
 		8 * Scale, 128 * Scale, Vsd.Width - 8 * Scale, Vsd.Height - 8,
 		ALIGN_VCENTER | ALIGN_HCENTER,
-		3 * Scale, 6 * Scale, 0xFF000000, 0x00FFFF, 0x00FFFF, 0x00FFFF
+		4 * Scale, 6 * Scale, 0xFF000000, 0x00FFFF, 0x00FFFF, 0x00FFFF
 	);
 	Vsd.DrawMapPos(
 		8 * Scale, 128 * Scale, Vsd.Width - 8 * Scale, Vsd.Height - 8,

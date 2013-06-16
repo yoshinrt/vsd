@@ -57,8 +57,8 @@ function Draw(){
 	
 	if( Vsd.Speed < Vsd.MaxSpeed ) Vsd.DrawArc(
 		MeterCx, MeterCy,
-		MeterR * Scale, MeterR * Scale,
-		MeterR * 0.9 * Scale, MeterR * 0.9 * Scale,
+		MeterR, MeterR,
+		MeterR * 0.9, MeterR * 0.9,
 		240 + 60 * Vsd.Speed / Vsd.MaxSpeed, 300, 0x004040
 	);
 	
