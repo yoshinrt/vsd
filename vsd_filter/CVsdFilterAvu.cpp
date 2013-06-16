@@ -1376,6 +1376,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				filter->exfunc->dlg_get_load_name( szBuf, FILE_LAPCHART_EXT, NULL ) &&
 				g_Vsd->LapChartRead( szBuf )
 			){
+				StringNew( g_Vsd->m_szLapChart, szBuf );
 				filter->exfunc->filter_window_update( filter );
 				SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_LAPCHART ), szBuf );
 				g_Vsd->DeleteScript();
