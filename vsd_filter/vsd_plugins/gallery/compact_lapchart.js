@@ -4,6 +4,7 @@ function Initialize(){
 	Scale = Vsd.Width / 1280;
 	
 	// 使用する画像・フォントの宣言
+	FontSOL = new Font( "Impact", 30 * Scale, FONT_FIXED | FONT_OUTLINE );
 	FontS = new Font( "Arial Black", 20 * Scale );
 	FontM = new Font( "Arial Black", 42 * Scale );
 	FontL = new Font( "Arial Black", 90 * Scale );
@@ -100,6 +101,18 @@ function Draw(){
 		5, 5, 155 * Scale, 115 * Scale, ALIGN_HCENTER | ALIGN_VCENTER,
 		2, 4 * Scale, ( Vsd.FrameCnt & 8 ) ? 0x00FFFF : 0xFF000000,
 		0xFF6030, 0xFF6030, 0xFF6030
+	);
+	
+	// 走行軌跡
+	Vsd.DrawMap(
+		8 * Scale, 128 * Scale, Vsd.Width - 8 * Scale, Vsd.Height - 8,
+		ALIGN_VCENTER | ALIGN_HCENTER,
+		3 * Scale, 6 * Scale, 0xFF000000, 0x00FFFF, 0x00FFFF, 0x00FFFF
+	);
+	Vsd.DrawMapPos(
+		8 * Scale, 128 * Scale, Vsd.Width - 8 * Scale, Vsd.Height - 8,
+		ALIGN_VCENTER | ALIGN_HCENTER,
+		FontSOL
 	);
 	
 	// グラフ
