@@ -1011,6 +1011,108 @@ void CVsdFilter::DrawMap(
 	SelectLogVsd;
 }
 
+/*** 走行位置表示 ***********************************************************/
+
+void CVsdFilter::DrawMapPos(
+	int x1, int y1, int x2, int y2,	UINT uFlag,
+	CVsdFont &Font, tRABY uColor, tRABY uColorOutline
+){
+	int	x, y;
+	int i;
+	CLapLogAll *pLap = reinterpret_cast<CLapLogAll *>( m_LapLog );
+	
+	// ラップチャートを未リードならリターン
+	if( !m_LapLog || m_LapLog->m_iLapMode != LAPMODE_CHART ) return;
+	
+	SelectLogGPS;
+	
+	if( !LineTrace() || !m_CurLog || !m_CurLog->m_pLogX ) return;
+	
+	double dMapSizeX = m_CurLog->m_pLogX->GetMax() - m_CurLog->m_pLogX->GetMin();
+	double dMapOffsX = m_CurLog->m_pLogX->GetMin();
+	double dMapSizeY = m_CurLog->m_pLogY->GetMax() - m_CurLog->m_pLogY->GetMin();
+	double dMapOffsY = m_CurLog->m_pLogY->GetMin();
+	
+	int iWidth  = x2 - x1 + 1;
+	int iHeight = y2 - y1 + 1;
+	double dScaleX = iWidth  / dMapSizeX;
+	double dScaleY = iHeight / dMapSizeY;
+	double dScale;
+	
+	if( dScaleX < dScaleY ){
+		// 幅律速なので y1 を再計算
+		dScale = dScaleX;
+		if( uFlag & ALIGN_HCENTER ){
+			y1 = y1 + ( iHeight - ( int )( dMapSizeY * dScale )) / 2;
+		}else if( uFlag & ALIGN_BOTTOM ){
+			y1 = y1 + ( iHeight - ( int )( dMapSizeY * dScale ));
+		}
+	}else{
+		// 高さ律速なので x1 を再計算
+		dScale = dScaleY;
+		if( uFlag & ALIGN_HCENTER ){
+			x1 = x1 + ( iWidth - ( int )( dMapSizeX * dScale )) / 2;
+		}else if( uFlag & ALIGN_BOTTOM ){
+			x1 = x1 + ( iWidth - ( int )( dMapSizeX * dScale ));
+		}
+	}
+	
+	// そのラップの何 % を進んだかを求める
+	int iLapIdx;
+	double dProceeding;
+	
+	if( pLap->m_iLapIdx < 0 ){
+		iLapIdx = 0;
+		dProceeding = 0;
+	}else{
+		iLapIdx = pLap->m_iLapIdx;
+		dProceeding = (
+			GetFrameCnt() -
+			pLap->m_Lap[ iLapIdx ].fLogNum
+		) / (
+			pLap->m_Lap[ iLapIdx + 1 ].fLogNum -
+			pLap->m_Lap[ iLapIdx ].fLogNum
+		);
+	}
+	
+	// タイム差分を求めて push
+	// 下位 8bit が id, 上位残りがタイム差
+	std::vector<int> Diff;
+	for( i = 0; i < ( int )pLap->m_strName.size(); ++i ){
+		if( i == pLap->m_iMainNameIdx ){
+			Diff.push_back( i );
+		}else{
+			int iDiff = pLap->m_LapTime[ i ][ iLapIdx ];
+			iDiff += ( int )(( pLap->m_LapTime[ i ][ iLapIdx + 1 ] - iDiff ) * dProceeding );
+			
+			Diff.push_back(( iDiff << 8 ) | i );
+		}
+	}
+	
+	std::sort( Diff.begin(), Diff.end());	// ソート
+	int	iMyTime = m_CurLog->GetTime();		// 自分のタイム
+	
+	// 遅い順に表示
+	int iSearchStartIdx = pLap->m_iSearchStartIdx;
+	
+	for( i = Diff.size() - 1; i >= 0; --i ){
+		double dIndex = m_CurLog->GetIndex( iMyTime - ( Diff[ i ] >> 8 ), iSearchStartIdx );
+		iSearchStartIdx = ( int )dIndex;
+		if( i == Diff.size() - 1 ) pLap->m_iSearchStartIdx = iSearchStartIdx;
+		
+		// 座標取得
+		x = x1 + ( int )GetMapPos( m_CurLog->X( dIndex ), X );
+		y = y1 + ( int )GetMapPos( m_CurLog->Y( dIndex ), Y );
+		
+		DrawTextAlign(
+			x, y, ALIGN_VCENTER | ALIGN_HCENTER,
+			pLap->m_strName[ Diff[ i ] & 0xFF ].c_str(), Font, uColor, uColorOutline
+		);
+	}
+	
+	SelectLogVsd;
+}
+
 /*** 針描画 *****************************************************************/
 
 void CVsdFilter::DrawNeedle(

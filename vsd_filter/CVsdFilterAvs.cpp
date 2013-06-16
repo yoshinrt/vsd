@@ -81,6 +81,11 @@ CVsdFilter::CVsdFilter(
 	// mark= 引数処理
 	if( p = args[ ARGID_MARK ].AsString( NULL )) ParseMarkStr( p );
 	
+	// ラップチャート
+	if( p = args[ ARGID_STRPARAM_LAPCHART ].AsString( NULL )){
+		if( !LapChartRead( p )) env->ThrowError( PROG_NAME ": read lap chart \"%s\" failed.", p );
+	}
+	
 	// ログリード
 	if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )){
 		const char *szReader = args[ ARGID_STRPARAM_LOGFILE_READER ].AsString( NULL );

@@ -234,13 +234,19 @@ class CVsdFilter
 	);
 	void DrawMap(	// !js_func
 		int x1, int y1, int x2, int y2,
-		UINT uAlign,
+		UINT uFlag,
 		int iWidth,
 		int iIndicatorR,
 		tRABY uColorIndicator,
 		tRABY uColorG0,
 		tRABY uColorGPlus,
 		tRABY uColorGMinus
+	);
+	void DrawMapPos(	// !js_func
+		int x1, int y1, int x2, int y2,	UINT uFlag,
+		CVsdFont &Font,
+		tRABY uColor,						// !default:color_white
+		tRABY uColorOutline = color_black	// !default:color_black
 	);
 	void DrawLapTime(	// !js_func
 		int x, int y, UINT uAlign, CVsdFont &Font,
@@ -327,7 +333,7 @@ class CVsdFilter
 	void CalcLapTime( void );
 	
 	// ラップチャートリーダ
-	int LapChartRead( char *szFileName );
+	int LapChartRead( const char *szFileName );
 	
 	// スキン dir 取得
 	char *SetSkinFile( const char *szSkinFile ){

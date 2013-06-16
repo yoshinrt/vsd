@@ -1299,6 +1299,15 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				StrTokFile( szBuf2, szBuf, STF_PATH2 );
 				CPushDir push_dir( szBuf2 );
 				
+				if(
+					g_Vsd->m_szLapChart &&
+					g_Vsd->LapChartRead( g_Vsd->m_szLapChart )
+				){
+					filter->exfunc->filter_window_update( filter );
+					SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_LAPCHART ), g_Vsd->m_szLapChart );
+					g_Vsd->DeleteScript();
+				}
+				
 				// ƒƒOƒŠ[ƒh
 				if( g_Vsd->m_szLogFile ){
 					DebugCmd(

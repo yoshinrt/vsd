@@ -346,7 +346,7 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 
 #define NAME_BUF_SIZE	64
 
-int CVsdFilter::LapChartRead( char *szFileName ){
+int CVsdFilter::LapChartRead( const char *szFileName ){
 	
 	// 既に優先度の高い Log があればリターン (今はない)
 	if( m_LapLog && m_LapLog->m_iLapMode > LAPMODE_CHART ){
@@ -365,9 +365,6 @@ int CVsdFilter::LapChartRead( char *szFileName ){
 	pLapLog->m_iLapMode = LAPMODE_CHART;
 	pLapLog->m_iLapSrc  = LAPSRC_VIDEO;
 	
-	int iStartFrame	= 0;
-	int iEndFrame	= 0x7FFFFFFF;
-	int iMainNameIdx	= -1;
 	int iMaxMembers;
 	
 	int	iTimeSum	= 0;
@@ -383,21 +380,25 @@ int CVsdFilter::LapChartRead( char *szFileName ){
 	// ファイルリード
 	while( fgets( szBuf, BUF_SIZE, fp )){
 		if(
-			sscanf( szBuf, "StartFrame:%u", &iStartFrame ) == 0 &&
-			sscanf( szBuf, "EndFrame:%u",   &iEndFrame ) == 0 &&
+			sscanf( szBuf, "StartFrame:%u", &pLapLog->m_iStartFrame ) == 0 &&
+			sscanf( szBuf, "EndFrame:%u",   &pLapLog->m_iEndFrame ) == 0 &&
 			sscanf( szBuf, "Name:%s",       szMainName ) == 0 &&
 			strncmp( szBuf, "LapChart:", 9 ) == 0
 		){
 			// 走者一覧取得
 			if( fgets( szBuf, BUF_SIZE, fp )){
-				char *p = szBuf;
+				char	*p = szBuf;
+				LPWSTR	wstr = NULL;
+				
 				std::vector<int>	int_vec;	// ダミー
 				iMaxMembers = 0;
 				
 				while( StrGetParam( szName, &p )){
-					pLapLog->m_strName.push_back( szName );
+					pLapLog->m_strName.push_back( StringNew( wstr, szName ));
+					delete wstr; wstr = NULL;
+					
 					pLapLog->m_LapTime.push_back( int_vec );
-					if( strcmp( szName, szMainName ) == 0 ) iMainNameIdx = iMaxMembers;
+					if( strcmp( szName, szMainName ) == 0 ) pLapLog->m_iMainNameIdx = iMaxMembers;
 					++iMaxMembers;
 				}
 			}
@@ -413,7 +414,7 @@ int CVsdFilter::LapChartRead( char *szFileName ){
 					pLapLog->m_LapTime[ i ].push_back( iTime = ( int )( strtod( szName, NULL ) * 1000 ));
 					
 					// 自分のタイムなのでラップデータを構築
-					if( i == iMainNameIdx ){
+					if( i == pLapLog->m_iMainNameIdx ){
 						if( Lap.uLap ) Lap.iTime = iTime;
 						iTimeSum += iTime;
 						pLapLog->PushLap( Lap );
@@ -436,7 +437,28 @@ int CVsdFilter::LapChartRead( char *szFileName ){
 	iTime = 0;
 	for( i = 0; i < ( int )pLapLog->m_Lap.size(); ++i ){
 		iTime += pLapLog->m_Lap[ i ].iTime;
-		pLapLog->m_Lap[ i ].fLogNum = ( float )( iStartFrame + ( iEndFrame - iStartFrame ) * ( double )iTime / iTimeSum );
+		pLapLog->m_Lap[ i ].fLogNum = ( float )(
+			pLapLog->m_iStartFrame +
+			( pLapLog->m_iEndFrame - pLapLog->m_iStartFrame ) * ( double )iTime / iTimeSum
+		);
+	}
+	
+	// タイム表をタイム差表に変換
+	for( int j = 0; j < ( int )pLapLog->m_LapTime.size(); ++j ){
+		if( j == pLapLog->m_iMainNameIdx ) continue;	// 自分はスキップ
+		
+		// ゴール時点の差分時間
+		int iPrev = pLapLog->m_LapTime[ j ][ 0 ] - pLapLog->m_LapTime[ pLapLog->m_iMainNameIdx ][ 0 ];
+		int iNext;
+		for( i = pLapLog->m_LapTime[ j ].size() - 1; i >= 1; --i ){
+			iNext = iPrev - pLapLog->m_LapTime[ j ][ i ] + pLapLog->m_LapTime[ pLapLog->m_iMainNameIdx ][ i ];
+			pLapLog->m_LapTime[ j ][ i ] = iPrev;
+			iPrev = iNext;
+		}
+		pLapLog->m_LapTime[ j ][ 0 ] = iPrev;
+		
+		// 番犬
+		pLapLog->m_LapTime[ j ].push_back( pLapLog->m_LapTime[ j ][ pLapLog->m_LapTime.size() - 1 ] );
 	}
 	
 	Lap.fLogNum	= FLT_MAX;	// 番犬

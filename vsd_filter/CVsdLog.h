@@ -80,8 +80,20 @@ class CLapLog {
 
 class CLapLogAll : public CLapLog {
   public:
-	std::vector<std::string>		m_strName;
+	CLapLogAll(){
+		m_iStartFrame	= 0;
+		m_iEndFrame		= 0x7FFFFFFF;
+		m_iMainNameIdx	= 0;
+		m_iSearchStartIdx	= -1;
+	}
+	
+	std::vector<std::wstring>		m_strName;
 	std::vector<std::vector<int> >	m_LapTime;
+	
+	int	m_iStartFrame;
+	int	m_iEndFrame;
+	int	m_iMainNameIdx;
+	int	m_iSearchStartIdx;
 };
 
 /*** ÉçÉO 1çÄñ⁄ *************************************************************/

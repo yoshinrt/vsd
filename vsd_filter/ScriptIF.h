@@ -463,6 +463,28 @@ class CVsdFilterIF {
 		
 		return v8::Undefined();
 	}
+	static v8::Handle<v8::Value> Func_DrawMapPos( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( 6 <= iLen && iLen <= 8 )) return v8::Undefined();
+		v8::Local<v8::Object> Font5 = args[ 5 ]->ToObject();
+		if( CScript::CheckClass( Font5, "Font", "arg[ 6 ] must be Font" )) return v8::Undefined();
+		CVsdFont *obj5 = CScript::GetThis<CVsdFont>( Font5 );
+		if( !obj5 ) return v8::Undefined();
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		thisObj->DrawMapPos(
+			args[ 0 ]->Int32Value(),
+			args[ 1 ]->Int32Value(),
+			args[ 2 ]->Int32Value(),
+			args[ 3 ]->Int32Value(),
+			args[ 4 ]->Int32Value(),
+			*obj5,
+			iLen <= 6 ? color_white : PIXEL_RABY::Argb2Raby( args[ 6 ]->Int32Value()),
+			iLen <= 7 ? color_black : PIXEL_RABY::Argb2Raby( args[ 7 ]->Int32Value())
+		);
+		
+		return v8::Undefined();
+	}
 	static v8::Handle<v8::Value> Func_DrawLapTime( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CScript::CheckArgs( 4 <= iLen && iLen <= 8 )) return v8::Undefined();
@@ -584,6 +606,7 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawGSnake" ), v8::FunctionTemplate::New( Func_DrawGSnake ));
 		proto->Set( v8::String::New( "DrawMeterScale" ), v8::FunctionTemplate::New( Func_DrawMeterScale ));
 		proto->Set( v8::String::New( "DrawMap" ), v8::FunctionTemplate::New( Func_DrawMap ));
+		proto->Set( v8::String::New( "DrawMapPos" ), v8::FunctionTemplate::New( Func_DrawMapPos ));
 		proto->Set( v8::String::New( "DrawLapTime" ), v8::FunctionTemplate::New( Func_DrawLapTime ));
 		proto->Set( v8::String::New( "DrawLapTimeLog" ), v8::FunctionTemplate::New( Func_DrawLapTimeLog ));
 		proto->Set( v8::String::New( "DrawNeedle" ), v8::FunctionTemplate::New( Func_DrawNeedle ));
