@@ -404,8 +404,8 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 			}
 			
 			// ラップチャート取得
-			// 1行目はゴール時のタイム差
-			// 2行目以降がラップタイム
+			// 1行目以降がラップタイム
+			// 最終行目はゴール時のタイム差
 			while( fgets( szBuf, BUF_SIZE, fp )){
 				char *p = szBuf;
 				
@@ -413,13 +413,7 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 					StrGetParam( szName, &p );
 					pLapLog->m_LapTime[ i ].push_back( iTime = ( int )( strtod( szName, NULL ) * 1000 ));
 					
-					// 自分のタイムなのでラップデータを構築
-					if( i == pLapLog->m_iMainNameIdx ){
-						if( Lap.uLap ) Lap.iTime = iTime;
-						iTimeSum += iTime;
-						pLapLog->PushLap( Lap );
-						++Lap.uLap;
-					}
+					if( i == pLapLog->m_iMainNameIdx ) iTimeSum += iTime;
 				}
 			}
 			break;
@@ -428,42 +422,44 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 	
 	fclose( fp );
 	
-	if( pLapLog->m_Lap.size() == 0 ){
+	if( pLapLog->m_LapTime.size() == 0 || pLapLog->MainNameLap().size() <= 1 ){
 		delete pLapLog;
 		return 0;
 	}
 	
-	// Frame# を補正
+	// ゴール差分を足しすぎたので引く
+	iTimeSum -= pLapLog->MainNameLap()[ pLapLog->MainNameLap().size() - 1 ];
+	
+	// ラップデータを構築
+	Lap.fLogNum = ( float )pLapLog->m_iStartFrame;
+	pLapLog->PushLap( Lap );	// 計測スタート ( iTime = 0 )
 	iTime = 0;
-	for( i = 0; i < ( int )pLapLog->m_Lap.size(); ++i ){
-		iTime += pLapLog->m_Lap[ i ].iTime;
-		pLapLog->m_Lap[ i ].fLogNum = ( float )(
+	
+	for( i = 0; i < ( int )pLapLog->MainNameLap().size() - 1; ++i ){
+		iTime += Lap.iTime = pLapLog->MainNameLap()[ i ];
+		++Lap.uLap;
+		
+		Lap.fLogNum = ( float )(
 			pLapLog->m_iStartFrame +
 			( pLapLog->m_iEndFrame - pLapLog->m_iStartFrame ) * ( double )iTime / iTimeSum
 		);
-	}
-	
-	// タイム表をタイム差表に変換
-	for( int j = 0; j < ( int )pLapLog->m_LapTime.size(); ++j ){
-		if( j == pLapLog->m_iMainNameIdx ) continue;	// 自分はスキップ
-		
-		// ゴール時点の差分時間
-		int iPrev = pLapLog->m_LapTime[ j ][ 0 ] - pLapLog->m_LapTime[ pLapLog->m_iMainNameIdx ][ 0 ];
-		int iNext;
-		for( i = pLapLog->m_LapTime[ j ].size() - 1; i >= 1; --i ){
-			iNext = iPrev - pLapLog->m_LapTime[ j ][ i ] + pLapLog->m_LapTime[ pLapLog->m_iMainNameIdx ][ i ];
-			pLapLog->m_LapTime[ j ][ i ] = iPrev;
-			iPrev = iNext;
-		}
-		pLapLog->m_LapTime[ j ][ 0 ] = iPrev;
-		
-		// 番犬
-		pLapLog->m_LapTime[ j ].push_back( pLapLog->m_LapTime[ j ][ pLapLog->m_LapTime.size() - 1 ] );
+		pLapLog->PushLap( Lap );
 	}
 	
 	Lap.fLogNum	= FLT_MAX;	// 番犬
 	Lap.iTime	= 0;		// 番犬
 	pLapLog->m_Lap.push_back( Lap );
+	
+	// タイム表をフレーム番号表に変換
+	for( int j = 0; j < ( int )pLapLog->m_LapTime.size(); ++j ){
+		
+		i = pLapLog->m_LapTime[ j ].size() - 1;
+		iTime = pLapLog->m_LapTime[ j ][ i ] * 2;	// ループ初回の iTime をゴール差分時間にするための措置
+		for( ; i >= 0; --i ){
+			iTime -= pLapLog->m_LapTime[ j ][ i ];
+			pLapLog->m_LapTime[ j ][ i ] = pLapLog->m_iEndFrame + ( int )(( double )( pLapLog->m_iEndFrame - pLapLog->m_iStartFrame ) * iTime / iTimeSum );
+		}
+	}
 	
 	// ここでやっと m_LapLog を上書き
 	if( m_LapLog ) delete m_LapLog;

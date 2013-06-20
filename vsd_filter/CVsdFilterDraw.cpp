@@ -1057,36 +1057,50 @@ void CVsdFilter::DrawMapPos(
 		}
 	}
 	
-	// そのラップの何 % を進んだかを求める
-	int iLapIdx;
-	double dProceeding;
-	
-	if( pLap->m_iLapIdx < 0 ){
-		iLapIdx = 0;
-		dProceeding = 0;
+	// 各車のカメラ者との差分を求める
+	int iFrame;
+	if( m_LapLog->m_iLapIdx < 0 ){
+		iFrame = pLap->MainNameLap()[ 0 ];
+	}else if( m_LapLog->m_iLapIdx >= ( int )pLap->MainNameLap().size() - 1 ){
+		iFrame = pLap->MainNameLap()[ pLap->MainNameLap().size() - 1 ];
 	}else{
-		iLapIdx = pLap->m_iLapIdx;
-		dProceeding = (
-			GetFrameCnt() -
-			pLap->m_Lap[ iLapIdx ].fLogNum
-		) / (
-			pLap->m_Lap[ iLapIdx + 1 ].fLogNum -
-			pLap->m_Lap[ iLapIdx ].fLogNum
-		);
+		iFrame = GetFrameCnt();
 	}
 	
-	// タイム差分を求めて push
-	// 下位 8bit が id, 上位残りがタイム差
 	std::vector<int> Diff;
 	for( i = 0; i < ( int )pLap->m_strName.size(); ++i ){
-		if( i == pLap->m_iMainNameIdx ){
-			Diff.push_back( i );
-		}else{
-			int iDiff = pLap->m_LapTime[ i ][ iLapIdx ];
-			iDiff += ( int )(( pLap->m_LapTime[ i ][ iLapIdx + 1 ] - iDiff ) * dProceeding );
-			
-			Diff.push_back(( iDiff << 8 ) | i );
+		int iLap;
+		double dProceeding;
+		
+		// ラップ数と何 % を進んだかを求める
+		for( iLap = -1; iLap < ( int )pLap->m_LapTime[ i ].size() - 1; ++iLap ){
+			if( iFrame < pLap->m_LapTime[ i ][ iLap + 1 ] ) break;
 		}
+		if( iLap < 0 ){
+			iLap = 0;
+			dProceeding = 0;
+		}else if( iLap == pLap->m_LapTime[ i ].size() - 1 ){
+			--iLap;
+			dProceeding = 1;
+		}else{
+			dProceeding =
+				( double )( iFrame                 - pLap->m_LapTime[ i ][ iLap ] ) /
+				( pLap->m_LapTime[ i ][ iLap + 1 ] - pLap->m_LapTime[ i ][ iLap ] );
+		}
+		
+		// 上で求めた位置の，カメラ車におけるフレーム番号を求め
+		// そこからカメラ車との時間差を求めて push
+		// 下位 8bit が id, 上位残りがタイム差
+		Diff.push_back(
+			(
+				( int )(
+					(
+						pLap->MainNameLap()[ iLap ] - iFrame +
+						( pLap->MainNameLap()[ iLap + 1 ] - pLap->MainNameLap()[ iLap ] ) * dProceeding
+					) / GetFPS() * 1000
+				) << 8
+			) | i
+		);
 	}
 	
 	std::sort( Diff.begin(), Diff.end());	// ソート
@@ -1095,10 +1109,10 @@ void CVsdFilter::DrawMapPos(
 	// 遅い順に表示
 	int iSearchStartIdx = pLap->m_iSearchStartIdx;
 	
-	for( i = Diff.size() - 1; i >= 0; --i ){
-		double dIndex = m_CurLog->GetIndex( iMyTime - ( Diff[ i ] >> 8 ), iSearchStartIdx );
+	for( i = 0; i < ( int )Diff.size(); ++i ){
+		double dIndex = m_CurLog->GetIndex( iMyTime + ( Diff[ i ] >> 8 ), iSearchStartIdx );
 		iSearchStartIdx = ( int )dIndex;
-		if( i == Diff.size() - 1 ) pLap->m_iSearchStartIdx = iSearchStartIdx;
+		if( i == 0 ) pLap->m_iSearchStartIdx = iSearchStartIdx;
 		
 		// 座標取得
 		x = x1 + ( int )GetMapPos( m_CurLog->X( dIndex ), X );

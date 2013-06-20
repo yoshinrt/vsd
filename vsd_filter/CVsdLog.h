@@ -90,6 +90,8 @@ class CLapLogAll : public CLapLog {
 	std::vector<std::wstring>		m_strName;
 	std::vector<std::vector<int> >	m_LapTime;
 	
+	std::vector<int>& MainNameLap( void ){ return m_LapTime[ m_iMainNameIdx ]; }
+	
 	int	m_iStartFrame;
 	int	m_iEndFrame;
 	int	m_iMainNameIdx;
