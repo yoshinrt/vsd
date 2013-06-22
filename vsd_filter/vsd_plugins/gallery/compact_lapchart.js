@@ -104,15 +104,10 @@ function Draw(){
 	);
 	
 	// 走行軌跡
-	Vsd.DrawMap(
+	Vsd.DrawMapPosition(
 		8 * Scale, 128 * Scale, Vsd.Width - 8 * Scale, Vsd.Height - 8,
 		ALIGN_VCENTER | ALIGN_HCENTER,
-		4 * Scale, 6 * Scale, 0xFF000000, 0x00FFFF, 0x00FFFF, 0x00FFFF
-	);
-	Vsd.DrawMapPos(
-		8 * Scale, 128 * Scale, Vsd.Width - 8 * Scale, Vsd.Height - 8,
-		ALIGN_VCENTER | ALIGN_HCENTER,
-		FontSOL
+		4 * Scale, 0x00FFFF, FontSOL
 	);
 	
 	// グラフ

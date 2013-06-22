@@ -358,7 +358,7 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 	if( !fp ) return 0;
 	
 	char	szBuf[ BUF_SIZE ];
-	char	szMainName[ NAME_BUF_SIZE ] = "";
+	char	szCamName[ NAME_BUF_SIZE ] = "";
 	char	szName[ NAME_BUF_SIZE ];
 	
 	CLapLogAll *pLapLog = new CLapLogAll();
@@ -382,7 +382,7 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 		if(
 			sscanf( szBuf, "StartFrame:%u", &pLapLog->m_iStartFrame ) == 0 &&
 			sscanf( szBuf, "EndFrame:%u",   &pLapLog->m_iEndFrame ) == 0 &&
-			sscanf( szBuf, "Name:%s",       szMainName ) == 0 &&
+			sscanf( szBuf, "Name:%s",       szCamName ) == 0 &&
 			strncmp( szBuf, "LapChart:", 9 ) == 0
 		){
 			// 走者一覧取得
@@ -397,8 +397,8 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 					pLapLog->m_strName.push_back( StringNew( wstr, szName ));
 					delete wstr; wstr = NULL;
 					
-					pLapLog->m_LapTime.push_back( int_vec );
-					if( strcmp( szName, szMainName ) == 0 ) pLapLog->m_iMainNameIdx = iMaxMembers;
+					pLapLog->m_LapTable.push_back( int_vec );
+					if( strcmp( szName, szCamName ) == 0 ) pLapLog->m_iCamCarIdx = iMaxMembers;
 					++iMaxMembers;
 				}
 			}
@@ -411,9 +411,9 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 				
 				for( i = 0; i < iMaxMembers; ++i ){
 					StrGetParam( szName, &p );
-					pLapLog->m_LapTime[ i ].push_back( iTime = ( int )( strtod( szName, NULL ) * 1000 ));
+					pLapLog->m_LapTable[ i ].push_back( iTime = ( int )( strtod( szName, NULL ) * 1000 ));
 					
-					if( i == pLapLog->m_iMainNameIdx ) iTimeSum += iTime;
+					if( i == pLapLog->m_iCamCarIdx ) iTimeSum += iTime;
 				}
 			}
 			break;
@@ -422,21 +422,21 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 	
 	fclose( fp );
 	
-	if( pLapLog->m_LapTime.size() == 0 || pLapLog->MainNameLap().size() <= 1 ){
+	if( pLapLog->m_LapTable.size() == 0 || pLapLog->CamCarLap().size() <= 1 ){
 		delete pLapLog;
 		return 0;
 	}
 	
 	// ゴール差分を足しすぎたので引く
-	iTimeSum -= pLapLog->MainNameLap()[ pLapLog->MainNameLap().size() - 1 ];
+	iTimeSum -= pLapLog->CamCarLap()[ pLapLog->CamCarLap().size() - 1 ];
 	
 	// ラップデータを構築
 	Lap.fLogNum = ( float )pLapLog->m_iStartFrame;
 	pLapLog->PushLap( Lap );	// 計測スタート ( iTime = 0 )
 	iTime = 0;
 	
-	for( i = 0; i < ( int )pLapLog->MainNameLap().size() - 1; ++i ){
-		iTime += Lap.iTime = pLapLog->MainNameLap()[ i ];
+	for( i = 0; i < ( int )pLapLog->CamCarLap().size() - 1; ++i ){
+		iTime += Lap.iTime = pLapLog->CamCarLap()[ i ];
 		++Lap.uLap;
 		
 		Lap.fLogNum = ( float )(
@@ -451,13 +451,13 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 	pLapLog->m_Lap.push_back( Lap );
 	
 	// タイム表をフレーム番号表に変換
-	for( int j = 0; j < ( int )pLapLog->m_LapTime.size(); ++j ){
+	for( int j = 0; j < ( int )pLapLog->m_LapTable.size(); ++j ){
 		
-		i = pLapLog->m_LapTime[ j ].size() - 1;
-		iTime = pLapLog->m_LapTime[ j ][ i ] * 2;	// ループ初回の iTime をゴール差分時間にするための措置
+		i = pLapLog->m_LapTable[ j ].size() - 1;
+		iTime = pLapLog->m_LapTable[ j ][ i ] * 2;	// ループ初回の iTime をゴール差分時間にするための措置
 		for( ; i >= 0; --i ){
-			iTime -= pLapLog->m_LapTime[ j ][ i ];
-			pLapLog->m_LapTime[ j ][ i ] = pLapLog->m_iEndFrame + ( int )(( double )( pLapLog->m_iEndFrame - pLapLog->m_iStartFrame ) * iTime / iTimeSum );
+			iTime -= pLapLog->m_LapTable[ j ][ i ];
+			pLapLog->m_LapTable[ j ][ i ] = pLapLog->m_iEndFrame + ( int )(( double )( pLapLog->m_iEndFrame - pLapLog->m_iStartFrame ) * iTime / iTimeSum );
 		}
 	}
 	
@@ -560,7 +560,7 @@ BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, L
 
 /****************************************************************************/
 
-BOOL WINAPI DllMain(
+BOOL WINAPI DllCam(
 	HINSTANCE	hinstDLL,	// handle to DLL module
 	DWORD		fdwReason,	// reason for calling function
 	LPVOID		lpvReserved	// reserved

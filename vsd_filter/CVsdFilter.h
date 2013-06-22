@@ -242,10 +242,11 @@ class CVsdFilter
 		tRABY uColorGPlus,
 		tRABY uColorGMinus
 	);
-	void DrawMapPos(	// !js_func
+	void DrawMapPosition(	// !js_func
 		int x1, int y1, int x2, int y2,	UINT uFlag,
+		int iLineWidth, tRABY uColor,
 		CVsdFont &Font,
-		tRABY uColor,						// !default:color_white
+		tRABY uColorFont,					// !default:color_white
 		tRABY uColorOutline = color_black	// !default:color_black
 	);
 	void DrawLapTime(	// !js_func

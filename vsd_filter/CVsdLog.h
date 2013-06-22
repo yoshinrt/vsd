@@ -83,18 +83,18 @@ class CLapLogAll : public CLapLog {
 	CLapLogAll(){
 		m_iStartFrame	= 0;
 		m_iEndFrame		= 0x7FFFFFFF;
-		m_iMainNameIdx	= 0;
+		m_iCamCarIdx	= 0;
 		m_iSearchStartIdx	= -1;
 	}
 	
 	std::vector<std::wstring>		m_strName;
-	std::vector<std::vector<int> >	m_LapTime;
+	std::vector<std::vector<int> >	m_LapTable;
 	
-	std::vector<int>& MainNameLap( void ){ return m_LapTime[ m_iMainNameIdx ]; }
+	std::vector<int>& CamCarLap( void ){ return m_LapTable[ m_iCamCarIdx ]; }
 	
 	int	m_iStartFrame;
 	int	m_iEndFrame;
-	int	m_iMainNameIdx;
+	int	m_iCamCarIdx;
 	int	m_iSearchStartIdx;
 };
 

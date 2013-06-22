@@ -143,6 +143,7 @@ void CVsdFilter::DrawCircle(
 	tRABY uColor,
 	UINT uFlag
 ){
+	if( !r ) return;
 	
 	int	i = r;
 	int j = 0;
@@ -1013,9 +1014,10 @@ void CVsdFilter::DrawMap(
 
 /*** 走行位置表示 ***********************************************************/
 
-void CVsdFilter::DrawMapPos(
+void CVsdFilter::DrawMapPosition(
 	int x1, int y1, int x2, int y2,	UINT uFlag,
-	CVsdFont &Font, tRABY uColor, tRABY uColorOutline
+	int iLineWidth, tRABY uColor,
+	CVsdFont &Font, tRABY uColorFont, tRABY uColorOutline
 ){
 	int	x, y;
 	int i;
@@ -1027,6 +1029,11 @@ void CVsdFilter::DrawMapPos(
 	SelectLogGPS;
 	
 	if( !LineTrace() || !m_CurLog || !m_CurLog->m_pLogX ) return;
+	
+	DrawMap( 
+		x1, y1, x2, y2, uFlag, iLineWidth, 0,
+		RABY_TRANSPARENT, uColor, uColor, uColor
+	);
 	
 	double dMapSizeX = m_CurLog->m_pLogX->GetMax() - m_CurLog->m_pLogX->GetMin();
 	double dMapOffsX = m_CurLog->m_pLogX->GetMin();
@@ -1060,9 +1067,9 @@ void CVsdFilter::DrawMapPos(
 	// 各車のカメラ者との差分を求める
 	int iFrame;
 	if( m_LapLog->m_iLapIdx < 0 ){
-		iFrame = pLap->MainNameLap()[ 0 ];
-	}else if( m_LapLog->m_iLapIdx >= ( int )pLap->MainNameLap().size() - 1 ){
-		iFrame = pLap->MainNameLap()[ pLap->MainNameLap().size() - 1 ];
+		iFrame = pLap->CamCarLap()[ 0 ];
+	}else if( m_LapLog->m_iLapIdx >= ( int )pLap->CamCarLap().size() - 1 ){
+		iFrame = pLap->CamCarLap()[ pLap->CamCarLap().size() - 1 ];
 	}else{
 		iFrame = GetFrameCnt();
 	}
@@ -1073,19 +1080,19 @@ void CVsdFilter::DrawMapPos(
 		double dProceeding;
 		
 		// ラップ数と何 % を進んだかを求める
-		for( iLap = -1; iLap < ( int )pLap->m_LapTime[ i ].size() - 1; ++iLap ){
-			if( iFrame < pLap->m_LapTime[ i ][ iLap + 1 ] ) break;
+		for( iLap = -1; iLap < ( int )pLap->m_LapTable[ i ].size() - 1; ++iLap ){
+			if( iFrame < pLap->m_LapTable[ i ][ iLap + 1 ] ) break;
 		}
 		if( iLap < 0 ){
 			iLap = 0;
 			dProceeding = 0;
-		}else if( iLap == pLap->m_LapTime[ i ].size() - 1 ){
+		}else if( iLap == pLap->m_LapTable[ i ].size() - 1 ){
 			--iLap;
 			dProceeding = 1;
 		}else{
 			dProceeding =
-				( double )( iFrame                 - pLap->m_LapTime[ i ][ iLap ] ) /
-				( pLap->m_LapTime[ i ][ iLap + 1 ] - pLap->m_LapTime[ i ][ iLap ] );
+				( double )( iFrame                 - pLap->m_LapTable[ i ][ iLap ] ) /
+				( pLap->m_LapTable[ i ][ iLap + 1 ] - pLap->m_LapTable[ i ][ iLap ] );
 		}
 		
 		// 上で求めた位置の，カメラ車におけるフレーム番号を求め
@@ -1095,8 +1102,8 @@ void CVsdFilter::DrawMapPos(
 			(
 				( int )(
 					(
-						pLap->MainNameLap()[ iLap ] - iFrame +
-						( pLap->MainNameLap()[ iLap + 1 ] - pLap->MainNameLap()[ iLap ] ) * dProceeding
+						pLap->CamCarLap()[ iLap ] - iFrame +
+						( pLap->CamCarLap()[ iLap + 1 ] - pLap->CamCarLap()[ iLap ] ) * dProceeding
 					) / GetFPS() * 1000
 				) << 8
 			) | i
@@ -1120,7 +1127,7 @@ void CVsdFilter::DrawMapPos(
 		
 		DrawTextAlign(
 			x, y, ALIGN_VCENTER | ALIGN_HCENTER,
-			pLap->m_strName[ Diff[ i ] & 0xFF ].c_str(), Font, uColor, uColorOutline
+			pLap->m_strName[ Diff[ i ] & 0xFF ].c_str(), Font, uColorFont, uColorOutline
 		);
 	}
 	
