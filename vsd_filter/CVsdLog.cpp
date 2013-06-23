@@ -715,3 +715,185 @@ void CVsdLog::RotateMap( double dAngle ){
 		SetY( i, -sin( dAngle ) * X0( i ) + cos( dAngle ) * Y0( i ));
 	}
 }
+
+/*** チャートリード *********************************************************/
+
+#define NAME_BUF_SIZE	64
+
+int CLapLogAll::LapChartRead( const char *szFileName ){
+	
+	// ファイルオープン
+	FILE *fp = fopen( szFileName, "r" );
+	if( !fp ) return 0;
+	
+	char	szBuf[ BUF_SIZE ];
+	char	szCamName[ NAME_BUF_SIZE ] = "";
+	char	szName[ NAME_BUF_SIZE ];
+	
+	m_iLapMode = LAPMODE_CHART;
+	m_iLapSrc  = LAPSRC_VIDEO;
+	
+	int iMaxMembers;
+	
+	int	iTimeSum	= 0;
+	int	iTime;
+	int i;
+	
+	LAP_t	Lap = {
+		0,	// uLap
+		0,	// fLogNum
+		0	// iTime
+	};
+	
+	// ファイルリード
+	while( fgets( szBuf, BUF_SIZE, fp )){
+		if(
+			sscanf( szBuf, "StartFrame:%u", &m_iStartFrame ) == 0 &&
+			sscanf( szBuf, "EndFrame:%u",   &m_iEndFrame ) == 0 &&
+			sscanf( szBuf, "Name:%s",       szCamName ) == 0 &&
+			strncmp( szBuf, "LapChart:", 9 ) == 0
+		){
+			// 走者一覧取得
+			if( fgets( szBuf, BUF_SIZE, fp )){
+				char	*p = szBuf;
+				LPWSTR	wstr = NULL;
+				
+				std::vector<int>	int_vec;	// ダミー
+				iMaxMembers = 0;
+				
+				while( StrGetParam( szName, &p )){
+					m_strName.push_back( StringNew( wstr, szName ));
+					delete wstr; wstr = NULL;
+					
+					m_LapTable.push_back( int_vec );
+					if( strcmp( szName, szCamName ) == 0 ) m_iCamCarIdx = iMaxMembers;
+					++iMaxMembers;
+				}
+			}
+			
+			// ラップチャート取得
+			// 1行目以降がラップタイム
+			// 最終行目はゴール時のタイム差
+			while( fgets( szBuf, BUF_SIZE, fp )){
+				char *p = szBuf;
+				
+				for( i = 0; i < iMaxMembers; ++i ){
+					StrGetParam( szName, &p );
+					m_LapTable[ i ].push_back( iTime = ( int )( strtod( szName, NULL ) * 1000 ));
+					
+					if( i == m_iCamCarIdx ) iTimeSum += iTime;
+				}
+			}
+			break;
+		}
+	}
+	
+	fclose( fp );
+	
+	if( m_LapTable.size() == 0 || CamCarLap().size() <= 1 ){
+		return 0;
+	}
+	
+	// ゴール差分を足しすぎたので引く
+	iTimeSum -= CamCarLap()[ CamCarLap().size() - 1 ];
+	
+	// ラップデータを構築
+	Lap.fLogNum = ( float )m_iStartFrame;
+	PushLap( Lap );	// 計測スタート ( iTime = 0 )
+	iTime = 0;
+	
+	for( i = 0; i < ( int )CamCarLap().size() - 1; ++i ){
+		iTime += Lap.iTime = CamCarLap()[ i ];
+		++Lap.uLap;
+		
+		Lap.fLogNum = ( float )(
+			m_iStartFrame +
+			( m_iEndFrame - m_iStartFrame ) * ( double )iTime / iTimeSum
+		);
+		PushLap( Lap );
+	}
+	
+	Lap.fLogNum	= FLT_MAX;	// 番犬
+	Lap.iTime	= 0;		// 番犬
+	m_Lap.push_back( Lap );
+	
+	// タイム表をフレーム番号表に変換
+	for( int j = 0; j < ( int )m_LapTable.size(); ++j ){
+		
+		i = m_LapTable[ j ].size() - 1;
+		iTime = m_LapTable[ j ][ i ] * 2;	// ループ初回の iTime をゴール差分時間にするための措置
+		for( ; i >= 0; --i ){
+			iTime -= m_LapTable[ j ][ i ];
+			m_LapTable[ j ][ i ] = m_iEndFrame + ( int )(( double )( m_iEndFrame - m_iStartFrame ) * iTime / iTimeSum );
+		}
+	}
+	
+	// vector 配列を作る
+	m_iAllLapIdx.resize( m_strName.size(), -1 );
+	m_iAllGapInfo.resize( m_strName.size(), 0 );
+	
+	return m_Lap.size();
+}
+
+/*** 各自のラップ情報再計算 *************************************************/
+
+void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
+	
+	// 各車のカメラ者との差分を求める
+	if( m_iLapIdx < 0 ){
+		iFrameCnt = CamCarLap()[ 0 ];
+	}else if( m_iLapIdx >= ( int )CamCarLap().size() - 1 ){
+		iFrameCnt = CamCarLap()[ CamCarLap().size() - 1 ];
+	}else{
+		//iFrameCnt = GetFrameCnt();
+	}
+	
+	// 各車の周回 index を求める
+	#ifdef _OPENMP_AVS
+		#pragma omp parallel for
+	#endif
+	for( UINT u = 0; u < m_strName.size(); ++u ){
+		int iLapIdx = m_iAllLapIdx[ u ];
+		
+		// m_LapTable[ iLapIdx ] <= iFrameCnt < m_LapTable[ iLapIdx + 1 ]
+		// となるように iLapIdx を調整
+		if( iLapIdx >= 0 && m_LapTable[ u ][ iLapIdx ] > iFrameCnt ){
+			iLapIdx = -1;
+		}
+		for(;
+			iLapIdx <= ( int )m_LapTable[ u ].size() - 2 &&
+			iFrameCnt >= m_LapTable[ u ][ iLapIdx + 1 ];
+			++iLapIdx
+		);
+		
+		m_iAllLapIdx[ u ] = iLapIdx;
+		
+		// ラップ数と何 % を進んだかを求める
+		double dProceeding;
+		if( iLapIdx < 0 ){
+			iLapIdx = 0;
+			dProceeding = 0;
+		}else if( iLapIdx == m_LapTable[ u ].size() - 1 ){
+			--iLapIdx;
+			dProceeding = 1;
+		}else{
+			dProceeding =
+				( double )( iFrameCnt            - m_LapTable[ u ][ iLapIdx ] ) /
+				( m_LapTable[ u ][ iLapIdx + 1 ] - m_LapTable[ u ][ iLapIdx ] );
+		}
+		
+		// 上で求めた位置の，カメラ車におけるフレーム番号を求め
+		// そこからカメラ車との時間差を求めて push
+		// 下位 8bit が id, 上位残りがタイム差
+		m_iAllGapInfo[ u ] = (
+			( int )(
+				(
+					CamCarLap()[ iLapIdx ] - iFrameCnt +
+					( CamCarLap()[ iLapIdx + 1 ] - CamCarLap()[ iLapIdx ] ) * dProceeding
+				) / dFPS * 1000
+			) << 8
+		) | u;
+	}
+	
+	std::sort( m_iAllGapInfo.begin(), m_iAllGapInfo.end());	// ソート
+}

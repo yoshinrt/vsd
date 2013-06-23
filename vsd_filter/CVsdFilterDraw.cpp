@@ -1064,60 +1064,13 @@ void CVsdFilter::DrawMapPosition(
 		}
 	}
 	
-	// 各車のカメラ者との差分を求める
-	int iFrame;
-	if( m_LapLog->m_iLapIdx < 0 ){
-		iFrame = pLap->CamCarLap()[ 0 ];
-	}else if( m_LapLog->m_iLapIdx >= ( int )pLap->CamCarLap().size() - 1 ){
-		iFrame = pLap->CamCarLap()[ pLap->CamCarLap().size() - 1 ];
-	}else{
-		iFrame = GetFrameCnt();
-	}
-	
-	std::vector<int> Diff;
-	for( i = 0; i < ( int )pLap->m_strName.size(); ++i ){
-		int iLap;
-		double dProceeding;
-		
-		// ラップ数と何 % を進んだかを求める
-		for( iLap = -1; iLap < ( int )pLap->m_LapTable[ i ].size() - 1; ++iLap ){
-			if( iFrame < pLap->m_LapTable[ i ][ iLap + 1 ] ) break;
-		}
-		if( iLap < 0 ){
-			iLap = 0;
-			dProceeding = 0;
-		}else if( iLap == pLap->m_LapTable[ i ].size() - 1 ){
-			--iLap;
-			dProceeding = 1;
-		}else{
-			dProceeding =
-				( double )( iFrame                 - pLap->m_LapTable[ i ][ iLap ] ) /
-				( pLap->m_LapTable[ i ][ iLap + 1 ] - pLap->m_LapTable[ i ][ iLap ] );
-		}
-		
-		// 上で求めた位置の，カメラ車におけるフレーム番号を求め
-		// そこからカメラ車との時間差を求めて push
-		// 下位 8bit が id, 上位残りがタイム差
-		Diff.push_back(
-			(
-				( int )(
-					(
-						pLap->CamCarLap()[ iLap ] - iFrame +
-						( pLap->CamCarLap()[ iLap + 1 ] - pLap->CamCarLap()[ iLap ] ) * dProceeding
-					) / GetFPS() * 1000
-				) << 8
-			) | i
-		);
-	}
-	
-	std::sort( Diff.begin(), Diff.end());	// ソート
 	int	iMyTime = m_CurLog->GetTime();		// 自分のタイム
 	
 	// 遅い順に表示
 	int iSearchStartIdx = pLap->m_iSearchStartIdx;
 	
-	for( i = 0; i < ( int )Diff.size(); ++i ){
-		double dIndex = m_CurLog->GetIndex( iMyTime + ( Diff[ i ] >> 8 ), iSearchStartIdx );
+	for( i = 0; i < ( int )pLap->m_iAllGapInfo.size(); ++i ){
+		double dIndex = m_CurLog->GetIndex( iMyTime + ( pLap->m_iAllGapInfo[ i ] >> 8 ), iSearchStartIdx );
 		iSearchStartIdx = ( int )dIndex;
 		if( i == 0 ) pLap->m_iSearchStartIdx = iSearchStartIdx;
 		
@@ -1127,7 +1080,7 @@ void CVsdFilter::DrawMapPosition(
 		
 		DrawTextAlign(
 			x, y, ALIGN_VCENTER | ALIGN_HCENTER,
-			pLap->m_strName[ Diff[ i ] & 0xFF ].c_str(), Font, uColorFont, uColorOutline
+			pLap->m_strName[ pLap->m_iAllGapInfo[ i ] & 0xFF ].c_str(), Font, uColorFont, uColorOutline
 		);
 	}
 	
@@ -1523,7 +1476,12 @@ BOOL CVsdFilter::DrawVSD( void ){
 	}
 	
 	// ラップタイム等再計算
-	if( m_LapLog ) CalcLapTime();
+	if( m_LapLog ){
+		CalcLapTime();
+		if( m_LapLog->m_iLapMode == LAPMODE_CHART ){
+			reinterpret_cast<CLapLogAll *>( m_LapLog )->CalcLapInfo( GetFrameCnt(), GetFPS());
+		}
+	}
 	
 	// スクリプト実行
 	DebugMsgD( ":DrawVSD():Running script... %X\n", GetCurrentThreadId());

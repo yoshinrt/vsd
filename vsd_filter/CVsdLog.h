@@ -89,8 +89,12 @@ class CLapLogAll : public CLapLog {
 	
 	std::vector<std::wstring>		m_strName;
 	std::vector<std::vector<int> >	m_LapTable;
+	std::vector<int>				m_iAllLapIdx;
+	std::vector<int>				m_iAllGapInfo;
 	
 	std::vector<int>& CamCarLap( void ){ return m_LapTable[ m_iCamCarIdx ]; }
+	int LapChartRead( const char *szFileName );
+	void CalcLapInfo( int iFrameCnt, double dFPS );
 	
 	int	m_iStartFrame;
 	int	m_iEndFrame;
