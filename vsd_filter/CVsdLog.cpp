@@ -766,6 +766,7 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 					delete wstr; wstr = NULL;
 					
 					m_LapTable.push_back( int_vec );
+					m_LapTableFrame.push_back( int_vec );
 					if( strcmp( szName, szCamName ) == 0 ) m_iCamCarIdx = iMaxMembers;
 					++iMaxMembers;
 				}
@@ -820,11 +821,13 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 	// タイム表をフレーム番号表に変換
 	for( int j = 0; j < ( int )m_LapTable.size(); ++j ){
 		
+		m_LapTableFrame[ j ].resize( m_LapTable[ j ].size(), 0 );
+		
 		i = m_LapTable[ j ].size() - 1;
 		iTime = m_LapTable[ j ][ i ] * 2;	// ループ初回の iTime をゴール差分時間にするための措置
 		for( ; i >= 0; --i ){
 			iTime -= m_LapTable[ j ][ i ];
-			m_LapTable[ j ][ i ] = m_iEndFrame + ( int )(( double )( m_iEndFrame - m_iStartFrame ) * iTime / iTimeSum );
+			m_LapTableFrame[ j ][ i ] = m_iEndFrame + ( int )(( double )( m_iEndFrame - m_iStartFrame ) * iTime / iTimeSum );
 		}
 	}
 	
@@ -841,9 +844,9 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 	
 	// 各車のカメラ者との差分を求める
 	if( m_iLapIdx < 0 ){
-		iFrameCnt = CamCarLap()[ 0 ];
-	}else if( m_iLapIdx >= ( int )CamCarLap().size() - 1 ){
-		iFrameCnt = CamCarLap()[ CamCarLap().size() - 1 ];
+		iFrameCnt = CamCarLapFrame()[ 0 ];
+	}else if( m_iLapIdx >= ( int )CamCarLapFrame().size() - 1 ){
+		iFrameCnt = CamCarLapFrame()[ CamCarLapFrame().size() - 1 ];
 	}else{
 		//iFrameCnt = GetFrameCnt();
 	}
@@ -855,14 +858,14 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 	for( UINT u = 0; u < m_strName.size(); ++u ){
 		int iLapIdx = m_iAllLapIdx[ u ];
 		
-		// m_LapTable[ iLapIdx ] <= iFrameCnt < m_LapTable[ iLapIdx + 1 ]
+		// m_LapTableFrame[ iLapIdx ] <= iFrameCnt < m_LapTableFrame[ iLapIdx + 1 ]
 		// となるように iLapIdx を調整
-		if( iLapIdx >= 0 && m_LapTable[ u ][ iLapIdx ] > iFrameCnt ){
+		if( iLapIdx >= 0 && m_LapTableFrame[ u ][ iLapIdx ] > iFrameCnt ){
 			iLapIdx = -1;
 		}
 		for(;
-			iLapIdx <= ( int )m_LapTable[ u ].size() - 2 &&
-			iFrameCnt >= m_LapTable[ u ][ iLapIdx + 1 ];
+			iLapIdx <= ( int )m_LapTableFrame[ u ].size() - 2 &&
+			iFrameCnt >= m_LapTableFrame[ u ][ iLapIdx + 1 ];
 			++iLapIdx
 		);
 		
@@ -873,13 +876,13 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 		if( iLapIdx < 0 ){
 			iLapIdx = 0;
 			dProceeding = 0;
-		}else if( iLapIdx == m_LapTable[ u ].size() - 1 ){
+		}else if( iLapIdx == m_LapTableFrame[ u ].size() - 1 ){
 			--iLapIdx;
 			dProceeding = 1;
 		}else{
 			dProceeding =
-				( double )( iFrameCnt            - m_LapTable[ u ][ iLapIdx ] ) /
-				( m_LapTable[ u ][ iLapIdx + 1 ] - m_LapTable[ u ][ iLapIdx ] );
+				( double )( iFrameCnt            - m_LapTableFrame[ u ][ iLapIdx ] ) /
+				( m_LapTableFrame[ u ][ iLapIdx + 1 ] - m_LapTableFrame[ u ][ iLapIdx ] );
 		}
 		
 		// 上で求めた位置の，カメラ車におけるフレーム番号を求め
@@ -888,8 +891,8 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 		m_iAllGapInfo[ u ] = (
 			( int )(
 				(
-					CamCarLap()[ iLapIdx ] - iFrameCnt +
-					( CamCarLap()[ iLapIdx + 1 ] - CamCarLap()[ iLapIdx ] ) * dProceeding
+					CamCarLapFrame()[ iLapIdx ] - iFrameCnt +
+					( CamCarLapFrame()[ iLapIdx + 1 ] - CamCarLapFrame()[ iLapIdx ] ) * dProceeding
 				) / dFPS * 1000
 			) << 8
 		) | u;
