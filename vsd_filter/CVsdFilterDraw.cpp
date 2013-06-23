@@ -1069,8 +1069,8 @@ void CVsdFilter::DrawMapPosition(
 	// 遅い順に表示
 	int iSearchStartIdx = pLap->m_iSearchStartIdx;
 	
-	for( i = 0; i < ( int )pLap->m_iAllGapInfo.size(); ++i ){
-		double dIndex = m_CurLog->GetIndex( iMyTime + ( pLap->m_iAllGapInfo[ i ] >> 8 ), iSearchStartIdx );
+	for( i = pLap->m_iAllGapInfo.size() - 1; i >= 0; --i ){
+		double dIndex = m_CurLog->GetIndex( iMyTime - ( pLap->m_iAllGapInfo[ i ] >> 8 ), iSearchStartIdx );
 		iSearchStartIdx = ( int )dIndex;
 		if( i == 0 ) pLap->m_iSearchStartIdx = iSearchStartIdx;
 		
@@ -1348,6 +1348,118 @@ void CVsdFilter::DrawLapTimeLog(
 		}
 	}
 	SelectLogVsd;
+}
+
+/*** 全車ラップタイム表示 ***************************************************/
+
+#define RACELAP_POS_W	2
+#define RACELAP_CAR_W	8
+#define RACELAP_CAR_L	( RACELAP_POS_W + 1 )
+#define RACELAP_LAP_R	( RACELAP_CAR_L + RACELAP_CAR_W )
+#define RACELAP_TIME_L	( RACELAP_LAP_R + 1 )
+#define RACELAP_TIME_W	9
+#define RACELAP_TIME_R	( RACELAP_TIME_L + RACELAP_TIME_W )
+#define RACELAP_GAP_L	( RACELAP_TIME_R + 1 )
+#define RACELAP_GAP_W	7
+#define RACELAP_GAP_R	( RACELAP_GAP_L + RACELAP_GAP_W )
+
+void CVsdFilter::DrawRaceLapTime(
+	int x, int y, UINT uAlign, int iNum, CVsdFont &Font,
+	tRABY uColor, tRABY uColorOutline
+){
+	WCHAR	szBuf[ SPRINTF_BUF ];
+	
+	// ラップチャートを未リードならリターン
+	if( !m_LapLog || m_LapLog->m_iLapMode != LAPMODE_CHART ) return;
+	
+	// x, y 補正
+	if( uAlign & ALIGN_HCENTER ){
+		x -= Font.GetWidth() * RACELAP_GAP_R / 2;
+	}else if( uAlign & ALIGN_RIGHT ){
+		x -= Font.GetWidth() * RACELAP_GAP_R + 1;
+	}
+	if( uAlign & ALIGN_VCENTER ){
+		y -= Font.GetHeight() * iNum / 2;
+	}else if( uAlign & ALIGN_BOTTOM ){
+		y -= Font.GetHeight() * ( iNum + 1 ) + 1;
+	}
+	
+	CLapLogAll *pLap = reinterpret_cast<CLapLogAll *>( m_LapLog );
+	
+	// ヘッダ
+	DrawTextAlign(
+		x + RACELAP_POS_W * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
+		L"P", Font, uColor, uColorOutline
+	);
+	DrawTextAlign(
+		x + RACELAP_CAR_L * Font.GetWidth(), y, ALIGN_TOP | ALIGN_LEFT,
+		L"Car", Font, uColor, uColorOutline
+	);
+	DrawTextAlign(
+		x + RACELAP_LAP_R * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
+		L"Lap", Font, uColor, uColorOutline
+	);
+	DrawTextAlign(
+		x + RACELAP_TIME_L * Font.GetWidth(), y, ALIGN_TOP | ALIGN_LEFT,
+		L"Time", Font, uColor, uColorOutline
+	);
+	DrawTextAlign(
+		x + RACELAP_GAP_L * Font.GetWidth(), y, ALIGN_TOP | ALIGN_LEFT,
+		L"Gap", Font, uColor, uColorOutline
+	);
+	
+	y += Font.GetHeight();
+	
+	for( int i = 0; i < iNum && i < ( int )pLap->m_iAllGapInfo.size(); ++i ){
+		int iCar = pLap->m_iAllGapInfo[ i ] & 0xFF;
+		
+		// pos
+		swprintf( szBuf, sizeof( szBuf ), L"%d", i + 1 );
+		DrawTextAlign(
+			x + RACELAP_POS_W * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
+			szBuf, Font, uColor, uColorOutline
+		);
+		
+		// name
+		DrawTextAlign(
+			x + RACELAP_CAR_L * Font.GetWidth(), y, ALIGN_TOP | ALIGN_LEFT,
+			pLap->m_strName[ iCar ].c_str(), Font, uColor, uColorOutline
+		);
+		
+		// Lap#
+		swprintf( szBuf, sizeof( szBuf ), L"%d",
+			pLap->m_iAllLapIdx[ iCar ] < 0 ? 1 :
+			pLap->m_iAllLapIdx[ iCar ] < ( int )pLap->m_LapTable[ iCar ].size() - 1 ?
+				pLap->m_iAllLapIdx[ iCar ] + 1 : pLap->m_iAllLapIdx[ iCar ]
+		);
+		DrawTextAlign(
+			x + RACELAP_LAP_R * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
+			szBuf, Font, uColor, uColorOutline
+		);
+		
+		// Time
+		DrawTextAlign(
+			x + RACELAP_TIME_R * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
+			FormatTime(
+				pLap->m_iAllLapIdx[ iCar ] < 1 ? TIME_NONE :
+				pLap->m_LapTable[ iCar ][ pLap->m_iAllLapIdx[ iCar ] - 1 ]
+			), Font, uColor, uColorOutline
+		);
+		
+		int iLap = pLap->m_iAllLapIdx[ iCar ];
+		
+		if( i ){
+			if( iLap >= 0 ) swprintf( szBuf, sizeof( szBuf ), L"%.3f",
+				( pLap->m_LapTableFrame[ iCar ][ iLap ] - pLap->m_LapTableFrame[ pLap->m_iAllGapInfo[ 0 ] & 0xFF ][ iLap ] ) / GetFPS()
+			);
+			
+			DrawTextAlign(
+				x + RACELAP_GAP_R * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
+				iLap >= 0 ? szBuf : L"-.---", Font, uColor, uColorOutline
+			);
+		}
+		y += Font.GetHeight();
+	}
 }
 
 /*** メーターパネル目盛り ***************************************************/

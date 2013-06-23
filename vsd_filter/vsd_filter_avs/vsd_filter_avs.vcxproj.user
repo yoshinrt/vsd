@@ -1,26 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerWorkingDirectory>D:\Video\Car\ELISE\20130502_Mihama\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>D:\Video\Car\Kart\20130331_maishima\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>C:\Program Files (x86)\MediaPlayerClassic\mpc-hc.exe</LocalDebuggerCommand>
-    <LocalDebuggerCommandArguments>/fixedsize 860,533 D:\Video\Car\ELISE\20130502_Mihama\FILE0007.avs</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>/fixedsize 860,533 D:\Video\Car\Kart\20130331_maishima\FILE0004.avs</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerCommand>C:\Program Files (x86)\MediaPlayerClassic\mpc-hc.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerCommandArguments>/fixedsize 860,533 D:\Video\Car\ELISE\20130502_Mihama\FILE0007.avs</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>/fixedsize 860,533 D:\Video\Car\Kart\20130331_maishima\FILE0004.avs</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerWorkingDirectory>D:\Video\Car\ELISE\20130502_Mihama\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>D:\Video\Car\Kart\20130331_maishima\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
-    <LocalDebuggerCommandArguments>/fixedsize 860,533 D:\Video\Car\ELISE\20130502_Mihama\FILE0007.avs</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>/fixedsize 860,533 D:\Video\Car\Kart\20130331_maishima\FILE0004.avs</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
-    <LocalDebuggerWorkingDirectory>D:\Video\Car\ELISE\20130502_Mihama\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>D:\Video\Car\Kart\20130331_maishima\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>C:\Program Files (x86)\MediaPlayerClassic\mpc-hc.exe</LocalDebuggerCommand>
   </PropertyGroup>

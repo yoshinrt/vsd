@@ -8,6 +8,7 @@ function Initialize(){
 	FontS = new Font( "Arial Black", 20 * Scale );
 	FontM = new Font( "Arial Black", 42 * Scale );
 	FontL = new Font( "Arial Black", 90 * Scale );
+	FontMOL = new Font( "Impact", 42 * Scale, FONT_FIXED | FONT_OUTLINE );
 	
 	GCx = Vsd.Width - 330 * Scale;
 	GCy = 60 * Scale;
@@ -115,4 +116,6 @@ function Draw(){
 		480 * Scale, 5, Vsd.Width - 400 * Scale, 120 * Scale - 5, FontS,
 		GRAPH_HTILE, GraphParam
 	);
+	
+	Vsd.DrawRaceLapTime( 0, 120 * Scale, 0, 10, FontMOL );
 }

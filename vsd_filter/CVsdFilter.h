@@ -262,6 +262,11 @@ class CVsdFilter
 		tRABY uColorBest,		// !default:color_cyan
 		tRABY uColorOutline		// !default:color_black
 	);
+	void DrawRaceLapTime(	// !js_func
+		int x, int y, UINT uAlign, int iNum, CVsdFont &Font,
+		tRABY uColor,			// !default:color_white
+		tRABY uColorOutline		// !default:color_black
+	);
 	void DrawNeedle( // !js_func
 		int x, int y, int r1, int r2,
 		int iStart, int iEnd, double dVal,

@@ -458,7 +458,7 @@ BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, L
 
 /****************************************************************************/
 
-BOOL WINAPI DllCam(
+BOOL WINAPI DllMain(
 	HINSTANCE	hinstDLL,	// handle to DLL module
 	DWORD		fdwReason,	// reason for calling function
 	LPVOID		lpvReserved	// reserved
