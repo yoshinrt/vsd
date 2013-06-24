@@ -766,7 +766,6 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 					delete wstr; wstr = NULL;
 					
 					m_LapTable.push_back( int_vec );
-					m_LapTableFrame.push_back( int_vec );
 					if( strcmp( szName, szCamName ) == 0 ) m_iCamCarIdx = iMaxMembers;
 					++iMaxMembers;
 				}
@@ -796,7 +795,7 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 	}
 	
 	// ゴール差分を足しすぎたので引く
-	iTimeSum -= GetLapTime( CamCarLap().size() - 1 );
+	iTimeSum -= CamCarLap()[ CamCarLap().size() - 1 ];
 	
 	// ラップデータを構築
 	Lap.fLogNum = ( float )m_iStartFrame;
@@ -804,7 +803,7 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 	iTime = 0;
 	
 	for( i = 0; i < ( int )CamCarLap().size() - 1; ++i ){
-		iTime += Lap.iTime = GetLapTime( i );
+		iTime += Lap.iTime = CamCarLap()[ i ];
 		++Lap.uLap;
 		
 		Lap.fLogNum = ( float )(
@@ -818,16 +817,11 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 	Lap.iTime	= 0;		// 番犬
 	m_Lap.push_back( Lap );
 	
-	// タイム表をフレーム番号表に変換
+	// ラップタイム表を時刻表に変換
 	for( int j = 0; j < ( int )m_LapTable.size(); ++j ){
 		
-		m_LapTableFrame[ j ].resize( m_LapTable[ j ].size(), 0 );
-		
-		i = m_LapTable[ j ].size() - 1;
-		iTime = GetLapTime( j, i ) * 2;	// ループ初回の iTime をゴール差分時間にするための措置
-		for( ; i >= 0; --i ){
-			iTime -= GetLapTime( j, i );
-			m_LapTableFrame[ j ][ i ] = m_iEndFrame + ( int )(( double )( m_iEndFrame - m_iStartFrame ) * iTime / iTimeSum );
+		for( i = m_LapTable[ j ].size() - 2; i >= 0; --i ){
+			m_LapTable[ j ][ i ] = m_LapTable[ j ][ i + 1 ] - m_LapTable[ j ][ i ];
 		}
 	}
 	
@@ -847,8 +841,8 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 	// 各車のカメラ者との差分を求める
 	if( m_iLapIdx < 0 ){
 		iFrameCnt = GetLapFrame( 0 );
-	}else if( m_iLapIdx >= ( int )CamCarLapFrame().size() - 1 ){
-		iFrameCnt = GetLapFrame( CamCarLapFrame().size() - 1 );
+	}else if( m_iLapIdx >= ( int )CamCarLap().size() - 1 ){
+		iFrameCnt = GetLapFrame( CamCarLap().size() - 1 );
 	}else{
 		//iFrameCnt = GetFrameCnt();
 	}
@@ -860,13 +854,13 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 	for( UINT u = 0; u < m_strName.size(); ++u ){
 		int iLapIdx = m_iAllLapIdx[ u ];
 		
-		// m_LapTableFrame[ iLapIdx ] <= iFrameCnt < m_LapTableFrame[ iLapIdx + 1 ]
+		// GetLapFrame( u, iLapIdx ) <= iFrameCnt < GetLapFrame( u, iLapIdx + 1 )
 		// となるように iLapIdx を調整
 		if( iLapIdx >= 0 && GetLapFrame( u, iLapIdx ) > iFrameCntRaw ){
 			iLapIdx = -1;
 		}
 		for(;
-			iLapIdx <= ( int )m_LapTableFrame[ u ].size() - 2 &&
+			iLapIdx <= ( int )m_LapTable[ u ].size() - 2 &&
 			iFrameCntRaw >= GetLapFrame( u, iLapIdx + 1 );
 			++iLapIdx
 		);
@@ -877,7 +871,7 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 		double dProceeding;
 		if( iLapIdx < 0 ){
 			iLapIdx = 0;
-		}else if( iLapIdx == m_LapTableFrame[ u ].size() - 1 ){
+		}else if( iLapIdx == m_LapTable[ u ].size() - 1 ){
 			--iLapIdx;
 		}
 		dProceeding =
