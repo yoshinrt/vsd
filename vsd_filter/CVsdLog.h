@@ -93,6 +93,11 @@ class CLapLogAll : public CLapLog {
 	std::vector<int>				m_iAllLapIdx;
 	std::vector<int>				m_iAllGapInfo;
 	
+	int GetLapTime( int iCar, int iLap ){ return m_LapTable[ iCar ][ iLap ]; }
+	int GetLapTime( int iLap ){ return GetLapTime( m_iCamCarIdx, iLap ); }
+	int GetLapFrame( int iCar, int iLap ){ return m_LapTableFrame[ iCar ][ iLap ]; }
+	int GetLapFrame( int iLap ){ return GetLapFrame( m_iCamCarIdx, iLap ); }
+	
 	std::vector<int>& CamCarLap( void ){ return m_LapTable[ m_iCamCarIdx ]; }
 	std::vector<int>& CamCarLapFrame( void ){ return m_LapTableFrame[ m_iCamCarIdx ]; }
 	int LapChartRead( const char *szFileName );

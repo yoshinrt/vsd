@@ -1442,7 +1442,7 @@ void CVsdFilter::DrawRaceLapTime(
 			x + RACELAP_TIME_R * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
 			FormatTime(
 				pLap->m_iAllLapIdx[ iCar ] < 1 ? TIME_NONE :
-				pLap->m_LapTable[ iCar ][ pLap->m_iAllLapIdx[ iCar ] - 1 ]
+				pLap->GetLapTime( iCar, pLap->m_iAllLapIdx[ iCar ] - 1 )
 			), Font, uColor, uColorOutline
 		);
 		
@@ -1450,7 +1450,7 @@ void CVsdFilter::DrawRaceLapTime(
 		
 		if( i ){
 			if( iLap >= 0 ) swprintf( szBuf, sizeof( szBuf ), L"%.3f",
-				( pLap->m_LapTableFrame[ iCar ][ iLap ] - pLap->m_LapTableFrame[ pLap->m_iAllGapInfo[ 0 ] & 0xFF ][ iLap ] ) / GetFPS()
+				( pLap->GetLapFrame( iCar, iLap ) - pLap->GetLapFrame( pLap->m_iAllGapInfo[ 0 ] & 0xFF, iLap )) / GetFPS()
 			);
 			
 			DrawTextAlign(
