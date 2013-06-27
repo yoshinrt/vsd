@@ -5,6 +5,7 @@ function Initialize(){
 	
 	// 使用する画像・フォントの宣言
 	FontSOL = new Font( "Impact", 30 * Scale, FONT_FIXED | FONT_OUTLINE );
+	//FontSOL = new Font( "ＭＳ Ｐゴシック", 30 * Scale, FONT_OUTLINE );
 	FontS = new Font( "Arial Black", 20 * Scale );
 	FontM = new Font( "Arial Black", 42 * Scale );
 	FontL = new Font( "Arial Black", 90 * Scale );
@@ -116,5 +117,5 @@ function Draw(){
 		GRAPH_HTILE, GraphParam
 	);
 	
-	//Vsd.DrawRaceLapTime( 0, 120 * Scale, 0, 10, FontSOL );
+	Vsd.DrawRaceLapTime( 0, 120 * Scale, 0, 10, FontSOL );
 }

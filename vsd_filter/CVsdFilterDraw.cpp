@@ -1410,8 +1410,9 @@ void CVsdFilter::DrawRaceLapTime(
 	
 	y += Font.GetHeight();
 	
-	for( int i = 0; i < iNum && i < ( int )pLap->m_iAllGapInfo.size(); ++i ){
-		int iCar = pLap->m_iAllGapInfo[ i ] & 0xFF;
+	for( int i = 0; i < iNum && i < ( int )pLap->m_iPositionInfo.size(); ++i ){
+		int iCar = pLap->m_iPositionInfo[ i ];
+		if( iCar < 0 ) break;
 		
 		// pos
 		swprintf( szBuf, sizeof( szBuf ), L"%d", i + 1 );
@@ -1442,17 +1443,19 @@ void CVsdFilter::DrawRaceLapTime(
 			x + RACELAP_TIME_R * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
 			FormatTime(
 				pLap->m_iAllLapIdx[ iCar ] < 1 ? TIME_NONE :
-				pLap->GetLapTime( iCar, pLap->m_iAllLapIdx[ iCar ] - 1 )
+				pLap->GetLapTime( iCar, pLap->m_iAllLapIdx[ iCar ] )
 			), Font, uColor, uColorOutline
 		);
 		
 		int iLap = pLap->m_iAllLapIdx[ iCar ];
 		
 		if( i ){
-			if( iLap >= 0 ) swprintf( szBuf, sizeof( szBuf ), L"%.3f",
-				( pLap->GetLapFrame( iCar, iLap ) - pLap->GetLapFrame( pLap->m_iAllGapInfo[ 0 ] & 0xFF, iLap )) / GetFPS()
-			);
-			
+			if( iLap >= 0 ){
+				int iGap = pLap->GetGap( iCar );
+				swprintf( szBuf, sizeof( szBuf ), L"%d.%03d",
+					iGap / 1000, iGap % 1000
+				);
+			}
 			DrawTextAlign(
 				x + RACELAP_GAP_R * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
 				iLap >= 0 ? szBuf : L"-.---", Font, uColor, uColorOutline

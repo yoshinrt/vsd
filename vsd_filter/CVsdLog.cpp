@@ -828,6 +828,7 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 	// vector 配列を作る
 	m_iAllLapIdx.resize( m_strName.size(), -1 );
 	m_iAllGapInfo.resize( m_strName.size(), 0 );
+	m_iPositionInfo.resize( m_strName.size(), -1 );
 	
 	return m_Lap.size();
 }
@@ -837,8 +838,9 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 	
 	int iFrameCntRaw = iFrameCnt;
+	int i;
 	
-	// 各車のカメラ者との差分を求める
+	// スタート前・ゴール後の iFrameCnt を補正
 	if( m_iLapIdx < 0 ){
 		iFrameCnt = GetLapFrame( 0 );
 	}else if( m_iLapIdx >= ( int )CamCarLap().size() - 1 ){
@@ -847,25 +849,75 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 		//iFrameCnt = GetFrameCnt();
 	}
 	
+	// 巻き戻しされたときは，先頭からサーチし直す
+	if( iFrameCntRaw < m_iPrevFrame ){
+		for( i = 0; i < ( int )m_iPositionInfo.size(); ++i ){
+			m_iAllLapIdx[ i ] = m_iPositionInfo[ i ] = -1;
+			m_iPrevFrame = -1;
+		}
+	}
+	
+	// 前回の演算位置から Frame# まで進めていって，順位を計算する
+	for( i = m_iPrevFrame + 1; i <= iFrameCntRaw; ++i ){
+		for( UINT u = 0; u < m_iPositionInfo.size(); ++u ){
+			
+			// 現在ラップ数を求める
+			int iLapIdx = m_iAllLapIdx[ u ];
+			for(;
+				iLapIdx <= ( int )m_LapTable[ u ].size() - 2 &&
+				i >= GetLapFrame( u, iLapIdx + 1 );
+				++iLapIdx
+			);
+			
+			// ラップ数が更新された
+			if( iLapIdx != m_iAllLapIdx[ u ] ){
+				
+				m_iAllLapIdx[ u ] = iLapIdx;
+				
+				// 一旦自車の要素を消す
+				m_iPositionInfo.erase(
+					std::remove(
+						m_iPositionInfo.begin(),
+						m_iPositionInfo.end(),
+						u
+					),
+					m_iPositionInfo.end()
+				);
+				
+				if( m_iPositionInfo.size() == m_iAllLapIdx.size()){
+					m_iPositionInfo.pop_back();
+				}
+				
+				// 挿入ポイントを探して挿入
+				std::vector<int>::iterator v;
+				for( v = m_iPositionInfo.begin(); v != m_iPositionInfo.end(); ++v ){
+					if(
+						*v == -1 ||
+						m_iAllLapIdx[ *v ] < iLapIdx
+					) break;
+				}
+				
+				// ラップリーダーを格納
+				if( v == m_iPositionInfo.begin()){
+					if(( int )m_iLapLeader.size() <= iLapIdx ){
+						m_iLapLeader.push_back( u );
+					}else{
+						m_iLapLeader[ iLapIdx ] = u;
+					}
+				}
+
+				m_iPositionInfo.insert( v, u );
+			}
+		}
+	}
+	m_iPrevFrame = iFrameCntRaw;
+	
 	// 各車の周回 index を求める
 	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 	#endif
 	for( UINT u = 0; u < m_strName.size(); ++u ){
 		int iLapIdx = m_iAllLapIdx[ u ];
-		
-		// GetLapFrame( u, iLapIdx ) <= iFrameCnt < GetLapFrame( u, iLapIdx + 1 )
-		// となるように iLapIdx を調整
-		if( iLapIdx >= 0 && GetLapFrame( u, iLapIdx ) > iFrameCntRaw ){
-			iLapIdx = -1;
-		}
-		for(;
-			iLapIdx <= ( int )m_LapTable[ u ].size() - 2 &&
-			iFrameCntRaw >= GetLapFrame( u, iLapIdx + 1 );
-			++iLapIdx
-		);
-		
-		m_iAllLapIdx[ u ] = iLapIdx;
 		
 		// ラップ数と何 % を進んだかを求める
 		double dProceeding;

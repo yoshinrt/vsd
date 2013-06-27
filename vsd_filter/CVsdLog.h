@@ -84,6 +84,7 @@ class CLapLogAll : public CLapLog {
 		m_iStartFrame	= 0;
 		m_iEndFrame		= 0x7FFFFFFF;
 		m_iCamCarIdx	= 0;
+		m_iPrevFrame	= 0x7FFFFFFF;
 		m_iSearchStartIdx	= -1;
 	}
 	
@@ -91,9 +92,11 @@ class CLapLogAll : public CLapLog {
 	std::vector<std::vector<int> >	m_LapTable;
 	std::vector<int>				m_iAllLapIdx;
 	std::vector<int>				m_iAllGapInfo;
+	std::vector<int>				m_iPositionInfo;
+	std::vector<int>				m_iLapLeader;
 	
 	int GetLapTime( int iCar, int iLap ){
-		return iLap > 0? m_LapTable[ iCar ][ iLap ] - m_LapTable[ iCar ][ iLap - 1 ] : 0;
+		return iLap > 0 ? m_LapTable[ iCar ][ iLap ] - m_LapTable[ iCar ][ iLap - 1 ] : 0;
 	}
 	int GetLapTime( int iLap ){
 		return GetLapTime( m_iCamCarIdx, iLap );
@@ -111,6 +114,11 @@ class CLapLogAll : public CLapLog {
 		return GetLapFrame( m_iCamCarIdx, iLap );
 	}
 	
+	int GetGap( int iCar ){
+		int iLap = m_iAllLapIdx[ iCar ];
+		return m_LapTable[ iCar ][ iLap ] - m_LapTable[ m_iLapLeader[ iLap ]][ iLap ];
+	}
+	
 	std::vector<int>& CamCarLap( void ){ return m_LapTable[ m_iCamCarIdx ]; }
 	int LapChartRead( const char *szFileName );
 	void CalcLapInfo( int iFrameCnt, double dFPS );
@@ -118,7 +126,8 @@ class CLapLogAll : public CLapLog {
 	int	m_iStartFrame;
 	int	m_iEndFrame;
 	int	m_iCamCarIdx;
-	int	m_iSearchStartIdx;
+	int	m_iPrevFrame;
+	int m_iSearchStartIdx;
 };
 
 /*** ÉçÉO 1çÄñ⁄ *************************************************************/
