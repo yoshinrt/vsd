@@ -778,10 +778,16 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 				char *p = szBuf;
 				
 				for( i = 0; i < iMaxMembers; ++i ){
-					StrGetParam( szName, &p );
-					m_LapTable[ i ].push_back( iTime = ( int )( strtod( szName, NULL ) * 1000 ));
-					
+					if( *p == 0xD || *p == 0xA || *p == 0 ) break;
+					if( *p == '\t' ){
+						++p;
+						continue;
+					}
+					m_LapTable[ i ].push_back( iTime = ( int )( strtod( p, NULL ) * 1000 ));
 					if( i == m_iCamCarIdx ) iTimeSum += iTime;
+					
+					if(( p = strchr( p, '\t' )) == NULL ) break;
+					++p;
 				}
 			}
 			break;
@@ -905,7 +911,7 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 						m_iLapLeader[ iLapIdx ] = u;
 					}
 				}
-
+				
 				m_iPositionInfo.insert( v, u );
 			}
 		}

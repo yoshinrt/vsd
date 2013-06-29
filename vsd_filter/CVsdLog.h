@@ -96,7 +96,8 @@ class CLapLogAll : public CLapLog {
 	std::vector<int>				m_iLapLeader;
 	
 	int GetLapTime( int iCar, int iLap ){
-		return iLap > 0 ? m_LapTable[ iCar ][ iLap ] - m_LapTable[ iCar ][ iLap - 1 ] : 0;
+		if( iLap >= ( int )m_LapTable[ iCar ].size()) --iLap;
+		return ( iLap < 1 ) ? TIME_NONE : ( m_LapTable[ iCar ][ iLap ] - m_LapTable[ iCar ][ iLap - 1 ] );
 	}
 	int GetLapTime( int iLap ){
 		return GetLapTime( m_iCamCarIdx, iLap );

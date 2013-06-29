@@ -1428,23 +1428,18 @@ void CVsdFilter::DrawRaceLapTime(
 		);
 		
 		// Lap#
-		swprintf( szBuf, sizeof( szBuf ), L"%d",
-			pLap->m_iAllLapIdx[ iCar ] < 0 ? 1 :
-			pLap->m_iAllLapIdx[ iCar ] < ( int )pLap->m_LapTable[ iCar ].size() - 1 ?
-				pLap->m_iAllLapIdx[ iCar ] + 1 : pLap->m_iAllLapIdx[ iCar ]
-		);
+		swprintf( szBuf, sizeof( szBuf ), L"%d", pLap->m_iAllLapIdx[ iCar ] + 1 );
 		DrawTextAlign(
 			x + RACELAP_LAP_R * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
-			szBuf, Font, uColor, uColorOutline
+			pLap->m_iAllLapIdx[ iCar ] < ( int )pLap->m_LapTable[ iCar ].size() - 1 ? szBuf : L"F",
+			Font, uColor, uColorOutline
 		);
 		
 		// Time
 		DrawTextAlign(
 			x + RACELAP_TIME_R * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
-			FormatTime(
-				pLap->m_iAllLapIdx[ iCar ] < 1 ? TIME_NONE :
-				pLap->GetLapTime( iCar, pLap->m_iAllLapIdx[ iCar ] )
-			), Font, uColor, uColorOutline
+			FormatTime( pLap->GetLapTime( iCar, pLap->m_iAllLapIdx[ iCar ] + 1 )),
+			Font, uColor, uColorOutline
 		);
 		
 		int iLap = pLap->m_iAllLapIdx[ iCar ];
