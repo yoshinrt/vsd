@@ -38,6 +38,8 @@ enum {
 	ID_BUTT_LOAD_LOG,
 	ID_EDIT_LOAD_GPS,
 	ID_BUTT_LOAD_GPS,
+	ID_BUTT_LAP_START,
+	ID_BUTT_LAP_END,
 	ID_EDIT_LOAD_LAPCHART,
 	ID_BUTT_LOAD_LAPCHART,
 	ID_COMBO_SEL_SKIN,
@@ -675,6 +677,15 @@ void SetSkinFileList( HWND hwnd ){
 
 /*** ダイアログサイズ拡張とパーツ追加 ***************************************/
 
+#define CreateButton( Caption, x, y, id )( \
+	hwndChild = CreateWindow( \
+		"BUTTON", ( Caption ), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, \
+		( x ), ( y ), POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT, \
+		hwnd, ( id ), hInst, NULL \
+	), \
+	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 ) \
+)
+
 void CreateControlFileName(
 	HWND hwnd, HINSTANCE hInst, int &iID, HFONT hfont, int iX, int &iY, RECT rectClient,
 	char *szCap, char *szEdit, char *szButt
@@ -822,9 +833,14 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	
 	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "車両ログ",	"",		"開く" );
 	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "GPSログ",	"",		"開く" );
-	#ifndef PUBLIC_MODE
-		CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "LAPチャート",	"",		"開く" );
-	#endif
+	
+	CreateButton( "始", rectClient.right - ( POS_FILE_BUTT_SIZE * 2 ), y, ( HMENU )( i++ ));
+	CreateButton( "終", rectClient.right - POS_FILE_BUTT_SIZE,         y, ( HMENU )( i++ ));
+	
+	rectClient.right -= POS_FILE_BUTT_SIZE * 2;
+	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "LAP表",	"",		"開く" );
+	rectClient.right += POS_FILE_BUTT_SIZE * 2;
+	
 	CreateControlSkinName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "スキン",	"" );
 	
 	// rev
@@ -845,21 +861,8 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
-	hwndChild = CreateWindow(
-		"BUTTON", "開く", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		rectClient.right - ( POS_FILE_BUTT_SIZE * 2 ), y,
-		POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT,
-		hwnd, ( HMENU )( i++ ), hInst, NULL
-	);
-	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
-	
-	hwndChild = CreateWindow(
-		"BUTTON", "保存", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		rectClient.right - POS_FILE_BUTT_SIZE, y,
-		POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT,
-		hwnd, ( HMENU )( i++ ), hInst, NULL
-	);
-	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
+	CreateButton( "開く", rectClient.right - ( POS_FILE_BUTT_SIZE * 2 ), y, ( HMENU )( i++ ));
+	CreateButton( "保存", rectClient.right - POS_FILE_BUTT_SIZE,         y, ( HMENU )( i++ ));
 }
 
 /*** OpenDialog 用フィルタ作成 **********************************************/
@@ -1146,7 +1149,8 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	
 	for( i = 0; i < SHADOW_N; ++i ){
 		if(
-			m_piParamS[ i ] == shadow_default[ i ]
+			m_piParamS[ i ] == shadow_default[ i ] ||
+			( i == SHADOW_LAP_CHART_St || i == SHADOW_LAP_CHART_Ed ) && !( uStrParamFlag & ( 1 << STRPARAM_LAPCHART ))
 		) continue;
 		
 		fprintf(
@@ -1214,6 +1218,9 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			track_e[ PARAM_VSt ] =
 			track_e[ PARAM_VEd ] = filter->exfunc->get_frame_n( editp );
 		#endif
+		
+		g_Vsd->m_piParamS[ SHADOW_LAP_CHART_St ] = 0;
+		g_Vsd->m_piParamS[ SHADOW_LAP_CHART_Ed ] = filter->exfunc->get_frame_n( editp );
 		
 		// リストボックスアイテム追加
 		SetSkinFileList( GetDlgItem( hwnd, ID_COMBO_SEL_SKIN ));
@@ -1379,8 +1386,19 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				StringNew( g_Vsd->m_szLapChart, szBuf );
 				filter->exfunc->filter_window_update( filter );
 				SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_LAPCHART ), szBuf );
+				g_Vsd->m_bCalcLapTimeReq = TRUE;
 				g_Vsd->DeleteScript();
 			}
+			
+		  Case ID_BUTT_LAP_START:
+			g_Vsd->m_piParamS[ SHADOW_LAP_CHART_St ] = filter->exfunc->get_frame( editp );
+			g_Vsd->m_bCalcLapTimeReq = TRUE;
+			return TRUE;
+			
+		  Case ID_BUTT_LAP_END:
+			g_Vsd->m_piParamS[ SHADOW_LAP_CHART_Ed ] = filter->exfunc->get_frame( editp );
+			g_Vsd->m_bCalcLapTimeReq = TRUE;
+			return TRUE;
 			
 		  Case ( CBN_SELCHANGE << 16 ) | ID_COMBO_SEL_SKIN:	// スキン選択
 			{

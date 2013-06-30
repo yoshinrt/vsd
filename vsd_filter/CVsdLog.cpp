@@ -735,21 +735,12 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 	
 	int iMaxMembers;
 	
-	int	iTimeSum	= 0;
 	int	iTime;
 	int i;
-	
-	LAP_t	Lap = {
-		0,	// uLap
-		0,	// fLogNum
-		0	// iTime
-	};
 	
 	// ファイルリード
 	while( fgets( szBuf, BUF_SIZE, fp )){
 		if(
-			sscanf( szBuf, "StartFrame:%u", &m_iStartFrame ) == 0 &&
-			sscanf( szBuf, "EndFrame:%u",   &m_iEndFrame ) == 0 &&
 			sscanf( szBuf, "Name:%s",       szCamName ) == 0 &&
 			strncmp( szBuf, "LapChart:", 9 ) == 0
 		){
@@ -784,8 +775,6 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 						continue;
 					}
 					m_LapTable[ i ].push_back( iTime = ( int )( strtod( p, NULL ) * 1000 ));
-					if( i == m_iCamCarIdx ) iTimeSum += iTime;
-					
 					if(( p = strchr( p, '\t' )) == NULL ) break;
 					++p;
 				}
@@ -800,16 +789,46 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 		return 0;
 	}
 	
-	// ゴール差分を足しすぎたので引く
-	iTimeSum -= CamCarLap()[ CamCarLap().size() - 1 ];
+	// ラップタイム表を時刻表に変換
+	for( int j = 0; j < ( int )m_LapTable.size(); ++j ){
+		for( i = m_LapTable[ j ].size() - 2; i >= 0; --i ){
+			m_LapTable[ j ][ i ] = m_LapTable[ j ][ i + 1 ] - m_LapTable[ j ][ i ];
+		}
+	}
+	
+	// vector 配列を作る
+	m_iAllLapIdx.resize( m_strName.size(), -1 );
+	m_iAllGapInfo.resize( m_strName.size(), 0 );
+	m_iPositionInfo.resize( m_strName.size(), -1 );
+	
+	return CamCarLap().size();
+}
+
+/*** 自車ラップデータ構築 ***************************************************/
+
+void CLapLogAll::MakeCamLapData( int iStartFrame, int iEndFrame ){
+	
+	LAP_t	Lap = {
+		0,	// uLap
+		0,	// fLogNum
+		0	// iTime
+	};
+	
+	m_Lap.clear();
+	m_iLapNum = 0;
+	
+	m_iStartFrame = iStartFrame;
+	m_iEndFrame = iEndFrame;
+	
+	int iTimeSum = CamCarLap()[ CamCarLap().size() - 1 ] - CamCarLap()[ 0 ];
 	
 	// ラップデータを構築
 	Lap.fLogNum = ( float )m_iStartFrame;
 	PushLap( Lap );	// 計測スタート ( iTime = 0 )
-	iTime = 0;
+	int iTime = 0;
 	
-	for( i = 0; i < ( int )CamCarLap().size() - 1; ++i ){
-		iTime += Lap.iTime = CamCarLap()[ i ];
+	for( int i = 1; i < ( int )CamCarLap().size(); ++i ){
+		iTime += Lap.iTime = GetLapTime( i );
 		++Lap.uLap;
 		
 		Lap.fLogNum = ( float )(
@@ -823,20 +842,8 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 	Lap.iTime	= 0;		// 番犬
 	m_Lap.push_back( Lap );
 	
-	// ラップタイム表を時刻表に変換
-	for( int j = 0; j < ( int )m_LapTable.size(); ++j ){
-		
-		for( i = m_LapTable[ j ].size() - 2; i >= 0; --i ){
-			m_LapTable[ j ][ i ] = m_LapTable[ j ][ i + 1 ] - m_LapTable[ j ][ i ];
-		}
-	}
-	
-	// vector 配列を作る
-	m_iAllLapIdx.resize( m_strName.size(), -1 );
-	m_iAllGapInfo.resize( m_strName.size(), 0 );
-	m_iPositionInfo.resize( m_strName.size(), -1 );
-	
-	return m_Lap.size();
+	// CalcLapInfo() をリセット
+	m_iPrevFrame	= INT_MAX;
 }
 
 /*** 各自のラップ情報再計算 *************************************************/

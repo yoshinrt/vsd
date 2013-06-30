@@ -82,9 +82,9 @@ class CLapLogAll : public CLapLog {
   public:
 	CLapLogAll(){
 		m_iStartFrame	= 0;
-		m_iEndFrame		= 0x7FFFFFFF;
+		m_iEndFrame		= INT_MAX;
 		m_iCamCarIdx	= 0;
-		m_iPrevFrame	= 0x7FFFFFFF;
+		m_iPrevFrame	= INT_MAX;
 		m_iSearchStartIdx	= -1;
 	}
 	
@@ -122,6 +122,7 @@ class CLapLogAll : public CLapLog {
 	
 	std::vector<int>& CamCarLap( void ){ return m_LapTable[ m_iCamCarIdx ]; }
 	int LapChartRead( const char *szFileName );
+	void MakeCamLapData( int iStartFrame, int iEndFrame );
 	void CalcLapInfo( int iFrameCnt, double dFPS );
 	
 	int	m_iStartFrame;

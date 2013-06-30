@@ -1560,28 +1560,33 @@ BOOL CVsdFilter::DrawVSD( void ){
 	}
 	
 	// ラップタイムの再生成
-	if(
-		DispLap() && m_bCalcLapTimeReq &&
-		( m_LapLog == NULL || m_LapLog->m_iLapMode < LAPMODE_MAGNET )
-	){
+	if( DispLap() && m_bCalcLapTimeReq ){
 		m_bCalcLapTimeReq	= FALSE;
 		
-		if( m_LapLog ){
-			delete m_LapLog;
-			m_LapLog = NULL;
-		}
-		
-		// GPS からラップタイム計算してみる
-		if( m_GPSLog && m_piParamT[ TRACK_SLineWidth ] > 0 ){
-			m_LapLog = CreateLapTimeAuto();
-		}
-		
-		// できなかったので手動で
-		if( !m_LapLog ){
-			m_LapLog = CreateLapTimeHand(
-				m_GPSLog ? LAPSRC_GPS :
-						   LAPSRC_VIDEO
+		if( m_LapLog && m_LapLog->m_iLapMode == LAPMODE_CHART ){
+			// ラップチャートからラップ情報構築
+			reinterpret_cast<CLapLogAll *>( m_LapLog )->MakeCamLapData(
+				m_piParamS[ SHADOW_LAP_CHART_St ],
+				m_piParamS[ SHADOW_LAP_CHART_Ed ]
 			);
+		}else{
+			if( m_LapLog ){
+				delete m_LapLog;
+				m_LapLog = NULL;
+			}
+			
+			// GPS からラップタイム計算してみる
+			if( m_GPSLog && m_piParamT[ TRACK_SLineWidth ] > 0 ){
+				m_LapLog = CreateLapTimeAuto();
+			}
+			
+			// できなかったので手動で
+			if( !m_LapLog ){
+				m_LapLog = CreateLapTimeHand(
+					m_GPSLog ? LAPSRC_GPS :
+							   LAPSRC_VIDEO
+				);
+			}
 		}
 	}
 	

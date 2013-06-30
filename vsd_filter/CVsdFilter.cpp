@@ -30,7 +30,7 @@ void CVsdFilter::Constructor( void ){
 	m_GPSLog 			= NULL;
 	m_LapLog			= NULL;
 	
-	m_bCalcLapTimeReq	= FALSE;
+	m_bCalcLapTimeReq	= TRUE;
 	
 	m_Polygon			= NULL;	// DrawPolygon 用バッファ
 	m_pFont				= NULL;
