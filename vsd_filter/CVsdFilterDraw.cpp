@@ -1353,7 +1353,7 @@ void CVsdFilter::DrawLapTimeLog(
 /*** 全車ラップタイム表示 ***************************************************/
 
 #define RACELAP_POS_W	2
-#define RACELAP_CAR_W	8
+#define RACELAP_CAR_W	10
 #define RACELAP_CAR_L	( RACELAP_POS_W + 1 )
 #define RACELAP_LAP_R	( RACELAP_CAR_L + RACELAP_CAR_W )
 #define RACELAP_TIME_L	( RACELAP_LAP_R + 1 )
@@ -1372,6 +1372,14 @@ void CVsdFilter::DrawRaceLapTime(
 	// ラップチャートを未リードならリターン
 	if( !m_LapLog || m_LapLog->m_iLapMode != LAPMODE_CHART ) return;
 	
+	CLapLogAll *pLap = reinterpret_cast<CLapLogAll *>( m_LapLog );
+	
+	if( iNum == 0 ){
+		iNum = pLap->m_strName.size();
+	}else if( iNum < 0 ){
+		iNum = ( int )pLap->m_strName.size() < -iNum ? pLap->m_strName.size() : -iNum;
+	}
+	
 	// x, y 補正
 	if( uAlign & ALIGN_HCENTER ){
 		x -= Font.GetWidth() * RACELAP_GAP_R / 2;
@@ -1383,8 +1391,6 @@ void CVsdFilter::DrawRaceLapTime(
 	}else if( uAlign & ALIGN_BOTTOM ){
 		y -= Font.GetHeight() * ( iNum + 1 ) + 1;
 	}
-	
-	CLapLogAll *pLap = reinterpret_cast<CLapLogAll *>( m_LapLog );
 	
 	// ヘッダ
 	DrawTextAlign(
@@ -1428,11 +1434,14 @@ void CVsdFilter::DrawRaceLapTime(
 		);
 		
 		// Lap#
-		swprintf( szBuf, sizeof( szBuf ), L"%d", pLap->m_iAllLapIdx[ iCar ] + 1 );
+		if( pLap->m_iAllLapIdx[ iCar ] < ( int )pLap->m_LapTable[ iCar ].size() - 1 ){
+			swprintf( szBuf, sizeof( szBuf ), L"%d", pLap->m_iAllLapIdx[ iCar ] + 1 );
+		}else{
+			swprintf( szBuf, sizeof( szBuf ), L"F%d", pLap->m_iAllLapIdx[ iCar ] );
+		}
 		DrawTextAlign(
 			x + RACELAP_LAP_R * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
-			pLap->m_iAllLapIdx[ iCar ] < ( int )pLap->m_LapTable[ iCar ].size() - 1 ? szBuf : L"F",
-			Font, uColor, uColorOutline
+			szBuf, Font, uColor, uColorOutline
 		);
 		
 		// Time
