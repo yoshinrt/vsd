@@ -24,6 +24,7 @@ class CScript {
 	UINT RunFile( LPCWSTR szFileName );
 	UINT RunFileCore( LPCWSTR szFileName );
 	UINT Run( LPCWSTR szFunc, BOOL bNoFunc = FALSE );
+	UINT Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc = FALSE );
 	UINT Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc = FALSE );
 	UINT RunArg( LPCWSTR szFunc, int iArgNum, v8::Handle<v8::Value> Args[], BOOL bNoFunc = FALSE );
 	

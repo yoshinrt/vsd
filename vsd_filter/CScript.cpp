@@ -276,6 +276,17 @@ UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
 	return RunArg( szFunc, 0, NULL, bNoFunc );
 }
 
+UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
+	v8::Isolate::Scope IsolateScope( m_pIsolate );
+	HandleScope handle_scope;
+	Context::Scope context_scope( m_Context );
+	
+	Handle<Value> Args[] = {
+		str0 ? String::New(( uint16_t *)str0 ) : v8::Undefined()
+	};
+	return RunArg( szFunc, 1, Args, bNoFunc );
+}
+
 UINT CScript::Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc ){
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;

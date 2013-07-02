@@ -354,7 +354,7 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 	}
 	
 	CLapLogAll *pLapLog = new CLapLogAll();
-	int iRet = pLapLog->LapChartRead( szFileName );
+	int iRet = pLapLog->LapChartRead( szFileName, this );
 	if( iRet == 0 ){
 		delete pLapLog;
 		return 0;

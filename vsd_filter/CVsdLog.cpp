@@ -718,72 +718,62 @@ void CVsdLog::RotateMap( double dAngle ){
 
 /*** チャートリード *********************************************************/
 
-#define NAME_BUF_SIZE	64
-
-int CLapLogAll::LapChartRead( const char *szFileName ){
-	
-	// ファイルオープン
-	FILE *fp = fopen( szFileName, "r" );
-	if( !fp ) return 0;
-	
-	char	szBuf[ BUF_SIZE ];
-	char	szCamName[ NAME_BUF_SIZE ] = "";
-	char	szName[ NAME_BUF_SIZE ];
-	
+int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 	m_iLapMode = LAPMODE_CHART;
 	m_iLapSrc  = LAPSRC_VIDEO;
 	
-	int iMaxMembers;
-	
-	int	iTime;
-	int i;
-	
-	// ファイルリード
-	while( fgets( szBuf, BUF_SIZE, fp )){
-		if(
-			sscanf( szBuf, "Name:%s",       szCamName ) == 0 &&
-			strncmp( szBuf, "LapChart:", 9 ) == 0
-		){
-			// 走者一覧取得
-			if( fgets( szBuf, BUF_SIZE, fp )){
-				char	*p = szBuf;
-				LPWSTR	wstr = NULL;
+	{
+		// JavaScript オブジェクト初期化
+		CScript Script( pVsd );
+		if( Script.InitLogReader() != ERR_OK ){
+			return 0;
+		}
+		
+		// スクリプト実行
+		LPWSTR pStr = NULL;
+		LPWSTR pReader = NULL;
+		Script.Run_s( L"ReadLapChart", StringNew( pStr, szFileName ));
+		delete [] pStr;
+		delete [] pReader;
+		
+		if( Script.m_uError != ERR_OK ){
+			pVsd->DispErrorMessage( Script.GetErrorMessage());
+			return 0;
+		}
+		
+		/*** JS の Log にアクセス *******************************************/
+		
+		{
+			v8::Isolate::Scope IsolateScope( Script.m_pIsolate );
+			v8::HandleScope handle_scope;
+			v8::Context::Scope context_scope( Script.m_Context );
+			
+			// "LapTime" 取得
+			v8::Local<v8::Array> hLapTime = v8::Local<v8::Array>::Cast(
+				Script.m_Context->Global()->Get( v8::String::New(( uint16_t *)L"LapTime" ))
+			);
+			if( !hLapTime->IsArray()) return 0;
+			
+			// カメラカー No 取得
+			m_iCamCarIdx = Script.m_Context->Global()->Get( v8::String::New(( uint16_t *)L"CameraCarID" ))->Int32Value();
+			
+			// LapTime の key 取得
+			v8::Local<v8::Array> Keys = hLapTime->GetPropertyNames();
+			
+			for( UINT u = 0; u < Keys->Length(); ++u ){
+				v8::String::Value strKey( Keys->Get( u ));
+				m_strName.push_back( reinterpret_cast<LPWSTR>( *strKey ));
 				
 				std::vector<int>	int_vec;	// ダミー
-				iMaxMembers = 0;
+				m_LapTable.push_back( int_vec );
 				
-				while( StrGetParam( szName, &p )){
-					m_strName.push_back( StringNew( wstr, szName ));
-					delete wstr; wstr = NULL;
-					
-					m_LapTable.push_back( int_vec );
-					if( strcmp( szName, szCamName ) == 0 ) m_iCamCarIdx = iMaxMembers;
-					++iMaxMembers;
+				v8::Local<v8::Array> ArrayTmp = v8::Local<v8::Array>::Cast( hLapTime->Get( Keys->Get( u )));
+				for( UINT v = 0; v < ArrayTmp->Length(); ++ v ){
+					m_LapTable[ u ].push_back( ArrayTmp->Get( v )->Int32Value());
 				}
 			}
-			
-			// ラップチャート取得
-			// 1行目以降がラップタイム
-			// 最終行目はゴール時のタイム差
-			while( fgets( szBuf, BUF_SIZE, fp )){
-				char *p = szBuf;
-				
-				for( i = 0; i < iMaxMembers; ++i ){
-					if( *p == 0xD || *p == 0xA || *p == 0 ) break;
-					if( *p == '\t' ){
-						++p;
-						continue;
-					}
-					m_LapTable[ i ].push_back( iTime = ( int )( strtod( p, NULL ) * 1000 ));
-					if(( p = strchr( p, '\t' )) == NULL ) break;
-					++p;
-				}
-			}
-			break;
 		}
 	}
-	
-	fclose( fp );
 	
 	if( m_LapTable.size() == 0 || CamCarLap().size() <= 1 ){
 		return 0;
@@ -791,7 +781,7 @@ int CLapLogAll::LapChartRead( const char *szFileName ){
 	
 	// ラップタイム表を時刻表に変換
 	for( int j = 0; j < ( int )m_LapTable.size(); ++j ){
-		for( i = m_LapTable[ j ].size() - 2; i >= 0; --i ){
+		for( int i = m_LapTable[ j ].size() - 2; i >= 0; --i ){
 			m_LapTable[ j ][ i ] = m_LapTable[ j ][ i + 1 ] - m_LapTable[ j ][ i ];
 		}
 	}

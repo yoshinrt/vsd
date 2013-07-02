@@ -38,6 +38,7 @@ typedef struct {
 } LAP_t;
 
 class CVsdLog;
+class CVsdFilter;
 class CLapLog {
   public:
 	CLapLog(){
@@ -121,7 +122,7 @@ class CLapLogAll : public CLapLog {
 	}
 	
 	std::vector<int>& CamCarLap( void ){ return m_LapTable[ m_iCamCarIdx ]; }
-	int LapChartRead( const char *szFileName );
+	int LapChartRead( const char *szFileName, CVsdFilter *pVsd );
 	void MakeCamLapData( int iStartFrame, int iEndFrame );
 	void CalcLapInfo( int iFrameCnt, double dFPS );
 	
