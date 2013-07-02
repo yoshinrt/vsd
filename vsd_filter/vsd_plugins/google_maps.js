@@ -69,7 +69,7 @@ function Initialize(){
 function Draw(){
 	if( Vsd.Longitude === undefined ){
 		Vsd.DrawTextAlign(
-			Vsd.Width, ( Vsd.Height - font.Height ) / 2, ALIGN_HCENTER | ALIGN_VCENTER,
+			Vsd.Width / 2, ( Vsd.Height - font.Height ) / 2, ALIGN_HCENTER | ALIGN_VCENTER,
 			"GPS データが読み込まれていません", font, 0xFFFFFF
 		);
 		return;
