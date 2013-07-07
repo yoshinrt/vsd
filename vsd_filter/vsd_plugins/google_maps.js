@@ -23,18 +23,18 @@ function Initialize(){
 		// 例: APIKey: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
 		APIKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
 		
-		// ズームレベルを 1～21 で指定します
+		// ズームレベルを 0～21 で指定します
 		Zoom: 14,
 		
 		// 地図タイプ
-		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:航空写真
+		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:地図+航空写真
 		Maptype: "roadmap",
 		
-		// 地図表示位置，サイズ
+		// 地図表示位置，サイズ(最大 640x640)
 		X:		0,
 		Y:		0,
-		Width:	400 * Scale,
-		Height:	300 * Scale,
+		Width:	min( 400 * Scale, 640 ),
+		Height:	min( 300 * Scale, 640 ),
 		
 		// 自車インジケータ
 		IndicatorSize:	12 * Scale,		// サイズ
@@ -44,12 +44,14 @@ function Initialize(){
 		// 前回地図更新時から指定秒以上経過し，
 		// かつ指定距離以上移動した場合のみ地図を更新します
 		UpdateTime:		1000,	// [ミリ秒]
-		UpdateDistance:	5,		// [m]
+		UpdateDistance:	10,		// [ピクセル]
 	};
 	
 	//////////////////////////////////////////////////////////////////////////
 	/// ↑↑↑↑↑Google Maps の設定 ここまで↑↑↑↑↑ //////////////////////
 	//////////////////////////////////////////////////////////////////////////
+	
+	function min( a, b ){ return ( a < b ) ? a : b; }
 	
 	if( GoogleMapsParam.APIKey == '' ){
 		MessageBox(

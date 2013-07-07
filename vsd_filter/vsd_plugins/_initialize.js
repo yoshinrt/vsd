@@ -128,23 +128,9 @@ Vsd.DrawGoogleMaps = function( param ){
 		param.MapImg	= new Image( GMapURL + Vsd.Latitude + "," + Vsd.Longitude );
 		param.Dir		= Vsd.Direction;
 		param.Time		= Vsd.DateTime;
-		param.Long		= Vsd.Longitude;
-		param.Lati		= Vsd.Latitude;
-	}
-	
-	// 次のマップデータを非同期モードで取得
-	if(
-		Math.abs( param.Time - Vsd.DateTime ) >= param.UpdateTime &&
-		GetDistance( Vsd.Longitude, Vsd.Latitude, param.Long, param.Lati ) >= param.UpdateDistance
-	){
-		param.MapImgNext = new Image(
-			GMapURL + Vsd.Latitude + "," + Vsd.Longitude,
-			IMG_INET_ASYNC
-		);
-		param.Time		= Vsd.DateTime;
-		param.Long		= Vsd.Longitude;
-		param.Lati		= Vsd.Latitude;
-		param.NextDir	= Vsd.Direction;
+		param.DispLong	= param.Long = Vsd.Longitude;
+		param.DispLati	= param.Lati = Vsd.Latitude;
+		param.Distance	= Vsd.Distance;
 	}
 	
 	// 次のマップデータ取得が完了した
@@ -156,10 +142,42 @@ Vsd.DrawGoogleMaps = function( param ){
 		param.MapImg		= param.MapImgNext;
 		param.MapImgNext	= undefined;
 		param.Dir			= param.NextDir;
+		param.DispLong		= param.Long;
+		param.DispLati		= param.Lati;
 	}
 	
 	Vsd.PutImage( param.X, param.Y, param.MapImg );
-	DrawArrow( param.X + param.Width / 2, param.Y + param.Height / 2, param.Dir, param.IndicatorSize );
+	
+	// ピクセル移動量を計算  参考: http://hosohashi.blog59.fc2.com/blog-entry-5.html
+	var PixLong = ( Vsd.Longitude - param.DispLong ) / 180 * ( 1 << ( 7 + param.Zoom ));
+	var sin_pic = Math.sin( Math.PI / 180 * param.DispLati );
+	var sin_now = Math.sin( Math.PI / 180 * Vsd.Latitude );
+	var PixLati = (
+		Math.log(( 1 + sin_pic ) / ( 1 - sin_pic )) -
+		Math.log(( 1 + sin_now ) / ( 1 - sin_now ))
+	) / Math.PI * ( 1 << ( 7 - 1 + param.Zoom ));
+	
+	DrawArrow(
+		param.X + param.Width  / 2 + PixLong,
+		param.Y + param.Height / 2 + PixLati,
+		Vsd.Direction, param.IndicatorSize
+	);
+	
+	// 次のマップデータを非同期モードで取得
+	if(
+		Math.abs( param.Time - Vsd.DateTime ) >= param.UpdateTime &&
+		( PixLong * PixLong + PixLati * PixLati ) >= param.UpdateDistance * param.UpdateDistance
+	){
+		param.MapImgNext = new Image(
+			GMapURL + Vsd.Latitude + "," + Vsd.Longitude,
+			IMG_INET_ASYNC
+		);
+		param.Time		= Vsd.DateTime;
+		param.Long		= Vsd.Longitude;
+		param.Lati		= Vsd.Latitude;
+		param.NextDir	= Vsd.Direction;
+	}
+	
 	
 	// 自車マーク描画
 	function DrawArrow( cx, cy, angle, size ){
@@ -184,22 +202,5 @@ Vsd.DrawGoogleMaps = function( param ){
 		
 		Vsd.DrawPolygon( apex, param.IndicatorColor, DRAW_FILL );
 		Vsd.DrawCircle( cx, cy, size, param.IndicatorColor );
-	}
-	
-	// 緯度・経度から距離算出
-	function GetDistance( dLong0, dLati0, dLong1, dLati1 ){
-		var a	= 6378137.000;
-		var b	= 6356752.314245;
-		var e2	= ( a * a - b * b ) / ( a * a );
-		var ToRAD = Math.PI / 180;
-		
-		var dx	= ( dLong1 - dLong0 ) * ToRAD;
-		var dy	= ( dLati1 - dLati0 ) * ToRAD;
-		var uy	= ( dLati0 + dLati1 ) / 2 * ToRAD;
-		var W	= Math.sqrt( 1 - e2 * Math.sin( uy ) * Math.sin( uy ));
-		var M	= a * ( 1 - e2 ) / Math.pow( W, 3 );
-		var N	= a / W;
-		
-		return	Math.sqrt( dy * dy * M * M + Math.pow( dx * N * Math.cos( uy ), 2 ));
 	}
 }
