@@ -546,7 +546,7 @@ void CVsdFilter::FillPolygon( tRABY uColor ){
 
 /* 辺の定義 */
 struct Edge {
-	USHORT	x, y;	// 始点座標
+	short	x, y;	// 始点座標
 	USHORT	Flag;		// 傾き
 };
 
@@ -640,6 +640,9 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 	
 	// 描画開始
 	std::vector<int> vec_x( uEdgeCnt + 2 ); // X 座標のリスト
+	
+	if( iMinY < 0 ) iMinY = 0;
+	if( iMaxY >= GetHeight()) iMaxY = GetHeight() - 1;
 	
 	for( int y = iMinY ; y <= iMaxY ; ++y ){
 		// 抽出した X 座標の末尾(開始位置で初期化)
@@ -1578,7 +1581,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 				m_piParamS[ SHADOW_LAP_CHART_St ],
 				m_piParamS[ SHADOW_LAP_CHART_Ed ]
 			);
-		}else{
+		}else if( m_LapLog == NULL || m_LapLog->m_iLapMode != LAPMODE_MAGNET ){
 			if( m_LapLog ){
 				delete m_LapLog;
 				m_LapLog = NULL;
