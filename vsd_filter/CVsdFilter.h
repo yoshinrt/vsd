@@ -27,8 +27,6 @@
 #define PROG_NAME_J_W	L"VSDメーター合成"
 #define PROG_NAME_LONG	"`VSDFilter' vehicle data logger overlay plugin"
 
-#define MAX_LAP		200
-
 #define G_CX_CNT		30
 #define POS_DEFAULT		0x80000000
 
@@ -487,7 +485,7 @@ class CVsdFilter
 	// パラメータ
 	int	m_iFrameCnt, m_iFrameMax;
 	int m_iBytesPerLine;
-	int *m_piMark;
+	std::vector<int> m_iMark;
 	int m_iMarkCnt;
 	
 	BYTE	*m_pPlane;

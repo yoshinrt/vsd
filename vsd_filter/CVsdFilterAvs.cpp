@@ -48,7 +48,6 @@ CVsdFilter::CVsdFilter(
 	m_piParamT	= new int[ TRACK_N ];
 	m_piParamC	= new int[ CHECK_N ];
 	m_piParamS	= new int[ SHADOW_N ];
-	m_piMark	= new int[ MAX_LAP ];
 	m_iMarkCnt	= 0;
 	
 	m_env = NULL;
@@ -112,7 +111,6 @@ CVsdFilter::~CVsdFilter(){
 	delete [] m_piParamT;
 	delete [] m_piParamC;
 	delete [] m_piParamS;
-	delete [] m_piMark;
 }
 
 /*** PutPixel ***************************************************************/
@@ -248,14 +246,15 @@ void CVsdFilter::DispErrorMessage( LPCWSTR szMsg ){
 /*** フレームをマーク *******************************************************/
 
 void CVsdFilter::SetFrameMark( int iFrame ){
-	m_piMark[ m_iMarkCnt++ ] = iFrame;
-	m_piMark[ m_iMarkCnt   ] = -1;
+	m_iMark.push_back( iFrame );
 };
 
 int CVsdFilter::GetFrameMark( int iFrame ){
-	int	i;
-	for( i = 0; m_piMark[ i ] < iFrame && m_piMark[ i ] >= 0; ++i );
-	return m_piMark[ i ];
+	UINT	u;
+	for( u = 0; u < m_iMark.size(); ++u ){
+		if( m_iMark[ u ] == iFrame ) return iFrame;
+	}
+	return -1;
 }
 
 /*** DrawSyncInfo ダミー ****************************************************/
