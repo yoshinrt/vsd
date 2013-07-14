@@ -28,9 +28,9 @@ function Initialize(){
 		
 		// 地図タイプ
 		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:地図+航空写真
-		Maptype: "hybrid",
 		Maptype: "terrain",
 		Maptype: "roadmap",
+		Maptype: "hybrid",
 		
 		// 地図表示位置，サイズ(最大 640x640)
 		X: 0,
@@ -47,6 +47,8 @@ function Initialize(){
 		// かつ指定距離以上移動した場合のみ地図を更新します
 		UpdateTime:		1000,	// [ミリ秒]
 		UpdateDistance:	16,		// [ピクセル]
+		
+		SmoothScrollMap:	1,
 	};
 	
 	//////////////////////////////////////////////////////////////////////////
@@ -80,7 +82,7 @@ function Draw(){
 	}
 	
 	// Google マップ表示
-	Vsd.DrawGoogleMaps2( GoogleMapsParam );
+	Vsd.DrawGoogleMaps( GoogleMapsParam );
 	
 	// 文字データ
 	Vsd.DrawTextAlign(
@@ -91,102 +93,4 @@ function Draw(){
 		"  速度:" + Vsd.Speed.toFixed( 0 ) + "km/h",
 		font, 0xFFFFFF
 	);
-}
-
-//*** Google Map 描画 ********************************************************
-
-Vsd.DrawGoogleMaps2 = function( param ){
-	if( Vsd.Longitude === undefined ) return;
-	
-	GMapURL = "http://maps.googleapis.com/maps/api/staticmap?sensor=false&language=ja" +
-		( param.APIKey != '' ? "&key=" + param.APIKey : '' ) +
-		"&maptype=" + param.Maptype +
-		"&zoom=" + param.Zoom +
-		"&size=640x640&center=";
-	
-	// 一番最初の地図データを同期モードで取得
-	if( param.MapImg === undefined ){
-		param.MapImg	= new Image( GMapURL + Vsd.Latitude + "," + Vsd.Longitude );
-		param.Dir		= Vsd.Direction;
-		param.Time		= Vsd.DateTime;
-		param.DispLong	= param.Long = Vsd.Longitude;
-		param.DispLati	= param.Lati = Vsd.Latitude;
-		param.Distance	= Vsd.Distance;
-	}
-	
-	// 次のマップデータ取得が完了した
-	if(
-		param.MapImgNext !== undefined &&
-		param.MapImgNext.Status == IMG_STATUS_LOAD_COMPLETE
-	){
-		param.MapImg.Dispose();
-		param.MapImg		= param.MapImgNext;
-		param.MapImgNext	= undefined;
-		param.Dir			= param.NextDir;
-		param.DispLong		= param.Long;
-		param.DispLati		= param.Lati;
-	}
-	
-	// ピクセル移動量を計算  参考: http://hosohashi.blog59.fc2.com/blog-entry-5.html
-	var PixLong = ( Vsd.Longitude - param.DispLong ) / 180 * ( 1 << ( 7 + param.Zoom ));
-	var sin_pic = Math.sin( Math.PI / 180 * param.DispLati );
-	var sin_now = Math.sin( Math.PI / 180 * Vsd.Latitude );
-	var PixLati = (
-		Math.log(( 1 + sin_pic ) / ( 1 - sin_pic )) -
-		Math.log(( 1 + sin_now ) / ( 1 - sin_now ))
-	) / Math.PI * ( 1 << ( 7 - 1 + param.Zoom ));
-	
-	Vsd.PutImage(
-		param.X, param.Y, param.MapImg, 0,
-		320 - ( param.Width  >> 1 ) + PixLong,
-		320 - ( param.Height >> 1 ) + PixLati,
-		param.Width, param.Height
-	);
-	
-	DrawArrow(
-		param.X + param.Width  / 2,
-		param.Y + param.Height / 2,
-		Vsd.Direction, param.IndicatorSize
-	);
-	
-	// 次のマップデータを非同期モードで取得
-	if(
-		Math.abs( param.Time - Vsd.DateTime ) >= param.UpdateTime &&
-		( PixLong * PixLong + PixLati * PixLati ) >= param.UpdateDistance * param.UpdateDistance
-	){
-		param.MapImgNext = new Image(
-			GMapURL + Vsd.Latitude + "," + Vsd.Longitude,
-			IMG_INET_ASYNC
-		);
-		param.Time		= Vsd.DateTime;
-		param.Long		= Vsd.Longitude;
-		param.Lati		= Vsd.Latitude;
-		param.NextDir	= Vsd.Direction;
-	}
-	
-	
-	// 自車マーク描画
-	function DrawArrow( cx, cy, angle, size ){
-		angle *= Math.PI / 180;
-		var cos = Math.cos( angle ) * size;
-		var sin = Math.sin( angle ) * size;
-		
-		apex = [
-			0, -1,
-			0.707, 0.707,
-			0, 0.25,
-			-0.707, 0.707,
-		];
-		
-		// 回転 + x,y 座標加算
-		for( var i = 0; i < apex.length; i += 2 ){
-			var x = cx + apex[ i ] * cos - apex[ i + 1 ] * sin;
-			var y = cy + apex[ i ] * sin + apex[ i + 1 ] * cos;
-			apex[ i     ] = x;
-			apex[ i + 1 ] = y;
-		}
-		
-		Vsd.DrawPolygon( apex, param.IndicatorColor, DRAW_FILL );
-		Vsd.DrawCircle( cx, cy, size, param.IndicatorColor );
-	}
 }

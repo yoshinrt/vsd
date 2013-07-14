@@ -120,7 +120,7 @@ Vsd.DrawGoogleMaps = function( param ){
 		( param.APIKey != '' ? "&key=" + param.APIKey : '' ) +
 		"&maptype=" + param.Maptype +
 		"&zoom=" + param.Zoom +
-		"&size=" + Math.floor( param.Width ) + "x" + Math.floor( param.Height ) +
+		( param.SmoothScrollMap ? "&size=640x640" : "&size=" + Math.floor( param.Width ) + "x" + Math.floor( param.Height )) +
 		"&center=";
 	
 	// 一番最初の地図データを同期モードで取得
@@ -155,13 +155,28 @@ Vsd.DrawGoogleMaps = function( param ){
 		Math.log(( 1 + sin_now ) / ( 1 - sin_now ))
 	) / Math.PI * ( 1 << ( 7 - 1 + param.Zoom ));
 	
-	Vsd.PutImage( param.X, param.Y, param.MapImg );
-	
-	DrawArrow(
-		param.X + param.Width  / 2 + PixLong,
-		param.Y + param.Height / 2 + PixLati,
-		Vsd.Direction, param.IndicatorSize
-	);
+	if( param.SmoothScrollMap ){
+		Vsd.PutImage(
+			param.X, param.Y, param.MapImg, 0,
+			320 - ( param.Width  >> 1 ) + PixLong,
+			320 - ( param.Height >> 1 ) + PixLati,
+			param.Width, param.Height
+		);
+		
+		DrawArrow(
+			param.X + param.Width  / 2,
+			param.Y + param.Height / 2,
+			Vsd.Direction, param.IndicatorSize
+		);
+	}else{
+		Vsd.PutImage( param.X, param.Y, param.MapImg );
+		
+		DrawArrow(
+			param.X + param.Width  / 2 + PixLong,
+			param.Y + param.Height / 2 + PixLati,
+			Vsd.Direction, param.IndicatorSize
+		);
+	}
 	
 	// 次のマップデータを非同期モードで取得
 	if(
