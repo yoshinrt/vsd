@@ -216,7 +216,7 @@ UINT CVsdFilter::PutImage(
 		// æ“ª‚Ì”¼’[‚È 1pixel ˆ—
 		if( iIndex & 2 ){
 			PIXEL_YCA yc( img.GetPixel0( x1, y1 ));
-			PutPixel( x1, y1, yc );
+			PutPixel( x + x1, y + y1, yc );
 			iIndex += 2;
 			++x1;
 		}
