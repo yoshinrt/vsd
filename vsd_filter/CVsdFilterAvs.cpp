@@ -185,44 +185,30 @@ void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ){
 
 /*** PutImage ***************************************************************/
 
-UINT CVsdFilter::PutImage(
-	int x, int y, CVsdImage &img, UINT uAlign
+UINT CVsdFilter::PutImage0(
+	int x, int y, CVsdImage &img,
+	int ix_st, int iy_st, int ix_ed, int iy_ed
 ){
-	if( uAlign & ALIGN_HCENTER ){
-		x -= img.m_iWidth / 2;
-	}else if( uAlign & ALIGN_RIGHT ){
-		x -= img.m_iWidth;
-	}
-	
-	if( uAlign & ALIGN_VCENTER ){
-		y -= img.m_iHeight / 2;
-	}else if( uAlign & ALIGN_BOTTOM ){
-		y -= img.m_iHeight;
-	}
-	
-	int xst = ( -x <= img.m_iOffsX ) ? img.m_iOffsX : -x;
-	int yst = ( -y <= img.m_iOffsY ) ? img.m_iOffsY : -y;
-	int xed = x + img.m_iOffsX + img.m_iRawWidth  <= GetWidth()  ? img.m_iOffsX + img.m_iRawWidth  : GetWidth()  - x;
-	int yed = y + img.m_iOffsY + img.m_iRawHeight <= GetHeight() ? img.m_iOffsY + img.m_iRawHeight : GetHeight() - y;
-	
 	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 	#endif
-	for( int y1 = yst; y1 < yed; ++y1 ){
+	for( int iy = iy_st; iy < iy_ed; ++iy, ++y ){
 		
-		int	iIndex = GetIndex( x + xst, y + y1 );
-		int x1 = xst;
+		int	iIndex = GetIndex( x, y );
+		int ix = ix_st;
+		int sx = x;
 		
 		// 先頭の半端な 1pixel 処理
 		if( iIndex & 2 ){
-			PIXEL_YCA yc( img.GetPixel0( x1, y1 ));
-			PutPixel( x + x1, y + y1, yc );
+			PIXEL_YCA yc( img.GetPixelRaw( ix, iy ));
+			PutPixel( x, y, yc );
 			iIndex += 2;
-			++x1;
+			++ix;
+			++sx;
 		}
-		for( ; x1 < xed - 1; x1 += 2, iIndex += 4 ){
-			PIXEL_YCA yc0( img.GetPixel0( x1    , y1 ));
-			PIXEL_YCA yc1( img.GetPixel0( x1 + 1, y1 ));
+		for( ; ix < ix_ed - 1; ix += 2, sx += 2, iIndex += 4 ){
+			PIXEL_YCA yc0( img.GetPixelRaw( ix    , iy ));
+			PIXEL_YCA yc1( img.GetPixelRaw( ix + 1, iy ));
 			
 			if( yc0.alfa == 0 && yc1.alfa == 0 ){
 				// 2ピクセルが共に 100% 不透明
@@ -233,14 +219,14 @@ UINT CVsdFilter::PutImage(
 				*( UINT *)( m_pPlane + iIndex ) = yc0.ycbcr;
 			}else{
 				// そうではなかった
-				PutPixel( x + x1,     y + y1, yc0 );
-				PutPixel( x + x1 + 1, y + y1, yc1 );
+				PutPixel( sx,     y, yc0 );
+				PutPixel( sx + 1, y, yc1 );
 			}
 		}
 		// 後端の半端な 1pixel 処理
-		if( x1 < xed ){
-			PIXEL_YCA yc( img.GetPixel0( x1, y1 ));
-			PutPixel( x + x1, y + y1, yc );
+		if( ix < ix_ed ){
+			PIXEL_YCA yc( img.GetPixelRaw( ix, iy ));
+			PutPixel( sx, y, yc );
 		}
 	}
 	

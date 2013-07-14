@@ -703,6 +703,87 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 	}
 }
 
+/*** PutImage の座標，width 等補正関数 **************************************/
+
+UINT CVsdFilter::PutImage(
+	int x, int y, CVsdImage &img, UINT uAlign,
+	int iImgX, int iImgY, int iImgW, int iImgH
+){
+	if( iImgW < 0 ) iImgW = img.m_iWidth;
+	if( iImgH < 0 ) iImgH = img.m_iHeight;
+	
+	/// アラインの計算 ///////////////////////////////////////////////////////
+	
+	if( uAlign & ALIGN_HCENTER ){
+		x -= iImgW / 2;
+	}else if( uAlign & ALIGN_RIGHT ){
+		x -= iImgW;
+	}
+	
+	if( uAlign & ALIGN_VCENTER ){
+		y -= iImgH / 2;
+	}else if( uAlign & ALIGN_BOTTOM ){
+		y -= iImgH;
+	}
+	
+	/// 座標補正 /////////////////////////////////////////////////////////////
+	
+	// Raw イメージ座標
+	int ix_st, ix_ed, iy_st, iy_ed;
+	
+	// RawImgX の補正
+	if( img.m_iOffsX < iImgX ){
+		// RawImg の途中から始めることになる
+		ix_st = iImgX - img.m_iOffsX;
+	}else{
+		// RawImg の先頭から始まる，ただし表示は右にずれることになる
+		ix_st = 0;
+		x     += img.m_iOffsX - iImgX;
+		iImgW -= img.m_iOffsX - iImgX;
+	}
+	
+	// スクリーン座標が左にはみ出していたら，補正
+	if( x < 0 ){
+		ix_st -= x;
+		iImgW += x;
+		x = 0;
+	}
+	
+	// RawImgW をはみ出していたら，iImgW を補正
+	if( img.m_iRawWidth < ix_st + iImgW ) iImgW = img.m_iRawWidth - ix_st;
+	
+	// スクリーン右をはみ出していたら，iImgW を補正
+	if( GetWidth() < x + iImgW ) iImgW = GetWidth() - x;
+	ix_ed = ix_st + iImgW;
+	
+	// RawImgY の補正
+	if( img.m_iOffsY < iImgY ){
+		// RawImg の途中から始めることになる
+		iy_st = iImgY - img.m_iOffsY;
+	}else{
+		// RawImg の先頭から始まる，ただし表示は下にずれることになる
+		iy_st = 0;
+		y     += img.m_iOffsY - iImgY;
+		iImgH -= img.m_iOffsY - iImgY;
+	}
+	
+	// スクリーン座標が上にはみ出していたら，補正
+	if( y < 0 ){
+		iy_st -= y;
+		iImgH += y;
+		y = 0;
+	}
+	
+	// RawImgH をはみ出していたら，iImgH を補正
+	if( img.m_iRawHeight < iy_st + iImgH ) iImgH = img.m_iRawHeight - iy_st;
+	
+	// スクリーン下をはみ出していたら，iImgH を補正
+	if( GetHeight() < y + iImgH ) iImgH = GetHeight() - y;
+	iy_ed = iy_st + iImgH;
+	
+	return PutImage0( x, y, img, ix_st, iy_st, ix_ed, iy_ed );
+}
+
 /*** カラーを混ぜる *********************************************************/
 
 inline UINT CVsdFilter::BlendColor(

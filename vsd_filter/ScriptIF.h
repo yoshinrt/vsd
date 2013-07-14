@@ -206,7 +206,7 @@ class CVsdFilterIF {
 	}
 	static v8::Handle<v8::Value> Func_PutImage( const v8::Arguments& args ){
 		int iLen = args.Length();
-		if( CScript::CheckArgs( 3 <= iLen && iLen <= 4 )) return v8::Undefined();
+		if( CScript::CheckArgs( 3 <= iLen && iLen <= 8 )) return v8::Undefined();
 		v8::Local<v8::Object> Image2 = args[ 2 ]->ToObject();
 		if( CScript::CheckClass( Image2, "Image", "arg[ 3 ] must be Image" )) return v8::Undefined();
 		CVsdImage *obj2 = CScript::GetThis<CVsdImage>( Image2 );
@@ -217,7 +217,11 @@ class CVsdFilterIF {
 			args[ 0 ]->Int32Value(),
 			args[ 1 ]->Int32Value(),
 			*obj2,
-			iLen <= 3 ? 0 : args[ 3 ]->Int32Value()
+			iLen <= 3 ? 0 : args[ 3 ]->Int32Value(),
+			iLen <= 4 ? 0 : args[ 4 ]->Int32Value(),
+			iLen <= 5 ? 0 : args[ 5 ]->Int32Value(),
+			iLen <= 6 ? INT_MIN : args[ 6 ]->Int32Value(),
+			iLen <= 7 ? INT_MIN : args[ 7 ]->Int32Value()
 		);
 		
 		return v8::Integer::New( ret );

@@ -114,9 +114,19 @@ class CVsdFilter
 	void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
 	void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT uFlag );
 	void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
+	
 	UINT PutImage(	// !js_func
 		int x, int y, CVsdImage &img,
-		UINT uAlign = 0	// !default:0
+		UINT uAlign = 0,		// !default:0
+		int iImgX = 0,			// !default:0
+		int iImgY = 0,			// !default:0
+		int iImgW = INT_MIN,	// !default:INT_MIN
+		int iImgH = INT_MIN		// !default:INT_MIN
+	);
+	// ç¿ïWÅCwidth ìôï‚ê≥å„
+	UINT PutImage0(
+		int x, int y, CVsdImage &img,
+	int ix_st, int iy_st, int ix_ed, int iy_ed
 	);
 	
 	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG yc, UINT uFlag );

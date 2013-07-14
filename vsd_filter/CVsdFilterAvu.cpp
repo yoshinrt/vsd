@@ -296,34 +296,21 @@ void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ){
 
 /*** PutImage ***************************************************************/
 
-UINT CVsdFilter::PutImage( int x, int y, CVsdImage &img, UINT uAlign ){
+UINT CVsdFilter::PutImage0(
+	int x, int y, CVsdImage &img,
+	int ix_st, int iy_st, int ix_ed, int iy_ed
+){
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
-	if( uAlign & ALIGN_HCENTER ){
-		x -= img.m_iWidth / 2;
-	}else if( uAlign & ALIGN_RIGHT ){
-		x -= img.m_iWidth;
-	}
-	
-	if( uAlign & ALIGN_VCENTER ){
-		y -= img.m_iHeight / 2;
-	}else if( uAlign & ALIGN_BOTTOM ){
-		y -= img.m_iHeight;
-	}
-	
-	int xst = ( -x <= img.m_iOffsX ) ? img.m_iOffsX : -x;
-	int yst = ( -y <= img.m_iOffsY ) ? img.m_iOffsY : -y;
-	int xed = x + img.m_iOffsX + img.m_iRawWidth  <= GetWidth()  ? img.m_iOffsX + img.m_iRawWidth  : GetWidth()  - x;
-	int yed = y + img.m_iOffsY + img.m_iRawHeight <= GetHeight() ? img.m_iOffsY + img.m_iRawHeight : GetHeight() - y;
-	
-	for( int y1 = yst; y1 < yed; ++y1 ){
-		for( int x1 = xst; x1 < xed; ++x1 ){
+	for( int iy = iy_st; iy < iy_ed; ++iy, ++y ){
+		
+		int	iIndex = GetIndex( x, y );
+		
+		for( int ix = ix_st; ix < ix_ed; ++ix, ++iIndex ){
 			
-			PIXEL_YCA yc( img.GetPixel0( x1, y1 ));
+			PIXEL_YCA yc( img.GetPixelRaw( ix, iy ));
 			
 			if( yc.alfa != 256 ){
-				int	iIndex = GetIndex( x + x1, y + y1 );
-				
 				if( yc.alfa ){
 					int iAlfa = ( int )yc.alfa;
 					

@@ -146,8 +146,6 @@ Vsd.DrawGoogleMaps = function( param ){
 		param.DispLati		= param.Lati;
 	}
 	
-	Vsd.PutImage( param.X, param.Y, param.MapImg );
-	
 	// ピクセル移動量を計算  参考: http://hosohashi.blog59.fc2.com/blog-entry-5.html
 	var PixLong = ( Vsd.Longitude - param.DispLong ) / 180 * ( 1 << ( 7 + param.Zoom ));
 	var sin_pic = Math.sin( Math.PI / 180 * param.DispLati );
@@ -156,6 +154,8 @@ Vsd.DrawGoogleMaps = function( param ){
 		Math.log(( 1 + sin_pic ) / ( 1 - sin_pic )) -
 		Math.log(( 1 + sin_now ) / ( 1 - sin_now ))
 	) / Math.PI * ( 1 << ( 7 - 1 + param.Zoom ));
+	
+	Vsd.PutImage( param.X, param.Y, param.MapImg );
 	
 	DrawArrow(
 		param.X + param.Width  / 2 + PixLong,

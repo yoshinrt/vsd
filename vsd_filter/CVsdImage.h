@@ -63,6 +63,10 @@ class CVsdImage {
 		return m_pBuf[ ( x - m_iOffsX ) + ( y - m_iOffsY ) * m_iRawWidth ].raby;
 	}
 	
+	inline UINT GetPixelRaw( int x, int y ){
+		return m_pBuf[ x + y * m_iRawWidth ].raby;
+	}
+	
 	inline UINT GetPixel( int x, int y ){
 		int x0 = x - m_iOffsX;
 		int y0 = y - m_iOffsY;
