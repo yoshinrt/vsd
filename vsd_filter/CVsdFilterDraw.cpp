@@ -639,7 +639,7 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 	}
 	
 	// 描画開始
-	std::vector<int> vec_x( uEdgeCnt + 2 ); // X 座標のリスト
+	std::vector<int> vec_x( uEdgeCnt * 2 ); // X 座標のリスト
 	
 	if( iMinY < 0 ) iMinY = 0;
 	if( iMaxY >= GetHeight()) iMaxY = GetHeight() - 1;
