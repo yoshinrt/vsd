@@ -21,8 +21,6 @@
 #include <tchar.h>
 #include <time.h>
 #include <v8.h>
-#include <zconf.h>
-#include <zlib.h>
 #include <ole2.h>
 #include <Wininet.h>
 #include <limits.h>
@@ -32,6 +30,10 @@
 #include <map>
 #include <functional>
 #include <limits>
+
+#define ZLIB_WINAPI
+#include <zconf.h>
+#include <zlib.h>
 
 #include "dds.h"
 #include <assert.h>

@@ -68,7 +68,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;VSD_FILTER_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../v8_lib/include;../lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../v8_lib/include;../zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedUsingFiles>
       </ForcedUsingFiles>
       <ForcedIncludeFiles>
@@ -80,7 +80,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>D:\Program Files\AVIUTL\vsd_filter.auf</OutputFile>
-      <AdditionalDependencies>../lib/$(IntDir)/zlib.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
     <PreBuildEvent>
@@ -97,7 +97,7 @@ rev_num.bat ./make_js_func.bat
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;VSD_FILTER_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../v8_lib/include;../lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../v8_lib/include;../zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedUsingFiles>
       </ForcedUsingFiles>
       <ForcedIncludeFiles>
@@ -111,7 +111,7 @@ rev_num.bat ./make_js_func.bat
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>D:\Program Files\AVIUTL\vsd_filter.auf</OutputFile>
-      <AdditionalDependencies>../lib/$(IntDir)/zlib.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
@@ -129,7 +129,7 @@ rev_num.bat ./make_js_func.bat
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;VSD_FILTER_EXPORTS;_CRT_SECURE_NO_WARNINGS;PUBLIC_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../v8_lib/include;../lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../v8_lib/include;../zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedUsingFiles>
       </ForcedUsingFiles>
       <ForcedIncludeFiles>
@@ -142,7 +142,7 @@ rev_num.bat ./make_js_func.bat
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>D:\Program Files\AVIUTL\vsd_filter.auf</OutputFile>
-      <AdditionalDependencies>../lib/$(IntDir)/zlib.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
