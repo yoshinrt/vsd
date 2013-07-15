@@ -13,7 +13,7 @@
 
 #define SPRINTF_BUF		128
 
-#define INVALID_INT		0x7FFFFFFF
+#define INVALID_INT		INT_MAX
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] * ( G_MULT / 1000.0 ))
 #define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
 
@@ -600,8 +600,8 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 	
 	VecEdge EdgeList;
 	Edge edge;
-	int	iMinY = 0x7FFFFFFF;
-	int	iMaxY = 0x80000000;
+	int	iMinY = INT_MAX;
+	int	iMaxY = INT_MIN;
 	
 	
 	// ’¸“_ƒŠƒXƒg‚ðŠi”[

@@ -10,7 +10,7 @@
 
 /*** macros *****************************************************************/
 
-#define TIME_NONE		(( int )0x80000000 )
+#define TIME_NONE		(( int )INT_MIN )
 #define WATCHDOG_TIME	( 0x70000000 )
 
 #define WATCHDOG_REC_NUM	2		// ログ先頭の番犬分のレコード数

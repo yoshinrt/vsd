@@ -24,7 +24,7 @@ function Initialize(){
 		APIKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
 		
 		// ズームレベルを 0～21 で指定します
-		Zoom: 17,
+		Zoom: 19,
 		
 		// 地図タイプ
 		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:地図+航空写真

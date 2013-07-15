@@ -73,7 +73,7 @@ enum {
 #define POS_FILE_HEIGHT			21
 #define POS_FILE_HEIGHT_MARGIN	2
 
-#define INVALID_INT		0x80000000
+#define INVALID_INT		INT_MIN
 
 #define OFFSET_ADJUST_WIDTH	( 60 * 10 * 1000 )	// 10•ª
 
