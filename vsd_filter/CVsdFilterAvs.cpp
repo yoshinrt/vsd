@@ -252,7 +252,7 @@ void CVsdFilter::SetFrameMark( int iFrame ){
 int CVsdFilter::GetFrameMark( int iFrame ){
 	UINT	u;
 	for( u = 0; u < m_iMark.size(); ++u ){
-		if( m_iMark[ u ] == iFrame ) return iFrame;
+		if( m_iMark[ u ] >= iFrame ) return m_iMark[ u ];
 	}
 	return -1;
 }
