@@ -725,16 +725,16 @@ int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 	{
 		// JavaScript オブジェクト初期化
 		CScript Script( pVsd );
-		if( Script.InitLogReader() != ERR_OK ){
-			return 0;
-		}
+		Script.Initialize();
 		
-		// スクリプト実行
-		LPWSTR pStr = NULL;
-		LPWSTR pReader = NULL;
-		Script.Run_s( L"ReadLapChart", StringNew( pStr, szFileName ));
-		delete [] pStr;
-		delete [] pReader;
+		if( Script.RunFile( L"_log_reader\\_LapChartReader.js" ) == ERR_OK ){
+			// スクリプト実行
+			LPWSTR pStr = NULL;
+			LPWSTR pReader = NULL;
+			Script.Run_s( L"ReadLapChart", StringNew( pStr, szFileName ));
+			delete [] pStr;
+			delete [] pReader;
+		}
 		
 		if( Script.m_uError != ERR_OK ){
 			pVsd->DispErrorMessage( Script.GetErrorMessage());
