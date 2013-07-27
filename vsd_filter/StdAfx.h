@@ -24,6 +24,7 @@
 #include <ole2.h>
 #include <Wininet.h>
 #include <limits.h>
+#include <wincon.h>
 
 #include <string>
 #include <vector>

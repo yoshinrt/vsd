@@ -239,7 +239,6 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 					);
 					
 					wszIncFile[ uSize ] = 0;
-					wprintf( L"include: \"%s\"\n", wszIncFile );
 					RunFileCore( wszIncFile );
 				}
 			}

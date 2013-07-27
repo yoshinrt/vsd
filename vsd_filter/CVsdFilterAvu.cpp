@@ -474,7 +474,7 @@ void CVsdFilter::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 /*** エラーメッセージ *******************************************************/
 
 void CVsdFilter::DispErrorMessage( LPCWSTR szMsg ){
-	MessageBoxW( NULL, szMsg, PROG_NAME_J_W, MB_ICONWARNING );
+	Print( szMsg );
 }
 
 /*** フレームをマーク *******************************************************/

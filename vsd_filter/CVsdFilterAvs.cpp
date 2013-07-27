@@ -234,13 +234,7 @@ UINT CVsdFilter::PutImage0(
 /*** エラーメッセージ *******************************************************/
 
 void CVsdFilter::DispErrorMessage( LPCWSTR szMsg ){
-	if( m_env ){
-		char *p = NULL;
-		m_env->ThrowError( "%s", StringNew( p, szMsg ));
-		delete [] p;
-	}else{
-		MessageBoxW( NULL, szMsg, PROG_NAME_J_W, MB_ICONWARNING );
-	}
+	Print( szMsg );
 }
 
 /*** フレームをマーク *******************************************************/

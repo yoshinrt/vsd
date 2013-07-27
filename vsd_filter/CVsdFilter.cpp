@@ -45,6 +45,7 @@ void CVsdFilter::Constructor( void ){
 	m_szPluginDirA		= NULL;
 	m_szSkinDirW		= NULL;
 	m_szPluginDirW		= NULL;
+	m_bConsoleOn		= FALSE;
 	
 	// str param に初期値設定
 	#define DEF_STR_PARAM( id, var, init, conf_name ) StringNew( var, init );
@@ -454,6 +455,45 @@ BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, L
 		FindClose( hFindFile );
 	}
 	return( bSuccess );
+}
+
+/*** コンソールウィンドウに表示 *********************************************/
+
+BOOL WINAPI ConsoleHandler( DWORD dwCtrlType ){
+	switch( dwCtrlType ){
+		case CTRL_C_EVENT:
+		case CTRL_BREAK_EVENT:
+		case CTRL_CLOSE_EVENT:
+			//FreeConsole();
+			return TRUE;
+	}
+	return FALSE;
+}
+
+void CVsdFilter::OpenConsole( void ){
+	if( AllocConsole()){
+		freopen ( "CONOUT$", "w", stdout );
+		freopen ( "CONIN$", "r", stdin );
+		SetConsoleCtrlHandler( ConsoleHandler, TRUE );
+	}
+}
+
+void CVsdFilter::Print( LPCWSTR szMsg ){
+	OpenConsole();
+	
+	char *p = NULL;
+	StringNew( p, szMsg );
+	fputs( p, stdout );
+	delete [] p;
+}
+
+void CVsdFilter::Print( const char *szFormat, ... ){
+	OpenConsole();
+	
+	va_list	arg;
+	va_start( arg, szFormat );
+	vprintf( szFormat, arg );
+	va_end( arg );
 }
 
 /****************************************************************************/

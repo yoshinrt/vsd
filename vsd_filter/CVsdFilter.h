@@ -433,6 +433,12 @@ class CVsdFilter
 		}
 	}
 	
+	void OpenConsole( void );
+	void Print( LPCWSTR szMsg );	// !js_func
+	void Print( const char *szFormat, ... );
+	
+	BOOL	m_bConsoleOn;
+	
   protected:
 	
 	CScript	*m_Script;
