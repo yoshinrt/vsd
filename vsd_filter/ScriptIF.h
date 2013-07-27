@@ -588,18 +588,6 @@ class CVsdFilterIF {
 		
 		return v8::String::New(( uint16_t *)ret );
 	}
-	static v8::Handle<v8::Value> Func_Print( const v8::Arguments& args ){
-		int iLen = args.Length();
-		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
-		v8::String::Value str0( args[ 0 ] );
-		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
-		if( !thisObj ) return v8::Undefined();
-		thisObj->Print(
-			( LPCWSTR )*str0
-		);
-		
-		return v8::Undefined();
-	}
 
   public:
 	// クラステンプレートの初期化
@@ -651,7 +639,6 @@ class CVsdFilterIF {
 		proto->Set( v8::String::New( "DrawRaceLapTime" ), v8::FunctionTemplate::New( Func_DrawRaceLapTime ));
 		proto->Set( v8::String::New( "DrawNeedle" ), v8::FunctionTemplate::New( Func_DrawNeedle ));
 		proto->Set( v8::String::New( "FormatTime" ), v8::FunctionTemplate::New( Func_FormatTime ));
-		proto->Set( v8::String::New( "Print" ), v8::FunctionTemplate::New( Func_Print ));
 
 		proto->Set( v8::String::New( "SkinDir" ), v8::String::New(( uint16_t *)(( CVsdFilter *)pClass )->m_szSkinDirW ));
 		proto->Set( v8::String::New( "VsdRootDir" ), v8::String::New(( uint16_t *)(( CVsdFilter *)pClass )->m_szPluginDirW ));
@@ -1328,6 +1315,16 @@ class CScriptIF {
 		
 		return v8::Undefined();
 	}
+	static v8::Handle<v8::Value> Func_Print( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		v8::String::Value str0( args[ 0 ] );
+		CScript::Print(
+			( LPCWSTR )*str0
+		);
+		
+		return v8::Undefined();
+	}
 
   public:
 	// クラステンプレートの初期化
@@ -1339,6 +1336,7 @@ class CScriptIF {
 		// メャbドはこちらに
 		proto->Set( v8::String::New( "DebugPrint" ), v8::FunctionTemplate::New( Func_DebugPrint ));
 		proto->Set( v8::String::New( "MessageBox" ), v8::FunctionTemplate::New( Func_MessageBox ));
+		proto->Set( v8::String::New( "Print" ), v8::FunctionTemplate::New( Func_Print ));
 
 
 

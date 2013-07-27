@@ -113,6 +113,12 @@ void CScript::Dispose( void ){
 	}
 }
 
+/*** Print ******************************************************************/
+
+void CScript::Print( LPCWSTR strMsg ){
+	CVsdFilter::Print( strMsg );
+}
+
 /*** include ****************************************************************/
 
 static v8::Handle<v8::Value> Func_Include( const v8::Arguments& args ){

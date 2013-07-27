@@ -65,7 +65,6 @@ function Initialize(){
 //*** メーター描画処理 ******************************************************
 
 function Draw(){
-Vsd.Print( "あああああ\n" );
 	// メーター画像描画
 	Vsd.PutImage( MeterX, MeterY, ImgMeter );
 	

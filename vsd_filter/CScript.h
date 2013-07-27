@@ -58,6 +58,8 @@ class CScript {
 		);
 	}
 	
+	static void Print( LPCWSTR strMsg );	// !js_func
+	
 	// this へのアクセスヘルパ
 	template<typename T>
 	static T* GetThis( v8::Local<v8::Object> handle ){

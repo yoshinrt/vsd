@@ -53,17 +53,17 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.auf</TargetExt>
-    <OutDir>D:\Program Files\AVIUTL</OutDir>
+    <OutDir>D:\Program Files\AVIUTL\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetExt>.auf</TargetExt>
-    <OutDir>D:\Program Files\AVIUTL</OutDir>
+    <OutDir>D:\Program Files\AVIUTL\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetExt>.auf</TargetExt>
-    <OutDir>D:\Program Files\AVIUTL</OutDir>
+    <OutDir>D:\Program Files\AVIUTL\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

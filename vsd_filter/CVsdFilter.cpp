@@ -459,14 +459,12 @@ BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, L
 
 /*** コンソールウィンドウに表示 *********************************************/
 
-BOOL WINAPI ConsoleHandler( DWORD dwCtrlType ){
-	switch( dwCtrlType ){
-		case CTRL_C_EVENT:
-		case CTRL_BREAK_EVENT:
-		case CTRL_CLOSE_EVENT:
-			//FreeConsole();
-			return TRUE;
+BOOL WINAPI HandlerRoutine( DWORD dwCtrlType ){
+	if( dwCtrlType == CTRL_C_EVENT ){
+		FreeConsole();
+		return TRUE;
 	}
+	
 	return FALSE;
 }
 
@@ -474,7 +472,16 @@ void CVsdFilter::OpenConsole( void ){
 	if( AllocConsole()){
 		freopen ( "CONOUT$", "w", stdout );
 		freopen ( "CONIN$", "r", stdin );
-		SetConsoleCtrlHandler( ConsoleHandler, TRUE );
+		
+		SetConsoleCtrlHandler( HandlerRoutine, TRUE );
+		// ウィンドウタイトル変更
+		SetConsoleTitle( "VSD for GPS コンソール" );
+		
+		// 閉じるボタン無効化
+		HMENU hmenu = GetSystemMenu( GetConsoleWindow(), FALSE );
+		RemoveMenu( hmenu, SC_CLOSE, MF_BYCOMMAND );
+		
+		Print( "このウィンドウを閉じるには Ctrl+C を押してください\n" );
 	}
 }
 
