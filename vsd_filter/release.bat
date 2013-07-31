@@ -5,12 +5,12 @@ set path=%path%;c:\cygwin\bin
 mkdir zrelease
 pushd zrelease
 
-copy "D:\Program Files\AVIUTL\vsd_filter.auf" vsd_filter_gps.auf
+copy "D:\Program Files\AVIUTL\Plugins\vsd_filter.auf" vsd_filter_gps.auf
 copy ..\manual.url .
 copy ..\split_nmea.hta .
 
 mkdir vsd_plugins
-xcopy /i/s "D:\Program Files\AVIUTL\vsd_plugins" vsd_plugins
+xcopy /i/s "D:\Program Files\AVIUTL\Plugins\vsd_plugins" vsd_plugins
 
 rmdir /s/q vsd_plugins\gallery
 del vsd_plugins\_log_reader\vsd_log.js

@@ -53,17 +53,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.auf</TargetExt>
-    <OutDir>D:\Program Files\AVIUTL\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetExt>.auf</TargetExt>
-    <OutDir>D:\Program Files\AVIUTL\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetExt>.auf</TargetExt>
-    <OutDir>D:\Program Files\AVIUTL\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -84,6 +81,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
+      <OutputFile>D:\Program Files\AVIUTL\Plugins\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
     <PreBuildEvent>
       <Command>cd ..\
@@ -115,6 +113,7 @@ rev_num.bat ./make_js_func.bat
       <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
+      <OutputFile>D:\Program Files\AVIUTL\Plugins\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
     <PreBuildEvent>
       <Command>cd ..\
@@ -145,6 +144,7 @@ rev_num.bat ./make_js_func.bat
       <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
+      <OutputFile>D:\Program Files\AVIUTL\Plugins\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
     <PreBuildEvent>
       <Command>cd ..\
