@@ -1,45 +1,10 @@
-@echo off
-set perlscr=%0 %*
-set perlscr=%perlscr:\=/%
-C:\cygwin\bin\bash --login -i -c 'cd "%CD%";CYGWIN=nodosfilewarning perl -x %perlscr%'
-goto :EOF
-
-##############################################################################
 #!/usr/bin/perl -w
 # .tab=4
 
 $ENV{ 'PATH' } = "$ENV{ 'HOME' }/bin:" . $ENV{ 'PATH' };
 
-$OutputFile = 'ScriptIF.h';
+$OutputFile = $ARGV[ 0 ];
 
-# make の必要があるかどうかチェック
-
-@InputFiles = (
-	$0,
-	'CVsdFilter.cpp',
-	'CVsdFilterDraw.cpp',
-	'CVsdImage.cpp',
-	'CVsdFont.cpp',
-	'CVsdFile.cpp',
-	'CScript.cpp',
-);
-
-$bMake = 0;
-
-if( !-e $OutputFile ){
-	$bMake = 1;
-}else{
-	foreach $_ ( @InputFiles ){
-		if(( stat( $OutputFile ))[ 9 ] < ( stat( $_ ))[ 9 ] ){
-			$bMake = 1;
-			last;
-		}
-	}
-}
-
-exit( 0 ) if( !$bMake );
-
-print( "creating $OutputFile\n" );
 open( fpOut, "| nkf -s > $OutputFile" );
 
 print fpOut << "-----";

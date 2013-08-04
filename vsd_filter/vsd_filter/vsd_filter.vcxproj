@@ -83,11 +83,7 @@
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
       <OutputFile>D:\Program Files\AVIUTL\Plugins\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
-    <PreBuildEvent>
-      <Command>cd ..\
-rev_num.bat ./make_js_func.bat
-</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -115,11 +111,7 @@ rev_num.bat ./make_js_func.bat
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
       <OutputFile>D:\Program Files\AVIUTL\Plugins\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
-    <PreBuildEvent>
-      <Command>cd ..\
-rev_num.bat ./make_js_func.bat
-</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
     <ClCompile>
@@ -146,11 +138,7 @@ rev_num.bat ./make_js_func.bat
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
       <OutputFile>D:\Program Files\AVIUTL\Plugins\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
-    <PreBuildEvent>
-      <Command>cd ..\
-rev_num.bat ./make_js_func.bat
-</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\CScript.h" />
