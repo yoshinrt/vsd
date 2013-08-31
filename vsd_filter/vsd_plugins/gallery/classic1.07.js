@@ -42,8 +42,8 @@ function Initialize(){
 		"Tacho",	"%.0f rpm",		0xFF4000,
 	//	"Accel",	"%.0f %%",		0x00FF00,
 	//	"TurnR",	"%.0f m",		0x00FF00,
-		"Gx",		"%.2f G[lon]",	0x00FF00,
-		"Gy",		"%.2f G[lat]",	0xFF00FF,
+		"Gx",		"%.2f G[lat]",	0x00FF00,
+		"Gy",		"%.2f G[lon]",	0xFF00FF,
 	];
 	Vsd.MakeGraphParam( GraphParam );
 }

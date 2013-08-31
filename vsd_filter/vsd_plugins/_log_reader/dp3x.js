@@ -1,17 +1,4 @@
 // LAP+Android ログリーダ
-
-LogReaderInfo.push({
-	Caption:	"LAP+Android (*.dp3x)",
-	Filter:		"*.dp3x",
-	ReaderFunc:	"Read_dp3x_5Hz"
-});
-
-//LogReaderInfo.push({
-//	Caption:	"LAP+Android 10Hz (*.dp3x)",
-//	Filter:		"*.dp3x",
-//	ReaderFunc:	"Read_dp3x_10Hz"
-//});
-
 // dp3x フォーマット
 // 0x48-0x4F: ログ開始時刻,ms (GMT-9h, 日本時間に直すためには +18h)
 // 0x50-0x53: 原点の経度 1度 = 128 * 360 * 360
@@ -24,6 +11,19 @@ LogReaderInfo.push({
 // +0x06-0x08: G センサー	1G = 40(?)
 // +0x09-0x0B: 磁気センサー?
 // +0x0C～   : 不明 (all 0)
+// タイムスタンプは決め打ち
+
+LogReaderInfo.push({
+	Caption:	"LAP+Android (*.dp3x)",
+	Filter:		"*.dp3x",
+	ReaderFunc:	"Read_dp3x_5Hz"
+});
+
+//LogReaderInfo.push({
+//	Caption:	"LAP+Android 10Hz (*.dp3x)",
+//	Filter:		"*.dp3x",
+//	ReaderFunc:	"Read_dp3x_10Hz"
+//});
 
 function Read_dp3x_5Hz( Files ){
 	return Read_dp3x( Files, 5 );

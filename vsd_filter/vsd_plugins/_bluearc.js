@@ -48,8 +48,8 @@ function Initialize(){
 		"Speed",	"%.0f km/h",	0x00FFFF,
 		"Tacho",	"%.0f rpm",		0xFF4000,
 		"Accel",	"%.0f %%",		0xFFFF00,
-		"Gx",		"%.2f G[lon]",	0x00FF00,
-		"Gy",		"%.2f G[lat]",	0xFF00FF,
+		"Gx",		"%.2f G[lat]",	0x00FF00,
+		"Gy",		"%.2f G[lon]",	0xFF00FF,
 	];
 	Vsd.MakeGraphParam( GraphParam );
 }
