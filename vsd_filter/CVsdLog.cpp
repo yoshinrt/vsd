@@ -226,21 +226,14 @@ UINT CVsdLog::GPSLogRescan( void ){
 		if( bCreateSpeed ){
 			#pragma omp for
 			for( int i = 1; i < GetCnt(); ++i ){
-				if( GetTime( i ) - GetTime( i - 1 ) >= ( TIME_STOP - TIME_STOP_MARGIN * 2 )){
-					// éûä‘Ç™äJÇ¢ÇƒÇ¢ÇÈí‚é~ÉçÉO
-					SetRawSpeed( i, 0 );
-					if( dMaxSpeed < 0 ) dMaxSpeed = 0;
-					if( dMinSpeed > 0 ) dMinSpeed = 0;
-				}else{
-					double d;
-					SetRawSpeed( i,
-						d = ( Distance( i ) - Distance( i - 1 ))
-						* ( 3600.0 / 1000 * 1000 ) /
-						( GetTime( i ) - GetTime( i - 1 ))
-					);
-					if( dMaxSpeed < d ) dMaxSpeed = d;
-					if( dMinSpeed > d ) dMinSpeed = d;
-				}
+				double d;
+				SetRawSpeed( i,
+					d = ( Distance( i ) - Distance( i - 1 ))
+					* ( 3600.0 / 1000 * 1000 ) /
+					( GetTime( i ) - GetTime( i - 1 ))
+				);
+				if( dMaxSpeed < d ) dMaxSpeed = d;
+				if( dMinSpeed > d ) dMinSpeed = d;
 			}
 			// î‘å¢ÇÕÇ∑Ç≈Ç… 0 Å® SetRawSpeed( GetCnt() - 1, 0 );
 			

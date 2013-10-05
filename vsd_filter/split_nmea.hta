@@ -3,6 +3,9 @@
 <HEAD>
 	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift-JIS">
 	<title>NMEA splitter</title>
+	<script>
+		window.resizeTo( 390, 500 );
+	</script>
 	<HTA:APPLICATION innerBorder="no" scroll="no" />
 </head>
 <style type="text/css">
@@ -12,7 +15,7 @@ BODY {
 }
 </style>
 
-<body onLoad = "WindowOnLoad()">
+<body>
 <form name="form1">
 	<input type="text" name="SpeedTh" size="3" value="10">km/h 以下が
 	<input type="text" name="TimeTh" size="3" value="300">秒以上続く場合に分割<br />
@@ -31,10 +34,6 @@ BODY {
 <SPAN ID="Log"></SPAN>
 
 <script language="JavaScript">
-function WindowOnLoad(){
-	window.resizeTo( 390, 500 );
-}
-
 function SplitNMEA( NmeaFile ){
 	// オブジェクト初期化
 	var fso = new ActiveXObject( "Scripting.FileSystemObject" );
