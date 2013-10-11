@@ -226,14 +226,27 @@ UINT CVsdLog::GPSLogRescan( void ){
 		if( bCreateSpeed ){
 			#pragma omp for
 			for( int i = 1; i < GetCnt(); ++i ){
-				double d;
-				SetRawSpeed( i,
-					d = ( Distance( i ) - Distance( i - 1 ))
-					* ( 3600.0 / 1000 * 1000 ) /
-					( GetTime( i ) - GetTime( i - 1 ))
-				);
-				if( dMaxSpeed < d ) dMaxSpeed = d;
-				if( dMinSpeed > d ) dMinSpeed = d;
+				int iDiffTime = GetTime( i ) - GetTime( i - 1 );
+				if(
+					iDiffTime > ( TIME_STOP - TIME_STOP_MARGIN * 2 ) &&
+					m_pLogDistance &&
+					( Distance( i ) - Distance( i - 1 )) * 3600 / iDiffTime < KPH_STOP
+				){
+					// ŽžŠÔ‚ªŠJ‚¢‚Ä‚¢‚Ä‚È‚¨‚©‚ÂˆÚ“®‚µ‚Ä‚¢‚È‚¢
+					SetRawSpeed( i, 0 );
+					SetRawSpeed( i - 1, 0 );
+					if( dMaxSpeed < 0 ) dMaxSpeed = 0;
+					if( dMinSpeed > 0 ) dMinSpeed = 0;
+				}else{
+					double d;
+					SetRawSpeed( i,
+						d = ( Distance( i ) - Distance( i - 1 ))
+						* ( 3600.0 / 1000 * 1000 ) /
+						( GetTime( i ) - GetTime( i - 1 ))
+					);
+					if( dMaxSpeed < d ) dMaxSpeed = d;
+					if( dMinSpeed > d ) dMinSpeed = d;
+				}
 			}
 			// ”ÔŒ¢‚Í‚·‚Å‚É 0 ¨ SetRawSpeed( GetCnt() - 1, 0 );
 			
@@ -598,8 +611,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					int iDiffTime = GetTime( iCnt ) - GetTime( iCnt - 1 );
 					if(
 						uIdxDistance != ~0 &&
-						iDiffTime >= TIME_STOP &&
-						( Distance( iCnt ) - Distance( iCnt - 1 )) * 3600 / iDiffTime < 5.0 /*[km/h]*/
+						iDiffTime > TIME_STOP &&
+						( Distance( iCnt ) - Distance( iCnt - 1 )) * 3600 / iDiffTime < KPH_STOP
 					){
 						// -1 -0
 						// A  B
