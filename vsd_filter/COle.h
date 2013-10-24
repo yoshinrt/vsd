@@ -51,6 +51,10 @@ class COle {
 		const v8::Arguments& args
 	);
 	
+	static v8::Handle<v8::Value> CallAsFunctionHandler(
+		const v8::Arguments& args
+	);
+	
 	static v8::Handle<v8::Value> OleValueGetter(
 		v8::Local<v8::String> propertyName,
 		const v8::AccessorInfo& info

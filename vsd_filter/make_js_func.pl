@@ -162,7 +162,7 @@ MakeJsIF( 'COle', 'ActiveXObject', << '-----', undef, << '-----', << '-----' );
 		}
 -----
 		// Default function “o˜^
-		proto->SetCallAsFunctionHandler( COle::OleFuncCaller, v8::Int32::New( 0 ));
+		inst->SetCallAsFunctionHandler( COle::CallAsFunctionHandler, v8::Int32::New( 0 ));
 -----
 		if( args.Length() >= 1 ) obj->AddOLEFunction( thisObject );
 -----

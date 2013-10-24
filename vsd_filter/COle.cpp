@@ -41,6 +41,19 @@ v8::Handle<v8::Value> COle::OleFuncCaller(
 	);
 }
 
+// 共通メソッド caller
+v8::Handle<v8::Value> COle::CallAsFunctionHandler(
+	const v8::Arguments& args
+){
+	COle *obj = CScript::GetThis<COle>( args.This());
+	if( !obj ) return v8::Undefined();
+	
+	return obj->Invoke(
+		args.Data()->Int32Value(), args,
+		v8::Local<v8::Value>(), args.This()->CreationContext(), DISPATCH_PROPERTYGET
+	);
+}
+
 /****************************************************************************/
 // 共通プロパティセッタ
 void COle::OleValueSetter(

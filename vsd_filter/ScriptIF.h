@@ -1376,7 +1376,7 @@ class COleIF {
 
 
 		// Default function 登録
-		proto->SetCallAsFunctionHandler( COle::OleFuncCaller, v8::Int32::New( 0 ));
+		inst->SetCallAsFunctionHandler( COle::CallAsFunctionHandler, v8::Int32::New( 0 ));
 
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "ActiveXObject" ), tmpl );
