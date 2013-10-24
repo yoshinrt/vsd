@@ -141,6 +141,7 @@
     <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\COle.h" />
     <ClInclude Include="..\CScript.h" />
     <ClInclude Include="..\CVsdFile.h" />
     <ClInclude Include="..\CVsdFilter.h" />
@@ -162,6 +163,7 @@
     <ClInclude Include="..\StdAfx.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\COle.cpp" />
     <ClCompile Include="..\CScript.cpp" />
     <ClCompile Include="..\CVsdFile.cpp" />
     <ClCompile Include="..\CVsdFilter.cpp" />

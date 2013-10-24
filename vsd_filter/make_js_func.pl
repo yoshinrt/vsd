@@ -20,7 +20,7 @@ print fpOut << "-----";
 
 #include "CVsdFilter.h"
 #include "CVsdFile.h"
-//#include "COle.h"
+#include "COle.h"
 -----
 
 ### CVsdFilter ###############################################################
@@ -152,17 +152,20 @@ MakeJsIF( 'CVsdFile', 'File' );
 
 ### COle #####################################################################
 
-#MakeJsIF( 'COle', 'ActiveXObject', << '-----', undef, << '-----' );
-#		COle *obj = new COle();
-#		
-#		// 引数チェック
-#		if ( args.Length() >= 1 ){
-#			v8::String::Value strServer( args[ 0 ] );
-#			obj->CreateInstance(( LPCWSTR )*strServer );
-#		}
-#-----
-#		COle::InitJS( tmpl );
-#-----
+MakeJsIF( 'COle', 'ActiveXObject', << '-----', undef, << '-----', << '-----' );
+		COle *obj = new COle();
+		
+		// 引数チェック
+		if( args.Length() >= 1 ){
+			v8::String::Value strServer( args[ 0 ] );
+			obj->CreateInstance(( LPCWSTR )*strServer );
+		}
+-----
+		// Default function 登録
+		proto->SetCallAsFunctionHandler( COle::OleFuncCaller, v8::Int32::New( 0 ));
+-----
+		if( args.Length() >= 1 ) obj->AddOLEFunction( thisObject );
+-----
 
 ### Global ###################################################################
 
@@ -171,7 +174,7 @@ MakeJsIF( 'CScript' );
 ##############################################################################
 
 sub MakeJsIF {
-	my( $Class, $JsClass, $NewObject, $FunctionIF, $ExtraInit ) = @_;
+	my( $Class, $JsClass, $NewObject, $FunctionIF, $ExtraInit, $ExtraNew ) = @_;
 	
 	$NewObject = << "-----" if( !defined( $NewObject ));
 		$Class *obj = new $Class();
@@ -181,6 +184,7 @@ sub MakeJsIF {
 	
 	$FunctionIF = '' if( !defined( $FunctionIF ));
 	$ExtraInit  = '' if( !defined( $ExtraInit ));
+	$ExtraNew	= '' if( !defined( $ExtraNew ));
 	
 	$Accessor	= '';
 	$AccessorIF	= '';
@@ -440,6 +444,7 @@ $NewObject
 		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
 		objectHolder.MakeWeak( obj, Dispose );
 		
+$ExtraNew
 		#ifdef DEBUG
 			DebugMsgD( ">>>new js obj $Class:%X\\n", obj );
 		#endif
