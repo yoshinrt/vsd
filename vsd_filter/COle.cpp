@@ -285,7 +285,8 @@ void COle::Val2Variant(
 #endif
 	if( val->IsString()){
 		V_VT(var) = VT_BSTR;
-		V_BSTR(var) = SysAllocString(( LPCWSTR )*val );
+		v8::String::Value str( val );
+		V_BSTR(var) = SysAllocString(( LPCWSTR )*str );
 	}else if( val->IsInt32() || val->IsUint32() && val->Uint32Value() < 0x80000000 ){
 		V_VT(var) = VT_I4;
 		V_I4(var) = val->Int32Value();
@@ -550,11 +551,9 @@ v8::Handle<v8::Value> COle::Invoke(
 	/*--------------------------------------
 	  non hash args ==> dispatch parameters 
 	 ----------------------------------------*/
-	if( wFlags & DISPATCH_METHOD ) {
-		if( op.dp.cArgs = args.Length()){
-			realargs		= ALLOCA_N(VARIANTARG, op.dp.cArgs);
-			op.dp.rgvarg	= ALLOCA_N(VARIANTARG, op.dp.cArgs);
-		}
+	if( &args != NULL && ( op.dp.cArgs = args.Length())){
+		realargs		= ALLOCA_N(VARIANTARG, op.dp.cArgs);
+		op.dp.rgvarg	= ALLOCA_N(VARIANTARG, op.dp.cArgs);
 		
 		for(i = 0; i < op.dp.cArgs; i++) {
 			VariantInit(&realargs[i]);
@@ -565,6 +564,7 @@ v8::Handle<v8::Value> COle::Invoke(
 			V_VARIANTREF(&op.dp.rgvarg[i]) = &realargs[i];
 		}
 	}
+	
 	/* apparent you need to call propput, you need this */
 	else if (wFlags & DISPATCH_PROPERTYPUT) {
 		op.dp.cNamedArgs = 1;
