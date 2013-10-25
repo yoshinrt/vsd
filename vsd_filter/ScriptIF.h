@@ -1375,8 +1375,7 @@ class COleIF {
 		proto->Set( v8::String::New( "Dispose" ), v8::FunctionTemplate::New( Func_Dispose ));
 
 
-		// Default function 登録
-		inst->SetCallAsFunctionHandler( COle::CallAsFunctionHandler, v8::Int32::New( 0 ));
+		COle::InitJS( tmpl );
 
 		// グローバルオブジェクトにクラスを定義
 		global->Set( v8::String::New( "ActiveXObject" ), tmpl );

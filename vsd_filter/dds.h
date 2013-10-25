@@ -42,6 +42,7 @@ typedef long long		INT64;
 
 #define DEBUG_SPRINTF_BUFSIZE	1024
 #define DEBUG_MESSAGE_HEADER	"DEBUG:"
+#define DEBUG_MESSAGE_HEADER_W	L"DEBUG:"
 #ifdef _WIN32
 # define C_DECL __cdecl
 #else
@@ -62,6 +63,15 @@ static char * C_DECL DebugSPrintf( char *szFormat, va_list arg ){
 	
 	return( szMsg );
 }
+
+#ifdef __cplusplus
+	static LPCWSTR C_DECL DebugSPrintf( LPCWSTR wszFormat, va_list arg ){
+		static WCHAR	wszMsg[ DEBUG_SPRINTF_BUFSIZE ];
+		_vsnwprintf( wszMsg, DEBUG_SPRINTF_BUFSIZE, wszFormat, arg );
+		wszMsg[ DEBUG_SPRINTF_BUFSIZE - 1 ] = '\0';
+		return( wszMsg );
+	}
+#endif
 #undef DEBUG_SPRINTF_BUFSIZE
 
 static int C_DECL DebugMsg( char *szFormat, ... ){
@@ -110,6 +120,42 @@ static int C_DECL DebugPrintfD( char *szFormat, ... ){
 	
 	return( 0 );
 }
+
+#ifdef __cplusplus
+	static int C_DECL DebugMsgD( LPCWSTR wszFormat, ... ){
+		
+		va_list	arg;
+		
+		va_start( arg, wszFormat );
+		OutputDebugStringW( DEBUG_MESSAGE_HEADER_W );
+		OutputDebugStringW( DebugSPrintf( wszFormat, arg ));
+		va_end( arg );
+		
+		return( 0 );
+	}
+	
+	static int C_DECL DebugMsgW( LPCWSTR wszFormat, ... ){
+		
+		va_list	arg;
+		
+		va_start( arg, wszFormat );	
+		MessageBoxW( NULL, DebugSPrintf( wszFormat, arg ), L"DEBUG message", MB_OK );
+		va_end( arg );
+		
+		return( 0 );
+	}
+	
+	static int C_DECL DebugPrintfD( LPCWSTR wszFormat, ... ){
+		
+		va_list	arg;
+		
+		va_start( arg, wszFormat );
+		OutputDebugStringW( DebugSPrintf( wszFormat, arg ));
+		va_end( arg );
+		
+		return( 0 );
+	}
+#endif
 
 #endif	/* _INC_WINDOWS */
 #undef DEBUG_MESSAGE_HEADER

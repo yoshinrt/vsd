@@ -20,6 +20,7 @@ class COle {
 	}
 	
 	UINT CreateInstance( LPCWSTR strServer );
+	static void InitJS( v8::Local<v8::FunctionTemplate> tmpl );
 	
 	static v8::Handle<v8::Value> CreateActiveXObject(
 		IDispatch *pDispatch,

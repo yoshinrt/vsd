@@ -161,8 +161,7 @@ MakeJsIF( 'COle', 'ActiveXObject', << '-----', undef, << '-----', << '-----' );
 			obj->CreateInstance(( LPCWSTR )*strServer );
 		}
 -----
-		// Default function “o˜^
-		inst->SetCallAsFunctionHandler( COle::CallAsFunctionHandler, v8::Int32::New( 0 ));
+		COle::InitJS( tmpl );
 -----
 		if( args.Length() >= 1 ) obj->AddOLEFunction( thisObject );
 -----

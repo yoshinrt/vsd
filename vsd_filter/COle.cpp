@@ -26,6 +26,14 @@ UINT COle::CreateInstance( LPCWSTR strServer ){
 	return ERR_OK;
 }
 
+/*** JavaScript IF èâä˙âªí«â¡èàóù *******************************************/
+
+void COle::InitJS( v8::Local<v8::FunctionTemplate> tmpl ){
+	v8::Handle<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
+	// Default function ìoò^
+	inst->SetCallAsFunctionHandler( COle::CallAsFunctionHandler, v8::Int32::New( 0 ));
+}
+
 /*** OLE function í«â¡ ******************************************************/
 
 // ã§í ÉÅÉ\ÉbÉh caller
@@ -120,11 +128,7 @@ void COle::AddOLEFunction( v8::Local<v8::Object> ThisObj ){
 				OleValueSetter,
 				v8::Int32::New( pVarDesc->memid )
 			);
-			DebugCmd(
-				OutputDebugString( "Var:" );
-				OutputDebugStringW( Name );
-				OutputDebugString( "\n" );
-			)
+			//DebugMsgD( L"Var:%s\n", Name );
 			
 			SysFreeString( Name );
 			pTypeInfo->ReleaseVarDesc( pVarDesc );
@@ -146,11 +150,7 @@ void COle::AddOLEFunction( v8::Local<v8::Object> ThisObj ){
 						v8::Int32::New( pFuncDesc->memid )
 					)->GetFunction()
 				);
-				DebugCmd(
-					OutputDebugString( "Func:" );
-					OutputDebugStringW( Name );
-					OutputDebugString( "\n" );
-				)
+				//DebugMsgD( L"Func:%s\n", Name );
 			}else{
 				// var í«â¡
 				ThisObj->SetAccessor(
@@ -159,11 +159,7 @@ void COle::AddOLEFunction( v8::Local<v8::Object> ThisObj ){
 					OleValueSetter,
 					v8::Int32::New( pFuncDesc->memid )
 				);
-				DebugCmd(
-					OutputDebugString( "Var:" );
-					OutputDebugStringW( Name );
-					OutputDebugString( "\n" );
-				)
+				//DebugMsgD( L"Var:%s\n", Name );
 			}
 			SysFreeString( Name );
 			pTypeInfo->ReleaseFuncDesc( pFuncDesc );
