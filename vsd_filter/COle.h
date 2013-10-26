@@ -9,8 +9,6 @@
 #pragma once
 #include "error_code.h"
 
-typedef std::map<DISPID, std::wstring>	PROPNAME_TBL;
-
 class COle {
   public:
 	COle( void ){
@@ -28,25 +26,6 @@ class COle {
 		IDispatch *pDispatch,
 		v8::Handle<v8::Context> Context
 	);
-	
-	// プロパティ名マネジメント
-	void RegisterPropName( DISPID DispID, LPCWSTR wszName ){
-		PROPNAME_TBL::iterator itr;
-		
-		if(( itr = m_PropNameTbl.find( DispID )) == m_PropNameTbl.end()){
-			std::wstring strName( wszName );
-			m_PropNameTbl[ DispID ] = strName;
-		}
-	}
-	
-	LPCWSTR GetPropName( DISPID DispID ){
-		PROPNAME_TBL::iterator itr;
-		
-		if(( itr = m_PropNameTbl.find( DispID )) == m_PropNameTbl.end()){
-			return L"(unknown)";
-		}
-		return itr->second.c_str();
-	}
 	
 	// Ruby win32ole 移植物
 	void Val2Variant(
@@ -88,6 +67,5 @@ class COle {
 	static void Uninitialize( void ){	CoUninitialize(); }
 	
   private:
-	IDispatch		*m_pApp;
-	PROPNAME_TBL	m_PropNameTbl;
+	IDispatch	*m_pApp;
 };

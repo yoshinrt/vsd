@@ -44,8 +44,6 @@ v8::Handle<v8::Value> COle::OleFuncCaller(
 	COle *obj = CScript::GetThis<COle>( args.This());
 	if( !obj ) return v8::Undefined();
 	
-	DebugMsgD( L"FuncCall: %s\n", obj->GetPropName( args.Data()->Int32Value()));
-	
 	return handle_scope.Close(
 		obj->Invoke(
 			args.This()->CreationContext(),
@@ -62,8 +60,6 @@ v8::Handle<v8::Value> COle::CallAsFunctionHandler(
 	v8::HandleScope handle_scope;
 	COle *obj = CScript::GetThis<COle>( args.This());
 	if( !obj ) return v8::Undefined();
-	
-	DebugMsgD( L"FuncCall: %s\n", obj->GetPropName( args.Data()->Int32Value()));
 	
 	return handle_scope.Close(
 		obj->Invoke(
@@ -85,8 +81,6 @@ void COle::OleValueSetter(
 	COle *obj = CScript::GetThis<COle>( info.Holder());
 	if( !obj ) return;
 	
-	DebugMsgD( L"PropSet: %s\n", obj->GetPropName( info.Data()->Int32Value()));
-	
 	obj->Invoke(
 		info.This()->CreationContext(),
 		info.Data()->Int32Value(), *( v8::Arguments *)NULL,
@@ -103,8 +97,6 @@ v8::Handle<v8::Value> COle::OleValueGetter(
 	COle *obj = CScript::GetThis<COle>( info.Holder());
 	if( !obj ) return v8::Undefined();
 	
-	DebugMsgD( L"PropGet: %s\n", obj->GetPropName( info.Data()->Int32Value()));
-	
 	return handle_scope.Close(
 		obj->Invoke(
 			info.Holder()->CreationContext(),
@@ -113,8 +105,6 @@ v8::Handle<v8::Value> COle::OleValueGetter(
 		)
 	);
 }
-
-/*** IDispatch “à‚Ì‘S Method/Property ‚ð“o˜^ ********************************/
 
 void COle::AddOLEFunction( v8::Local<v8::Object> ThisObj ){
 	UINT	uTypeInfoCnt;
@@ -128,7 +118,7 @@ void COle::AddOLEFunction( v8::Local<v8::Object> ThisObj ){
 	TYPEATTR	*pTypeAttr;
 	FUNCDESC	*pFuncDesc;
 	VARDESC		*pVarDesc;
-	BSTR		bstrName;
+	BSTR		Name;
 	
 	for( UINT u = 0; u < uTypeInfoCnt; ++u ){
 		if( FAILED( hr = m_pApp->GetTypeInfo( u, LOCALE_SYSTEM_DEFAULT, &pTypeInfo ))) break;
@@ -143,20 +133,18 @@ void COle::AddOLEFunction( v8::Local<v8::Object> ThisObj ){
 			if( FAILED( hr = pTypeInfo->GetVarDesc( u, &pVarDesc ))) break;
 			
 			UINT v;
-			hr = pTypeInfo->GetNames( pVarDesc->memid, &bstrName, 1, &v );
+			hr = pTypeInfo->GetNames( pVarDesc->memid, &Name, 1, &v );
 			
 			// var ’Ç‰Á
-			RegisterPropName( pVarDesc->memid, bstrName );
-			
 			ThisObj->SetAccessor(
-				v8::String::New(( uint16_t *)bstrName ),
+				v8::String::New(( uint16_t *)Name ),
 				OleValueGetter,
 				OleValueSetter,
 				v8::Int32::New( pVarDesc->memid )
 			);
-			//DebugMsgD( L"Var:%08X %s\n", pVarDesc->memid, bstrName );
+			//DebugMsgD( L"Var:%s\n", Name );
 			
-			SysFreeString( bstrName );
+			SysFreeString( Name );
 			pTypeInfo->ReleaseVarDesc( pVarDesc );
 		}
 		
@@ -165,31 +153,29 @@ void COle::AddOLEFunction( v8::Local<v8::Object> ThisObj ){
 			if( FAILED( hr = pTypeInfo->GetFuncDesc( u, &pFuncDesc ))) break;
 			
 			UINT v;
-			hr = pTypeInfo->GetNames( pFuncDesc->memid, &bstrName, 1, &v );
-			
-			RegisterPropName( pFuncDesc->memid, bstrName );
+			hr = pTypeInfo->GetNames( pFuncDesc->memid, &Name, 1, &v );
 			
 			if( pFuncDesc->invkind & INVOKE_FUNC ){
 				// function ’Ç‰Á
 				ThisObj->Set(
-					v8::String::New(( uint16_t *)bstrName ),
+					v8::String::New(( uint16_t *)Name ),
 					v8::FunctionTemplate::New(
 						OleFuncCaller,
 						v8::Int32::New( pFuncDesc->memid )
 					)->GetFunction()
 				);
-				//DebugMsgD( L"Fnc:%08X %s\n", pFuncDesc->memid, bstrName );
+				//DebugMsgD( L"Func:%s\n", Name );
 			}else{
 				// var ’Ç‰Á
 				ThisObj->SetAccessor(
-					v8::String::New(( uint16_t *)bstrName ),
+					v8::String::New(( uint16_t *)Name ),
 					OleValueGetter,
 					OleValueSetter,
 					v8::Int32::New( pFuncDesc->memid )
 				);
-				//DebugMsgD( L"Var:%08X %s\n", pFuncDesc->memid, bstrName );
+				//DebugMsgD( L"Var:%s\n", Name );
 			}
-			SysFreeString( bstrName );
+			SysFreeString( Name );
 			pTypeInfo->ReleaseFuncDesc( pFuncDesc );
 		}
 		
@@ -329,7 +315,6 @@ void COle::Val2Variant(
 v8::Handle<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> Context ){
 	v8::Handle<v8::Value> ret = v8::Undefined();
 	
-	HRESULT hr;
 	while ( V_VT(pvar) == (VT_BYREF | VT_VARIANT) )
 		pvar = V_VARIANTREF(pvar);
 
