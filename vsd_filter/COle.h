@@ -11,7 +11,7 @@
 
 class ICallbackJSFunc : public IDispatch {
   public:
-	ICallbackJSFunc( v8::Handle<v8::Function> func ) : CallbackFunc( func ){
+	ICallbackJSFunc( v8::Handle<v8::Function> func ) : m_CallbackFunc( func ){
 		m_uRefCnt = 1;
 	}
 	
@@ -59,7 +59,7 @@ class ICallbackJSFunc : public IDispatch {
 	);
 	
   private:
-	v8::Handle<v8::Function> CallbackFunc;
+	v8::Handle<v8::Function> m_CallbackFunc;
 	UINT	m_uRefCnt;
 };
 

@@ -311,7 +311,12 @@ void COle::Val2Variant(
 		V_BOOL(var) = val->IsTrue() ? VARIANT_TRUE : VARIANT_FALSE;
 	}else if( val->IsFunction()){
 		V_VT(var) = VT_DISPATCH;
-		V_DISPATCH(var) = new ICallbackJSFunc( v8::Local<v8::Function>::Cast( val ));
+		// š‚±‚±‚Ì Persistent handle ‚ğ‚¢‚Âíœ‚·‚é‚©???
+		V_DISPATCH(var) = new ICallbackJSFunc(
+			v8::Handle<v8::Function>::Cast(
+				v8::Persistent<v8::Value>::New( val )
+			)
+		);
 	}else{
 		V_VT(var) = VT_ERROR;
 		V_ERROR(var) = DISP_E_PARAMNOTFOUND;
@@ -644,6 +649,6 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 	EXCEPINFO *pExcepInfo,
 	UINT *puArgErr
 ){
-	int a = 0;
+	m_CallbackFunc->Call( m_CallbackFunc, 0, NULL );
 	return S_OK;
 }
