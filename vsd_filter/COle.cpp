@@ -48,8 +48,9 @@ v8::Handle<v8::Value> COle::OleFuncCaller(
 	
 	return handle_scope.Close(
 		obj->Invoke(
+			args.This()->CreationContext(),
 			args.Data()->Int32Value(), args,
-			v8::Local<v8::Value>(), args.This()->CreationContext(), DISPATCH_METHOD
+			v8::Local<v8::Value>(), DISPATCH_METHOD
 		)
 	);
 }
@@ -66,8 +67,9 @@ v8::Handle<v8::Value> COle::CallAsFunctionHandler(
 	
 	return handle_scope.Close(
 		obj->Invoke(
+			args.This()->CreationContext(),
 			args.Data()->Int32Value(), args,
-			v8::Local<v8::Value>(), args.This()->CreationContext(), DISPATCH_PROPERTYGET
+			v8::Local<v8::Value>(), DISPATCH_PROPERTYGET
 		)
 	);
 }
@@ -86,8 +88,9 @@ void COle::OleValueSetter(
 	DebugMsgD( L"PropSet: %s\n", obj->GetPropName( info.Data()->Int32Value()));
 	
 	obj->Invoke(
+		info.This()->CreationContext(),
 		info.Data()->Int32Value(), *( v8::Arguments *)NULL,
-		value, info.This()->CreationContext(), DISPATCH_PROPERTYPUT
+		value, DISPATCH_PROPERTYPUT
 	);
 }
 
@@ -104,8 +107,9 @@ v8::Handle<v8::Value> COle::OleValueGetter(
 	
 	return handle_scope.Close(
 		obj->Invoke(
+			info.Holder()->CreationContext(),
 			info.Data()->Int32Value(), *( v8::Arguments *)NULL,
-			v8::Local<v8::Value>(), info.Holder()->CreationContext(), DISPATCH_PROPERTYGET
+			v8::Local<v8::Value>(), DISPATCH_PROPERTYGET
 		)
 	);
 }
@@ -521,33 +525,10 @@ v8::Handle<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> 
 }
 
 v8::Handle<v8::Value> COle::Invoke(
-	LPCWSTR wszPropName,
-	const v8::Arguments& args,
-	v8::Local<v8::Value> value,
 	v8::Handle<v8::Context>	Context,
-	UINT wFlags
-){
-	LCID	lcid = LOCALE_SYSTEM_DEFAULT;
-	HRESULT hr;
-	
-	DISPID DispID;
-	
-	hr = m_pApp->GetIDsOfNames( IID_NULL, ( LPOLESTR *)&wszPropName, 1, lcid, &DispID );
-	if(FAILED(hr)) {
-		v8::ThrowException( v8::Exception::Error( v8::String::New(
-			"Unknown property or method"
-		)));
-		return v8::Undefined();
-	}
-	
-	return Invoke( DispID, args, value, Context, wFlags );
-}
-
-v8::Handle<v8::Value> COle::Invoke(
 	DISPID DispID,
 	const v8::Arguments& args,
 	v8::Local<v8::Value> value,
-	v8::Handle<v8::Context>	Context,
 	UINT wFlags
 ){
 	LCID	lcid = LOCALE_SYSTEM_DEFAULT;
