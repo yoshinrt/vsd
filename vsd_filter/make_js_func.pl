@@ -433,6 +433,7 @@ class ${Class}IF {
   public:
 	// クラスコンストラクタ
 	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
+		v8::HandleScope handle_scope;
 		
 $NewObject
 		// internal field にバックエンドオブジェクトを設定
@@ -448,7 +449,7 @@ $ExtraNew
 			DebugMsgD( ">>>new js obj $Class:%X\\n", obj );
 		#endif
 		// コンストラクタは this を返すこと。
-		return thisObject;
+		return handle_scope.Close( thisObject );
 	}
 	
 	// クラスデストラクタ
@@ -489,6 +490,8 @@ $FunctionIF
   public:
 	// クラステンプレートの初期化
 	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global, void *pClass = NULL ){
+		v8::HandleScope handle_scope;
+		
 		// コンストラクタを作成
 		v8::Local<v8::FunctionTemplate> tmpl = v8::FunctionTemplate::New( New );
 		tmpl->SetClassName( v8::String::New( "$JsClass" ));

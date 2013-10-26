@@ -40,12 +40,17 @@ void COle::InitJS( v8::Local<v8::FunctionTemplate> tmpl ){
 v8::Handle<v8::Value> COle::OleFuncCaller(
 	const v8::Arguments& args
 ){
+	v8::HandleScope handle_scope;
 	COle *obj = CScript::GetThis<COle>( args.This());
 	if( !obj ) return v8::Undefined();
 	
-	return obj->Invoke(
-		args.Data()->Int32Value(), args,
-		v8::Local<v8::Value>(), args.This()->CreationContext(), DISPATCH_METHOD
+	DebugMsgD( L"FuncCall: %s\n", obj->GetPropName( args.Data()->Int32Value()));
+	
+	return handle_scope.Close(
+		obj->Invoke(
+			args.Data()->Int32Value(), args,
+			v8::Local<v8::Value>(), args.This()->CreationContext(), DISPATCH_METHOD
+		)
 	);
 }
 
@@ -53,12 +58,17 @@ v8::Handle<v8::Value> COle::OleFuncCaller(
 v8::Handle<v8::Value> COle::CallAsFunctionHandler(
 	const v8::Arguments& args
 ){
+	v8::HandleScope handle_scope;
 	COle *obj = CScript::GetThis<COle>( args.This());
 	if( !obj ) return v8::Undefined();
 	
-	return obj->Invoke(
-		args.Data()->Int32Value(), args,
-		v8::Local<v8::Value>(), args.This()->CreationContext(), DISPATCH_PROPERTYGET
+	DebugMsgD( L"FuncCall: %s\n", obj->GetPropName( args.Data()->Int32Value()));
+	
+	return handle_scope.Close(
+		obj->Invoke(
+			args.Data()->Int32Value(), args,
+			v8::Local<v8::Value>(), args.This()->CreationContext(), DISPATCH_PROPERTYGET
+		)
 	);
 }
 
@@ -69,8 +79,11 @@ void COle::OleValueSetter(
 	v8::Local<v8::Value> value,
 	const v8::AccessorInfo& info
 ){
+	v8::HandleScope handle_scope;
 	COle *obj = CScript::GetThis<COle>( info.Holder());
 	if( !obj ) return;
+	
+	DebugMsgD( L"PropSet: %s\n", obj->GetPropName( info.Data()->Int32Value()));
 	
 	obj->Invoke(
 		info.Data()->Int32Value(), *( v8::Arguments *)NULL,
@@ -83,14 +96,21 @@ v8::Handle<v8::Value> COle::OleValueGetter(
 	v8::Local<v8::String> propertyName,
 	const v8::AccessorInfo& info
 ){
+	v8::HandleScope handle_scope;
 	COle *obj = CScript::GetThis<COle>( info.Holder());
 	if( !obj ) return v8::Undefined();
 	
-	return obj->Invoke(
-		info.Data()->Int32Value(), *( v8::Arguments *)NULL,
-		v8::Local<v8::Value>(), info.Holder()->CreationContext(), DISPATCH_PROPERTYGET
+	DebugMsgD( L"PropGet: %s\n", obj->GetPropName( info.Data()->Int32Value()));
+	
+	return handle_scope.Close(
+		obj->Invoke(
+			info.Data()->Int32Value(), *( v8::Arguments *)NULL,
+			v8::Local<v8::Value>(), info.Holder()->CreationContext(), DISPATCH_PROPERTYGET
+		)
 	);
 }
+
+/*** IDispatch “à‚Ì‘S Method/Property ‚ð“o˜^ ********************************/
 
 void COle::AddOLEFunction( v8::Local<v8::Object> ThisObj ){
 	UINT	uTypeInfoCnt;
@@ -103,8 +123,8 @@ void COle::AddOLEFunction( v8::Local<v8::Object> ThisObj ){
 	ITypeInfo	*pTypeInfo;
 	TYPEATTR	*pTypeAttr;
 	FUNCDESC	*pFuncDesc;
-	VARDESC	*pVarDesc;
-	BSTR		Name;
+	VARDESC		*pVarDesc;
+	BSTR		bstrName;
 	
 	for( UINT u = 0; u < uTypeInfoCnt; ++u ){
 		if( FAILED( hr = m_pApp->GetTypeInfo( u, LOCALE_SYSTEM_DEFAULT, &pTypeInfo ))) break;
@@ -119,18 +139,20 @@ void COle::AddOLEFunction( v8::Local<v8::Object> ThisObj ){
 			if( FAILED( hr = pTypeInfo->GetVarDesc( u, &pVarDesc ))) break;
 			
 			UINT v;
-			hr = pTypeInfo->GetNames( pVarDesc->memid, &Name, 1, &v );
+			hr = pTypeInfo->GetNames( pVarDesc->memid, &bstrName, 1, &v );
 			
 			// var ’Ç‰Á
+			RegisterPropName( pVarDesc->memid, bstrName );
+			
 			ThisObj->SetAccessor(
-				v8::String::New(( uint16_t *)Name ),
+				v8::String::New(( uint16_t *)bstrName ),
 				OleValueGetter,
 				OleValueSetter,
 				v8::Int32::New( pVarDesc->memid )
 			);
-			//DebugMsgD( L"Var:%s\n", Name );
+			//DebugMsgD( L"Var:%08X %s\n", pVarDesc->memid, bstrName );
 			
-			SysFreeString( Name );
+			SysFreeString( bstrName );
 			pTypeInfo->ReleaseVarDesc( pVarDesc );
 		}
 		
@@ -139,29 +161,31 @@ void COle::AddOLEFunction( v8::Local<v8::Object> ThisObj ){
 			if( FAILED( hr = pTypeInfo->GetFuncDesc( u, &pFuncDesc ))) break;
 			
 			UINT v;
-			hr = pTypeInfo->GetNames( pFuncDesc->memid, &Name, 1, &v );
+			hr = pTypeInfo->GetNames( pFuncDesc->memid, &bstrName, 1, &v );
+			
+			RegisterPropName( pFuncDesc->memid, bstrName );
 			
 			if( pFuncDesc->invkind & INVOKE_FUNC ){
 				// function ’Ç‰Á
 				ThisObj->Set(
-					v8::String::New(( uint16_t *)Name ),
+					v8::String::New(( uint16_t *)bstrName ),
 					v8::FunctionTemplate::New(
 						OleFuncCaller,
 						v8::Int32::New( pFuncDesc->memid )
 					)->GetFunction()
 				);
-				//DebugMsgD( L"Func:%s\n", Name );
+				//DebugMsgD( L"Fnc:%08X %s\n", pFuncDesc->memid, bstrName );
 			}else{
 				// var ’Ç‰Á
 				ThisObj->SetAccessor(
-					v8::String::New(( uint16_t *)Name ),
+					v8::String::New(( uint16_t *)bstrName ),
 					OleValueGetter,
 					OleValueSetter,
 					v8::Int32::New( pFuncDesc->memid )
 				);
-				//DebugMsgD( L"Var:%s\n", Name );
+				//DebugMsgD( L"Var:%08X %s\n", pFuncDesc->memid, bstrName );
 			}
-			SysFreeString( Name );
+			SysFreeString( bstrName );
 			pTypeInfo->ReleaseFuncDesc( pFuncDesc );
 		}
 		

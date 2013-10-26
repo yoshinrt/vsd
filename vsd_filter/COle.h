@@ -9,6 +9,8 @@
 #pragma once
 #include "error_code.h"
 
+typedef std::map<DISPID, std::wstring>	PROPNAME_TBL;
+
 class COle {
   public:
 	COle( void ){
@@ -27,6 +29,25 @@ class COle {
 		v8::Handle<v8::Context> Context
 	);
 	
+	// プロパティ名マネジメント
+	void RegisterPropName( DISPID DispID, LPCWSTR wszName ){
+		PROPNAME_TBL::iterator itr;
+		
+		if(( itr = m_PropNameTbl.find( DispID )) == m_PropNameTbl.end()){
+			std::wstring strName( wszName );
+			m_PropNameTbl[ DispID ] = strName;
+		}
+	}
+	
+	LPCWSTR GetPropName( DISPID DispID ){
+		PROPNAME_TBL::iterator itr;
+		
+		if(( itr = m_PropNameTbl.find( DispID )) == m_PropNameTbl.end()){
+			return L"(unknown)";
+		}
+		return itr->second.c_str();
+	}
+	
 	// Ruby win32ole 移植物
 	void Val2Variant(
 		v8::Local<v8::Value> val,
@@ -34,17 +55,10 @@ class COle {
 	);
 	v8::Handle<v8::Value> Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> Context );
 	v8::Handle<v8::Value> Invoke(
-		LPCWSTR wszPropName,
-		const 	v8::Arguments& args,
-		v8::Local<v8::Value> value,
 		v8::Handle<v8::Context>	Context,
-		UINT wFlags
-	);
-	v8::Handle<v8::Value> Invoke(
 		DISPID DispID,
 		const 	v8::Arguments& args,
 		v8::Local<v8::Value> value,
-		v8::Handle<v8::Context>	Context,
 		UINT wFlags
 	);
 	
@@ -74,5 +88,6 @@ class COle {
 	static void Uninitialize( void ){	CoUninitialize(); }
 	
   private:
-	IDispatch	*m_pApp;
+	IDispatch		*m_pApp;
+	PROPNAME_TBL	m_PropNameTbl;
 };
