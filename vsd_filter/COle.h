@@ -9,6 +9,60 @@
 #pragma once
 #include "error_code.h"
 
+class ICallbackJSFunc : public IDispatch {
+  public:
+	ICallbackJSFunc( v8::Handle<v8::Function> func ) : CallbackFunc( func ){
+		m_uRefCnt = 1;
+	}
+	
+	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject){
+		*ppvObject = static_cast<ICallbackJSFunc *>( this );
+		return S_OK;
+	}
+	
+	ULONG STDMETHODCALLTYPE AddRef( void ){
+		return m_uRefCnt++;
+	}
+	
+	ULONG STDMETHODCALLTYPE Release(void){
+		if( --m_uRefCnt == 0 ){
+			delete this;
+			return 0;
+		}
+		return m_uRefCnt;
+	}
+	
+	HRESULT STDMETHODCALLTYPE GetTypeInfoCount( unsigned int FAR* pctinfo ){ return 1; }
+	HRESULT STDMETHODCALLTYPE GetTypeInfo( UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo ){
+		return S_OK;
+	}
+	
+	HRESULT STDMETHODCALLTYPE GetIDsOfNames(
+		REFIID riid,
+		LPOLESTR *rgszNames,
+		UINT cNames,
+		LCID lcid,
+		DISPID *rgDispId
+	){
+		return S_OK;
+	}
+	
+	HRESULT STDMETHODCALLTYPE Invoke(
+		DISPID dispIdMember,
+		REFIID riid,
+		LCID lcid,
+		WORD wFlags,
+		DISPPARAMS *pDispParams,
+		VARIANT *pVarResult,
+		EXCEPINFO *pExcepInfo,
+		UINT *puArgErr
+	);
+	
+  private:
+	v8::Handle<v8::Function> CallbackFunc;
+	UINT	m_uRefCnt;
+};
+
 class COle {
   public:
 	COle( void ){
@@ -28,11 +82,11 @@ class COle {
 	);
 	
 	// Ruby win32ole à⁄êAï®
-	void Val2Variant(
+	static void Val2Variant(
 		v8::Local<v8::Value> val,
 		VARIANT *var
 	);
-	v8::Handle<v8::Value> Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> Context );
+	static v8::Handle<v8::Value> Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> Context );
 	v8::Handle<v8::Value> Invoke(
 		v8::Handle<v8::Context>	Context,
 		DISPID DispID,

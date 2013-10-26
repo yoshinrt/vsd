@@ -158,7 +158,14 @@ MakeJsIF( 'COle', 'ActiveXObject', << '-----', undef, << '-----', << '-----' );
 		// 引数チェック
 		if( args.Length() >= 1 ){
 			v8::String::Value strServer( args[ 0 ] );
-			obj->CreateInstance(( LPCWSTR )*strServer );
+			if( obj->CreateInstance(( LPCWSTR )*strServer ) != S_OK ){
+				return v8::ThrowException( v8::Exception::Error(
+					v8::String::Concat(
+						v8::String::New( "Can't open OLE server: " ),
+						v8::String::New(( LPCWSTR )*strServer )
+					)
+				));
+			}
 		}
 -----
 		COle::InitJS( tmpl );

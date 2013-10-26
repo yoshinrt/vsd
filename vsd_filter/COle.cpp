@@ -20,8 +20,11 @@ UINT COle::CreateInstance( LPCWSTR strServer ){
 	if( FAILED( hr )) return ERR_OLE_NO_SERVER;
 	
 	// Start server and get IDispatch...
-	hr = CoCreateInstance( clsid, NULL, CLSCTX_LOCAL_SERVER, IID_IDispatch, ( void ** )&m_pApp );
-	if( FAILED( hr )) return ERR_OLE_CREATE_FAILED;
+	hr = ::CoCreateInstance( clsid, NULL, CLSCTX_LOCAL_SERVER, IID_IDispatch, ( void ** )&m_pApp );
+	if( FAILED( hr )){
+		hr = ::CoCreateInstance( clsid, NULL, CLSCTX_INPROC_SERVER, IID_IDispatch, ( void ** )&m_pApp );
+		if( FAILED( hr )) return ERR_OLE_CREATE_FAILED;
+	}
 	
 	return ERR_OK;
 }
@@ -306,6 +309,9 @@ void COle::Val2Variant(
 	}else if( val->IsBoolean()){
 		V_VT(var) = VT_BOOL;
 		V_BOOL(var) = val->IsTrue() ? VARIANT_TRUE : VARIANT_FALSE;
+	}else if( val->IsFunction()){
+		V_VT(var) = VT_DISPATCH;
+		V_DISPATCH(var) = new ICallbackJSFunc( v8::Local<v8::Function>::Cast( val ));
 	}else{
 		V_VT(var) = VT_ERROR;
 		V_ERROR(var) = DISP_E_PARAMNOTFOUND;
@@ -624,4 +630,20 @@ v8::Handle<v8::Value> COle::Invoke(
 	delete [] op.dp.rgdispidNamedArgs;
 	
 	return ret;
+}
+
+/*** JavaScript function callback *******************************************/
+
+HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
+	DISPID dispIdMember,
+	REFIID riid,
+	LCID lcid,
+	WORD wFlags,
+	DISPPARAMS *pDispParams,
+	VARIANT *pVarResult,
+	EXCEPINFO *pExcepInfo,
+	UINT *puArgErr
+){
+	int a = 0;
+	return S_OK;
 }
