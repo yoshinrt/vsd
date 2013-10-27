@@ -670,6 +670,7 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 	EXCEPINFO *pExcepInfo,
 	UINT *puArgErr
 ){
+	HandleScope handle_scope;
 	v8::TryCatch try_catch;
 	m_CallbackFunc->Call( m_Global, 0, NULL );
 	
