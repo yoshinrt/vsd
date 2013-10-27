@@ -72,12 +72,8 @@ LPWSTR CScript::ReportException( LPWSTR pMsg, TryCatch& try_catch ){
 CScript::CScript( CVsdFilter *pVsd ){
 	DebugMsgD( ":CScript::CScript():%X\n", GetCurrentThreadId());
 	
-	m_pIsolate = v8::Isolate::New();
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
-	
-	DebugMsgD( ":CScript::CScript():m_pIsolate = %X\n", m_pIsolate );
-	
-	DebugMsgD( ":CScript::CScript():m_Context\n" );
+	m_pIsolate		= v8::Isolate::New();
+	m_pIsolateScope = new v8::Isolate::Scope( m_pIsolate );
 	m_Context.Clear();
 	
 	if( pVsd ) m_pVsd = pVsd;
@@ -92,11 +88,11 @@ CScript::~CScript(){
 	DebugMsgD( ":CScript::~CScript():%X\n", GetCurrentThreadId());
 	DebugMsgD( ":CScript::~CScript():m_pIsolate = %X\n", m_pIsolate );
 	
-	{
-		v8::Isolate::Scope IsolateScope( m_pIsolate );
-		m_Context.Dispose();
-		while( !v8::V8::IdleNotification());
-	}
+	delete m_pContextScope;
+	m_Context.Dispose();
+	while( !v8::V8::IdleNotification());
+	
+	delete m_pIsolateScope;
 	m_pIsolate->Dispose();
 	
 	delete [] m_szErrorMsg;
@@ -140,8 +136,6 @@ static v8::Handle<v8::Value> Func_Include( const v8::Arguments& args ){
 /*** JavaScript interface のセットアップ ************************************/
 
 void CScript::Initialize( void ){
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
-	
 	// 準備
 	HandleScope handle_scope;
 	
@@ -162,25 +156,22 @@ void CScript::Initialize( void ){
 	
 	// グローバルオブジェクトから環境を生成
 	m_Context = Context::New( NULL, global );
+	m_pContextScope = new v8::Context::Scope( m_Context );
 }
 
 /*** スクリプトファイルの実行 ***********************************************/
 
 UINT CScript::RunFile( LPCWSTR szFileName ){
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
-	
 	HandleScope handle_scope;
 	
 	// 環境からスコープを生成
-	Context::Scope context_scope( m_Context );
-	
 	TryCatch try_catch;
 	
 	UINT uRet = RunFileCore( szFileName );
 	
 	if( uRet == ERR_SCRIPT || try_catch.HasCaught()){
 		// Print errors that happened during compilation.
-		ReportException( m_szErrorMsg, try_catch );
+		m_szErrorMsg = ReportException( m_szErrorMsg, try_catch );
 		return m_uError = ERR_SCRIPT;
 	}
 	
@@ -271,17 +262,12 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 /*** function 名指定実行，引数なし ******************************************/
 
 UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
-	Context::Scope context_scope( m_Context );
-	
 	return RunArg( szFunc, 0, NULL, bNoFunc );
 }
 
 UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
-	Context::Scope context_scope( m_Context );
 	
 	Handle<Value> Args[] = {
 		str0 ? String::New(( uint16_t *)str0 ) : v8::Undefined()
@@ -290,9 +276,7 @@ UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
 }
 
 UINT CScript::Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc ){
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
-	Context::Scope context_scope( m_Context );
 	
 	Handle<Value> Args[] = {
 		str0 ? String::New(( uint16_t *)str0 ) : v8::Undefined(),
@@ -315,7 +299,7 @@ UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bN
 	Handle<Value> result = hFunction->Call( m_Context->Global(), iArgNum, Args );
 	
 	if( try_catch.HasCaught()){
-		ReportException( m_szErrorMsg, try_catch );
+		m_szErrorMsg = ReportException( m_szErrorMsg, try_catch );
 		return m_uError = ERR_SCRIPT;
 	}
 	
@@ -360,9 +344,7 @@ UINT CScript::InitLogReader( void ){
 	Initialize();
 	
 	{
-		v8::Isolate::Scope IsolateScope( m_pIsolate );
 		v8::HandleScope handle_scope;
-		v8::Context::Scope context_scope( m_Context );
 		
 		// log 用の global array 登録
 		m_Context->Global()->Set( v8::String::New( "Log" ), v8::Array::New( 0 ));

@@ -190,6 +190,42 @@ Vsd.DrawGoogleMaps = function( param ){
 		param.NextDir	= Vsd.Direction;
 	}
 	
+	/*** Geocoding 処理 ***/
+	if( param.UpdateTimeGeocoding !== undefined ){
+		// XMLHttpRequest 作成
+		if( param.HttpRequest === undefined ){
+			param.HttpRequest = CreateXMLHttpRequest();
+			
+			param.HttpRequest.onreadystatechange = function(){
+				if(
+					param.HttpRequest.readyState === 4 &&
+					( param.HttpRequest.status === 200 || param.HttpRequest.status === 0 )
+				){
+					var result = eval( "(" + param.HttpRequest.responseText + ")" );
+					param.Address = result.results[ 0 ].formatted_address;
+				}
+			}
+			
+			param.Address = '(取得中...)';
+		}
+		
+		// リクエスト送信
+		if(
+			param.GeocodingTime === undefined ||
+			Math.abs( param.GeocodingTime - Vsd.DateTime ) >= param.UpdateTimeGeocoding &&
+			param.HttpRequest.readyState === 4
+		){
+			param.HttpRequest.open(
+				"GET",
+				"http://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng=" +
+					Vsd.Latitude + "," + Vsd.Longitude,
+				true
+			);
+			
+			param.HttpRequest.send( null );
+			param.GeocodingTime = Vsd.DateTime;
+		}
+	}
 	
 	// 自車マーク描画
 	function DrawArrow( cx, cy, angle, size ){
@@ -214,5 +250,13 @@ Vsd.DrawGoogleMaps = function( param ){
 		
 		Vsd.DrawPolygon( apex, param.IndicatorColor, DRAW_FILL );
 		Vsd.DrawCircle( cx, cy, size, param.IndicatorColor );
+	}
+	
+	// XMLHttpRequest 生成
+	function CreateXMLHttpRequest(){
+		try{ return new ActiveXObject( "Msxml2.XMLHTTP.6.0" ) }catch( e ){}
+		try{ return new ActiveXObject( "Msxml2.XMLHTTP.3.0" ) }catch( e ){}
+		try{ return new ActiveXObject( "Microsoft.XMLHTTP"  ) }catch( e ){}
+		return false;
 	}
 }

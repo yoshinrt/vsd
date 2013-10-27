@@ -11,12 +11,15 @@ function Initialize(){
 	
 	// ★補足説明
 	// このスキンは Google Maps にアクセスし地図データを得ています．
-	// Google Maps にアクセスするためには「API キー」が必要です．
-	// キーは無料で取得出来ます．キー取得方法は
-	// https://developers.google.com/maps/documentation/staticmaps/?hl=ja#api_key
-	// を参照してください．
-	// また，マップデータの取得は Google によって
-	// 1日あたり 25,000 枚に制限されています．
+	//   Google Maps にアクセスするためには「API キー」が必要です．
+	//   キーは無料で取得出来ます．キー取得方法は
+	//   https://developers.google.com/maps/documentation/staticmaps/?hl=ja#api_key
+	//   を参照してください．
+	// また，Google によって
+	//   マップデータの取得は 1日あたり 25,000 枚
+	//   ジオコーディングの取得は 1日あたり 2,500 回
+	//   に制限されています．
+	
 	
 	GoogleMapsParam = {
 		// Google Maps の API キーを指定します．
@@ -47,6 +50,9 @@ function Initialize(){
 		// かつ指定距離以上移動した場合のみ地図を更新します
 		UpdateTime:		1000,	// [ミリ秒]
 		UpdateDistance:	16,		// [ピクセル]
+		
+		// GeoCoding (現在住所表示) の時間間隔
+		UpdateTimeGeocoding:	10000,	// [ミリ秒]
 		
 		SmoothScrollMap:	1,
 	};
@@ -93,4 +99,11 @@ function Draw(){
 		"  速度:" + Vsd.Speed.toFixed( 0 ) + "km/h",
 		font, 0xFFFFFF
 	);
+	if( GoogleMapsParam.Address !== undefined ){
+		Vsd.DrawTextAlign(
+			0, Vsd.Height - 1 - font.Height, ALIGN_BOTTOM,
+			"住所:" + GoogleMapsParam.Address,
+			font, 0xFFFFFF
+		);
+	}
 }

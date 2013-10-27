@@ -594,6 +594,7 @@ v8::Handle<v8::Value> COle::Invoke(
 		/* retry to call args by value */
 		if(op.dp.cArgs > 0) {
 			for(i = 0; i < op.dp.cArgs; i++) {
+				// šprop ƒZƒbƒg‚ÌŽž‚Ê‚é‚Û
 				Val2Variant( args[ i ], &op.dp.rgvarg[i], Context );
 			}
 			memset(&excepinfo, 0, sizeof(EXCEPINFO));
@@ -670,7 +671,7 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 	EXCEPINFO *pExcepInfo,
 	UINT *puArgErr
 ){
-	HandleScope handle_scope;
+	v8::HandleScope handle_scope;
 	v8::TryCatch try_catch;
 	m_CallbackFunc->Call( m_Global, 0, NULL );
 	

@@ -447,9 +447,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
-			v8::Isolate::Scope IsolateScope( Script.m_pIsolate );
 			v8::HandleScope handle_scope;
-			v8::Context::Scope context_scope( Script.m_Context );
 			
 			// "Log" 取得
 			v8::Local<v8::Array> hLog = v8::Local<v8::Array>::Cast(
@@ -750,9 +748,7 @@ int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
-			v8::Isolate::Scope IsolateScope( Script.m_pIsolate );
 			v8::HandleScope handle_scope;
-			v8::Context::Scope context_scope( Script.m_Context );
 			
 			// "LapTime" 取得
 			v8::Local<v8::Array> hLapTime = v8::Local<v8::Array>::Cast(
