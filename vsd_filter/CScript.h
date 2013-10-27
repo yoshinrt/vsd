@@ -28,7 +28,7 @@ class CScript {
 	UINT Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc = FALSE );
 	UINT RunArg( LPCWSTR szFunc, int iArgNum, v8::Handle<v8::Value> Args[], BOOL bNoFunc = FALSE );
 	
-	void ReportException( v8::TryCatch* try_catch );
+	static LPWSTR ReportException( LPWSTR pMsg, v8::TryCatch& try_catch );
 	
 	CVsdFilter	*m_pVsd;	// ÉGÅc
 	

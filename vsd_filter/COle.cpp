@@ -564,7 +564,6 @@ v8::Handle<v8::Value> COle::Invoke(
 			VariantInit(&op.dp.rgvarg[i]);
 			
 			Val2Variant( args[ op.dp.cArgs - i - 1 ], &realargs[ i ], Context );
-//			Val2Variant( args[ i ], &realargs[ i ], Context );
 			V_VT(&op.dp.rgvarg[i]) = VT_VARIANT | VT_BYREF;
 			V_VARIANTREF(&op.dp.rgvarg[i]) = &realargs[i];
 		}
@@ -673,53 +672,11 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 ){
 	v8::TryCatch try_catch;
 	m_CallbackFunc->Call( m_Global, 0, NULL );
+	
 	if( try_catch.HasCaught()){
-		WCHAR *m_szErrorMsg = NULL;
-		#define MSGBUF_SIZE	1024
-		
-		v8::HandleScope handle_scope;
-		v8::String::Value exception( try_catch.Exception());
-		v8::Handle<v8::Message> message = try_catch.Message();
-		
-		if( !m_szErrorMsg ) m_szErrorMsg = new WCHAR[ MSGBUF_SIZE ];
-		LPWSTR p = m_szErrorMsg;
-		
-		if ( message.IsEmpty()){
-			// V8 didn't provide any extra information about this error; just
-			// print the exception.
-			swprintf( p, MSGBUF_SIZE, L"%s\n", *exception );
-			p = wcschr( p, '\0' );
-		}else{
-			// Print ( filename ):( line number ): ( message ).
-			v8::String::Value filename( message->GetScriptResourceName());
-			int linenum = message->GetLineNumber();
-			swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s:%i: %s\n", *filename, linenum, *exception );
-			p = wcschr( p, '\0' );
-			// Print line of source code.
-			v8::String::Value sourceline( message->GetSourceLine());
-			swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s\n", *sourceline );
-			p = wcschr( p, '\0' );
-			// Print wavy underline ( GetUnderline is deprecated ).
-			int start = message->GetStartColumn();
-			for ( int i = 0; i < start; i++ ){
-				*p++ = L' ';
-			}
-			int end = message->GetEndColumn();
-			for ( int i = start; i < end; i++ ){
-				*p++ = L'^';
-			}
-			*p++ = L'\n';
-			*p = L'\0';
-			
-			/*
-			String::Utf8Value stack_trace( try_catch.StackTrace());
-			if ( stack_trace.length() > 0 ){
-				v8::String::Value stack_trace_string( stack_trace );
-				swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s\n", *stack_trace_string );
-				p = wcschr( p, '\0' );
-			}
-			*/
-		}
+		LPWSTR pMsg = CScript::ReportException( NULL, try_catch );
+		fputws( pMsg, stdout );
+		delete [] pMsg;
 	}
 	return S_OK;
 }

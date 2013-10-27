@@ -24,13 +24,13 @@ LPCWSTR CScript::m_szErrorMsgID[] = {
 
 #define MSGBUF_SIZE	( 4 * 1024 )
 
-void CScript::ReportException( TryCatch* try_catch ){
+LPWSTR CScript::ReportException( LPWSTR pMsg, TryCatch& try_catch ){
 	HandleScope handle_scope;
-	String::Value exception( try_catch->Exception());
-	Handle<Message> message = try_catch->Message();
+	String::Value exception( try_catch.Exception());
+	Handle<Message> message = try_catch.Message();
 	
-	if( !m_szErrorMsg ) m_szErrorMsg = new WCHAR[ MSGBUF_SIZE ];
-	LPWSTR p = m_szErrorMsg;
+	if( !pMsg ) pMsg = new WCHAR[ MSGBUF_SIZE ];
+	LPWSTR p = pMsg;
 	
 	if ( message.IsEmpty()){
 		// V8 didn't provide any extra information about this error; just
@@ -41,12 +41,16 @@ void CScript::ReportException( TryCatch* try_catch ){
 		// Print ( filename ):( line number ): ( message ).
 		String::Value filename( message->GetScriptResourceName());
 		int linenum = message->GetLineNumber();
-		swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s:%i: %s\n", *filename, linenum, *exception );
+		swprintf( p, MSGBUF_SIZE - ( p - pMsg ), L"%s:%i: %s\n", *filename, linenum, *exception );
 		p = wcschr( p, '\0' );
+		
 		// Print line of source code.
 		String::Value sourceline( message->GetSourceLine());
-		swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s\n", *sourceline );
-		p = wcschr( p, '\0' );
+		swprintf( p, MSGBUF_SIZE - ( p - pMsg ), L"%s\n", *sourceline );
+		
+		// TAB->SP 変換と，p は '\0' を指すようにする
+		for( ; *p; ++p ) if( *p == '\t' ) *p = ' ';
+		
 		// Print wavy underline ( GetUnderline is deprecated ).
 		int start = message->GetStartColumn();
 		for ( int i = 0; i < start; i++ ){
@@ -58,16 +62,9 @@ void CScript::ReportException( TryCatch* try_catch ){
 		}
 		*p++ = L'\n';
 		*p = L'\0';
-		
-		/*
-		String::Utf8Value stack_trace( try_catch->StackTrace());
-		if ( stack_trace.length() > 0 ){
-			String::Value stack_trace_string( stack_trace );
-			swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s\n", *stack_trace_string );
-			p = wcschr( p, '\0' );
-		}
-		*/
 	}
+	
+	return pMsg;
 }
 
 /*** コンストラクタ *********************************************************/
@@ -183,7 +180,7 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 	
 	if( uRet == ERR_SCRIPT || try_catch.HasCaught()){
 		// Print errors that happened during compilation.
-		ReportException( &try_catch );
+		ReportException( m_szErrorMsg, try_catch );
 		return m_uError = ERR_SCRIPT;
 	}
 	
@@ -318,7 +315,7 @@ UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bN
 	Handle<Value> result = hFunction->Call( m_Context->Global(), iArgNum, Args );
 	
 	if( try_catch.HasCaught()){
-		ReportException( &try_catch );
+		ReportException( m_szErrorMsg, try_catch );
 		return m_uError = ERR_SCRIPT;
 	}
 	
