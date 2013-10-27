@@ -48,21 +48,18 @@ function GetGear( GearRatio ){
 	return Gear;
 }
 
-GlobalInstance = this;
-
 function DisposeAll(){
-	if( typeof GlobalInstance[ "Dispose" ] == 'function' ){
+	if( typeof this[ "Dispose" ] == 'function' ){
 		Dispose();
 	}
 	
-	for( var obj in GlobalInstance ){
+	for( var obj in this ){
 		if(
-			obj != "GlobalInstance" &&
-			typeof GlobalInstance[ obj ] == 'object' &&
-			typeof GlobalInstance[ obj ].Dispose == 'function'
+			typeof this[ obj ] == 'object' &&
+			typeof this[ obj ].Dispose == 'function'
 		){
-			GlobalInstance[ obj ].Dispose();
-			GlobalInstance[ obj ] = null;
+			this[ obj ].Dispose();
+			this[ obj ] = null;
 		}
 	}
 }

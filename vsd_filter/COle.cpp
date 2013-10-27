@@ -185,6 +185,9 @@ void COle::AddOLEFunction( v8::Local<v8::Object> ThisObj ){
 		pTypeInfo->ReleaseTypeAttr( pTypeAttr );
 		pTypeInfo->Release();
 	}
+	if( FAILED( hr )){
+		ThrowHResultError( hr );
+	}
 }
 
 /*** IDispatch -> ActiveXObject *********************************************/
@@ -198,7 +201,10 @@ v8::Handle<v8::Value> COle::CreateActiveXObject(
 		Context->Global()->Get( v8::String::New( "ActiveXObject" ))
 	);
 	if( hFunction->IsUndefined()){
-		return v8::Undefined(); // ★エラー処理追加
+		v8::ThrowException( v8::Exception::Error( v8::String::New(
+			"Internal error : Can't call ActiveXOjbect constructor"
+		)));
+		return v8::Undefined();
 	}
 	
 	v8::Local<v8::Object> JSObj = hFunction->NewInstance( 0, NULL );
@@ -223,7 +229,8 @@ struct oleparam {
 
 void COle::Val2Variant(
 	v8::Local<v8::Value> val,
-	VARIANT *var
+	VARIANT *var,
+	v8::Handle<v8::Context> Context
 ){
 #if 0
 	struct oledata *pole;
@@ -311,9 +318,9 @@ void COle::Val2Variant(
 		V_BOOL(var) = val->IsTrue() ? VARIANT_TRUE : VARIANT_FALSE;
 	}else if( val->IsFunction()){
 		V_VT(var) = VT_DISPATCH;
-		// ★ここの Persistent handle をいつ削除するか???
 		V_DISPATCH(var) = new ICallbackJSFunc(
-			v8::Handle<v8::Function>::Cast(
+			v8::Persistent<v8::Object>::New( Context->Global()),
+			v8::Persistent<v8::Function>::Cast(
 				v8::Persistent<v8::Value>::New( val )
 			)
 		);
@@ -556,7 +563,8 @@ v8::Handle<v8::Value> COle::Invoke(
 			VariantInit(&realargs[i]);
 			VariantInit(&op.dp.rgvarg[i]);
 			
-			Val2Variant( args[ i ], &realargs[ i ] );
+			Val2Variant( args[ op.dp.cArgs - i - 1 ], &realargs[ i ], Context );
+//			Val2Variant( args[ i ], &realargs[ i ], Context );
 			V_VT(&op.dp.rgvarg[i]) = VT_VARIANT | VT_BYREF;
 			V_VARIANTREF(&op.dp.rgvarg[i]) = &realargs[i];
 		}
@@ -575,7 +583,7 @@ v8::Handle<v8::Value> COle::Invoke(
 		VariantInit(&realargs[0]);
 		VariantInit(&op.dp.rgvarg[0]);
 		
-		Val2Variant( value, &realargs[ 0 ] );
+		Val2Variant( value, &realargs[ 0 ], Context );
 		V_VT(&op.dp.rgvarg[0]) = VT_VARIANT | VT_BYREF;
 		V_VARIANTREF(&op.dp.rgvarg[0]) = &realargs[0];
 	}
@@ -587,7 +595,7 @@ v8::Handle<v8::Value> COle::Invoke(
 		/* retry to call args by value */
 		if(op.dp.cArgs > 0) {
 			for(i = 0; i < op.dp.cArgs; i++) {
-				Val2Variant( args[ i ], &op.dp.rgvarg[i]);
+				Val2Variant( args[ i ], &op.dp.rgvarg[i], Context );
 			}
 			memset(&excepinfo, 0, sizeof(EXCEPINFO));
 			hr = m_pApp->Invoke( DispID, 
@@ -617,14 +625,8 @@ v8::Handle<v8::Value> COle::Invoke(
 	}
 	
 	v8::Handle<v8::Value> ret;
-	if (FAILED(hr)) {
-		/*v = ole_excepinfo2msg(&excepinfo);
-		ole_raise(hr, eWIN32OLE_RUNTIME_ERROR, "%s%s",
-				  StringValuePtr(cmd), StringValuePtr(v));
-		*/
-		v8::ThrowException( v8::Exception::Error( v8::String::New(
-			"OLE Error"
-		)));
+	if( FAILED( hr )) {
+		ThrowHResultError( hr );
 		ret = v8::Undefined();
 	}else{
 		ret = Variant2Val( &result, Context );
@@ -635,6 +637,26 @@ v8::Handle<v8::Value> COle::Invoke(
 	delete [] op.dp.rgdispidNamedArgs;
 	
 	return ret;
+}
+
+/*** HRESULT のエラーメッセージを投げる *************************************/
+
+void COle::ThrowHResultError( HRESULT hr ){
+	LPSTR pMsg;
+	
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, hr, MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ),
+		( LPTSTR )&pMsg, 0, NULL
+	);
+	if( pMsg != NULL ){
+		v8::ThrowException( v8::Exception::TypeError( v8::String::New( pMsg )));
+		LocalFree( pMsg );
+	}else{
+		char szMsg[ 64 ];
+		sprintf( szMsg, "OLE Error 0x%X", hr );
+		v8::ThrowException( v8::Exception::TypeError( v8::String::New( szMsg )));
+	}
 }
 
 /*** JavaScript function callback *******************************************/
@@ -649,6 +671,55 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 	EXCEPINFO *pExcepInfo,
 	UINT *puArgErr
 ){
-	m_CallbackFunc->Call( m_CallbackFunc, 0, NULL );
+	v8::TryCatch try_catch;
+	m_CallbackFunc->Call( m_Global, 0, NULL );
+	if( try_catch.HasCaught()){
+		WCHAR *m_szErrorMsg = NULL;
+		#define MSGBUF_SIZE	1024
+		
+		v8::HandleScope handle_scope;
+		v8::String::Value exception( try_catch.Exception());
+		v8::Handle<v8::Message> message = try_catch.Message();
+		
+		if( !m_szErrorMsg ) m_szErrorMsg = new WCHAR[ MSGBUF_SIZE ];
+		LPWSTR p = m_szErrorMsg;
+		
+		if ( message.IsEmpty()){
+			// V8 didn't provide any extra information about this error; just
+			// print the exception.
+			swprintf( p, MSGBUF_SIZE, L"%s\n", *exception );
+			p = wcschr( p, '\0' );
+		}else{
+			// Print ( filename ):( line number ): ( message ).
+			v8::String::Value filename( message->GetScriptResourceName());
+			int linenum = message->GetLineNumber();
+			swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s:%i: %s\n", *filename, linenum, *exception );
+			p = wcschr( p, '\0' );
+			// Print line of source code.
+			v8::String::Value sourceline( message->GetSourceLine());
+			swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s\n", *sourceline );
+			p = wcschr( p, '\0' );
+			// Print wavy underline ( GetUnderline is deprecated ).
+			int start = message->GetStartColumn();
+			for ( int i = 0; i < start; i++ ){
+				*p++ = L' ';
+			}
+			int end = message->GetEndColumn();
+			for ( int i = start; i < end; i++ ){
+				*p++ = L'^';
+			}
+			*p++ = L'\n';
+			*p = L'\0';
+			
+			/*
+			String::Utf8Value stack_trace( try_catch.StackTrace());
+			if ( stack_trace.length() > 0 ){
+				v8::String::Value stack_trace_string( stack_trace );
+				swprintf( p, MSGBUF_SIZE - ( p - m_szErrorMsg ), L"%s\n", *stack_trace_string );
+				p = wcschr( p, '\0' );
+			}
+			*/
+		}
+	}
 	return S_OK;
 }

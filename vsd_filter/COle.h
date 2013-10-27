@@ -11,8 +11,19 @@
 
 class ICallbackJSFunc : public IDispatch {
   public:
-	ICallbackJSFunc( v8::Handle<v8::Function> func ) : m_CallbackFunc( func ){
+	ICallbackJSFunc(
+		v8::Persistent<v8::Object> Global,
+		v8::Persistent<v8::Function> Func
+	) :
+		m_Global( Global ),
+		m_CallbackFunc( Func )
+	{
 		m_uRefCnt = 1;
+	}
+	
+	~ICallbackJSFunc(){
+		if( !m_CallbackFunc.IsEmpty()) m_CallbackFunc.Dispose();
+		if( !m_Global.IsEmpty()) m_Global.Dispose();
 	}
 	
 	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject){
@@ -59,7 +70,8 @@ class ICallbackJSFunc : public IDispatch {
 	);
 	
   private:
-	v8::Handle<v8::Function> m_CallbackFunc;
+	v8::Persistent<v8::Object>		m_Global;
+	v8::Persistent<v8::Function>	m_CallbackFunc;
 	UINT	m_uRefCnt;
 };
 
@@ -84,7 +96,8 @@ class COle {
 	// Ruby win32ole à⁄êAï®
 	static void Val2Variant(
 		v8::Local<v8::Value> val,
-		VARIANT *var
+		VARIANT *var,
+		v8::Handle<v8::Context> Context
 	);
 	static v8::Handle<v8::Value> Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> Context );
 	v8::Handle<v8::Value> Invoke(
@@ -115,6 +128,8 @@ class COle {
 	);
 	
 	void AddOLEFunction( v8::Local<v8::Object> ThisObj );
+	
+	static void ThrowHResultError( HRESULT hr );
 	
 	// èâä˙âªÅEèIóπ
 	static void Initialize( void ){		CoInitialize( NULL ); }

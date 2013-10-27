@@ -315,7 +315,7 @@ UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bN
 		swprintf( m_szErrorMsg, MSGBUF_SIZE, L"Undefined function \"%s()\"", szFunc );
 		return m_uError = ERR_SCRIPT;
 	}
-	Handle<Value> result = hFunction->Call( hFunction, iArgNum, Args );
+	Handle<Value> result = hFunction->Call( m_Context->Global(), iArgNum, Args );
 	
 	if( try_catch.HasCaught()){
 		ReportException( &try_catch );
