@@ -32,10 +32,8 @@ class CScript {
 	
 	CVsdFilter	*m_pVsd;	// ÉGÅc
 	
-	v8::Isolate					*m_pIsolate;
-	v8::Isolate::Scope			*m_pIsolateScope;
 	v8::Persistent<v8::Context> m_Context;
-	v8::Context::Scope			*m_pContextScope;
+	v8::Isolate	*m_pIsolate;
 	
 	LPWSTR m_szErrorMsg;
 	UINT m_uError;

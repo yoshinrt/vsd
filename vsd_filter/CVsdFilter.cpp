@@ -63,6 +63,7 @@ void CVsdFilter::Constructor( void ){
 	m_iHeight	= 0;
 	
 	//---- GDI+‚Ì‰Šúİ’è
+	COle::Initialize();
 	Gdiplus::GdiplusStartup( &m_gdiplusToken, &m_gdiplusStartupInput, NULL );
 }
 
@@ -71,6 +72,7 @@ void CVsdFilter::Constructor( void ){
 void CVsdFilter::Destructor( void ){
 	//---- GDI+‚Ì‰ğ•ú
 	Gdiplus::GdiplusShutdown( m_gdiplusToken );
+	COle::Uninitialize();
 	
 	delete m_VsdLog;
 	delete m_GPSLog;

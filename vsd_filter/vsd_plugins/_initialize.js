@@ -195,25 +195,25 @@ Vsd.DrawGoogleMaps = function( param ){
 		// XMLHttpRequest 作成
 		if( param.HttpRequest === undefined ){
 			param.HttpRequest = CreateXMLHttpRequest();
-			
-			param.HttpRequest.onreadystatechange = function(){
-				if(
-					param.HttpRequest.readyState === 4 &&
-					( param.HttpRequest.status === 200 || param.HttpRequest.status === 0 )
-				){
-					var result = eval( "(" + param.HttpRequest.responseText + ")" );
-					param.Address = result.results[ 0 ].formatted_address;
-				}
-			}
-			
 			param.Address = '(取得中...)';
+			param.GeoSendRequest = 0;
+			param.GeoTime = Vsd.DateTime - param.UpdateTimeGeocoding;
+		}
+		
+		// HTTP リクエスト完了
+		if( param.GeoSendRequest && param.HttpRequest.readyState === 4 ){
+			param.GeoSendRequest = 0;
+			
+			if( param.HttpRequest.status === 200 || param.HttpRequest.status === 0 ){
+				var result = eval( "(" + param.HttpRequest.responseText + ")" );
+				param.Address = result.results[ 0 ].formatted_address;
+			}
 		}
 		
 		// リクエスト送信
 		if(
-			param.GeocodingTime === undefined ||
-			Math.abs( param.GeocodingTime - Vsd.DateTime ) >= param.UpdateTimeGeocoding &&
-			param.HttpRequest.readyState === 4
+			!param.GeoSendRequest &&
+			Math.abs( param.GeoTime - Vsd.DateTime ) >= param.UpdateTimeGeocoding
 		){
 			param.HttpRequest.open(
 				"GET",
@@ -223,7 +223,8 @@ Vsd.DrawGoogleMaps = function( param ){
 			);
 			
 			param.HttpRequest.send( null );
-			param.GeocodingTime = Vsd.DateTime;
+			param.GeoTime = Vsd.DateTime;
+			param.GeoSendRequest = 1;
 		}
 	}
 	
