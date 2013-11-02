@@ -175,7 +175,8 @@ function Draw(){
 	Vsd.DrawMap(
 		8 * Scale, 8 * Scale, 500 * Scale, 300 * Scale,
 		ALIGN_TOP | ALIGN_LEFT,
-		3 * Scale, 6 * Scale, 0xFF0000, 0xFFFF00, 0x00FF00, 0xFF0000
+		3 * Scale, 6 * Scale, 0xFF0000, 0xFFFF00, 0x00FF00, 0xFF0000,
+		Vsd.Config_map_length
 	);
 	
 	// ラップタイム

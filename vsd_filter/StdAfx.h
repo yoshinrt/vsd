@@ -55,6 +55,7 @@
 #ifdef PUBLIC_MODE
 	#define USE_TURN_R
 #endif
+#define INVALID_INT		INT_MIN
 
 static char *StringNew( char *&szDst, const char *szSrc ){
 	if( szDst == szSrc ) return( szDst );

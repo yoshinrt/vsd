@@ -248,7 +248,8 @@ class CVsdFilter
 		tRABY uColorIndicator,
 		tRABY uColorG0,
 		tRABY uColorGPlus,
-		tRABY uColorGMinus
+		tRABY uColorGMinus,
+		int	iLength = INVALID_INT	// !default:INVALID_INT
 	);
 	void DrawMapPosition(	// !js_func
 		int x1, int y1, int x2, int y2,	UINT uFlag,

@@ -180,7 +180,7 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 	
 	if( uRet == ERR_SCRIPT || try_catch.HasCaught()){
 		// Print errors that happened during compilation.
-		ReportException( m_szErrorMsg, try_catch );
+		m_szErrorMsg = ReportException( m_szErrorMsg, try_catch );
 		return m_uError = ERR_SCRIPT;
 	}
 	
@@ -315,7 +315,7 @@ UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bN
 	Handle<Value> result = hFunction->Call( m_Context->Global(), iArgNum, Args );
 	
 	if( try_catch.HasCaught()){
-		ReportException( m_szErrorMsg, try_catch );
+		m_szErrorMsg = ReportException( m_szErrorMsg, try_catch );
 		return m_uError = ERR_SCRIPT;
 	}
 	

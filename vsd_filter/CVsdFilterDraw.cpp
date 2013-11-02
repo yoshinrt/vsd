@@ -13,7 +13,6 @@
 
 #define SPRINTF_BUF		128
 
-#define INVALID_INT		INT_MAX
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] * ( G_MULT / 1000.0 ))
 #define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
 
@@ -974,7 +973,8 @@ void CVsdFilter::DrawMap(
 	tRABY uColorIndicator,
 	tRABY uColorG0,
 	tRABY uColorGPlus,
-	tRABY uColorGMinus
+	tRABY uColorGMinus,
+	int	iLength
 ){
 	double dGx, dGy;
 	int	iGx, iGy;
@@ -982,7 +982,9 @@ void CVsdFilter::DrawMap(
 	
 	SelectLogGPS;
 	
-	if( !LineTrace() || !m_CurLog || !m_CurLog->m_pLogX ) return;
+	if( iLength == INVALID_INT ) iLength = LineTrace();
+	
+	if( !iLength || !m_CurLog || !m_CurLog->m_pLogX ) return;
 	
 	if( iLineWidth  < 1 ) iLineWidth  = 1;
 	if( iIndicatorR < 1 ) iIndicatorR = 1;
@@ -1030,11 +1032,11 @@ void CVsdFilter::DrawMap(
 		iLineEd = m_CurLog->GetCnt() - 1;
 	}
 	
-	if( m_CurLog->m_iLogNum - iLineSt > ( int )( LineTrace() * m_CurLog->m_dFreq ))
-		iLineSt = m_CurLog->m_iLogNum - ( int )( LineTrace() * m_CurLog->m_dFreq );
+	if( m_CurLog->m_iLogNum - iLineSt > ( int )( iLength * m_CurLog->m_dFreq ))
+		iLineSt = m_CurLog->m_iLogNum - ( int )( iLength * m_CurLog->m_dFreq );
 	
-	if( iLineEd - m_CurLog->m_iLogNum > ( int )( LineTrace() * m_CurLog->m_dFreq ))
-		iLineEd = m_CurLog->m_iLogNum + ( int )( LineTrace() * m_CurLog->m_dFreq );
+	if( iLineEd - m_CurLog->m_iLogNum > ( int )( iLength * m_CurLog->m_dFreq ))
+		iLineEd = m_CurLog->m_iLogNum + ( int )( iLength * m_CurLog->m_dFreq );
 	
 	for( i = iLineSt; i <= iLineEd ; ++i ){
 		#define GetMapPos( p, a ) ((( p ) - dMapOffs ## a ) * dScale )
@@ -1112,7 +1114,7 @@ void CVsdFilter::DrawMapPosition(
 	
 	SelectLogGPS;
 	
-	if( !LineTrace() || !m_CurLog || !m_CurLog->m_pLogX ) return;
+	if( !m_CurLog || !m_CurLog->m_pLogX ) return;
 	
 	DrawMap( 
 		x1, y1, x2, y2, uFlag, iLineWidth, 0,
