@@ -118,76 +118,97 @@ void COle::AddOLEFunction( v8::Local<v8::Object> ThisObj ){
 	}
 	
 	ITypeInfo	*pTypeInfo;
+	for( UINT u = 0; u < uTypeInfoCnt; ++u ){
+		if( FAILED( hr = m_pApp->GetTypeInfo( u, LOCALE_SYSTEM_DEFAULT, &pTypeInfo ))) break;
+		hr = AddOLEFunction( ThisObj, pTypeInfo );
+		pTypeInfo->Release();
+		if( FAILED( hr )) break;
+	}
+	
+	if( FAILED( hr )){
+		ThrowHResultError( hr );
+	}
+}
+
+HRESULT COle::AddOLEFunction( v8::Local<v8::Object> ThisObj, ITypeInfo *pTypeInfo ){
+	HRESULT	hr;
+	
 	TYPEATTR	*pTypeAttr;
 	FUNCDESC	*pFuncDesc;
 	VARDESC		*pVarDesc;
 	BSTR		Name;
 	
-	for( UINT u = 0; u < uTypeInfoCnt; ++u ){
-		if( FAILED( hr = m_pApp->GetTypeInfo( u, LOCALE_SYSTEM_DEFAULT, &pTypeInfo ))) break;
+	if( FAILED( hr = pTypeInfo->GetTypeAttr( &pTypeAttr ))){
+		return hr;
+	}
+	
+	// •Ï”ˆê——‚ğæ“¾
+	for( UINT u = 0; u < pTypeAttr->cVars; ++u ){
+		if( FAILED( hr = pTypeInfo->GetVarDesc( u, &pVarDesc ))) break;
 		
-		if( FAILED( hr = pTypeInfo->GetTypeAttr( &pTypeAttr ))){
-			pTypeInfo->Release();
-			break;
-		}
+		UINT v;
+		hr = pTypeInfo->GetNames( pVarDesc->memid, &Name, 1, &v );
 		
-		// •Ï”ˆê——‚ğæ“¾
-		for( u = 0; u < pTypeAttr->cVars; ++u ){
-			if( FAILED( hr = pTypeInfo->GetVarDesc( u, &pVarDesc ))) break;
-			
-			UINT v;
-			hr = pTypeInfo->GetNames( pVarDesc->memid, &Name, 1, &v );
-			
+		// var ’Ç‰Á
+		ThisObj->SetAccessor(
+			v8::String::New(( uint16_t *)Name ),
+			OleValueGetter,
+			OleValueSetter,
+			v8::Int32::New( pVarDesc->memid )
+		);
+		DebugMsgD( L"Var:%X:%s\n", pVarDesc->memid, Name );
+		
+		SysFreeString( Name );
+		pTypeInfo->ReleaseVarDesc( pVarDesc );
+	}
+	
+	// function ˆê——‚ğæ“¾
+	for( UINT u = 0; u < pTypeAttr->cFuncs; ++u ){
+		if( FAILED( hr = pTypeInfo->GetFuncDesc( u, &pFuncDesc ))) break;
+		
+		UINT v;
+		hr = pTypeInfo->GetNames( pFuncDesc->memid, &Name, 1, &v );
+		
+		if( pFuncDesc->invkind & INVOKE_FUNC ){
+			// function ’Ç‰Á
+			ThisObj->Set(
+				v8::String::New(( uint16_t *)Name ),
+				v8::FunctionTemplate::New(
+					OleFuncCaller,
+					v8::Int32::New( pFuncDesc->memid )
+				)->GetFunction()
+			);
+			DebugMsgD( L"Fuc:%08X:%s\n", pFuncDesc->memid, Name );
+		}else{
 			// var ’Ç‰Á
 			ThisObj->SetAccessor(
 				v8::String::New(( uint16_t *)Name ),
 				OleValueGetter,
 				OleValueSetter,
-				v8::Int32::New( pVarDesc->memid )
+				v8::Int32::New( pFuncDesc->memid )
 			);
-			//DebugMsgD( L"Var:%s\n", Name );
-			
-			SysFreeString( Name );
-			pTypeInfo->ReleaseVarDesc( pVarDesc );
+			DebugMsgD( L"Var:%08X:%s\n", pFuncDesc->memid, Name );
 		}
-		
-		// function ˆê——‚ğæ“¾
-		for( u = 0; u < pTypeAttr->cFuncs; ++u ){
-			if( FAILED( hr = pTypeInfo->GetFuncDesc( u, &pFuncDesc ))) break;
-			
-			UINT v;
-			hr = pTypeInfo->GetNames( pFuncDesc->memid, &Name, 1, &v );
-			
-			if( pFuncDesc->invkind & INVOKE_FUNC ){
-				// function ’Ç‰Á
-				ThisObj->Set(
-					v8::String::New(( uint16_t *)Name ),
-					v8::FunctionTemplate::New(
-						OleFuncCaller,
-						v8::Int32::New( pFuncDesc->memid )
-					)->GetFunction()
-				);
-				//DebugMsgD( L"Func:%s\n", Name );
-			}else{
-				// var ’Ç‰Á
-				ThisObj->SetAccessor(
-					v8::String::New(( uint16_t *)Name ),
-					OleValueGetter,
-					OleValueSetter,
-					v8::Int32::New( pFuncDesc->memid )
-				);
-				//DebugMsgD( L"Var:%s\n", Name );
-			}
-			SysFreeString( Name );
-			pTypeInfo->ReleaseFuncDesc( pFuncDesc );
-		}
-		
-		pTypeInfo->ReleaseTypeAttr( pTypeAttr );
-		pTypeInfo->Release();
+		SysFreeString( Name );
+		pTypeInfo->ReleaseFuncDesc( pFuncDesc );
 	}
-	if( FAILED( hr )){
-		ThrowHResultError( hr );
+	
+    // Œp³ƒNƒ‰ƒX‚Ìî•ñ‚ğ“o˜^
+    ITypeInfo	*pRefTypeInfo;
+    HREFTYPE href;
+	
+	for( UINT u = 0; u < pTypeAttr->cImplTypes; ++u ){
+		hr = pTypeInfo->GetRefTypeOfImplType( u, &href );
+		if( FAILED( hr )) break;
+		hr = pTypeInfo->GetRefTypeInfo( href, &pRefTypeInfo );
+		if( FAILED( hr )) break;
+		hr = AddOLEFunction( ThisObj, pRefTypeInfo );
+		pRefTypeInfo->Release();
+		if( FAILED( hr )) break;
 	}
+	
+	pTypeInfo->ReleaseTypeAttr( pTypeAttr );
+	return hr;
 }
 
 /*** IDispatch -> ActiveXObject *********************************************/

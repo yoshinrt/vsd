@@ -2,10 +2,10 @@
 
 use Time::HiRes qw(sleep);
 
-$Scale	= 4;	# ÇÜÂ®ÀßÄê
+$Scale	= 1;	# ÇÜÂ®ÀßÄê
 $Dist	= 10;	# ºÇÄã°ÜÆ°µ÷Î¥
 
-open( fpCom, "> /dev/ttyS6" ) || die( "Can't open COM\n" );
+open( fpCom, "> /dev/ttyS2" ) || die( "Can't open COM\n" );
 #open( fpCom, "| cat" ) || die( "Can't open COM\n" );
 
 $PrevTime = 0;

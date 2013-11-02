@@ -128,6 +128,7 @@ class COle {
 	);
 	
 	void AddOLEFunction( v8::Local<v8::Object> ThisObj );
+	HRESULT AddOLEFunction( v8::Local<v8::Object> ThisObj, ITypeInfo *pTypeInfo );
 	
 	static void ThrowHResultError( HRESULT hr );
 	
