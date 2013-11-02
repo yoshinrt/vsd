@@ -20,7 +20,6 @@ function Initialize(){
 	//   ジオコーディングの取得は 1日あたり 2,500 回
 	//   に制限されています．
 	
-	
 	GoogleMapsParam = {
 		// Google Maps の API キーを指定します．
 		// 例: APIKey: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
@@ -51,10 +50,18 @@ function Initialize(){
 		UpdateTime:		1000,	// [ミリ秒]
 		UpdateDistance:	16,		// [ピクセル]
 		
-		// GeoCoding (現在住所表示) の時間間隔
-		UpdateTimeGeocoding:	10000,	// [ミリ秒]
-		
+		// 1に設定すると，地図をスムースにスクロールします．
+		// ★重要★
+		//   地図から Google の権利帰属表示表示が消え，Google Maps の利用規約
+		//   違反になりますので，SmoothScrollMap:1 で作成した動画は絶対にネッ
+		//   ト等で公開しないでください．
 		SmoothScrollMap:	1,
+	};
+	
+	// Geocoding の設定
+	GeocodingParam = {
+		// Geocoding 更新間隔
+		UpdateTime:	10000,	// [ミリ秒]
 	};
 	
 	//////////////////////////////////////////////////////////////////////////
@@ -99,11 +106,11 @@ function Draw(){
 		"  速度:" + Vsd.Speed.toFixed( 0 ) + "km/h",
 		font, 0xFFFFFF
 	);
-	if( GoogleMapsParam.Address !== undefined ){
-		Vsd.DrawTextAlign(
-			0, Vsd.Height - 1 - font.Height, ALIGN_BOTTOM,
-			"住所:" + GoogleMapsParam.Address,
-			font, 0xFFFFFF
-		);
-	}
+	
+	Vsd.Geocoding( GeocodingParam );
+	Vsd.DrawTextAlign(
+		0, Vsd.Height - 1 - font.Height, ALIGN_BOTTOM,
+		"住所:" + GeocodingParam.Address,
+		font, 0xFFFFFF
+	);
 }

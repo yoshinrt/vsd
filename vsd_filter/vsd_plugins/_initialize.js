@@ -190,44 +190,6 @@ Vsd.DrawGoogleMaps = function( param ){
 		param.NextDir	= Vsd.Direction;
 	}
 	
-	/*** Geocoding 処理 ***/
-	if( param.UpdateTimeGeocoding !== undefined ){
-		// XMLHttpRequest 作成
-		if( param.HttpRequest === undefined ){
-			param.HttpRequest = CreateXMLHttpRequest();
-			param.Address = '(取得中...)';
-			param.GeoSendRequest = 0;
-			param.GeoTime = Vsd.DateTime - param.UpdateTimeGeocoding;
-		}
-		
-		// HTTP リクエスト完了
-		if( param.GeoSendRequest && param.HttpRequest.readyState === 4 ){
-			param.GeoSendRequest = 0;
-			
-			if( param.HttpRequest.status === 200 || param.HttpRequest.status === 0 ){
-				var result = eval( "(" + param.HttpRequest.responseText + ")" );
-				param.Address = result.results[ 0 ].formatted_address;
-			}
-		}
-		
-		// リクエスト送信
-		if(
-			!param.GeoSendRequest &&
-			Math.abs( param.GeoTime - Vsd.DateTime ) >= param.UpdateTimeGeocoding
-		){
-			param.HttpRequest.open(
-				"GET",
-				"http://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng=" +
-					Vsd.Latitude + "," + Vsd.Longitude,
-				true
-			);
-			
-			param.HttpRequest.send( null );
-			param.GeoTime = Vsd.DateTime;
-			param.GeoSendRequest = 1;
-		}
-	}
-	
 	// 自車マーク描画
 	function DrawArrow( cx, cy, angle, size ){
 		angle *= Math.PI / 180;
@@ -252,6 +214,47 @@ Vsd.DrawGoogleMaps = function( param ){
 		Vsd.DrawPolygon( apex, param.IndicatorColor, DRAW_FILL );
 		Vsd.DrawCircle( cx, cy, size, param.IndicatorColor );
 	}
+}
+
+//*** Geocoding 処理 *********************************************************
+
+Vsd.Geocoding = function( param ){
+	// XMLHttpRequest 作成
+	if( param.HttpRequest === undefined ){
+		param.HttpRequest = CreateXMLHttpRequest();
+		param.Address = undefined;
+		param.Result = undefined;
+		param.SendRequest = 0;
+		param.PrevTime = Vsd.DateTime - param.UpdateTime;
+	}
+	
+	// HTTP リクエスト完了
+	if( param.SendRequest && param.HttpRequest.readyState === 4 ){
+		param.SendRequest = 0;
+		
+		if( param.HttpRequest.status === 200 || param.HttpRequest.status === 0 ){
+			param.Result = eval( "(" + param.HttpRequest.responseText + ")" );
+			param.Address = param.Result.results[ 0 ].formatted_address;
+		}
+	}
+	
+	// リクエスト送信
+	if(
+		!param.SendRequest &&
+		Math.abs( param.PrevTime - Vsd.DateTime ) >= param.UpdateTime
+	){
+		param.HttpRequest.open(
+			"GET",
+			"http://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng=" +
+				Vsd.Latitude + "," + Vsd.Longitude,
+			true
+		);
+		
+		param.HttpRequest.send( null );
+		param.PrevTime = Vsd.DateTime;
+		param.SendRequest = 1;
+	}
+	return param.Address;
 	
 	// XMLHttpRequest 生成
 	function CreateXMLHttpRequest(){
