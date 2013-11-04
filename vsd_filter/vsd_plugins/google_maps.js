@@ -33,9 +33,9 @@ function Initialize(){
 		Maptype: "roadmap",
 		
 		// 地図表示位置，サイズ(最大 640x640)
-		X:		0,
-		Y:		0,
-		Width:	min( 400 * Scale, 640 ),
+		X:		8 * Scale,
+		Y:		8 * Scale,
+		Width:	min( 300 * Scale, 640 ),
 		Height:	min( 300 * Scale, 640 ),
 		
 		// 自車インジケータ
@@ -77,38 +77,110 @@ function Initialize(){
 		);
 	}
 	
+	MeterRight = 1;
+	
 	// 使用する画像・フォントの宣言
-	font = new Font( "ＭＳ ゴシック", 24 * Scale, FONT_OUTLINE );
+	FontS = new Font( "Impact", 24 * Scale );
+	FontJ = new Font( "ＭＳ Ｐゴシック", 31 * Scale );
+	FontM = new Font( "Impact", 31 * Scale, FONT_FIXED );
+	FontL = new Font( "Impact", 60 * Scale );
+	
+	// 動画サイズに応じてメーター画像をリサイズ
+	if( Scale != 1 ){
+		ImgMeter.Resize( ImgMeter.Width * Scale, ImgMeter.Height * Scale );
+	}
+	
+	// 座標等を予め計算しておく
+	MeterR  = 120 * Scale;
+	MeterX	= MeterRight ? Vsd.Width  - MeterR * 2: 0;
+	MeterY	= Vsd.Height - MeterR * 2 * 0.85;
+	MeterCx = MeterX + MeterR;
+	MeterCy = MeterY + MeterR;
+	
+	// スピードメータ用最高速計算
+	MaxSpeed = ~~( Vsd.MaxSpeed / 10 ) * 10;
+	
+	FontColor = 0xE0E0E0;
+	BGColor = 0x80008080;
 }
 
 //*** メーター描画処理 ******************************************************
 
 function Draw(){
-	if( Vsd.Longitude === undefined ){
-		Vsd.DrawTextAlign(
-			Vsd.Width / 2, ( Vsd.Height - font.Height ) / 2, ALIGN_HCENTER | ALIGN_VCENTER,
-			"GPS データが読み込まれていません", font, 0xFFFFFF
-		);
-		return;
-	}
+	// メーター画像描画
+	Vsd.DrawCircle( MeterCx, MeterCy, MeterR, BGColor, DRAW_FILL );
+	
+	// スピードメーター目盛り描画
+	Vsd.DrawMeterScale(
+		MeterCx, MeterCy, MeterR,
+		MeterR * 0.1,  2, 0xFFFFFF,
+		MeterR * 0.05, 1, 0xFFFFFF,
+		2, 135, 45,
+		MeterR * 0.78,
+		MaxSpeed, 12, 0xFFFFFF,
+		FontS
+	);
+	
+	// スピード数値表示
+	Vsd.DrawTextAlign(
+		MeterCx, MeterCy + MeterR * 0.25, 
+		ALIGN_HCENTER | ALIGN_VCENTER,
+		~~Vsd.Speed, FontL, 0xFFFFFF
+	);
+	
+	Vsd.DrawTextAlign(
+		MeterCx, MeterCy + MeterR * 0.5,
+		ALIGN_HCENTER | ALIGN_VCENTER,
+		"km/h", FontS, 0xFFFFFF
+	);
+	
+	// スピードメーター針
+	Vsd.DrawNeedle(
+		MeterCx, MeterCy, MeterR * 0.95, MeterR * -0.1,
+		135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
+	);
+	
+	Vsd.DrawRect( 0, 0, 316 * Scale - 1, 316 * Scale - 1, BGColor, DRAW_FILL );
+	Vsd.DrawRect( 316 * Scale, 0, Vsd.Width - 1, FontJ.Height - 1, BGColor, DRAW_FILL );
+	Vsd.DrawRect( 0, 324 * Scale, 316 * Scale - 1, 324 * Scale + FontJ.Height * 6 - 1, BGColor, DRAW_FILL );
 	
 	// Google マップ表示
 	Vsd.DrawGoogleMaps( GoogleMapsParam );
 	
 	// 文字データ
-	Vsd.DrawTextAlign(
-		0, Vsd.Height - 1, ALIGN_BOTTOM,
-		"緯度:" + Vsd.Latitude.toFixed( 6 ) +
-		"  経度:" + Vsd.Longitude.toFixed( 6 ) +
-		"  距離:" + ( Vsd.Distance / 1000 ).toFixed( 2 ) + "km" +
-		"  速度:" + Vsd.Speed.toFixed( 0 ) + "km/h",
-		font, 0xFFFFFF
+	var Y = 324 * Scale;
+	
+	var date = new Date();
+	date.setTime( Vsd.DateTime );
+	
+	Vsd.DrawText( 0, Y,
+		"Date: " + date.getFullYear() + "/" +
+			( date.getMonth() < 10 ? "0" : "" ) + date.getMonth() + "/" +
+			( date.getDay() < 10 ? "0" : "" ) + date.getDay(),
+		FontM, FontColor
 	);
+	Y += FontM.Height;
+	
+	Vsd.DrawText( 0, Y,
+		"Time: " + ( date.getHours() < 10 ? "0" : "" ) + date.getHours() + ":" +
+			( date.getMinutes() < 10 ? "0" : "" ) + date.getMinutes() + ":" +
+			( date.getSeconds() < 10 ? "0" : "" ) + date.getSeconds(),
+		FontM, FontColor
+	);
+	Y += FontM.Height;
+	
+	Vsd.DrawText( 0, Y, "Lat.: " + Vsd.Latitude.toFixed( 6 ), FontM, FontColor );
+	Y += FontM.Height;
+	Vsd.DrawText( 0, Y, "Lng.: " + Vsd.Longitude.toFixed( 6 ), FontM, FontColor );
+	Y += FontM.Height;
+	Vsd.DrawText( 0, Y, "Alt.: " + ( Vsd.Altitude / 1000 ).toFixed( 1 ) + "m", FontM, FontColor );
+	Y += FontM.Height;
+	Vsd.DrawText( 0, Y, "Dist.:" + ( Vsd.Distance / 1000 ).toFixed( 2 ) + "km", FontM, FontColor );
 	
 	Vsd.Geocoding( GeocodingParam );
 	Vsd.DrawTextAlign(
-		0, Vsd.Height - 1 - font.Height, ALIGN_BOTTOM,
-		"住所:" + GeocodingParam.Address,
-		font, 0xFFFFFF
+		316 * Scale, 0, 0,
+		GeocodingParam.Address,
+		FontJ, FontColor
 	);
 }
