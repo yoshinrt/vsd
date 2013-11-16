@@ -85,11 +85,6 @@ function Initialize(){
 	FontM = new Font( "Impact", 31 * Scale, FONT_FIXED );
 	FontL = new Font( "Impact", 60 * Scale );
 	
-	// 動画サイズに応じてメーター画像をリサイズ
-	if( Scale != 1 ){
-		ImgMeter.Resize( ImgMeter.Width * Scale, ImgMeter.Height * Scale );
-	}
-	
 	// 座標等を予め計算しておく
 	MeterR  = 120 * Scale;
 	MeterX	= MeterRight ? Vsd.Width  - MeterR * 2: 0;
