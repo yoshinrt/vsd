@@ -52,7 +52,7 @@ function Draw(){
 			MeterCx, MeterCy, MeterR,
 			MeterR * 0.1,  2, MeterColor,
 			MeterR * 0.05, 1, MeterColor,
-			5, 135, 45,
+			2, 135, 45,
 			MeterR * 0.80,
 			MaxTacho / 1000, 12, MeterColor,
 			FontM

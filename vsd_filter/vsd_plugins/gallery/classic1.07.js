@@ -118,8 +118,8 @@ function Draw(){
 		// G 数値
 		var Accel = Math.sqrt( Vsd.Gx * Vsd.Gx + Vsd.Gy * Vsd.Gy ).toFixed( 1 ) + "G";
 		Vsd.DrawTextAlign(
-			ALIGN_HCENTER | ALIGN_BOTTOM,
-			MeterCx + MeterR, MeterCy + MeterR,
+			MeterGCx + MeterGR, MeterGCy + MeterGR,
+			ALIGN_RIGHT | ALIGN_BOTTOM,
 			Accel, FontS, 0xFFFFFF
 		);
 	}

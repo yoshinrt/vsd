@@ -122,12 +122,12 @@ Vsd.DrawGoogleMaps = function( param ){
 	
 	// 一番最初の地図データを同期モードで取得
 	if( param.MapImg === undefined ){
-		param.MapImg	= new Image( GMapURL + Vsd.Latitude + "," + Vsd.Longitude );
-		param.Dir		= Vsd.Direction;
-		param.Time		= Vsd.DateTime;
-		param.DispLong	= param.Long = Vsd.Longitude;
-		param.DispLati	= param.Lati = Vsd.Latitude;
-		param.Distance	= Vsd.Distance;
+		param.MapImg		= new Image( GMapURL + Vsd.Latitude + "," + Vsd.Longitude );
+		param.Dir			= Vsd.Direction;
+		param.Time			= Vsd.DateTime;
+		param.DispLong		= param.Long 	= Vsd.Longitude;
+		param.DispLati		= param.Lati 	= Vsd.Latitude;
+		param.Distance		= Vsd.Distance;
 	}
 	
 	// 次のマップデータ取得が完了した
@@ -177,6 +177,7 @@ Vsd.DrawGoogleMaps = function( param ){
 	
 	// 次のマップデータを非同期モードで取得
 	if(
+		param.MapImgNext === undefined &&
 		Math.abs( param.Time - Vsd.DateTime ) >= param.UpdateTime &&
 		( PixLong * PixLong + PixLati * PixLati ) >= param.UpdateDistance * param.UpdateDistance
 	){
@@ -184,10 +185,10 @@ Vsd.DrawGoogleMaps = function( param ){
 			GMapURL + Vsd.Latitude + "," + Vsd.Longitude,
 			IMG_INET_ASYNC
 		);
-		param.Time		= Vsd.DateTime;
-		param.Long		= Vsd.Longitude;
-		param.Lati		= Vsd.Latitude;
-		param.NextDir	= Vsd.Direction;
+		param.Time			= Vsd.DateTime;
+		param.Long			= Vsd.Longitude;
+		param.Lati			= Vsd.Latitude;
+		param.NextDir		= Vsd.Direction;
 	}
 	
 	// 自車マーク描画
