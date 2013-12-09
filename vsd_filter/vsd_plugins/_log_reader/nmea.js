@@ -14,7 +14,8 @@ function Read_nmea( Files ){
 	
 	var	Cnt = 0;
 	var Line;
-	var bSpeed = false;
+	var bSpeed		= false;
+	var bAltitude	= false;
 	
 	for( var i = 0; i < Files.length; ++i ){
 		var file = new File();
@@ -28,21 +29,11 @@ function Read_nmea( Files ){
 			if( file.IsEOF()) break;
 			
 			if( Line.substr( 0, 6 ) == "$GPRMC" ){
-				
 				//        時間         lat           long           knot  方位   日付
 				// 0      1          2 3           4 5            6 7     8      9
 				// $GPRMC,043431.200,A,3439.997825,N,13523.377978,E,0.602,178.29,240612,,,A*59
 				
 				var Param = Line.split( "," );
-				
-				// Speed がある場合は Array 作成
-				if( Param[ 7 ] != '' ){
-					if( !bSpeed ){
-						Log.Speed = [];
-						bSpeed = true;
-					}
-					Log.Speed[ Cnt ] = +Param[ 7 ] * 1.85200;
-				}
 				
 				var Time	= +Param[ 1 ];
 				var Hour	= ~~( Time / 10000 );
@@ -68,7 +59,32 @@ function Read_nmea( Files ){
 				Log.Longitude[ Cnt ] = Long;
 				Log.Latitude [ Cnt ] = Lati;
 				
+				// Speed がある場合は Array 作成
+				if( Param[ 7 ] != '' ){
+					if( !bSpeed ){
+						Log.Speed = [];
+						bSpeed = true;
+					}
+					Log.Speed[ Cnt ] = +Param[ 7 ] * 1.85200;
+				}
+				
 				++Cnt;
+			}else if( Line.substr( 0, 6 ) == "$GPGGA" ){
+				//        時間       lat           long               高度
+				// 0      1          2           3 4            5 6 789
+				// $GPGGA,233132.000,3439.997825,N,13523.377978,E,1,,,293.425,M,,,,*21
+				
+				var Param = Line.split( "," );
+				
+				// 高度がある場合は Array 作成
+				if( Param[ 9 ] != '' ){
+					if( !bAltitude ){
+						Log.Altitude = [];
+						bAltitude = true;
+					}
+					Log.Altitude[ +Param[ 1 ] == Time ? Cnt - 1 : Cnt ] = +Param[ 9 ];
+				}
+				var Time	= +Param[ 1 ];
 			}
 		}
 		file.Close();

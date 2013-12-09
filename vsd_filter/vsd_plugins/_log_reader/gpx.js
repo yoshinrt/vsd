@@ -13,7 +13,8 @@ function Read_gpx( Files ){
 	Log.Latitude	= [];
 	
 	var	Cnt = 0;
-	var bSpeed = false;
+	var bSpeed		= false;
+	var bAltitude	= false;
 	
 	for( var i = 0; i < Files.length; ++i ){
 		var file = new File();
@@ -30,6 +31,7 @@ function Read_gpx( Files ){
 			// <trkpt lat="35.12345" lon="135.12345">
 			// <speed>0.0</speed>
 			// <time>2012-04-28T21:27:50Z</time>
+			// <ele>128.1</ele>
 			// </trkpt>
 			
 			// trkpt 先頭サーチ
@@ -67,7 +69,6 @@ function Read_gpx( Files ){
 			if( !Point.match( /lon="([\d\.]+)"/ )) continue;
 			Log.Longitude[ Cnt ] = +RegExp.$1;
 			
-			
 			// Speed がある場合は Array 作成
 			if( Point.match( /<speed>([\d\.]+)/ )){
 				if( !bSpeed ){
@@ -75,6 +76,15 @@ function Read_gpx( Files ){
 					bSpeed = true;
 				}
 				Log.Speed[ Cnt ] = 3.6 * RegExp.$1;
+			}
+			
+			// ele がある場合は Array 作成
+			if( Point.match( /<ele>([\d\.]+)/ )){
+				if( !bAltitude ){
+					Log.Altitude = [];
+					bAltitude = true;
+				}
+				Log.Altitude[ Cnt ] = +RegExp.$1;
 			}
 			
 			++Cnt;

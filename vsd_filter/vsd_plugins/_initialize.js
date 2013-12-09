@@ -113,16 +113,16 @@ Vsd.DrawGraph = function( x1, y1, x2, y2, font, flags, params ){
 Vsd.DrawGoogleMaps = function( param ){
 	if( Vsd.Longitude === undefined ) return;
 	
-	GMapURL = "http://maps.googleapis.com/maps/api/staticmap?sensor=false&language=ja" +
-		( param.APIKey != '' ? "&key=" + param.APIKey : '' ) +
-		"&maptype=" + param.Maptype +
-		"&zoom=" + param.Zoom +
-		( param.SmoothScrollMap ? "&size=640x640" : "&size=" + Math.floor( param.Width ) + "x" + Math.floor( param.Height )) +
-		"&center=";
-	
 	// 一番最初の地図データを同期モードで取得
 	if( param.MapImg === undefined ){
-		param.MapImg		= new Image( GMapURL + Vsd.Latitude + "," + Vsd.Longitude );
+		param.GMapURL = "http://maps.googleapis.com/maps/api/staticmap?sensor=false&language=ja" +
+			( param.APIKey != '' ? "&key=" + param.APIKey : '' ) +
+			"&maptype=" + param.Maptype +
+			"&zoom=" + param.Zoom +
+			( param.SmoothScrollMap ? "&size=640x640" : "&size=" + Math.floor( param.Width ) + "x" + Math.floor( param.Height )) +
+			"&center=";
+		
+		param.MapImg		= new Image( param.GMapURL + Vsd.Latitude + "," + Vsd.Longitude );
 		param.Dir			= Vsd.Direction;
 		param.Time			= Vsd.DateTime;
 		param.DispLong		= param.Long 	= Vsd.Longitude;
@@ -182,7 +182,7 @@ Vsd.DrawGoogleMaps = function( param ){
 		( PixLong * PixLong + PixLati * PixLati ) >= param.UpdateDistance * param.UpdateDistance
 	){
 		param.MapImgNext = new Image(
-			GMapURL + Vsd.Latitude + "," + Vsd.Longitude,
+			param.GMapURL + Vsd.Latitude + "," + Vsd.Longitude,
 			IMG_INET_ASYNC
 		);
 		param.Time			= Vsd.DateTime;

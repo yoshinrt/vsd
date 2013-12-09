@@ -26,10 +26,11 @@ function Initialize(){
 		APIKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
 		
 		// ズームレベルを 0～21 で指定します
-		Zoom: 15,
+		Zoom: 17,
 		
 		// 地図タイプ
 		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:地図+航空写真
+		Maptype: "roadmap",
 		Maptype: "hybrid",
 		
 		// 地図表示位置，サイズ(最大 640x640)
@@ -46,7 +47,7 @@ function Initialize(){
 		// 前回地図更新時から指定秒以上経過し，
 		// かつ指定距離以上移動した場合のみ地図を更新します
 		UpdateTime:		1000,	// [ミリ秒]
-		UpdateDistance:	16,		// [ピクセル]
+		UpdateDistance:	32,		// [ピクセル]
 		
 		// 1に設定すると，地図をスムースにスクロールします．
 		// ★重要★
@@ -88,15 +89,15 @@ function Initialize(){
 	// 座標等を予め計算しておく
 	MeterR  = 120 * Scale;
 	MeterX	= MeterRight ? Vsd.Width  - MeterR * 2: 0;
-	MeterY	= Vsd.Height - MeterR * 2 * 0.85;
+	MeterY	= Vsd.Height - MeterR * 2 * 0.88;
 	MeterCx = MeterX + MeterR;
 	MeterCy = MeterY + MeterR;
 	
 	// スピードメータ用最高速計算
 	MaxSpeed = ~~( Vsd.MaxSpeed / 10 ) * 10;
 	
-	FontColor = 0xE0E0E0;
-	BGColor = 0x80008080;
+	FontColor = 0xC0C0C0;
+	BGColor = 0x80001020;
 }
 
 //*** メーター描画処理 ******************************************************
@@ -168,7 +169,7 @@ function Draw(){
 	Y += FontM.Height;
 	Vsd.DrawText( 0, Y, "Lng.: " + Vsd.Longitude.toFixed( 6 ), FontM, FontColor );
 	Y += FontM.Height;
-	Vsd.DrawText( 0, Y, "Alt.: " + ( Vsd.Altitude / 1000 ).toFixed( 1 ) + "m", FontM, FontColor );
+	Vsd.DrawText( 0, Y, "Alt.: " + Vsd.Altitude.toFixed( 1 ) + "m", FontM, FontColor );
 	Y += FontM.Height;
 	Vsd.DrawText( 0, Y, "Dist.:" + ( Vsd.Distance / 1000 ).toFixed( 2 ) + "km", FontM, FontColor );
 	

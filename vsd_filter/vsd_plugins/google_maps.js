@@ -88,15 +88,15 @@ function Initialize(){
 	// 座標等を予め計算しておく
 	MeterR  = 120 * Scale;
 	MeterX	= MeterRight ? Vsd.Width  - MeterR * 2: 0;
-	MeterY	= Vsd.Height - MeterR * 2 * 0.85;
+	MeterY	= Vsd.Height - MeterR * 2 * 0.88;
 	MeterCx = MeterX + MeterR;
 	MeterCy = MeterY + MeterR;
 	
 	// スピードメータ用最高速計算
 	MaxSpeed = ~~( Vsd.MaxSpeed / 10 ) * 10;
 	
-	FontColor = 0xE0E0E0;
-	BGColor = 0x80008080;
+	FontColor = 0xC0C0C0;
+	BGColor = 0x80001020;
 }
 
 //*** メーター描画処理 ******************************************************
@@ -168,7 +168,7 @@ function Draw(){
 	Y += FontM.Height;
 	Vsd.DrawText( 0, Y, "Lng.: " + Vsd.Longitude.toFixed( 6 ), FontM, FontColor );
 	Y += FontM.Height;
-	Vsd.DrawText( 0, Y, "Alt.: " + ( Vsd.Altitude / 1000 ).toFixed( 1 ) + "m", FontM, FontColor );
+	Vsd.DrawText( 0, Y, "Alt.: " + Vsd.Altitude.toFixed( 1 ) + "m", FontM, FontColor );
 	Y += FontM.Height;
 	Vsd.DrawText( 0, Y, "Dist.:" + ( Vsd.Distance / 1000 ).toFixed( 2 ) + "km", FontM, FontColor );
 	
