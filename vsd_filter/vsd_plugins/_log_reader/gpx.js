@@ -2,7 +2,7 @@
 
 LogReaderInfo.push({
 	Caption:	"GPX (*.gpx)",
-	Filter:		"*.gpx",
+	Filter:		"*.gpx;*.gpx.gz",
 	ReaderFunc:	"Read_gpx"
 });
 

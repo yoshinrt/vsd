@@ -150,8 +150,8 @@ function Draw(){
 	
 	Vsd.DrawText( 0, Y,
 		"Date: " + date.getFullYear() + "/" +
-			( date.getMonth() < 10 ? "0" : "" ) + date.getMonth() + "/" +
-			( date.getDay() < 10 ? "0" : "" ) + date.getDay(),
+			( date.getMonth() < 9 ? "0" : "" ) + ( date.getMonth() + 1 ) + "/" +
+			( date.getDate() < 10 ? "0" : "" ) + date.getDate(),
 		FontM, FontColor
 	);
 	Y += FontM.Height;
