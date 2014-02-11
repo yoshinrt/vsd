@@ -36,7 +36,7 @@ function Draw(){
 		~~Vsd.Speed, FontL, 0x00FFFF
 	);
 	
-	if( Vsd.Speed > 1 ) Vsd.DrawArc(
+	if( Vsd.Speed > 0 ) Vsd.DrawArc(
 		MeterCx, MeterCy,
 		MeterR, MeterR,
 		MeterR * 0.9, MeterR * 0.9,

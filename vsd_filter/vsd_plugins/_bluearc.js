@@ -69,7 +69,7 @@ function Draw(){
 				135, 135 + 270 * Vsd.Tacho / MaxTacho, GauageColor
 			);
 		}
-	}else if( Vsd.Speed >= 1 ){
+	}else if( Vsd.Speed > 0 ){
 		// スピードメーター針
 		Vsd.DrawArc(
 			MeterCx, MeterCy, 120 * Scale, 120 * Scale, 80 * Scale, 80 * Scale,

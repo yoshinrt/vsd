@@ -39,7 +39,7 @@ function ReadLapChart( filename ){
 				Line = file.ReadLine();
 				if( file.IsEOF()) break;
 				
-				var Times = Line.replace( /[\x0D\x0A]+/, '' ).split( / *[,\t] */ );
+				var Times = Line.replace( /[\x0D\x0A]+/, '' ).split( /(?:\s*,\s*| *\t *)/ );
 				for( var i = 0; i < Times.length; ++i ){
 					if( Times[ i ] != '' ){
 						LapTime[ Drivers[ i ]].push( GetMS( Times[ i ] ));

@@ -218,6 +218,7 @@ void CVsdFilter::DrawArc(
 ){
 	dStart = fmod( dStart, 360 ); if( dStart < 0 ) dStart += 360;
 	dEnd   = fmod( dEnd  , 360 ); if( dEnd   < 0 ) dEnd   += 360;
+	BOOL	bEdGtSt	= dEnd > dStart;
 	
 	int		i	= a;
 	int		j	= 0;
@@ -237,7 +238,6 @@ void CVsdFilter::DrawArc(
 	int		iStArea	= ( iStart / ( 360 / 4 )) << 4;
 	int		iEdArea	= ( iEnd   / ( 360 / 4 )) << 4;
 	
-	
 	PIXEL_YCA yc( uColor );
 	
 	int	iAreaCmpS, iAreaCmpE;
@@ -254,7 +254,7 @@ void CVsdFilter::DrawArc(
 					iAreaCmpE >= 0 ? 1 : -1;
 		iAreaCmpE = iEdArea + (( iEdArea & 0x10 ) ? iAreaCmpE : -iAreaCmpE );
 		
-		if( iStart < iEnd ){
+		if( bEdGtSt ){
 			// st && ed
 			if( iAreaCmpS <= 0x00 && 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, uFlag );
 			if( iAreaCmpS <= 0x10 && 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, uFlag );
@@ -293,6 +293,7 @@ void CVsdFilter::DrawArc(
 ){
 	dStart = fmod( dStart, 360 ); if( dStart < 0 ) dStart += 360;
 	dEnd   = fmod( dEnd  , 360 ); if( dEnd   < 0 ) dEnd   += 360;
+	BOOL	bEdGtSt	= dEnd > dStart;
 	
 	int		iStX = ( int )( 1024 * a * abs( cos( ToRAD * dStart )));
 	int		iStY = ( int )( 1024 * b * abs( sin( ToRAD * dStart )));
@@ -330,7 +331,7 @@ void CVsdFilter::DrawArc(
 						iAreaCmpE >= 0 ? 1 : -1;
 			iAreaCmpE = iEdArea + (( iEdArea & 0x10 ) ? iAreaCmpE : -iAreaCmpE );
 			
-			if( iStart < iEnd ){
+			if( bEdGtSt ){
 				// st && ed
 				if(           iAreaCmpS <= 0x00 && 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, 0 );
 				if( i &&      iAreaCmpS <= 0x10 && 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, 0 );
