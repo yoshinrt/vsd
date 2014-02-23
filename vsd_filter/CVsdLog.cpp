@@ -262,7 +262,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 			
 			#pragma omp for
 			for( int i = 2; i < GetCnt() - 1; ++i ){
-				if( dBearingPrev = 100 ){
+				if( dBearingPrev == 100 ){
 					dBearingPrev = atan2( Y0( i ) - Y0( i - 2 ), X0( i ) - X0( i - 2 ));
 				}
 				
@@ -270,9 +270,13 @@ UINT CVsdLog::GPSLogRescan( void ){
 				double dBearing = atan2( Y0( i + 1 ) - Y0( i - 1 ), X0( i + 1 ) - X0( i - 1 ));
 				
 				if( bCreateDir ){
-					double dDir = dBearing / ToRAD + 90;
-					if( dDir < 0 ) dDir += 360;
-					SetDirection( i, dDir );
+					if( Speed( i ) > 1 ){
+						double dDir = dBearing / ToRAD + 90;
+						if( dDir < 0 ) dDir += 360;
+						SetDirection( i, dDir );
+					}else{
+						SetDirection( i, Direction( i - 1 ));
+					}
 				}
 				
 				// ‰¡ G ŒvŽZ
