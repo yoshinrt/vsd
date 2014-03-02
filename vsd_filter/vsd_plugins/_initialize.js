@@ -236,7 +236,8 @@ Vsd.Geocoding = function( param ){
 		if( param.HttpRequest.status === 200 || param.HttpRequest.status === 0 ){
 			param.Result = eval( "(" + param.HttpRequest.responseText + ")" );
 			if( param.Result.results.length > 0 ){
-				param.Address = param.Result.results[ 0 ].formatted_address;
+				param.Address = param.Result.results[ 0 ].formatted_address
+					.replace( /^日本, (?:〒\d+.\d+ )?/, "" );
 			}else{
 				param.Address = "(取得できません)";
 			}
