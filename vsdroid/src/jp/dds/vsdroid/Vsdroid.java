@@ -77,19 +77,19 @@ public class Vsdroid extends Activity implements SensorEventListener {
 	// モード・config
 	int		iMainMode	= MODE_LAPTIME;
 	int		iConnMode	= CONN_MODE_ETHER;
-	
+
 	private static final double GRAVITY = 9.80665;
-	
+
 	private static final UUID BT_UUID = UUID.fromString( "00001101-0000-1000-8000-00805F9B34FB" );
 
 	private static final int SHOW_CONFIG		= 0;
 	private static final int REQUEST_ENABLE_BT	= 1;
-	
+
     // G センサー用
     private SensorManager manager;
 	int	iPhoneGxRaw = 0;
 	int	iPhoneGyRaw = 0;
-	
+
 	enum LAP_STATE {
 		NONE,
 		START,
@@ -311,7 +311,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			// ログファイルオープン
 			try{
 				fsLog    = new BufferedWriter( new FileWriter( s ));
-				//fsBinLog = new BufferedOutputStream( new FileOutputStream( s + ".bin" ));
+				fsBinLog = new BufferedOutputStream( new FileOutputStream( s + ".bin" ));
 			}catch( Exception e ){
 				iMessage = R.string.statmsg_log_open_failed;
 				return -1;
@@ -414,7 +414,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 					iGy			= ( int )( Unpack() * ( 1000 / ACC_1G_Y / 0.86054332 ));	// 斜めに設置しているので補正
 					iGx			= ( int )( Unpack() * ( 1000 / ACC_1G_Z ));
 					iThrottleRaw	= 0x7FFFFFFF / Unpack();
-					
+
 					if( iGCaribCnt-- > 0 ){
 						// センサーキャリブレーション中
 						iGx0		+= iGx;
@@ -422,17 +422,17 @@ public class Vsdroid extends Activity implements SensorEventListener {
 						iPhoneGx0	+= iPhoneGxRaw;
 						iPhoneGy0	+= iPhoneGyRaw;
 						iThrottle0	+= iThrottleRaw;
-						
+
 						if( iGCaribCnt == 0 ){
 							iGx0		/= iGCaribCntMax;
 							iGy0		/= iGCaribCntMax;
 							iPhoneGx0	/= iGCaribCntMax;
 							iPhoneGy0	/= iGCaribCntMax;
 							iThrottle0	/= iGCaribCntMax;
-							
+
 							iThrottleFull = iThrottle0 - 10000;	// スロットル全開の暫定値
 						}
-						
+
 						iGx			= 0;
 						iGy			= 0;
 						iPhoneGx	= 0;
@@ -443,17 +443,17 @@ public class Vsdroid extends Activity implements SensorEventListener {
 						iGy			= iGy - iGy0;
 						iPhoneGx	= iPhoneGxRaw - iPhoneGx0;
 						iPhoneGy	= iPhoneGyRaw - iPhoneGy0;
-						
+
 						// スロットル全開値補正
 						if( iThrottleRaw < iThrottleFull ){
 							iThrottleFull -= ( iThrottleFull - iThrottleRaw ) >> 4;	// 1/16 だけ補正する
 						}
-						
+
 						iThrottle	= ( iThrottleRaw - iThrottle0 ) * 1000 / ( iThrottleFull - iThrottle0 );
 						if( iThrottle < 0 ) iThrottle = 0;
 						else if( iThrottle > 1000 ) iThrottle = 1000;
 					}
-					
+
 					// mileage 補正
 					if(( iMileageRaw & 0xFFFF ) > iMileage16 ) iMileageRaw += 0x10000;
 					iMileageRaw &= 0xFFFF0000;
@@ -924,7 +924,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 	class VsdInterfaceEmulation extends VsdInterface {
 		BufferedReader brEmuLog = null;
 		double	dOutputWaitTime = 0;
-		
+
 		int	iIdxTacho		= 0x7FFFFFFF;
 		int	iIdxSpeed		= 0x7FFFFFFF;
 		int	iIdxDistance	= 0x7FFFFFFF;
@@ -957,16 +957,16 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		public int Open(){
 			String strBuf;
 			String strToken;
-			
+
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::Open" );
-			
+
 			try{
 				brEmuLog = new BufferedReader( new FileReader( Pref.getString( "key_system_dir", null ) + "/vsd.log" ));
-				
+
 				// ヘッダ解析
 				try{ strBuf = brEmuLog.readLine(); }catch( IOException e ){ strBuf = ""; }
 				StringTokenizer Token = new StringTokenizer( strBuf );
-				
+
 				for( int i = 0; Token.hasMoreTokens(); ++i ){
 					strToken = Token.nextToken();
 					if(      strToken.equals( "Tacho"			)) iIdxTacho		= i;
@@ -977,7 +977,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 					else if( strToken.equals( "Throttle(raw)"	)) iIdxThrottle	= i;
 					else if( strToken.equals( "LapTime"			)) iIdxLapTime	= i;
 				}
-				
+
 			}catch( FileNotFoundException e ){
 				iMessage = R.string.statmsg_emulog_open_failed;
 				return -1;
@@ -1023,10 +1023,10 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				// G
 				iIdx = Pack( iIdx, iIdxGy < iTokCnt ? ( int )( -Double.parseDouble( strToken[ iIdxGy ] ) * ACC_1G_Y ) + 32000 : 0 );
 				iIdx = Pack( iIdx, iIdxGx < iTokCnt ? ( int )(  Double.parseDouble( strToken[ iIdxGx ] ) * ACC_1G_Z ) + 32000 : 0 );
-				
+
 				// Throttle
 				iIdx = Pack( iIdx, iIdxThrottle < iTokCnt ? Integer.parseInt( strToken[ iIdxThrottle ] ) : 0x8000 );
-				
+
 				// ラップタイム
 				if( iIdxLapTime < iTokCnt && !strToken[ iIdxLapTime ].equals( "" )){
 					// ラップタイム記録発見
@@ -1037,10 +1037,10 @@ public class Vsdroid extends Activity implements SensorEventListener {
 							Double.parseDouble( strToken[ iIdxLapTime ].substring( i + 1 ))
 						) * 256
 					);
-					
+
 					// LAP モード以外の 0:00.000 をスキップ
 					if( !( j == 0 && iRtcPrevRaw != 0 )){
-						
+
 						// 0:00.000 が来た時，Lap Ready を解除する
 						if( j == 0 && iRtcPrevRaw == 0 ) j = 1;
 						j += iRtcPrevRaw;
@@ -1100,6 +1100,11 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		Bitmap[] bitmap;
 		Paint paint;
 
+		private static final int BASE_WIDTH		= 800;
+		private static final int BASE_HEIGHT	= 480;
+		float	fScale;
+		float	fOffsX = 0, fOffsY = 0;
+
 		public VsdSurfaceView( Context context ){
 			super( context );
 			if( bDebug ) Log.d( "VSDroid", "VsdSurfaceView::constructor" );
@@ -1131,7 +1136,22 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			if( bDebug ) Log.d( "VSDroid", "surfaceCreated" );
 			VsdScreen = this;
 
+			float fScaleX = ( float )getWidth()  / BASE_WIDTH;
+			float fScaleY = ( float )getHeight() / BASE_HEIGHT;
+			if( fScaleX < fScaleY ){
+				// X 側が幅いっぱい
+				fScale = fScaleX;
+				fOffsY = ( getHeight() - BASE_HEIGHT * fScale ) / 2 * fScale;
+			}else{
+				// Y 側が高さいっぱい
+				fScale = fScaleY;
+				fOffsX = ( getWidth()  - BASE_WIDTH  * fScale ) / 2 * fScale;
+			}
+
 			Canvas canvas = getHolder().lockCanvas();
+			canvas.translate( fOffsX / fScale, fOffsY / fScale );
+			canvas.scale( fScale, fScale );
+
 			canvas.drawBitmap( bitmap[ 0 ], 0, 0, null );
 			getHolder().unlockCanvasAndPost( canvas );
 		}
@@ -1156,6 +1176,8 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			if( Vsd == null ) return;
 
 			Canvas canvas = getHolder().lockCanvas();
+			canvas.translate( fOffsX / fScale, fOffsY / fScale );
+			canvas.scale( fScale, fScale );
 
 			int iTacho = Vsd.bEcoMode ? Vsd.iTacho * 2 : Vsd.iTacho;
 
@@ -1250,7 +1272,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			canvas.drawText( FormatTime( Vsd.iTimeLastRaw ), 340, 410, paint );
 			paint.setColor( Color.GRAY );
 			canvas.drawText( FormatTime( Vsd.iTimeBestRaw ), 340, 470, paint );
-			
+
 			if( bDebug ){
 				// デバッグ用
 				int	y = 0;
@@ -1265,7 +1287,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				canvas.drawText( String.format( "Gx(dev): %.2f", Vsd.iPhoneGx / 1000.0 ), 0, y += 30, paint );
 				canvas.drawText( String.format( "Gy(dev): %.2f", Vsd.iPhoneGy / 1000.0 ), 0, y += 30, paint );
 			}
-			
+
 			getHolder().unlockCanvasAndPost( canvas );
 		}
 	}
@@ -1376,7 +1398,6 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 	@Override
 	protected void onStop() {
-		// TODO Auto-generated method stub
 		super.onStop();
 		// Listenerの登録解除
 		manager.unregisterListener( this );
@@ -1384,7 +1405,6 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 	@Override
 	protected void onResume() {
-		// TODO Auto-generated method stub
 		super.onResume();
 		// Listenerの登録
 		List<Sensor> sensors = manager.getSensorList( Sensor.TYPE_ACCELEROMETER );
@@ -1393,16 +1413,15 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			manager.registerListener( this, s, SensorManager.SENSOR_DELAY_UI );
 		}
 	}
-	
+
 	@Override
 	public void onSensorChanged( SensorEvent event ){
-		// TODO Auto-generated method stub
 		if( event.sensor.getType() == Sensor.TYPE_ACCELEROMETER ){
 			iPhoneGxRaw = ( int )( -event.values[ SensorManager.DATA_Y ] * ( 1000 / GRAVITY ));
 			iPhoneGyRaw = ( int )( -event.values[ SensorManager.DATA_Z ] * ( 1000 / GRAVITY ));
 		}
 	}
-	
+
 	void CreateVsdInterface( int iNewMode ){
 		// VSD コネクション
 		Vsd =	iNewMode == CONN_MODE_BLUETOOTH	? new VsdInterfaceBluetooth() :
@@ -1414,7 +1433,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		VsdThread.start();
 		iConnMode = iNewMode;
 	}
-	
+
 	@Override
 	protected void onDestroy(){
 		super.onDestroy();
