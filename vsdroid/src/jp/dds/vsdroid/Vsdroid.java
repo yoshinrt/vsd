@@ -293,7 +293,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		public int OpenLog(){
 
 			// 非デバッグモードかつ Log リプレイモードなら，ログは作らない
-			if( !bDebug && iConnMode == CONN_MODE_LOGREPLAY ) return 0;
+			//if( !bDebug && iConnMode == CONN_MODE_LOGREPLAY ) return 0;
 
 			// 日付
 			Calendar Now = Calendar.getInstance();
@@ -472,11 +472,8 @@ public class Vsdroid extends Activity implements SensorEventListener {
 								LapState = LAP_STATE.UPDATE;
 
 								++iLapNum;
-								if( iTimeLastRaw < iTimeBestRaw ){
-									iTimeBestRaw = iTimeLastRaw;
-								}
 								iTimeLastRaw = iRtcRaw - iRtcPrevRaw;
-								if( iTimeBestRaw == 0 ) iTimeBestRaw = iTimeLastRaw;
+								if( iTimeBestRaw == 0 || iTimeLastRaw < iTimeBestRaw ) iTimeBestRaw = iTimeLastRaw;
 
 								if( iMainMode != MODE_LAPTIME ){
 									// Laptime モード以外でゴールしたら，Ready 状態に戻す
@@ -488,7 +485,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 							}
 							iRtcPrevRaw	= iRtcRaw;
 							iSectorCnt	= 0;
-						}else{
+						}else if( iRtcPrevRaw != 0 ){
 							// 中間セクタ通過
 							LapState = LAP_STATE.SECTOR;
 						}
@@ -927,6 +924,14 @@ public class Vsdroid extends Activity implements SensorEventListener {
 	class VsdInterfaceEmulation extends VsdInterface {
 		BufferedReader brEmuLog = null;
 		double	dOutputWaitTime = 0;
+		
+		int	iIdxTacho		= 0x7FFFFFFF;
+		int	iIdxSpeed		= 0x7FFFFFFF;
+		int	iIdxDistance	= 0x7FFFFFFF;
+		int	iIdxGx			= 0x7FFFFFFF;
+		int	iIdxGy			= 0x7FFFFFFF;
+		int	iIdxThrottle	= 0x7FFFFFFF;
+		int	iIdxLapTime		= 0x7FFFFFFF;
 
 		// 16bit int を 2byte にパックする
 		private int Pack( int iIdx, int iVal ){
@@ -950,10 +955,29 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 		@Override
 		public int Open(){
+			String strBuf;
+			String strToken;
+			
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::Open" );
-
+			
 			try{
 				brEmuLog = new BufferedReader( new FileReader( Pref.getString( "key_system_dir", null ) + "/vsd.log" ));
+				
+				// ヘッダ解析
+				try{ strBuf = brEmuLog.readLine(); }catch( IOException e ){ strBuf = ""; }
+				StringTokenizer Token = new StringTokenizer( strBuf );
+				
+				for( int i = 0; Token.hasMoreTokens(); ++i ){
+					strToken = Token.nextToken();
+					if(      strToken.equals( "Tacho"			)) iIdxTacho		= i;
+					else if( strToken.equals( "Speed"			)) iIdxSpeed		= i;
+					else if( strToken.equals( "Distance"		)) iIdxDistance	= i;
+					else if( strToken.equals( "Gx"				)) iIdxGx		= i;
+					else if( strToken.equals( "Gy"				)) iIdxGy		= i;
+					else if( strToken.equals( "Throttle(raw)"	)) iIdxThrottle	= i;
+					else if( strToken.equals( "LapTime"			)) iIdxLapTime	= i;
+				}
+				
 			}catch( FileNotFoundException e ){
 				iMessage = R.string.statmsg_emulog_open_failed;
 				return -1;
@@ -965,7 +989,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		public int RawRead( int iStart, int iLen ){
 
 			String strBuf;
-			String[] strToken = new String[ 8 ];
+			String[] strToken = new String[ 16 ];
 			int iIdx = iStart;
 			int iTokCnt;
 			int i, j;
@@ -980,43 +1004,46 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 				StringTokenizer Token = new StringTokenizer( strBuf );
 
-				for( iTokCnt = 0; iTokCnt < 8 && Token.hasMoreTokens(); ++iTokCnt ){
+				for( iTokCnt = 0; iTokCnt < 16 && Token.hasMoreTokens(); ++iTokCnt ){
 					strToken[ iTokCnt ] = Token.nextToken();
 				}
 
 				// Tacho
-				iIdx = Pack( iIdx, Integer.parseInt( strToken[ 0 ] ));
+				iIdx = Pack( iIdx, iIdxTacho < iTokCnt ? Integer.parseInt( strToken[ iIdxTacho ] ) : 0 );
 
 				// Speed
-				iIdx = Pack( iIdx, ( int )( Double.parseDouble( strToken[ 1 ] ) * 100 ));
+				iIdx = Pack( iIdx, iIdxSpeed < iTokCnt ? ( int )( Double.parseDouble( strToken[ iIdxSpeed ] ) * 100 ) : 0 );
 
 				// Mileage
-				iIdx = Pack( iIdx, ( int )( Double.parseDouble( strToken[ 2 ] ) / 1000 * PULSE_PER_1KM ));
+				iIdx = Pack( iIdx, iIdxDistance < iTokCnt ? ( int )( Double.parseDouble( strToken[ iIdxDistance ] ) / 1000 * PULSE_PER_1KM ) : 0 );
 
 				// TSC
 				iIdx = Pack( iIdx, 0 );
 
 				// G
-				iIdx = Pack( iIdx, ( int )( -Double.parseDouble( strToken[ 4 ] ) * ACC_1G_Y ) + 32000 );
-				iIdx = Pack( iIdx, ( int )(  Double.parseDouble( strToken[ 3 ] ) * ACC_1G_Z ) + 32000 );
-
+				iIdx = Pack( iIdx, iIdxGy < iTokCnt ? ( int )( -Double.parseDouble( strToken[ iIdxGy ] ) * ACC_1G_Y ) + 32000 : 0 );
+				iIdx = Pack( iIdx, iIdxGx < iTokCnt ? ( int )(  Double.parseDouble( strToken[ iIdxGx ] ) * ACC_1G_Z ) + 32000 : 0 );
+				
+				// Throttle
+				iIdx = Pack( iIdx, iIdxThrottle < iTokCnt ? Integer.parseInt( strToken[ iIdxThrottle ] ) : 0x8000 );
+				
 				// ラップタイム
-				if( iTokCnt >= 8 && strToken[ 6 ].startsWith( "LAP" )){
-					if( strToken[ 7 ].equals( "start" )){
-						// LAP start なので，とりあえず RTC をクリア
-						i = 1;
-						iIdx = Pack( iIdx, i );
-						iIdx = Pack( iIdx, i >> 16 );
-					}else{
-						// ラップタイム記録発見
-						i = strToken[ 7 ].indexOf( ':' );
-						j = iRtcPrevRaw + ( int )(
-							(
-								Double.parseDouble( strToken[ 7 ].substring( 0, i )) * 60 +
-								Double.parseDouble( strToken[ 7 ].substring( i + 1 ))
-							) * 256
-						);
-
+				if( iIdxLapTime < iTokCnt && !strToken[ iIdxLapTime ].equals( "" )){
+					// ラップタイム記録発見
+					i = strToken[ iIdxLapTime ].indexOf( ':' );
+					j = ( int )(
+						(
+							Double.parseDouble( strToken[ iIdxLapTime ].substring( 0, i )) * 60 +
+							Double.parseDouble( strToken[ iIdxLapTime ].substring( i + 1 ))
+						) * 256
+					);
+					
+					// LAP モード以外の 0:00.000 をスキップ
+					if( !( j == 0 && iRtcPrevRaw != 0 )){
+						
+						// 0:00.000 が来た時，Lap Ready を解除する
+						if( j == 0 && iRtcPrevRaw == 0 ) j = 1;
+						j += iRtcPrevRaw;
 						iIdx = Pack( iIdx, j );
 						iIdx = Pack( iIdx, j >> 16 );
 					}
