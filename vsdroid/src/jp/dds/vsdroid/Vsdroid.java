@@ -293,7 +293,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		public int OpenLog(){
 
 			// 非デバッグモードかつ Log リプレイモードなら，ログは作らない
-			//if( !bDebug && iConnMode == CONN_MODE_LOGREPLAY ) return 0;
+			if( !bDebug && iConnMode == CONN_MODE_LOGREPLAY ) return 0;
 
 			// 日付
 			Calendar Now = Calendar.getInstance();
