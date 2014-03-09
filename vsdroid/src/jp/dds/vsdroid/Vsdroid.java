@@ -38,7 +38,7 @@ import jp.dds.vsdroid.VsdInterface;
 @SuppressLint("DefaultLocale")
 public class Vsdroid extends Activity implements SensorEventListener {
 
-	static final boolean	bDebug		= true;
+	static final boolean	bDebug		= false;
 
 	// シフトインジケータの表示
 	private static final int iTachoBar[] = { 334, 200, 150, 118, 97 };
@@ -704,11 +704,10 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 		super.onResume();
 		// Listenerの登録
-		List<Sensor> sensors = manager.getSensorList( Sensor.TYPE_ACCELEROMETER );
-		if( sensors.size() > 0 ){
-			Sensor s = sensors.get( 0 );
-			manager.registerListener( this, s, SensorManager.SENSOR_DELAY_UI );
-		}
+		manager.registerListener( this,
+			manager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER ),
+			SensorManager.SENSOR_DELAY_UI
+		);
 
 		// カメラ (フラッシュ) オープン
 		if( Cam == null && ( Cam = Camera.open()) != null ){
