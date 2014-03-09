@@ -663,20 +663,20 @@ v8::Handle<v8::Value> COle::Invoke(
 /*** HRESULT のエラーメッセージを投げる *************************************/
 
 void COle::ThrowHResultError( HRESULT hr ){
-	LPSTR pMsg;
+	LPWSTR pMsg;
 	
-	FormatMessage(
+	FormatMessageW(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL, hr, MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ),
-		( LPTSTR )&pMsg, 0, NULL
+		( LPWSTR )&pMsg, 0, NULL
 	);
 	if( pMsg != NULL ){
-		v8::ThrowException( v8::Exception::TypeError( v8::String::New( pMsg )));
+		v8::ThrowException( v8::Exception::Error( v8::String::New(( uint16_t *)pMsg )));
 		LocalFree( pMsg );
 	}else{
 		char szMsg[ 64 ];
 		sprintf( szMsg, "OLE Error 0x%X", hr );
-		v8::ThrowException( v8::Exception::TypeError( v8::String::New( szMsg )));
+		v8::ThrowException( v8::Exception::Error( v8::String::New( szMsg )));
 	}
 }
 

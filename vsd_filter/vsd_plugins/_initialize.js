@@ -256,7 +256,7 @@ Vsd.Geocoding = function( param ){
 			true
 		);
 		
-		param.HttpRequest.send( null );
+		param.HttpRequest.send();
 		param.PrevTime = Vsd.DateTime;
 		param.SendRequest = 1;
 	}
