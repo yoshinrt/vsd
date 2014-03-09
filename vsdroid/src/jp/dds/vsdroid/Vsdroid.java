@@ -92,17 +92,18 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 	boolean bToggle = false;
 	public void SetFlash( FLASH_STATE Switch ){
+		if( Cam != null){
+			// フラッシュモードを設定
+			CamParam.setFlashMode(
+				bRevWarn && Switch == FLASH_STATE.ON ?
+					Camera.Parameters.FLASH_MODE_TORCH :
+					Camera.Parameters.FLASH_MODE_OFF
+			);
+			bToggle = !bToggle;
 
-		// フラッシュモードを設定
-		CamParam.setFlashMode(
-			bRevWarn && Switch == FLASH_STATE.ON ?
-				Camera.Parameters.FLASH_MODE_TORCH :
-				Camera.Parameters.FLASH_MODE_OFF
-		);
-		bToggle = !bToggle;
-
-		// パラメータを設定
-		Cam.setParameters( CamParam );
+			// パラメータを設定
+			Cam.setParameters( CamParam );
+		}
 	}
 
 	//*** Bluetooth 接続 *****************************************************
@@ -447,12 +448,17 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				fOffsX = ( getWidth()  - BASE_WIDTH  * fScale ) / 2 * fScale;
 			}
 
-			Canvas canvas = getHolder().lockCanvas();
-			canvas.translate( fOffsX / fScale, fOffsY / fScale );
-			canvas.scale( fScale, fScale );
+			try{
+				Canvas canvas = getHolder().lockCanvas();
+				if( bDebug ) assert canvas != null;
+				canvas.translate( fOffsX / fScale, fOffsY / fScale );
+				canvas.scale( fScale, fScale );
 
-			canvas.drawBitmap( bitmap[ 0 ], 0, 0, null );
-			getHolder().unlockCanvasAndPost( canvas );
+				canvas.drawBitmap( bitmap[ 0 ], 0, 0, null );
+				getHolder().unlockCanvasAndPost( canvas );
+			}catch( Exception e ){
+				if( bDebug ) Log.d( "VSDroid", "surfaceCreated::LockCanvas failed" );
+			}
 		}
 
 		@Override
@@ -624,8 +630,8 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			// BT イネーブルダイアログから帰ってきたか，
 			// 接続モードが変更されたので，
 			// VsdThread を停止後，VsdInterface を再構築する
-			Vsd.KillThread();
-			CreateVsdInterface( Integer.parseInt( Pref.getString( "key_connection_mode", "0" )));
+			if( Vsd != null ) Vsd.KillThread();
+			CreateVsdInterface();
 		}else if( Vsd.VsdThread.isAlive()){
 			// 設定メニューから帰ってきた (?)
 			SetupMode();
@@ -688,7 +694,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			// 初回起動時は config を起動して pref を初期化
 			Config();
 		}else{
-			CreateVsdInterface( Integer.parseInt( Pref.getString( "key_connection_mode", "0" )));
+			CreateVsdInterface();
 		}
 	}
 
@@ -705,8 +711,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		}
 
 		// カメラ (フラッシュ) オープン
-		if( Cam == null ){
-			Cam = Camera.open();			//カメラを取得
+		if( Cam == null && ( Cam = Camera.open()) != null ){
 			CamParam = Cam.getParameters();	//カメラのパラメータを取得
 			Cam.startPreview();				//プレビューをしないと光らない
 		}
@@ -714,12 +719,14 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 	@Override
 	protected void onStop() {
+		if( bDebug ) Log.d( "VSDroid", "onStop" );
 		super.onStop();
 		// Listenerの登録解除
 		manager.unregisterListener( this );
+		manager = null;
 
 		SetFlash( FLASH_STATE.OFF );
-		Cam.release();
+		if( Cam != null ) Cam.release();
 		Cam = null;
 	}
 
@@ -731,9 +738,13 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		}
 	}
 
-	void CreateVsdInterface( int iNewMode ){
+	void CreateVsdInterface(){
+		// VsdInterface が動いている時に呼び出されたらおかしい
+		if( bDebug ) assert !Vsd.VsdThread.isAlive();
+
 		// VSD コネクション
-		switch( iNewMode ){
+		int iMode = Integer.parseInt( Pref.getString( "key_connection_mode", "0" ));
+		switch( iMode ){
 		  case VsdInterface.CONN_MODE_BLUETOOTH:
 			Vsd = new VsdInterfaceBluetooth();
 			break;
@@ -743,11 +754,11 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		  default:
 			Vsd = new VsdInterface();
 		}
-		Vsd.iConnMode	= iNewMode;
+		Vsd.iConnMode	= iMode;
 		Vsd.Pref		= Pref;
 		Vsd.MsgHandler	= VsdMsgHandler;
 
-		Vsd.SetupMode();
+		SetupMode();
 
 		// VSD スレッド起動
 		Vsd.Start();

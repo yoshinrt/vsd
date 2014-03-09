@@ -15,6 +15,8 @@ import java.util.*;
 
 class VsdInterface implements Runnable {
 
+	static final boolean bDebug = Vsdroid.bDebug;
+
 	// モード・config
 	int		iMainMode	= MODE_LAPTIME;
 	static final int MODE_LAPTIME	= 0;
@@ -107,8 +109,6 @@ class VsdInterface implements Runnable {
 	volatile boolean bKillThread = false;
 
 	Handler	MsgHandler	= null;
-
-	static final boolean bDebug = Vsdroid.bDebug;
 
 	private static final int iStartGThrethold		= 500;
 	private static final int iGCaribCntMax			= 30;
@@ -299,7 +299,10 @@ class VsdInterface implements Runnable {
 		//if( bDebug ) Log.d( "VSDroid", "VsdInterface::Read" );
 
 		iReadSize = RawRead( iBufLen, iBufSize - iBufLen );
-		if( iReadSize < 0 ) return -1;
+		if( iReadSize < 0 ){
+			iMessage = R.string.statmsg_socket_rw_failed;
+			return -1;
+		}
 
 		try{
 			if( fsBinLog != null ) fsBinLog.write( Buf, iBufLen, iReadSize );
@@ -711,6 +714,8 @@ class VsdInterface implements Runnable {
 			while( !bKillThread && Read() >= 0 );
 		}
 
+		if( bDebug ) Log.d( "VSDroid", String.format( "run() loop extting. reason = %X", iMessage ));
+
 		Close();
 		CloseLog();
 		if( !bKillThread ) MsgHandler.sendEmptyMessage( MSG_OPEN_FAILED );;
@@ -721,13 +726,16 @@ class VsdInterface implements Runnable {
 
 	public void KillThread(){
 		bKillThread = true;
+
+		if( bDebug ) Log.d( "VSDroid", "KillThread: killing..." );
 		try{
 			while( bKillThread && VsdThread != null && VsdThread.isAlive()){
-				Close();
 				Thread.sleep( 100 );
+				Close();
 			}
 		}catch( InterruptedException e ){}
 
 		VsdThread = null;
+		if( bDebug ) Log.d( "VSDroid", "KillThread: done" );
 	}
 }

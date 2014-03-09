@@ -9,6 +9,50 @@ if( $ARGV[ 0 ] =~ /\.gz$/ ){
 	open( fpIn, "< $ARGV[ 0 ]" );
 }
 
+# ヘッダ解析
+
+$_ = <fpIn>;
+s/[\x0D\x0A]//g;
+@_ = split( /\t/, $_ );
+
+$IdxDate		= 0x7FFFFFFF;
+$IdxTacho		= 0x7FFFFFFF;
+$IdxSpeed		= 0x7FFFFFFF;
+$IdxDistance	= 0x7FFFFFFF;
+$IdxGx			= 0x7FFFFFFF;
+$IdxGy			= 0x7FFFFFFF;
+$IdxThrottle	= 0x7FFFFFFF;
+$IdxAuxInfo		= 0x7FFFFFFF;
+$IdxLapTime		= 0x7FFFFFFF;
+$IdxSectorTime	= 0x7FFFFFFF;
+
+for( $i = 0; $i <= $#_; ++$i ){
+	if(     $_[ $i ] eq "Date/Time"		){ $IdxDate			= $i;
+	}elsif( $_[ $i ] eq "Tacho"			){ $IdxTacho		= $i;
+	}elsif( $_[ $i ] eq "Speed"			){ $IdxSpeed		= $i;
+	}elsif( $_[ $i ] eq "Distance"		){ $IdxDistance		= $i;
+	}elsif( $_[ $i ] eq "Gx"			){ $IdxGx			= $i;
+	}elsif( $_[ $i ] eq "Gy"			){ $IdxGy			= $i;
+	}elsif( $_[ $i ] eq "Throttle(raw)"	){ $IdxThrottle		= $i;
+	}elsif( $_[ $i ] eq "AuxInfo"		){ $IdxAuxInfo		= $i;
+	}elsif( $_[ $i ] eq "LapTime"		){ $IdxLapTime		= $i;
+	}elsif( $_[ $i ] eq "SectorTime"	){ $IdxSectorTime	= $i;
+	}
+}
+
+if( 0 ){
+	print( "IdxDate = $IdxDate\n" );
+	print( "IdxTacho = $IdxTacho\n" );
+	print( "IdxSpeed = $IdxSpeed\n" );
+	print( "IdxDistance = $IdxDistance\n" );
+	print( "IdxGx = $IdxGx\n" );
+	print( "IdxGy = $IdxGy\n" );
+	print( "IdxThrottle = $IdxThrottle\n" );
+	print( "IdxAuxInfo = $IdxAuxInfo\n" );
+	print( "IdxLapTime = $IdxLapTime\n" );
+	print( "IdxSectorTime = $IdxSectorTime\n" );
+}
+
 ### サーバ
 
 # 1. 受付用ソケットの作成
@@ -52,34 +96,28 @@ $ACC_1G_Y	= 6667.738702;
 $ACC_1G_Z	= 6842.591839;
 
 $iCnt = 0;
-$PrevTime = 0;
+$PrevTime = 1;
 
 while( <fpIn> ){
 	
 	s/[\x0D\x0A]//g;
-	@_ = split( /\s+/, $_ );
+	@_ = split( /\t/, $_ );
 	
-	$_ = pack( 'S6',
-		$_[ 0 ],
-		int( $_[ 1 ] * 100 ),
-		int( $_[ 2 ] / 1000 * $PULSE_PER_1KM ),
-		$iCnt++,
-		int( -$_[ 4 ] * $ACC_1G_Y + 32000 ),
-		int(  $_[ 3 ] * $ACC_1G_Z + 32000 )
+	$_ = pack( 'S7',
+		$_[ $IdxTacho ],
+		int( $_[ $IdxSpeed ] * 100 ),
+		int( $_[ $IdxDistance ] / 1000 * $PULSE_PER_1KM ),
+		$iCnt++,	# TSC
+		int( -$_[ $IdxGy ] * $ACC_1G_Y + 32000 ),
+		int(  $_[ $IdxGx ] * $ACC_1G_Z + 32000 ),
+		$_[ $IdxThrottle ] > 0 ? $_[ $IdxThrottle ] : 0x8000
 	);
 	
 	# ラップタイム
-	if( defined( $_[ 6 ] ) && $_[ 6 ] =~ /^LAP/ ){
-		if( $_[ 7 ] eq 'start' ){
-			# LAP start なので，とりあえず RTC をクリア
-			$PrevTime = 1;
-			$_ .= pack( 'I', $PrevTime );
-		}else{
-			# ラップタイム記録発見
-			$_[ 7 ] =~ /(.+):(.+)/;
-			$PrevTime += int(( $1 * 60 + $2 ) * 256 );
-			$_ .= pack( 'I', $PrevTime );
-		}
+	if( defined( $_[ $IdxLapTime ] ) && $_[ $IdxLapTime ] =~ /(.+):(.+)/){
+		# ラップタイム記録発見
+		$PrevTime += int(( $1 * 60 + $2 ) * 256 );
+		$_ .= pack( 'I', $PrevTime );
 	}
 	
 	# 0xFE, FF 処理
@@ -93,7 +131,6 @@ while( <fpIn> ){
 	
 	#GetData( MSG_DONTWAIT );
 }
-
 
 sub GetData {
 	my( $param ) = @_;

@@ -79,9 +79,11 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 
 		File file = new File( getPreferenceScreen().getSharedPreferences().getString( "key_system_dir", null ));
 		String[] RomFiles = file.list( getFileExtensionFilter( ".mot" ));
-		Arrays.sort( RomFiles );
-		ListRoms.setEntries( RomFiles );
-		ListRoms.setEntryValues( RomFiles );
+		if( RomFiles != null ){
+			Arrays.sort( RomFiles );
+			ListRoms.setEntries( RomFiles );
+			ListRoms.setEntryValues( RomFiles );
+		}
 	}
 
 	static FilenameFilter getFileExtensionFilter( String extension ){
