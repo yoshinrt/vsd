@@ -704,10 +704,12 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 		super.onResume();
 		// Listenerの登録
-		manager.registerListener( this,
-			manager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER ),
-			SensorManager.SENSOR_DELAY_UI
-		);
+		if( manager != null ){
+			manager.registerListener( this,
+				manager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER ),
+				SensorManager.SENSOR_DELAY_UI
+			);
+		}
 
 		// カメラ (フラッシュ) オープン
 		if( Cam == null && ( Cam = Camera.open()) != null ){
@@ -721,8 +723,10 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		if( bDebug ) Log.d( "VSDroid", "onStop" );
 		super.onStop();
 		// Listenerの登録解除
-		manager.unregisterListener( this );
-		manager = null;
+		if( manager != null ){
+			manager.unregisterListener( this );
+			manager = null;
+		}
 
 		SetFlash( FLASH_STATE.OFF );
 		if( Cam != null ) Cam.release();
