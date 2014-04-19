@@ -339,7 +339,7 @@ WCHAR *CVsdFilter::DrawSyncInfoFormatTime(
 	LPWSTR	p = wcschr( pBuf, '\0' );
 	swprintf(
 		p, uBufSize - ( p - pBuf ), L".%02d",
-		(( UINT )iBaseTime + iTime ) % 1000 / 10
+		( UINT )(( iBaseTime + iTime ) % 1000 ) / 10
 	);
 	
 	return pBuf;
