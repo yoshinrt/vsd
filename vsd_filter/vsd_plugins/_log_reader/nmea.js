@@ -35,6 +35,8 @@ function Read_nmea( Files ){
 				
 				var Param = Line.split( "," );
 				
+				if( Param[ 1 ] == '' ) continue;
+				
 				var Time	= +Param[ 1 ];
 				var Hour	= ~~( Time / 10000 );
 				var Min		= ~~( Time / 100 ) % 100;
