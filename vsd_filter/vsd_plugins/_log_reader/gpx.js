@@ -30,7 +30,7 @@ function Read_gpx( Files ){
 			
 			// <trkpt lat="35.12345" lon="135.12345">
 			// <speed>0.0</speed>
-			// <time>2012-04-28T21:27:50Z</time>
+			// <time>2012-04-28T21:27:50.328Z</time>
 			// <ele>128.1</ele>
 			// </trkpt>
 			
@@ -55,12 +55,14 @@ function Read_gpx( Files ){
 			Point = Point.replace( /[\x0D\x0A]/g, "" );
 			
 			// 時間
-			if( !Point.match( /<time>(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)/ )){
+			if( !Point.match( /<time>(\d+)-(\d+)-(\d+)T(\d+):(\d+):([\d\.]+)(Z|([-+]\d+):(\d+))/ )){
 				continue;
 			}
 			Log.Time[ Cnt ] = Date.UTC(
 				RegExp.$1, RegExp.$2 - 1, RegExp.$3,
-				RegExp.$4, RegExp.$5, RegExp.$6, RegExp.$7 * 1000
+				RegExp.$4 - ( RegExp.$7 == 'Z' ? 0 : RegExp.$8 ),
+				RegExp.$5 - ( RegExp.$7 == 'Z' ? 0 : RegExp.$9 ),
+				~~RegExp.$6, ~~( RegExp.$6 * 1000 ) % 1000
 			);
 			
 			// long, lat
