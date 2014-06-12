@@ -61,7 +61,7 @@ function Read_gpx( Files ){
 			Log.Time[ Cnt ] = Date.UTC(
 				RegExp.$1, RegExp.$2 - 1, RegExp.$3,
 				RegExp.$4 - ( RegExp.$7 == 'Z' ? 0 : RegExp.$8 ),
-				RegExp.$5 - ( RegExp.$7 == 'Z' ? 0 : RegExp.$9 ),
+				RegExp.$5 - ( RegExp.$7 == 'Z' ? 0 : RegExp.$8 >= 0 ? RegExp.$9 : -RegExp.$9 ),
 				~~RegExp.$6, ~~( RegExp.$6 * 1000 ) % 1000
 			);
 			
