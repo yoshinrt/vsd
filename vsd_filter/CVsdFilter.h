@@ -232,14 +232,22 @@ class CVsdFilter
 	
 	void DrawRoundMeterScaleSub(	// !js_func
 		int iCx, int iCy, int iR,
-		int iLineLen1, int iLineWidth1, tRABY uColorLine1,
-		int iLineLen2, int iLineWidth2, tRABY uColorLine2,
-		int iLine2Cnt,
-		int iMinDeg, int iMaxDeg, int iRNum,
+		int iLineLen1, int iLineWidth1, tRABY uColorLine1, int iLine1Cnt,
+		int iLineLen2, int iLineWidth2, tRABY uColorLine2, int iLine2Cnt,
+		int iMinDeg, int iMaxDeg,
 		int iMinVal, int iMaxVal,
-		int iMaxNumCnt, tRABY uColorNum,
-		CVsdFont &Font
+		int iRNum, tRABY uColorNum, CVsdFont &Font
 	);
+	
+	void DrawLinearMeterScaleSub(	// !js_func
+		UINT uFlag,
+		int iX, int iY, int iWidth,
+		int iLineLen1, int iLineWidth1, tRABY uColorLine1, int iLine1Cnt,
+		int iLineLen2, int iLineWidth2, tRABY uColorLine2, int iLine2Cnt,
+		int iMinVal, int iMaxVal,
+		int iNumPos, tRABY uColorNum, CVsdFont &Font
+	);
+	
 	void DrawMap(	// !js_func
 		int x1, int y1, int x2, int y2,
 		UINT uFlag,
@@ -318,6 +326,7 @@ class CVsdFilter
 		ALIGN_VCENTER	= 1 << 2,
 		ALIGN_BOTTOM	= 1 << 3,
 		DRAW_MAP_START	= 1 << 4,	// DrawMap 専用フラグ
+		LMS_VERTICAL	= 1 << 4,	// DrawLinearMeterScale 専用フラグ
 	};
 	
 	// ダイアログ設定リード

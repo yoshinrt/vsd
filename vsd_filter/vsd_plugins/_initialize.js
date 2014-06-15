@@ -28,6 +28,8 @@ ALIGN_RIGHT			= 1 << 1;
 ALIGN_VCENTER		= 1 << 2;
 ALIGN_BOTTOM		= 1 << 3;
 DRAW_MAP_START		= 1 << 4;
+LMS_HORIZONTAL		= 0;
+LMS_VERTICAL		= 1 << 4
 GRAPH_HTILE			= 1 << 30;
 GRAPH_VTILE			= 1 << 31;
 IMG_INET_ASYNC				= 1 << 0;
@@ -276,16 +278,27 @@ Vsd.Geocoding = function( param ){
 	}
 }
 
-//*** 丸メータ用目盛り描画 ***************************************************
+//*** メータ用目盛り描画 *****************************************************
 
 Vsd.DrawRoundMeterScale = function( param ){
 	return Vsd.DrawRoundMeterScaleSub(
 		param.X, param.Y, param.R,
-		param.Line1Len, param.Line1Width, param.Line1Color,
+		param.Line1Len, param.Line1Width, param.Line1Color, param.Line1Cnt,
 		param.Line2Len, param.Line2Width, param.Line2Color, param.Line2Cnt,
-		param.MinAngle, param.MaxAngle, param.NumR,
+		param.MinAngle, param.MaxAngle,
 		param.MinVal, param.MaxVal,
-		param.NumCnt, param.FontColor, param.Font
+		param.NumR, param.FontColor, param.Font
+	);
+}
+
+Vsd.DrawLinearMeterScale = function( param ){
+	return Vsd.DrawLinearMeterScaleSub(
+		param.Flag,
+		param.X, param.Y, param.Width,
+		param.Line1Len, param.Line1Width, param.Line1Color, param.Line1Cnt,
+		param.Line2Len, param.Line2Width, param.Line2Color, param.Line2Cnt,
+		param.MinVal, param.MaxVal,
+		param.NumPos, param.FontColor, param.Font
 	);
 }
 
@@ -294,14 +307,14 @@ Vsd.DrawMeterScale = function(
 	x, y, r,
 	line1_len, line1_width, line1_color,
 	line2_len, line2_width, line2_color, line2_cnt,
-	min_angle, max_angle, r_num, max_val, num_cnt,
+	min_angle, max_angle, r_num, max_val, line1_cnt,
 	color, font
 ){
 	return Vsd.DrawRoundMeterScaleSub(
 		x, y, r,
-		line1_len, line1_width, line1_color,
+		line1_len, line1_width, line1_color, line1_cnt,
 		line2_len, line2_width, line2_color, line2_cnt,
-		min_angle, max_angle, r_num, 0, max_val, num_cnt,
-		color, font
+		min_angle, max_angle, 0, max_val,
+		r_num, color, font
 	);
 }

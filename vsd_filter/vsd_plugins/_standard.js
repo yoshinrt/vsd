@@ -31,12 +31,12 @@ function Initialize(){
 		Line1Len:	MeterR2 * 0.1,
 		Line1Width:	2,
 		Line1Color:	0xFFFFFF,
+		Line1Cnt:	12,
 		Line2Len:	MeterR2 * 0.05,
 		Line2Width:	1,
 		Line2Color:	0xFFFFFF,
 		Line2Cnt:	5,
 		NumR:		MeterR2 * 0.78,
-		NumCnt:		12,
 		FontColor:	0xFFFFFF,
 		Font:		FontS,
 		MinAngle:	135,
@@ -66,7 +66,7 @@ function Initialize(){
 	if( Vsd.MaxTacho > 0 ){
 		MaxTacho			= Math.ceil( Vsd.MaxTacho / 1000 ) * 1000;
 		MeterParam.MaxVal	= ~~( MaxTacho / 1000 );
-		Font				= FontM;
+		MeterParam.Font		= FontM;
 	}else{
 		MaxSpeed			= Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
 		MeterParam.MaxVal	= MaxSpeed;

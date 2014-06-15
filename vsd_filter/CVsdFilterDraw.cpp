@@ -1556,17 +1556,15 @@ void CVsdFilter::DrawRaceLapTime(
 	}
 }
 
-/*** メーターパネル目盛り ***************************************************/
+/*** 丸型メーターパネル目盛り ***********************************************/
 
 void CVsdFilter::DrawRoundMeterScaleSub(
 	int iCx, int iCy, int iR,
-	int iLineLen1, int iLineWidth1, tRABY uColorLine1,
-	int iLineLen2, int iLineWidth2, tRABY uColorLine2,
-	int iLine2Cnt,
-	int iMinDeg, int iMaxDeg, int iRNum,
+	int iLineLen1, int iLineWidth1, tRABY uColorLine1, int iLine1Cnt,
+	int iLineLen2, int iLineWidth2, tRABY uColorLine2, int iLine2Cnt,
+	int iMinDeg, int iMaxDeg,
 	int iMinVal, int iMaxVal,
-	int iMaxNumCnt, tRABY uColorNum,
-	CVsdFont &Font
+	int iRNum, tRABY uColorNum, CVsdFont &Font
 ){
 	int	i;
 	int	iValRange = iMaxVal - iMinVal;
@@ -1578,10 +1576,13 @@ void CVsdFilter::DrawRoundMeterScaleSub(
 	/*** メーターパネル ***/
 	
 	// iStep は切り上げ
-	int	iStep = ( iValRange + iMaxNumCnt - 1 ) / iMaxNumCnt;
+	int	iStep = ( iValRange + iLine1Cnt - 1 ) / iLine1Cnt;
 	
 	if( iStep == 0 ){
 		iStep = 1;
+	}else if( iValRange >= 1000 ){
+		// 1000以上では，100単位に切り上げ
+		iStep = ( iStep + 90 ) / 100 * 100;
 	}else if( iValRange >= 50 ){
 		// 50以上では，10単位に切り上げ
 		iStep = ( iStep + 9 ) / 10 * 10;
@@ -1610,7 +1611,7 @@ void CVsdFilter::DrawRoundMeterScaleSub(
 			
 			// メーターパネル目盛り数値
 			if( iDegRange != 360 || i != iMaxVal * iLine2Cnt / iStep ){
-			swprintf( szBuf, sizeof( szBuf ), L"%d", iStep * i / iLine2Cnt );
+				swprintf( szBuf, sizeof( szBuf ), L"%d", iStep * i / iLine2Cnt );
 				DrawTextAlign(
 					( int )( cos( dAngle ) * iRNum ) + iCx,
 					( int )( sin( dAngle ) * iRNum ) + iCy,
@@ -1628,6 +1629,71 @@ void CVsdFilter::DrawRoundMeterScaleSub(
 				iLineWidth2,
 				uColorLine2, 0
 			);
+		}
+	}
+}
+
+/*** リニアメーターパネル目盛り *********************************************/
+
+void CVsdFilter::DrawLinearMeterScaleSub(
+	UINT uFlag,
+	int iX, int iY, int iWidth,
+	int iLineLen1, int iLineWidth1, tRABY uColorLine1, int iLine1Cnt,
+	int iLineLen2, int iLineWidth2, tRABY uColorLine2, int iLine2Cnt,
+	int iMinVal, int iMaxVal,
+	int iNumPos, tRABY uColorNum, CVsdFont &Font
+){
+	int	i;
+	int	iValRange = iMaxVal - iMinVal;
+	WCHAR	szBuf[ SPRINTF_BUF ];
+	
+	/*** メーターパネル ***/
+	
+	// iStep は切り上げ
+	int	iStep = ( iValRange + iLine1Cnt - 1 ) / iLine1Cnt;
+	
+	if( iStep == 0 ){
+		iStep = 1;
+	}else if( iValRange >= 1000 ){
+		// 1000以上では，100単位に切り上げ
+		iStep = ( iStep + 90 ) / 100 * 100;
+	}else if( iValRange >= 50 ){
+		// 50以上では，10単位に切り上げ
+		iStep = ( iStep + 9 ) / 10 * 10;
+	}
+	
+	if( iLine2Cnt < 1 ) iLine2Cnt = 1;
+	int iZeroPos = -iMinVal * iWidth / iValRange;
+	
+	for(
+		i =  iMinVal * iLine2Cnt / iStep;
+		i <= iMaxVal * iLine2Cnt / iStep;
+		++i
+	){
+		int iPos = ( iWidth * i * iStep / iLine2Cnt / iValRange + iZeroPos );
+		
+		// メーターパネル目盛り
+		if( i % iLine2Cnt == 0 ){
+			if( uFlag & LMS_VERTICAL ){
+				DrawLine( iX, iY + iPos, iX + iLineLen1, iY + iPos, iLineWidth1, uColorLine1, 0 );
+			}else{
+				DrawLine( iX + iPos, iY, iX + iPos, iY + iLineLen1, iLineWidth1, uColorLine1, 0 );
+			}
+			// メーターパネル目盛り数値
+			swprintf( szBuf, sizeof( szBuf ), L"%d", iStep * i / iLine2Cnt );
+			
+			if( uFlag & LMS_VERTICAL ){
+				DrawTextAlign( iX + iNumPos, iY + iPos, uFlag, szBuf, Font, uColorNum );
+			}else{
+				DrawTextAlign( iX + iPos, iY + iNumPos, uFlag, szBuf, Font, uColorNum );
+			}
+		}else{
+			// 小目盛り
+			if( uFlag & LMS_VERTICAL ){
+				DrawLine( iX, iY + iPos, iX + iLineLen2, iY + iPos, iLineWidth2, uColorLine2, 0 );
+			}else{
+				DrawLine( iX + iPos, iY, iX + iPos, iY + iLineLen2, iLineWidth2, uColorLine2, 0 );
+			}
 		}
 	}
 }
