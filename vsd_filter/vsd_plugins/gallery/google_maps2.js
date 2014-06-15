@@ -86,15 +86,34 @@ function Initialize(){
 	FontM = new Font( "Impact", 31 * Scale, FONT_FIXED );
 	FontL = new Font( "Impact", 60 * Scale );
 	
+	// スピードメータ用最高速計算
+	MaxSpeed = Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
+	
 	// 座標等を予め計算しておく
 	MeterR  = 120 * Scale;
 	MeterX	= MeterRight ? Vsd.Width  - MeterR * 2: 0;
 	MeterY	= Vsd.Height - MeterR * 2 * 0.88;
-	MeterCx = MeterX + MeterR;
-	MeterCy = MeterY + MeterR;
 	
-	// スピードメータ用最高速計算
-	MaxSpeed = ~~( Vsd.MaxSpeed / 10 ) * 10;
+	MeterParam = {
+		X:			MeterX + MeterR,
+		Y:			MeterY + MeterR,
+		R:			MeterR,
+		Line1Len:	MeterR * 0.1,
+		Line1Width:	2,
+		Line1Color:	0xFFFFFF,
+		Line2Len:	MeterR * 0.05,
+		Line2Width:	1,
+		Line2Color:	0xFFFFFF,
+		Line2Cnt:	2,
+		NumR:		MeterR * 0.78,
+		NumCnt:		12,
+		FontColor:	0xFFFFFF,
+		Font:		FontS,
+		MinAngle:	135,
+		MaxAngle:	45,
+		MinVal:		0,
+		MaxVal:		MaxSpeed,
+	};
 	
 	FontColor = 0xC0C0C0;
 	BGColor = 0x80001020;
@@ -104,35 +123,27 @@ function Initialize(){
 
 function Draw(){
 	// メーター画像描画
-	Vsd.DrawCircle( MeterCx, MeterCy, MeterR, BGColor, DRAW_FILL );
+	Vsd.DrawCircle( MeterParam.X, MeterParam.Y, MeterR, BGColor, DRAW_FILL );
 	
 	// スピードメーター目盛り描画
-	Vsd.DrawMeterScale(
-		MeterCx, MeterCy, MeterR,
-		MeterR * 0.1,  2, 0xFFFFFF,
-		MeterR * 0.05, 1, 0xFFFFFF,
-		2, 135, 45,
-		MeterR * 0.78,
-		MaxSpeed, 12, 0xFFFFFF,
-		FontS
-	);
+	Vsd.DrawRoundMeterScale( MeterParam );
 	
 	// スピード数値表示
 	Vsd.DrawTextAlign(
-		MeterCx, MeterCy + MeterR * 0.25, 
+		MeterParam.X, MeterParam.Y + MeterR * 0.25, 
 		ALIGN_HCENTER | ALIGN_VCENTER,
 		~~Vsd.Speed, FontL, 0xFFFFFF
 	);
 	
 	Vsd.DrawTextAlign(
-		MeterCx, MeterCy + MeterR * 0.5,
+		MeterParam.X, MeterParam.Y + MeterR * 0.5,
 		ALIGN_HCENTER | ALIGN_VCENTER,
 		"km/h", FontS, 0xFFFFFF
 	);
 	
 	// スピードメーター針
 	Vsd.DrawNeedle(
-		MeterCx, MeterCy, MeterR * 0.95, MeterR * -0.1,
+		MeterParam.X, MeterParam.Y, MeterR * 0.95, MeterR * -0.1,
 		135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
 	);
 	

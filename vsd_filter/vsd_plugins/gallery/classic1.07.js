@@ -45,7 +45,6 @@ function Initialize(){
 		"Gx",		"%.2f G[lat]",	0x00FF00,
 		"Gy",		"%.2f G[lon]",	0xFF00FF,
 	];
-	Vsd.MakeGraphParam( GraphParam );
 }
 
 //*** メーター描画処理 ******************************************************

@@ -230,14 +230,14 @@ class CVsdFilter
 		double dLength	// !default:3
 	);
 	
-	void DrawMeterScale(	// !js_func
+	void DrawRoundMeterScaleSub(	// !js_func
 		int iCx, int iCy, int iR,
 		int iLineLen1, int iLineWidth1, tRABY uColorLine1,
 		int iLineLen2, int iLineWidth2, tRABY uColorLine2,
 		int iLine2Cnt,
-		int iMinDeg, int iMaxDeg,
-		int iRNum,
-		int iMaxVal, int iMaxNumCnt, tRABY uColorNum,
+		int iMinDeg, int iMaxDeg, int iRNum,
+		int iMinVal, int iMaxVal,
+		int iMaxNumCnt, tRABY uColorNum,
 		CVsdFont &Font
 	);
 	void DrawMap(	// !js_func

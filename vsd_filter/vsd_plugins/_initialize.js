@@ -80,6 +80,11 @@ Vsd.DrawGraph = function( x1, y1, x2, y2, font, flags, params ){
 	// グラフを表示しない条件
 	if( !Vsd.Config_graph ) return;
 	
+	if( params.Adjust === undefined ){
+		Vsd.MakeGraphParam( params );
+		params.Adjust = true;
+	}
+	
 	var GrpNum = ~~( params.length / 3 );
 	var Width  = x2 - x1 + 1;
 	var Height = y2 - y1 + 1;
@@ -269,4 +274,34 @@ Vsd.Geocoding = function( param ){
 		try{ return new ActiveXObject( "Microsoft.XMLHTTP"  ) }catch( e ){}
 		return false;
 	}
+}
+
+//*** 丸メータ用目盛り描画 ***************************************************
+
+Vsd.DrawRoundMeterScale = function( param ){
+	return Vsd.DrawRoundMeterScaleSub(
+		param.X, param.Y, param.R,
+		param.Line1Len, param.Line1Width, param.Line1Color,
+		param.Line2Len, param.Line2Width, param.Line2Color, param.Line2Cnt,
+		param.MinAngle, param.MaxAngle, param.NumR,
+		param.MinVal, param.MaxVal,
+		param.NumCnt, param.FontColor, param.Font
+	);
+}
+
+// 後方互換性のための function
+Vsd.DrawMeterScale = function(
+	x, y, r,
+	line1_len, line1_width, line1_color,
+	line2_len, line2_width, line2_color, line2_cnt,
+	min_angle, max_angle, r_num, max_val, num_cnt,
+	color, font
+){
+	return Vsd.DrawRoundMeterScaleSub(
+		x, y, r,
+		line1_len, line1_width, line1_color,
+		line2_len, line2_width, line2_color, line2_cnt,
+		min_angle, max_angle, r_num, 0, max_val, num_cnt,
+		color, font
+	);
 }

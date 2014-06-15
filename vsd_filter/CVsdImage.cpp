@@ -69,7 +69,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 	int iMaxY = MININT;
 	
 	UINT	raby;
-	Gdiplus::Bitmap*	pBitmap;
+	Gdiplus::Bitmap*	pBitmap = NULL;
 	
 	if(
 		wcsncmp( szFileName, L"http://",  7 ) == 0 ||
@@ -118,6 +118,16 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 					)
 				)
 			){
+				#ifdef DEBUG
+					DWORD	dwError = GetLastError();
+					WCHAR	szBuffer[ 1024 ];
+					DWORD	dwBufferLength = 1024;
+					InternetGetLastResponseInfoW(
+						&dwError,
+						szBuffer,
+						&dwBufferLength
+					);
+				#endif
 				result		= ERR_WININET;
 				m_iStatus	= IMG_STATUS_LOAD_FAILED;
 				break;

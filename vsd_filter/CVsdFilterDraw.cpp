@@ -1558,37 +1558,44 @@ void CVsdFilter::DrawRaceLapTime(
 
 /*** メーターパネル目盛り ***************************************************/
 
-void CVsdFilter::DrawMeterScale(
+void CVsdFilter::DrawRoundMeterScaleSub(
 	int iCx, int iCy, int iR,
 	int iLineLen1, int iLineWidth1, tRABY uColorLine1,
 	int iLineLen2, int iLineWidth2, tRABY uColorLine2,
 	int iLine2Cnt,
-	int iMinDeg, int iMaxDeg,
-	int iRNum,
-	int iMaxVal, int iMaxNumCnt, tRABY uColorNum,
+	int iMinDeg, int iMaxDeg, int iRNum,
+	int iMinVal, int iMaxVal,
+	int iMaxNumCnt, tRABY uColorNum,
 	CVsdFont &Font
 ){
 	int	i;
+	int	iValRange = iMaxVal - iMinVal;
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
-	const int iDegRange	= ( iMaxDeg + 360 - iMinDeg ) % 360;
+	int iDegRange	= ( iMaxDeg + 360 - iMinDeg ) % 360;
+	if( iDegRange == 0 ) iDegRange = 360;
 	
 	/*** メーターパネル ***/
 	
 	// iStep は切り上げ
-	int	iStep = ( iMaxVal + iMaxNumCnt - 1 ) / iMaxNumCnt;
+	int	iStep = ( iValRange + iMaxNumCnt - 1 ) / iMaxNumCnt;
 	
 	if( iStep == 0 ){
 		iStep = 1;
-	}else if( iMaxVal >= 50 ){
+	}else if( iValRange >= 50 ){
 		// 50以上では，10単位に切り上げ
 		iStep = ( iStep + 9 ) / 10 * 10;
 	}
 	
 	if( iLine2Cnt < 1 ) iLine2Cnt = 1;
+	double dZeroDeg = -iMinVal * iDegRange / ( double )iValRange + iMinDeg;
 	
-	for( i = 0; i <= iMaxVal * iLine2Cnt / iStep; ++i ){
-		double dAngle = ( iDegRange * i * iStep / ( double )iLine2Cnt / iMaxVal + iMinDeg ) * ToRAD;
+	for(
+		i =  iMinVal * iLine2Cnt / iStep;
+		i <= iMaxVal * iLine2Cnt / iStep;
+		++i
+	){
+		double dAngle = ( iDegRange * i * iStep / ( double )iLine2Cnt / iValRange + dZeroDeg ) * ToRAD;
 		
 		// メーターパネル目盛り
 		if( i % iLine2Cnt == 0 ){
@@ -1602,13 +1609,15 @@ void CVsdFilter::DrawMeterScale(
 			);
 			
 			// メーターパネル目盛り数値
+			if( iDegRange != 360 || i != iMaxVal * iLine2Cnt / iStep ){
 			swprintf( szBuf, sizeof( szBuf ), L"%d", iStep * i / iLine2Cnt );
-			DrawTextAlign(
-				( int )( cos( dAngle ) * iRNum ) + iCx,
-				( int )( sin( dAngle ) * iRNum ) + iCy,
-				ALIGN_HCENTER | ALIGN_VCENTER,
-				szBuf, Font, uColorNum
-			);
+				DrawTextAlign(
+					( int )( cos( dAngle ) * iRNum ) + iCx,
+					( int )( sin( dAngle ) * iRNum ) + iCy,
+					ALIGN_HCENTER | ALIGN_VCENTER,
+					szBuf, Font, uColorNum
+				);
+			}
 		}else{
 			// 小目盛り
 			DrawLine(

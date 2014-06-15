@@ -18,13 +18,32 @@ function Initialize(){
 		ImgMeter.Resize( ImgMeter.Width * Scale, ImgMeter.Height * Scale );
 	}
 	
-	// 座標等を予め計算しておく
+	// メータ描画用パラメータ作成
 	MeterX	= MeterRight ? Vsd.Width  - ImgMeter.Width : 0;
 	MeterY	= Vsd.Height - ImgMeter.Height * 0.85;
 	MeterR  = 150 * Scale;
 	MeterR2 = 126 * Scale;
-	MeterCx = MeterX + MeterR;
-	MeterCy = MeterY + MeterR;
+	
+	MeterParam = {
+		X:			MeterX + MeterR,
+		Y:			MeterY + MeterR,
+		R:			MeterR2,
+		Line1Len:	MeterR2 * 0.1,
+		Line1Width:	2,
+		Line1Color:	0xFFFFFF,
+		Line2Len:	MeterR2 * 0.05,
+		Line2Width:	1,
+		Line2Color:	0xFFFFFF,
+		Line2Cnt:	5,
+		NumR:		MeterR2 * 0.78,
+		NumCnt:		12,
+		FontColor:	0xFFFFFF,
+		Font:		FontS,
+		MinAngle:	135,
+		MaxAngle:	45,
+		MinVal:		0,
+		MaxVal:		0,	// 暫定
+	};
 	
 	// G 用画像をリサイズ
 	ImgG.Resize( ImgG.Width * Scale / 2, ImgG.Height * Scale / 2 );
@@ -33,7 +52,7 @@ function Initialize(){
 	MeterGX	 = MeterRight ? Vsd.Width - ImgMeter.Width * 1.45 : ImgMeter.Width * 0.95;
 	MeterGY	 = Vsd.Height - ImgG.Height;
 	MeterGR  = MeterR / 2;
-	MeterGR2 = MeterR2 / 2;
+	MeterGR2 = MeterParam.R / 2;
 	MeterGCx = MeterGX + MeterGR;
 	MeterGCy = MeterGY + MeterGR;
 	
@@ -45,9 +64,12 @@ function Initialize(){
 	
 	// スピードメータ用最高速計算
 	if( Vsd.MaxTacho > 0 ){
-		MaxTacho = Math.ceil( Vsd.MaxTacho / 1000 ) * 1000;
+		MaxTacho			= Math.ceil( Vsd.MaxTacho / 1000 ) * 1000;
+		MeterParam.MaxVal	= ~~( MaxTacho / 1000 );
+		Font				= FontM;
 	}else{
-		MaxSpeed = Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
+		MaxSpeed			= Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
+		MeterParam.MaxVal	= MaxSpeed;
 	}
 	
 	// グラフ用パラメータ生成
@@ -59,7 +81,6 @@ function Initialize(){
 		"Gx",		"%.2f G[lat]",	0x00FF00,
 		"Gy",		"%.2f G[lon]",	0xFF00FF,
 	];
-	Vsd.MakeGraphParam( GraphParam );
 }
 
 //*** メーター描画処理 ******************************************************
@@ -69,53 +90,39 @@ function Draw(){
 	Vsd.PutImage( MeterX, MeterY, ImgMeter );
 	
 	if( Vsd.MaxTacho > 0 ){
-		var MeterColor = Vsd.Tacho > REV_LIMIT && ( Vsd.FrameCnt & 0x2 ) ? 0xFF0000 : 0xFFFFFF;
+		MeterParam.Line1Color =
+		MeterParam.Line2Color =
+		MeterParam.FontColor = Vsd.Tacho > REV_LIMIT && ( Vsd.FrameCnt & 0x2 ) ? 0xFF0000 : 0xFFFFFF;
 		
 		// タコメーター目盛り描画
-		Vsd.DrawMeterScale(
-			MeterCx, MeterCy, MeterR2,
-			MeterR2 * 0.1,  2, MeterColor,
-			MeterR2 * 0.05, 1, MeterColor,
-			5, 135, 45,
-			MeterR2 * 0.80,
-			MaxTacho / 1000, 12, MeterColor,
-			FontM
-		);
+		Vsd.DrawRoundMeterScale( MeterParam );
 		
 		// ギア
 		Vsd.DrawRect(
-			MeterCx - MeterR * 0.09, MeterCy - MeterR * 0.48,
-			MeterCx + MeterR * 0.09, MeterCy - MeterR * 0.22,
+			MeterParam.X - MeterR * 0.09, MeterParam.Y - MeterR * 0.48,
+			MeterParam.X + MeterR * 0.09, MeterParam.Y - MeterR * 0.22,
 			0xFF4000, DRAW_FILL
 		);
 		
 		Vsd.DrawTextAlign(
-			MeterCx, MeterCy - MeterR * 0.35,
+			MeterParam.X, MeterParam.Y - MeterR * 0.35,
 			ALIGN_HCENTER | ALIGN_VCENTER,
 			GetGear( Vsd.Tacho / Vsd.Speed ), FontG, 0
 		);
 	}else{
 		// スピードメーター目盛り描画
-		Vsd.DrawMeterScale(
-			MeterCx, MeterCy, MeterR2,
-			MeterR2 * 0.1,  2, 0xFFFFFF,
-			MeterR2 * 0.05, 1, 0xFFFFFF,
-			5, 135, 45,
-			MeterR2 * 0.78,
-			MaxSpeed, 12, 0xFFFFFF,
-			FontS
-		);
+		Vsd.DrawRoundMeterScale( MeterParam );
 	}
 	
 	// スピード数値表示
 	Vsd.DrawTextAlign(
-		MeterCx, MeterCy + MeterR * 0.25, 
+		MeterParam.X, MeterParam.Y + MeterR * 0.25, 
 		ALIGN_HCENTER | ALIGN_VCENTER,
 		~~Vsd.Speed, FontL, 0xFFFFFF
 	);
 	
 	Vsd.DrawTextAlign(
-		MeterCx, MeterCy + MeterR * 0.5,
+		MeterParam.X, MeterParam.Y + MeterR * 0.5,
 		ALIGN_HCENTER | ALIGN_VCENTER,
 		"km/h", FontS, 0xFFFFFF
 	);
@@ -123,13 +130,13 @@ function Draw(){
 	if( Vsd.MaxTacho > 0 ){
 		// タコメーター針
 		Vsd.DrawNeedle(
-			MeterCx, MeterCy, MeterR2 * 0.95, MeterR2 * -0.1,
+			MeterParam.X, MeterParam.Y, MeterParam.R * 0.95, MeterParam.R * -0.1,
 			135, 45, Vsd.Tacho / MaxTacho, 0xFF0000, 3
 		);
 	}else{
 		// スピードメーター針
 		Vsd.DrawNeedle(
-			MeterCx, MeterCy, MeterR2 * 0.95, MeterR2 * -0.1,
+			MeterParam.X, MeterParam.Y, MeterParam.R * 0.95, MeterParam.R * -0.1,
 			135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
 		);
 	}
@@ -137,17 +144,17 @@ function Draw(){
 	// アクセル
 	if( Vsd.MaxAccel > 0 ){
 		Vsd.DrawLine(
-			MeterCx - MeterR * 0.45,
-			MeterCy + MeterR * 0.65,
-			MeterCx + MeterR * 0.45,
-			MeterCy + MeterR * 0.65,
+			MeterParam.X - MeterR * 0.45,
+			MeterParam.Y + MeterR * 0.65,
+			MeterParam.X + MeterR * 0.45,
+			MeterParam.Y + MeterR * 0.65,
 			0x404040, 4 * Scale
 		);
 		Vsd.DrawLine(
-			MeterCx - MeterR * 0.45,
-			MeterCy + MeterR * 0.65,
-			MeterCx + MeterR * 0.45 * ( 2 * Vsd.Accel / Vsd.MaxAccel - 1 ),
-			MeterCy + MeterR * 0.65,
+			MeterParam.X - MeterR * 0.45,
+			MeterParam.Y + MeterR * 0.65,
+			MeterParam.X + MeterR * 0.45 * ( 2 * Vsd.Accel / Vsd.MaxAccel - 1 ),
+			MeterParam.Y + MeterR * 0.65,
 			0x00C0C0, 4 * Scale
 		);
 	}
