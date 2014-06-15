@@ -2,10 +2,11 @@
 
 use Time::HiRes qw(sleep);
 
-$Scale	= 1;	# 倍速設定
-$Dist	= 10;	# 最低移動距離
+$Scale	= 10;	# 倍速設定
+$Dist	= 10;	# 最低移動距離 [m]
 
-open( fpCom, "> /dev/ttyS2" ) || die( "Can't open COM\n" );
+# BT COM の着信を有効，COMn の n - 1 をttySm に設定
+open( fpCom, "> /dev/ttyS3" ) || die( "Can't open COM\n" );
 #open( fpCom, "| cat" ) || die( "Can't open COM\n" );
 
 $PrevTime = 0;
@@ -62,10 +63,10 @@ while( <> ){
 		$_[ 1 ] =~ /(\d\d)(\d\d)(\d\d)\.?(\d*)/;
 		
 		$Time = $1 * 3600 + $2 * 60 + $3 + "0.$4";
-		$Time += 24 * 3600 if( $PrevTime > $Time );
 		
 		( $Sleep, $PrevTime ) = ( $Time - $PrevTime, $Time );
-		$Sleep = 1 if( $Sleep > 1 );
+		$Sleep += 24 * 3600 if( $Sleep < 0 );
+		$Sleep = 5 if( $Sleep > 5 );
 		
 		# NMEA の時刻を現在時に修正
 		( $sec, $min, $hour, $mday, $mon, $year ) = gmtime( time );
@@ -105,4 +106,3 @@ sub AddChksum {
 	
 	return sprintf( "$_*%02X\n", $Sum );
 }
-

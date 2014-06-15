@@ -64,7 +64,7 @@ class CScript {
 	template<typename T>
 	static T* GetThis( v8::Local<v8::Object> handle ){
 		if( handle->GetInternalField( 0 )->IsUndefined()){
-			v8::ThrowException( v8::Exception::TypeError( v8::String::New( "Invalid object ( maybe \"new\" failed )" )));
+			v8::ThrowException( v8::Exception::TypeError( v8::String::New( "Object is undefined" )));
 			return NULL;
 		}
 		
