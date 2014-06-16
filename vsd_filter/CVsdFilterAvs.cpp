@@ -151,7 +151,7 @@ void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
 	}
 }
 
-void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ){
+void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT uPattern ){
 	
 	int iIndex = GetIndex( x1, y1 );
 	
@@ -159,10 +159,12 @@ void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc ){
 	int iAlfa = yca.alfa;
 	yca.alfa = yca.y;
 	
-	if( iAlfa ){
+	if( iAlfa || uPattern != ~0 ){
 		iAlfa += iAlfa >> 7;
 		for( int x = x1; x <= x2; ++x, iIndex += 2 ){
-			PutPixel( iIndex, yc, iAlfa );
+			if( uPattern & ( 1 << (( x + y1 ) & 0x1F ))){
+				PutPixel( iIndex, yc, iAlfa );
+			}
 		}
 	}else{
 		// x1, x2 ‚ª”¼’[‚È pixel ‚È‚çC‚»‚ê‚¾‚¯æ‚Éˆ—

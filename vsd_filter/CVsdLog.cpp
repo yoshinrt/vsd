@@ -680,7 +680,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		AddStopRecord( iCnt + 1, WATCHDOG_TIME );
 		
 		
-		#define DUMP_LOG
+		//#define DUMP_LOG
 		#if defined DEBUG && defined DUMP_LOG
 			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_raw.txt" );
 		#endif

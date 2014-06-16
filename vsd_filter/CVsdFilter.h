@@ -110,8 +110,7 @@ class CVsdFilter
 	);
 	void PutPixel( int x, int y, const PIXEL_YCA_ARG yc, UINT uFlag );
 	void PutPixel( int x, int y, const PIXEL_YCA_ARG yc );
-	void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT uFlag );
-	void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc );
+	void FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT uPattern = 0xFFFFFFFF );
 	
 	UINT PutImage(	// !js_func
 		int x, int y, CVsdImage &img,
@@ -127,13 +126,13 @@ class CVsdFilter
 	int ix_st, int iy_st, int ix_ed, int iy_ed
 	);
 	
-	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG yc, UINT uFlag );
-	void DrawLine( int x1, int y1, int x2, int y2, tRABY uColor, UINT uFlag );
+	void DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG yc, UINT uPattern = 0xFFFFFFFF );
+	void DrawLine( int x1, int y1, int x2, int y2, tRABY uColor,           UINT uPattern = 0xFFFFFFFF );
 	void DrawLine(		// !js_func
 		int x1, int y1, int x2, int y2,
 		int width,		// !arg:5 !default:1
 		tRABY uColor,	// !arg:4
-		UINT uFlag		// !default:0
+		UINT uPattern = 0xFFFFFFFF	// !default:0xFFFFFFFF
 	);
 	
 	void DrawRect(	// !js_func

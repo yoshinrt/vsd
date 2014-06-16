@@ -29,13 +29,17 @@
 #define ABS( x )			(( x ) < 0 ? -( x ) : ( x ))
 #define SWAP( x, y, tmp )	( tmp = x, x = y, y = tmp )
 
-void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG yc, UINT uFlag ){
+void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG yc, UINT uPattern ){
 	
 	int i;
 	
 	if( y1 == y2 ){
-		if( x1 > x2 ) SWAP( x1, x2, i );
-		FillLine( x1, y1, x2, yc, uFlag );
+		if( 0 <= y1 && y1 < GetHeight() && yc.alfa < 255 ){
+			if( x1 > x2 ) SWAP( x1, x2, i );
+			if( x1 < 0 )         x1 = 0;
+			if( x2 > GetWidth()) x2 = GetWidth();
+			FillLine( x1, y1, x2, yc, uPattern );
+		}
 		return;
 	}
 	
@@ -49,7 +53,12 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG y
 	if( iXdiff > iYdiff ){
 		int E = iYdiff - 2 * iXdiff;
 		for( i = 0; i < iXdiff; i++ ){
-			PutPixel( x1, y1, yc, uFlag );
+			
+			if(
+				uPattern == 0xFFFFFFFF ||
+				uPattern & ( 1 << (( x1 + y1 ) & 0x1F ))
+			) PutPixel( x1, y1, yc, 0 );
+			
 			x1 += iXsign;
 			E += 2 * iYdiff;
 			if( E > 0 ){
@@ -61,7 +70,12 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG y
 	}else{
 		int E = iXdiff - 2 * iYdiff;
 		for( i = 0; i < iYdiff; i++ ){
-			PutPixel( x1, y1, yc, uFlag );
+			
+			if(
+				uPattern == 0xFFFFFFFF ||
+				uPattern & ( 1 << (( x1 + y1 ) & 0x1F ))
+			) PutPixel( x1, y1, yc, 0 );
+			
 			y1 += iYsign;
 			E += 2 * iXdiff;
 			if( E > 0 ){
@@ -72,17 +86,12 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG y
 	}
 }
 
-void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, tRABY uColor, UINT uFlag ){
+void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, tRABY uColor, UINT uPattern ){
 	PIXEL_YCA yc( uColor );
-	DrawLine( x1, y1, x2, y2, yc, uFlag );
+	DrawLine( x1, y1, x2, y2, yc, uPattern );
 }
 
-void CVsdFilter::DrawLine(
-	int x1, int y1, int x2, int y2,
-	int width,
-	tRABY uColor,
-	UINT uFlag
-){
+void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, tRABY uColor, UINT uPattern ){
 	
 	PIXEL_YCA yc( uColor );
 	
@@ -95,7 +104,7 @@ void CVsdFilter::DrawLine(
 			DrawLine(
 				x1 + x, y1 + y,
 				x2 + x, y2 + y,
-				yc, uFlag
+				yc, uPattern
 			);
 		}
 	#else
@@ -103,7 +112,7 @@ void CVsdFilter::DrawLine(
 			DrawLine(
 				x1 + x - width / 2, y1 + y - width / 2,
 				x2 + x - width / 2, y2 + y - width / 2,
-				yc, uFlag
+				yc, uPattern
 			);
 		}
 	#endif
@@ -124,14 +133,17 @@ void CVsdFilter::DrawRect(
 		#ifdef _OPENMP_AVS
 			#pragma omp parallel for
 		#endif
+		if( y1 < 0 ) y1 = 0;
+		if( y2 >= GetHeight()) y2 = GetHeight() - 1;
+		
 		for( y = y1; y <= y2; ++y ){
-			FillLine( x1, y, x2, uColor, 0 );
+			FillLine( x1, y, x2, uColor );
 		}
 	}else{
-		DrawLine( x1, y1, x2, y1, uColor, 0 );
-		DrawLine( x1, y2, x2, y2, uColor, 0 );
-		DrawLine( x1, y1, x1, y2, uColor, 0 );
-		DrawLine( x2, y1, x2, y2, uColor, 0 );
+		DrawLine( x1, y1, x2, y1, uColor );
+		DrawLine( x1, y2, x2, y2, uColor );
+		DrawLine( x1, y1, x1, y2, uColor );
+		DrawLine( x2, y1, x2, y2, uColor );
 	}
 }
 
@@ -495,25 +507,6 @@ inline void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA_ARG yc, UINT uFl
 	}
 }
 
-inline void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT uFlag ){
-	
-	if( uFlag & IMG_FILL ){
-		// ポリゴン描画
-		if( x1 > x2 ){
-			if( x1 > m_Polygon[ y1 ].iRight ) m_Polygon[ y1 ].iRight = x1;
-			if( x2 < m_Polygon[ y1 ].iLeft  ) m_Polygon[ y1 ].iLeft  = x2;
-		}else{
-			if( x2 > m_Polygon[ y1 ].iRight ) m_Polygon[ y1 ].iRight = x2;
-			if( x1 < m_Polygon[ y1 ].iLeft  ) m_Polygon[ y1 ].iLeft  = x1;
-		}
-	}else if( 0 <= y1 && y1 < GetHeight() && yc.alfa < 255 ){
-		if( x1 < 0 )         x1 = 0;
-		if( x2 > GetWidth()) x2 = GetWidth();
-		
-		FillLine( x1, y1, x2, yc );
-	}
-}
-
 /*** ポリゴン描画 (今は DrawCircle の fill にしか使ってないはず *************/
 
 inline void CVsdFilter::InitPolygon( void ){
@@ -581,7 +574,7 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 				GetCoordinate( i + 1 ),
 				GetCoordinate(( i + 2 ) % uCnt ),
 				GetCoordinate(( i + 3 ) % uCnt ),
-				uColor, 0
+				uColor
 			);
 		}
 		return;
@@ -856,7 +849,7 @@ void CVsdFilter::DrawGraphSub(
 		tRABY uColor0 = BlendColor( uColor, PIXEL_RABY::Argb2Raby( 0xFF000000 ), 0.75 );
 		
 		int iPosY = y2 - ( int )( -Data.GetMin() * iHeight / ( Data.GetMax() - Data.GetMin()));
-		DrawLine( x1, iPosY, x2, iPosY, 1, uColor0, 0 );
+		DrawLine( x1, iPosY, x2, iPosY, uColor0 );
 	}
 	
 	for( int x = 0; x < iWidth; x += GRAPH_STEP ){
@@ -867,7 +860,7 @@ void CVsdFilter::DrawGraphSub(
 		
 		int iPosY = y2 - ( int )(( dVal - Data.GetMin()) * iHeight / ( Data.GetMax() - Data.GetMin()));
 		if( iPrevY != INVALID_INT )
-			DrawLine( x1 + x - GRAPH_STEP, iPrevY, x1 + x, iPosY, 1, uColor, 0 );
+			DrawLine( x1 + x - GRAPH_STEP, iPrevY, x1 + x, iPosY, uColor );
 		
 		iPrevY = iPosY;
 		
@@ -876,7 +869,7 @@ void CVsdFilter::DrawGraphSub(
 			DrawLine(
 				x, iPosY,
 				x + 10, iPosY - 10,
-				1, uColor, 0
+				uColor
 			);
 			
 			swprintf( szBuf, sizeof( szBuf ), szFormat, dVal );
@@ -942,7 +935,7 @@ void CVsdFilter::DrawGSnake(
 					
 					if( iGxPrev != INVALID_INT ) DrawLine(
 						iCx + iGx, iCy - iGy, iCx + iGxPrev, iCy - iGyPrev,
-						iWidth, uColorLine, 0
+						iWidth, uColorLine
 					);
 					
 					iGxPrev = iGx;
@@ -1065,7 +1058,7 @@ void CVsdFilter::DrawMap(
 				DrawLine(
 					iGx,     iGy,
 					iGxPrev, iGyPrev,
-					iLineWidth, uColorLine, 0
+					iLineWidth, uColorLine
 				);
 				iGxPrev = iGx;
 				iGyPrev = iGy;
@@ -1094,7 +1087,7 @@ void CVsdFilter::DrawMap(
 		int xs2 = x1 + ( int )((  cos( dAngle ) * m_dStartLineX2 + sin( dAngle ) * m_dStartLineY2 - dMapOffsX ) * dScale );
 		int ys2 = y1 + ( int )(( -sin( dAngle ) * m_dStartLineX2 + cos( dAngle ) * m_dStartLineY2 - dMapOffsY ) * dScale );
 		
-		DrawLine( xs1, ys1, xs2, ys2, color_blue, 0 );
+		DrawLine( xs1, ys1, xs2, ys2, color_blue );
 	}
 	SelectLogVsd;
 }
@@ -1191,7 +1184,7 @@ void CVsdFilter::DrawNeedle(
 		( int )( sin( dAngle ) * r1 ) + y,
 		( int )( cos( dAngle ) * r2 ) + x,
 		( int )( sin( dAngle ) * r2 ) + y,
-		iWidth, uColor, 0
+		iWidth, uColor
 	);
 }
 
@@ -1606,7 +1599,7 @@ void CVsdFilter::DrawRoundMeterScaleSub(
 				( int )( cos( dAngle ) * ( iR - iLineLen1 )) + iCx,
 				( int )( sin( dAngle ) * ( iR - iLineLen1 )) + iCy,
 				iLineWidth1,
-				uColorLine1, 0
+				uColorLine1
 			);
 			
 			// メーターパネル目盛り数値
@@ -1627,7 +1620,7 @@ void CVsdFilter::DrawRoundMeterScaleSub(
 				( int )( cos( dAngle ) * ( iR - iLineLen2 )) + iCx,
 				( int )( sin( dAngle ) * ( iR - iLineLen2 )) + iCy,
 				iLineWidth2,
-				uColorLine2, 0
+				uColorLine2
 			);
 		}
 	}
@@ -1675,9 +1668,9 @@ void CVsdFilter::DrawLinearMeterScaleSub(
 		// メーターパネル目盛り
 		if( i % iLine2Cnt == 0 ){
 			if( uFlag & LMS_VERTICAL ){
-				DrawLine( iX, iY + iPos, iX + iLineLen1, iY + iPos, iLineWidth1, uColorLine1, 0 );
+				DrawLine( iX, iY + iPos, iX + iLineLen1, iY + iPos, iLineWidth1, uColorLine1 );
 			}else{
-				DrawLine( iX + iPos, iY, iX + iPos, iY + iLineLen1, iLineWidth1, uColorLine1, 0 );
+				DrawLine( iX + iPos, iY, iX + iPos, iY + iLineLen1, iLineWidth1, uColorLine1 );
 			}
 			// メーターパネル目盛り数値
 			swprintf( szBuf, sizeof( szBuf ), L"%d", iStep * i / iLine2Cnt );
@@ -1690,9 +1683,9 @@ void CVsdFilter::DrawLinearMeterScaleSub(
 		}else{
 			// 小目盛り
 			if( uFlag & LMS_VERTICAL ){
-				DrawLine( iX, iY + iPos, iX + iLineLen2, iY + iPos, iLineWidth2, uColorLine2, 0 );
+				DrawLine( iX, iY + iPos, iX + iLineLen2, iY + iPos, iLineWidth2, uColorLine2 );
 			}else{
-				DrawLine( iX + iPos, iY, iX + iPos, iY + iLineLen2, iLineWidth2, uColorLine2, 0 );
+				DrawLine( iX + iPos, iY, iX + iPos, iY + iLineLen2, iLineWidth2, uColorLine2 );
 			}
 		}
 	}
