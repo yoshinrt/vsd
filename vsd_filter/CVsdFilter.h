@@ -315,6 +315,7 @@ class CVsdFilter
 	
 	enum {
 		IMG_FILL	= ( 1 << 0 ),
+		IMG_NOCLOSE	= ( 1 << 1 ),
 	};
 	
 	enum {

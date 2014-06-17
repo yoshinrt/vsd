@@ -576,6 +576,7 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 				GetCoordinate(( i + 3 ) % uCnt ),
 				uColor
 			);
+			if(( uFlag & IMG_NOCLOSE ) && i == uCnt - 4 ) break;
 		}
 		return;
 	}

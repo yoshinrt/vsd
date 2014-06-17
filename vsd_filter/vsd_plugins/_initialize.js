@@ -15,7 +15,8 @@ REV_LIMIT		= 6500;	// レブリミット (上限)
 
 Vsd = new __VSD_System__( __CVsdFilter );
 
-DRAW_FILL			= 1;
+DRAW_FILL			= 1 << 0;
+DRAW_NOCLOSE		= 1 << 1;
 FONT_BOLD			= 1 << 0;
 FONT_ITALIC			= 1 << 1;
 FONT_OUTLINE		= 1 << 2;
