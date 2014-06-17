@@ -1,6 +1,10 @@
 //*** 初期化処理 ************************************************************
 
 function Initialize(){
+	if( Vsd.Revision < 724 ){
+		MessageBox( "このスキンは VSD r724 以降が必要です" );
+	}
+	
 	// 使用する画像・フォントの宣言
 	Scale	= Vsd.Height / 720;
 	Color	= 0x00FF00;
