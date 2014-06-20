@@ -2,7 +2,7 @@
 
 function Initialize(){
 	if( Vsd.Revision < 724 ){
-		MessageBox( "このスキンは VSD r724 以降が必要です" );
+		MessageBox( "このスキンはリビジョンr724 以降が必要です" );
 	}
 	
 	// 使用する画像・フォントの宣言
@@ -121,7 +121,7 @@ function Draw(){
 	var Pitch = 5 * Vsd.Gy;
 	var Roll  = -5 * Vsd.Gx;
 	
-	R = Vsd.Height * 3 / 8;
+	var R = Vsd.Height * 3 / 8;
 	Vsd.DrawCircle( Vsd.Width / 2, Vsd.Height / 2, R, Color );
 	
 	for( var i = ~~(( Pitch - 20 ) / 10 ) * 10; i <= ~~(( Pitch + 20 ) / 10 ) * 10; i += 10 ){
@@ -200,77 +200,79 @@ function Draw(){
 	);
 	
 	// 走行軌跡表示
+	var MapSize = 200;
+	
 	Vsd.DrawRect(
-		8 * Scale, Vsd.Height - 248 * Scale,
-		248 * Scale, Vsd.Height - 8 * Scale,
+		8 * Scale, Vsd.Height - ( MapSize + 8 ) * Scale,
+		( MapSize + 8 ) * Scale, Vsd.Height - 8 * Scale,
 		0x80000000, DRAW_FILL
 	);
 	
 	Vsd.DrawRect(
-		8 * Scale, Vsd.Height - 248 * Scale,
-		248 * Scale, Vsd.Height - 8 * Scale,
+		8 * Scale, Vsd.Height - ( MapSize + 8 ) * Scale,
+		( MapSize + 8 ) * Scale, Vsd.Height - 8 * Scale,
 		Color
 	);
 	
 	Vsd.DrawMap(
-		8 * Scale, Vsd.Height - 248 * Scale,
-		248 * Scale, Vsd.Height - 8 * Scale,
+		8 * Scale, Vsd.Height - ( MapSize + 8 ) * Scale,
+		( MapSize + 8 ) * Scale, Vsd.Height - 8 * Scale,
 		ALIGN_HCENTER | ALIGN_VCENTER,
 		1, 4 * Scale, Vsd.FrameCnt & 4 ? Color : 0xFF000000, Color, Color, Color
 	);
 	
 	// 走行軌跡表示
 	Vsd.DrawRect(
-		Vsd.Width - 248 * Scale, Vsd.Height - 248 * Scale,
+		Vsd.Width - ( MapSize + 8 ) * Scale, Vsd.Height - ( MapSize + 8 ) * Scale,
 		Vsd.Width -   8 * Scale, Vsd.Height -   8 * Scale,
 		0x80000000, DRAW_FILL
 	);
 	
 	Vsd.DrawRect(
-		Vsd.Width - 248 * Scale, Vsd.Height - 248 * Scale,
+		Vsd.Width - ( MapSize + 8 ) * Scale, Vsd.Height - ( MapSize + 8 ) * Scale,
 		Vsd.Width -   8 * Scale, Vsd.Height -   8 * Scale,
 		Color
 	);
 	
 	Vsd.DrawLine( 
-		Vsd.Width - 248 * Scale, Vsd.Height - 124 * Scale,
-		Vsd.Width -   8 * Scale, Vsd.Height - 124 * Scale,
+		Vsd.Width - ( MapSize + 8 ) * Scale, Vsd.Height - ( MapSize + 8 ) / 2 * Scale,
+		Vsd.Width -   8 * Scale, Vsd.Height - ( MapSize + 8 ) / 2 * Scale,
 		Color, 1, 0xF0F0F0F0
 	);
 	
 	Vsd.DrawLine( 
-		Vsd.Width - 124 * Scale, Vsd.Height - 248 * Scale,
-		Vsd.Width - 124 * Scale, Vsd.Height -   8 * Scale,
+		Vsd.Width - ( MapSize + 8 ) / 2 * Scale, Vsd.Height - ( MapSize + 8 ) * Scale,
+		Vsd.Width - ( MapSize + 8 ) / 2 * Scale, Vsd.Height -   8 * Scale,
 		Color, 1, 0xF0F0F0F0
 	);
 	
 	Vsd.DrawGSnake(
-		Vsd.Width - 124 * Scale, Vsd.Height - 124 * Scale,
+		Vsd.Width - ( MapSize + 8 ) / 2 * Scale, Vsd.Height - ( MapSize + 8 ) / 2 * Scale,
 		80 * Scale, 4 * Scale, 1, Color, Color, 3
 	);
 	
 	// 文字情報
 	var Accel = Math.sqrt( Vsd.Gx * Vsd.Gx + Vsd.Gy * Vsd.Gy ).toFixed( 1 ) + "G";
 	Vsd.DrawText(
-		260 * Scale, Vsd.Height - FontS.Height * 3,
+		( MapSize + 20 ) * Scale, Vsd.Height - FontS.Height * 3,
 		Accel, FontS, Color
 	);
 	Vsd.DrawText(
-		260 * Scale, Vsd.Height - FontS.Height * 2,
+		( MapSize + 20 ) * Scale, Vsd.Height - FontS.Height * 2,
 		"Thr" + ~~Vsd.Accel + "%", FontS, Color
 	);
 	
 	// ラップタイム
 	Vsd.DrawTextAlign(
-		Vsd.Width - 260 * Scale, Vsd.Height - FontS.Height * 4, ALIGN_TOP | ALIGN_RIGHT,
+		Vsd.Width - ( MapSize + 20 ) * Scale, Vsd.Height - FontS.Height * 4, ALIGN_TOP | ALIGN_RIGHT,
 		"Best " + Vsd.FormatTime( Vsd.BestLapTime ), FontS, Color
 	);
 	Vsd.DrawTextAlign(
-		Vsd.Width - 260 * Scale, Vsd.Height - FontS.Height * 3, ALIGN_TOP | ALIGN_RIGHT,
+		Vsd.Width - ( MapSize + 20 ) * Scale, Vsd.Height - FontS.Height * 3, ALIGN_TOP | ALIGN_RIGHT,
 		"Lap" + Vsd.LapCnt + "/" + Vsd.MaxLapCnt + " " + Vsd.FormatTime( Vsd.LapTime ), FontS, Color
 	);
 	Vsd.DrawTextAlign(
-		Vsd.Width - 260 * Scale, Vsd.Height - FontS.Height * 2, ALIGN_TOP | ALIGN_RIGHT,
+		Vsd.Width - ( MapSize + 20 ) * Scale, Vsd.Height - FontS.Height * 2, ALIGN_TOP | ALIGN_RIGHT,
 		( Vsd.DiffTime > 0 ? '+' : '' ) + Vsd.FormatTime( Vsd.DiffTime ),
 		FontS, Color
 	);
