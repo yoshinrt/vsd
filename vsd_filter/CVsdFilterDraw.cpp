@@ -1638,10 +1638,12 @@ void CVsdFilter::DrawLinearMeterScaleSub(
 	int iNumPos, tRABY uColorNum, CVsdFont &Font
 ){
 	int	i;
-	int	iValRange = iMaxVal - iMinVal;
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
 	/*** メーターパネル ***/
+	
+	if( iMinVal == iMaxVal ) iMaxVal = iMinVal + 10;
+	int	iValRange = iMaxVal - iMinVal;
 	
 	// iStep は切り上げ
 	int	iStep = ( iValRange + iLine1Cnt - 1 ) / iLine1Cnt;
