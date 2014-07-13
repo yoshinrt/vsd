@@ -16,7 +16,7 @@
 #define WATCHDOG_REC_NUM	2		// ログ先頭の番犬分のレコード数
 #define TIME_STOP			3000	// 停車とみなす Log 時間間隔
 #define TIME_STOP_MARGIN	300		// 停車とみなす Log に付加する Log の時間差分
-#define KPH_STOP			5		// TIME_STOP を満たした時，停車とみなす速度
+#define KPH_STOP			4		// TIME_STOP を満たした時，停車とみなす速度
 
 /*** Lap Time ***************************************************************/
 

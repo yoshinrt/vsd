@@ -178,7 +178,6 @@ UINT CVsdLog::GPSLogRescan( void ){
 	
 	BOOL	bCreateSpeed	= FALSE;
 	BOOL	bCreateG		= FALSE;
-	BOOL	bCreateDir		= FALSE;
 #ifdef USE_TURN_R
 	BOOL	bCreateTurnR	= FALSE;
 #endif
@@ -196,12 +195,6 @@ UINT CVsdLog::GPSLogRescan( void ){
 			m_pLogGx->Resize( GetCnt(), 0 );
 			GetElement( "Gy", TRUE );
 			m_pLogGy->Resize( GetCnt(), 0 );
-		}
-		
-		if( !m_pLogDirection ){
-			bCreateDir = TRUE;
-			GetElement( "Direction", TRUE );
-			m_pLogDirection->Resize( GetCnt(), 0 );
 		}
 		
 		#ifdef USE_TURN_R
@@ -258,27 +251,8 @@ UINT CVsdLog::GPSLogRescan( void ){
 		
 		// G 計算
 		if( bCreateG ){
-			double	dBearingPrev = 100;
-			
 			#pragma omp for
 			for( int i = 2; i < GetCnt() - 1; ++i ){
-				if( dBearingPrev == 100 ){
-					dBearingPrev = atan2( Y0( i ) - Y0( i - 2 ), X0( i ) - X0( i - 2 ));
-				}
-				
-				// bearing 計算
-				double dBearing = atan2( Y0( i + 1 ) - Y0( i - 1 ), X0( i + 1 ) - X0( i - 1 ));
-				
-				if( bCreateDir ){
-					if( Speed( i ) > 1 ){
-						double dDir = dBearing / ToRAD + 90;
-						if( dDir < 0 ) dDir += 360;
-						SetDirection( i, dDir );
-					}else{
-						SetDirection( i, Direction( i - 1 ));
-					}
-				}
-				
 				// 横 G 計算
 				// Gx / Gy を作る
 				SetRawGy( i,
@@ -288,7 +262,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 				);
 				
 				// 横G = vω
-				double dBearingDelta = dBearing - dBearingPrev;
+				double dBearingDelta = ( Direction( i ) - Direction( i - 1 )) * ToRAD;
 				if     ( dBearingDelta >  M_PI ) dBearingDelta -= M_PI * 2;
 				else if( dBearingDelta < -M_PI ) dBearingDelta += M_PI * 2;
 				
@@ -302,8 +276,6 @@ UINT CVsdLog::GPSLogRescan( void ){
 				if( Gx( i ) < -3 || Gx( i ) > 3 ){
 					SetRawGx( i, Gx( i - 1 ));
 				}
-				
-				dBearingPrev = dBearing;
 			}
 			
 			// スムージング
@@ -397,6 +369,14 @@ UINT CVsdLog::GPSLogRescan( void ){
 				}
 			#endif
 		}
+		
+		// Direction 補正
+		if( m_pLogDirection ){
+			#pragma omp for
+			for( int i = 1; i < GetCnt(); ++i ){
+				if( Speed( i ) < KPH_STOP ) SetDirection( i, Direction( i - 1 ));
+			}
+		}
   	}
 	
 	return GetCnt();
@@ -473,6 +453,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			UINT	uIdxTime		= ~0;
 			UINT	uIdxLapTime		= ~0;
 			UINT	uIdxDistance	= ~0;
+			UINT	uIdxDirection	= ~0;
 			UINT	uIdxSpeed		= ~0;
 			UINT	uIdxLong		= ~0;
 			UINT	uIdxLati		= ~0;
@@ -486,6 +467,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				if( ArrayTmp->IsArray()){
 					if     ( !strcmp( *strKey, "Time"      )) uIdxTime		= uIdx;
 					else if( !strcmp( *strKey, "Distance"  )) uIdxDistance	= uIdx;
+					else if( !strcmp( *strKey, "Direction" )) uIdxDirection	= uIdx;
 					else if( !strcmp( *strKey, "Speed"     )) uIdxSpeed		= uIdx;
 					else if( !strcmp( *strKey, "Longitude" )) uIdxLong		= uIdx;
 					else if( !strcmp( *strKey, "Latitude"  )) uIdxLati		= uIdx;
@@ -510,7 +492,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			if( uIdxTime == ~0 ) return 0;
 			m_iLogStartTime = ( time_t )JSArrays[ uIdxTime ]->Get( 0 )->NumberValue();
 			
-			BOOL bCreateDistance = FALSE;
+			BOOL bCreateDistance  = FALSE;
+			BOOL bCreateDirection = FALSE;
 			
 			if( uIdxLong != ~0 && uIdxLati != ~0 ){
 				// Distance が無いときは，作る
@@ -531,6 +514,13 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				
 				m_dLong2Meter =  GPSLogGetLength( dLong0, dLati0, dLong0 + 1.0 / 3600, dLati0 ) * 3600;
 				m_dLati2Meter = -GPSLogGetLength( dLong0, dLati0, dLong0, dLati0 + 1.0 / 3600 ) * 3600;
+				
+				// Direction が無いときは，作る
+				if( uIdxDirection == ~0 ){
+					uIdxDirection = uIdx++;
+					CArrays.push_back( GetElement( "Direction", TRUE ));
+					bCreateDirection = TRUE;
+				}
 			}
 			
 			// vector に積む
@@ -574,7 +564,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				
 				if( iCnt == 0 ){
 					// 番犬作成
-					if( uIdxDistance != ~0 ) SetDistance( 0, 0 );
+					if( uIdxDistance  != ~0 ) SetDistance( 0, 0 );
+					if( uIdxDirection != ~0 ) SetDirection( 0, 0 );
 					CopyRecord( 1, 0 );
 					CopyRecord( 2, 0 );
 					AddStopRecord( 0, -WATCHDOG_TIME );
@@ -611,6 +602,13 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						SetDistance( iCnt, dDistance );
 					}
 					
+					// 方位を作る
+					if( bCreateDirection ){
+						double dDir = atan2( Y0( iCnt ) - Y0( iCnt - 1 ), X0( iCnt ) - X0( iCnt - 1 )) / ToRAD + 90;
+						if( dDir < 0 ) dDir += 360;
+						SetDirection( iCnt, dDir );
+					}
+					
 					// 前のログから TIME_STOP 離れていてかつ 指定km/h 以下なら，停止とみなす
 					int iDiffTime = GetTime( iCnt ) - GetTime( iCnt - 1 );
 					if(
@@ -628,6 +626,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						CopyRecord( iCnt,     iCnt - 1 ); // A'
 						AddStopRecord( iCnt,     GetTime( iCnt - 1 ) + TIME_STOP_MARGIN ); // A'
 						AddStopRecord( iCnt + 1, GetTime( iCnt + 2 ) - TIME_STOP_MARGIN ); // B'
+						
+						if( uIdxDirection ) SetDirection( iCnt + 2, Direction( iCnt - 1 ));
 					}else{
 						// 停止期間でなければ，ログ Hz を計算する
 						iLogHzTime += iDiffTime;
@@ -680,7 +680,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		AddStopRecord( iCnt + 1, WATCHDOG_TIME );
 		
 		
-		//#define DUMP_LOG
+		#define DUMP_LOG
 		#if defined DEBUG && defined DUMP_LOG
 			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_raw.txt" );
 		#endif
