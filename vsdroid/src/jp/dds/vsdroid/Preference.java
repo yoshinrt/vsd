@@ -20,10 +20,8 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 	private ListPreference		ListSectors;
 	private ListPreference		ListConnMode;
 	private ListPreference		ListBTDevices;
-	private ListPreference		ListRoms;
 	private EditTextPreference	EditGymkhaStart;
 	private EditTextPreference	EditIPAddr;
-	private EditTextPreference	EditSystemDir;
 
 	static final int	RESULT_OK		= 0;
 	static final int	RESULT_RENEW	= 1;
@@ -38,10 +36,8 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		ListSectors		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_sectors" );
 		ListConnMode	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_connection_mode" );
 		ListBTDevices	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_bt_devices" );
-		ListRoms		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_roms" );
 		EditGymkhaStart	= ( EditTextPreference )getPreferenceScreen().findPreference( "key_gymkha_start" );
 		EditIPAddr		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_ip_addr" );
-		EditSystemDir	= ( EditTextPreference )getPreferenceScreen().findPreference( "key_system_dir" );
 
 		Bundle extras = getIntent().getExtras();
 		if( extras != null ){
@@ -74,16 +70,6 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		Arrays.sort( entries );
 		ListBTDevices.setEntries( entries );
 		ListBTDevices.setEntryValues( entries );
-
-		/*** ROM リストの作成 ***********************************************/
-
-		File file = new File( getPreferenceScreen().getSharedPreferences().getString( "key_system_dir", null ));
-		String[] RomFiles = file.list( getFileExtensionFilter( ".mot" ));
-		if( RomFiles != null ){
-			Arrays.sort( RomFiles );
-			ListRoms.setEntries( RomFiles );
-			ListRoms.setEntryValues( RomFiles );
-		}
 	}
 
 	static FilenameFilter getFileExtensionFilter( String extension ){
@@ -148,10 +134,6 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 			EditGymkhaStart.setSummary( s );
 		}
 
-		if( key == null || key.equals( "key_roms" )){
-			ListRoms.setSummary( sharedPreferences.getString( "key_roms", "Not selected" ));
-		}
-
 		if( key == null || key.equals( "key_connection_mode" )){
 			String s = sharedPreferences.getString( "key_connection_mode", "0" );
 
@@ -166,10 +148,6 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 
 		if( key == null || key.equals( "key_ip_addr" )){
 			EditIPAddr.setSummary( sharedPreferences.getString( "key_ip_addr", null ));
-		}
-
-		if( key == null || key.equals( "key_system_dir" )){
-			EditSystemDir.setSummary( sharedPreferences.getString( "key_system_dir", null ));
 		}
 
 		if( key == null || key.equals( "key_bt_devices" )){

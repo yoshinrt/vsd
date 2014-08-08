@@ -246,7 +246,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::Open" );
 
 			try{
-				brEmuLog = new BufferedReader( new FileReader( Pref.getString( "key_system_dir", null ) + "/vsd.log" ));
+				brEmuLog = new BufferedReader( new FileReader( Pref.getString( "key_replay_log", null )));
 
 				// ヘッダ解析
 				try{ strBuf = brEmuLog.readLine(); }catch( IOException e ){ strBuf = ""; }
@@ -263,7 +263,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 					else if( strToken.equals( "LapTime"			)) iIdxLapTime	= i;
 				}
 
-			}catch( FileNotFoundException e ){
+			}catch( Exception e ){
 				iMessage = R.string.statmsg_emulog_open_failed;
 				return -1;
 			}
@@ -625,10 +625,12 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 		if(
 			requestCode == REQUEST_ENABLE_BT ||
-			resultCode == Preference.RESULT_RENEW
+			resultCode == Preference.RESULT_RENEW ||
+			Vsd == null
 		){
 			// BT イネーブルダイアログから帰ってきたか，
-			// 接続モードが変更されたので，
+			// 接続モードが変更されたか，
+			// Pref がからの状態での preferenceScreen から帰ってきたので，
 			// VsdThread を停止後，VsdInterface を再構築する
 			if( Vsd != null ) Vsd.KillThread();
 			CreateVsdInterface();

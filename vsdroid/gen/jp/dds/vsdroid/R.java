@@ -9,60 +9,73 @@ package jp.dds.vsdroid;
 
 public final class R {
     public static final class array {
-        public static final int list_connection_mode=0x7f040003;
-        public static final int list_connection_mode_values=0x7f040004;
-        public static final int list_sectors=0x7f040002;
-        public static final int list_vsd_mode=0x7f040000;
-        public static final int list_vsd_mode_values=0x7f040001;
+        public static final int list_connection_mode=0x7f060003;
+        public static final int list_connection_mode_values=0x7f060004;
+        public static final int list_sectors=0x7f060002;
+        public static final int list_vsd_mode=0x7f060000;
+        public static final int list_vsd_mode_values=0x7f060001;
     }
     public static final class attr {
     }
     public static final class drawable {
-        public static final int icon=0x7f020000;
-        public static final int meter0=0x7f020001;
-        public static final int meter1=0x7f020002;
-        public static final int meter2=0x7f020003;
-        public static final int meter3=0x7f020004;
-        public static final int meter4=0x7f020005;
+        public static final int ic_launcher=0x7f020000;
+        public static final int icon=0x7f020001;
+        public static final int meter0=0x7f020002;
+        public static final int meter1=0x7f020003;
+        public static final int meter2=0x7f020004;
+        public static final int meter3=0x7f020005;
+        public static final int meter4=0x7f020006;
+    }
+    public static final class id {
+        public static final int seekBarPrefBarContainer=0x7f070003;
+        public static final int seekBarPrefSeekBar=0x7f070004;
+        public static final int seekBarPrefUnitsLeft=0x7f070002;
+        public static final int seekBarPrefUnitsRight=0x7f070000;
+        public static final int seekBarPrefValue=0x7f070001;
+    }
+    public static final class layout {
+        public static final int seek_bar_preference=0x7f030000;
     }
     public static final class string {
-        public static final int app_name=0x7f050000;
-        public static final int conn_mode_bluetooth=0x7f050015;
-        public static final int conn_mode_ether=0x7f050014;
-        public static final int conn_mode_logreplay=0x7f050016;
-        public static final int mode_0_100=0x7f050013;
-        public static final int mode_0_400=0x7f050012;
-        public static final int mode_gymkhana=0x7f050011;
-        public static final int mode_laptime=0x7f050010;
-        public static final int pref_bt_devices=0x7f050009;
-        public static final int pref_caribration=0x7f050003;
-        public static final int pref_connection_mode=0x7f050007;
-        public static final int pref_eco_mode=0x7f05000a;
-        public static final int pref_flash=0x7f05000e;
-        public static final int pref_gymkhana_start=0x7f050006;
-        public static final int pref_ip_addr=0x7f050008;
-        public static final int pref_reopen_log=0x7f050002;
-        public static final int pref_replay_log=0x7f05000c;
-        public static final int pref_roms=0x7f05000d;
-        public static final int pref_sectors=0x7f050005;
-        public static final int pref_summery_eco_mode=0x7f05000b;
-        public static final int pref_summery_status=0x7f050001;
-        public static final int pref_system_dir=0x7f05000f;
-        public static final int pref_vsd_mode=0x7f050004;
-        public static final int statmsg_bluetooth_connection_failed=0x7f050022;
-        public static final int statmsg_bluetooth_device_not_selected=0x7f050021;
-        public static final int statmsg_bluetooth_not_available=0x7f05001f;
-        public static final int statmsg_bluetooth_server_error=0x7f050020;
-        public static final int statmsg_emulog_open_failed=0x7f05001c;
-        public static final int statmsg_log_open_failed=0x7f050018;
-        public static final int statmsg_log_replay_failed=0x7f05001d;
-        public static final int statmsg_log_replay_finished=0x7f05001e;
-        public static final int statmsg_normal=0x7f050017;
-        public static final int statmsg_socket_open_failed=0x7f050019;
-        public static final int statmsg_socket_rw_failed=0x7f05001a;
-        public static final int statmsg_vsd_initialize_failed=0x7f05001b;
+        public static final int app_name=0x7f050002;
+        public static final int conn_mode_bluetooth=0x7f050017;
+        public static final int conn_mode_ether=0x7f050016;
+        public static final int conn_mode_logreplay=0x7f050018;
+        public static final int mode_0_100=0x7f050015;
+        public static final int mode_0_400=0x7f050014;
+        public static final int mode_gymkhana=0x7f050013;
+        public static final int mode_laptime=0x7f050012;
+        public static final int pref_bt_devices=0x7f05000b;
+        public static final int pref_caribration=0x7f050005;
+        public static final int pref_connection_mode=0x7f050009;
+        public static final int pref_eco_mode=0x7f05000c;
+        public static final int pref_flash=0x7f05000f;
+        public static final int pref_gymkhana_start=0x7f050008;
+        public static final int pref_ip_addr=0x7f05000a;
+        public static final int pref_reopen_log=0x7f050004;
+        public static final int pref_replay_log=0x7f050010;
+        public static final int pref_roms=0x7f05000e;
+        public static final int pref_sectors=0x7f050007;
+        public static final int pref_summery_eco_mode=0x7f05000d;
+        public static final int pref_summery_status=0x7f050003;
+        public static final int pref_system_dir=0x7f050011;
+        public static final int pref_vsd_mode=0x7f050006;
+        public static final int statmsg_bluetooth_connection_failed=0x7f050024;
+        public static final int statmsg_bluetooth_device_not_selected=0x7f050023;
+        public static final int statmsg_bluetooth_not_available=0x7f050021;
+        public static final int statmsg_bluetooth_server_error=0x7f050022;
+        public static final int statmsg_emulog_open_failed=0x7f05001e;
+        public static final int statmsg_log_open_failed=0x7f05001a;
+        public static final int statmsg_log_replay_failed=0x7f05001f;
+        public static final int statmsg_log_replay_finished=0x7f050020;
+        public static final int statmsg_normal=0x7f050019;
+        public static final int statmsg_socket_open_failed=0x7f05001b;
+        public static final int statmsg_socket_rw_failed=0x7f05001c;
+        public static final int statmsg_vsd_initialize_failed=0x7f05001d;
+        public static final int text_ParentDir=0x7f050000;
+        public static final int text_SelectDir=0x7f050001;
     }
     public static final class xml {
-        public static final int preference=0x7f030000;
+        public static final int preference=0x7f040000;
     }
 }

@@ -576,10 +576,7 @@ class VsdInterface implements Runnable {
 
 			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware" );
 			try{
-				fsFirm = new FileInputStream(
-					Pref.getString( "key_system_dir", null )
-					+ "/" + Pref.getString( "key_roms", null )
-				);
+				fsFirm = new FileInputStream( Pref.getString( "key_roms", null ));
 
 				WaitChar( ':' ); SendCmd( "l\r" );	// FW があったときだけ l コマンド
 
@@ -590,7 +587,7 @@ class VsdInterface implements Runnable {
 					}
 					OutStream.write( Buf, 0, iPtr );
 				}
-			}catch( FileNotFoundException e ){
+			}catch( Exception e ){
 				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware canceled" );
 			}
 
