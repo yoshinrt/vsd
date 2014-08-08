@@ -38,7 +38,7 @@ import jp.dds.vsdroid.VsdInterface;
 @SuppressLint("DefaultLocale")
 public class Vsdroid extends Activity implements SensorEventListener {
 
-	static final boolean	bDebug		= false;
+	static final boolean	bDebug		= BuildConfig.DEBUG;
 
 	// シフトインジケータの表示
 	private static final int iTachoBar[] = { 334, 200, 150, 118, 97 };
