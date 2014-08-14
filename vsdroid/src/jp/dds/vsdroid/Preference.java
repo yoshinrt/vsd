@@ -87,9 +87,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 	protected void onResume() {
 		super.onResume();
 		SharedPreferences sharedPreferences = getPreferenceScreen().getSharedPreferences();
-
 		SetupSummery( sharedPreferences, null );
-
 		sharedPreferences.registerOnSharedPreferenceChangeListener( this );
 	}
 
