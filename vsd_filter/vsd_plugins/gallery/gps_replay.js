@@ -26,7 +26,7 @@ function Initialize(){
 		APIKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
 		
 		// ズームレベルを 0～21 で指定します
-		Zoom: 13,
+		Zoom: 14,
 		
 		// 地図タイプ
 		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:地図+航空写真
@@ -103,7 +103,8 @@ function Initialize(){
 
 function Draw(){
 	// Google マップ表示
-	Vsd.DrawGoogleMaps( GoogleMapsParam );
+	//Vsd.DrawGoogleMaps( GoogleMapsParam );
+	Vsd.DrawOpenStreetMap( GoogleMapsParam );
 	
 	// メーター画像描画
 	Vsd.DrawCircle( MeterCx, MeterCy, MeterR, BGColor, DRAW_FILL );

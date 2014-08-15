@@ -168,18 +168,18 @@ Vsd.DrawGoogleMaps = function( param ){
 			param.Width, param.Height
 		);
 		
-		DrawArrow(
+		Vsd.DrawCarIndicator(
 			param.X + param.Width  / 2,
 			param.Y + param.Height / 2,
-			Vsd.Direction, param.IndicatorSize
+			Vsd.Direction, param.IndicatorSize, param.IndicatorColor
 		);
 	}else{
 		Vsd.PutImage( param.X, param.Y, param.MapImg );
 		
-		DrawArrow(
+		Vsd.DrawCarIndicator(
 			param.X + param.Width  / 2 + PixLong,
 			param.Y + param.Height / 2 + PixLati,
-			Vsd.Direction, param.IndicatorSize
+			Vsd.Direction, param.IndicatorSize, param.IndicatorColor
 		);
 	}
 	
@@ -198,31 +198,31 @@ Vsd.DrawGoogleMaps = function( param ){
 		param.Lati			= Vsd.Latitude;
 		param.NextDir		= Vsd.Direction;
 	}
+}
+
+// 自車マーク描画
+Vsd.DrawCarIndicator = function( cx, cy, angle, size, color ){
+	angle *= Math.PI / 180;
+	var cos = Math.cos( angle ) * size;
+	var sin = Math.sin( angle ) * size;
 	
-	// 自車マーク描画
-	function DrawArrow( cx, cy, angle, size ){
-		angle *= Math.PI / 180;
-		var cos = Math.cos( angle ) * size;
-		var sin = Math.sin( angle ) * size;
-		
-		apex = [
-			0, -1,
-			0.707, 0.707,
-			0, 0.25,
-			-0.707, 0.707,
-		];
-		
-		// 回転 + x,y 座標加算
-		for( var i = 0; i < apex.length; i += 2 ){
-			var x = cx + apex[ i ] * cos - apex[ i + 1 ] * sin;
-			var y = cy + apex[ i ] * sin + apex[ i + 1 ] * cos;
-			apex[ i     ] = x;
-			apex[ i + 1 ] = y;
-		}
-		
-		Vsd.DrawPolygon( apex, param.IndicatorColor, DRAW_FILL );
-		Vsd.DrawCircle( cx, cy, size, param.IndicatorColor );
+	apex = [
+		0, -1,
+		0.707, 0.707,
+		0, 0.25,
+		-0.707, 0.707,
+	];
+	
+	// 回転 + x,y 座標加算
+	for( var i = 0; i < apex.length; i += 2 ){
+		var x = cx + apex[ i ] * cos - apex[ i + 1 ] * sin;
+		var y = cy + apex[ i ] * sin + apex[ i + 1 ] * cos;
+		apex[ i     ] = x;
+		apex[ i + 1 ] = y;
 	}
+	
+	Vsd.DrawPolygon( apex, color, DRAW_FILL );
+	Vsd.DrawCircle( cx, cy, size, color );
 }
 
 //*** Geocoding 処理 *********************************************************
@@ -277,6 +277,115 @@ Vsd.Geocoding = function( param ){
 		try{ return new ActiveXObject( "Microsoft.XMLHTTP"  ) }catch( e ){}
 		return false;
 	}
+}
+
+//*** OpenStreetMap 描画 *****************************************************
+
+Vsd.DrawOpenStreetMap = function( param ){
+	if( Vsd.Longitude === undefined ) return;
+	
+	if( param.MapImg === undefined ){
+		param.MapImg = [];
+		
+		if( param.PrefetchSize === undefined ) param.PrefetchSize = 1.5;
+	}
+	
+	// タイル番号，タイル内 x,y 座標を求める
+	var PosX = lng2tile( Vsd.Longitude, param.Zoom ); var TileX = ~~PosX;
+	var PosY = lat2tile( Vsd.Latitude,  param.Zoom ); var TileY = ~~PosY;
+	PosX = ~~(( PosX - TileX ) * 256 );
+	PosY = ~~(( PosY - TileY ) * 256 );
+	
+	//Print( "X=" + TileX + ":" + PosX + " Y=" + TileY + ":" + PosY + "\n" );
+	
+	// プリフェッチするタイル番号の範囲を求める
+	var TileStX = ( PosX - (( param.Width  * param.PrefetchSize ) >> 1 ) - 255 ) >> 8;
+	var TileEdX = ( PosX + (( param.Width  * param.PrefetchSize ) >> 1 ) +   1 ) >> 8;
+	var TileStY = ( PosY - (( param.Height * param.PrefetchSize ) >> 1 ) - 255 ) >> 8;
+	var TileEdY = ( PosY + (( param.Height * param.PrefetchSize ) >> 1 ) +   1 ) >> 8;
+	
+	// プリフェッチ
+	for( var x = TileX + TileStX; x <= TileX + TileEdY; ++x ){
+		for( var y = TileY + TileStY; y <= TileY + TileEdY; ++y ){
+			var key = x + "," + y;
+			if( param.MapImg[ key ] === undefined ){
+				var url = "http://" + String.fromCharCode( 0x61 + ~~( Math.random() * 3 )) + ".tile.openstreetmap.org/" + param.Zoom + "/" + x + "/" + y + ".png";
+				param.MapImg[ key ] = new Image( url, IMG_INET_ASYNC );
+				//Print( "new " + url + "\n" );
+			}
+		}
+	}
+	
+	// 表示
+	var TileStX = (( param.Width >> 1 ) - PosX + 255 ) >> 8;
+	var OffsStX = TileStX * 256 + PosX - ( param.Width >> 1 );
+	var TileStY = (( param.Height >> 1 ) - PosY + 255 ) >> 8;
+	var OffsY   = TileStY * 256 + PosY - ( param.Height >> 1 );
+	var OffsX;
+	
+	TileStX = TileX - TileStX;
+	TileY   = TileY - TileStY;
+	
+	var w, h;
+	
+	for( var y = 0; y < param.Height; ){
+		
+		TileX = TileStX;
+		OffsX = OffsStX;
+		
+		h = 256 - OffsY;
+		if( h > param.Height - y ) h = param.Height - y;
+		
+		for( var x = 0; x < param.Width; ){
+			
+			w = 256 - OffsX;
+			if( w > param.Width - x ) w = param.Width - x;
+			
+			// Image 存在確認
+			var key = TileX + "," + TileY;
+			if( param.MapImg[ key ] !== undefined && param.MapImg[ key ].Status == IMG_STATUS_LOAD_COMPLETE ){
+				Vsd.PutImage( param.X + x, param.Y + y, param.MapImg[ key ], 0, OffsX, OffsY, w, h );
+			}else{
+				Vsd.DrawRect(
+					param.X + x, param.Y + y,
+					param.X + x + w - 1, param.Y + y + h - 1,
+					0xC0C0C0, DRAW_FILL
+				);
+				Vsd.DrawRect(
+					param.X + x, param.Y + y,
+					param.X + x + w - 1, param.Y + y + h - 1,
+					0x808080
+				);
+				Vsd.DrawLine(
+					param.X + x, param.Y + y,
+					param.X + x + w - 1, param.Y + y + h - 1,
+					0x808080
+				);
+				Vsd.DrawLine(
+					param.X + x + w - 1, param.Y + y,
+					param.X + x, param.Y + y + h - 1,
+					0x808080
+				);
+			}
+			
+			++TileX;
+			OffsX = 0;
+			x += w;
+		}
+		
+		++TileY;
+		OffsY = 0;
+		y += h;
+	}
+	
+	Vsd.DrawCarIndicator(
+		param.X + param.Width  / 2,
+		param.Y + param.Height / 2,
+		Vsd.Direction, param.IndicatorSize, param.IndicatorColor
+	);
+	
+	function lng2tile( lng, zoom ){ return ( lng + 180 ) / 360 * Math.pow( 2, zoom ); }
+	function lat2tile( lat, zoom ){ return ( 1 - Math.log( Math.tan( lat * Math.PI / 180 ) + 1 / Math.cos( lat * Math.PI / 180 ))/ Math.PI ) / 2 * Math.pow( 2, zoom ); }
 }
 
 //*** メータ用目盛り描画 *****************************************************

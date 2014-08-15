@@ -108,7 +108,8 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 					(
 						/* WININETèâä˙âª */
 						hInternet = InternetOpen(
-							"WININET Sample Program",
+							//"WININET Sample Program",
+							"Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)",
 							INTERNET_OPEN_TYPE_PRECONFIG,
 							NULL, NULL, 0
 						)
