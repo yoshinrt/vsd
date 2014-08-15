@@ -1,4 +1,4 @@
-:@echo off
+@echo off
 
 set path=%path%;c:\cygwin\bin
 
