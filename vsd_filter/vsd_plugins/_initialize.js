@@ -305,7 +305,7 @@ Vsd.DrawOpenStreetMap = function( param ){
 	var TileEdY = ( PosY + (( param.Height * param.PrefetchSize ) >> 1 ) +   1 ) >> 8;
 	
 	// プリフェッチ
-	for( var x = TileX + TileStX; x <= TileX + TileEdY; ++x ){
+	for( var x = TileX + TileStX; x <= TileX + TileEdX; ++x ){
 		for( var y = TileY + TileStY; y <= TileY + TileEdY; ++y ){
 			var key = x + "," + y;
 			if( param.MapImg[ key ] === undefined ){
