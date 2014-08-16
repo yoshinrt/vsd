@@ -73,7 +73,7 @@
       </ForcedUsingFiles>
       <ForcedIncludeFiles>
       </ForcedIncludeFiles>
-      <OpenMPSupport>false</OpenMPSupport>
+      <OpenMPSupport>true</OpenMPSupport>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>

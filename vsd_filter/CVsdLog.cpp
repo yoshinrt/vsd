@@ -208,12 +208,11 @@ UINT CVsdLog::GPSLogRescan( void ){
 	
 	#pragma omp parallel
 	{
-		double dMaxSpeed, dMinSpeed;
+		double dMaxSpeed;
 		double dMaxGx, dMinGx;
 		double dMaxGy, dMinGy;
 		
 		dMaxSpeed = -FLT_MAX;
-		dMinSpeed =  FLT_MAX;
 		
 		// スピード生成
 		if( bCreateSpeed ){
@@ -229,7 +228,6 @@ UINT CVsdLog::GPSLogRescan( void ){
 					SetRawSpeed( i, 0 );
 					SetRawSpeed( i - 1, 0 );
 					if( dMaxSpeed < 0 ) dMaxSpeed = 0;
-					if( dMinSpeed > 0 ) dMinSpeed = 0;
 				}else{
 					double d;
 					SetRawSpeed( i,
@@ -237,15 +235,16 @@ UINT CVsdLog::GPSLogRescan( void ){
 						* ( 3600.0 / 1000 * 1000 ) /
 						( GetTime( i ) - GetTime( i - 1 ))
 					);
-					if( dMaxSpeed < d ) dMaxSpeed = d;
-					if( dMinSpeed > d ) dMinSpeed = d;
+					// 100km/h 以上は，+20% 以上の値は無視する
+					if( dMaxSpeed < d && ( d < 100 || dMaxSpeed * 1.2 > d )) dMaxSpeed = d;
 				}
 			}
 			// 番犬はすでに 0 → SetRawSpeed( GetCnt() - 1, 0 );
 			
 			#pragma omp critical
 			{
-				SetMaxMinSpeed( dMaxSpeed, dMinSpeed );
+				//DebugMsgD( "val=%f max=%f\n", dMaxSpeed, m_pLogSpeed->GetMax());
+				SetMaxMinSpeed( dMaxSpeed, 0 );
 			}
 		}
 		
