@@ -106,7 +106,7 @@ function Initialize(){
 function Draw(){
 	// Google マップ表示
 	//Vsd.DrawGoogleMaps( MapParam );
-	Vsd.DrawMap( MapParam );
+	Vsd.DrawStreetMap( MapParam );
 	
 	// メーター画像描画
 	Vsd.DrawCircle( MeterCx, MeterCy, MeterR, BGColor, DRAW_FILL );

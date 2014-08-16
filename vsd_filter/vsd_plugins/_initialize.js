@@ -266,7 +266,7 @@ Vsd.Geocoding = function( param ){
 
 //*** OpenStreetMap 描画 *****************************************************
 
-Vsd.DrawMap = function( param ){
+Vsd.DrawStreetMap = function( param ){
 	if( Vsd.Longitude === undefined ){
 		NoMap( param.X, param.Y, param.X + param.Width - 1, param.Y + param.Height - 1 );
 		return;
@@ -281,6 +281,7 @@ Vsd.DrawMap = function( param ){
 		if( param.Maptype == "openstreetmap" ){
 			param.TileSize = 256;
 		}else{
+			// GoogleMaps でも表示できるけど地図の著作権的に隠しモード
 			param.TileSize = 512;
 			--param.Zoom;
 			param.GMapURL = "http://maps.googleapis.com/maps/api/staticmap?sensor=false&language=ja" +
