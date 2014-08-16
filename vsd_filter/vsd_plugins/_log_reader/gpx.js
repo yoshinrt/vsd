@@ -15,6 +15,7 @@ function Read_gpx( Files ){
 	var	Cnt = 0;
 	var bSpeed		= false;
 	var bAltitude	= false;
+	var bMyTracks; // Google My Tracks のバグ? 回避
 	
 	for( var i = 0; i < Files.length; ++i ){
 		var file = new File();
@@ -36,9 +37,15 @@ function Read_gpx( Files ){
 			
 			// trkpt 先頭サーチ
 			while( !Line.match( /<trkpt/ )){
+				if( bMyTracks === undefined && Line.match( /Google My Tracks/ )){
+					bMyTracks = true;
+				}
+				
 				Line = file.ReadLine();
 				if( file.IsEOF()) break NextFile;
 			}
+			
+			if( bMyTracks === undefined ) bMyTracks = false;
 			
 			// trkpt 先頭が見つかったので，それ以前を破棄
 			Line = RegExp.lastMatch + RegExp.rightContext;
@@ -89,7 +96,11 @@ function Read_gpx( Files ){
 				Log.Altitude[ Cnt ] = +RegExp.$1;
 			}
 			
-			++Cnt;
+			// Google My Tracks は変なログを吐くのでその対策
+			if( !( bMyTracks && Cnt &&
+				Log.Latitude [ Cnt - 1 ] == Log.Latitude [ Cnt ] &&
+				Log.Longitude[ Cnt - 1 ] == Log.Longitude[ Cnt ]
+			)) ++Cnt;
 		}
 		file.Close();
 	}
