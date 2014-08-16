@@ -266,7 +266,7 @@ Vsd.Geocoding = function( param ){
 
 //*** OpenStreetMap 描画 *****************************************************
 
-Vsd.DrawStreetMap = function( param ){
+Vsd.DrawRoadMap = function( param ){
 	if( Vsd.Longitude === undefined ){
 		NoMap( param.X, param.Y, param.X + param.Width - 1, param.Y + param.Height - 1 );
 		return;

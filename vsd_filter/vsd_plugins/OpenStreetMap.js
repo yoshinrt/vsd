@@ -110,7 +110,7 @@ function Draw(){
 	Vsd.DrawRect( 0, 324 * Scale, 316 * Scale - 1, 324 * Scale + FontJ.Height * 6 - 1, BGColor, DRAW_FILL );
 	
 	// Google マップ表示
-	Vsd.DrawStreetMap( MapParam );
+	Vsd.DrawRoadMap( MapParam );
 	
 	// 文字データ
 	var Y = 324 * Scale;
