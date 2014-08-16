@@ -127,7 +127,7 @@ Vsd.DrawGoogleMaps = function( param ){
 			( param.APIKey != '' ? "&key=" + param.APIKey : '' ) +
 			"&maptype=" + param.Maptype +
 			"&zoom=" + param.Zoom +
-			( param.SmoothScrollMap ? "&size=640x640" : "&size=" + Math.floor( param.Width ) + "x" + Math.floor( param.Height )) +
+			"&size=" + ~~param.Width + "x" + ~~param.Height +
 			"&center=";
 		
 		param.MapImg		= new Image( param.GMapURL + Vsd.Latitude + "," + Vsd.Longitude );
@@ -160,28 +160,13 @@ Vsd.DrawGoogleMaps = function( param ){
 		Math.log(( 1 + sin_now ) / ( 1 - sin_now ))
 	) / Math.PI * ( 1 << ( 7 - 1 + param.Zoom ));
 	
-	if( param.SmoothScrollMap ){
-		Vsd.PutImage(
-			param.X, param.Y, param.MapImg, 0,
-			320 - ( param.Width  >> 1 ) + PixLong,
-			320 - ( param.Height >> 1 ) + PixLati,
-			param.Width, param.Height
-		);
-		
-		Vsd.DrawCarIndicator(
-			param.X + param.Width  / 2,
-			param.Y + param.Height / 2,
-			Vsd.Direction, param.IndicatorSize, param.IndicatorColor
-		);
-	}else{
-		Vsd.PutImage( param.X, param.Y, param.MapImg );
-		
-		Vsd.DrawCarIndicator(
-			param.X + param.Width  / 2 + PixLong,
-			param.Y + param.Height / 2 + PixLati,
-			Vsd.Direction, param.IndicatorSize, param.IndicatorColor
-		);
-	}
+	Vsd.PutImage( param.X, param.Y, param.MapImg );
+	
+	Vsd.DrawCarIndicator(
+		param.X + param.Width  / 2 + PixLong,
+		param.Y + param.Height / 2 + PixLati,
+		Vsd.Direction, param.IndicatorSize, param.IndicatorColor
+	);
 	
 	// 次のマップデータを非同期モードで取得
 	if(
@@ -281,64 +266,85 @@ Vsd.Geocoding = function( param ){
 
 //*** OpenStreetMap 描画 *****************************************************
 
-Vsd.DrawOpenStreetMap = function( param ){
-	if( Vsd.Longitude === undefined ) return;
+Vsd.DrawMap = function( param ){
+	if( Vsd.Longitude === undefined ){
+		NoMap( param.X, param.Y, param.X + param.Width - 1, param.Y + param.Height - 1 );
+		return;
+	}
 	
 	if( param.MapImg === undefined ){
 		param.MapImg = [];
 		
 		if( param.PrefetchSize === undefined ) param.PrefetchSize = 1.5;
+		if( param.Maptype === undefined ) param.Maptype = "openstreetmap";
+		
+		if( param.Maptype == "openstreetmap" ){
+			param.TileSize = 256;
+		}else{
+			param.TileSize = 512;
+			--param.Zoom;
+			param.GMapURL = "http://maps.googleapis.com/maps/api/staticmap?sensor=false&language=ja" +
+				( param.APIKey != '' ? "&key=" + param.APIKey : '' ) +
+				"&maptype=" + param.Maptype +
+				"&zoom=" + ( param.Zoom + 1 ) +
+				"&size=512x512&center=";
+		}
 	}
 	
 	// タイル番号，タイル内 x,y 座標を求める
-	var PosX = lng2tile( Vsd.Longitude, param.Zoom ); var TileX = ~~PosX;
-	var PosY = lat2tile( Vsd.Latitude,  param.Zoom ); var TileY = ~~PosY;
-	PosX = ~~(( PosX - TileX ) * 256 );
-	PosY = ~~(( PosY - TileY ) * 256 );
+	var PosX = Lng2Tile( Vsd.Longitude, param.Zoom ); var TileX = ~~PosX;
+	var PosY = Lat2Tile( Vsd.Latitude,  param.Zoom ); var TileY = ~~PosY;
+	PosX = ~~(( PosX - TileX ) * param.TileSize );
+	PosY = ~~(( PosY - TileY ) * param.TileSize );
 	
 	//Print( "X=" + TileX + ":" + PosX + " Y=" + TileY + ":" + PosY + "\n" );
 	
 	// プリフェッチするタイル番号の範囲を求める
-	var TileStX = ( PosX - (( param.Width  * param.PrefetchSize ) >> 1 ) - 255 ) >> 8;
-	var TileEdX = ( PosX + (( param.Width  * param.PrefetchSize ) >> 1 ) +   1 ) >> 8;
-	var TileStY = ( PosY - (( param.Height * param.PrefetchSize ) >> 1 ) - 255 ) >> 8;
-	var TileEdY = ( PosY + (( param.Height * param.PrefetchSize ) >> 1 ) +   1 ) >> 8;
+	var TileStX = ~~(( PosX - (( param.Width  * param.PrefetchSize ) >> 1 ) + 1 - param.TileSize ) / param.TileSize );
+	var TileEdX = ~~(( PosX + (( param.Width  * param.PrefetchSize ) >> 1 ) + 1 ) / param.TileSize );
+	var TileStY = ~~(( PosY - (( param.Height * param.PrefetchSize ) >> 1 ) + 1 - param.TileSize ) / param.TileSize );
+	var TileEdY = ~~(( PosY + (( param.Height * param.PrefetchSize ) >> 1 ) + 1 ) / param.TileSize );
 	
 	// プリフェッチ
+	var url;
 	for( var x = TileX + TileStX; x <= TileX + TileEdX; ++x ){
 		for( var y = TileY + TileStY; y <= TileY + TileEdY; ++y ){
 			var key = x + "," + y;
 			if( param.MapImg[ key ] === undefined ){
-				var url = "http://" + String.fromCharCode( 0x61 + ~~( Math.random() * 3 )) + ".tile.openstreetmap.org/" + param.Zoom + "/" + x + "/" + y + ".png";
+				if( param.Maptype == "openstreetmap" ){
+					url = "http://" + String.fromCharCode( 0x61 + ~~( Math.random() * 3 )) + ".tile.openstreetmap.org/" + param.Zoom + "/" + x + "/" + y + ".png";
+				}else{
+					url = param.GMapURL + Tile2Lat( y + 0.5, param.Zoom ) + "," + Tile2Lng( x + 0.5, param.Zoom );
+				}
 				param.MapImg[ key ] = new Image( url, IMG_INET_ASYNC );
-				//Print( "new " + url + "\n" );
+				//Print( "new " + key + "=" + url + "\n" );
 			}
 		}
 	}
 	
 	// 表示
-	var TileStX = (( param.Width >> 1 ) - PosX + 255 ) >> 8;
-	var OffsStX = TileStX * 256 + PosX - ( param.Width >> 1 );
-	var TileStY = (( param.Height >> 1 ) - PosY + 255 ) >> 8;
-	var OffsY   = TileStY * 256 + PosY - ( param.Height >> 1 );
+	var TileStX = ~~((( param.Width >> 1 ) - PosX + param.TileSize - 1 ) / param.TileSize );
+	var OffsStX = TileStX * param.TileSize + PosX - ( param.Width >> 1 );
+	var TileStY = ~~((( param.Height >> 1 ) - PosY + param.TileSize - 1 ) / param.TileSize );
+	var OffsY   = TileStY * param.TileSize + PosY - ( param.Height >> 1 );
 	var OffsX;
 	
 	TileStX = TileX - TileStX;
 	TileY   = TileY - TileStY;
 	
-	var w, h;
+	var w, h, e;
 	
 	for( var y = 0; y < param.Height; ){
 		
 		TileX = TileStX;
 		OffsX = OffsStX;
 		
-		h = 256 - OffsY;
+		h = param.TileSize - OffsY;
 		if( h > param.Height - y ) h = param.Height - y;
 		
 		for( var x = 0; x < param.Width; ){
 			
-			w = 256 - OffsX;
+			w = param.TileSize - OffsX;
 			if( w > param.Width - x ) w = param.Width - x;
 			
 			// Image 存在確認
@@ -346,26 +352,7 @@ Vsd.DrawOpenStreetMap = function( param ){
 			if( param.MapImg[ key ] !== undefined && param.MapImg[ key ].Status == IMG_STATUS_LOAD_COMPLETE ){
 				Vsd.PutImage( param.X + x, param.Y + y, param.MapImg[ key ], 0, OffsX, OffsY, w, h );
 			}else{
-				Vsd.DrawRect(
-					param.X + x, param.Y + y,
-					param.X + x + w - 1, param.Y + y + h - 1,
-					0xC0C0C0, DRAW_FILL
-				);
-				Vsd.DrawRect(
-					param.X + x, param.Y + y,
-					param.X + x + w - 1, param.Y + y + h - 1,
-					0x808080
-				);
-				Vsd.DrawLine(
-					param.X + x, param.Y + y,
-					param.X + x + w - 1, param.Y + y + h - 1,
-					0x808080
-				);
-				Vsd.DrawLine(
-					param.X + x + w - 1, param.Y + y,
-					param.X + x, param.Y + y + h - 1,
-					0x808080
-				);
+				NoMap( param.X + x, param.Y + y, param.X + x + w - 1, param.Y + y + h - 1 );
 			}
 			
 			++TileX;
@@ -384,8 +371,23 @@ Vsd.DrawOpenStreetMap = function( param ){
 		Vsd.Direction, param.IndicatorSize, param.IndicatorColor
 	);
 	
-	function lng2tile( lng, zoom ){ return ( lng + 180 ) / 360 * Math.pow( 2, zoom ); }
-	function lat2tile( lat, zoom ){ return ( 1 - Math.log( Math.tan( lat * Math.PI / 180 ) + 1 / Math.cos( lat * Math.PI / 180 ))/ Math.PI ) / 2 * Math.pow( 2, zoom ); }
+	function Lng2Tile( lng, zoom ){ return ( lng + 180 ) / 360 * Math.pow( 2, zoom ); }
+	function Lat2Tile( lat, zoom ){ return ( 1 - Math.log( Math.tan( lat * Math.PI / 180 ) + 1 / Math.cos( lat * Math.PI / 180 ))/ Math.PI ) / 2 * Math.pow( 2, zoom ); }
+	
+	function Tile2Lng( x, z ){
+		return x / Math.pow( 2, z ) * 360 - 180;
+	}
+	function Tile2Lat( y, z ){
+		var n = Math.PI - 2 * Math.PI * y / Math.pow( 2, z );
+		return 180 / Math.PI * Math.atan( 0.5 * ( Math.exp( n ) - Math.exp( -n )));
+	}
+	
+	function NoMap( x1, y1, x2, y2 ){
+		Vsd.DrawRect( x1, y1, x2, y2, 0xC0C0C0, DRAW_FILL );
+		Vsd.DrawRect( x1, y1, x2, y2, 0x808080 );
+		Vsd.DrawLine( x1, y1, x2, y2, 0x808080 );
+		Vsd.DrawLine( x2, y1, x1, y2, 0x808080 );
+	}
 }
 
 //*** メータ用目盛り描画 *****************************************************

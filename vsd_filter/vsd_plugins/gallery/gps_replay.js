@@ -20,7 +20,7 @@ function Initialize(){
 	//   ジオコーディングの取得は 1日あたり 2,500 回
 	//   に制限されています．
 	
-	GoogleMapsParam = {
+	MapParam = {
 		// Google Maps の API キーを指定します．
 		// 例: APIKey: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
 		APIKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
@@ -31,12 +31,14 @@ function Initialize(){
 		// 地図タイプ
 		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:地図+航空写真
 		Maptype: "roadmap",
+		//Maptype: "hybrid",
+		//Maptype: "satellite",
 		
 		// 地図表示位置，サイズ(最大 640x640)
 		X:		0,
 		Y:		0,
-		Width:	640,
-		Height:	640,
+		Width:	Vsd.Width,
+		Height:	Vsd.Height,
 		
 		// 自車インジケータ
 		IndicatorSize:	12 * Scale,		// サイズ
@@ -68,7 +70,7 @@ function Initialize(){
 	
 	function min( a, b ){ return ( a < b ) ? a : b; }
 	
-	if( GoogleMapsParam.APIKey == '' ){
+	if( MapParam.APIKey == '' ){
 		MessageBox(
 			"google_maps.js スキンを使用するためには初期設定が必要です．詳しくは\n" +
 			Vsd.SkinDir + "google_maps.js\n" +
@@ -103,8 +105,8 @@ function Initialize(){
 
 function Draw(){
 	// Google マップ表示
-	//Vsd.DrawGoogleMaps( GoogleMapsParam );
-	Vsd.DrawOpenStreetMap( GoogleMapsParam );
+	//Vsd.DrawGoogleMaps( MapParam );
+	Vsd.DrawMap( MapParam );
 	
 	// メーター画像描画
 	Vsd.DrawCircle( MeterCx, MeterCy, MeterR, BGColor, DRAW_FILL );

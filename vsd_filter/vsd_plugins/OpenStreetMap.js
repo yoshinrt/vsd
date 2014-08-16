@@ -110,7 +110,7 @@ function Draw(){
 	Vsd.DrawRect( 0, 324 * Scale, 316 * Scale - 1, 324 * Scale + FontJ.Height * 6 - 1, BGColor, DRAW_FILL );
 	
 	// Google マップ表示
-	Vsd.DrawOpenStreetMap( MapParam );
+	Vsd.DrawMap( MapParam );
 	
 	// 文字データ
 	var Y = 324 * Scale;
@@ -133,6 +133,8 @@ function Draw(){
 		FontM, FontColor
 	);
 	Y += FontM.Height;
+	
+	if( Vsd.Longitude === undefined ) return;
 	
 	Vsd.DrawText( 0, Y, "Lat.: " + Vsd.Latitude.toFixed( 6 ), FontM, FontColor );
 	Y += FontM.Height;

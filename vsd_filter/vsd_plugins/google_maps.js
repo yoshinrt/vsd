@@ -47,13 +47,6 @@ function Initialize(){
 		// かつ指定距離以上移動した場合のみ地図を更新します
 		UpdateTime:		1000,	// [ミリ秒]
 		UpdateDistance:	10,		// [ピクセル]
-		
-		// 1に設定すると，地図をスムースにスクロールします．
-		// ★重要★
-		//   地図から Google の権利帰属表示表示が消え，Google Maps の利用規約
-		//   違反になりますので，SmoothScrollMap:1 で作成した動画は絶対にネッ
-		//   ト等で公開しないでください．
-		SmoothScrollMap:	0,
 	};
 	
 	// Geocoding の設定
@@ -174,6 +167,8 @@ function Draw(){
 		FontM, FontColor
 	);
 	Y += FontM.Height;
+	
+	if( Vsd.Longitude === undefined ) return;
 	
 	Vsd.DrawText( 0, Y, "Lat.: " + Vsd.Latitude.toFixed( 6 ), FontM, FontColor );
 	Y += FontM.Height;
