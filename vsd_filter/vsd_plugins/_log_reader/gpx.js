@@ -73,9 +73,9 @@ function Read_gpx( Files ){
 			);
 			
 			// long, lat
-			if( !Point.match( /lat="([\d\.]+)"/ )) continue;
+			if( !Point.match( /lat="(.*?)"/ )) continue;
 			Log.Latitude [ Cnt ] = +RegExp.$1;
-			if( !Point.match( /lon="([\d\.]+)"/ )) continue;
+			if( !Point.match( /lon="(.*?)"/ )) continue;
 			Log.Longitude[ Cnt ] = +RegExp.$1;
 			
 			// Speed がある場合は Array 作成

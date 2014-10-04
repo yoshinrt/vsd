@@ -1,7 +1,7 @@
 //*** 初期化処理 ************************************************************
 
 function Initialize(){
-	Scale = 1;
+	Scale = Vsd.Height / 720;
 	
 	//////////////////////////////////////////////////////////////////////////
 	/// ↓↓↓↓↓Google Maps の設定 ここから↓↓↓↓↓ //////////////////////
@@ -58,6 +58,14 @@ function Initialize(){
 		SmoothScrollMap:	0,
 	};
 	
+	MapParam2 = [];
+	for( var v in MapParam ) MapParam2[ v ] = MapParam[ v ];
+	MapParam2.Width		= 300 * Scale;
+	MapParam2.Height	= 300 * Scale;
+	MapParam2.X			= 0;
+	MapParam2.Y			= Vsd.Height - MapParam2.Height;
+	MapParam2.Zoom		-= 4;
+	
 	// Geocoding の設定
 	GeocodingParam = {
 		// Geocoding 更新間隔
@@ -107,6 +115,8 @@ function Draw(){
 	// Google マップ表示
 	//Vsd.DrawGoogleMaps( MapParam );
 	Vsd.DrawRoadMap( MapParam );
+	Vsd.DrawRoadMap( MapParam2 );
+	Vsd.DrawRect( MapParam2.X, MapParam2.Y, MapParam2.X + MapParam2.Width -1 , MapParam2.Y + MapParam2.Height - 1, 0 );
 	
 	// メーター画像描画
 	Vsd.DrawCircle( MeterCx, MeterCy, MeterR, BGColor, DRAW_FILL );
