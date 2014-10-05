@@ -14,6 +14,7 @@ xcopy /i/s "D:\Program Files\AVIUTL\Plugins\vsd_plugins" vsd_plugins
 
 rmdir /s/q vsd_plugins\gallery
 del vsd_plugins\_log_reader\vsd_log.js
+del vsd_plugins\_log_reader\kml.js
 
 : API ƒL[íœ
 perl -pe 's/AIzaSyCcW8fww9nc2dP6BceauZPfnKHEamj8Fu4//' ../vsd_plugins/google_maps.js > vsd_plugins/google_maps.js
