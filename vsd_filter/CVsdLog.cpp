@@ -626,7 +626,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						AddStopRecord( iCnt,     GetTime( iCnt - 1 ) + TIME_STOP_MARGIN ); // A'
 						AddStopRecord( iCnt + 1, GetTime( iCnt + 2 ) - TIME_STOP_MARGIN ); // B'
 						
-						if( uIdxDirection ) SetDirection( iCnt + 2, Direction( iCnt - 1 ));
+						if( uIdxDirection != ~0 ) SetDirection( iCnt + 2, Direction( iCnt - 1 ));
 					}else{
 						// í‚é~ä˙ä‘Ç≈Ç»ÇØÇÍÇŒÅCÉçÉO Hz ÇåvéZÇ∑ÇÈ
 						iLogHzTime += iDiffTime;

@@ -67,6 +67,12 @@ function DisposeAll(){
 	}
 }
 
+//*** include ****************************************************************
+
+function Include( file ){
+	__Include( file, __CScript );
+}
+
 //*** グラフ描画 *************************************************************
 
 Vsd.MakeGraphParam = function( params ){

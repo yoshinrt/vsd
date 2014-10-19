@@ -162,7 +162,7 @@ void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT 
 	if( iAlfa || uPattern != ~0 ){
 		iAlfa += iAlfa >> 7;
 		for( int x = x1; x <= x2; ++x, iIndex += 2 ){
-			if( uPattern & ( 1 << (( x + y1 ) & 0x1F ))){
+			if( uPattern & ( 1 << ( x & 0x1F ))){
 				PutPixel( iIndex, yc, iAlfa );
 			}
 		}

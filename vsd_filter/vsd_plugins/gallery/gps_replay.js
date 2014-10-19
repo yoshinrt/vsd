@@ -31,6 +31,7 @@ function Initialize(){
 		// 地図タイプ
 		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:地図+航空写真
 		Maptype: "roadmap",
+		//Maptype: "openstreetmap",
 		//Maptype: "hybrid",
 		//Maptype: "satellite",
 		

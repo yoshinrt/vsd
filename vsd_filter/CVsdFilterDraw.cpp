@@ -56,7 +56,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG y
 			
 			if(
 				uPattern == 0xFFFFFFFF ||
-				uPattern & ( 1 << (( x1 + y1 ) & 0x1F ))
+				uPattern & ( 1 << ( x1 & 0x1F ))
 			) PutPixel( x1, y1, yc, 0 );
 			
 			x1 += iXsign;
@@ -73,7 +73,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG y
 			
 			if(
 				uPattern == 0xFFFFFFFF ||
-				uPattern & ( 1 << (( x1 + y1 ) & 0x1F ))
+				uPattern & ( 1 << ( y1 & 0x1F ))
 			) PutPixel( x1, y1, yc, 0 );
 			
 			y1 += iYsign;
@@ -913,7 +913,7 @@ void CVsdFilter::DrawGSnake(
 	tRABY uColorBall, tRABY uColorLine,
 	double dLength
 ){
-	int	iGx, iGy;
+	int	iGx = 0, iGy = 0;
 	int	i;
 	
 	SelectLogVsd;

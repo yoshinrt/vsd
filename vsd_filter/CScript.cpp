@@ -130,9 +130,12 @@ static v8::Handle<v8::Value> Func_Include( const v8::Arguments& args ){
 	UINT uRet = obj->RunFileCore(( LPCWSTR )*str );
 	
 	if( uRet == ERR_FILE_NOT_FOUND ){
-		return v8::ThrowException( v8::Exception::Error( v8::String::New(
-			"Include: file not found"
-		)));
+		return v8::ThrowException( v8::Exception::Error(
+			v8::String::Concat(
+				v8::String::New( "Include file not found:\n  " ),
+				v8::Local<v8::String>::Cast( args[ 0 ] )
+			)
+		));
 	}
 	return v8::Undefined();
 }
@@ -157,8 +160,8 @@ void CScript::Initialize( void ){
 	COleIF::InitializeClass( global );
 	
 	global->Set( v8::String::New( "__CVsdFilter" ), v8::External::New( m_pVsd ));
-//	global->Set( v8::String::New( "__CScript" ), v8::External::New( this ));
-//	global->Set( v8::String::New( "__Include" ), v8::FunctionTemplate::New( Func_Include ));
+	global->Set( v8::String::New( "__CScript" ), v8::External::New( this ));
+	global->Set( v8::String::New( "__Include" ), v8::FunctionTemplate::New( Func_Include ));
 	
 	// グローバルオブジェクトから環境を生成
 	m_Context = Context::New( NULL, global );
@@ -191,11 +194,9 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 UINT CScript::RunFileCore( LPCWSTR szFileName ){
 	
 	FILE *fp;
-	{
-		// スクリプト ロード
-		CPushDir push_dir( m_pVsd->m_szPluginDirA );
-		fp = _wfopen( szFileName, L"r" );
-	}
+	// スクリプト ロード
+	CPushDir push_dir( m_pVsd->m_szPluginDirA );
+	fp = _wfopen( szFileName, L"r" );
 	
 	if( fp == NULL ) return m_uError = ERR_FILE_NOT_FOUND;
 	
@@ -242,7 +243,12 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 					);
 					
 					wszIncFile[ uSize ] = 0;
-					RunFileCore( wszIncFile );
+					if(( m_uError = RunFileCore( wszIncFile )) != ERR_OK ){
+						
+						if( !m_szErrorMsg ) m_szErrorMsg = new WCHAR[ MSGBUF_SIZE ];
+						swprintf( m_szErrorMsg, MSGBUF_SIZE, L"Include file \"%s\" not found\n", wszIncFile );
+						return m_uError;
+					}
 				}
 			}
 		}
@@ -309,7 +315,7 @@ UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bN
 		if( bNoFunc ) return ERR_OK;
 		if( !m_szErrorMsg ) m_szErrorMsg = new WCHAR[ MSGBUF_SIZE ];
 		
-		swprintf( m_szErrorMsg, MSGBUF_SIZE, L"Undefined function \"%s()\"", szFunc );
+		swprintf( m_szErrorMsg, MSGBUF_SIZE, L"Undefined function \"%s()\"\n", szFunc );
 		return m_uError = ERR_SCRIPT;
 	}
 	Handle<Value> result = hFunction->Call( m_Context->Global(), iArgNum, Args );
