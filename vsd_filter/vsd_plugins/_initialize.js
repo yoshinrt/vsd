@@ -235,7 +235,14 @@ Vsd.Geocoding = function( param ){
 		if( param.HttpRequest.status === 200 || param.HttpRequest.status === 0 ){
 			param.Result = eval( "(" + param.HttpRequest.responseText + ")" );
 			if( param.Result.results.length > 0 ){
-				param.Address = param.Result.results[ 0 ].formatted_address
+				var i;
+				
+				// 道路名，郵便番号 をスキップ
+				for( i = 0; i < param.Result.results.length - 1; ++i ){
+					if(( "" + param.Result.results[ i ].types ).match( /political/ )) break;
+				}
+				
+				param.Address = param.Result.results[ i ].formatted_address
 					.replace( /^日本, (?:〒\d+.\d+ )?/, "" );
 			}else{
 				param.Address = "(取得できません)";
