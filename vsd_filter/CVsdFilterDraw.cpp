@@ -1027,11 +1027,17 @@ void CVsdFilter::DrawMap(
 		iLineEd = m_CurLog->GetCnt() - 1;
 	}
 	
-	if( m_CurLog->m_iLogNum - iLineSt > ( int )( iLength * m_CurLog->m_dFreq ))
-		iLineSt = m_CurLog->m_iLogNum - ( int )( iLength * m_CurLog->m_dFreq );
-	
-	if( iLineEd - m_CurLog->m_iLogNum > ( int )( iLength * m_CurLog->m_dFreq ))
-		iLineEd = m_CurLog->m_iLogNum + ( int )( iLength * m_CurLog->m_dFreq );
+	if( dMapSizeX <= 10000 && dMapSizeY <= 10000 ){
+		// 一辺が 10km を超えたら，サーキットのログじゃないとみなし
+		// 全ログの軌跡を表示
+		// そうでなければ，走行軌跡長さにしたがって描画長さを決定
+		
+		if( m_CurLog->m_iLogNum - iLineSt > ( int )( iLength * m_CurLog->m_dFreq ))
+			iLineSt = m_CurLog->m_iLogNum - ( int )( iLength * m_CurLog->m_dFreq );
+		
+		if( iLineEd - m_CurLog->m_iLogNum > ( int )( iLength * m_CurLog->m_dFreq ))
+			iLineEd = m_CurLog->m_iLogNum + ( int )( iLength * m_CurLog->m_dFreq );
+	}
 	
 	for( i = iLineSt; i <= iLineEd ; ++i ){
 		#define GetMapPos( p, a ) ((( p ) - dMapOffs ## a ) * dScale )
