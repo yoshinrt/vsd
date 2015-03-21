@@ -14,12 +14,15 @@ Y = 0;
 Align = 0;
 
 function print( msg, param ){
-		if( typeof param == 'object' ){
+	var Color = 0xFFFFFF;
+	
+	if( typeof param == 'object' ){
 		if( param.x !== undefined ) X = param.x;
 		if( param.y !== undefined ) Y = param.y;
 		if( param.align !== undefined ) Align = param.align;
+		if( param.color !== undefined ) Color = param.color;
 	}
-	Vsd.DrawTextAlign( X, Y, Align, msg, font );
+	Vsd.DrawTextAlign( X, Y, Align, msg, font, Color );
 	
 	Y += font.Height;
 }
@@ -31,6 +34,14 @@ function Draw(){
 //	);
 	
 	// 走行軌跡
+	var MapX = Vsd.MaxX - Vsd.MinX;
+	var MapY = Vsd.MaxY - Vsd.MinY;
+	if( MapX >= 10000 || MapY >= 10000 ){
+		print(
+		"走行軌跡大きさ: " + ~~( MapX / 1000 ) + "km×" + ~~( MapY / 1000 ) + "km",
+		{ x: 0, y: 0, color: 0xFF8000, align: ALIGN_LEFT | ALIGN_TOP } );
+	}
+	
 	Vsd.DrawMap(
 		4, 4, Vsd.Width / 1.5, Vsd.Height / 1.5,
 		ALIGN_TOP | ALIGN_LEFT | DRAW_MAP_START,
