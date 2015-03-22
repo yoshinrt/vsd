@@ -92,6 +92,15 @@ typedef struct {
 	short	iLeft, iRight;
 } PolygonData_t;
 
+/* 辺の定義 */
+struct Edge {
+	double	dx, dy;	// 座標
+	int		x, y;	// 始点座標
+	USHORT	Flag;
+};
+
+typedef std::vector<Edge> VecEdge; // 辺リストの型定義
+
 class CVsdFilter
 	#ifdef AVS_PLUGIN
 		: public GenericVideoFilter
@@ -215,6 +224,8 @@ class CVsdFilter
 		tRABY uColor,
 		UINT uFlag	// !default:0
 	);
+	
+	void DrawPolygon( VecEdge &EdgeList, int iMinY, int iMaxY, tRABY uColor, UINT uFlag );
 	
 	UINT BlendColor(
 		tRABY uColor0,

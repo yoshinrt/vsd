@@ -15,6 +15,7 @@
 
 #define GScale			( m_piParamS[ SHADOW_G_SCALE ] * ( G_MULT / 1000.0 ))
 #define GPSPriority		m_piParamC[ CHECK_GPS_PRIO ]
+#define ToInt( d )		(( int )(( d ) + 0.5 ))
 
 #if defined PUBLIC_MODE || defined INVERT_G
 	#define G_MULT			(-1)
@@ -95,27 +96,52 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, tRABY uCol
 	
 	PIXEL_YCA yc( uColor );
 	
-	#ifdef _OPENMP_AVS
-		#pragma omp parallel for
-		for( int i = 0; i < width * width; ++i ){
-			int x = i % width - width / 2;
-			int y = i / width - width / 2;
+	if( width >= 2 ){
+		if( x1 == x2 ){
+			x1 -= width / 2;
+			DrawRect(
+				x1,         y1,
+				x1 + width, y2,
+				uColor, IMG_FILL
+			);
+		}else if( y1 == y2 ){
+			y1 -= width / 2;
+			DrawRect(
+				x1, y1,
+				x2, y1 + width,
+				uColor, IMG_FILL
+			);
+		}else{
+			VecEdge EdgeList;
+			EdgeList.resize( 4 );
+			//Edge edge;
 			
-			DrawLine(
-				x1 + x, y1 + y,
-				x2 + x, y2 + y,
-				yc, uPattern
-			);
+			double dx = x2 - x1;
+			double dy = y2 - y1;
+			double scale = width / 2 / sqrt( dx * dx + dy * dy );
+			
+			EdgeList[ 0 ].dx = x1 + dy * scale; EdgeList[ 0 ].dy = y1 - dx * scale;
+			EdgeList[ 1 ].dx = x1 - dy * scale; EdgeList[ 1 ].dy = y1 + dx * scale;
+			EdgeList[ 2 ].dx = x2 - dy * scale; EdgeList[ 2 ].dy = y2 + dx * scale;
+			EdgeList[ 3 ].dx = x2 + dy * scale; EdgeList[ 3 ].dy = y2 - dx * scale;
+			
+			int	iMinY = INT_MAX;
+			int	iMaxY = INT_MIN;
+			
+			// 頂点リストを格納
+			for( UINT u = 0; u < 4; ++u ){
+				EdgeList[ u ].x = ToInt( EdgeList[ u ].dx );
+				EdgeList[ u ].y = ToInt( EdgeList[ u ].dy );
+				
+				if( iMaxY < EdgeList[ u ].y ) iMaxY = EdgeList[ u ].y;
+				if( iMinY > EdgeList[ u ].y ) iMinY = EdgeList[ u ].y;
+			}
+			
+			DrawPolygon( EdgeList, iMinY, iMaxY, uColor, IMG_FILL );
 		}
-	#else
-		for( int y = 0; y < width; ++y ) for( int x = 0; x < width; ++x ){
-			DrawLine(
-				x1 + x - width / 2, y1 + y - width / 2,
-				x2 + x - width / 2, y2 + y - width / 2,
-				yc, uPattern
-			);
-		}
-	#endif
+	}else{
+		DrawLine( x1, y1, x2, y2, yc, uPattern );
+	}
 }
 
 /*** DrawRect ***************************************************************/
@@ -537,19 +563,14 @@ void CVsdFilter::FillPolygon( tRABY uColor ){
 
 /*** まともなポリゴン描画 ***************************************************/
 
-/* 辺の定義 */
-struct Edge {
-	short	x, y;	// 始点座標
-	USHORT	Flag;		// 傾き
-};
-
 enum {
-	EDGE_DEL_END	= 1,
-	EDGE_H			= 2,
-	EDGE_H_DEL_END	= 3,
+	EDGE_DEL_END	= 1,	// ライン終端点を削除
+	EDGE_H			= 2,	// 水平ライン
+	EDGE_H_DEL_END	= 3,	// 水平ライン & ライン終点を削除
 };
 
-typedef std::vector<Edge> VecEdge; // 辺リストの型定義
+#define GetCoordinateI( n ) ToInt(( pixs->Get( n )->NumberValue() + 0.5 ))
+#define GetCoordinateD( n ) ( pixs->Get( n )->NumberValue())
 
 /*
 	PolyFill : 多角形描画(アクティブ・非アクティブの判断をフラグで行う)
@@ -559,21 +580,21 @@ typedef std::vector<Edge> VecEdge; // 辺リストの型定義
 	VecEdge& EdgeList : 生成した辺リスト
 */
 void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
-	PIXEL_YCA	yc( uColor );
-	#define GetCoordinate( n ) (( int )( pixs->Get( n )->NumberValue() + 0.5 ))
+	
+	v8::Isolate::Scope IsolateScope( m_Script->m_pIsolate );
+	v8::HandleScope handle_scope;
+	v8::Context::Scope context_scope( m_Script->m_Context );
 	
 	if( !( uFlag & IMG_FILL )){
-		v8::Isolate::Scope IsolateScope( m_Script->m_pIsolate );
-		v8::HandleScope handle_scope;
-		v8::Context::Scope context_scope( m_Script->m_Context );
-		
+		PIXEL_YCA	yc( uColor );
 		int uCnt = pixs->Length();
+		
 		for( int i = 0; i < uCnt; i = i + 2 ){
 			DrawLine(
-				GetCoordinate( i ),
-				GetCoordinate( i + 1 ),
-				GetCoordinate(( i + 2 ) % uCnt ),
-				GetCoordinate(( i + 3 ) % uCnt ),
+				GetCoordinateI( i ),
+				GetCoordinateI( i + 1 ),
+				GetCoordinateI(( i + 2 ) % uCnt ),
+				GetCoordinateI(( i + 3 ) % uCnt ),
 				uColor
 			);
 			if(( uFlag & IMG_NOCLOSE ) && i == uCnt - 4 ) break;
@@ -585,9 +606,6 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 		const VecCoord& clippedVertex : クリッピング後の頂点座標
 		VecEdge& EdgeList : 生成する辺リスト
 	*/
-	v8::Isolate::Scope IsolateScope( m_Script->m_pIsolate );
-	v8::HandleScope handle_scope;
-	v8::Context::Scope context_scope( m_Script->m_Context );
 	
 	UINT uEdgeCnt = pixs->Length() / 2; // 頂点の個数
 	if( uEdgeCnt < 3 ) return;
@@ -600,13 +618,22 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 	
 	// 頂点リストを格納
 	for( UINT u = 0; u < uEdgeCnt; ++u ){
-		edge.x = GetCoordinate( u * 2 );
-		edge.y = GetCoordinate( u * 2 + 1 );
+		edge.dx = GetCoordinateD( u * 2 );
+		edge.dy = GetCoordinateD( u * 2 + 1 );
+		edge.x = ToInt( edge.dx );
+		edge.y = ToInt( edge.dy );
 		EdgeList.push_back( edge );
 		
 		if( iMaxY < edge.y ) iMaxY = edge.y;
 		if( iMinY > edge.y ) iMinY = edge.y;
 	}
+	
+	DrawPolygon( EdgeList, iMinY, iMaxY, uColor, uFlag );
+}
+
+void CVsdFilter::DrawPolygon( VecEdge &EdgeList, int iMinY, int iMaxY, tRABY uColor, UINT uFlag ){
+	UINT uEdgeCnt = EdgeList.size(); // 頂点の個数
+	PIXEL_YCA	yc( uColor );
 	
 	// 傾き計算
 	int	a = EdgeList[ 0 ].y - EdgeList[ uEdgeCnt - 1 ].y;
@@ -653,19 +680,19 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 			if( EdgeList[ v ].y == y ){
 				// 終点，削除対象でなければ積む
 				if( !( EdgeList[ u ].Flag & EDGE_DEL_END )) *ep++ = EdgeList[ v ].x;
+			}else if( EdgeList[ u ].y == y ){
+				*ep++ = EdgeList[ u ].x;
 			}else if(
-				( EdgeList[ u ].y < EdgeList[ v ].y ) ?
-					( EdgeList[ u ].y <= y && y <= EdgeList[ v ].y ) :
-					( EdgeList[ v ].y <= y && y <= EdgeList[ u ].y )
+				( EdgeList[ u ].y <= y && y <= EdgeList[ v ].y ) ||
+				( EdgeList[ v ].y <= y && y <= EdgeList[ u ].y )
 			){
 				// ここは斜め線かつ終点以外しか通らないはず
-				// シフトは 0.5 の四捨五入
-				*ep++ =
-					((
-						(( EdgeList[ v ].x - EdgeList[ u ].x ) << 1 ) *
-						( y               - EdgeList[ u ].y ) /
-						( EdgeList[ v ].y - EdgeList[ u ].y ) + 1
-					) >> 1 ) + EdgeList[ u ].x;
+				*ep++ = ToInt(
+					( EdgeList[ v ].dx - EdgeList[ u ].dx ) *
+					( y                - EdgeList[ u ].dy ) /
+					( EdgeList[ v ].dy - EdgeList[ u ].dy )
+					+ EdgeList[ u ].dx
+				);
 			}
 		}
 		
