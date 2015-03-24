@@ -100,15 +100,15 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, tRABY uCol
 		if( x1 == x2 ){
 			x1 -= width / 2;
 			DrawRect(
-				x1,         y1,
-				x1 + width, y2,
+				x1, y1,
+				x1 + width - 1, y2,
 				uColor, IMG_FILL
 			);
 		}else if( y1 == y2 ){
 			y1 -= width / 2;
 			DrawRect(
 				x1, y1,
-				x2, y1 + width,
+				x2, y1 + width - 1,
 				uColor, IMG_FILL
 			);
 		}else{
@@ -665,6 +665,9 @@ void CVsdFilter::DrawPolygon( VecEdge &EdgeList, int iMinY, int iMaxY, tRABY uCo
 	if( iMinY < 0 ) iMinY = 0;
 	if( iMaxY >= GetHeight()) iMaxY = GetHeight() - 1;
 	
+	#ifdef _OPENMP_AVS
+		#pragma omp parallel for
+	#endif
 	for( int y = iMinY ; y <= iMaxY ; ++y ){
 		// 抽出した X 座標の末尾(開始位置で初期化)
 		std::vector<int>::iterator ep = vec_x.begin();
