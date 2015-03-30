@@ -25,6 +25,33 @@
 
 #define DEFAULT_FONT	"ÇlÇr ÉSÉVÉbÉN"
 
+/*** put pixel ån ***********************************************************/
+
+inline void CVsdFilter::PutPixel( int x, int y, tRABY uColor, UINT uFlag ){
+	PIXEL_YCA	yc( uColor );
+	PutPixel( x, y, yc, uFlag );
+}
+
+inline void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA_ARG yc, UINT uFlag ){
+	
+	if( !( 0 <= y && y < GetHeight())) return;
+	
+	if( uFlag & IMG_FILL ){
+		// É|ÉäÉSÉìï`âÊ
+		if( x > m_Polygon[ y ].iRight ){
+			m_Polygon[ y ].iRight = ( x >= GetWidth()) ? GetWidth() : x;
+		}
+		if( x < m_Polygon[ y ].iLeft  ){
+			m_Polygon[ y ].iLeft  = ( x < 0 ) ? 0 : x;
+		}
+		
+		if( m_iPolygonMinY > y ) m_iPolygonMinY = y;
+		if( m_iPolygonMaxY < y ) m_iPolygonMaxY = y;
+	}else if( 0 <= x && x < GetWidth() && yc.alfa < 255 ){
+		PutPixel( x, y, yc );
+	}
+}
+
 /*** DrawLine ***************************************************************/
 
 #define ABS( x )			(( x ) < 0 ? -( x ) : ( x ))
@@ -58,7 +85,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG y
 			if(
 				uPattern == 0xFFFFFFFF ||
 				uPattern & ( 1 << ( x1 & 0x1F ))
-			) PutPixel( x1, y1, yc, 0 );
+			) PutPixel( x1, y1, yc );
 			
 			x1 += iXsign;
 			E += 2 * iYdiff;
@@ -75,7 +102,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, const PIXEL_YCA_ARG y
 			if(
 				uPattern == 0xFFFFFFFF ||
 				uPattern & ( 1 << ( y1 & 0x1F ))
-			) PutPixel( x1, y1, yc, 0 );
+			) PutPixel( x1, y1, yc );
 			
 			y1 += iYsign;
 			E += 2 * iXdiff;
@@ -93,7 +120,6 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, tRABY uColor, UINT uP
 }
 
 void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, tRABY uColor, UINT uPattern ){
-	
 	PIXEL_YCA yc( uColor );
 	
 	if( width >= 2 ){
@@ -112,9 +138,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, tRABY uCol
 				uColor, IMG_FILL
 			);
 		}else{
-			VecEdge EdgeList;
-			EdgeList.resize( 4 );
-			//Edge edge;
+			Edge EdgeList[ 4 ];
 			
 			double dx = x2 - x1;
 			double dy = y2 - y1;
@@ -125,19 +149,13 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, tRABY uCol
 			EdgeList[ 2 ].dx = x2 - dy * scale; EdgeList[ 2 ].dy = y2 + dx * scale;
 			EdgeList[ 3 ].dx = x2 + dy * scale; EdgeList[ 3 ].dy = y2 - dx * scale;
 			
-			int	iMinY = INT_MAX;
-			int	iMaxY = INT_MIN;
-			
 			// í∏ì_ÉäÉXÉgÇäiî[
 			for( UINT u = 0; u < 4; ++u ){
 				EdgeList[ u ].x = ToInt( EdgeList[ u ].dx );
 				EdgeList[ u ].y = ToInt( EdgeList[ u ].dy );
-				
-				if( iMaxY < EdgeList[ u ].y ) iMaxY = EdgeList[ u ].y;
-				if( iMinY > EdgeList[ u ].y ) iMinY = EdgeList[ u ].y;
 			}
 			
-			DrawPolygon( EdgeList, iMinY, iMaxY, uColor, IMG_FILL );
+			DrawPolygon( 4, EdgeList, yc );
 		}
 	}else{
 		DrawLine( x1, y1, x2, y2, yc, uPattern );
@@ -371,16 +389,16 @@ void CVsdFilter::DrawArc(
 			
 			if( bEdGtSt ){
 				// st && ed
-				if(           iAreaCmpS <= 0x00 && 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, 0 );
-				if( i &&      iAreaCmpS <= 0x10 && 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, 0 );
-				if( i && j && iAreaCmpS <= 0x20 && 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, 0 );
-				if(      j && iAreaCmpS <= 0x30 && 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, 0 );
+				if(           iAreaCmpS <= 0x00 && 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc );
+				if( i &&      iAreaCmpS <= 0x10 && 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc );
+				if( i && j && iAreaCmpS <= 0x20 && 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc );
+				if(      j && iAreaCmpS <= 0x30 && 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc );
 			}else{
 				// st || ed
-				if(           iAreaCmpS <= 0x00 || 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc, 0 );
-				if( i &&      iAreaCmpS <= 0x10 || 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc, 0 );
-				if( i && j && iAreaCmpS <= 0x20 || 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc, 0 );
-				if(      j && iAreaCmpS <= 0x30 || 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc, 0 );
+				if(           iAreaCmpS <= 0x00 || 0x00 <= iAreaCmpE ) PutPixel( x + i, y + j, yc );
+				if( i &&      iAreaCmpS <= 0x10 || 0x10 <= iAreaCmpE ) PutPixel( x - i, y + j, yc );
+				if( i && j && iAreaCmpS <= 0x20 || 0x20 <= iAreaCmpE ) PutPixel( x - i, y - j, yc );
+				if(      j && iAreaCmpS <= 0x30 || 0x30 <= iAreaCmpE ) PutPixel( x + i, y - j, yc );
 			}
 		}
 	}
@@ -509,30 +527,6 @@ void CVsdFilter::DrawTextAlign( int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFo
 	m_iTextPosY += Font.GetHeight();
 }
 
-/*** put pixel ån ***********************************************************/
-
-inline void CVsdFilter::PutPixel( int x, int y, tRABY uColor, UINT uFlag ){
-	PIXEL_YCA	yc( uColor );
-	PutPixel( x, y, yc, uFlag );
-}
-
-inline void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA_ARG yc, UINT uFlag ){
-	
-	if( !( 0 <= y && y < GetHeight())) return;
-	
-	if( uFlag & IMG_FILL ){
-		// É|ÉäÉSÉìï`âÊ
-		if( x > m_Polygon[ y ].iRight ){
-			m_Polygon[ y ].iRight = ( x >= GetWidth()) ? GetWidth() : x;
-		}
-		if( x < m_Polygon[ y ].iLeft  ){
-			m_Polygon[ y ].iLeft  = ( x < 0 ) ? 0 : x;
-		}
-	}else if( 0 <= x && x < GetWidth() && yc.alfa < 255 ){
-		PutPixel( x, y, yc );
-	}
-}
-
 /*** É|ÉäÉSÉìï`âÊ (ç°ÇÕ DrawCircle ÇÃ fill Ç…ÇµÇ©égÇ¡ÇƒÇ»Ç¢ÇÕÇ∏ *************/
 
 inline void CVsdFilter::InitPolygon( void ){
@@ -543,17 +537,23 @@ inline void CVsdFilter::InitPolygon( void ){
 		m_Polygon[ y ].iRight	= 0;		// right
 		m_Polygon[ y ].iLeft	= 0x7FFF;	// left
 	}
+	m_iPolygonMinY = GetHeight() - 1;
+	m_iPolygonMaxY = 0;
 }
 
 inline void CVsdFilter::FillPolygon( const PIXEL_YCA_ARG yc ){
 	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 	#endif
-	for( int y = 0; y < GetHeight(); ++y ) if( m_Polygon[ y ].iLeft <= m_Polygon[ y ].iRight ){
-		FillLine( m_Polygon[ y ].iLeft, y, m_Polygon[ y ].iRight, yc );
+	for( int y = m_iPolygonMinY; y <= m_iPolygonMaxY; ++y ){
+		if( m_Polygon[ y ].iLeft <= m_Polygon[ y ].iRight ){
+			FillLine( m_Polygon[ y ].iLeft, y, m_Polygon[ y ].iRight, yc );
+			m_Polygon[ y ].iRight	= 0;		// right
+			m_Polygon[ y ].iLeft	= 0x7FFF;	// left
+		}
 	}
-	
-	InitPolygon();
+	m_iPolygonMinY = GetHeight() - 1;
+	m_iPolygonMaxY = 0;
 }
 
 void CVsdFilter::FillPolygon( tRABY uColor ){
@@ -581,12 +581,12 @@ enum {
 */
 void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 	
+	PIXEL_YCA	yc( uColor );
 	v8::Isolate::Scope IsolateScope( m_Script->m_pIsolate );
 	v8::HandleScope handle_scope;
 	v8::Context::Scope context_scope( m_Script->m_Context );
 	
 	if( !( uFlag & IMG_FILL )){
-		PIXEL_YCA	yc( uColor );
 		int uCnt = pixs->Length();
 		
 		for( int i = 0; i < uCnt; i = i + 2 ){
@@ -610,30 +610,61 @@ void CVsdFilter::DrawPolygon( v8Array pixs, tRABY uColor, UINT uFlag ){
 	UINT uEdgeCnt = pixs->Length() / 2; // í∏ì_ÇÃå¬êî
 	if( uEdgeCnt < 3 ) return;
 	
-	VecEdge EdgeList;
-	Edge edge;
+	Edge *EdgeList = new Edge[ uEdgeCnt ];
 	int	iMinY = INT_MAX;
 	int	iMaxY = INT_MIN;
 	
-	
 	// í∏ì_ÉäÉXÉgÇäiî[
 	for( UINT u = 0; u < uEdgeCnt; ++u ){
-		edge.dx = GetCoordinateD( u * 2 );
-		edge.dy = GetCoordinateD( u * 2 + 1 );
-		edge.x = ToInt( edge.dx );
-		edge.y = ToInt( edge.dy );
-		EdgeList.push_back( edge );
+		EdgeList[ u ].dx = GetCoordinateD( u * 2 );
+		EdgeList[ u ].dy = GetCoordinateD( u * 2 + 1 );
+		EdgeList[ u ].x = ToInt( EdgeList[ u ].dx );
+		EdgeList[ u ].y = ToInt( EdgeList[ u ].dy );
 		
-		if( iMaxY < edge.y ) iMaxY = edge.y;
-		if( iMinY > edge.y ) iMinY = edge.y;
+		if( iMaxY < EdgeList[ u ].y ) iMaxY = EdgeList[ u ].y;
+		if( iMinY > EdgeList[ u ].y ) iMinY = EdgeList[ u ].y;
 	}
 	
-	DrawPolygon( EdgeList, iMinY, iMaxY, uColor, uFlag );
+	DrawPolygon( uEdgeCnt, EdgeList, iMinY, iMaxY, yc );
+	
+	delete [] EdgeList;
 }
 
-void CVsdFilter::DrawPolygon( VecEdge &EdgeList, int iMinY, int iMaxY, tRABY uColor, UINT uFlag ){
-	UINT uEdgeCnt = EdgeList.size(); // í∏ì_ÇÃå¬êî
-	PIXEL_YCA	yc( uColor );
+// çÇë¨ÉÇÅ[ÉhÅCì ê}å`ÇÃÇ›
+void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, PIXEL_YCA_ARG yc ){
+	
+	for( UINT u = 0; u < uEdgeCnt; ++u ){
+		UINT v = ( u + 1 ) % uEdgeCnt;
+		UINT y1 = EdgeList[ u ].y;
+		UINT y2 = EdgeList[ v ].y;
+		
+		if( y1 == y2 ){
+			PutPixel( EdgeList[ u ].x, y1, yc, IMG_FILL );
+			PutPixel( EdgeList[ v ].x, y1, yc, IMG_FILL );
+		}else{
+			if( y1 > y2 ){
+				y1 = y2;
+				y2 = EdgeList[ u ].y;
+			}
+			
+			for( UINT y = y1; y <= y2; ++y ){
+				PutPixel(
+					ToInt(
+						( EdgeList[ v ].dx - EdgeList[ u ].dx ) *
+						( y                - EdgeList[ u ].dy ) /
+						( EdgeList[ v ].dy - EdgeList[ u ].dy )
+						+ EdgeList[ u ].dx
+					), y, yc, IMG_FILL
+				);
+			}
+		}
+	}
+	
+	FillPolygon( yc );
+}
+
+// âöÇÒÇ≈Ç¢ÇƒÇ‡ìhÇÍÇÈÉÇÅ[Éh
+void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMaxY, PIXEL_YCA_ARG yc ){
 	
 	// åXÇ´åvéZ
 	int	a = EdgeList[ 0 ].y - EdgeList[ uEdgeCnt - 1 ].y;

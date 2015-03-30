@@ -8,7 +8,8 @@ ReadMode 'cbreak';
 $Speed	= 64;	# [km/h]
 $Stop	= 0;
 
-open( $fp, "> /dev/ttyS3" ) || die( "Can't open COM\n" );
+# BT COM の着信を有効，COMn の n - 1 をttySm に設定
+open( $fp, "> /dev/ttyS2" ) || die( "Can't open COM\n" );
 #open( $fp, "| cat" ) || die( "Can't open COM\n" );
 
 $a = 6378137.0;

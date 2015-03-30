@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="jp.dds.vsdroid"
-	android:versionCode="733"
-	android:versionName="r733" >
+	android:versionCode="751"
+	android:versionName="r751" >
 	
 	<uses-sdk
 		android:minSdkVersion="10"

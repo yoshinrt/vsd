@@ -99,8 +99,6 @@ struct Edge {
 	USHORT	Flag;
 };
 
-typedef std::vector<Edge> VecEdge; // 辺リストの型定義
-
 class CVsdFilter
 	#ifdef AVS_PLUGIN
 		: public GenericVideoFilter
@@ -225,7 +223,8 @@ class CVsdFilter
 		UINT uFlag	// !default:0
 	);
 	
-	void DrawPolygon( VecEdge &EdgeList, int iMinY, int iMaxY, tRABY uColor, UINT uFlag );
+	void DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, PIXEL_YCA_ARG yc );
+	void DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMaxY, PIXEL_YCA_ARG yc );
 	
 	UINT BlendColor(
 		tRABY uColor0,
@@ -325,8 +324,8 @@ class CVsdFilter
 	void DispErrorMessage( LPCWSTR szMsg );
 	
 	enum {
-		IMG_FILL	= ( 1 << 0 ),
-		IMG_NOCLOSE	= ( 1 << 1 ),
+		IMG_FILL		= ( 1 << 0 ),
+		IMG_NOCLOSE		= ( 1 << 1 ),
 	};
 	
 	enum {
@@ -480,6 +479,8 @@ class CVsdFilter
 	int  GetFrameMark( int iFrame );
 	
 	PolygonData_t	*m_Polygon;
+	int m_iPolygonMinY;
+	int m_iPolygonMaxY;
 	
 	// 解像度変更検出用
 	int	m_iWidth;
