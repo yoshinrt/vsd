@@ -122,43 +122,61 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, tRABY uColor, UINT uP
 void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, tRABY uColor, UINT uPattern ){
 	PIXEL_YCA yc( uColor );
 	
-	if( width >= 2 ){
-		if( x1 == x2 ){
-			x1 -= width / 2;
-			DrawRect(
-				x1, y1,
-				x1 + width - 1, y2,
-				uColor, IMG_FILL
-			);
-		}else if( y1 == y2 ){
-			y1 -= width / 2;
-			DrawRect(
-				x1, y1,
-				x2, y1 + width - 1,
-				uColor, IMG_FILL
-			);
-		}else{
-			Edge EdgeList[ 4 ];
-			
-			double dx = x2 - x1;
-			double dy = y2 - y1;
-			double scale = width / 2 / sqrt( dx * dx + dy * dy );
-			
-			EdgeList[ 0 ].dx = x1 + dy * scale; EdgeList[ 0 ].dy = y1 - dx * scale;
-			EdgeList[ 1 ].dx = x1 - dy * scale; EdgeList[ 1 ].dy = y1 + dx * scale;
-			EdgeList[ 2 ].dx = x2 - dy * scale; EdgeList[ 2 ].dy = y2 + dx * scale;
-			EdgeList[ 3 ].dx = x2 + dy * scale; EdgeList[ 3 ].dy = y2 - dx * scale;
-			
-			// ’¸“_ƒŠƒXƒg‚ðŠi”[
-			for( UINT u = 0; u < 4; ++u ){
-				EdgeList[ u ].x = ToInt( EdgeList[ u ].dx );
-				EdgeList[ u ].y = ToInt( EdgeList[ u ].dy );
+	if( width <= 1 || uPattern != -1 ){
+		#ifdef _OPENMP_AVS
+			#pragma omp parallel for
+			for( int i = 0; i < width * width; ++i ){
+				int x = i % width - width / 2;
+				int y = i / width - width / 2;
+				
+				DrawLine(
+					x1 + x, y1 + y,
+					x2 + x, y2 + y,
+					yc, uPattern
+				);
 			}
-			
-			DrawPolygon( 4, EdgeList, yc );
-		}
+		#else
+			for( int y = 0; y < width; ++y ) for( int x = 0; x < width; ++x ){
+				DrawLine(
+					x1 + x - width / 2, y1 + y - width / 2,
+					x2 + x - width / 2, y2 + y - width / 2,
+					yc, uPattern
+				);
+			}
+		#endif
+	}else if( x1 == x2 ){
+		x1 -= width / 2;
+		DrawRect(
+			x1, y1,
+			x1 + width - 1, y2,
+			uColor, IMG_FILL
+		);
+	}else if( y1 == y2 ){
+		y1 -= width / 2;
+		DrawRect(
+			x1, y1,
+			x2, y1 + width - 1,
+			uColor, IMG_FILL
+		);
 	}else{
-		DrawLine( x1, y1, x2, y2, yc, uPattern );
+		Edge EdgeList[ 4 ];
+		
+		double dx = x2 - x1;
+		double dy = y2 - y1;
+		double scale = width / 2 / sqrt( dx * dx + dy * dy );
+		
+		EdgeList[ 0 ].dx = x1 + dy * scale; EdgeList[ 0 ].dy = y1 - dx * scale;
+		EdgeList[ 1 ].dx = x1 - dy * scale; EdgeList[ 1 ].dy = y1 + dx * scale;
+		EdgeList[ 2 ].dx = x2 - dy * scale; EdgeList[ 2 ].dy = y2 + dx * scale;
+		EdgeList[ 3 ].dx = x2 + dy * scale; EdgeList[ 3 ].dy = y2 - dx * scale;
+		
+		// ’¸“_ƒŠƒXƒg‚ðŠi”[
+		for( UINT u = 0; u < 4; ++u ){
+			EdgeList[ u ].x = ToInt( EdgeList[ u ].dx );
+			EdgeList[ u ].y = ToInt( EdgeList[ u ].dy );
+		}
+		
+		DrawPolygon( 4, EdgeList, yc );
 	}
 }
 
