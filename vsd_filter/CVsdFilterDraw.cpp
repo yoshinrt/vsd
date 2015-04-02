@@ -446,19 +446,11 @@ int CVsdFilter::DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, tRABY uColor )
 				if( iDensity == 64 ){
 					PutPixel( x + iOrgX + i, y + FontGlyph.iOrgY + j, uColor, 0 );
 				}else{
-					int ir = ( uColor >> 24 ) - 0x80;
-					int ia = ( 0xFF << 6 ) - (( 0xFF - (( uColor >> 16 ) & 0xFF )) * iDensity );
-					int ib = (( uColor >>  8 ) & 0xFF ) - 0x80;
-					int iy = uColor & 0xFF;
-					
-					UINT uColorTmp = (
-						(( ir * iDensity ) & ( 0xFF << 6 )) << ( 24 - 6 ) |
-						(( ia            ) & ( 0xFF << 6 )) << ( 16 - 6 ) |
-						(( ib * iDensity ) & ( 0xFF << 6 )) << (  8 - 6 ) |
-						(( iy * iDensity ) & ( 0xFF << 6 )) >> (      6 )
-					) ^ 0x80008000;
-					
-					PutPixel( x + iOrgX + i, y + FontGlyph.iOrgY + j, uColorTmp, 0 );
+					PutPixel(
+						x + iOrgX + i, y + FontGlyph.iOrgY + j,
+						PIXEL_RABY( color_transparent, uColor, iDensity, 64 ),
+						0
+					);
 				}
 			}
 		}
@@ -858,23 +850,6 @@ UINT CVsdFilter::PutImage(
 	return PutImage0( x, y, img, ix_st, iy_st, ix_ed, iy_ed );
 }
 
-/*** カラーを混ぜる *********************************************************/
-
-inline UINT CVsdFilter::BlendColor(
-	tRABY uColor0,
-	tRABY uColor1,
-	double	dAlfa
-){
-	if     ( dAlfa < 0.0 ) dAlfa = 0.0;
-	else if( dAlfa > 1.0 ) dAlfa = 1.0;
-	
-	return
-		(( UINT )(( uColor1 & 0xFF000000 ) * dAlfa + ( uColor0 & 0xFF000000 ) * ( 1 - dAlfa )) & 0xFF000000 ) +
-		(( UINT )(( uColor1 & 0x00FF0000 ) * dAlfa + ( uColor0 & 0x00FF0000 ) * ( 1 - dAlfa )) & 0x00FF0000 ) +
-		(( UINT )(( uColor1 & 0x0000FF00 ) * dAlfa + ( uColor0 & 0x0000FF00 ) * ( 1 - dAlfa )) & 0x0000FF00 ) +
-		(( UINT )(( uColor1 & 0x000000FF ) * dAlfa + ( uColor0 & 0x000000FF ) * ( 1 - dAlfa )) & 0x000000FF );
-}
-
 /*** パラメータ調整用スピードグラフ *****************************************/
 
 #define GRAPH_SCALE	( 1.0 / SLIDER_TIME * 2 )	// 1dot あたりの log 時間
@@ -927,10 +902,11 @@ void CVsdFilter::DrawGraphSub(
 	
 	// 0 ラインを描く
 	if( Data.GetMax() >= 0 && Data.GetMin() <= 0 ){
-		tRABY uColor0 = BlendColor( uColor, PIXEL_RABY::Argb2Raby( 0xFF000000 ), 0.75 );
-		
 		int iPosY = y2 - ( int )( -Data.GetMin() * iHeight / ( Data.GetMax() - Data.GetMin()));
-		DrawLine( x1, iPosY, x2, iPosY, uColor0 );
+		DrawLine(
+			x1, iPosY, x2, iPosY,
+			PIXEL_RABY( color_transparent, uColor, 1, 4 )
+		);
 	}
 	
 	for( int x = 0; x < iWidth; x += GRAPH_STEP ){
@@ -1132,20 +1108,16 @@ void CVsdFilter::DrawMap(
 				// Line の色用に G を求める
 				
 				double dG = m_CurLog->Gy( i );
-				
-				tRABY uColorLine;
-				
-				if( dG >= 0.0 ){
-					uColorLine = BlendColor( uColorG0, uColorGPlus,  dG / m_CurLog->MaxGy());
-				}else{
-					uColorLine = BlendColor( uColorG0, uColorGMinus, dG / m_CurLog->MinGy());
-				}
+				int iAlfa = ( int )( dG / ( dG >= 0 ? m_CurLog->MaxGy() : m_CurLog->MinGy()) * 256 );
+				if( iAlfa < 0 ) iAlfa = 0;
+				else if( iAlfa > 256 ) iAlfa = 256;
 				
 				// Line を引く
 				DrawLine(
 					iGx,     iGy,
 					iGxPrev, iGyPrev,
-					iLineWidth, uColorLine
+					iLineWidth,
+					PIXEL_RABY( uColorG0, dG >= 0 ? uColorGPlus : uColorGMinus, iAlfa, 256 )
 				);
 				iGxPrev = iGx;
 				iGyPrev = iGy;

@@ -10,8 +10,6 @@
 
 /*** new type ***************************************************************/
 
-typedef UINT	tRABY;
-
 class PIXEL_RABY {
   public:
 	union {
@@ -34,6 +32,8 @@ class PIXEL_RABY {
 	};
 	
 	PIXEL_RABY(){}
+	PIXEL_RABY( UINT uColor ){ Set( uColor ); }
+	
 	~PIXEL_RABY(){}
 	
 	static double GetY(  int r, int g, int b ){ return  0.299 * r + 0.587 * g + 0.114 * b; }
@@ -77,21 +77,31 @@ class PIXEL_RABY {
 		cr	= ( int )( GetCr( r, g, b ) * dAlfa ) ^ 0x80;
 		alfa= a;
 	}
+	
+	// new & ƒuƒŒƒ“ƒh
+	PIXEL_RABY( PIXEL_RABY yc0, PIXEL_RABY yc1, UINT uAlfa, UINT uAlfaMax ){
+		UINT uAlfaM = uAlfaMax - uAlfa;
+		
+		y	= ( yc0.y  * uAlfaM + yc1.y  * uAlfa ) / uAlfaMax;
+		cb	= ( yc0.cb * uAlfaM + yc1.cb * uAlfa ) / uAlfaMax;
+		cr	= ( yc0.cr * uAlfaM + yc1.cr * uAlfa ) / uAlfaMax;
+		alfa= ( yc0.alfa * uAlfaM + yc1.alfa * uAlfa ) / uAlfaMax;
+	}
 };
+
+typedef PIXEL_RABY	tRABY;
 
 /****************************************************************************/
 
-											//   AARRGGBB
-#define	color_black		PIXEL_RABY::Argb2Raby( 0x00000000 )
-#define	color_white		PIXEL_RABY::Argb2Raby( 0x00FFFFFF )
-#define	color_blue		PIXEL_RABY::Argb2Raby( 0x000000FF )
-#define	color_red		PIXEL_RABY::Argb2Raby( 0x00FF0000 )
-#define	color_cyan		PIXEL_RABY::Argb2Raby( 0x0000FFFF )
-#define	color_orange	PIXEL_RABY::Argb2Raby( 0x00FF4000 )
-#define	color_gray_a	PIXEL_RABY::Argb2Raby( 0x80404040 )
-#define	color_black_a	PIXEL_RABY::Argb2Raby( 0x40000000 )
-#define	color_green		PIXEL_RABY::Argb2Raby( 0x0000FF00 )
-#define	color_masenta	PIXEL_RABY::Argb2Raby( 0x00FF00FF )
+									//   AARRGGBB
+#define	color_black			PIXEL_RABY( 0x00000000 )
+#define	color_white			PIXEL_RABY( 0x00FFFFFF )
+#define	color_blue			PIXEL_RABY( 0x000000FF )
+#define	color_red			PIXEL_RABY( 0x00FF0000 )
+#define	color_cyan			PIXEL_RABY( 0x0000FFFF )
+#define	color_orange		PIXEL_RABY( 0x00FF4000 )
+#define	color_masenta		PIXEL_RABY( 0x00FF00FF )
+#define	color_transparent	PIXEL_RABY( 0xFF000000 )
 
 #ifdef AVS_PLUGIN
 typedef UCHAR	PIXEL_t;
@@ -119,8 +129,8 @@ class PIXEL_YCA {
 	
 	PIXEL_YCA(){};
 	
-	PIXEL_YCA( UINT uColor ){
-		Set( uColor );
+	PIXEL_YCA( PIXEL_RABY yc ){
+		Set( yc.ycbcr );
 	}
 	
 	void Set( UINT uColor ){
@@ -143,9 +153,8 @@ class PIXEL_YCA {
 	USHORT	alfa;	// 0-256
 	
 	PIXEL_YCA(){}
-	
-	PIXEL_YCA( UINT uColor ){
-		Set( uColor );
+	PIXEL_YCA( PIXEL_RABY yc ){
+		Set( yc.ycbcr );
 	}
 	
 	void Set( UINT uColor ){
