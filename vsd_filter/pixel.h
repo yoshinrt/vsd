@@ -128,12 +128,10 @@ class PIXEL_YCA {
 	}
 };
 
-#define PIXEL_YCA_ARG	PIXEL_YCA
+typedef	PIXEL_YCA PIXEL_YCA_ARG;
 
 #else // !AVS_PLUGIN
 typedef short	PIXEL_t;
-
-#define PIXEL_YCA_ARG	PIXEL_YCA&
 
 class PIXEL_YCA {
   public:
@@ -164,4 +162,7 @@ class PIXEL_YCA {
 		alfa	= ia + ( ia >> 7 );
 	}
 };
+
+typedef	PIXEL_YCA& PIXEL_YCA_ARG;
+
 #endif // !AVS_PLUGIN

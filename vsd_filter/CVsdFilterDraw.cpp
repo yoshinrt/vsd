@@ -187,6 +187,7 @@ void CVsdFilter::DrawRect(
 	tRABY uColor, UINT uFlag
 ){
 	int	y;
+	PIXEL_YCA yc( uColor );
 	
 	if( y1 > y2 ) SWAP( y1, y2, y );
 	if( x1 > x2 ) SWAP( x1, x2, y );
@@ -199,13 +200,13 @@ void CVsdFilter::DrawRect(
 		if( y2 >= GetHeight()) y2 = GetHeight() - 1;
 		
 		for( y = y1; y <= y2; ++y ){
-			FillLine( x1, y, x2, uColor );
+			FillLine( x1, y, x2, yc );
 		}
 	}else{
-		DrawLine( x1, y1, x2, y1, uColor );
-		DrawLine( x1, y2, x2, y2, uColor );
-		DrawLine( x1, y1, x1, y2, uColor );
-		DrawLine( x2, y1, x2, y2, uColor );
+		DrawLine( x1, y1, x2, y1, yc );
+		DrawLine( x1, y2, x2, y2, yc );
+		DrawLine( x1, y1, x1, y2, yc );
+		DrawLine( x2, y1, x2, y2, yc );
 	}
 }
 
