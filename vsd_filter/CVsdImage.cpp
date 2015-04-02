@@ -11,6 +11,17 @@
 #include "CVsdImage.h"
 #include "error_code.h"
 
+/*** マクロ *****************************************************************/
+
+#define UpdateMinMax(){ \
+	if( raby != RABY_TRANSPARENT ){ \
+		if( iMinX > x ) iMinX = x; \
+		if( iMaxX < x ) iMaxX = x; \
+		if( iMinY > y ) iMinY = y; \
+		if( iMaxY < y ) iMaxY = y; \
+	} \
+}
+
 /*** コンストラクタ・デストラクタ *******************************************/
 
 CVsdImage::CVsdImage(){
@@ -204,12 +215,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 						srcColor.GetB()
 					);
 					
-					if( raby != RABY_TRANSPARENT ){
-						if     ( iMinX > x ) iMinX = x;
-						else if( iMaxX < x ) iMaxX = x;
-						if     ( iMinY > y ) iMinY = y;
-						else if( iMaxY < y ) iMaxY = y;
-					}
+					UpdateMinMax();
 				}
 			}
 		}
@@ -419,12 +425,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 				m_iHeight * y / ( double )iHeight
 			);
 			
-			if( raby != RABY_TRANSPARENT ){
-				if     ( iMinX > x ) iMinX = x;
-				else if( iMaxX < x ) iMaxX = x;
-				if     ( iMinY > y ) iMinY = y;
-				else if( iMaxY < y ) iMaxY = y;
-			}
+			UpdateMinMax();
 		}
 		
 		delete [] m_pBuf;
@@ -448,12 +449,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 					pNewBuf[ x + iWidth * y ].raby = raby = Resampling(
 						m_iWidth  * x / ( double )iWidth, y
 					);
-					if( raby != RABY_TRANSPARENT ){
-						if     ( iMinX > x ) iMinX = x;
-						else if( iMaxX < x ) iMaxX = x;
-						if     ( iMinY > y ) iMinY = y;
-						else if( iMaxY < y ) iMaxY = y;
-					}
+					UpdateMinMax();
 				}
 			}else{
 				// x 縮小
@@ -466,12 +462,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 						m_iWidth * ( x + 1 ) / ( double )iWidth,
 						y
 					);
-					if( raby != RABY_TRANSPARENT ){
-						if     ( iMinX > x ) iMinX = x;
-						else if( iMaxX < x ) iMaxX = x;
-						if     ( iMinY > y ) iMinY = y;
-						else if( iMaxY < y ) iMaxY = y;
-					}
+					UpdateMinMax();
 				}
 			}
 			
@@ -504,12 +495,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 					pNewBuf[ x + iWidth * y ].raby = raby = Resampling(
 						x, m_iHeight * y / ( double )iHeight
 					);
-					if( raby != RABY_TRANSPARENT ){
-						if     ( iMinX > x ) iMinX = x;
-						else if( iMaxX < x ) iMaxX = x;
-						if     ( iMinY > y ) iMinY = y;
-						else if( iMaxY < y ) iMaxY = y;
-					}
+					UpdateMinMax();
 				}
 			}else{
 				// y 縮小
@@ -522,12 +508,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 						m_iHeight * y         / ( double )iHeight,
 						m_iHeight * ( y + 1 ) / ( double )iHeight
 					);
-					if( raby != RABY_TRANSPARENT ){
-						if     ( iMinX > x ) iMinX = x;
-						else if( iMaxX < x ) iMaxX = x;
-						if     ( iMinY > y ) iMinY = y;
-						else if( iMaxY < y ) iMaxY = y;
-					}
+					UpdateMinMax();
 				}
 			}
 			
@@ -573,12 +554,7 @@ UINT CVsdImage::Rotate( int cx, int cy, double dAngle ){
 			cy - ( x - cx ) * dSin + ( y - cy ) * dCos
 		);
 		
-		if( raby != RABY_TRANSPARENT ){
-			if     ( iMinX > x ) iMinX = x;
-			else if( iMaxX < x ) iMaxX = x;
-			if     ( iMinY > y ) iMinY = y;
-			else if( iMaxY < y ) iMaxY = y;
-		}
+		UpdateMinMax();
 	}
 	
 	delete [] m_pBuf;
