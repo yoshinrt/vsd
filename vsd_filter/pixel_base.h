@@ -71,12 +71,6 @@ class PIXEL {
 	PIXEL(){}
 	PIXEL( UINT uColor ){ Set( uColor ); }
 	
-	~PIXEL(){}
-	
-	static double GetY(  int r, int g, int b ){ return  0.299 * r + 0.587 * g + 0.114 * b; }
-	static double GetCb( int r, int g, int b ){ return -0.169 * r - 0.331 * g + 0.500 * b; }
-	static double GetCr( int r, int g, int b ){ return  0.500 * r - 0.419 * g - 0.081 * b; }
-	
 	void Set( UINT uColor ){
 		int a = ( uColor >> 24 );
 		int r = ( uColor >> 16 ) & 0xFF;
@@ -95,6 +89,11 @@ class PIXEL {
 		cr	= ( yc0.cr * uAlfaM + yc1.cr * uAlfa ) / uAlfaMax;
 		alfa= ( yc0.alfa * uAlfaM + yc1.alfa * uAlfa ) / uAlfaMax;
 	}
+	
+  private:
+	static double GetY(  int r, int g, int b ){ return  0.299 * r + 0.587 * g + 0.114 * b; }
+	static double GetCb( int r, int g, int b ){ return -0.169 * r - 0.331 * g + 0.500 * b; }
+	static double GetCr( int r, int g, int b ){ return  0.500 * r - 0.419 * g - 0.081 * b; }
 };
 
 #undef PIXEL_AVU
