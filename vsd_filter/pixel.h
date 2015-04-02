@@ -15,17 +15,30 @@ typedef UINT	tRABY;
 class PIXEL_RABY {
   public:
 	union {
-		UINT	raby;
+		// yuv 全部指定
+		UINT	ycbcr;
+		
+		// ycb / ycr アクセス
 		struct {
-			UCHAR	y;	// UCHAR
-			UCHAR	b;	// * alfa 済み，signed だけど +128 offset 済み
-			UCHAR	a;	// * alfa 済み，UCHAR
-			UCHAR	r;	// * alfa 済み，signed だけど +128 offset 済み
+			USHORT	ycb;
+			USHORT	ycr;
+		};
+		
+		// yuv 個別指定
+		struct {
+			UCHAR	y;
+			UCHAR	cb;		// -128～127 ではなくて 0～255
+			UCHAR	alfa;
+			UCHAR	cr;		// -128～127 ではなくて 0～255
 		};
 	};
 	
 	PIXEL_RABY(){}
 	~PIXEL_RABY(){}
+	
+	static double GetY(  int r, int g, int b ){ return  0.299 * r + 0.587 * g + 0.114 * b; }
+	static double GetCb( int r, int g, int b ){ return -0.169 * r - 0.331 * g + 0.500 * b; }
+	static double GetCr( int r, int g, int b ){ return  0.500 * r - 0.419 * g - 0.081 * b; }
 	
 	static inline UINT Argb2Raby( UINT uColor ){
 		int a = ( uColor >> 24 );
@@ -36,17 +49,33 @@ class PIXEL_RABY {
 		return Argb2Raby( a, r, g, b );
 	}
 	
-	static inline UINT Argb2Raby(
-		int a, int r, int g, int b
-	){
+	static inline UINT Argb2Raby( int a, int r, int g, int b ){
 		double dAlfa = ( 255 - a ) / 255.0;
 		
 		return (
-			((( int )(( 0.500 * r - 0.419 * g - 0.081 * b ) * dAlfa )        ) << 24 ) |
+			((( int )( GetCr( r, g, b ) * dAlfa )        ) << 24 ) |
 			( a << 16 ) |
-			((( int )((-0.169 * r - 0.331 * g + 0.500 * b ) * dAlfa ) & 0xFF ) <<  8 ) |
-			((( int )(( 0.299 * r + 0.587 * g + 0.114 * b ) * dAlfa ) & 0xFF )       )
+			((( int )( GetCb( r, g, b ) * dAlfa ) & 0xFF ) <<  8 ) |
+			((( int )( GetY(  r, g, b ) * dAlfa ) & 0xFF )       )
 		) ^ 0x80008000;
+	}
+	
+	void Set( UINT uColor ){
+		int a = ( uColor >> 24 );
+		int r = ( uColor >> 16 ) & 0xFF;
+		int g = ( uColor >>  8 ) & 0xFF;
+		int b = ( uColor       ) & 0xFF;
+		
+		return Set( a, r, g, b );
+	}
+	
+	void Set( int a, int r, int g, int b ){
+		double dAlfa = ( 255 - a ) / 255.0;
+		
+		y	= ( int )( GetY(  r, g, b ) * dAlfa );
+		cb	= ( int )( GetCb( r, g, b ) * dAlfa ) ^ 0x80;
+		cr	= ( int )( GetCr( r, g, b ) * dAlfa ) ^ 0x80;
+		alfa= a;
 	}
 };
 

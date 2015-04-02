@@ -21,11 +21,11 @@ class CVsdImage {
 	UINT Load( LPCWSTR szFileName, UINT uFlag = 0 );
 	
 	inline UINT GetPixel0( int x, int y ){
-		return m_pBuf[ ( x - m_iOffsX ) + ( y - m_iOffsY ) * m_iRawWidth ].raby;
+		return m_pBuf[ ( x - m_iOffsX ) + ( y - m_iOffsY ) * m_iRawWidth ].ycbcr;
 	}
 	
 	inline UINT GetPixelRaw( int x, int y ){
-		return m_pBuf[ x + y * m_iRawWidth ].raby;
+		return m_pBuf[ x + y * m_iRawWidth ].ycbcr;
 	}
 	
 	inline UINT GetPixel( int x, int y ){

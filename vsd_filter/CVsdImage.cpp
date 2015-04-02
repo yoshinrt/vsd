@@ -13,8 +13,8 @@
 
 /*** ƒ}ƒNƒ *****************************************************************/
 
-#define UpdateMinMax(){ \
-	if( raby != RABY_TRANSPARENT ){ \
+#define UpdateMinMax( ycbcr ){ \
+	if( ycbcr != RABY_TRANSPARENT ){ \
 		if( iMinX > x ) iMinX = x; \
 		if( iMaxX < x ) iMaxX = x; \
 		if( iMinY > y ) iMinY = y; \
@@ -79,7 +79,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 	int iMaxX = MININT;
 	int iMaxY = MININT;
 	
-	UINT	raby;
+	PIXEL_RABY	yc;
 	Gdiplus::Bitmap*	pBitmap = NULL;
 	
 	if(
@@ -208,14 +208,15 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 					Gdiplus::Color srcColor;
 					pBitmap->GetPixel( x, y, &srcColor );
 					
-					m_pBuf[ x + y * m_iWidth ].raby = raby = PIXEL_RABY::Argb2Raby(
+					yc.Set(
 						255 - srcColor.GetA(),
 						srcColor.GetR(),
 						srcColor.GetG(),
 						srcColor.GetB()
 					);
+					m_pBuf[ x + y * m_iWidth ] = yc;
 					
-					UpdateMinMax();
+					UpdateMinMax( yc.ycbcr );
 				}
 			}
 		}
@@ -407,7 +408,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 	int iMaxX = MININT;
 	int iMaxY = MININT;
 	
-	UINT	raby;
+	UINT	ycbcr;
 	
 	// x, y —¼•ûŠg‘å‚Ìê‡‚Ì‚ÝCˆê‹C‚ÉŠg‘å
 	if( iWidth > m_iWidth && iHeight > m_iHeight ){
@@ -420,12 +421,12 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 			#pragma omp parallel for
 		#endif
 		for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-			pNewBuf[ x + iWidth * y ].raby = raby = Resampling(
+			pNewBuf[ x + iWidth * y ].ycbcr = ycbcr = Resampling(
 				m_iWidth  * x / ( double )iWidth,
 				m_iHeight * y / ( double )iHeight
 			);
 			
-			UpdateMinMax();
+			UpdateMinMax( ycbcr );
 		}
 		
 		delete [] m_pBuf;
@@ -446,10 +447,10 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 					#pragma omp parallel for
 				#endif
 				for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-					pNewBuf[ x + iWidth * y ].raby = raby = Resampling(
+					pNewBuf[ x + iWidth * y ].ycbcr = ycbcr = Resampling(
 						m_iWidth  * x / ( double )iWidth, y
 					);
-					UpdateMinMax();
+					UpdateMinMax( ycbcr );
 				}
 			}else{
 				// x k¬
@@ -457,12 +458,12 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 					#pragma omp parallel for
 				#endif
 				for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-					pNewBuf[ x + iWidth * y ].raby = raby = Resampling(
+					pNewBuf[ x + iWidth * y ].ycbcr = ycbcr = Resampling(
 						m_iWidth * x         / ( double )iWidth,
 						m_iWidth * ( x + 1 ) / ( double )iWidth,
 						y
 					);
-					UpdateMinMax();
+					UpdateMinMax( ycbcr );
 				}
 			}
 			
@@ -492,10 +493,10 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 					#pragma omp parallel for
 				#endif
 				for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-					pNewBuf[ x + iWidth * y ].raby = raby = Resampling(
+					pNewBuf[ x + iWidth * y ].ycbcr = ycbcr = Resampling(
 						x, m_iHeight * y / ( double )iHeight
 					);
-					UpdateMinMax();
+					UpdateMinMax( ycbcr );
 				}
 			}else{
 				// y k¬
@@ -503,12 +504,12 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 					#pragma omp parallel for
 				#endif
 				for( int y = 0; y < iHeight; ++y ) for( int x = 0; x < iWidth; ++x ){
-					pNewBuf[ x + iWidth * y ].raby = raby = Resampling(
+					pNewBuf[ x + iWidth * y ].ycbcr = ycbcr = Resampling(
 						x,
 						m_iHeight * y         / ( double )iHeight,
 						m_iHeight * ( y + 1 ) / ( double )iHeight
 					);
-					UpdateMinMax();
+					UpdateMinMax( ycbcr );
 				}
 			}
 			
@@ -543,18 +544,18 @@ UINT CVsdImage::Rotate( int cx, int cy, double dAngle ){
 	int iMaxX = MININT;
 	int iMaxY = MININT;
 	
-	UINT	raby;
+	UINT	ycbcr;
 	
 	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 	#endif
 	for( int y = 0; y < m_iHeight; ++y ) for( int x = 0; x < m_iWidth; ++x ){
-		pNewBuf[ x + m_iWidth * y ].raby = raby = Resampling(
+		pNewBuf[ x + m_iWidth * y ].ycbcr = ycbcr = Resampling(
 			cx + ( x - cx ) * dCos + ( y - cy ) * dSin,
 			cy - ( x - cx ) * dSin + ( y - cy ) * dCos
 		);
 		
-		UpdateMinMax();
+		UpdateMinMax( ycbcr );
 	}
 	
 	delete [] m_pBuf;
@@ -583,7 +584,7 @@ UINT CVsdImage::Clip( int x1, int y1, int x2, int y2 ){
 		#pragma omp parallel for
 	#endif
 	for( int y = 0; y < iNewHeight; ++y ) for( int x = 0; x < iNewWidth; ++x ){
-		pNewBuf[ x + y * iNewWidth ].raby = GetPixel( x + x1, y + y1 );
+		pNewBuf[ x + y * iNewWidth ].ycbcr = GetPixel( x + x1, y + y1 );
 	}
 	
 	delete [] m_pBuf;
