@@ -19,11 +19,11 @@ class PIXEL {
 		USHORT	alfa;	// 0-256
 		
 		void Set( int a, int r, int g, int b ){
-			double dAlfa = ( 255 - a ) * ( 4096 / 256 / 255.0 );
+			int iAlfa = 256 - ( a + ( a >> 7 ));
 			
-			y	= ( int )( GetY(  r, g, b ) * dAlfa );
-			cb	= ( int )( GetCb( r, g, b ) * dAlfa );
-			cr	= ( int )( GetCr( r, g, b ) * dAlfa );
+			y	= ( GetY(  r, g, b ) * iAlfa ) >> 14;
+			cb	= ( GetCb( r, g, b ) * iAlfa ) >> 14;
+			cr	= ( GetCr( r, g, b ) * iAlfa ) >> 14;
 			alfa= a + ( a >> 7 );
 		}
 		
@@ -59,11 +59,11 @@ class PIXEL {
 		};
 		
 		void Set( int a, int r, int g, int b ){
-			double dAlfa = ( 255 - a ) / 255.0;
+			int iAlfa = 256 - ( a + ( a >> 7 ));
 			
-			y	= ( int )( GetY(  r, g, b ) * dAlfa );
-			cb	= ( int )( GetCb( r, g, b ) * dAlfa ) ^ 0x80;
-			cr	= ( int )( GetCr( r, g, b ) * dAlfa ) ^ 0x80;
+			y	=  ( GetY(  r, g, b ) * iAlfa ) >> 18;
+			cb	= (( GetCb( r, g, b ) * iAlfa ) >> 18 ) ^ 0x80;
+			cr	= (( GetCr( r, g, b ) * iAlfa ) >> 18 ) ^ 0x80;
 			alfa= a;
 		}
 	#endif
@@ -91,9 +91,9 @@ class PIXEL {
 	}
 	
   private:
-	static double GetY(  int r, int g, int b ){ return  0.299 * r + 0.587 * g + 0.114 * b; }
-	static double GetCb( int r, int g, int b ){ return -0.169 * r - 0.331 * g + 0.500 * b; }
-	static double GetCr( int r, int g, int b ){ return  0.500 * r - 0.419 * g - 0.081 * b; }
+	static int GetY(  int r, int g, int b ){ return  306 * r + 601 * g + 117 * b; }
+	static int GetCb( int r, int g, int b ){ return -173 * r - 339 * g + 512 * b; }
+	static int GetCr( int r, int g, int b ){ return  512 * r - 429 * g -  83 * b; }
 };
 
 #undef PIXEL_AVU
