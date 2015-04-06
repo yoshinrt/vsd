@@ -159,6 +159,7 @@
     <ClInclude Include="..\def_trackbar.h" />
     <ClInclude Include="..\error_code.h" />
     <ClInclude Include="..\pixel.h" />
+    <ClInclude Include="..\pixel_base.h" />
     <ClInclude Include="..\ScriptIF.h" />
     <ClInclude Include="..\StdAfx.h" />
   </ItemGroup>

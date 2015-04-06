@@ -158,6 +158,7 @@
     <ClInclude Include="..\error_code.h" />
     <ClInclude Include="..\filter.h" />
     <ClInclude Include="..\pixel.h" />
+    <ClInclude Include="..\pixel_base.h" />
     <ClInclude Include="..\rev_num.h" />
     <ClInclude Include="..\ScriptIF.h" />
     <ClInclude Include="..\StdAfx.h" />
