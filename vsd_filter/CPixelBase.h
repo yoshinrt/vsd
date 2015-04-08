@@ -2,13 +2,13 @@
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
-	pixel_base.h - PIXEL_YC / PIXEL_YCA structure
+	CPixelBase.h - PIXEL_YC / CPixel structure
 	
 *****************************************************************************/
 
 /*** new type ***************************************************************/
 
-class PIXEL {
+class CPixelBase {
   public:
 	#ifdef PIXEL_AVU
 		short	y;		//	‰æ‘f(‹P“x    )ƒf[ƒ^ (     0 ` 4096 )
@@ -27,7 +27,7 @@ class PIXEL {
 			alfa= a + ( a >> 7 );
 		}
 		
-		PIXEL( PIXEL_RABY yc ){
+		CPixelBase( CPixelImg yc ){
 			int iy = yc.y;
 			int ib = ( char )( yc.cb ^ 0x80 );
 			int ir = ( char )( yc.cr ^ 0x80 );
@@ -68,8 +68,8 @@ class PIXEL {
 		}
 	#endif
 	
-	PIXEL(){}
-	PIXEL( UINT uColor ){ Set( uColor ); }
+	CPixelBase(){}
+	CPixelBase( UINT uColor ){ Set( uColor ); }
 	
 	void Set( UINT uColor ){
 		int a = ( uColor >> 24 );
@@ -81,7 +81,7 @@ class PIXEL {
 	}
 	
 	// new & ƒuƒŒƒ“ƒh
-	PIXEL( PIXEL yc0, PIXEL yc1, UINT uAlfa, UINT uAlfaMax ){
+	CPixelBase( CPixelBase yc0, CPixelBase yc1, UINT uAlfa, UINT uAlfaMax ){
 		UINT uAlfaM = uAlfaMax - uAlfa;
 		
 		y	= ( yc0.y  * uAlfaM + yc1.y  * uAlfa ) / uAlfaMax;
@@ -97,4 +97,4 @@ class PIXEL {
 };
 
 #undef PIXEL_AVU
-#undef PIXEL
+#undef CPixelBase

@@ -144,6 +144,8 @@
   <ItemGroup>
     <ClInclude Include="..\avisynth.h" />
     <ClInclude Include="..\COle.h" />
+    <ClInclude Include="..\CPixel.h" />
+    <ClInclude Include="..\CPixelBase.h" />
     <ClInclude Include="..\CScript.h" />
     <ClInclude Include="..\CVsdFile.h" />
     <ClInclude Include="..\CVsdFilter.h" />
@@ -158,8 +160,6 @@
     <ClInclude Include="..\def_str_param.h" />
     <ClInclude Include="..\def_trackbar.h" />
     <ClInclude Include="..\error_code.h" />
-    <ClInclude Include="..\pixel.h" />
-    <ClInclude Include="..\pixel_base.h" />
     <ClInclude Include="..\ScriptIF.h" />
     <ClInclude Include="..\StdAfx.h" />
   </ItemGroup>

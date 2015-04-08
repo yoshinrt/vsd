@@ -39,8 +39,8 @@ CVsdImage::CVsdImage(){
 CVsdImage::CVsdImage( CVsdImage &Org ){
 	DebugMsgD( "new CVsdImage %X\n", this );
 	*this = Org;
-	m_pBuf = new PIXEL_RABY[ m_iRawWidth * m_iRawHeight ];
-	memcpy( m_pBuf, Org.m_pBuf, sizeof( PIXEL_RABY ) * m_iRawWidth * m_iRawHeight );
+	m_pBuf = new CPixelImg[ m_iRawWidth * m_iRawHeight ];
+	memcpy( m_pBuf, Org.m_pBuf, sizeof( CPixelImg ) * m_iRawWidth * m_iRawHeight );
 }
 
 CVsdImage::~CVsdImage(){
@@ -79,7 +79,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 	int iMaxX = MININT;
 	int iMaxY = MININT;
 	
-	PIXEL_RABY	yc;
+	CPixelImg	yc;
 	Gdiplus::Bitmap*	pBitmap = NULL;
 	
 	if(
@@ -196,7 +196,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 		m_iHeight = pBitmap->GetHeight();
 		
 		// ■ロードする画像のメモリの解像度を変更/設定（この位置に任意に記述して下さい）
-		m_pBuf = new PIXEL_RABY[ m_iWidth * m_iHeight ];
+		m_pBuf = new CPixelImg[ m_iWidth * m_iHeight ];
 		
 		if( !m_pBuf ){
 			result		= ERR_NOT_ENOUGH_MEMORY;
@@ -401,7 +401,7 @@ UINT CVsdImage::Resampling( int x, double y0, double y1 ){
 
 UINT CVsdImage::Resize( int iWidth, int iHeight ){
 	
-	PIXEL_RABY *pNewBuf;
+	CPixelImg *pNewBuf;
 	
 	int	iMinX = MAXINT;
 	int iMinY = MAXINT;
@@ -413,7 +413,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 	// x, y 両方拡大の場合のみ，一気に拡大
 	if( iWidth > m_iWidth && iHeight > m_iHeight ){
 		
-		pNewBuf = new PIXEL_RABY[ iWidth * iHeight ];
+		pNewBuf = new CPixelImg[ iWidth * iHeight ];
 		
 		if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 		
@@ -438,7 +438,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 		/*** x 方向の処理 ***/
 		
 		if( iWidth != m_iWidth ){
-			pNewBuf = new PIXEL_RABY[ iWidth * m_iHeight ];
+			pNewBuf = new CPixelImg[ iWidth * m_iHeight ];
 			if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 			
 			if( iWidth > m_iWidth ){
@@ -484,7 +484,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 			iMaxX = MININT;
 			iMaxY = MININT;
 			
-			pNewBuf = new PIXEL_RABY[ iWidth * iHeight ];
+			pNewBuf = new CPixelImg[ iWidth * iHeight ];
 			if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 			
 			if( iHeight > m_iHeight ){
@@ -533,7 +533,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 
 UINT CVsdImage::Rotate( int cx, int cy, double dAngle ){
 	
-	PIXEL_RABY *pNewBuf = new PIXEL_RABY[ m_iWidth * m_iHeight ];
+	CPixelImg *pNewBuf = new CPixelImg[ m_iWidth * m_iHeight ];
 	if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 	
 	double dSin = sin( dAngle * ToRAD );
@@ -577,7 +577,7 @@ UINT CVsdImage::Clip( int x1, int y1, int x2, int y2 ){
 	m_iRawHeight = m_iHeight;
 	m_iOffsX = m_iOffsY = 0;
 	
-	PIXEL_RABY *pNewBuf = new PIXEL_RABY[ iNewWidth * iNewHeight ];
+	CPixelImg *pNewBuf = new CPixelImg[ iNewWidth * iNewHeight ];
 	if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 	
 	#ifdef _OPENMP_AVS

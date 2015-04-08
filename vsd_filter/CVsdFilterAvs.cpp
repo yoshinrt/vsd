@@ -125,7 +125,7 @@ G = Y-0.714Cr-0.344Cb
 B = Y+1.772Cb 
 */
 
-inline void CVsdFilter::PutPixel( int iIndex, const PIXEL_YCA_ARG yc, int iAlfa ){
+inline void CVsdFilter::PutPixel( int iIndex, const CPixelArg yc, int iAlfa ){
 	
 	m_pPlane[ iIndex + 0 ] = ( PIXEL_t )(
 		yc.y + ((  m_pPlane[ iIndex + 0 ] * iAlfa ) >> 8 )
@@ -135,11 +135,11 @@ inline void CVsdFilter::PutPixel( int iIndex, const PIXEL_YCA_ARG yc, int iAlfa 
 	);
 }
 
-void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
+void CVsdFilter::PutPixel( int x, int y, const CPixelArg yc ){
 	
 	int	iIndex	= GetIndex( x, y );
 	
-	PIXEL_YCA yca = yc;
+	CPixel yca = yc;
 	int iAlfa = yca.alfa;
 	yca.alfa = yca.y;
 	
@@ -151,11 +151,11 @@ void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
 	}
 }
 
-void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT uPattern ){
+void CVsdFilter::FillLine( int x1, int y1, int x2, const CPixelArg yc, UINT uPattern ){
 	
 	int iIndex = GetIndex( x1, y1 );
 	
-	PIXEL_YCA yca = yc;
+	CPixel yca = yc;
 	int iAlfa = yca.alfa;
 	yca.alfa = yca.y;
 	
@@ -200,15 +200,15 @@ UINT CVsdFilter::PutImage0(
 		
 		// 先頭の半端な 1pixel 処理
 		if( iIndex & 2 ){
-			PIXEL_YCA yc( img.GetPixelRaw( ix, iy ));
+			CPixel yc( img.GetPixelRaw( ix, iy ));
 			PutPixel( x, y, yc );
 			iIndex += 2;
 			++ix;
 			++sx;
 		}
 		for( ; ix < ix_ed - 1; ix += 2, sx += 2, iIndex += 4 ){
-			PIXEL_YCA yc0( img.GetPixelRaw( ix    , iy ));
-			PIXEL_YCA yc1( img.GetPixelRaw( ix + 1, iy ));
+			CPixel yc0( img.GetPixelRaw( ix    , iy ));
+			CPixel yc1( img.GetPixelRaw( ix + 1, iy ));
 			
 			if( yc0.alfa == 0 && yc1.alfa == 0 ){
 				// 2ピクセルが共に 100% 不透明
@@ -225,7 +225,7 @@ UINT CVsdFilter::PutImage0(
 		}
 		// 後端の半端な 1pixel 処理
 		if( ix < ix_ed ){
-			PIXEL_YCA yc( img.GetPixelRaw( ix, iy ));
+			CPixel yc( img.GetPixelRaw( ix, iy ));
 			PutPixel( sx, y, yc );
 		}
 	}

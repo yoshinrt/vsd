@@ -7,7 +7,7 @@
 *****************************************************************************/
 
 #pragma once
-#include "pixel.h"
+#include "CPixel.h"
 
 #define RABY_TRANSPARENT	0x80FF8000
 #define IMG_INET_ASYNC		0x1
@@ -24,7 +24,7 @@ class CVsdImage {
 		return m_pBuf[ ( x - m_iOffsX ) + ( y - m_iOffsY ) * m_iRawWidth ].ycbcr;
 	}
 	
-	inline PIXEL_RABY GetPixelRaw( int x, int y ){
+	inline CPixelImg GetPixelRaw( int x, int y ){
 		return m_pBuf[ x + y * m_iRawWidth ];
 	}
 	
@@ -64,5 +64,5 @@ class CVsdImage {
 	
 	LPWSTR		m_pFileName;
   private:
-	PIXEL_RABY	*m_pBuf;
+	CPixelImg	*m_pBuf;
 };

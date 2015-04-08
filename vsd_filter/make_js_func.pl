@@ -51,7 +51,7 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
 				args[ 5 ]->Int32Value(),
 				args[ 6 ]->NumberValue(),
 				args[ 7 ]->NumberValue(),
-				PIXEL_YCA( args[ 8 ]->Int32Value())
+				CPixel( args[ 8 ]->Int32Value())
 			);
 		}else{
 			thisObj->DrawArc(
@@ -61,7 +61,7 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
 				args[ 3 ]->Int32Value(),
 				args[ 4 ]->NumberValue(),
 				args[ 5 ]->NumberValue(),
-				PIXEL_YCA( args[ 6 ]->Int32Value()),
+				CPixel( args[ 6 ]->Int32Value()),
 				iLen <= 7 ? 0 : args[ 7 ]->Int32Value()
 			);
 		}
@@ -282,13 +282,13 @@ sub MakeJsIF {
 					}
 				}
 				
-				elsif( $Type eq 'PIXEL_YCA_ARG' ){
+				elsif( $Type eq 'CPixelArg' ){
 					# (ÅEÅÕÅE)ÉâÉîÉB!!
 					if( defined( $Default )){
-						$Args[ $ArgNum ] = "iLen <= $ArgPos ? $Default : PIXEL_YCA( args[ $ArgPos ]->Int32Value())";
+						$Args[ $ArgNum ] = "iLen <= $ArgPos ? $Default : CPixel( args[ $ArgPos ]->Int32Value())";
 						--$ArgMin;
 					}else{
-						$Args[ $ArgNum ] = "PIXEL_YCA( args[ $ArgPos ]->Int32Value())";
+						$Args[ $ArgNum ] = "CPixel( args[ $ArgPos ]->Int32Value())";
 					}
 				}
 				

@@ -27,7 +27,7 @@
 
 /*** put pixel 系 ***********************************************************/
 
-inline void CVsdFilter::PutPixel( int x, int y, PIXEL_YCA_ARG yc, UINT uFlag ){
+inline void CVsdFilter::PutPixel( int x, int y, CPixelArg yc, UINT uFlag ){
 	
 	if( !( 0 <= y && y < GetHeight())) return;
 	
@@ -52,7 +52,7 @@ inline void CVsdFilter::PutPixel( int x, int y, PIXEL_YCA_ARG yc, UINT uFlag ){
 #define ABS( x )			(( x ) < 0 ? -( x ) : ( x ))
 #define SWAP( x, y, tmp )	( tmp = x, x = y, y = tmp )
 
-void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, PIXEL_YCA_ARG yc, UINT uPattern ){
+void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, CPixelArg yc, UINT uPattern ){
 	
 	int i;
 	
@@ -109,7 +109,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, PIXEL_YCA_ARG yc, UIN
 	}
 }
 
-void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, PIXEL_YCA_ARG yc, UINT uPattern ){
+void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, CPixelArg yc, UINT uPattern ){
 	if( width <= 1 || uPattern != -1 ){
 		#ifdef _OPENMP_AVS
 			#pragma omp parallel for
@@ -172,7 +172,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, PIXEL_YCA_
 
 void CVsdFilter::DrawRect(
 	int x1, int y1, int x2, int y2,
-	PIXEL_YCA_ARG yc, UINT uFlag
+	CPixelArg yc, UINT uFlag
 ){
 	int	y;
 	
@@ -201,7 +201,7 @@ void CVsdFilter::DrawRect(
 
 void CVsdFilter::DrawCircle(
 	int x, int y, int r,
-	PIXEL_YCA_ARG yc,
+	CPixelArg yc,
 	UINT uFlag
 ){
 	if( !r ) return;
@@ -231,7 +231,7 @@ void CVsdFilter::DrawCircle(
 
 // http://fussy.web.fc2.com/algo/algo2-2.htm
 // の，a = r / A, b = r / B と置いて両辺に ( A * B / r )^2 をかける
-void CVsdFilter::DrawCircle( int x, int y, int a, int b, PIXEL_YCA_ARG yc, UINT uFlag ){
+void CVsdFilter::DrawCircle( int x, int y, int a, int b, CPixelArg yc, UINT uFlag ){
 	
 	if( a == b ){
 		DrawCircle( x, y, a, yc, uFlag );
@@ -272,7 +272,7 @@ void CVsdFilter::DrawArc(
 	int x, int y,
 	int a, int b,
 	double dStart, double dEnd,
-	PIXEL_YCA_ARG yc, UINT uFlag
+	CPixelArg yc, UINT uFlag
 ){
 	dStart = fmod( dStart, 360 ); if( dStart < 0 ) dStart += 360;
 	dEnd   = fmod( dEnd  , 360 ); if( dEnd   < 0 ) dEnd   += 360;
@@ -345,7 +345,7 @@ void CVsdFilter::DrawArc(
 	int a, int b,
 	int c, int d,
 	double dStart, double dEnd,
-	PIXEL_YCA_ARG yc
+	CPixelArg yc
 ){
 	dStart = fmod( dStart, 360 ); if( dStart < 0 ) dStart += 360;
 	dEnd   = fmod( dEnd  , 360 ); if( dEnd   < 0 ) dEnd   += 360;
@@ -404,7 +404,7 @@ void CVsdFilter::DrawArc(
 
 /*** DrawFont ***************************************************************/
 
-int CVsdFilter::DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, PIXEL_YCA_ARG yc ){
+int CVsdFilter::DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc ){
 	
 	// 文字幅を得る
 	CFontGlyph &FontGlyph = Font.FontGlyph( c );
@@ -427,7 +427,7 @@ int CVsdFilter::DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, PIXEL_YCA_ARG 
 				}else{
 					PutPixel(
 						x + iOrgX + i, y + FontGlyph.iOrgY + j,
-						PIXEL_YCA( color_transparent, yc, iDensity, 64 ),
+						CPixel( color_transparent, yc, iDensity, 64 ),
 						0
 					);
 				}
@@ -458,7 +458,7 @@ int CVsdFilter::DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, PIXEL_YCA_ARG 
 	return iCellIncX;
 }
 
-int CVsdFilter::DrawFont( int x, int y, WCHAR c, CVsdFont &Font, PIXEL_YCA_ARG yc, PIXEL_YCA_ARG ycOutline ){
+int CVsdFilter::DrawFont( int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc, CPixelArg ycOutline ){
 	
 	// フォントが存在しない文字なら，space の文字幅を返す
 	if( !CVsdFont::ExistFont( c ))
@@ -475,7 +475,7 @@ int CVsdFilter::DrawFont( int x, int y, WCHAR c, CVsdFont &Font, PIXEL_YCA_ARG y
 
 /*** DrawText *************************************************************/
 
-void CVsdFilter::DrawText( int x, int y, LPCWSTR szMsg, CVsdFont &Font, PIXEL_YCA_ARG yc, PIXEL_YCA_ARG ycOutline ){
+void CVsdFilter::DrawText( int x, int y, LPCWSTR szMsg, CVsdFont &Font, CPixelArg yc, CPixelArg ycOutline ){
 	
 	if( x != POS_DEFAULT ) m_iTextPosX = x;
 	if( y != POS_DEFAULT ) m_iTextPosY = y;
@@ -489,7 +489,7 @@ void CVsdFilter::DrawText( int x, int y, LPCWSTR szMsg, CVsdFont &Font, PIXEL_YC
 	m_iTextPosY += Font.GetHeight();
 }
 
-void CVsdFilter::DrawTextAlign( int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFont &Font, PIXEL_YCA_ARG yc, PIXEL_YCA_ARG ycOutline ){
+void CVsdFilter::DrawTextAlign( int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFont &Font, CPixelArg yc, CPixelArg ycOutline ){
 	
 	if( x != POS_DEFAULT ) m_iTextPosX = x;
 	if( y != POS_DEFAULT ) m_iTextPosY = y;
@@ -531,7 +531,7 @@ inline void CVsdFilter::InitPolygon( void ){
 	m_iPolygonMaxY = 0;
 }
 
-inline void CVsdFilter::FillPolygon( PIXEL_YCA_ARG yc ){
+inline void CVsdFilter::FillPolygon( CPixelArg yc ){
 	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 	#endif
@@ -564,7 +564,7 @@ enum {
 	GPixelOp& pset : 点描画に使う関数オブジェクト
 	VecEdge& EdgeList : 生成した辺リスト
 */
-void CVsdFilter::DrawPolygon( v8Array pixs, PIXEL_YCA_ARG yc, UINT uFlag ){
+void CVsdFilter::DrawPolygon( v8Array pixs, CPixelArg yc, UINT uFlag ){
 	
 	v8::Isolate::Scope IsolateScope( m_Script->m_pIsolate );
 	v8::HandleScope handle_scope;
@@ -615,7 +615,7 @@ void CVsdFilter::DrawPolygon( v8Array pixs, PIXEL_YCA_ARG yc, UINT uFlag ){
 }
 
 // 高速モード，凸図形のみ
-void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, PIXEL_YCA_ARG yc ){
+void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, CPixelArg yc ){
 	
 	for( UINT u = 0; u < uEdgeCnt; ++u ){
 		UINT v = ( u + 1 ) % uEdgeCnt;
@@ -648,7 +648,7 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, PIXEL_YCA_ARG yc ){
 }
 
 // 凹んでいても塗れるモード
-void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMaxY, PIXEL_YCA_ARG yc ){
+void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMaxY, CPixelArg yc ){
 	
 	// 傾き計算
 	int	a = EdgeList[ 0 ].y - EdgeList[ uEdgeCnt - 1 ].y;
@@ -833,7 +833,7 @@ void CVsdFilter::DrawGraphSingle(
 	char *szKey,
 	LPCWSTR szFormat,
 	CVsdFont &Font,
-	PIXEL_YCA_ARG yc
+	CPixelArg yc
 ){
 	CVsdLog 	*pLog;
 	CLog	*pData;
@@ -858,7 +858,7 @@ void CVsdFilter::DrawGraphSub(
 	int x1, int y1, int x2, int y2,
 	LPCWSTR szFormat,
 	CVsdFont &Font,
-	PIXEL_YCA_ARG yc,
+	CPixelArg yc,
 	CVsdLog& Log,
 	CLog	&Data
 ){
@@ -878,7 +878,7 @@ void CVsdFilter::DrawGraphSub(
 		int iPosY = y2 - ( int )( -Data.GetMin() * iHeight / ( Data.GetMax() - Data.GetMin()));
 		DrawLine(
 			x1, iPosY, x2, iPosY,
-			PIXEL_YCA( color_transparent, yc, 1, 4 )
+			CPixel( color_transparent, yc, 1, 4 )
 		);
 	}
 	
@@ -939,7 +939,7 @@ void CVsdFilter::DrawSyncGraph( int x1, int y1, int x2, int y2, CVsdFont &Font )
 
 void CVsdFilter::DrawGSnake(
 	int iCx, int iCy, int iR, int iIndicatorR, int iWidth,
-	PIXEL_YCA_ARG ycBall, PIXEL_YCA_ARG ycLine,
+	CPixelArg ycBall, CPixelArg ycLine,
 	double dLength
 ){
 	int	iGx = 0, iGy = 0;
@@ -994,10 +994,10 @@ void CVsdFilter::DrawMap(
 	UINT uFlag,
 	int iLineWidth,
 	int iIndicatorR,
-	PIXEL_YCA_ARG ycIndicator,
-	PIXEL_YCA_ARG ycG0,
-	PIXEL_YCA_ARG ycGPlus,
-	PIXEL_YCA_ARG ycGMinus,
+	CPixelArg ycIndicator,
+	CPixelArg ycG0,
+	CPixelArg ycGPlus,
+	CPixelArg ycGMinus,
 	int	iLength
 ){
 	double dGx, dGy;
@@ -1090,7 +1090,7 @@ void CVsdFilter::DrawMap(
 					iGx,     iGy,
 					iGxPrev, iGyPrev,
 					iLineWidth,
-					PIXEL_YCA( ycG0, dG >= 0 ? ycGPlus : ycGMinus, iAlfa, 256 )
+					CPixel( ycG0, dG >= 0 ? ycGPlus : ycGMinus, iAlfa, 256 )
 				);
 				iGxPrev = iGx;
 				iGyPrev = iGy;
@@ -1128,8 +1128,8 @@ void CVsdFilter::DrawMap(
 
 void CVsdFilter::DrawMapPosition(
 	int x1, int y1, int x2, int y2,	UINT uFlag,
-	int iLineWidth, PIXEL_YCA_ARG yc,
-	CVsdFont &Font, PIXEL_YCA_ARG ycFont, PIXEL_YCA_ARG ycOutline
+	int iLineWidth, CPixelArg yc,
+	CVsdFont &Font, CPixelArg ycFont, CPixelArg ycOutline
 ){
 	int	x, y;
 	int i;
@@ -1204,7 +1204,7 @@ void CVsdFilter::DrawMapPosition(
 void CVsdFilter::DrawNeedle(
 	int x, int y, int r1, int r2,
 	int iStart, int iEnd, double dVal,
-	PIXEL_YCA_ARG yc,
+	CPixelArg yc,
 	int iWidth
 ){
 	iStart %= 360;
@@ -1328,7 +1328,7 @@ void CVsdFilter::CalcLapTime( void ){
 
 void CVsdFilter::DrawLapTime(
 	int x, int y, UINT uAlign, CVsdFont &Font,
-	PIXEL_YCA_ARG yc, PIXEL_YCA_ARG ycBest, PIXEL_YCA_ARG ycPlus, PIXEL_YCA_ARG ycOutline
+	CPixelArg yc, CPixelArg ycBest, CPixelArg ycPlus, CPixelArg ycOutline
 ){
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
@@ -1407,7 +1407,7 @@ void CVsdFilter::DrawLapTime(
 
 void CVsdFilter::DrawLapTimeLog(
 	int x, int y, UINT uAlign, int iNum, CVsdFont &Font,
-	PIXEL_YCA_ARG yc, PIXEL_YCA_ARG ycBest, PIXEL_YCA_ARG ycOutline
+	CPixelArg yc, CPixelArg ycBest, CPixelArg ycOutline
 ){
 	int	i;
 	WCHAR	szBuf[ SPRINTF_BUF ];
@@ -1477,7 +1477,7 @@ void CVsdFilter::DrawLapTimeLog(
 
 void CVsdFilter::DrawRaceLapTime(
 	int x, int y, UINT uAlign, int iNum, CVsdFont &Font,
-	PIXEL_YCA_ARG yc, PIXEL_YCA_ARG ycOutline
+	CPixelArg yc, CPixelArg ycOutline
 ){
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
@@ -1585,11 +1585,11 @@ void CVsdFilter::DrawRaceLapTime(
 
 void CVsdFilter::DrawRoundMeterScaleSub(
 	int iCx, int iCy, int iR,
-	int iLineLen1, int iLineWidth1, PIXEL_YCA_ARG ycLine1, int iLine1Cnt,
-	int iLineLen2, int iLineWidth2, PIXEL_YCA_ARG ycLine2, int iLine2Cnt,
+	int iLineLen1, int iLineWidth1, CPixelArg ycLine1, int iLine1Cnt,
+	int iLineLen2, int iLineWidth2, CPixelArg ycLine2, int iLine2Cnt,
 	int iMinDeg, int iMaxDeg,
 	int iMinVal, int iMaxVal,
-	int iRNum, PIXEL_YCA_ARG ycNum, CVsdFont &Font
+	int iRNum, CPixelArg ycNum, CVsdFont &Font
 ){
 	int	i;
 	int	iValRange = iMaxVal - iMinVal;
@@ -1663,10 +1663,10 @@ void CVsdFilter::DrawRoundMeterScaleSub(
 void CVsdFilter::DrawLinearMeterScaleSub(
 	UINT uFlag,
 	int iX, int iY, int iWidth,
-	int iLineLen1, int iLineWidth1, PIXEL_YCA_ARG ycLine1, int iLine1Cnt,
-	int iLineLen2, int iLineWidth2, PIXEL_YCA_ARG ycLine2, int iLine2Cnt,
+	int iLineLen1, int iLineWidth1, CPixelArg ycLine1, int iLine1Cnt,
+	int iLineLen2, int iLineWidth2, CPixelArg ycLine2, int iLine2Cnt,
 	int iMinVal, int iMaxVal,
-	int iNumPos, PIXEL_YCA_ARG ycNum, CVsdFont &Font
+	int iNumPos, CPixelArg ycNum, CVsdFont &Font
 ){
 	int	i;
 	WCHAR	szBuf[ SPRINTF_BUF ];

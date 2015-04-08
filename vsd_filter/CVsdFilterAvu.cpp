@@ -253,7 +253,7 @@ G = Y-0.714Cr-0.344Cb
 B = Y+1.772Cb 
 */
 
-void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
+void CVsdFilter::PutPixel( int x, int y, const CPixelArg yc ){
 	
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
@@ -269,7 +269,7 @@ void CVsdFilter::PutPixel( int x, int y, const PIXEL_YCA_ARG yc ){
 	}
 }
 
-void CVsdFilter::FillLine( int x1, int y1, int x2, const PIXEL_YCA_ARG yc, UINT uPattern ){
+void CVsdFilter::FillLine( int x1, int y1, int x2, const CPixelArg yc, UINT uPattern ){
 	
 	PIXEL_YC	*ycp = fpip->ycp_edit;
 	
@@ -312,7 +312,7 @@ UINT CVsdFilter::PutImage0(
 		
 		for( int ix = ix_st; ix < ix_ed; ++ix, ++iIndex ){
 			
-			PIXEL_YCA yc( img.GetPixelRaw( ix, iy ));
+			CPixel yc( img.GetPixelRaw( ix, iy ));
 			
 			if( yc.alfa != 256 ){
 				if( yc.alfa ){

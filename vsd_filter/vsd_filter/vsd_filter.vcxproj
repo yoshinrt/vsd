@@ -142,6 +142,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\COle.h" />
+    <ClInclude Include="..\CPixel.h" />
+    <ClInclude Include="..\CPixelBase.h" />
     <ClInclude Include="..\CScript.h" />
     <ClInclude Include="..\CVsdFile.h" />
     <ClInclude Include="..\CVsdFilter.h" />
@@ -157,8 +159,6 @@
     <ClInclude Include="..\def_trackbar.h" />
     <ClInclude Include="..\error_code.h" />
     <ClInclude Include="..\filter.h" />
-    <ClInclude Include="..\pixel.h" />
-    <ClInclude Include="..\pixel_base.h" />
     <ClInclude Include="..\rev_num.h" />
     <ClInclude Include="..\ScriptIF.h" />
     <ClInclude Include="..\StdAfx.h" />

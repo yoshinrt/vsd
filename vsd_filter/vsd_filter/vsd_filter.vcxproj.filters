@@ -45,9 +45,6 @@
     <ClInclude Include="..\CScript.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\pixel.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="..\CVsdImage.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -75,7 +72,10 @@
     <ClInclude Include="..\COle.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\pixel_base.h">
+    <ClInclude Include="..\CPixel.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CPixelBase.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
