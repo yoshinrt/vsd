@@ -82,6 +82,9 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 	CPixelImg	yc;
 	Gdiplus::Bitmap*	pBitmap = NULL;
 	
+	HGLOBAL		hBuffer		= NULL;
+	void*		pBuffer		= NULL;
+	
 	if(
 		wcsncmp( szFileName, L"http://",  7 ) == 0 ||
 		wcsncmp( szFileName, L"https://", 8 ) == 0
@@ -107,8 +110,6 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 		// URL で開く
 		HINTERNET	hInternet	= NULL;
 		HINTERNET	hFile		= NULL;
-		HGLOBAL		hBuffer		= NULL;
-		void*		pBuffer		= NULL;
 		
 		DWORD		dwReadSize;
 		BOOL		bResult;
@@ -150,11 +151,8 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 			
 			if(
 				!(
-					(
-						hBuffer = GlobalAlloc( GMEM_MOVEABLE, IMG_BUF_SIZE )
-					) && (
-						pBuffer = GlobalLock( hBuffer )
-					)
+					( hBuffer = GlobalAlloc( GMEM_MOVEABLE, IMG_BUF_SIZE )) &&
+					( pBuffer = GlobalLock( hBuffer ))
 				)
 			){
 				result		= ERR_GLOBAL_MEM;
@@ -165,25 +163,21 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 			/* オープンしたURLからデータを(BUF_SIZEバイトずつ)読み込む */
 			UINT	uTotalSize = 0;
 			
-			for(;;){
+			do{
 				bResult = InternetReadFile( hFile, ( char *)pBuffer + uTotalSize, IMG_BUF_SIZE - uTotalSize, &dwReadSize );
+				uTotalSize += dwReadSize;
 				
 				/* 全て読み込んだらループを抜ける */
-				if( bResult && ( dwReadSize == 0 )) break;
-				uTotalSize += dwReadSize;
-			}
+			}while( !( bResult && ( dwReadSize == 0 )));
 			
 	        IStream* pIStream;
 			if( CreateStreamOnHGlobal( hBuffer, FALSE, &pIStream ) == S_OK )
-			pBitmap = Gdiplus::Bitmap::FromStream( pIStream );
+				pBitmap = Gdiplus::Bitmap::FromStream( pIStream );
 		}while( 0 );
 		
 		/* 後処理 */
 		if( hFile )		InternetCloseHandle( hFile );
 		if( hInternet )	InternetCloseHandle( hInternet );
-		if( pBuffer )	GlobalUnlock( hBuffer );
-		if( hBuffer )	GlobalFree( hBuffer );
-		
 	}else{
 		//--- 画像ファイルを開く
 		//  【対応画像形式】  BMP, JPEG, PNG, GIF, TIFF, WMF, EMF
@@ -226,6 +220,8 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 	}
 	
 	delete pBitmap;
+	if( pBuffer )	GlobalUnlock( hBuffer );
+	if( hBuffer )	GlobalFree( hBuffer );
 	
 	Clip( iMinX, iMinY, iMaxX, iMaxY );
 	

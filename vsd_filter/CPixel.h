@@ -2,13 +2,13 @@
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
-	CPixel.h - PIXEL_YC / CPixel structure
+	CPixel.h - CPixel structure
 	
 *****************************************************************************/
 
 #pragma once 
 
-									//   AARRGGBB
+								//    AARRGGBB
 #define	color_black			CPixel( 0x00000000 )
 #define	color_white			CPixel( 0x00FFFFFF )
 #define	color_blue			CPixel( 0x000000FF )

@@ -506,6 +506,7 @@ class CVsdFilter
 	int	GetFrameMax( void )	{ return vi.num_frames; }	// !js_var:MaxFrameCnt
 	int	GetFrameCnt( void )	{ return m_iFrameCnt; }	// !js_var:FrameCnt
 	double	GetFPS( void )	{ return ( double )vi.fps_numerator / vi.fps_denominator; }
+	int IsSaving( void )	{ return 0; }	// !js_var:IsSaving
 	
 	// パラメータ
 	int	m_iFrameCnt, m_iFrameMax;
@@ -551,6 +552,7 @@ class CVsdFilter
 	int	GetFrameMax( void ){ return fileinfo->frame_n; }
 	int	GetFrameCnt( void ){ return fpip->frame; }
 	double	GetFPS( void ){ return ( double )fileinfo->video_rate / fileinfo->video_scale; }
+	int IsSaving( void ){ return filter->exfunc->is_saving( editp ); }
 	
 	// 同期情報表示
 	WCHAR *DrawSyncInfoFormatTime(
