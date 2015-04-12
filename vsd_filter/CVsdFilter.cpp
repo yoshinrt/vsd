@@ -415,6 +415,26 @@ void CVsdFilter::InitJS( v8::Local<v8::FunctionTemplate> tmpl ){
 	InitJS_Sub( m_GPSLog, tmpl );
 }
 
+/*** 位置指定ログアクセス ***************************************************/
+
+double CVsdFilter::AccessLog( const char *szKey, double dFrameCnt ){
+	double dRet;
+	
+	if(
+		m_VsdLog &&
+		!_isnan( dRet = m_VsdLog->Get( szKey, GetLogIndex( dFrameCnt, Vsd, m_VsdLog->m_iLogNum )))
+	){
+		return dRet;
+	}
+	if(
+		m_GPSLog &&
+		!_isnan( dRet = m_GPSLog->Get( szKey, GetLogIndex( dFrameCnt, GPS, m_GPSLog->m_iLogNum )))
+	){
+		return dRet;
+	}
+	return NaN;
+}
+
 /*** ファイルリスト取得 *****************************************************/
 
 // szPath は [ MAX_PATH + 1 ] の配列で，work に使用される

@@ -7,12 +7,11 @@ all: ScriptIF.h rev_num.h
 
 ScriptIF.h : \
 	make_js_func.pl \
-	CVsdFilter.cpp \
-	CVsdFilterDraw.cpp \
-	CVsdImage.cpp \
-	CVsdFont.cpp \
-	CVsdFile.cpp \
-	CScript.cpp
+	CVsdFilter.h \
+	CVsdImage.h \
+	CVsdFont.h \
+	CVsdFile.h \
+	CScript.h
 	./$< $@
 
 rev_num.h:

@@ -397,6 +397,12 @@ class CVsdFilter
 		return m_szPluginDirA;
 	}
 	
+	// ログアクセス
+	double AccessLog(	// !js_func:AccessLog
+		const char *szKey,
+		double dFrameCnt
+	);
+	
 	int		*m_piParamT;
 	int		*m_piParamC;
 	int		*m_piParamS;

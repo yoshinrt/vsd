@@ -40,6 +40,9 @@ function Initialize(){
 		// かつ指定距離以上移動した場合のみ地図を更新します
 		UpdateTime:		1,		// [frame]
 		UpdateDistance:	1,		// [m]
+		
+		// 画像先読み数
+		ImgCacheCnt:	30,
 	};
 	
 	MapParam = {
@@ -131,49 +134,29 @@ DrawStreetView = function( param ){
 	
 	// 一番最初の画像を同期モードで取得
 	if( param.StViewImg === undefined ){
-		param.GMapURL = "http://maps.googleapis.com/maps/api/streetview?sensor=false" +
-			"&size=" + ~~param.Width + "x" + ~~param.Height +
-			"&location=";
-		
 		param.APIKeyNo		= 0;
-		param.StViewImg		= new Image( GetImageURL());
-		param.Dir			= Vsd.Direction;
-		param.Time			= Vsd.FrameCnt;
-		param.DispLong		= param.Long 	= Vsd.Longitude;
-		param.DispLati		= param.Lati 	= Vsd.Latitude;
-		param.Distance		= Vsd.Distance;
+		
+		// 画像 cache 数だけ先読み
+		param.StViewImg = [];
+		
+		for( var i = 0; i < param.ImgCacheCnt; ++i ){
+			param.StViewImg[ i ] = new Image( GetImageURL( Vsd.FrameCnt + i ), IMG_INET_ASYNC );
+		}
 	}
 	
-	// 次の画像データ取得が完了した
-	if(
-		param.StViewImgNext !== undefined &&
-		param.StViewImgNext.Status == IMG_STATUS_LOAD_COMPLETE
-	){
-		param.StViewImg.Dispose();
-		param.StViewImg		= param.StViewImgNext;
-		param.StViewImgNext	= undefined;
-		param.Dir			= param.NextDir;
-		param.DispLong		= param.Long;
-		param.DispLati		= param.Lati;
-	}
+	var ImgIdx = Vsd.FrameCnt % param.ImgCacheCnt;
 	
-	Vsd.PutImage( param.X, param.Y, param.StViewImg );
+	// 画像データ取得完了まで待つ
+	while( param.StViewImg[ ImgIdx ].Status == IMG_STATUS_LOAD_INCOMPLETE );
+	
+	Vsd.PutImage( param.X, param.Y, param.StViewImg[ ImgIdx ]);
 	
 	// 次の画像データを非同期モードで取得
-	if(
-		param.StViewImgNext === undefined &&
-		Math.abs( Vsd.FrameCnt - param.Time ) >= param.UpdateTime &&
-		GetDistance( Vsd.Longitude, Vsd.Latitude, param.Long, param.Lati ) >= param.UpdateDistance
-	){
-		param.StViewImgNext = new Image(
-			GetImageURL(),
-			Vsd.IsSaving ? 0 : IMG_INET_ASYNC
-		);
-		param.Time			= Vsd.FrameCnt;
-		param.Long			= Vsd.Longitude;
-		param.Lati			= Vsd.Latitude;
-		param.NextDir		= Vsd.Direction;
-	}
+	param.StViewImg[ ImgIdx ].Dispose();
+	param.StViewImg[ ImgIdx ] = new Image(
+		GetImageURL( Vsd.FrameCnt + param.ImgCacheCnt ),
+		IMG_INET_ASYNC
+	);
 	
 	// 緯度・経度から距離算出
 	function GetDistance( dLong0, dLati0, dLong1, dLati1 ){
@@ -193,7 +176,7 @@ DrawStreetView = function( param ){
 	}
 	
 	// 画像 URL 生成
-	function GetImageURL(){
+	function GetImageURL( FrameCnt ){
 		var key = '';
 		
 		if( typeof( param.APIKey ) == 'object' ){
@@ -203,7 +186,11 @@ DrawStreetView = function( param ){
 			key = "&key=" + param.APIKey;
 		}
 		
-		return param.GMapURL + Vsd.Latitude + "," + Vsd.Longitude + "&heading=" + Vsd.Direction + key;
+		return "http://maps.googleapis.com/maps/api/streetview?sensor=false" +
+			"&size=" + ~~param.Width + "x" + ~~param.Height + "&location=" +
+			Vsd.AccessLog( "Latitude", FrameCnt ) + "," +
+			Vsd.AccessLog( "Longitude", FrameCnt ) + "&heading=" +
+			Vsd.AccessLog( "Direction", FrameCnt ) + key;
 	}
 }
 
