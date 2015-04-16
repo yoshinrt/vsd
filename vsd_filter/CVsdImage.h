@@ -63,6 +63,7 @@ class CVsdImage {
 	int m_iOffsY;
 	
 	LPWSTR		m_pFileName;
+	volatile BOOL	m_bAsyncLoading;
   private:
-	CPixelImg	*m_pBuf;
+	CPixelImg		*m_pBuf;
 };

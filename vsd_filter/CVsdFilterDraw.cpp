@@ -1730,9 +1730,10 @@ void CVsdFilter::DrawLinearMeterScaleSub(
 BOOL CVsdFilter::DrawVSD( void ){
 	
 	// 解像度変更
-	if( m_iWidth != GetWidth() || m_iHeight != GetHeight()){
-		m_iWidth  = GetWidth();
-		m_iHeight = GetHeight();
+	if( m_iWidth != GetWidth() || m_iHeight != GetHeight() || m_bSaving != IsSaving()){
+		m_iWidth	= GetWidth();
+		m_iHeight	= GetHeight();
+		m_bSaving	= IsSaving();
 		
 		// ポリゴン用バッファリサイズ
 		if( m_Polygon ) delete [] m_Polygon;

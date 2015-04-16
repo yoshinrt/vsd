@@ -462,9 +462,10 @@ class CVsdFilter
 	
 	BOOL	m_bConsoleOn;
 	
+	CScript	*m_Script;
+	
   protected:
 	
-	CScript	*m_Script;
 	int m_iTextPosX, m_iTextPosY;
 	
   private:
@@ -486,8 +487,9 @@ class CVsdFilter
 	int m_iPolygonMaxY;
 	
 	// 解像度変更検出用
-	int	m_iWidth;
-	int m_iHeight;
+	int		m_iWidth;
+	int		m_iHeight;
+	BOOL	m_bSaving;
 	
 #ifdef AVS_PLUGIN
 	/*** AviSynth ***********************************************************/

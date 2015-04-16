@@ -22,6 +22,8 @@
 HINSTANCE	CVsdFilter::m_hInst 	= NULL;
 const int CVsdFilter::m_iRevision = PROG_REVISION;
 
+CVsdFilter	*g_Vsd;
+
 /*** コンストラクタ *********************************************************/
 
 void CVsdFilter::Constructor( void ){
@@ -61,6 +63,7 @@ void CVsdFilter::Constructor( void ){
 	
 	m_iWidth	=
 	m_iHeight	= 0;
+	m_bSaving	= FALSE;
 	
 	//---- GDI+の初期設定
 	COle::Initialize();
@@ -70,10 +73,6 @@ void CVsdFilter::Constructor( void ){
 /*** デストラクタ ***********************************************************/
 
 void CVsdFilter::Destructor( void ){
-	//---- GDI+の解放
-	Gdiplus::GdiplusShutdown( m_gdiplusToken );
-	COle::Uninitialize();
-	
 	delete m_VsdLog;
 	delete m_GPSLog;
 	delete m_LapLog;
@@ -90,6 +89,10 @@ void CVsdFilter::Destructor( void ){
 	delete [] m_Polygon;
 	delete m_pFont;
 	delete m_Script;
+	
+	//---- GDI+の解放
+	Gdiplus::GdiplusShutdown( m_gdiplusToken );
+	COle::Uninitialize();
 }
 
 /*** ログリード ************************************************************/

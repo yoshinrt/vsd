@@ -84,6 +84,8 @@ CScript::CScript( CVsdFilter *pVsd ){
 	
 	m_szErrorMsg	= NULL;
 	m_uError		= ERR_OK;
+	
+	m_hSemaphore = CreateSemaphore( NULL, 1, 1, "CScriptSemaphore" );
 }
 
 /*** デストラクタ ***********************************************************/
@@ -98,6 +100,7 @@ CScript::~CScript(){
 		while( !v8::V8::IdleNotification());
 	}
 	m_pIsolate->Dispose();
+	CloseHandle( m_hSemaphore );
 	
 	delete [] m_szErrorMsg;
 }
@@ -277,6 +280,8 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 /*** function 名指定実行，引数なし ******************************************/
 
 UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
+	//CSemaphore sem;
+	
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_Context );
@@ -285,6 +290,8 @@ UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
 }
 
 UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
+	//CSemaphore sem;
+	
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_Context );
@@ -296,6 +303,8 @@ UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
 }
 
 UINT CScript::Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc ){
+	//CSemaphore sem;
+	
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_Context );

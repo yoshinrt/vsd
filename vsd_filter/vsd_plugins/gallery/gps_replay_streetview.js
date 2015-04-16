@@ -38,8 +38,7 @@ function Initialize(){
 		// 地図更新間隔
 		// 前回地図更新時から指定秒以上経過し，
 		// かつ指定距離以上移動した場合のみ地図を更新します
-		UpdateTime:		1,		// [frame]
-		UpdateDistance:	1,		// [m]
+		UpdateTime:		Vsd.IsSaving ? 1 : 4,		// [frame]
 		
 		// 画像先読み数
 		ImgCacheCnt:	30,
@@ -69,19 +68,6 @@ function Initialize(){
 		// 自車インジケータ
 		IndicatorSize:	12 * Scale,		// サイズ
 		IndicatorColor:	0x0080FF,		// 色
-		
-		// 地図更新間隔
-		// 前回地図更新時から指定秒以上経過し，
-		// かつ指定距離以上移動した場合のみ地図を更新します
-		UpdateTime:		1000,	// [ミリ秒]
-		UpdateDistance:	160,	// [ピクセル]
-		
-		// 1に設定すると，地図をスムースにスクロールします．
-		// ★重要★
-		//   地図から Google の権利帰属表示表示が消え，Google Maps の利用規約
-		//   違反になりますので，SmoothScrollMap:1 で作成した動画は絶対にネッ
-		//   ト等で公開しないでください．
-		SmoothScrollMap:	0,
 	};
 	
 	// Geocoding の設定
@@ -132,56 +118,63 @@ function Initialize(){
 DrawStreetView = function( param ){
 	if( Vsd.Longitude === undefined ) return;
 	
+	var FrameCnt	= ~~( Vsd.FrameCnt / param.UpdateTime ) * param.UpdateTime;
+	var ImgIdx		= ( FrameCnt / param.UpdateTime ) % param.ImgCacheCnt;
+	
 	// 一番最初の画像を同期モードで取得
 	if( param.StViewImg === undefined ){
-		param.APIKeyNo		= 0;
-		
 		// 画像 cache 数だけ先読み
 		param.StViewImg = [];
 		
-		for( var i = 0; i < param.ImgCacheCnt; ++i ){
-			param.StViewImg[ i ] = new Image( GetImageURL( Vsd.FrameCnt + i ), IMG_INET_ASYNC );
+		for( var i = 1; i < param.ImgCacheCnt; ++i ){
+			param.StViewImg[ i ] = new Image( GetImageURL( FrameCnt + i * param.UpdateTime ), IMG_INET_ASYNC );
 		}
+		
+		param.StViewImg[ 0 ] = new Image( GetImageURL( FrameCnt ));
+		param.DispIdx = 0;
 	}
 	
-	var ImgIdx = Vsd.FrameCnt % param.ImgCacheCnt;
-	
-	// 画像データ取得完了まで待つ
-	while( param.StViewImg[ ImgIdx ].Status == IMG_STATUS_LOAD_INCOMPLETE );
-	
-	Vsd.PutImage( param.X, param.Y, param.StViewImg[ ImgIdx ]);
-	
-	// 次の画像データを非同期モードで取得
-	param.StViewImg[ ImgIdx ].Dispose();
-	param.StViewImg[ ImgIdx ] = new Image(
-		GetImageURL( Vsd.FrameCnt + param.ImgCacheCnt ),
-		IMG_INET_ASYNC
-	);
-	
-	// 緯度・経度から距離算出
-	function GetDistance( dLong0, dLati0, dLong1, dLati1 ){
-		var a	= 6378137.000;
-		var b	= 6356752.314245;
-		var e2	= ( a * a - b * b ) / ( a * a );
-		var ToRAD = Math.PI / 180;
+	if( Vsd.IsSaving ){
+		// 画像データ取得完了まで待つ
+		while( param.StViewImg[ ImgIdx ].Status == IMG_STATUS_LOAD_INCOMPLETE );
+		Vsd.PutImage( param.X, param.Y, param.StViewImg[ ImgIdx ]);
 		
-		var dx	= ( dLong1 - dLong0 ) * ToRAD;
-		var dy	= ( dLati1 - dLati0 ) * ToRAD;
-		var uy	= ( dLati0 + dLati1 ) / 2 * ToRAD;
-		var W	= Math.sqrt( 1 - e2 * Math.sin( uy ) * Math.sin( uy ));
-		var M	= a * ( 1 - e2 ) / Math.pow( W, 3 );
-		var N	= a / W;
-		
-		return	Math.sqrt( dy * dy * M * M + Math.pow( dx * N * Math.cos( uy ), 2 ));
+		// 次の画像データを非同期モードで取得
+		if(( Vsd.FrameCnt + 1 ) % param.UpdateTime == 0 ){
+			param.StViewImg[ ImgIdx ].Dispose();
+			param.StViewImg[ ImgIdx ] = new Image(
+				GetImageURL( FrameCnt + param.ImgCacheCnt * param.UpdateTime ),
+				IMG_INET_ASYNC
+			);
+		}
+	}else{
+		if(
+			ImgIdx != param.DispIdx &&
+			param.StViewImg[( param.DispIdx + 1 ) % param.ImgCacheCnt ].Status == IMG_STATUS_LOAD_COMPLETE
+		){
+			param.StViewImg[ param.DispIdx ].Dispose();
+			param.StViewImg[ param.DispIdx ] = new Image(
+				GetImageURL(
+					( ImgIdx > param.DispIdx ?
+						param.DispIdx + param.ImgCacheCnt - ImgIdx :
+						param.DispIdx - ImgIdx
+					) * param.UpdateTime + FrameCnt
+				),
+				IMG_INET_ASYNC
+			);
+			param.DispIdx = ( param.DispIdx + 1 ) % param.ImgCacheCnt;
+		}
+Print( "ImgIdx:" + ImgIdx + "  DispIdx:" + param.DispIdx + "\n" );
+		Vsd.PutImage( param.X, param.Y, param.StViewImg[ param.DispIdx ]);
 	}
 	
 	// 画像 URL 生成
 	function GetImageURL( FrameCnt ){
+Print( "Req:" + FrameCnt + " / " + ( ~~( FrameCnt / param.UpdateTime )% param.ImgCacheCnt ) + "\n" );
 		var key = '';
 		
 		if( typeof( param.APIKey ) == 'object' ){
-			param.APIKeyNo = ( param.APIKeyNo + 1 ) % param.APIKey.length;
-			key = "&key=" + param.APIKey[ param.APIKeyNo ];
+			key = "&key=" + param.APIKey[ Vsd.FrameCnt % param.APIKey.length ];
 		}else if( param.APIKey != '' ){
 			key = "&key=" + param.APIKey;
 		}

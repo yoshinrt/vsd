@@ -7,8 +7,11 @@
 *****************************************************************************/
 
 #include "StdAfx.h"
+#include "CVsdFilter.h"
 #include "CScript.h"
 #include "COle.h"
+
+extern CVsdFilter	*g_Vsd;
 
 /*** OLE インスタンス作成 ***************************************************/
 
@@ -692,8 +695,13 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 	EXCEPINFO *pExcepInfo,
 	UINT *puArgErr
 ){
+	//CSemaphore sem;
+	
+	v8::Isolate::Scope IsolateScope( g_Vsd->m_Script->m_pIsolate );
 	v8::HandleScope handle_scope;
+	v8::Context::Scope context_scope( g_Vsd->m_Script->m_Context );
 	v8::TryCatch try_catch;
+	
 	m_CallbackFunc->Call( m_Global, 0, NULL );
 	
 	if( try_catch.HasCaught()){

@@ -186,7 +186,7 @@ BOOL func_exit( FILTER *fp ){
 
 /*** CVsdFilter クラス ***************************************************/
 
-CVsdFilter	*g_Vsd;
+extern CVsdFilter	*g_Vsd;
 
 /*** tarckbar / checkbox conf_name 名 ***/
 
@@ -1584,7 +1584,7 @@ BOOL IsFileWriteEnabled( void ){
 	
 	if(
 		MessageBox( NULL,
-			"VSD の JavaScript がファイル書き込みすることを許可しますか?\n"
+			"VSD for GPS の JavaScript がファイル書き込みすることを許可しますか?\n"
 			"はい を選ぶと，以後のファイル書き込みはすべて許可されます．",
 			"VSD for GPS",
 			MB_YESNO | MB_ICONQUESTION
