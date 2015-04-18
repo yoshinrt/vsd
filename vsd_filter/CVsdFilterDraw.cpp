@@ -110,6 +110,8 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, CPixelArg yc, UINT uP
 }
 
 void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, CPixelArg yc, UINT uPattern ){
+	if( width < 1 ) width = 1;
+	
 	if( width <= 1 || uPattern != -1 ){
 		#ifdef _OPENMP_AVS
 			#pragma omp parallel for

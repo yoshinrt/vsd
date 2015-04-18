@@ -483,22 +483,22 @@ void CVsdFilter::AddLogAccessor( v8::Local<v8::Object> thisObj ){
 
 /*** 位置指定ログアクセス ***************************************************/
 
-double CVsdFilter::AccessLog( const char *szKey, double dFrameCnt ){
+v8::Handle<v8::Value> CVsdFilter::AccessLog( const char *szKey, double dFrameCnt ){
 	double dRet;
 	
 	if(
 		m_VsdLog &&
 		!_isnan( dRet = m_VsdLog->Get( szKey, GetLogIndex( dFrameCnt, Vsd, m_VsdLog->m_iLogNum )))
 	){
-		return dRet;
+		return v8::Number::New( dRet );
 	}
 	if(
 		m_GPSLog &&
 		!_isnan( dRet = m_GPSLog->Get( szKey, GetLogIndex( dFrameCnt, GPS, m_GPSLog->m_iLogNum )))
 	){
-		return dRet;
+		return v8::Number::New( dRet );
 	}
-	return NaN;
+	return v8::Undefined();
 }
 
 /*** ファイルリスト取得 *****************************************************/

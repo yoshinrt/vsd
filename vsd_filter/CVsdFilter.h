@@ -300,15 +300,19 @@ class CVsdFilter
 	// ラップタイム情報
 	LPCWSTR FormatTime( int iTime ); // !js_func
 	
-	int CurTime( void ){ return m_LapLog ? m_LapLog->m_iCurTime : TIME_NONE; }	// !js_var:ElapsedTime
-	int BestLapTime( void ){ return m_LapLog ? m_LapLog->m_iBestTime : TIME_NONE; }	// !js_var:BestLapTime
-	int DiffTime( void ){ return m_LapLog ? m_LapLog->m_iDiffTime : TIME_NONE; }	// !js_var:DiffTime
-	int LapTime( void ){	// !js_var:LapTime
-		if( !m_LapLog || m_LapLog->m_iLapIdx < 0 ) return TIME_NONE;
+	static inline v8::Handle<v8::Value> UndefIfTimeNone( int i ){
+		return i == TIME_NONE ? v8::Undefined() : v8::Integer::New( i );
+	}
+	
+	v8::Handle<v8::Value> CurTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iCurTime ) : v8::Undefined(); }	// !js_var:ElapsedTime
+	v8::Handle<v8::Value> BestLapTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iBestTime ) : v8::Undefined(); }	// !js_var:BestLapTime
+	v8::Handle<v8::Value> DiffTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iDiffTime ) : v8::Undefined(); }	// !js_var:DiffTime
+	v8::Handle<v8::Value> LapTime( void ){	// !js_var:LapTime
+		if( !m_LapLog || m_LapLog->m_iLapIdx < 0 ) return v8::Undefined();
 		if( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime ){
-			return m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime;
+			return UndefIfTimeNone( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime );
 		}
-		return m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].iTime;
+		return UndefIfTimeNone( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].iTime );
 	}
 	int LapCnt( void ){ // !js_var:LapCnt
 		if( !m_LapLog ) return 0;
@@ -398,7 +402,7 @@ class CVsdFilter
 	}
 	
 	// ログアクセス
-	double AccessLog(	// !js_func:AccessLog
+	v8::Handle<v8::Value> AccessLog(
 		const char *szKey,
 		double dFrameCnt
 	);
@@ -427,10 +431,10 @@ class CVsdFilter
 	}
 	#include "def_log.h"
 	
-	double DateTime( void ){	// !js_var:DateTime
-		if( m_VsdLog ) return m_VsdLog->DateTime();
-		if( m_GPSLog ) return m_GPSLog->DateTime();
-		return NaN;
+	v8::Handle<v8::Value> DateTime( void ){	// !js_var:DateTime
+		if( m_VsdLog ) return v8::Number::New( m_VsdLog->DateTime());
+		if( m_GPSLog ) return v8::Number::New( m_GPSLog->DateTime());
+		return v8::Undefined();
 	}
 	
 	v8::Handle<v8::Value> GetValue( char *szKey ){

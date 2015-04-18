@@ -115,7 +115,20 @@ MakeJsIF({
 		CVsdFilter *obj = static_cast<CVsdFilter *>( v8::Local<v8::External>::Cast( args[ 0 ] )->Value());
 		if( !obj ) return v8::Undefined();
 -----
-	ExtraNew	=> << '-----'
+	FunctionIF	=> << '-----',
+	static v8::Handle<v8::Value> Func_ValueOfIndex( const v8::Arguments& args ){
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 2 )) return v8::Undefined();
+		v8::String::AsciiValue str0( args[ 0 ] );
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
+		if( !thisObj ) return v8::Undefined();
+		return thisObj->AccessLog(
+			*str0,
+			args[ 1 ]->NumberValue()
+		);
+	}
+-----
+	ExtraNew	=> << '-----',
 		obj->AddLogAccessor( thisObject );
 -----
 });
@@ -253,7 +266,7 @@ sub MakeJsIF {
 		if( /!js_func\b/ ){
 			
 			# ´Ø¿ôÌ¾
-			/([\w_]+)\s+\*?([\w_]+)\s*\(/;
+			/(\S+)\s+\*?([\w_][\w_\d]*)\s*\(/;
 			( $RetType, $FuncName ) = ( $1, $2 );
 			
 			$ArgNum = 0;
@@ -372,22 +385,27 @@ sub MakeJsIF {
 			
 			elsif( $RetType eq 'int' || $RetType eq 'UINT' ){
 				$RetVar   = "int ret = ";
-				$RetValue = "v8::Integer::New( ret )"
+				$RetValue = "v8::Integer::New( ret )";
 			}
 			
 			elsif( $RetType eq 'char' ){
 				$RetVar   = "char *ret = ";
-				$RetValue = "v8::String::New( ret )"
+				$RetValue = "v8::String::New( ret )";
 			}
 			
 			elsif( $RetType =~ /^LPC?WSTR$/ ){
 				$RetVar   = "$RetType ret = ";
-				$RetValue = "v8::String::New(( uint16_t *)ret )"
+				$RetValue = "v8::String::New(( uint16_t *)ret )";
 			}
 			
 			elsif( $RetType eq 'double' ){
 				$RetVar   = "double ret = ";
-				$RetValue = "v8::Number::New( ret )"
+				$RetValue = "v8::Number::New( ret )";
+			}
+			
+			elsif( $RetType =~ /^v8::Handle\b/ ){
+				$RetVar   = "$RetType ret = ";
+				$RetValue = "ret";
 			}
 			
 			else{
@@ -425,26 +443,23 @@ sub MakeJsIF {
 			s/[\x0D\x0A]//g;
 			s/\s*[{=;].*//;
 			s/\(.*\)/()/;
+			s/^\s+//g;
 			/(\w+\W*)$/;
 			
 			$RealVar = $1;
 			
-			$Type =
-				/\b(?:int|UINT)\b/	? "Integer" :
-				/\bdouble\b/		? "Number" :
-				/\bchar\b/			? "String" :
-				/\bLPC?WSTR\b/		? "String" :
-									  "???";
-			
-			$Cast = '';
-			if( /\bLPC?WSTR\b/ ){
-				$Cast	= '( uint16_t *)';
-			}
+			$Ret =
+				/\b(?:int|UINT)\b/	? "v8::Integer::New( obj->$RealVar )" :
+				/\bdouble\b/		? "v8::Number::New( obj->$RealVar )" :
+				/\bchar\b/			? "v8::String::New( obj->$RealVar )" :
+				/\bLPC?WSTR\b/		? "v8::String::New(( uint16_t *)obj->$RealVar )" :
+				/^v8::Handle\b/		? "obj->$RealVar" :
+									  "unknown ret type obj->$RealVar";
 #-----
 			$AccessorIF .= << "-----";
 	static v8::Handle<v8::Value> Get_$JSvar( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		$param->{ Class } *obj = CScript::GetThis<$param->{ Class }>( info.Holder());
-		return obj ? v8::${Type}::New($Cast obj->$RealVar ) : v8::Undefined();
+		return obj ? $Ret : v8::Undefined();
 	}
 -----
 		}
