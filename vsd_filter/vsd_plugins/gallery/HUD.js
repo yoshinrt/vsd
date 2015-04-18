@@ -189,14 +189,14 @@ function Draw(){
 			ALIGN_RIGHT | ALIGN_VCENTER, ~~Log.Tacho, FontM, Color
 		);
 	}else if( Vsd.MaxAltitude > 0 ){
-		TachoMeterParam.MinVal = Vsd.Altitude - 300;
-		TachoMeterParam.MaxVal = Vsd.Altitude + 300;
+		TachoMeterParam.MinVal = Log.Altitude - 300;
+		TachoMeterParam.MaxVal = Log.Altitude + 300;
 		Vsd.DrawLinearMeterScale( TachoMeterParam );
 		Vsd.DrawPolygon( TachoBox, 0x80000000, DRAW_FILL );
 		Vsd.DrawPolygon( TachoBox, Color );
 		Vsd.DrawTextAlign(
 			TachoMeterParam.X + 100 * Scale, Vsd.Height / 2,
-			ALIGN_RIGHT | ALIGN_VCENTER, ~~Vsd.Altitude, FontM, Color
+			ALIGN_RIGHT | ALIGN_VCENTER, ~~Log.Altitude, FontM, Color
 		);
 	}
 	

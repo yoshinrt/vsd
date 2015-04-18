@@ -29,15 +29,15 @@ function Initialize(){
 			"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
 		],
 		
-		// 地図表示位置，サイズ(最大 640x640)
+		// ストリートビュー表示位置，サイズ(最大 640x640)
 		X:		0,
 		Y:		0,
 		Width:	min( 640, Vsd.Width ),
 		Height:	min( 480, Vsd.Height ),
 		
-		// 地図更新間隔
-		// 前回地図更新時から指定秒以上経過し，
-		// かつ指定距離以上移動した場合のみ地図を更新します
+		// ストリートビュー更新間隔
+		// 前回ストリートビュー更新時から指定秒以上経過し，
+		// かつ指定距離以上移動した場合のみストリートビューを更新します
 		UpdateTime:		Vsd.IsSaving ? 1 : 4,		// [frame]
 		
 		// 画像先読み数
@@ -54,14 +54,14 @@ function Initialize(){
 		
 		// 地図タイプ
 		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:地図+航空写真
-		//Maptype: "roadmap",
-		Maptype: "openstreetmap",
+		Maptype: "roadmap",
+		//Maptype: "openstreetmap",
 		//Maptype: "hybrid",
 		//Maptype: "satellite",
 		
 		// 地図表示位置，サイズ(最大 640x640)
-		X:		Vsd.Width - 300 * Scale,
-		Y:		0,
+		X:		Vsd.Width - 308 * Scale,
+		Y:		8 * Scale,
 		Width:	300 * Scale,
 		Height:	300 * Scale,
 		
@@ -94,21 +94,36 @@ function Initialize(){
 	MeterRight = 1;
 	
 	// 使用する画像・フォントの宣言
-	FontM = new Font( "Impact", 20, FONT_FIXED | FONT_OUTLINE );
-	FontS = new Font( "Impact", 18 * Scale );
-	FontL = new Font( "Impact", 48 * Scale );
-	
-	// 座標等を予め計算しておく
-	MeterR  = 100 * Scale;
-	MeterX	= MeterRight ? Vsd.Width  - MeterR * 2: 0;
-	MeterY	= Vsd.Height - MeterR * 2 * 0.88;
-	MeterCx = MeterX + MeterR;
-	MeterCy = MeterY + MeterR;
+	FontJ = new Font( "ＭＳ Ｐゴシック", 31 * Scale );
+	FontM = new Font( "Impact", 31 * Scale, FONT_FIXED );
+	FontS = new Font( "Impact", 24 * Scale );
 	
 	// スピードメータ用最高速計算
 	MaxSpeed = ~~( Log.Max.Speed / 10 ) * 10;
 	
-	FontColor   = 0;
+	// メータ用 param
+	
+	MeterParam = {
+		Flag:	LMS_HORIZONTAL | ALIGN_HCENTER | ALIGN_TOP,
+		X:			8 * Scale,
+		Y:			36 * Scale,
+		Width:		Vsd.Width - 332 * Scale,
+		Line1Len:	20 * Scale,
+		Line1Width:	3 * Scale,
+		Line1Color:	0xFFFFFF,
+		Line1Cnt:	5,
+		Line2Len:	15 * Scale,
+		Line2Width:	1,
+		Line2Color:	0xFFFFFF,
+		Line2Cnt:	15 * Scale,
+		MinVal:		0,
+		MaxVal:		MaxSpeed,
+		NumPos:		20 * Scale,
+		Font:		FontS,
+		FontColor:	0xFFFFFF
+	};
+	
+	FontColor   = 0xFFFFFF;
 	FontColorOL = 0xFFFFFF;
 	BGColor = 0x80001020;
 }
@@ -122,7 +137,7 @@ DrawStreetView = function( param ){
 	var ImgIdx		= ( FrameCnt / param.UpdateTime ) % param.ImgCacheCnt;
 	
 	// 一番最初の画像を同期モードで取得
-	if( param.StViewImg === undefined ){
+	if( param.StViewImg === undefined || param.FrameCnt != Vsd.FrameCnt ){
 		// 画像 cache 数だけ先読み
 		param.StViewImg = [];
 		
@@ -132,6 +147,9 @@ DrawStreetView = function( param ){
 		
 		param.StViewImg[ 0 ] = new Image( GetImageURL( FrameCnt ));
 		param.DispIdx = 0;
+		param.FrameCnt = Vsd.FrameCnt + 1;
+	}else{
+		++param.FrameCnt;
 	}
 	
 	if( Vsd.IsSaving ){
@@ -164,13 +182,11 @@ DrawStreetView = function( param ){
 			);
 			param.DispIdx = ( param.DispIdx + 1 ) % param.ImgCacheCnt;
 		}
-Print( "ImgIdx:" + ImgIdx + "  DispIdx:" + param.DispIdx + "\n" );
 		Vsd.PutImage( param.X, param.Y, param.StViewImg[ param.DispIdx ]);
 	}
 	
 	// 画像 URL 生成
 	function GetImageURL( FrameCnt ){
-Print( "Req:" + FrameCnt + " / " + ( ~~( FrameCnt / param.UpdateTime )% param.ImgCacheCnt ) + "\n" );
 		var key = '';
 		
 		if( typeof( param.APIKey ) == 'object' ){
@@ -181,72 +197,73 @@ Print( "Req:" + FrameCnt + " / " + ( ~~( FrameCnt / param.UpdateTime )% param.Im
 		
 		return "http://maps.googleapis.com/maps/api/streetview?sensor=false" +
 			"&size=" + ~~param.Width + "x" + ~~param.Height + "&location=" +
-			Vsd.AccessLog( "Latitude", FrameCnt ) + "," +
-			Vsd.AccessLog( "Longitude", FrameCnt ) + "&heading=" +
-			Vsd.AccessLog( "Direction", FrameCnt ) + key;
+			Log.ValueOfIndex( "Latitude", FrameCnt ) + "," +
+			Log.ValueOfIndex( "Longitude", FrameCnt ) + "&heading=" +
+			Log.ValueOfIndex( "Direction", FrameCnt ) + key;
 	}
 }
 
 //*** メーター描画処理 ******************************************************
 
 function Draw(){
-	// Google マップ表示
+	// ストリートビュー表示
 	DrawStreetView( StreetViewParam );
-	Vsd.DrawRoadMap( MapParam );
+	
+	// 背景
+	Vsd.DrawRect( Vsd.Width - 316 * Scale, 0, Vsd.Width - 1, 316 * Scale, BGColor, DRAW_FILL );
+	Vsd.DrawRect( 0, 0, Vsd.Width - 316 * Scale - 1, 84 * Scale - 1, BGColor, DRAW_FILL );
+	Vsd.DrawRect( 0, 84 * Scale, FontM.GetTextWidth( ' ' ) * 16.5, 84 * Scale + FontM.Height * 6.2, BGColor, DRAW_FILL );
 	//Vsd.DrawRect( MapParam2.X, MapParam2.Y, MapParam2.X + MapParam2.Width -1 , MapParam2.Y + MapParam2.Height - 1, 0 );
 	
-	// メーター画像描画
-	Vsd.DrawCircle( MeterCx, MeterCy, MeterR, BGColor, DRAW_FILL );
-	
-	// スピードメーター目盛り描画
-	Vsd.DrawMeterScale(
-		MeterCx, MeterCy, MeterR,
-		MeterR * 0.1,  2, 0xFFFFFF,
-		MeterR * 0.05, 1, 0xFFFFFF,
-		2, 135, 45,
-		MeterR * 0.78,
-		MaxSpeed, 12, 0xFFFFFF,
-		FontS
-	);
-	
-	// スピード数値表示
+	// 逆 Geo コーディング
+	Vsd.Geocoding( GeocodingParam );
 	Vsd.DrawTextAlign(
-		MeterCx, MeterCy + MeterR * 0.25, 
-		ALIGN_HCENTER | ALIGN_VCENTER,
-		~~Log.Speed, FontL, 0xFFFFFF
+		0, 0, 0,
+		GeocodingParam.Address,
+		FontJ, FontColor
 	);
 	
-	Vsd.DrawTextAlign(
-		MeterCx, MeterCy + MeterR * 0.5,
-		ALIGN_HCENTER | ALIGN_VCENTER,
-		"km/h", FontS, 0xFFFFFF
-	);
+	// Google マップ表示
+	Vsd.DrawRoadMap( MapParam );
 	
-	// スピードメーター針
-	Vsd.DrawNeedle(
-		MeterCx, MeterCy, MeterR * 0.95, MeterR * -0.1,
-		135, 45, Log.Speed / MaxSpeed, 0xFF0000, 3
+	// スピードメーター描画
+	Vsd.DrawRect(
+		8 * Scale, 36 * Scale,
+		( 8 * Scale ) + ( Vsd.Width - 332 * Scale ) * Log.Speed / MaxSpeed,
+		48 * Scale,
+		0x00FFFF, DRAW_FILL
 	);
+	Vsd.DrawLinearMeterScale( MeterParam );
 	
 	// 文字データ
-	var Y = 0;
-	var X = 0;
+	var Y = 84 * Scale;
 	
 	var date = new Date();
 	date.setTime( Vsd.DateTime );
 	
-	Vsd.DrawText( X, Y,
-			date.getFullYear() + "/" +
+	Vsd.DrawText( 0, Y,
+		"Date: " + date.getFullYear() + "/" +
 			( date.getMonth() < 9 ? "0" : "" ) + ( date.getMonth() + 1 ) + "/" +
-			( date.getDate() < 10 ? "0" : "" ) + date.getDate() + " " +
-			( date.getHours() < 10 ? "0" : "" ) + date.getHours() + ":" +
-			( date.getMinutes() < 10 ? "0" : "" ) + date.getMinutes() + ":" +
-			( date.getSeconds() < 10 ? "0" : "" ) + date.getSeconds(),
-		FontM, FontColor, FontColorOL
+			( date.getDate() < 10 ? "0" : "" ) + date.getDate(),
+		FontM, FontColor
 	);
 	Y += FontM.Height;
 	
-	Vsd.DrawText( X, Y, "Alt.: " + ( Vsd.Altitude !== undefined ? Vsd.Altitude.toFixed( 1 ) + "m" : "---" ), FontM, FontColor, FontColorOL );
+	Vsd.DrawText( 0, Y,
+		"Time: " + ( date.getHours() < 10 ? "0" : "" ) + date.getHours() + ":" +
+			( date.getMinutes() < 10 ? "0" : "" ) + date.getMinutes() + ":" +
+			( date.getSeconds() < 10 ? "0" : "" ) + date.getSeconds(),
+		FontM, FontColor
+	);
 	Y += FontM.Height;
-	Vsd.DrawText( X, Y, "Dist.:" + ( Log.Distance / 1000 ).toFixed( 2 ) + "km", FontM, FontColor, FontColorOL );
+	
+	if( Log.Longitude === undefined ) return;
+	
+	Vsd.DrawText( 0, Y, "Lat.: " + Log.Latitude.toFixed( 6 ), FontM, FontColor );
+	Y += FontM.Height;
+	Vsd.DrawText( 0, Y, "Lng.: " + Log.Longitude.toFixed( 6 ), FontM, FontColor );
+	Y += FontM.Height;
+	Vsd.DrawText( 0, Y, "Alt.: " + ( Log.Altitude !== undefined ? Log.Altitude.toFixed( 1 ) + "m" : "---" ), FontM, FontColor );
+	Y += FontM.Height;
+	Vsd.DrawText( 0, Y, "Dist.:" + ( Log.Distance / 1000 ).toFixed( 2 ) + "km", FontM, FontColor );
 }

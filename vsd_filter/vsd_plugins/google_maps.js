@@ -174,7 +174,7 @@ function Draw(){
 	Y += FontM.Height;
 	Vsd.DrawText( 0, Y, "Lng.: " + Log.Longitude.toFixed( 6 ), FontM, FontColor );
 	Y += FontM.Height;
-	Vsd.DrawText( 0, Y, "Alt.: " + ( Vsd.Altitude !== undefined ? Vsd.Altitude.toFixed( 1 ) + "m" : "---" ), FontM, FontColor );
+	Vsd.DrawText( 0, Y, "Alt.: " + ( Log.Altitude !== undefined ? Log.Altitude.toFixed( 1 ) + "m" : "---" ), FontM, FontColor );
 	Y += FontM.Height;
 	Vsd.DrawText( 0, Y, "Dist.:" + ( Log.Distance / 1000 ).toFixed( 2 ) + "km", FontM, FontColor );
 	
