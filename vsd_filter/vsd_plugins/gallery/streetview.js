@@ -4,30 +4,34 @@ function Initialize(){
 	Scale = Vsd.Height / 720;
 	
 	//////////////////////////////////////////////////////////////////////////
-	/// ↓↓↓↓↓Google Maps の設定 ここから↓↓↓↓↓ //////////////////////
+	/// ↓↓↓↓↓Google ストリートビュー の設定 ここから↓↓↓↓↓ //////////
 	//////////////////////////////////////////////////////////////////////////
 	
 	// 設定を行うためには，以下の設定値を直接書き換えてください．
 	
 	// ★補足説明
-	// このスキンは Google Maps にアクセスし地図データを得ています．
-	//   Google Maps にアクセスするためには「API キー」が必要です．
+	// このスキンは Google サーバにアクセスし画像データを得ています．
+	//   Google サーバにアクセスするためには「API キー」が必要です．
 	//   キーは無料で取得出来ます．キー取得方法は
-	//   https://developers.google.com/maps/documentation/staticmaps/?hl=ja#api_key
+	//   https://developers.google.com/maps/documentation/streetview/index?hl=ja#api_key
 	//   を参照してください．
 	// また，Google によって
-	//   マップデータの取得は 1日あたり 25,000 枚
+	//   ストリートビュー画像の取得は 1日あたり 25,000 枚
 	//   ジオコーディングの取得は 1日あたり 2,500 回
 	//   に制限されています．
 	
 	StreetViewParam = {
-		// Google Maps の API キーを指定します．
+		// Google ストリートビューの API キーを指定します．
 		// 例: APIKey: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
 		APIKey: [
 			"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
 			"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
 			"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
 		],
+		
+		//////////////////////////////////////////////////////////////////////////
+		/// ↑↑↑↑↑Google ストリートビュー の設定 ここまで↑↑↑↑↑ //////////
+		//////////////////////////////////////////////////////////////////////////
 		
 		// ストリートビュー表示位置，サイズ(最大 640x640)
 		X:		0,
@@ -76,16 +80,12 @@ function Initialize(){
 		UpdateTime:	10000,	// [ミリ秒]
 	};
 	
-	//////////////////////////////////////////////////////////////////////////
-	/// ↑↑↑↑↑Google Maps の設定 ここまで↑↑↑↑↑ //////////////////////
-	//////////////////////////////////////////////////////////////////////////
-	
 	function min( a, b ){ return ( a < b ) ? a : b; }
 	
 	if( MapParam.APIKey == '' ){
 		MessageBox(
-			"google_maps.js スキンを使用するためには初期設定が必要です．詳しくは\n" +
-			Vsd.SkinDir + "google_maps.js\n" +
+			"streetview.js スキンを使用するためには初期設定が必要です．詳しくは\n" +
+			Vsd.SkinDir + "streetview.js\n" +
 			"をメモ帳等で開き，その先頭に書かれている説明をお読みください．\n" +
 			"(設定なしでも短時間なら使えるようです)"
 		);
