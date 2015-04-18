@@ -22,11 +22,12 @@ function Initialize(){
 	
 	StreetViewParam = {
 		// Google ストリートビューの API キーを指定します．
-		// 例: APIKey: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+		// 例: APIKey: [ "ABCDEFGHIJKLMNOPQRSTUVWXYZ" ]
 		APIKey: [
-			"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
-			"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
-			"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
+			"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
+			"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
+			"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
+//#REL#		"",
 		],
 		
 		//////////////////////////////////////////////////////////////////////////
@@ -51,17 +52,16 @@ function Initialize(){
 	MapParam = {
 		// Google Maps の API キーを指定します．
 		// 例: APIKey: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-		APIKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
+		APIKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
+//#REL#	APIKey: "",
 		
 		// ズームレベルを 0～21 で指定します
 		Zoom: 14,
 		
 		// 地図タイプ
-		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:地図+航空写真
-		Maptype: "roadmap",
-		//Maptype: "openstreetmap",
-		//Maptype: "hybrid",
-		//Maptype: "satellite",
+		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:地図+航空写真 //#DEL#
+		Maptype: "roadmap",	//#DEL#
+//#REL#	Maptype: "openstreetmap",
 		
 		// 地図表示位置，サイズ(最大 640x640)
 		X:		Vsd.Width - 308 * Scale,
