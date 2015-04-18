@@ -22,13 +22,13 @@ function Initialize(){
 	
 	StreetViewParam = {
 		// Google ストリートビューの API キーを指定します．
-		// 例: APIKey: [ "ABCDEFGHIJKLMNOPQRSTUVWXYZ" ]
-		APIKey: [
+		// 例: APIKey: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		APIKey: [										//#DEL#
 			"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
 			"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
 			"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
-//#REL#		"",
-		],
+		],												//#DEL#
+//#REL#	APIKey: "",
 		
 		//////////////////////////////////////////////////////////////////////////
 		/// ↑↑↑↑↑Google ストリートビュー の設定 ここまで↑↑↑↑↑ //////////
@@ -50,10 +50,7 @@ function Initialize(){
 	};
 	
 	MapParam = {
-		// Google Maps の API キーを指定します．
-		// 例: APIKey: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
 		APIKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
-//#REL#	APIKey: "",
 		
 		// ズームレベルを 0～21 で指定します
 		Zoom: 14,
@@ -82,7 +79,7 @@ function Initialize(){
 	
 	function min( a, b ){ return ( a < b ) ? a : b; }
 	
-	if( MapParam.APIKey == '' ){
+	if( StreetViewParam.APIKey == '' ){
 		MessageBox(
 			"streetview.js スキンを使用するためには初期設定が必要です．詳しくは\n" +
 			Vsd.SkinDir + "streetview.js\n" +
