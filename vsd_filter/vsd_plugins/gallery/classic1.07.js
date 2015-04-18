@@ -30,10 +30,10 @@ function Initialize(){
 	SpdY2 = Vsd.Height - 8;
 	
 	// スピードメータ用最高速計算
-	if( Vsd.MaxTacho > 0 ){
-		MaxTacho = Math.ceil( Vsd.MaxTacho / 1000 ) * 1000;
+	if( Log.Max.Tacho > 0 ){
+		MaxTacho = Math.ceil( Log.Max.Tacho / 1000 ) * 1000;
 	}else{
-		MaxSpeed = Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
+		MaxSpeed = Math.ceil( Log.Max.Speed / 10 ) * 10;
 	}
 	
 	// グラフ用パラメータ生成
@@ -57,8 +57,8 @@ function Draw(){
 		90, 0, 0x804000A8
 	);
 	
-	if( Vsd.MaxTacho > 0 ){
-		var MeterColor = Vsd.Tacho > REV_LIMIT && ( Vsd.FrameCnt & 0x2 ) ? 0xFF0000 : 0xFFFFFF;
+	if( Log.Max.Tacho > 0 ){
+		var MeterColor = Log.Tacho > REV_LIMIT && ( Vsd.FrameCnt & 0x2 ) ? 0xFF0000 : 0xFFFFFF;
 		
 		// タコメーター目盛り描画
 		Vsd.DrawMeterScale(
@@ -74,7 +74,7 @@ function Draw(){
 		// メータ・針
 		Vsd.DrawNeedle(
 			MeterCx, MeterCy, MeterR * 0.95, MeterR * -0.1,
-			90, 0, Vsd.Tacho / MaxTacho, 0xFF0000, 3
+			90, 0, Log.Tacho / MaxTacho, 0xFF0000, 3
 		);
 		
 		// ギア
@@ -87,7 +87,7 @@ function Draw(){
 		Vsd.DrawTextAlign(
 			MeterCx, MeterCy + MeterR * 0.30,
 			ALIGN_HCENTER | ALIGN_VCENTER,
-			GetGear( Vsd.Tacho / Vsd.Speed ), FontL, 0xFF4000
+			GetGear( Log.Tacho / Log.Speed ), FontL, 0xFF4000
 		);
 	}else{
 		// スピードメーター目盛り描画
@@ -104,18 +104,18 @@ function Draw(){
 		// メータ・針
 		Vsd.DrawNeedle(
 			MeterCx, MeterCy, MeterR * 0.95, MeterR * -0.1,
-			90, 0, Vsd.Speed / MaxSpeed, 0xFF0000, 3
+			90, 0, Log.Speed / MaxSpeed, 0xFF0000, 3
 		);
 	}
 	
 	// G スネーク・数値
-	if( typeof Vsd.Gx != 'undefined' ){
+	if( typeof Log.Gx != 'undefined' ){
 		Vsd.DrawLine( MeterGCx - MeterGR, MeterGCy, MeterGCx + MeterGR, MeterGCy, 0xFFFFFF );
 		Vsd.DrawLine( MeterGCx, MeterGCy - MeterGR, MeterGCx, MeterGCy + MeterGR, 0xFFFFFF );
 		Vsd.DrawCircle( MeterGCx, MeterGCy, MeterGR, 0x80404040, 1 );
 		Vsd.DrawGSnake( MeterGCx, MeterGCy, MeterGR / 1.5, 5, 2, 0x00FF00, 0x008000 );
 		// G 数値
-		var Accel = Math.sqrt( Vsd.Gx * Vsd.Gx + Vsd.Gy * Vsd.Gy ).toFixed( 1 ) + "G";
+		var Accel = Math.sqrt( Log.Gx * Log.Gx + Log.Gy * Log.Gy ).toFixed( 1 ) + "G";
 		Vsd.DrawTextAlign(
 			MeterGCx + MeterGR, MeterGCy + MeterGR,
 			ALIGN_RIGHT | ALIGN_BOTTOM,
@@ -124,7 +124,7 @@ function Draw(){
 	}
 	
 	// スピード数値表示
-	var Speed = ~~Vsd.Speed;
+	var Speed = ~~Log.Speed;
 	Vsd.DrawText(
 		MeterCx - FontL.GetTextWidth( Speed ) / 2,
 		MeterCy - ( MeterR * 35 / 100 ) - FontL.Height / 2,

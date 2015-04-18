@@ -126,7 +126,7 @@ Vsd.DrawGraph = function( x1, y1, x2, y2, font, flags, params ){
 //*** Google Map 描画 ********************************************************
 
 Vsd.DrawGoogleMaps = function( param ){
-	if( Vsd.Longitude === undefined ) return;
+	if( Log.Longitude === undefined ) return;
 	
 	// 一番最初の地図データを同期モードで取得
 	if( param.MapImg === undefined ){
@@ -137,12 +137,12 @@ Vsd.DrawGoogleMaps = function( param ){
 			"&size=" + ~~param.Width + "x" + ~~param.Height +
 			"&center=";
 		
-		param.MapImg		= new Image( param.GMapURL + Vsd.Latitude + "," + Vsd.Longitude );
-		param.Dir			= Vsd.Direction;
+		param.MapImg		= new Image( param.GMapURL + Log.Latitude + "," + Log.Longitude );
+		param.Dir			= Log.Direction;
 		param.Time			= Vsd.DateTime;
-		param.DispLong		= param.Long 	= Vsd.Longitude;
-		param.DispLati		= param.Lati 	= Vsd.Latitude;
-		param.Distance		= Vsd.Distance;
+		param.DispLong		= param.Long 	= Log.Longitude;
+		param.DispLati		= param.Lati 	= Log.Latitude;
+		param.Distance		= Log.Distance;
 	}
 	
 	// 次のマップデータ取得が完了した
@@ -159,9 +159,9 @@ Vsd.DrawGoogleMaps = function( param ){
 	}
 	
 	// ピクセル移動量を計算  参考: http://hosohashi.blog59.fc2.com/blog-entry-5.html
-	var PixLong = ( Vsd.Longitude - param.DispLong ) / 180 * ( 1 << ( 7 + param.Zoom ));
+	var PixLong = ( Log.Longitude - param.DispLong ) / 180 * ( 1 << ( 7 + param.Zoom ));
 	var sin_pic = Math.sin( Math.PI / 180 * param.DispLati );
-	var sin_now = Math.sin( Math.PI / 180 * Vsd.Latitude );
+	var sin_now = Math.sin( Math.PI / 180 * Log.Latitude );
 	var PixLati = (
 		Math.log(( 1 + sin_pic ) / ( 1 - sin_pic )) -
 		Math.log(( 1 + sin_now ) / ( 1 - sin_now ))
@@ -172,7 +172,7 @@ Vsd.DrawGoogleMaps = function( param ){
 	Vsd.DrawCarIndicator(
 		param.X + param.Width  / 2 + PixLong,
 		param.Y + param.Height / 2 + PixLati,
-		Vsd.Direction, param.IndicatorSize, param.IndicatorColor
+		Log.Direction, param.IndicatorSize, param.IndicatorColor
 	);
 	
 	// 次のマップデータを非同期モードで取得
@@ -182,13 +182,13 @@ Vsd.DrawGoogleMaps = function( param ){
 		( PixLong * PixLong + PixLati * PixLati ) >= param.UpdateDistance * param.UpdateDistance
 	){
 		param.MapImgNext = new Image(
-			param.GMapURL + Vsd.Latitude + "," + Vsd.Longitude,
+			param.GMapURL + Log.Latitude + "," + Log.Longitude,
 			IMG_INET_ASYNC
 		);
 		param.Time			= Vsd.DateTime;
-		param.Long			= Vsd.Longitude;
-		param.Lati			= Vsd.Latitude;
-		param.NextDir		= Vsd.Direction;
+		param.Long			= Log.Longitude;
+		param.Lati			= Log.Latitude;
+		param.NextDir		= Log.Direction;
 	}
 }
 
@@ -259,7 +259,7 @@ Vsd.Geocoding = function( param ){
 		param.HttpRequest.open(
 			"GET",
 			"http://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng=" +
-				Vsd.Latitude + "," + Vsd.Longitude,
+				Log.Latitude + "," + Log.Longitude,
 			true
 		);
 		
@@ -281,7 +281,7 @@ Vsd.Geocoding = function( param ){
 //*** OpenStreetMap 描画 *****************************************************
 
 Vsd.DrawRoadMap = function( param ){
-	if( Vsd.Longitude === undefined ){
+	if( Log.Longitude === undefined ){
 		NoMap( param.X, param.Y, param.X + param.Width - 1, param.Y + param.Height - 1 );
 		return;
 	}
@@ -307,8 +307,8 @@ Vsd.DrawRoadMap = function( param ){
 	}
 	
 	// タイル番号，タイル内 x,y 座標を求める
-	var PosX = Lng2Tile( Vsd.Longitude, param.Zoom ); var TileX = ~~PosX;
-	var PosY = Lat2Tile( Vsd.Latitude,  param.Zoom ); var TileY = ~~PosY;
+	var PosX = Lng2Tile( Log.Longitude, param.Zoom ); var TileX = ~~PosX;
+	var PosY = Lat2Tile( Log.Latitude,  param.Zoom ); var TileY = ~~PosY;
 	PosX = ~~(( PosX - TileX ) * param.TileSize );
 	PosY = ~~(( PosY - TileY ) * param.TileSize );
 	
@@ -383,7 +383,7 @@ Vsd.DrawRoadMap = function( param ){
 	Vsd.DrawCarIndicator(
 		param.X + param.Width  / 2,
 		param.Y + param.Height / 2,
-		Vsd.Direction, param.IndicatorSize, param.IndicatorColor
+		Log.Direction, param.IndicatorSize, param.IndicatorColor
 	);
 	
 	function Lng2Tile( lng, zoom ){ return ( lng + 180 ) / 360 * Math.pow( 2, zoom ); }

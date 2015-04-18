@@ -41,12 +41,12 @@ function Initialize(){
 	SpdY2 = Vsd.Height - 8;
 	
 	// スピードメータ用最高速計算
-	if( Vsd.MaxTacho > 0 ){
-		MaxTacho			= Math.ceil( Vsd.MaxTacho / 1000 ) * 1000;
+	if( Log.Max.Tacho > 0 ){
+		MaxTacho			= Math.ceil( Log.Max.Tacho / 1000 ) * 1000;
 		MeterParam.MaxVal	= ~~( MaxTacho / 1000 );
 		MeterParam.NumR		= MeterR * 0.80;
 	}else{
-		MaxSpeed			= Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
+		MaxSpeed			= Math.ceil( Log.Max.Speed / 10 ) * 10;
 		MeterParam.MaxVal	= MaxSpeed;
 	}
 	
@@ -65,10 +65,10 @@ function Initialize(){
 function Draw(){
 	Vsd.DrawCircle( MeterParam.X, MeterParam.Y, MeterR, 0x80404040, DRAW_FILL );
 	
-	if( Vsd.MaxTacho > 0 ){
+	if( Log.Max.Tacho > 0 ){
 		MeterParam.Line1Color =
 		MeterParam.Line2Color =
-		MeterParam.FontColor = Vsd.Tacho > REV_LIMIT && ( Vsd.FrameCnt & 0x2 ) ? 0xFF0000 : 0xFFFFFF;
+		MeterParam.FontColor = Log.Tacho > REV_LIMIT && ( Vsd.FrameCnt & 0x2 ) ? 0xFF0000 : 0xFFFFFF;
 		
 		// タコメーター目盛り描画
 		Vsd.DrawRoundMeterScale( MeterParam );
@@ -83,7 +83,7 @@ function Draw(){
 		Vsd.DrawTextAlign(
 			MeterParam.X, MeterParam.Y - MeterR * 0.35,
 			ALIGN_HCENTER | ALIGN_VCENTER,
-			GetGear( Vsd.Tacho / Vsd.Speed ), FontM, 0
+			GetGear( Log.Tacho / Log.Speed ), FontM, 0
 		);
 	}else{
 		// スピードメーター目盛り描画
@@ -91,9 +91,9 @@ function Draw(){
 	}
 	
 	// G スネーク・数値
-	if( Vsd.Gx !== undefined ){
+	if( Log.Gx !== undefined ){
 		Vsd.DrawGSnake(	MeterParam.X, MeterParam.Y, MeterR / 1.5, 5, 2, 0x00FF00, 0x008000 );
-		var Accel = Math.sqrt( Vsd.Gx * Vsd.Gx + Vsd.Gy * Vsd.Gy ).toFixed( 1 ) + "G";
+		var Accel = Math.sqrt( Log.Gx * Log.Gx + Log.Gy * Log.Gy ).toFixed( 1 ) + "G";
 		Vsd.DrawText(
 			MeterParam.X - FontS.GetTextWidth( Accel ) / 2, MeterParam.Y + MeterR / 2 - FontS.Height,
 			Accel, FontS, 0xFFFFFF
@@ -101,7 +101,7 @@ function Draw(){
 	}
 	
 	// スピード数値表示
-	var Speed = ~~Vsd.Speed;
+	var Speed = ~~Log.Speed;
 	if     ( Speed <  10 ) Speed = "  " + Speed;
 	else if( Speed < 100 ) Speed = " "  + Speed;
 	
@@ -110,17 +110,17 @@ function Draw(){
 		Speed, FontM, 0xFFFFFF
 	);
 	
-	if( Vsd.MaxTacho > 0 ){
+	if( Log.Max.Tacho > 0 ){
 		// タコメーター針
 		Vsd.DrawNeedle(
 			MeterParam.X, MeterParam.Y, MeterR * 0.95, 0,
-			135, 45, Vsd.Tacho / MaxTacho, 0xFF0000, 3
+			135, 45, Log.Tacho / MaxTacho, 0xFF0000, 3
 		);
 	}else{
 		// スピードメーター針
 		Vsd.DrawNeedle(
 			MeterParam.X, MeterParam.Y, MeterR * 0.95, 0,
-			135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
+			135, 45, Log.Speed / MaxSpeed, 0xFF0000, 3
 		);
 	}
 	

@@ -87,7 +87,7 @@ function Initialize(){
 	FontL = new Font( "Impact", 60 * Scale );
 	
 	// スピードメータ用最高速計算
-	MaxSpeed = Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
+	MaxSpeed = Math.ceil( Log.Max.Speed / 10 ) * 10;
 	
 	// 座標等を予め計算しておく
 	MeterR  = 120 * Scale;
@@ -132,7 +132,7 @@ function Draw(){
 	Vsd.DrawTextAlign(
 		MeterParam.X, MeterParam.Y + MeterR * 0.25, 
 		ALIGN_HCENTER | ALIGN_VCENTER,
-		~~Vsd.Speed, FontL, 0xFFFFFF
+		~~Log.Speed, FontL, 0xFFFFFF
 	);
 	
 	Vsd.DrawTextAlign(
@@ -144,7 +144,7 @@ function Draw(){
 	// スピードメーター針
 	Vsd.DrawNeedle(
 		MeterParam.X, MeterParam.Y, MeterR * 0.95, MeterR * -0.1,
-		135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
+		135, 45, Log.Speed / MaxSpeed, 0xFF0000, 3
 	);
 	
 	Vsd.DrawRect( 0, 0, 316 * Scale - 1, 316 * Scale - 1, BGColor, DRAW_FILL );
@@ -176,13 +176,13 @@ function Draw(){
 	);
 	Y += FontM.Height;
 	
-	Vsd.DrawText( 0, Y, "Lat.: " + Vsd.Latitude.toFixed( 6 ), FontM, FontColor );
+	Vsd.DrawText( 0, Y, "Lat.: " + Log.Latitude.toFixed( 6 ), FontM, FontColor );
 	Y += FontM.Height;
-	Vsd.DrawText( 0, Y, "Lng.: " + Vsd.Longitude.toFixed( 6 ), FontM, FontColor );
+	Vsd.DrawText( 0, Y, "Lng.: " + Log.Longitude.toFixed( 6 ), FontM, FontColor );
 	Y += FontM.Height;
 	Vsd.DrawText( 0, Y, "Alt.: " + ( Vsd.Altitude !== undefined ? Vsd.Altitude.toFixed( 1 ) + "m" : "---" ), FontM, FontColor );
 	Y += FontM.Height;
-	Vsd.DrawText( 0, Y, "Dist.:" + ( Vsd.Distance / 1000 ).toFixed( 2 ) + "km", FontM, FontColor );
+	Vsd.DrawText( 0, Y, "Dist.:" + ( Log.Distance / 1000 ).toFixed( 2 ) + "km", FontM, FontColor );
 	
 	Vsd.Geocoding( GeocodingParam );
 	Vsd.DrawTextAlign(

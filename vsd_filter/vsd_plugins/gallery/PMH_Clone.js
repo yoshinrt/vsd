@@ -87,7 +87,7 @@ Vsd.DrawTextAlign(1890*Scale,1075*Scale,ALIGN_RIGHT|ALIGN_BOTTOM,GG+HH+":"+MM+":
 
 
 MaxTime = new Date()
-MaxTime.setTime(Vsd.MaxTime)
+MaxTime.setTime(Log.Max.Time)
 H2 = MaxTime.getUTCHours();
 if (H2 < 10) { H2 = "0" + H2;}
 M2 = MaxTime.getUTCMinutes();	// 分
@@ -98,7 +98,7 @@ Vsd.DrawTextAlign(1450*Scale,1075*Scale,ALIGN_RIGHT|ALIGN_BOTTOM,H2+":"+M2+":"+S
 
 
 ElapsedTime = new Date()
-ElapsedTime.setTime(Vsd.Time)
+ElapsedTime.setTime(Log.Time)
 H3 = ElapsedTime.getUTCHours();
 if (H3 < 10) { H3 = "0" + H3;}
 M3 = ElapsedTime.getUTCMinutes();	// 分
@@ -110,18 +110,18 @@ Vsd.DrawTextAlign(1010*Scale,1075*Scale,ALIGN_RIGHT|ALIGN_BOTTOM,H3+":"+M3+":"+S
 
 
 //移動距離表示
-Vsd.DrawTextAlign(1450*Scale,960*Scale,ALIGN_RIGHT|ALIGN_BOTTOM,(Vsd.Distance/1000).toFixed(1)+"km",FontS,0xFFFFFF)
+Vsd.DrawTextAlign(1450*Scale,960*Scale,ALIGN_RIGHT|ALIGN_BOTTOM,(Log.Distance/1000).toFixed(1)+"km",FontS,0xFFFFFF)
 
 //平均速度表示
-Vsd.DrawTextAlign(1010*Scale,960*Scale,ALIGN_RIGHT|ALIGN_BOTTOM,(60*60*Vsd.MaxDistance/Vsd.MaxTime).toFixed(1)+"km/h",FontS,0xFFFFFF)
+Vsd.DrawTextAlign(1010*Scale,960*Scale,ALIGN_RIGHT|ALIGN_BOTTOM,(60*60*Log.Max.Distance/Log.Max.Time).toFixed(1)+"km/h",FontS,0xFFFFFF)
 
 
 // スピードを表示
 Vsd.DrawTextAlign(MeterCx-5*Scale,MeterCy,ALIGN_LEFT|ALIGN_VCENTER,"km/h",FontR,0xFFFFFF);
-Vsd.DrawTextAlign(MeterCx-90*Scale,MeterCy,ALIGN_HCENTER|ALIGN_VCENTER,Vsd.Speed.toFixed(1),FontR,0xFFFFFF);
+Vsd.DrawTextAlign(MeterCx-90*Scale,MeterCy,ALIGN_HCENTER|ALIGN_VCENTER,Log.Speed.toFixed(1),FontR,0xFFFFFF);
 
-if( Vsd.Speed > 1 ) Vsd.DrawArc(MeterCx,MeterCy,MeterR,MeterR,MeterR*0.95,MeterR*0.95,180,180+180*Vsd.Speed/Vsd.MaxSpeed, 0xFF9933);
-//if( Vsd.Speed < Vsd.MaxSpeed ) Vsd.DrawArc(MeterCx,MeterCy,MeterR,MeterR,MeterR*0.95,MeterR*0.95,180+180*Vsd.Speed/Vsd.MaxSpeed,0,0xFFFFFF);
+if( Log.Speed > 1 ) Vsd.DrawArc(MeterCx,MeterCy,MeterR,MeterR,MeterR*0.95,MeterR*0.95,180,180+180*Log.Speed/Log.Max.Speed, 0xFF9933);
+//if( Log.Speed < Log.Max.Speed ) Vsd.DrawArc(MeterCx,MeterCy,MeterR,MeterR,MeterR*0.95,MeterR*0.95,180+180*Log.Speed/Log.Max.Speed,0,0xFFFFFF);
 //仕切り板の表示
 Vsd.DrawMeterScale(MeterCx,MeterCy,MeterR,MeterR*0.05,2.5*Scale,0x000000,MeterR*0.04,2*Scale,0xFFCCCCCC,0,180,0,MeterR*0.78,100000,60,0xFFFFFFFF,FontR);
 

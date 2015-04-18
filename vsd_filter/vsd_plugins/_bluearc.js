@@ -56,11 +56,11 @@ function Initialize(){
 	SpdY2 = Vsd.Height - 8;
 	
 	// スピードメータ用最高速計算
-	if( Vsd.MaxTacho > 0 ){
-		MaxTacho			= Math.ceil( Vsd.MaxTacho / 1000 ) * 1000;
+	if( Log.Max.Tacho > 0 ){
+		MaxTacho			= Math.ceil( Log.Max.Tacho / 1000 ) * 1000;
 		MeterParam.MaxVal	= ~~( MaxTacho / 1000 );
 	}else{
-		MaxSpeed			= Math.ceil( Vsd.MaxSpeed / 10 ) * 10;
+		MaxSpeed			= Math.ceil( Log.Max.Speed / 10 ) * 10;
 		MeterParam.MaxVal	= ~~( MaxSpeed / 10 );
 	}
 	
@@ -79,21 +79,21 @@ function Initialize(){
 function Draw(){
 	Vsd.DrawCircle( MeterParam.X, MeterParam.Y, 150 * Scale, 0x80000000, DRAW_FILL );
 	
-	if( Vsd.MaxTacho > 0 ){
-		if( Vsd.Tacho >= 1 ){
-			var GauageColor = Vsd.Tacho > REV_LIMIT && ( Vsd.FrameCnt & 0x2 ) ? 0xFF4040 : 0x804040FF;
+	if( Log.Max.Tacho > 0 ){
+		if( Log.Tacho >= 1 ){
+			var GauageColor = Log.Tacho > REV_LIMIT && ( Vsd.FrameCnt & 0x2 ) ? 0xFF4040 : 0x804040FF;
 			
 			// タコメーター針
 			Vsd.DrawArc(
 				MeterParam.X, MeterParam.Y, 120 * Scale, 120 * Scale, 80 * Scale, 80 * Scale,
-				135, 135 + 270 * Vsd.Tacho / MaxTacho, GauageColor
+				135, 135 + 270 * Log.Tacho / MaxTacho, GauageColor
 			);
 		}
-	}else if( Vsd.Speed > 0 ){
+	}else if( Log.Speed > 0 ){
 		// スピードメーター針
 		Vsd.DrawArc(
 			MeterParam.X, MeterParam.Y, 120 * Scale, 120 * Scale, 80 * Scale, 80 * Scale,
-			135, 135 + 270 * Vsd.Speed / MaxSpeed, 0x804040FF
+			135, 135 + 270 * Log.Speed / MaxSpeed, 0x804040FF
 		);
 	}
 	
@@ -107,11 +107,11 @@ function Draw(){
 			MeterParam.Y + 100 * Scale - 1,
 			0x00FF00, DRAW_FILL
 		);
-	}else if( Vsd.Gy >= 0 ){
+	}else if( Log.Gy >= 0 ){
 		Vsd.DrawRect(
 			MeterParam.X - 70 * Scale,
 			MeterParam.Y + 80 * Scale,
-			MeterParam.X + ( -70 + 140 * ( Vsd.Gy < Vsd.MaxGy ? Vsd.Gy : Vsd.MaxGy ) / Vsd.MaxGy ) * Scale,
+			MeterParam.X + ( -70 + 140 * ( Log.Gy < Log.Max.Gy ? Log.Gy : Log.Max.Gy ) / Log.Max.Gy ) * Scale,
 			MeterParam.Y + 100 * Scale - 1,
 			0x00FF00, DRAW_FILL
 		);
@@ -125,11 +125,11 @@ function Draw(){
 			MeterParam.Y + 120 * Scale - 1,
 			0xFF0000, DRAW_FILL
 		);
-	}else if( Vsd.Gy < 0 ){
+	}else if( Log.Gy < 0 ){
 		Vsd.DrawRect(
 			MeterParam.X - 70 * Scale,
 			MeterParam.Y + 100 * Scale,
-			MeterParam.X + ( -70 + 140 * ( Vsd.Gy > Vsd.MinGy ? Vsd.Gy : Vsd.MinGy ) / Vsd.MinGy ) * Scale,
+			MeterParam.X + ( -70 + 140 * ( Log.Gy > Log.Min.Gy ? Log.Gy : Log.Min.Gy ) / Log.Min.Gy ) * Scale,
 			MeterParam.Y + 120 * Scale - 1,
 			0xFF0000, DRAW_FILL
 		);
@@ -138,7 +138,7 @@ function Draw(){
 	// メーター画像描画
 	Vsd.PutImage( MeterX, MeterY, ImgMeter );
 	
-	if( Vsd.MaxTacho > 0 ){
+	if( Log.Max.Tacho > 0 ){
 		
 		// タコメーター目盛り描画
 		Vsd.DrawRoundMeterScale( MeterParam );
@@ -147,7 +147,7 @@ function Draw(){
 		Vsd.DrawTextAlign(
 			MeterParam.X, MeterParam.Y + MeterR * 0.25,
 			ALIGN_HCENTER | ALIGN_VCENTER,
-			GetGear( Vsd.Tacho / Vsd.Speed ), FontL, 0xFFFFFF
+			GetGear( Log.Tacho / Log.Speed ), FontL, 0xFFFFFF
 		);
 	}else{
 		// スピードメーター目盛り描画
@@ -158,7 +158,7 @@ function Draw(){
 	Vsd.DrawTextAlign(
 		MeterParam.X, MeterParam.Y - MeterR * 0.35, 
 		ALIGN_HCENTER | ALIGN_VCENTER,
-		~~Vsd.Speed, FontL, 0xFFFFFF
+		~~Log.Speed, FontL, 0xFFFFFF
 	);
 	
 	Vsd.DrawTextAlign(
@@ -167,7 +167,7 @@ function Draw(){
 		"km/h", FontS, 0xFFFFFF
 	);
 	
-	if( Vsd.Gx !== undefined ){
+	if( Log.Gx !== undefined ){
 		// Gメーターパネル画像描画
 		Vsd.DrawCircle( MeterGCx, MeterGCy, MeterGR, 0x80000000, DRAW_FILL );
 		Vsd.DrawLine( MeterGCx - MeterGR, MeterGCy, MeterGCx + MeterGR, MeterGCy, 0x606060 );
@@ -176,7 +176,7 @@ function Draw(){
 		Vsd.DrawCircle( MeterGCx, MeterGCy, MeterGR / 3 * 2, 0x606060 );
 		
 		// G 数値
-		var Accel = Math.sqrt( Vsd.Gx * Vsd.Gx + Vsd.Gy * Vsd.Gy ).toFixed( 1 ) + "G";
+		var Accel = Math.sqrt( Log.Gx * Log.Gx + Log.Gy * Log.Gy ).toFixed( 1 ) + "G";
 		Vsd.DrawTextAlign(
 			MeterGCx, MeterGCy + MeterR / 2, ALIGN_HCENTER | ALIGN_BOTTOM,
 			Accel, FontS, 0xFFFFFF

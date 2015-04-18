@@ -33,21 +33,21 @@ function Draw(){
 	);
 	Vsd.DrawTextAlign(
 		Vsd.Width - 90 * Scale, 80 * Scale, ALIGN_RIGHT | ALIGN_VCENTER,
-		~~Vsd.Speed, FontL, 0x00FFFF
+		~~Log.Speed, FontL, 0x00FFFF
 	);
 	
-	if( Vsd.Speed > 0 ) Vsd.DrawArc(
+	if( Log.Speed > 0 ) Vsd.DrawArc(
 		MeterCx, MeterCy,
 		MeterR, MeterR,
 		MeterR * 0.9, MeterR * 0.9,
-		240, 240 + 60 * Vsd.Speed / Vsd.MaxSpeed, 0x00FFFF
+		240, 240 + 60 * Log.Speed / Log.Max.Speed, 0x00FFFF
 	);
 	
-	if( Vsd.Speed < Vsd.MaxSpeed ) Vsd.DrawArc(
+	if( Log.Speed < Log.Max.Speed ) Vsd.DrawArc(
 		MeterCx, MeterCy,
 		MeterR, MeterR,
 		MeterR * 0.9, MeterR * 0.9,
-		240 + 60 * Vsd.Speed / Vsd.MaxSpeed, 300, 0x004040
+		240 + 60 * Log.Speed / Log.Max.Speed, 300, 0x004040
 	);
 	
 	// G メータ
@@ -58,7 +58,7 @@ function Draw(){
 	Vsd.DrawLine( GCx, GCy - GR, GCx, GCy + GR, 0x008000 );
 	Vsd.DrawGSnake(	GCx, GCy, GR / 1.5, 5 * Scale, 2, 0x00FF00, 0x008000 );
 	
-	var Accel = Math.sqrt( Vsd.Gx * Vsd.Gx + Vsd.Gy * Vsd.Gy ).toFixed( 1 ) + "G";
+	var Accel = Math.sqrt( Log.Gx * Log.Gx + Log.Gy * Log.Gy ).toFixed( 1 ) + "G";
 	Vsd.DrawTextAlign(
 		GCx + GR, GCy + GR, ALIGN_BOTTOM | ALIGN_RIGHT, Accel, FontS
 	);

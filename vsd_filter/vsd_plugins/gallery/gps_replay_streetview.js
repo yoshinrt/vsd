@@ -106,7 +106,7 @@ function Initialize(){
 	MeterCy = MeterY + MeterR;
 	
 	// スピードメータ用最高速計算
-	MaxSpeed = ~~( Vsd.MaxSpeed / 10 ) * 10;
+	MaxSpeed = ~~( Log.Max.Speed / 10 ) * 10;
 	
 	FontColor   = 0;
 	FontColorOL = 0xFFFFFF;
@@ -116,7 +116,7 @@ function Initialize(){
 //*** StreetView 描画 *******************************************************
 
 DrawStreetView = function( param ){
-	if( Vsd.Longitude === undefined ) return;
+	if( Log.Longitude === undefined ) return;
 	
 	var FrameCnt	= ~~( Vsd.FrameCnt / param.UpdateTime ) * param.UpdateTime;
 	var ImgIdx		= ( FrameCnt / param.UpdateTime ) % param.ImgCacheCnt;
@@ -213,7 +213,7 @@ function Draw(){
 	Vsd.DrawTextAlign(
 		MeterCx, MeterCy + MeterR * 0.25, 
 		ALIGN_HCENTER | ALIGN_VCENTER,
-		~~Vsd.Speed, FontL, 0xFFFFFF
+		~~Log.Speed, FontL, 0xFFFFFF
 	);
 	
 	Vsd.DrawTextAlign(
@@ -225,7 +225,7 @@ function Draw(){
 	// スピードメーター針
 	Vsd.DrawNeedle(
 		MeterCx, MeterCy, MeterR * 0.95, MeterR * -0.1,
-		135, 45, Vsd.Speed / MaxSpeed, 0xFF0000, 3
+		135, 45, Log.Speed / MaxSpeed, 0xFF0000, 3
 	);
 	
 	// 文字データ
@@ -248,5 +248,5 @@ function Draw(){
 	
 	Vsd.DrawText( X, Y, "Alt.: " + ( Vsd.Altitude !== undefined ? Vsd.Altitude.toFixed( 1 ) + "m" : "---" ), FontM, FontColor, FontColorOL );
 	Y += FontM.Height;
-	Vsd.DrawText( X, Y, "Dist.:" + ( Vsd.Distance / 1000 ).toFixed( 2 ) + "km", FontM, FontColor, FontColorOL );
+	Vsd.DrawText( X, Y, "Dist.:" + ( Log.Distance / 1000 ).toFixed( 2 ) + "km", FontM, FontColor, FontColorOL );
 }

@@ -34,8 +34,8 @@ function Draw(){
 //	);
 	
 	// 走行軌跡
-	var MapX = Vsd.MaxX - Vsd.MinX;
-	var MapY = Vsd.MaxY - Vsd.MinY;
+	var MapX = Log.Max.X - Log.Min.X;
+	var MapY = Log.Max.Y - Log.Min.Y;
 	if( MapX >= 10000 || MapY >= 10000 ){
 		print(
 		"走行軌跡大きさ: " + ~~( MapX / 1000 ) + "km×" + ~~( MapY / 1000 ) + "km",

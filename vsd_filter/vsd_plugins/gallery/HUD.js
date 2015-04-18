@@ -118,8 +118,8 @@ function Initialize(){
 
 function Draw(){
 	// ロール・ピッチ角表示
-	var Pitch = 5 * Vsd.Gy;
-	var Roll  = -5 * Vsd.Gx;
+	var Pitch = 5 * Log.Gy;
+	var Roll  = -5 * Log.Gx;
 	
 	var R = Vsd.Height * 3 / 8;
 	Vsd.DrawCircle( Vsd.Width / 2, Vsd.Height / 2, R, Color );
@@ -167,26 +167,26 @@ function Draw(){
 	Vsd.DrawPolygon( WhiskyMark, Color, DRAW_NOCLOSE );
 	
 	// スピード表示
-	SpeedMeterParam.MinVal = Vsd.Speed - 50;
-	SpeedMeterParam.MaxVal = Vsd.Speed + 50;
+	SpeedMeterParam.MinVal = Log.Speed - 50;
+	SpeedMeterParam.MaxVal = Log.Speed + 50;
 	Vsd.DrawLinearMeterScale( SpeedMeterParam );
 	Vsd.DrawPolygon( SpeedBox, 0x80000000, DRAW_FILL );
 	Vsd.DrawPolygon( SpeedBox, Color );
 	Vsd.DrawTextAlign(
 		SpeedMeterParam.X + SpeedMeterParam.Line2Len - 16 * Scale, Vsd.Height / 2,
-		ALIGN_RIGHT | ALIGN_VCENTER, ~~Vsd.Speed, FontM, Color
+		ALIGN_RIGHT | ALIGN_VCENTER, ~~Log.Speed, FontM, Color
 	);
 	
 	// タコ表示
-	if( Vsd.MaxTacho > 0 ){
-		TachoMeterParam.MinVal = Vsd.Tacho - 2000;
-		TachoMeterParam.MaxVal = Vsd.Tacho + 2000;
+	if( Log.Max.Tacho > 0 ){
+		TachoMeterParam.MinVal = Log.Tacho - 2000;
+		TachoMeterParam.MaxVal = Log.Tacho + 2000;
 		Vsd.DrawLinearMeterScale( TachoMeterParam );
 		Vsd.DrawPolygon( TachoBox, 0x80000000, DRAW_FILL );
 		Vsd.DrawPolygon( TachoBox, Color );
 		Vsd.DrawTextAlign(
 			TachoMeterParam.X + 100 * Scale, Vsd.Height / 2,
-			ALIGN_RIGHT | ALIGN_VCENTER, ~~Vsd.Tacho, FontM, Color
+			ALIGN_RIGHT | ALIGN_VCENTER, ~~Log.Tacho, FontM, Color
 		);
 	}else if( Vsd.MaxAltitude > 0 ){
 		TachoMeterParam.MinVal = Vsd.Altitude - 300;
@@ -201,14 +201,14 @@ function Draw(){
 	}
 	
 	// 方位表示
-	DirectionMeterParam.MinVal = Vsd.Direction - 90;
-	DirectionMeterParam.MaxVal = Vsd.Direction + 90;
+	DirectionMeterParam.MinVal = Log.Direction - 90;
+	DirectionMeterParam.MaxVal = Log.Direction + 90;
 	Vsd.DrawLinearMeterScale( DirectionMeterParam );
 	Vsd.DrawPolygon( DirectionBox, 0x80000000, DRAW_FILL );
 	Vsd.DrawPolygon( DirectionBox, Color );
 	Vsd.DrawTextAlign(
 		Vsd.Width / 2, DirectionMeterParam.Y - 23 * Scale,
-		ALIGN_HCENTER | ALIGN_BOTTOM, ~~Vsd.Direction, FontM, Color
+		ALIGN_HCENTER | ALIGN_BOTTOM, ~~Log.Direction, FontM, Color
 	);
 	
 	// 走行軌跡表示
@@ -264,7 +264,7 @@ function Draw(){
 	);
 	
 	// 文字情報
-	var Accel = Math.sqrt( Vsd.Gx * Vsd.Gx + Vsd.Gy * Vsd.Gy ).toFixed( 1 ) + "G";
+	var Accel = Math.sqrt( Log.Gx * Log.Gx + Log.Gy * Log.Gy ).toFixed( 1 ) + "G";
 	Vsd.DrawText(
 		( MapSize + 20 ) * Scale, Vsd.Height - FontS.Height * 3,
 		Accel, FontS, Color
