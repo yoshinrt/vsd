@@ -433,18 +433,27 @@ class CVsdFilter
 		return NaN;
 	}
 	
-	double GetValue( char *szKey ){
+	v8::Handle<v8::Value> GetValue( char *szKey ){
 		double dRet;
 		if( m_VsdLog && !_isnan( dRet = m_VsdLog->Get( szKey, m_VsdLog->m_dLogNum )))
-			return dRet;
+			return v8::Number::New( dRet );
 		if( m_GPSLog && !_isnan( dRet = m_GPSLog->Get( szKey, m_GPSLog->m_dLogNum )))
-			return dRet;
+			return v8::Number::New( dRet );
 		
-		return NaN;
+		return v8::Undefined();
 	}
 	
-	void InitJS( v8::Local<v8::FunctionTemplate> tmpl );
-	void InitJS_Sub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl );
+	void AddAccessor( v8::Local<v8::FunctionTemplate> tmpl );
+	void AddAccessorSub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl );
+	
+	void AddLogAccessorSub(
+		CVsdLog *pLog,
+		v8::Local<v8::Object> objLog,
+		v8::Local<v8::Array> objMin,
+		v8::Local<v8::Array> objMax,
+		v8::Local<v8::Array> objGet
+	);
+	void AddLogAccessor( v8::Local<v8::Object> thisObj );
 	
 	static HINSTANCE	m_hInst;	// dll handle
 	

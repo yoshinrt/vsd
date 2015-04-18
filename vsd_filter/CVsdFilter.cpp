@@ -372,9 +372,9 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 	return iRet;
 }
 
-/*** JavaScript IF í«â¡ÇÃèâä˙âª *********************************************/
+/*** Vsd.Speed ìôÇÃÉAÉNÉZÉTí«â¡ *********************************************/
 
-void CVsdFilter::InitJS_Sub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl ){
+void CVsdFilter::AddAccessorSub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl ){
 	if( !pLog ) return;
 	
 	char szBuf[ 256 ];
@@ -384,38 +384,101 @@ void CVsdFilter::InitJS_Sub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl
 	std::map<std::string, CLog *>::iterator it;
 	
 	for( it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it ){
-		if( m_VsdLog == NULL || pLog == m_VsdLog || m_VsdLog->GetElement( it->first.c_str()) == NULL ){
-			// Max ìoò^
-			sprintf( szBuf, "Max%s", it->first.c_str());
-			proto->Set(
-				v8::String::New( szBuf ),
-				v8::Number::New( pLog->GetMax( it->first.c_str()))
-			);
-			
-			// Min ìoò^
-			sprintf( szBuf, "Min%s", it->first.c_str());
-			proto->Set(
-				v8::String::New( szBuf ),
-				v8::Number::New( pLog->GetMin( it->first.c_str()))
-			);
-			
-			// åªç›ílìoò^
-			if( 0 );
-			#define DEF_LOG( name ) \
-			else if( strcmp( it->first.c_str(), #name ) == 0 ){ \
-				inst->SetAccessor( v8::String::New( #name ), CVsdFilterIF::Get_##name ); \
-			}
+		const char *szName = it->first.c_str();
+		
+		if(
+			// ã~çœë[íuÇ≈ÉVÉXÉeÉÄëgÇ›çûÇ›ÉvÉçÉpÉeÉBÇÕécÇ∑
+			#define DEF_LOG( name ) strcmp( #name, szName ) == 0 ||
 			#include "def_log.h"
-			else{
-				inst->SetAccessor( v8::String::New( it->first.c_str()), CVsdFilterIF::Get_Value );
+			0
+		){
+			if( m_VsdLog == NULL || pLog == m_VsdLog || m_VsdLog->GetElement( szName ) == NULL ){
+				// Max ìoò^
+				sprintf( szBuf, "Max%s", szName );
+				proto->Set(
+					v8::String::New( szBuf ),
+					v8::Number::New( pLog->GetMax( szName ))
+				);
+				
+				// Min ìoò^
+				sprintf( szBuf, "Min%s", szName );
+				proto->Set(
+					v8::String::New( szBuf ),
+					v8::Number::New( pLog->GetMin( szName ))
+				);
+				
+				// åªç›ílìoò^
+				if( 0 );
+				#define DEF_LOG( name ) \
+				else if( strcmp( szName, #name ) == 0 ){ \
+					inst->SetAccessor( v8::String::New( #name ), CVsdFilterIF::Get_##name ); \
+				}
+				#include "def_log.h"
+				else{
+					inst->SetAccessor( v8::String::New( szName ), CVsdFilterIF::Get_Value );
+				}
 			}
 		}
 	}
 }
 
-void CVsdFilter::InitJS( v8::Local<v8::FunctionTemplate> tmpl ){
-	InitJS_Sub( m_VsdLog, tmpl );
-	InitJS_Sub( m_GPSLog, tmpl );
+void CVsdFilter::AddAccessor( v8::Local<v8::FunctionTemplate> tmpl ){
+	AddAccessorSub( m_VsdLog, tmpl );
+	AddAccessorSub( m_GPSLog, tmpl );
+}
+
+/*** Log.Speed ìôÇÃÉAÉNÉZÉTí«â¡ *********************************************/
+
+void CVsdFilter::AddLogAccessorSub(
+	CVsdLog *pLog,
+	v8::Local<v8::Object> objLog,
+	v8::Local<v8::Array> objMin,
+	v8::Local<v8::Array> objMax,
+	v8::Local<v8::Array> objGet
+){
+	if( !pLog ) return;
+	
+	std::map<std::string, CLog *>::iterator it;
+	
+	for( it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it ){
+		const char *szName = it->first.c_str();
+		
+		if( m_VsdLog == NULL || pLog == m_VsdLog || m_VsdLog->GetElement( szName ) == NULL ){
+			v8::Local<v8::String> v8strName = v8::String::New( szName );
+			
+			// Max ìoò^
+			objMax->Set( v8strName, v8::Number::New( pLog->GetMax( szName )));
+			
+			// Min ìoò^
+			objMin->Set( v8strName, v8::Number::New( pLog->GetMin( szName )));
+			
+			// åªç›ílìoò^
+			if( 0 );
+			#define DEF_LOG( name ) \
+			else if( strcmp( szName, #name ) == 0 ){ \
+				objLog->SetAccessor( v8strName, CVsdFilterIF::Get_##name ); \
+			}
+			#include "def_log.h"
+			else{
+				objLog->SetAccessor( v8strName, CVsdFilterIF::Get_Value );
+			}
+		}
+	}
+}
+
+void CVsdFilter::AddLogAccessor( v8::Local<v8::Object> thisObj ){
+	
+	// Vsd.Log, Min, Max, Get ÇçÏÇÈ
+	#define AddLogObj( name ) \
+		v8::Local<v8::Array> obj##name = v8::Array::New( 0 ); \
+		thisObj->Set( v8::String::New( #name ), obj##name );
+	
+	AddLogObj( Min );
+	AddLogObj( Max );
+	AddLogObj( Get );
+	
+	AddLogAccessorSub( m_VsdLog, thisObj, objMin, objMax, objGet );
+	AddLogAccessorSub( m_GPSLog, thisObj, objMin, objMax, objGet );
 }
 
 /*** à íuéwíËÉçÉOÉAÉNÉZÉX ***************************************************/

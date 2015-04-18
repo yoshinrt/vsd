@@ -158,6 +158,7 @@ void CScript::Initialize( void ){
 	CVsdImageIF::InitializeClass( global );
 	CVsdFontIF::InitializeClass( global );
 	CVsdFilterIF::InitializeClass( global, m_pVsd );
+	CVsdFilter_LogIF::InitializeClass( global, m_pVsd );
 	CVsdFileIF::InitializeClass( global );
 	CScriptIF::InitializeClass( global );
 	COleIF::InitializeClass( global );

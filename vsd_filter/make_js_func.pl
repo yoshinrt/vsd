@@ -5,7 +5,7 @@ $ENV{ 'PATH' } = "$ENV{ 'HOME' }/bin:" . $ENV{ 'PATH' };
 
 $OutputFile = $ARGV[ 0 ];
 
-open( fpOut, "| nkf -s > $OutputFile" );
+open( fpOut, "| nkf -sLw > $OutputFile" );
 
 print fpOut << "-----";
 /*****************************************************************************
@@ -25,13 +25,17 @@ print fpOut << "-----";
 
 ### CVsdFilter ###############################################################
 
-MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
+MakeJsIF({
+	Class		=> 'CVsdFilter',
+	JsClass		=> '__VSD_System__',
+	NewObject	=> << '-----',
 		int iLen = args.Length();
 		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
 		
 		CVsdFilter *obj = static_cast<CVsdFilter *>( v8::Local<v8::External>::Cast( args[ 0 ] )->Value());
 		if( !obj ) return v8::Undefined();
 -----
+	FunctionIF	=> << '-----',
 	/*** DrawArc ****************************************************************/
 	
 	static v8::Handle<v8::Value> Func_DrawArc( const v8::Arguments& args ){
@@ -68,7 +72,7 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
 		return v8::Undefined();
 	}
 	
-	/*** ƒƒOƒf[ƒ^æ“¾—p *******************************************************/
+	/*** ¥í¥°¥Ç¡¼¥¿¼èÆÀÍÑ *******************************************************/
 	
 	#define DEF_LOG( name ) \
 		static v8::Handle<v8::Value> Get_##name( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){ \
@@ -80,12 +84,12 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
 	static v8::Handle<v8::Value> Get_Value( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
 		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		v8::String::AsciiValue str( propertyName );
-		return obj ? v8::Number::New( obj->GetValue( *str )) : v8::Undefined();
+		return obj ? obj->GetValue( *str ) : v8::Undefined();
 	}
 	
-	/*** ƒfƒoƒbƒO—p *************************************************************/
+	/*** ¥Ç¥Ğ¥Ã¥°ÍÑ *************************************************************/
 	
-	// ŠÖ”ƒIƒuƒWƒFƒNƒg print ‚ÌÀ‘Ì
+	// ´Ø¿ô¥ª¥Ö¥¸¥§¥¯¥È print ¤Î¼ÂÂÎ
 	static v8::Handle<v8::Value> Func_print(const v8::Arguments& args) {
 		v8::String::AsciiValue str( args[ 0 ] );
 		DebugMsgD( "%s\n", *str );
@@ -93,18 +97,40 @@ MakeJsIF( 'CVsdFilter', '__VSD_System__', << '-----', << '-----', << '-----' );
 	}
 	
 -----
-		(( CVsdFilter *)pClass )->InitJS( tmpl );
+	ExtraInit	=> << '-----',
+		(( CVsdFilter *)pClass )->AddAccessor( tmpl );
 -----
+});
+
+### CVsdFilter_Log ###############################################################
+
+MakeJsIF({
+	Class		=> 'CVsdFilter',
+	JsClass		=> '__VSD_SystemLog__',
+	vsdlog		=> 1,
+	NewObject	=> << '-----',
+		int iLen = args.Length();
+		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
+		
+		CVsdFilter *obj = static_cast<CVsdFilter *>( v8::Local<v8::External>::Cast( args[ 0 ] )->Value());
+		if( !obj ) return v8::Undefined();
+-----
+	ExtraNew	=> << '-----'
+		obj->AddLogAccessor( thisObject );
+-----
+});
 
 ### CVsdImage ################################################################
 
-MakeJsIF( 'CVsdImage', 'Image', << '-----' );
-		// ˆø”ƒ`ƒFƒbƒN
+MakeJsIF({
+	Class		=> 'CVsdImage',
+	NewObject	=> << '-----',
+		// °ú¿ô¥Á¥§¥Ã¥¯
 		if ( args.Length() <= 0 ) return v8::Undefined();
 		
 		CVsdImage* obj;
 		
-		// arg[ 0 ] ‚ª Image ‚¾‚Á‚½ê‡C‚»‚ÌƒRƒs[‚ğì‚é
+		// arg[ 0 ] ¤¬ Image ¤À¤Ã¤¿¾ì¹ç¡¤¤½¤Î¥³¥Ô¡¼¤òºî¤ë
 		if( args[ 0 ]->IsObject()){
 			v8::Local<v8::Object> Image0 = args[ 0 ]->ToObject();
 			if( strcmp( *( v8::String::AsciiValue )( Image0->GetConstructorName()), "Image" ) == 0 ){
@@ -118,7 +144,7 @@ MakeJsIF( 'CVsdImage', 'Image', << '-----' );
 				)));
 			}
 		}else{
-			// ƒtƒ@ƒCƒ‹–¼w’è‚Å‰æ‘œƒ[ƒh
+			// ¥Õ¥¡¥¤¥ëÌ¾»ØÄê¤Ç²èÁü¥í¡¼¥É
 			obj = new CVsdImage();
 			v8::String::Value FileName( args[ 0 ] );
 			
@@ -131,11 +157,14 @@ MakeJsIF( 'CVsdImage', 'Image', << '-----' );
 			}
 		}
 -----
+});
 
 ### CVsdFont #################################################################
 
-MakeJsIF( 'CVsdFont', 'Font', << '-----' );
-		// ˆø”ƒ`ƒFƒbƒN
+MakeJsIF({
+	Class		=> 'CVsdFont',
+	NewObject	=> << '-----'
+		// °ú¿ô¥Á¥§¥Ã¥¯
 		if ( args.Length() < 2 ) return v8::Undefined();
 		
 		v8::String::Value FontName( args[ 0 ] );
@@ -145,17 +174,23 @@ MakeJsIF( 'CVsdFont', 'Font', << '-----' );
 			args.Length() <= 2 ? 0 : args[ 2 ]->Int32Value()
 		);
 -----
+});
 
 ### CVsdFile #################################################################
 
-MakeJsIF( 'CVsdFile', 'File' );
+MakeJsIF({
+	Class		=> 'CVsdFile',
+});
 
 ### COle #####################################################################
 
-MakeJsIF( 'COle', 'ActiveXObject', << '-----', undef, << '-----', << '-----' );
+MakeJsIF({
+	Class		=> 'COle',
+	JsClass		=> 'ActiveXObject',
+	NewObject	=> << '-----',
 		COle *obj = new COle();
 		
-		// ˆø”ƒ`ƒFƒbƒN
+		// °ú¿ô¥Á¥§¥Ã¥¯
 		if( args.Length() >= 1 ){
 			v8::String::Value strServer( args[ 0 ] );
 			
@@ -169,42 +204,55 @@ MakeJsIF( 'COle', 'ActiveXObject', << '-----', undef, << '-----', << '-----' );
 			}
 		}
 -----
+	ExtraInit	=> << '-----',
 		COle::InitJS( tmpl );
 -----
+	ExtraNew	=> << '-----'
 		if( args.Length() >= 1 ) obj->AddOLEFunction( thisObject );
 -----
+});
 
 ### Global ###################################################################
 
-MakeJsIF( 'CScript' );
+MakeJsIF({
+	Class		=> 'CScript',
+	bGlobal		=> 1,
+});
 
 ##############################################################################
 
 sub MakeJsIF {
-	my( $Class, $JsClass, $NewObject, $FunctionIF, $ExtraInit, $ExtraNew ) = @_;
+	my( $param ) = @_;
 	
-	$NewObject = << "-----" if( !defined( $NewObject ));
-		$Class *obj = new $Class();
+	$param->{ NewObject } = << "-----" if( !defined( $param->{ NewObject } ));
+		$param->{ Class } *obj = new $param->{ Class }();
 -----
 	
-	$bGlobal = !defined( $JsClass );
+	$param->{ bGlobal }		= defined( $param->{ bGlobal } ) && $param->{ bGlobal };
+	$param->{ FunctionIF }	= '' if( !defined( $param->{ FunctionIF } ));
+	$param->{ ExtraInit }	= '' if( !defined( $param->{ ExtraInit } ));
+	$param->{ ExtraNew }	= '' if( !defined( $param->{ ExtraNew } ));
 	
-	$FunctionIF = '' if( !defined( $FunctionIF ));
-	$ExtraInit  = '' if( !defined( $ExtraInit ));
-	$ExtraNew	= '' if( !defined( $ExtraNew ));
+	if( !defined( $param->{ 'JsClass' })){
+		$param->{ 'Class' }		=~ /^CVsd(.+)/;
+		$param->{ 'JsClass' }	= $1;
+	}
 	
 	$Accessor	= '';
 	$AccessorIF	= '';
 	$Function	= '';
 	$Const	= '';
 	
-	$IfNotVsd = $Class eq 'CVsdFilter' ? 'if( 0 )' : '';
+	$IfNotVsd = $param->{ Class } eq 'CVsdFilter' ? 'if( 0 )' : '';
 	
-	open( fpIn,	"< $Class.h" );
+	open( fpIn,	"< $param->{ Class }.h" );
 	while( <fpIn> ){
+		# ¥¤¥ó¥Ç¥ó¥È¤ò¿¼¤¯¤·¤¿¤¯¤Ê¤¤¤Î¤Ç¶ìÆù¤Îºö
+		last if( $param->{ vsdlog });
+		
 		if( /!js_func\b/ ){
 			
-			# ŠÖ”–¼
+			# ´Ø¿ôÌ¾
 			/([\w_]+)\s+\*?([\w_]+)\s*\(/;
 			( $RetType, $FuncName ) = ( $1, $2 );
 			
@@ -215,7 +263,7 @@ sub MakeJsIF {
 			
 			$Line = $_;
 			
-			# ˆø”C ); ‚Ü‚Å“Ç‚İ‚Ş
+			# °ú¿ô¡¤ ); ¤Ş¤ÇÆÉ¤ß¹ş¤à
 			if( $Line !~ /\)(?:\s*=\s*0\s*)?;/ ){
 				while( <fpIn> ){
 					$Line .= $_;
@@ -234,7 +282,7 @@ sub MakeJsIF {
 			@Line = split( /\n/, $_ );
 			
 			foreach $_ ( @Line ){
-				/(\S+)/;	# Œ^
+				/(\S+)/;	# ·¿
 				$Type = $1;
 				
 				$Default = /!default:(\S+)/ ? $1 : undef;
@@ -252,13 +300,13 @@ sub MakeJsIF {
 				}
 				
 				elsif( $Type eq 'char' ){
-					# string Œ^
+					# string ·¿
 					push( @Defs, "v8::String::AsciiValue str$ArgNum( args[ $ArgPos ] );" );
 					$Args[ $ArgNum ] = "*str$ArgNum";
 				}
 				
 				elsif( $Type =~ /^LPC?WSTR$/ ){
-					# WCHAR string Œ^
+					# WCHAR string ·¿
 					push( @Defs, "v8::String::Value str$ArgNum( args[ $ArgPos ] );" );
 					$Args[ $ArgNum ] = "( $Type )*str$ArgNum";
 				}
@@ -273,7 +321,7 @@ sub MakeJsIF {
 				}
 				
 				elsif( $Type eq 'int' || $Type eq 'UINT' ){
-					# int/UINT Œ^
+					# int/UINT ·¿
 					if( defined( $Default )){
 						$Args[ $ArgNum ] = "iLen <= $ArgPos ? $Default : args[ $ArgPos ]->Int32Value()";
 						--$ArgMin;
@@ -283,7 +331,7 @@ sub MakeJsIF {
 				}
 				
 				elsif( $Type eq 'CPixelArg' ){
-					# (EÍE)ƒ‰ƒ”ƒB!!
+					# (¡¦¢Ï¡¦)¥é¥ô¥£!!
 					if( defined( $Default )){
 						$Args[ $ArgNum ] = "iLen <= $ArgPos ? $Default : CPixel( args[ $ArgPos ]->Int32Value())";
 						--$ArgMin;
@@ -316,7 +364,7 @@ sub MakeJsIF {
 				"iLen == $ArgNum" :
 				"$ArgMin <= iLen && iLen <= $ArgNum";
 			
-			# •Ô‚è’l
+			# ÊÖ¤êÃÍ
 			if( $RetType eq 'void' ){
 				$RetVar   = '';
 				$RetValue = 'v8::Undefined()';
@@ -347,19 +395,19 @@ sub MakeJsIF {
 				$RetValue = '???';
 			}
 #-----
-			$FunctionIF .= << "-----" if( !$bGlobal );
+			$param->{ FunctionIF } .= << "-----" if( !$param->{ bGlobal } );
 	static v8::Handle<v8::Value> Func_$FuncName( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CScript::CheckArgs( $Len )) return v8::Undefined();
 		$Defs
-		$Class *thisObj = CScript::GetThis<$Class>( args.This());
+		$param->{ Class } *thisObj = CScript::GetThis<$param->{ Class }>( args.This());
 		if( !thisObj ) return v8::Undefined();
 		${RetVar}thisObj->$FuncName($Args);
 		
 		return $RetValue;
 	}
 -----
-			$FunctionIF .= << "-----" if( $bGlobal );
+			$param->{ FunctionIF } .= << "-----" if( $param->{ bGlobal } );
 	static v8::Handle<v8::Value> Func_$FuncName( const v8::Arguments& args ){
 		int iLen = args.Length();
 		if( CScript::CheckArgs( $Len )) return v8::Undefined();
@@ -395,14 +443,14 @@ sub MakeJsIF {
 #-----
 			$AccessorIF .= << "-----";
 	static v8::Handle<v8::Value> Get_$JSvar( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
-		$Class *obj = CScript::GetThis<$Class>( info.Holder());
+		$param->{ Class } *obj = CScript::GetThis<$param->{ Class }>( info.Holder());
 		return obj ? v8::${Type}::New($Cast obj->$RealVar ) : v8::Undefined();
 	}
 -----
 		}
 		
 		elsif( /!js_const:(\w+)/ ){
-			# CVsdFilter ê—p
+			# CVsdFilter ÀìÍÑ
 			$JSvar = $1;
 			
 			s/[\x0D\x0A]//g;
@@ -425,121 +473,125 @@ sub MakeJsIF {
 			}
 #-----
 			$Const .= << "-----";
-		proto->Set( v8::String::New( "$JSvar" ), v8::${Type}::New($Cast(( $Class *)pClass )->$RealVar ));
+		proto->Set( v8::String::New( "$JSvar" ), v8::${Type}::New($Cast(( $param->{ Class } *)pClass )->$RealVar ));
 -----
 		}
 	}
 	close( fpIn );
 	
-	$AccessorIF =~ s/Get_(\w+)/AddAccessor( $1, $Class )/ge;
-	$FunctionIF =~ s/Func_(\w+)/AddFunction( $1, $Class )/ge;
+	$AccessorIF =~ s/Get_(\w+)/AddAccessor( $1, $param->{ Class } )/ge;
+	$param->{ FunctionIF } =~ s/Func_(\w+)/AddFunction( $1, $param->{ Class } )/ge;
 	
-	print fpOut << "-----" if( !$bGlobal );
+	$ClassIfName = $param->{ vsdlog } ?
+		"$param->{ Class }_LogIF" :
+		"$param->{ Class }IF";
+	
+	print fpOut << "-----" if( !$param->{ bGlobal } );
 /****************************************************************************/
 
-class ${Class}IF {
+class $ClassIfName {
   public:
-	// ƒNƒ‰ƒXƒRƒ“ƒXƒgƒ‰ƒNƒ^
+	// ¥¯¥é¥¹¥³¥ó¥¹¥È¥é¥¯¥¿
 	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
 		v8::HandleScope handle_scope;
 		
-$NewObject
-		// internal field ‚ÉƒoƒbƒNƒGƒ“ƒhƒIƒuƒWƒFƒNƒg‚ğİ’è
+$param->{ NewObject }
+		// internal field ¤Ë¥Ğ¥Ã¥¯¥¨¥ó¥É¥ª¥Ö¥¸¥§¥¯¥È¤òÀßÄê
 		v8::Local<v8::Object> thisObject = args.This();
 		thisObject->SetInternalField( 0, v8::External::New( obj ));
 		
-		// JS ƒIƒuƒWƒFƒNƒg‚ª GC ‚³‚ê‚é‚Æ‚«‚ÉƒfƒXƒgƒ‰ƒNƒ^‚ªŒÄ‚Î‚ê‚é‚¨‚Ü‚¶‚È‚¢
+		// JS ¥ª¥Ö¥¸¥§¥¯¥È¤¬ GC ¤µ¤ì¤ë¤È¤­¤Ë¥Ç¥¹¥È¥é¥¯¥¿¤¬¸Æ¤Ğ¤ì¤ë¤ª¤Ş¤¸¤Ê¤¤
 		v8::Persistent<v8::Object> objectHolder = v8::Persistent<v8::Object>::New( thisObject );
 		objectHolder.MakeWeak( obj, Dispose );
 		
-$ExtraNew
+$param->{ ExtraNew }
 		#ifdef DEBUG
-			DebugMsgD( ">>>new js obj $Class:%X\\n", obj );
+			DebugMsgD( ">>>new js obj $param->{ Class }:%X\\n", obj );
 		#endif
-		// ƒRƒ“ƒXƒgƒ‰ƒNƒ^‚Í this ‚ğ•Ô‚·‚±‚ÆB
+		// ¥³¥ó¥¹¥È¥é¥¯¥¿¤Ï this ¤òÊÖ¤¹¤³¤È¡£
 		return handle_scope.Close( thisObject );
 	}
 	
-	// ƒNƒ‰ƒXƒfƒXƒgƒ‰ƒNƒ^
+	// ¥¯¥é¥¹¥Ç¥¹¥È¥é¥¯¥¿
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
 		$IfNotVsd {
 			v8::HandleScope handle_scope;
-			$Class *thisObj = CScript::GetThis<$Class>( handle->ToObject());
+			$param->{ Class } *thisObj = CScript::GetThis<$param->{ Class }>( handle->ToObject());
 			if( thisObj ){
-				delete static_cast<$Class*>( thisObj );
+				delete static_cast<$param->{ Class }*>( thisObj );
 				#ifdef DEBUG
-					DebugMsgD( "<<<del js obj $Class:%X\\n", thisObj );
+					DebugMsgD( "<<<del js obj $param->{ Class }:%X\\n", thisObj );
 				#endif
 			}
 		}
 		handle.Dispose();
 	}
 	
-	// JavaScript ‚©‚ç‚Ì–¾¦“I‚È”jŠü
+	// JavaScript ¤«¤é¤ÎÌÀ¼¨Åª¤ÊÇË´ş
 	static v8::Handle<v8::Value> Func_Dispose( const v8::Arguments& args ){
-		// obj ‚Ì Dispose() ‚ğŒÄ‚Ô
-		$Class *thisObj = CScript::GetThis<$Class>( args.This());
+		// obj ¤Î Dispose() ¤ò¸Æ¤Ö
+		$param->{ Class } *thisObj = CScript::GetThis<$param->{ Class }>( args.This());
 		$IfNotVsd if( thisObj ){
 			delete thisObj;
 			#ifdef DEBUG
-				DebugMsgD( "<<<DISPOSE js obj $Class:%X\\n", thisObj );
+				DebugMsgD( "<<<DISPOSE js obj $param->{ Class }:%X\\n", thisObj );
 			#endif
 			
-			// internalfield ‚ğ null ‚Á‚Û‚­‚·‚é
+			// internalfield ¤ò null ¤Ã¤İ¤¯¤¹¤ë
 			args.This()->SetInternalField( 0, v8::External::New( NULL ));
 		}
 		return v8::Undefined();
 	}
 	
-	///// ƒvƒƒpƒeƒBƒAƒNƒZƒT /////
+	///// ¥×¥í¥Ñ¥Æ¥£¥¢¥¯¥»¥µ /////
 $AccessorIF
-	///// ƒƒ\ƒbƒhƒR[ƒ‹ƒoƒbƒN /////
-$FunctionIF
+	///// ¥á¥½¥Ã¥É¥³¡¼¥ë¥Ğ¥Ã¥¯ /////
+$param->{ FunctionIF }
   public:
-	// ƒNƒ‰ƒXƒeƒ“ƒvƒŒ[ƒg‚Ì‰Šú‰»
+	// ¥¯¥é¥¹¥Æ¥ó¥×¥ì¡¼¥È¤Î½é´ü²½
 	static void InitializeClass( v8::Handle<v8::ObjectTemplate> global, void *pClass = NULL ){
 		v8::HandleScope handle_scope;
 		
-		// ƒRƒ“ƒXƒgƒ‰ƒNƒ^‚ğì¬
+		// ¥³¥ó¥¹¥È¥é¥¯¥¿¤òºîÀ®
 		v8::Local<v8::FunctionTemplate> tmpl = v8::FunctionTemplate::New( New );
-		tmpl->SetClassName( v8::String::New( "$JsClass" ));
+		tmpl->SetClassName( v8::String::New( "$param->{ JsClass }" ));
 		
-		// ƒtƒB[ƒ‹ƒh‚È‚Ç‚Í‚±‚¿‚ç‚É
+		// ¥Õ¥£¡¼¥ë¥É¤Ê¤É¤Ï¤³¤Á¤é¤Ë
 		v8::Handle<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
 		inst->SetInternalFieldCount( 1 );
 $Accessor
-		// ƒƒ\ƒbƒh‚Í‚±‚¿‚ç‚É
+		// ¥á¥½¥Ã¥É¤Ï¤³¤Á¤é¤Ë
 		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
 		proto->Set( v8::String::New( "Dispose" ), v8::FunctionTemplate::New( Func_Dispose ));
 $Function
 $Const
-$ExtraInit
-		// ƒOƒ[ƒoƒ‹ƒIƒuƒWƒFƒNƒg‚ÉƒNƒ‰ƒX‚ğ’è‹`
-		global->Set( v8::String::New( "$JsClass" ), tmpl );
+$param->{ ExtraInit }
+		// ¥°¥í¡¼¥Ğ¥ë¥ª¥Ö¥¸¥§¥¯¥È¤Ë¥¯¥é¥¹¤òÄêµÁ
+		global->Set( v8::String::New( "$param->{ JsClass }" ), tmpl );
 	}
 };
 -----
 	
-	print fpOut << "-----" if( $bGlobal );
+	print fpOut << "-----" if( $param->{ bGlobal } );
 /****************************************************************************/
 
-class ${Class}IF {
+class $param->{Class}IF {
   public:
-	///// ƒvƒƒpƒeƒBƒAƒNƒZƒT /////
+	///// ¥×¥í¥Ñ¥Æ¥£¥¢¥¯¥»¥µ /////
 $AccessorIF
-	///// ƒƒ\ƒbƒhƒR[ƒ‹ƒoƒbƒN /////
-$FunctionIF
+	///// ¥á¥½¥Ã¥É¥³¡¼¥ë¥Ğ¥Ã¥¯ /////
+$param->{ FunctionIF }
   public:
-	// ƒNƒ‰ƒXƒeƒ“ƒvƒŒ[ƒg‚Ì‰Šú‰»
+	// ¥¯¥é¥¹¥Æ¥ó¥×¥ì¡¼¥È¤Î½é´ü²½
 	static void InitializeClass( v8::Handle<v8::ObjectTemplate> GlobalTmpl ){
 		#define inst	GlobalTmpl
 		#define proto	GlobalTmpl
-		// ƒtƒB[ƒ‹ƒh‚È‚Ç‚Í‚±‚¿‚ç‚É
+		// ¥Õ¥£¡¼¥ë¥É¤Ê¤É¤Ï¤³¤Á¤é¤Ë
 $Accessor
-		// ƒƒ\ƒbƒh‚Í‚±‚¿‚ç‚É
+		// ¥á¥½¥Ã¥É¤Ï¤³¤Á¤é¤Ë
 $Function
 $Const
-$ExtraInit
+$param->{ ExtraInit }
 		#undef inst
 		#undef GlobalTmpl
 	}

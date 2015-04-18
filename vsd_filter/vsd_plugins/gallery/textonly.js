@@ -20,14 +20,24 @@ function print( str ){
 	}
 }
 
+function PrintObj( prefix, obj ){
+	for( var v in obj ){
+		if( typeof obj[ v ] == 'object' ){
+			PrintObj( prefix + v + '.', obj[ v ] );
+		}else if(
+			typeof obj[ v ] != 'function' &&
+			!( prefix == "Vsd." && v.match( /^(Min|Max)?(Time|Speed|Tacho|Distance|Direction|Longitude|Latitude|X|Y|Gx|Gy|TurnR)$/ ))
+		){
+			print( prefix + v + ": " + obj[ v ] );
+		}
+	}
+}
 function Draw(){
 	x = 0;
 	y = 0;
-	for( var v in Vsd ){
-		if( typeof Vsd[ v ] != 'function' ){
-			print( v + ": " + Vsd[ v ] );
-		}
-	}
+	
+	PrintObj( 'Vsd.', Vsd );
+	PrintObj( 'Log.', Log );
 	
 	var date = new Date();
 	date.setTime( Vsd.DateTime );

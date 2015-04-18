@@ -14,6 +14,7 @@ REV_LIMIT		= 6500;	// レブリミット (上限)
 //*** 設定ここまで ***********************************************************
 
 Vsd = new __VSD_System__( __CVsdFilter );
+Log = new __VSD_SystemLog__( __CVsdFilter );
 
 DRAW_FILL			= 1 << 0;
 DRAW_NOCLOSE		= 1 << 1;
