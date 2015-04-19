@@ -74,7 +74,7 @@ function Initialize(){
 	// Geocoding の設定
 	GeocodingParam = {
 		// Geocoding 更新間隔
-		UpdateTime:	10000,	// [ミリ秒]
+		UpdateTime:	100000,	// [ミリ秒]
 	};
 	
 	function min( a, b ){ return ( a < b ) ? a : b; }
@@ -96,7 +96,7 @@ function Initialize(){
 	FontS = new Font( "Impact", 24 * Scale );
 	
 	// スピードメータ用最高速計算
-	MaxSpeed = ~~( Log.Max.Speed / 10 ) * 10;
+	MaxSpeed = Math.ceil( Log.Max.Speed / 10 ) * 10;
 	
 	// メータ用 param
 	
@@ -108,11 +108,11 @@ function Initialize(){
 		Line1Len:	20 * Scale,
 		Line1Width:	3 * Scale,
 		Line1Color:	0xFFFFFF,
-		Line1Cnt:	5,
+		Line1Cnt:	10,
 		Line2Len:	15 * Scale,
 		Line2Width:	1,
 		Line2Color:	0xFFFFFF,
-		Line2Cnt:	15 * Scale,
+		Line2Cnt:	5,
 		MinVal:		0,
 		MaxVal:		MaxSpeed,
 		NumPos:		20 * Scale,

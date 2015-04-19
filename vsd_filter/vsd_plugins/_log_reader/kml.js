@@ -21,44 +21,39 @@ function Read_kml( Files ){
 	var WshShell = new ActiveXObject( "WScript.Shell" );
 	var fso = new ActiveXObject( "Scripting.FileSystemObject" );
 	
+	var Buf = '';
+	
+	// 一旦全ファイルを Buf に溜める
 	for( var i = 0; i < Files.length; ++i ){
-		
 		if( Files[ i ].match( /\.kmz$/ )){
 			// kmz を unzip
 			var ExecInfo = WshShell.Exec( 'c:\\cygwin\\bin\\unzip -c "' + Files[ i ] + '"' );
 			file = ExecInfo.StdOut;
 		}else{
 			// kml を普通に open
-			var file = fso.OpenTextFile( WScript.arguments( 0 ), 1 );
+			var file = fso.OpenTextFile( Files[ i ], 1 );
 		}
 		
-		var Line = '';
-		var Buf;
+		do{
+			Buf += file.ReadLine()
+		}while( !file.AtEndOfStream );
+	}
+	
+	var bMyTracks = Buf.match( /Google My Tracks/ );
+	
+	// <when>2014-09-05T23:45:56.415Z</when>
+	// <gx:coord>135.12345 35.12345 160.10000610351563</gx:coord>
+	
+	var Points;
+	
+	if( Points = Buf.match( /<when>.*?<\/gx:coord>/gm )){
+		Buf = undefined;
 		
-	  NextFile:
-		while( 1 ){
-			
-			// <when>2014-09-05T23:45:56.415Z</when>
-			// <gx:coord>135.12345 35.12345 160.10000610351563</gx:coord>
-			
-			// </gx:coord> サーチ
-			while( !Line.match( /<\/gx:coord>/ )){
-				if( bMyTracks === undefined && Line.match( /Google My Tracks/ )){
-					bMyTracks = true;
-				}
-				
-				Line = Line + file.ReadLine();
-				if( file.AtEndOfStream ) break NextFile;
-			}
-			if( bMyTracks === undefined ) bMyTracks = false;
-			
-			// いらないデータ破棄
-			var Point = ( RegExp.leftContext + RegExp.lastMatch ).replace( /[\x0D\x0A]/g, "" );
-			Line = RegExp.rightContext;
-			
+		// 時刻付きの KML
+		Points.forEach( function( Point ){
 			// 時間
 			if( !Point.match( /<when>(\d+)-(\d+)-(\d+)T(\d+):(\d+):([\d\.]+)(Z|([-+]\d+):(\d+))/ )){
-				continue;
+				return;
 			}
 			Log.Time[ Cnt ] = Date.UTC(
 				RegExp.$1, RegExp.$2 - 1, RegExp.$3,
@@ -69,20 +64,71 @@ function Read_kml( Files ){
 			
 			// long, lat, alt
 			if( !Point.match( /<gx:coord>(\S+)\s+(\S+)\s+([\d\.]+)/ )){
-				continue;
+				return;
 			}
 			Log.Longitude[ Cnt ] = +RegExp.$1;
 			Log.Latitude [ Cnt ] = +RegExp.$2;
 			Log.Altitude [ Cnt ] = +RegExp.$3;
 			
-			// Google My Tracks は変なログを吐くのでその対策
-			if( !( bMyTracks && Cnt &&
-				Log.Latitude [ Cnt - 1 ] == Log.Latitude [ Cnt ] &&
-				Log.Longitude[ Cnt - 1 ] == Log.Longitude[ Cnt ]
-			)) ++Cnt;
-		}
-		file.Close();
+			++Cnt;
+		});
+	}else if( Points = Buf.match( /<coordinates>.*?<\/coordinates>/gm )){
+		Buf = undefined;
+		
+		// 時刻がない KML，Maps Engine の KML を想定
+		// <coordinates>135.67543,35.05375,0.0 135.6749,35.05453,0.0</coordinates>
+		
+		Points.forEach( function( Line ){
+			var Coordinates = Line.match( /[+\-\d\.,]+/g );
+			
+			if( Coordinates && Coordinates.length > 1 ){
+				Coordinates.forEach( function( Point ){
+					
+					Point.match( /^(.*),(.*),(.*)/ );
+					Log.Longitude[ Cnt ] = +RegExp.$1;
+					Log.Latitude [ Cnt ] = +RegExp.$2;
+					Log.Altitude [ Cnt ] = +RegExp.$3;
+					
+					if( Cnt == 0 ){
+						var date = new Date;
+						Log.Time[ 0 ] = Date.UTC( date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0 );
+						++Cnt;
+					}else if(
+						Log.Longitude[ Cnt - 1 ] != Log.Longitude[ Cnt ] &&
+						Log.Latitude [ Cnt - 1 ] != Log.Latitude [ Cnt ]
+					){
+						// 60km/h における所要時間を求める
+						Log.Time[ Cnt ] = Log.Time[ Cnt - 1 ] + GetDistance(
+							Log.Longitude[ Cnt - 1 ],
+							Log.Latitude [ Cnt - 1 ],
+							Log.Longitude[ Cnt ],
+							Log.Latitude [ Cnt ]
+						) / ( 60 / 3600 );
+						++Cnt;
+					}
+				});
+			}
+		});
+	}else{
+		return INVALID_FORMAT;
 	}
-	
+	if( bMyTracks ) SmoothLowFreqLog();
 	return Cnt;
+	
+	// 緯度・経度から距離算出
+	function GetDistance( dLong0, dLati0, dLong1, dLati1 ){
+		var a	= 6378137.000;
+		var b	= 6356752.314245;
+		var e2	= ( a * a - b * b ) / ( a * a );
+		var ToRAD = Math.PI / 180;
+		
+		var dx	= ( dLong1 - dLong0 ) * ToRAD;
+		var dy	= ( dLati1 - dLati0 ) * ToRAD;
+		var uy	= ( dLati0 + dLati1 ) / 2 * ToRAD;
+		var W	= Math.sqrt( 1 - e2 * Math.sin( uy ) * Math.sin( uy ));
+		var M	= a * ( 1 - e2 ) / Math.pow( W, 3 );
+		var N	= a / W;
+		
+		return	Math.sqrt( dy * dy * M * M + Math.pow( dx * N * Math.cos( uy ), 2 ));
+	}
 }
