@@ -44,6 +44,17 @@ int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 		return m_gzfp != NULL ? 0 : 1;
 	}
 	
+	// zip open
+	if( *pMode == 'Z' ){
+		char *pFile = NULL;
+		
+		StringNew( pFile, szFile );
+		m_unzfp = unzOpen( pFile );
+		delete [] pFile;
+		
+		return m_unzfp != NULL ? 0 : 1;
+	}
+	
 	// 普通 fopen
 	m_fp = _wfopen( szFile, szMode );
 	return m_fp != NULL ? 0 : 1;
@@ -55,11 +66,13 @@ void CVsdFile::Close( void ){
 	if( m_gzfp ){
 		gzclose( m_gzfp );
 		m_gzfp = NULL;
-	}
-	
-	if( m_fp ){
+	}else if( m_fp ){
 		fclose( m_fp );
 		m_fp = NULL;
+	}else if( m_unzfp ){
+		if( m_bZipCurrentFileOpen ) unzCloseCurrentFile( m_unzfp );
+		unzClose( m_unzfp );
+		m_unzfp = NULL;
 	}
 }
 
@@ -137,4 +150,44 @@ int CVsdFile::IsEOF( void ){
 		return feof( m_fp );
 	}
 	return 1;
+}
+
+/*** zip 次のファイル *******************************************************/
+
+v8::Handle<v8::Value> CVsdFile::ZipNextFile( void ){
+	unz_file_info fileInfo;
+
+	#define MAX_PATH_LEN	256
+	char szFileName[ MAX_PATH_LEN ];
+	
+	// zip じゃなければ ret
+	if( !m_unzfp ) return v8::Undefined();
+	
+	// ファイルを開いていたら，閉じる
+	if( m_bZipCurrentFileOpen ){
+		unzCloseCurrentFile( m_unzfp );
+		
+		// ファイル全部処理した
+		if( unzGoToNextFile( m_unzfp ) == UNZ_END_OF_LIST_OF_FILE ){
+			return v8::Undefined();
+		}
+	}
+	m_bZipCurrentFileOpen = FALSE;
+	
+	if(
+		unzGetCurrentFileInfo(
+			m_unzfp, &fileInfo,
+			szFileName, MAX_PATH_LEN - 1,
+			NULL, 0, NULL, 0
+		) != UNZ_OK
+	){
+		return v8::Undefined();
+	}
+	
+	if( unzOpenCurrentFile( m_unzfp ) == UNZ_OK ){
+		m_bZipCurrentFileOpen = TRUE;
+		return v8::String::New( szFileName );
+	}
+	
+	return v8::Undefined();
 }

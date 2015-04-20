@@ -32,7 +32,6 @@
 #include <functional>
 #include <limits>
 
-#define ZLIB_WINAPI
 #include <zconf.h>
 #include <zlib.h>
 

@@ -8,11 +8,16 @@
 
 #pragma once
 
+#include "unzip.h"
+
 class CVsdFile {
   public:
 	CVsdFile(){
 		m_gzfp	= NULL;
 		m_fp	= NULL;
+		m_unzfp	= NULL;
+		
+		m_bZipCurrentFileOpen = FALSE;
 	}
 	
 	~CVsdFile(){
@@ -25,6 +30,8 @@ class CVsdFile {
 	int WriteLine( char *str ); // !js_func
 	int Seek( int iOffs, int iOrg );	// !js_func
 	int IsEOF( void ); // !js_func
+	
+	v8::Handle<v8::Value> ZipNextFile( void ); // !js_func
 	
 	// バイナリアクセス
 	UCHAR *ReadBin( int iSize );
@@ -103,5 +110,8 @@ class CVsdFile {
   private:
 	gzFile	m_gzfp;
 	FILE	*m_fp;
+	unzFile	m_unzfp;
+	
+	BOOL	m_bZipCurrentFileOpen;
 	char	m_cBuf[ BUF_LEN ];
 };
