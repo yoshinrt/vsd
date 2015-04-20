@@ -1,18 +1,12 @@
-//*** 設定ここから ***********************************************************
+//*** include ****************************************************************
 
-// ギア比の設定  各ギアの エンジン回転[rpm]／スピード[km/h] を設定
-GEAR_RATIO = [
-	101.9192993,	// 1速
-	61.08177186,	// 2速
-	45.72406922,	// 3速
-	35.95098573,	// 4速
-	29.66828919,	// 5速  6速以降がある場合は同じように追加
-];
+function Include( file ){
+	__Include( file, __CScript );
+}
 
-REV_LIMIT		= 6500;	// レブリミット (上限)
+//****************************************************************************
 
-//*** 設定ここまで ***********************************************************
-
+Include( "_user_config.js" );
 Vsd = new __VSD_System__( __CVsdFilter );
 Log = new __VSD_SystemLog__( __CVsdFilter );
 
@@ -66,12 +60,6 @@ function DisposeAll(){
 			this[ obj ] = null;
 		}
 	}
-}
-
-//*** include ****************************************************************
-
-function Include( file ){
-	__Include( file, __CScript );
 }
 
 //*** グラフ描画 *************************************************************
@@ -131,7 +119,7 @@ Vsd.DrawGoogleMaps = function( param ){
 	// 一番最初の地図データを同期モードで取得
 	if( param.MapImg === undefined ){
 		param.GMapURL = "http://maps.googleapis.com/maps/api/staticmap?sensor=false&language=ja" +
-			( param.APIKey != '' ? "&key=" + param.APIKey : '' ) +
+			( GoogleAPIKey[ 0 ] != '' ? "&key=" + GoogleAPIKey[ 0 ] : '' ) +
 			"&maptype=" + param.Maptype +
 			"&zoom=" + param.Zoom +
 			"&size=" + ~~param.Width + "x" + ~~param.Height +
@@ -299,7 +287,7 @@ Vsd.DrawRoadMap = function( param ){
 			param.TileSize = 512;
 			--param.Zoom;
 			param.GMapURL = "http://maps.googleapis.com/maps/api/staticmap?sensor=false&language=ja" +
-				( param.APIKey != '' ? "&key=" + param.APIKey : '' ) +
+				( GoogleAPIKey[ 0 ] != '' ? "&key=" + GoogleAPIKey[ 0 ] : '' ) +
 				"&maptype=" + param.Maptype +
 				"&zoom=" + ( param.Zoom + 1 ) +
 				"&size=512x512&center=";

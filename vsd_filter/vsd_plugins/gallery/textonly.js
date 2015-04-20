@@ -32,6 +32,7 @@ function PrintObj( prefix, obj ){
 		}
 	}
 }
+
 function Draw(){
 	x = 0;
 	y = 0;

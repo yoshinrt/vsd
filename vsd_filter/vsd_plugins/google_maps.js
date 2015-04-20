@@ -3,29 +3,8 @@
 function Initialize(){
 	Scale = Vsd.Height / 720;
 	
-	//////////////////////////////////////////////////////////////////////////
-	/// ↓↓↓↓↓Google Maps の設定 ここから↓↓↓↓↓ //////////////////////
-	//////////////////////////////////////////////////////////////////////////
-	
-	// 設定を行うためには，以下の設定値を直接書き換えてください．
-	
-	// ★補足説明
-	// このスキンは Google Maps にアクセスし地図データを得ています．
-	//   Google Maps にアクセスするためには「API キー」が必要です．
-	//   キーは無料で取得出来ます．キー取得方法は
-	//   https://developers.google.com/maps/documentation/staticmaps/?hl=ja#api_key
-	//   を参照してください．
-	// また，Google によって
-	//   マップデータの取得は 1日あたり 25,000 枚
-	//   ジオコーディングの取得は 1日あたり 2,500 回
-	//   に制限されています．
-	
+	// Google Maps パラメータ設定
 	GoogleMapsParam = {
-		// Google Maps の API キーを指定します．
-		// 例: APIKey: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-		APIKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
-//#REL#	APIKey: "",
-		
 		// ズームレベルを 0～21 で指定します
 		Zoom: 14,
 		
@@ -56,19 +35,16 @@ function Initialize(){
 		UpdateTime:	10000,	// [ミリ秒]
 	};
 	
-	//////////////////////////////////////////////////////////////////////////
-	/// ↑↑↑↑↑Google Maps の設定 ここまで↑↑↑↑↑ //////////////////////
-	//////////////////////////////////////////////////////////////////////////
-	
 	function min( a, b ){ return ( a < b ) ? a : b; }
 	
-	if( GoogleMapsParam.APIKey == '' ){
+	if( GoogleAPIKey[ 0 ] == '' ){
 		MessageBox(
-			"google_maps.js スキンを使用するためには初期設定が必要です．詳しくは\n" +
-			Vsd.SkinDir + "google_maps.js\n" +
-			"をメモ帳等で開き，その先頭に書かれている説明をお読みください．\n" +
-			"(設定なしでも短時間なら使えるようです)"
+			"本スキンを使用するためには初期設定が必要です．詳しくは\n" +
+			"VSD for GPS インストール手順の web ページを参照してください．\n" +
+			"(OK を押すと web ブラウザを開きます)"
 		);
+		var WshShell = new ActiveXObject( "WScript.Shell" );
+		WshShell.Run( "cmd /c start https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install#GoogleAPIKey" );
 	}
 	
 	MeterRight = 1;
