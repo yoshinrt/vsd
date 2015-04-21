@@ -30,39 +30,43 @@ LPWSTR CScript::ReportException( LPWSTR pMsg, TryCatch& try_catch ){
 	Handle<Message> message = try_catch.Message();
 	
 	if( !pMsg ) pMsg = new WCHAR[ MSGBUF_SIZE ];
-	LPWSTR p = pMsg;
+	UINT	u = 0;
 	
 	if ( message.IsEmpty()){
 		// V8 didn't provide any extra information about this error; just
 		// print the exception.
 		swprintf( p, MSGBUF_SIZE, L"%s\n", *exception );
-		p = wcschr( p, '\0' );
+		for( ; u < MSGBUF_SIZE && pMsg[ u ]; ++u );
 	}else{
 		// Print ( filename ):( line number ): ( message ).
 		String::Value filename( message->GetScriptResourceName());
 		int linenum = message->GetLineNumber();
-		swprintf( p, MSGBUF_SIZE - ( p - pMsg ), L"%s:%i: %s\n", *filename, linenum, *exception );
-		p = wcschr( p, '\0' );
+		swprintf( p, MSGBUF_SIZE - u, L"%s:%i: %s\n", *filename, linenum, *exception );
+		
+		for( ; u < MSGBUF_SIZE && pMsg[ u ]; ++u );
 		
 		// Print line of source code.
 		String::Value sourceline( message->GetSourceLine());
-		swprintf( p, MSGBUF_SIZE - ( p - pMsg ), L"%s\n", *sourceline );
+		swprintf( p, MSGBUF_SIZE - u, L"%s\n", *sourceline );
 		
 		// TAB->SP ïœä∑Ç∆ÅCp ÇÕ '\0' ÇéwÇ∑ÇÊÇ§Ç…Ç∑ÇÈ
-		for( ; *p; ++p ) if( *p == '\t' ) *p = ' ';
+		for( ; u < MSGBUF_SIZE && pMsg[ u ]; ++u ) if( pMsg[ u ] == '\t' ) pMsg[ u ] = ' ';
 		
 		// Print wavy underline ( GetUnderline is deprecated ).
 		int start = message->GetStartColumn();
-		for ( int i = 0; i < start; i++ ){
-			*p++ = L' ';
+		for ( int i = 0; i < start && u < MSGBUF_SIZE; i++ ){
+			pMsg[ u++ ] = L' ';
 		}
 		int end = message->GetEndColumn();
 		for ( int i = start; i < end; i++ ){
-			*p++ = L'^';
+			pMsg[ u++ ] = L'^';
 		}
-		*p++ = L'\n';
-		*p = L'\0';
 	}
+	
+	if( u > MSGBUG_SIZE - 2 ) u = MSGBUG_SIZE - 2;
+	
+	pMsg[ u++ ] = L'\n';
+	pMsg[ u   ] = L'\0';
 	
 	return pMsg;
 }

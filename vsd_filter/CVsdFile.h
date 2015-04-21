@@ -13,29 +13,29 @@
 class CVsdFile {
   public:
 	CVsdFile(){
-		m_gzfp	= NULL;
-		m_fp	= NULL;
-		m_unzfp	= NULL;
-		
-		m_bZipCurrentFileOpen = FALSE;
+		m_fp		= NULL;
+		m_uMode		= MODE_NORMAL;
+		m_uBufSize	= 0;
+		m_uBufPtr	= 0;
 	}
 	
 	~CVsdFile(){
 		Close();
 	}
 	
-	int Open( LPCWSTR szFile, LPCWSTR szMode );	// !js_func
+	v8::Handle<v8::Value> Open( LPCWSTR szFile, LPCWSTR szMode );	// !js_func
 	void Close( void ); // !js_func
-	char *ReadLine( void ); // !js_func
-	int WriteLine( char *str ); // !js_func
-	int Seek( int iOffs, int iOrg );	// !js_func
-	int IsEOF( void ); // !js_func
+	v8::Handle<v8::Value> ReadLine( void ); // !js_func
+	v8::Handle<v8::Value> WriteLine( char *str ); // !js_func
+	v8::Handle<v8::Value> Seek( int iOffs, int iOrg );	// !js_func
+	v8::Handle<v8::Value> IsEOF( void ); // !js_func
 	
 	v8::Handle<v8::Value> ZipNextFile( void ); // !js_func
+	int ReadZip( void );
 	
 	// バイナリアクセス
 	UCHAR *ReadBin( int iSize );
-	int WriteBin( void *pBuf, int iSize );
+	v8::Handle<v8::Value> WriteBin( void *pBuf, int iSize );
 	
 	int ReadChar	( void ){ return *( char *)ReadBin( 1 ); }	// !js_func
 	int ReadUChar	( void ){ return *( UCHAR *)ReadBin( 1 ); }	// !js_func
@@ -108,10 +108,25 @@ class CVsdFile {
 	static const int BUF_LEN = 10240;
 	
   private:
-	gzFile	m_gzfp;
-	FILE	*m_fp;
-	unzFile	m_unzfp;
+	union {
+		gzFile	m_gzfp;
+		FILE	*m_fp;
+		unzFile	m_unzfp;
+	};
 	
-	BOOL	m_bZipCurrentFileOpen;
+	UINT	m_uMode;
+	
+	// zip 用
+	UINT	m_uBufSize;
+	UINT	m_uBufPtr;
+	
+	enum {
+		MODE_NORMAL,
+		MODE_GZIP,
+		MODE_ZIP,
+		MODE_ZIP_OPENED,
+		MODE_ZIP_EOF,		// unzReadCurrentFile で EOF と思しき
+	};
+	
 	char	m_cBuf[ BUF_LEN ];
 };
