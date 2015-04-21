@@ -30,7 +30,6 @@ function Read_kml( Files ){
 			
 			do{
 				var file_name = file.ZipNextFile();
-Print( file_name + "---------\n" );
 			}while( !file_name.match( /\.kml$/i ));
 		}else{
 			// kml ‚ğ•’Ê‚É open

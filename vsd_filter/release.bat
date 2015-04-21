@@ -15,7 +15,7 @@ rmdir /s/q vsd_plugins\gallery
 del vsd_plugins\_log_reader\vsd_log.js
 
 : API ƒL[íœ
-for %%a in ( vsd_plugins/google_maps.js vsd_plugins/streetview.js ) do (
+for %%a in ( vsd_plugins/_user_config.js ) do (
 	perl -pe 's@.*//#DEL#.*\n@@; s@//#REL#@\t@' ../%%a > %%a
 )
 
