@@ -17,6 +17,7 @@ class CVsdFile {
 		m_uMode		= MODE_NORMAL;
 		m_uBufSize	= 0;
 		m_uBufPtr	= 0;
+		m_uFlag		= 0;
 	}
 	
 	~CVsdFile(){
@@ -74,27 +75,27 @@ class CVsdFile {
 		);
 	}
 	
-	int WriteChar	( int iVal ){ return WriteBin( &iVal, 1 ); }	// !js_func
-	int WriteShortL	( int iVal ){ return WriteBin( &iVal, 2 ); }	// !js_func
+	v8::Handle<v8::Value> WriteChar	( int iVal ){ return WriteBin( &iVal, 1 ); }	// !js_func
+	v8::Handle<v8::Value> WriteShortL	( int iVal ){ return WriteBin( &iVal, 2 ); }	// !js_func
 	
-	int WriteIntL( double dVal ){	// !js_func
+	v8::Handle<v8::Value> WriteIntL( double dVal ){	// !js_func
 		dVal += ( double )( 1 << 31 ) * 2;
 		UINT uTmp = ( UINT )fmod( dVal, ( double )( 1 << 31 ) * 2 );
 		return WriteBin( &uTmp, 4 );
 	}
 	
-	int WriteFloat ( double dVal ){	// !js_func
+	v8::Handle<v8::Value> WriteFloat ( double dVal ){	// !js_func
 		float fVal = ( float )dVal;
 		return WriteBin( &fVal, 4 );
 	}
-	int WriteDouble( double dVal ){ return WriteBin( &dVal, 8 ); }	// !js_func
+	v8::Handle<v8::Value> WriteDouble( double dVal ){ return WriteBin( &dVal, 8 ); }	// !js_func
 	
-	int WriteShortB( int iVal ){	// !js_func
+	v8::Handle<v8::Value> WriteShortB( int iVal ){	// !js_func
 		int iTmp = (( UINT )iVal >> 8 ) | (( iVal & 0xFF ) << 8 );
 		return WriteShortL( iTmp );
 	}
 	
-	int WriteIntB( double dVal ){	// !js_func
+	v8::Handle<v8::Value> WriteIntB( double dVal ){	// !js_func
 		dVal += ( double )( 1 << 31 ) * 2;
 		UINT uTmp = ( UINT )fmod( dVal, ( double )( 1 << 31 ) * 2 );
 		UINT uTmp2 =
@@ -105,7 +106,7 @@ class CVsdFile {
 		return WriteBin( &uTmp2, 4 );
 	}
 	
-	static const int BUF_LEN = 10240;
+	static const int FILEBUF_LEN = 10240;
 	
   private:
 	union {
@@ -114,19 +115,25 @@ class CVsdFile {
 		unzFile	m_unzfp;
 	};
 	
-	UINT	m_uMode;
-	
 	// zip —p
 	UINT	m_uBufSize;
 	UINT	m_uBufPtr;
 	
+	USHORT	m_uMode;
+	
 	enum {
 		MODE_NORMAL,
 		MODE_GZIP,
-		MODE_ZIP,
-		MODE_ZIP_OPENED,
-		MODE_ZIP_EOF,		// unzReadCurrentFile ‚Å EOF ‚ÆŽv‚µ‚«
+		MODE_ZIP,			// “à•” file ‚ð open ‚µ‚Ä‚¢‚È‚¢
+		MODE_ZIP_OPENED,	// “à•” file ‚ð open ’†
 	};
 	
-	char	m_cBuf[ BUF_LEN ];
+	USHORT	m_uFlag;
+	
+	enum {
+		FLAG_EOF		= 1 << 0,
+		FLAG_2ND_FILE	= 1 << 1,
+	};
+	
+	char	m_cBuf[ FILEBUF_LEN ];
 };

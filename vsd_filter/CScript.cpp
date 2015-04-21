@@ -35,19 +35,19 @@ LPWSTR CScript::ReportException( LPWSTR pMsg, TryCatch& try_catch ){
 	if ( message.IsEmpty()){
 		// V8 didn't provide any extra information about this error; just
 		// print the exception.
-		swprintf( p, MSGBUF_SIZE, L"%s\n", *exception );
+		swprintf( pMsg, MSGBUF_SIZE, L"%s\n", *exception );
 		for( ; u < MSGBUF_SIZE && pMsg[ u ]; ++u );
 	}else{
 		// Print ( filename ):( line number ): ( message ).
 		String::Value filename( message->GetScriptResourceName());
 		int linenum = message->GetLineNumber();
-		swprintf( p, MSGBUF_SIZE - u, L"%s:%i: %s\n", *filename, linenum, *exception );
+		swprintf( pMsg, MSGBUF_SIZE - u, L"%s:%i: %s\n", *filename, linenum, *exception );
 		
 		for( ; u < MSGBUF_SIZE && pMsg[ u ]; ++u );
 		
 		// Print line of source code.
 		String::Value sourceline( message->GetSourceLine());
-		swprintf( p, MSGBUF_SIZE - u, L"%s\n", *sourceline );
+		swprintf( pMsg + u, MSGBUF_SIZE - u, L"%s\n", *sourceline );
 		
 		// TAB->SP ïœä∑Ç∆ÅCp ÇÕ '\0' ÇéwÇ∑ÇÊÇ§Ç…Ç∑ÇÈ
 		for( ; u < MSGBUF_SIZE && pMsg[ u ]; ++u ) if( pMsg[ u ] == '\t' ) pMsg[ u ] = ' ';
@@ -63,7 +63,7 @@ LPWSTR CScript::ReportException( LPWSTR pMsg, TryCatch& try_catch ){
 		}
 	}
 	
-	if( u > MSGBUG_SIZE - 2 ) u = MSGBUG_SIZE - 2;
+	if( u > MSGBUF_SIZE - 2 ) u = MSGBUF_SIZE - 2;
 	
 	pMsg[ u++ ] = L'\n';
 	pMsg[ u   ] = L'\0';

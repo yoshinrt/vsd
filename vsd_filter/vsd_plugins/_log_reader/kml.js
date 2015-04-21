@@ -18,25 +18,30 @@ function Read_kml( Files ){
 	var	Cnt = 0;
 	var bMyTracks; // Google My Tracks のバグ? 回避
 	
-	var WshShell = new ActiveXObject( "WScript.Shell" );
-	var fso = new ActiveXObject( "Scripting.FileSystemObject" );
-	
 	var Buf = '';
+	var file = new File();
 	
 	// 一旦全ファイルを Buf に溜める
 	for( var i = 0; i < Files.length; ++i ){
 		if( Files[ i ].match( /\.kmz$/ )){
+			
 			// kmz を unzip
-			var ExecInfo = WshShell.Exec( 'c:\\cygwin\\bin\\unzip -c "' + Files[ i ] + '"' );
-			file = ExecInfo.StdOut;
+			file.Open( Files[ i ], "Zrb" );
+			
+			do{
+				var file_name = file.ZipNextFile();
+Print( file_name + "---------\n" );
+			}while( !file_name.match( /\.kml$/i ));
 		}else{
 			// kml を普通に open
-			var file = fso.OpenTextFile( Files[ i ], 1 );
+			file.Open( Files[ i ], "rb" );
 		}
 		
 		do{
-			Buf += file.ReadLine()
-		}while( !file.AtEndOfStream );
+			Buf += file.ReadLine();
+		}while( !file.IsEOF())
+		
+		file.Close();
 	}
 	
 	var bMyTracks = Buf.match( /Google My Tracks/ );
