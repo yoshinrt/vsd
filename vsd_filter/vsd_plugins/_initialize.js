@@ -277,7 +277,7 @@ Vsd.DrawRoadMap = function( param ){
 	if( param.MapImg === undefined ){
 		param.MapImg = [];
 		
-		if( param.PrefetchSize === undefined ) param.PrefetchSize = 1.5;
+		if( param.PrefetchFrame === undefined ) param.PrefetchFrame = 30;
 		if( param.Maptype === undefined ) param.Maptype = "openstreetmap";
 		
 		if( param.Maptype == "openstreetmap" ){
@@ -294,38 +294,23 @@ Vsd.DrawRoadMap = function( param ){
 		}
 	}
 	
+	// タイル先読み
+	if( Vsd.FrameCnt != param.FrameCnt ){
+		for( var i = 0; i < param.PrefetchFrame; ++i ){
+			FetchMapTile( Vsd.FrameCnt + i, param );
+		}
+		param.FrameCnt = Vsd.FrameCnt;
+	}
+	
+	FetchMapTile( Vsd.FrameCnt + param.PrefetchFrame, param );
+	++param.FrameCnt;
+	
 	// タイル番号，タイル内 x,y 座標を求める
 	var PosX = Lng2Tile( Log.Longitude, param.Zoom ); var TileX = ~~PosX;
 	var PosY = Lat2Tile( Log.Latitude,  param.Zoom ); var TileY = ~~PosY;
 	PosX = ~~(( PosX - TileX ) * param.TileSize );
 	PosY = ~~(( PosY - TileY ) * param.TileSize );
 	
-	//Print( "X=" + TileX + ":" + PosX + " Y=" + TileY + ":" + PosY + "\n" );
-	
-	// プリフェッチするタイル番号の範囲を求める
-	var TileStX = ~~(( PosX - (( param.Width  * param.PrefetchSize ) >> 1 ) + 1 - param.TileSize ) / param.TileSize );
-	var TileEdX = ~~(( PosX + (( param.Width  * param.PrefetchSize ) >> 1 ) + 1 ) / param.TileSize );
-	var TileStY = ~~(( PosY - (( param.Height * param.PrefetchSize ) >> 1 ) + 1 - param.TileSize ) / param.TileSize );
-	var TileEdY = ~~(( PosY + (( param.Height * param.PrefetchSize ) >> 1 ) + 1 ) / param.TileSize );
-	
-	// プリフェッチ
-	var url;
-	for( var x = TileX + TileStX; x <= TileX + TileEdX; ++x ){
-		for( var y = TileY + TileStY; y <= TileY + TileEdY; ++y ){
-			var key = x + "," + y;
-			if( param.MapImg[ key ] === undefined ){
-				if( param.Maptype == "openstreetmap" ){
-					url = "http://" + String.fromCharCode( 0x61 + ~~( Math.random() * 3 )) + ".tile.openstreetmap.org/" + param.Zoom + "/" + x + "/" + y + ".png";
-				}else{
-					url = param.GMapURL + Tile2Lat( y + 0.5, param.Zoom ) + "," + Tile2Lng( x + 0.5, param.Zoom );
-				}
-				param.MapImg[ key ] = new Image( url, IMG_INET_ASYNC );
-				//Print( "new " + key + "=" + url + "\n" );
-			}
-		}
-	}
-	
-	// 表示
 	var TileStX = ~~((( param.Width >> 1 ) - PosX + param.TileSize - 1 ) / param.TileSize );
 	var OffsStX = TileStX * param.TileSize + PosX - ( param.Width >> 1 );
 	var TileStY = ~~((( param.Height >> 1 ) - PosY + param.TileSize - 1 ) / param.TileSize );
@@ -337,6 +322,7 @@ Vsd.DrawRoadMap = function( param ){
 	
 	var w, h, e;
 	
+	// 表示
 	for( var y = 0; y < param.Height; ){
 		
 		TileX = TileStX;
@@ -366,6 +352,39 @@ Vsd.DrawRoadMap = function( param ){
 		++TileY;
 		OffsY = 0;
 		y += h;
+	}
+	
+	function FetchMapTile( frame, param ){
+		// タイル番号，タイル内 x,y 座標を求める
+		var PosX = Lng2Tile( Log.ValueOfIndex( "Longitude", frame ), param.Zoom ); var TileX = ~~PosX;
+		var PosY = Lat2Tile( Log.ValueOfIndex( "Latitude",  frame ), param.Zoom ); var TileY = ~~PosY;
+		PosX = ~~(( PosX - TileX ) * param.TileSize );
+		PosY = ~~(( PosY - TileY ) * param.TileSize );
+		
+		//Print( "X=" + TileX + ":" + PosX + " Y=" + TileY + ":" + PosY + "\n" );
+		
+		// プリフェッチするタイル番号の範囲を求める
+		var TileStX = ~~(( PosX - ( param.Width  >> 1 ) + 1 - param.TileSize ) / param.TileSize );
+		var TileEdX = ~~(( PosX + ( param.Width  >> 1 ) + 1 ) / param.TileSize );
+		var TileStY = ~~(( PosY - ( param.Height >> 1 ) + 1 - param.TileSize ) / param.TileSize );
+		var TileEdY = ~~(( PosY + ( param.Height >> 1 ) + 1 ) / param.TileSize );
+		
+		// プリフェッチ
+		var url;
+		for( var x = TileX + TileStX; x <= TileX + TileEdX; ++x ){
+			for( var y = TileY + TileStY; y <= TileY + TileEdY; ++y ){
+				var key = x + "," + y;
+				if( param.MapImg[ key ] === undefined ){
+					if( param.Maptype == "openstreetmap" ){
+						url = "http://" + String.fromCharCode( 0x61 + ~~( Math.random() * 3 )) + ".tile.openstreetmap.org/" + param.Zoom + "/" + x + "/" + y + ".png";
+					}else{
+						url = param.GMapURL + Tile2Lat( y + 0.5, param.Zoom ) + "," + Tile2Lng( x + 0.5, param.Zoom );
+					}
+					param.MapImg[ key ] = new Image( url, IMG_INET_ASYNC );
+					//Print( "new " + key + "=" + url + "\n" );
+				}
+			}
+		}
 	}
 	
 	Vsd.DrawCarIndicator(

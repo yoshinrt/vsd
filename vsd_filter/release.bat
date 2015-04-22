@@ -2,6 +2,10 @@
 : .tab=4
 
 set path=%path%;c:\cygwin\bin
+del "D:\Program Files\AVIUTL\Plugins\vsd_filter.auf"
+
+call "D:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat"
+msbuild /p:Configuration=ReleaseMT vsd_filter\vsd_filter.vcxproj
 
 xcopy /s/i release_files zrelease
 pushd zrelease
@@ -27,5 +31,8 @@ popd
 rmdir /s/q zrelease
 
 perl -ne 'rename( "vsd_filter_gps.zip", "vsd_filter_gps_r$1.zip" ) if( /#define\s+PROG_REVISION\s+(\d+)/ );' rev_num.h
+
+call "D:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat"
+msbuild /p:Configuration=Release vsd_filter\vsd_filter.vcxproj
 
 pause

@@ -38,7 +38,6 @@
 #include "dds.h"
 #include <assert.h>
 #include "dds_lib/dds_lib.h"
-#include "../vsd/main.h"
 
 #ifdef _OPENMP
 	#include <omp.h>
@@ -47,6 +46,7 @@
 	#endif
 #endif
 
+#define LOG_FREQ	16.0
 #define BUF_SIZE	1024
 #define ToRAD		( M_PI / 180 )
 #define SLIDER_TIME	( LOG_FREQ / 1000.0 )
