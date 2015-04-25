@@ -12,58 +12,39 @@ function Read_gpx( Files ){
 	Log.Longitude	= [];
 	Log.Latitude	= [];
 	
-	var	Cnt = 0;
+	var	Cnt			= 0;
 	var bSpeed		= false;
 	var bAltitude	= false;
-	var bMyTracks; // Google My Tracks のバグ? 回避
+	var Buf			= '';
 	
+	// 一旦全ファイルを Buf に溜める
 	for( var i = 0; i < Files.length; ++i ){
+		// kml を普通に open
 		var file = new File();
-		if( file.Open( Files[ i ], "zr" )){
-			MessageBox( "ファイルが開けません: " + Files[ i ] );
-			return 0;
-		}
+		file.Open( Files[ i ], "zrb" );
 		
-		var Line = '';
+		do{
+			Buf += file.ReadLine();
+		}while( !file.IsEOF())
 		
-	  NextFile:
-		while( 1 ){
-			
+		file.Close();
+	}
+	
+	// Google My Tracks のバグ? 回避
+	var bMyTracks = Buf.match( /Google My Tracks/ );
+	var Points;
+	
+	if( Points = Buf.match( /<trkpt[\S\s]*?<\/trkpt>/g )){
+		Points.forEach( function( Point ){
 			// <trkpt lat="35.12345" lon="135.12345">
 			// <speed>0.0</speed>
 			// <time>2012-04-28T21:27:50.328Z</time>
 			// <ele>128.1</ele>
 			// </trkpt>
 			
-			// trkpt 先頭サーチ
-			while( !Line.match( /<trkpt/ )){
-				if( bMyTracks === undefined && Line.match( /Google My Tracks/ )){
-					bMyTracks = true;
-				}
-				
-				Line = file.ReadLine();
-				if( file.IsEOF()) break NextFile;
-			}
-			
-			if( bMyTracks === undefined ) bMyTracks = false;
-			
-			// trkpt 先頭が見つかったので，それ以前を破棄
-			Line = RegExp.lastMatch + RegExp.rightContext;
-			
-			// trkpt 終了サーチ
-			while( !Line.match( /<\/trkpt>/ )){
-				Line = Line + file.ReadLine();
-				if( file.IsEOF()) break NextFile;
-			}
-			
-			// 1つの point に分解
-			var Point = RegExp.leftContext + RegExp.lastMatch;
-			Line = RegExp.rightContext;
-			Point = Point.replace( /[\x0D\x0A]/g, "" );
-			
 			// 時間
 			if( !Point.match( /<time>(\d+)-(\d+)-(\d+)T(\d+):(\d+):([\d\.]+)(Z|([-+]\d+):(\d+))/ )){
-				continue;
+				return;
 			}
 			Log.Time[ Cnt ] = Date.UTC(
 				RegExp.$1, RegExp.$2 - 1, RegExp.$3,
@@ -73,9 +54,9 @@ function Read_gpx( Files ){
 			);
 			
 			// long, lat
-			if( !Point.match( /lat="(.*?)"/ )) continue;
+			if( !Point.match( /lat="(.*?)"/ )) return;
 			Log.Latitude [ Cnt ] = +RegExp.$1;
-			if( !Point.match( /lon="(.*?)"/ )) continue;
+			if( !Point.match( /lon="(.*?)"/ )) return;
 			Log.Longitude[ Cnt ] = +RegExp.$1;
 			
 			// Speed がある場合は Array 作成
@@ -95,15 +76,12 @@ function Read_gpx( Files ){
 				}
 				Log.Altitude[ Cnt ] = +RegExp.$1;
 			}
-			
-			// Google My Tracks は変なログを吐くのでその対策
-			if( !( bMyTracks && Cnt &&
-				Log.Latitude [ Cnt - 1 ] == Log.Latitude [ Cnt ] &&
-				Log.Longitude[ Cnt - 1 ] == Log.Longitude[ Cnt ]
-			)) ++Cnt;
-		}
-		file.Close();
+			++Cnt;
+		});
+	}else{
+		return INVALID_FORMAT;
 	}
 	
+	if( bMyTracks ) SmoothLowFreqLog();
 	return Cnt;
 }

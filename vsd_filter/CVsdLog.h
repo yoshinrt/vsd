@@ -226,6 +226,7 @@ class CLogVariant : public CLog {
 
 typedef CLogVariant<float,	1>		CLogFloat;
 typedef CLogVariant<short,	4096>	CLogShort4096;
+typedef CLogVariant<USHORT,	64>		CLogUShort64;
 typedef CLogVariant<USHORT,	128>	CLogUShort128;
 typedef CLogVariant<USHORT,	1>		CLogUShort;
 typedef CLogVariant<UINT,	1024>	CLogUInt1024;

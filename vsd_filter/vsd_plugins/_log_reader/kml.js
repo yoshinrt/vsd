@@ -27,10 +27,7 @@ function Read_kml( Files ){
 			
 			// kmz ‚ğ unzip
 			file.Open( Files[ i ], "Zrb" );
-			
-			do{
-				var file_name = file.ZipNextFile();
-			}while( !file_name.match( /\.kml$/i ));
+			while( !file.ZipNextFile().match( /\.kml$/i ));
 		}else{
 			// kml ‚ğ•’Ê‚É open
 			file.Open( Files[ i ], "rb" );
@@ -50,7 +47,7 @@ function Read_kml( Files ){
 	
 	var Points;
 	
-	if( Points = Buf.match( /<when>.*?<\/gx:coord>/gm )){
+	if( Points = Buf.match( /<when>[\S\s]*?<\/gx:coord>/g )){
 		Buf = undefined;
 		
 		// •t‚«‚Ì KML
@@ -76,7 +73,7 @@ function Read_kml( Files ){
 			
 			++Cnt;
 		});
-	}else if( Points = Buf.match( /<coordinates>.*?<\/coordinates>/gm )){
+	}else if( Points = Buf.match( /<coordinates>[\S\s]*?<\/coordinates>/g )){
 		Buf = undefined;
 		
 		// ‚ª‚È‚¢ KMLCMaps Engine ‚Ì KML ‚ğ‘z’è

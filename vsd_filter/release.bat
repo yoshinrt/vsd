@@ -5,7 +5,8 @@ set path=%path%;c:\cygwin\bin
 del "D:\Program Files\AVIUTL\Plugins\vsd_filter.auf"
 
 call "D:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat"
-msbuild /p:Configuration=ReleaseMT vsd_filter\vsd_filter.vcxproj
+msbuild /p:Configuration=Release make\make.vcxproj
+msbuild /p:Configuration=ReleaseMT /t:Rebuild vsd_filter\vsd_filter.vcxproj
 
 xcopy /s/i release_files zrelease
 pushd zrelease

@@ -147,9 +147,9 @@ function Draw(){
 	
 	if( Log.Longitude === undefined ) return;
 	
-	Vsd.DrawText( 0, Y, "Lat.: " + Log.Latitude.toFixed( 6 ), FontM, FontColor );
+	Vsd.DrawText( 0, Y, "Lat.: " + Math.abs( Log.Latitude ).toFixed( 5 ) + ( Log.Latitude >= 0 ? 'N' : 'S' ), FontM, FontColor );
 	Y += FontM.Height;
-	Vsd.DrawText( 0, Y, "Lng.: " + Log.Longitude.toFixed( 6 ), FontM, FontColor );
+	Vsd.DrawText( 0, Y, "Lng.: " + Math.abs( Log.Longitude ).toFixed( 5 ) + ( Log.Longitude >= 0 ? 'E' : 'W' ), FontM, FontColor );
 	Y += FontM.Height;
 	Vsd.DrawText( 0, Y, "Alt.: " + ( Log.Altitude !== undefined ? Log.Altitude.toFixed( 1 ) + "m" : "---" ), FontM, FontColor );
 	Y += FontM.Height;

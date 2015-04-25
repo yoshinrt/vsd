@@ -11,9 +11,7 @@ function Initialize(){
 		Width:	min( 640, Vsd.Width ),
 		Height:	min( 480, Vsd.Height ),
 		
-		// ストリートビュー更新間隔
-		// 前回ストリートビュー更新時から指定秒以上経過し，
-		// かつ指定距離以上移動した場合のみストリートビューを更新します
+		// ストリートビュー更新間隔 (フレーム数)
 		UpdateTime:		Vsd.IsSaving ? 1 : 4,		// [frame]
 		
 		// 画像先読み数
@@ -224,9 +222,9 @@ function Draw(){
 	
 	if( Log.Longitude === undefined ) return;
 	
-	Vsd.DrawText( 0, Y, "Lat.: " + Log.Latitude.toFixed( 6 ), FontM, FontColor );
+	Vsd.DrawText( 0, Y, "Lat.: " + Math.abs( Log.Latitude ).toFixed( 5 ) + ( Log.Latitude >= 0 ? 'N' : 'S' ), FontM, FontColor );
 	Y += FontM.Height;
-	Vsd.DrawText( 0, Y, "Lng.: " + Log.Longitude.toFixed( 6 ), FontM, FontColor );
+	Vsd.DrawText( 0, Y, "Lng.: " + Math.abs( Log.Longitude ).toFixed( 5 ) + ( Log.Longitude >= 0 ? 'E' : 'W' ), FontM, FontColor );
 	Y += FontM.Height;
 	Vsd.DrawText( 0, Y, "Alt.: " + ( Log.Altitude !== undefined ? Log.Altitude.toFixed( 1 ) + "m" : "---" ), FontM, FontColor );
 	Y += FontM.Height;

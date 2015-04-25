@@ -3,7 +3,7 @@
 #endif
 
 DEF_LOG_T( Time,		CLogInt )
-DEF_LOG_T( Speed,		CLogUShort128 )
+DEF_LOG_T( Speed,		CLogUShort64 )
 DEF_LOG_T( Tacho,		CLogUShort )
 DEF_LOG_T( Distance,	CLogUInt1024 )
 DEF_LOG_T( Direction,	CLogDirection )
