@@ -8,6 +8,7 @@
 
 #pragma once
 #include "CPixel.h"
+#include "CSemaphore.h"
 
 #define RABY_TRANSPARENT	0x80FF8000
 #define IMG_INET_ASYNC		0x1
@@ -46,6 +47,8 @@ class CVsdImage {
 	UINT Rotate( int cx, int cy, double dAngle );	// !js_func
 	UINT Clip( int x1, int y1, int x2, int y2 );
 	
+	UINT WaitAsyncLoadComplete( int iMsec );	// !js_func
+	
 	int m_iWidth;	// !js_var:Width
 	int m_iHeight;	// !js_var:Height
 	
@@ -63,7 +66,7 @@ class CVsdImage {
 	int m_iOffsY;
 	
 	LPWSTR		m_pFileName;
-	volatile BOOL	m_bAsyncLoading;
+	CSemaphore	*m_pSemaphore;
   private:
 	CPixelImg		*m_pBuf;
 };

@@ -26,7 +26,6 @@
 
 CVsdImage::CVsdImage(){
 	DebugMsgD( "new CVsdImage %X\n", this );
-	m_bAsyncLoading	= FALSE;
 	m_pBuf	= NULL;
 	
 	m_iWidth  = 0;	// 画像の幅
@@ -35,20 +34,26 @@ CVsdImage::CVsdImage(){
 	
 	m_iStatus	= IMG_STATUS_LOAD_INCOMPLETE;
 	m_pFileName	= NULL;
+	m_pSemaphore = NULL;
 }
 
 CVsdImage::CVsdImage( CVsdImage &Org ){
 	DebugMsgD( "new CVsdImage %X\n", this );
-	m_bAsyncLoading	= FALSE;
 	*this = Org;
 	m_pBuf = new CPixelImg[ m_iRawWidth * m_iRawHeight ];
 	memcpy( m_pBuf, Org.m_pBuf, sizeof( CPixelImg ) * m_iRawWidth * m_iRawHeight );
+	m_pSemaphore = NULL;
 }
 
 CVsdImage::~CVsdImage(){
 	DebugMsgD( "delete CVsdImage %X\n", this );
 	
-	while( m_bAsyncLoading ) Sleep( 100 );
+	// ASync ロード完了まで待つ
+	if( m_pSemaphore ){
+		m_pSemaphore->Lock();
+		m_pSemaphore->Release();
+		delete m_pSemaphore;
+	}
 	
 	if( m_pFileName ) delete [] m_pFileName;
 	delete [] m_pBuf;
@@ -63,7 +68,8 @@ DWORD WINAPI CVsdImage_LoadAsync(
 	pImg->Load( pImg->m_pFileName );
 	delete [] pImg->m_pFileName;
 	pImg->m_pFileName = NULL;
-	pImg->m_bAsyncLoading = FALSE;
+	
+	pImg->m_pSemaphore->Release();
 	
 	return 0;
 }
@@ -100,7 +106,9 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 			m_pFileName = new WCHAR[ uSize ];
 			wcscpy_s( m_pFileName, uSize, szFileName );
 			
-			m_bAsyncLoading = TRUE;
+			m_pSemaphore = new CSemaphore();
+			m_pSemaphore->Lock();
+			
 			CreateThread(
 				NULL,					// セキュリティ記述子
 				0,						// 初期のスタックサイズ
@@ -598,4 +606,12 @@ UINT CVsdImage::Clip( int x1, int y1, int x2, int y2 ){
 	m_iOffsY		= y1;
 	
 	return ERR_OK;
+}
+
+/*** async ロード完了待ち ***************************************************/
+
+UINT CVsdImage::WaitAsyncLoadComplete( int iMsec ){
+	m_pSemaphore->Lock();
+	m_pSemaphore->Release();
+	return m_iStatus;
 }

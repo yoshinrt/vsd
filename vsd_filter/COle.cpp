@@ -695,7 +695,7 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 	EXCEPINFO *pExcepInfo,
 	UINT *puArgErr
 ){
-	//CSemaphore sem;
+	//CSemaphoreLock sem;
 	
 	v8::Isolate::Scope IsolateScope( g_Vsd->m_Script->m_pIsolate );
 	v8::HandleScope handle_scope;

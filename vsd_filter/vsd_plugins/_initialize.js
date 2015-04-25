@@ -341,7 +341,9 @@ Vsd.DrawRoadMap = function( param ){
 			
 			// Image 存在確認
 			var key = TileX + "," + TileY;
-			if( param.MapImg[ key ] !== undefined && param.MapImg[ key ].Status == IMG_STATUS_LOAD_COMPLETE ){
+			if( Vsd.IsSaving() && param.MapImg[ key ].WaitAsyncLoadComplete( 10000 ));
+			
+			if( param.MapImg[ key ].Status == IMG_STATUS_LOAD_COMPLETE ){
 				Vsd.PutImage( param.X + x, param.Y + y, param.MapImg[ key ], 0, OffsX, OffsY, w, h );
 			}else{
 				NoMap( param.X + x, param.Y + y, param.X + x + w - 1, param.Y + y + h - 1 );

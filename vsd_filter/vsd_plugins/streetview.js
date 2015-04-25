@@ -93,8 +93,7 @@ function Initialize(){
 	};
 	
 	FontColor   = 0xFFFFFF;
-	FontColorOL = 0xFFFFFF;
-	BGColor = 0x80001020;
+	BGColor		= 0x80001020;
 }
 
 //*** StreetView 描画 *******************************************************
@@ -105,25 +104,28 @@ DrawStreetView = function( param ){
 	var FrameCnt	= ~~( Vsd.FrameCnt / param.UpdateTime ) * param.UpdateTime;
 	var ImgIdx		= ( FrameCnt / param.UpdateTime ) % param.ImgCacheCnt;
 	
-	// 一番最初の画像を同期モードで取得
-	if( param.StViewImg === undefined || param.FrameCnt != Vsd.FrameCnt ){
-		// 画像 cache 数だけ先読み
+	if( param.StViewImg === undefined ){
 		param.StViewImg = [];
-		
-		for( var i = 1; i < param.ImgCacheCnt; ++i ){
+		param.FrameCnt = -1;
+	}
+	
+	// 画像 cache 数だけ先読み
+	if( param.FrameCnt != Vsd.FrameCnt ){
+		for( var i = 0; i < param.ImgCacheCnt; ++i ){
 			param.StViewImg[ i ] = new Image( GetImageURL( FrameCnt + i * param.UpdateTime ), IMG_INET_ASYNC );
 		}
 		
-		param.StViewImg[ 0 ] = new Image( GetImageURL( FrameCnt ));
 		param.DispIdx = 0;
 		param.FrameCnt = Vsd.FrameCnt + 1;
+		
+		param.StViewImg[ 0 ].WaitAsyncLoadComplete( 10000 );
 	}else{
 		++param.FrameCnt;
 	}
 	
 	if( Vsd.IsSaving ){
 		// 画像データ取得完了まで待つ
-		while( param.StViewImg[ ImgIdx ].Status == IMG_STATUS_LOAD_INCOMPLETE );
+		param.StViewImg[ ImgIdx ].WaitAsyncLoadComplete( 10000 );
 		Vsd.PutImage( param.X, param.Y, param.StViewImg[ ImgIdx ]);
 		
 		// 次の画像データを非同期モードで取得

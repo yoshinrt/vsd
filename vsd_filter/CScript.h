@@ -91,30 +91,7 @@ class CScript {
 		return FALSE;
 	}
 	
-	HANDLE	m_hSemaphore;
-	
   private:
 	
 	static LPCWSTR m_szErrorMsgID[];
-};
-
-/*** セマフォ操作クラス *****************************************************/
-
-class CSemaphore {
-	
-  public:
-	CSemaphore(){
-		m_hSemaphore = OpenSemaphore( SEMAPHORE_ALL_ACCESS, FALSE, "CScriptSemaphore" );
-		DebugMsgD( "Semaphore: waiting\n" );
-		WaitForSingleObject( m_hSemaphore, INFINITE );
-		DebugMsgD( "Semaphore: entering critical section\n" );
-	}
-	
-	~CSemaphore(){
-		DebugMsgD( "Semaphore: exiting critical section\n" );
-		ReleaseSemaphore( m_hSemaphore, 1, NULL );
-	}
-	
-  private:
-	HANDLE m_hSemaphore;
 };

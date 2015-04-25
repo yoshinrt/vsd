@@ -84,6 +84,9 @@
     <ClInclude Include="..\zlib\ioapi.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="..\CSemaphore.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\CVsdFilter.cpp">

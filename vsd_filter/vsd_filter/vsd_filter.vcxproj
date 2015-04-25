@@ -145,6 +145,7 @@
     <ClInclude Include="..\CPixel.h" />
     <ClInclude Include="..\CPixelBase.h" />
     <ClInclude Include="..\CScript.h" />
+    <ClInclude Include="..\CSemaphore.h" />
     <ClInclude Include="..\CVsdFile.h" />
     <ClInclude Include="..\CVsdFilter.h" />
     <ClInclude Include="..\CVsdFont.h" />
