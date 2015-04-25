@@ -72,6 +72,47 @@ MakeJsIF({
 		return v8::Undefined();
 	}
 	
+	static v8::Handle<v8::Value> Func_DrawMap( const v8::Arguments& args ){
+		int iLen = args.Length();
+		
+		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
+		UINT uFlag = args[ 4 ]->Int32Value();
+		
+		if( uFlag & CVsdFilter::IMG_LOADMAP ){
+			if( CScript::CheckArgs( 8 == iLen )) return v8::Undefined();
+			
+			if( !thisObj ) return v8::Undefined();
+			thisObj->DrawMap(
+				args[ 0 ]->Int32Value(),
+				args[ 1 ]->Int32Value(),
+				args[ 2 ]->Int32Value(),
+				args[ 3 ]->Int32Value(),
+				args[ 5 ]->Int32Value(),
+				args[ 6 ]->Int32Value(),
+				CPixel( args[ 7 ]->Int32Value())
+			);
+		}else{
+			if( CScript::CheckArgs( 11 <= iLen && iLen <= 12 )) return v8::Undefined();
+			
+			if( !thisObj ) return v8::Undefined();
+			thisObj->DrawMap(
+				args[ 0 ]->Int32Value(),
+				args[ 1 ]->Int32Value(),
+				args[ 2 ]->Int32Value(),
+				args[ 3 ]->Int32Value(),
+				args[ 4 ]->Int32Value(),
+				args[ 5 ]->Int32Value(),
+				args[ 6 ]->Int32Value(),
+				CPixel( args[ 7 ]->Int32Value()),
+				CPixel( args[ 8 ]->Int32Value()),
+				CPixel( args[ 9 ]->Int32Value()),
+				CPixel( args[ 10 ]->Int32Value()),
+				iLen <= 11 ? INVALID_INT : args[ 11 ]->Int32Value()
+			);
+		}
+		return v8::Undefined();
+	}
+	
 	/*** ログデータ取得用 *******************************************************/
 	
 	#define DEF_LOG( name ) \

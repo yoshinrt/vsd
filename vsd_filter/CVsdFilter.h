@@ -89,7 +89,7 @@ enum {
 /*** new type ***************************************************************/
 
 typedef struct {
-	short	iLeft, iRight;
+	int	iLeft, iRight;
 } PolygonData_t;
 
 /* 辺の定義 */
@@ -116,6 +116,16 @@ class CVsdFilter
 		UINT uFlag	// !default:0
 	);
 	void PutPixel( int x, int y, CPixelArg yc );
+	
+	void PutPixelClip( int x, int y, CPixelArg yc ){
+		if(
+			m_iClipX1 <= x && x <= m_iClipX2 &&
+			m_iClipY1 <= y && y <= m_iClipY2
+		){
+			PutPixel( x, y, yc );
+		}
+	}
+	
 	void FillLine( int x1, int y1, int x2, CPixelArg yc, UINT uPattern = 0xFFFFFFFF );
 	
 	UINT PutImage(	// !js_func
@@ -254,7 +264,7 @@ class CVsdFilter
 		int iNumPos, CPixelArg ycNum, CVsdFont &Font
 	);
 	
-	void DrawMap(	// !js_func
+	void DrawMap(
 		int x1, int y1, int x2, int y2,
 		UINT uFlag,
 		int iWidth,
@@ -263,8 +273,16 @@ class CVsdFilter
 		CPixelArg ycG0,
 		CPixelArg ycGPlus,
 		CPixelArg ycGMinus,
-		int	iLength = INVALID_INT	// !default:INVALID_INT
+		int	iLength = INVALID_INT
 	);
+	
+	void DrawMap(
+		int x1, int y1, int x2, int y2,
+		int iLineWidth,
+		int iZoomLv,
+		CPixelArg yc
+	);
+	
 	void DrawMapPosition(	// !js_func
 		int x1, int y1, int x2, int y2,	UINT uFlag,
 		int iLineWidth, CPixelArg yc,
@@ -327,6 +345,7 @@ class CVsdFilter
 	enum {
 		IMG_FILL		= ( 1 << 0 ),
 		IMG_NOCLOSE		= ( 1 << 1 ),
+		IMG_LOADMAP		= ( 1 << 2 ),
 	};
 	
 	enum {
@@ -339,6 +358,28 @@ class CVsdFilter
 		DRAW_MAP_START	= 1 << 4,	// DrawMap 専用フラグ
 		LMS_VERTICAL	= 1 << 4,	// DrawLinearMeterScale 専用フラグ
 	};
+	
+	// clip
+	int m_iClipX1, m_iClipY1, m_iClipX2, m_iClipY2;
+	void Clip(
+		int x1 = INVALID_INT,
+		int y1 = INVALID_INT,
+		int x2 = INVALID_INT,
+		int y2 = INVALID_INT
+	){
+		if( x1 > x2 ){ int x = x1; x1 = x2; x2 = x; }
+		if( y1 > y2 ){ int y = y1; y1 = y2; y2 = y; }
+		
+		if( x1 < 0 || x1 == INVALID_INT ) x1 = 0;
+		if( x2 >= GetWidth() || x2 == INVALID_INT ) x2 = GetWidth() - 1;
+		if( y1 < 0 || y1 == INVALID_INT ) y1 = 0;
+		if( y2 >= GetHeight() || y2 == INVALID_INT ) y2 = GetHeight() - 1;
+		
+		m_iClipX1 = x1;
+		m_iClipX2 = x2;
+		m_iClipY1 = y1;
+		m_iClipY2 = y2;
+	}
 	
 	// ダイアログ設定リード
 	
@@ -478,7 +519,6 @@ class CVsdFilter
 	CScript	*m_Script;
 	
   protected:
-	
 	int m_iTextPosX, m_iTextPosY;
 	
   private:

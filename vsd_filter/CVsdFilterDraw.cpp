@@ -25,24 +25,27 @@
 
 #define DEFAULT_FONT	"ＭＳ ゴシック"
 
+#define ClipX( x1, x2 )	( x1 = x1 < m_iClipX1 ? m_iClipX1 : x1, x2 = x2 > m_iClipX2 ? m_iClipX2 : x2 )
+#define ClipY( y1, y2 )	( y1 = y1 < m_iClipY1 ? m_iClipY1 : y1, y2 = y2 > m_iClipY2 ? m_iClipY2 : y2 )
+
 /*** put pixel 系 ***********************************************************/
 
 inline void CVsdFilter::PutPixel( int x, int y, CPixelArg yc, UINT uFlag ){
 	
-	if( !( 0 <= y && y < GetHeight())) return;
+	if( !( m_iClipY1 <= y && y <= m_iClipY2 )) return;
 	
 	if( uFlag & IMG_FILL ){
 		// ポリゴン描画
 		if( x > m_Polygon[ y ].iRight ){
-			m_Polygon[ y ].iRight = ( x >= GetWidth()) ? GetWidth() : x;
+			m_Polygon[ y ].iRight = x;
 		}
 		if( x < m_Polygon[ y ].iLeft  ){
-			m_Polygon[ y ].iLeft  = ( x < 0 ) ? 0 : x;
+			m_Polygon[ y ].iLeft  = x;
 		}
 		
 		if( m_iPolygonMinY > y ) m_iPolygonMinY = y;
 		if( m_iPolygonMaxY < y ) m_iPolygonMaxY = y;
-	}else if( 0 <= x && x < GetWidth() && yc.alfa < 255 ){
+	}else if( m_iClipX1 <= x && x <= m_iClipX2 && yc.alfa < 255 ){
 		PutPixel( x, y, yc );
 	}
 }
@@ -57,10 +60,9 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, CPixelArg yc, UINT uP
 	int i;
 	
 	if( y1 == y2 ){
-		if( 0 <= y1 && y1 < GetHeight() && yc.alfa < 255 ){
+		if( m_iClipY1 <= y1 && y1 <= m_iClipY2 && yc.alfa < 255 ){
 			if( x1 > x2 ) SWAP( x1, x2, i );
-			if( x1 < 0 )         x1 = 0;
-			if( x2 > GetWidth()) x2 = GetWidth();
+			ClipX( x1, x2 );
 			FillLine( x1, y1, x2, yc, uPattern );
 		}
 		return;
@@ -80,7 +82,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, CPixelArg yc, UINT uP
 			if(
 				uPattern == 0xFFFFFFFF ||
 				uPattern & ( 1 << ( x1 & 0x1F ))
-			) PutPixel( x1, y1, yc );
+			) PutPixelClip( x1, y1, yc );
 			
 			x1 += iXsign;
 			E += 2 * iYdiff;
@@ -97,7 +99,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, CPixelArg yc, UINT uP
 			if(
 				uPattern == 0xFFFFFFFF ||
 				uPattern & ( 1 << ( y1 & 0x1F ))
-			) PutPixel( x1, y1, yc );
+			) PutPixelClip( x1, y1, yc );
 			
 			y1 += iYsign;
 			E += 2 * iXdiff;
@@ -185,8 +187,9 @@ void CVsdFilter::DrawRect(
 		#ifdef _OPENMP_AVS
 			#pragma omp parallel for
 		#endif
-		if( y1 < 0 ) y1 = 0;
-		if( y2 >= GetHeight()) y2 = GetHeight() - 1;
+		
+		ClipX( x1, x2 );
+		ClipY( y1, y2 );
 		
 		for( y = y1; y <= y2; ++y ){
 			FillLine( x1, y, x2, yc );
@@ -526,8 +529,8 @@ inline void CVsdFilter::InitPolygon( void ){
 		#pragma omp parallel for
 	#endif
 	for( int y = 0; y < GetHeight(); ++y ){
-		m_Polygon[ y ].iRight	= 0;		// right
-		m_Polygon[ y ].iLeft	= 0x7FFF;	// left
+		m_Polygon[ y ].iRight	= SHRT_MIN;	// right
+		m_Polygon[ y ].iLeft	= SHRT_MAX;	// left
 	}
 	m_iPolygonMinY = GetHeight() - 1;
 	m_iPolygonMaxY = 0;
@@ -538,11 +541,18 @@ inline void CVsdFilter::FillPolygon( CPixelArg yc ){
 		#pragma omp parallel for
 	#endif
 	for( int y = m_iPolygonMinY; y <= m_iPolygonMaxY; ++y ){
-		if( m_Polygon[ y ].iLeft <= m_Polygon[ y ].iRight ){
-			FillLine( m_Polygon[ y ].iLeft, y, m_Polygon[ y ].iRight, yc );
-			m_Polygon[ y ].iRight	= 0;		// right
-			m_Polygon[ y ].iLeft	= 0x7FFF;	// left
+		if(
+			m_Polygon[ y ].iRight >= m_iClipX1 &&
+			m_Polygon[ y ].iLeft  <= m_iClipX2
+		){
+			int x1 = m_Polygon[ y ].iLeft;
+			int x2 = m_Polygon[ y ].iRight;
+			ClipX( x1, x2 );
+			
+			FillLine( x1, y, x2, yc );
 		}
+		m_Polygon[ y ].iRight	= SHRT_MIN;	// right
+		m_Polygon[ y ].iLeft	= SHRT_MAX;	// left
 	}
 	m_iPolygonMinY = GetHeight() - 1;
 	m_iPolygonMaxY = 0;
@@ -621,8 +631,8 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, CPixelArg yc ){
 	
 	for( UINT u = 0; u < uEdgeCnt; ++u ){
 		UINT v = ( u + 1 ) % uEdgeCnt;
-		UINT y1 = EdgeList[ u ].y;
-		UINT y2 = EdgeList[ v ].y;
+		int y1 = EdgeList[ u ].y;
+		int y2 = EdgeList[ v ].y;
 		
 		if( y1 == y2 ){
 			PutPixel( EdgeList[ u ].x, y1, yc, IMG_FILL );
@@ -633,7 +643,7 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, CPixelArg yc ){
 				y2 = EdgeList[ u ].y;
 			}
 			
-			for( UINT y = y1; y <= y2; ++y ){
+			for( int y = y1; y <= y2; ++y ){
 				PutPixel(
 					ToInt(
 						( EdgeList[ v ].dx - EdgeList[ u ].dx ) *
@@ -679,8 +689,7 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMax
 	// 描画開始
 	std::vector<int> vec_x( uEdgeCnt * 2 ); // X 座標のリスト
 	
-	if( iMinY < 0 ) iMinY = 0;
-	if( iMaxY >= GetHeight()) iMaxY = GetHeight() - 1;
+	ClipY( iMinY, iMaxY );
 	
 	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
@@ -734,9 +743,8 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMax
 			int x1 = *sp;			// 右端の点のX座標
 			
 			// X座標のクリッピング
-			if( x1 < 0 || x0 >= GetWidth()) continue;
-			if( x0 < 0 ) x0 = 0;
-			if( x1 >= GetWidth()) x1 = GetWidth() - 1;
+			if( x1 < m_iClipX1 || x0 > m_iClipX2 ) continue;
+			ClipX( x0, x1 );
 			
 			// 直線の描画
 			FillLine( x0, y, x1, yc );
@@ -1123,6 +1131,66 @@ void CVsdFilter::DrawMap(
 		
 		DrawLine( xs1, ys1, xs2, ys2, color_blue );
 	}
+	SelectLogVsd;
+}
+
+/*** 走行軌跡表示 ***********************************************************/
+
+static inline int Lng2Pix( double dLng, int iZoomLv ){
+	return ( int )(( dLng + 180 ) / 360.0 * ( 1 << ( iZoomLv + 8 )));
+}
+
+static inline int Lat2Pix( double dLat, int iZoomLv ){
+	double dRad = dLat * ( M_PI / 180 );
+	return ( int )(( 1 - log( tan( dRad ) + 1 / cos( dRad )) / M_PI ) / 2 * ( 1 << ( iZoomLv + 8 )));
+}
+
+void CVsdFilter::DrawMap(
+	int x1, int y1, int x2, int y2,
+	int iLineWidth,
+	int iZoomLv,
+	CPixelArg yc
+){
+	SelectLogGPS;
+	
+	if( !m_CurLog || !m_CurLog->m_pLogX ) return;
+	if( iLineWidth  < 1 ) iLineWidth  = 1;
+	
+	Clip( x1, y1, x2, y2 );
+	
+	// センター座標
+	for( int iStep = -1; iStep <= 1; iStep += 2 ){
+		int iX, iY;
+		int iPrevX = ( x1 + x2 ) / 2;
+		int iPrevY = ( y1 + y2 ) / 2;
+		int iOffsX = iPrevX - Lng2Pix( m_CurLog->Longitude(), iZoomLv );
+		int iOffsY = iPrevY - Lat2Pix( m_CurLog->Latitude(),  iZoomLv );
+		
+		for(
+			int iLogIdx = m_CurLog->m_iLogNum + ( iStep > 0 ? 1 : 0 );
+			0 <= iLogIdx && iLogIdx < m_CurLog->GetCnt();
+			iLogIdx += iStep
+		){
+			iX = Lng2Pix( m_CurLog->Longitude( iLogIdx ), iZoomLv ) + iOffsX;
+			iY = Lat2Pix( m_CurLog->Latitude(  iLogIdx ), iZoomLv ) + iOffsY;
+			
+			// 5px 以上離れてたら描画
+			if(( iX - iPrevX ) * ( iX - iPrevX ) + ( iY - iPrevY ) * ( iY - iPrevY ) >= 25 ){
+				DrawLine( iX, iY, iPrevX, iPrevY, iLineWidth, yc );
+				iPrevX = iX;
+				iPrevY = iY;
+				
+				if(
+					iPrevX < x1 || x2 < iPrevX ||
+					iPrevY < y1 || y2 < iPrevY
+				){
+					break;
+				}
+			}
+		}
+	}
+	
+	Clip();
 	SelectLogVsd;
 }
 
@@ -1814,6 +1882,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 			if( m_Script->m_uError == ERR_OK ){
 				m_Script->Run( L"Initialize" );
 			}
+			
+			m_iClipX1 = m_iClipY1 = 0;
+			m_iClipX2 = GetWidth() - 1;
+			m_iClipY2 = GetHeight() - 1;
 		}
 		
 		if( m_Script->m_uError ){

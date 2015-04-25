@@ -12,6 +12,7 @@ Log = new __VSD_SystemLog__( __CVsdFilter );
 
 DRAW_FILL			= 1 << 0;
 DRAW_NOCLOSE		= 1 << 1;
+DRAW_LOADMAP		= 1 << 2;
 FONT_BOLD			= 1 << 0;
 FONT_ITALIC			= 1 << 1;
 FONT_OUTLINE		= 1 << 2;
@@ -278,18 +279,20 @@ Vsd.DrawRoadMap = function( param ){
 		param.MapImg = [];
 		
 		if( param.PrefetchFrame === undefined ) param.PrefetchFrame = 30;
+		if( param.PathColor === undefined ) param.PathColor = -1;
 		if( param.Maptype === undefined ) param.Maptype = "openstreetmap";
 		
 		if( param.Maptype == "openstreetmap" ){
 			param.TileSize = 256;
+			param.TileZoom = param.Zoom;
 		}else{
 			// GoogleMaps でも表示できるけど地図の著作権的に隠しモード
 			param.TileSize = 512;
-			--param.Zoom;
+			param.TileZoom = param.Zoom - 1;
 			param.GMapURL = "http://maps.googleapis.com/maps/api/staticmap?sensor=false&language=ja" +
 				( GoogleAPIKey[ 0 ] != '' ? "&key=" + GoogleAPIKey[ 0 ] : '' ) +
 				"&maptype=" + param.Maptype +
-				"&zoom=" + ( param.Zoom + 1 ) +
+				"&zoom=" + ( param.TileZoom + 1 ) +
 				"&size=512x512&center=";
 		}
 	}
@@ -306,8 +309,8 @@ Vsd.DrawRoadMap = function( param ){
 	++param.FrameCnt;
 	
 	// タイル番号，タイル内 x,y 座標を求める
-	var PosX = Lng2Tile( Log.Longitude, param.Zoom ); var TileX = ~~PosX;
-	var PosY = Lat2Tile( Log.Latitude,  param.Zoom ); var TileY = ~~PosY;
+	var PosX = Lng2Tile( Log.Longitude, param.TileZoom ); var TileX = ~~PosX;
+	var PosY = Lat2Tile( Log.Latitude,  param.TileZoom ); var TileY = ~~PosY;
 	PosX = ~~(( PosX - TileX ) * param.TileSize );
 	PosY = ~~(( PosY - TileY ) * param.TileSize );
 	
@@ -356,8 +359,8 @@ Vsd.DrawRoadMap = function( param ){
 	
 	function FetchMapTile( frame, param ){
 		// タイル番号，タイル内 x,y 座標を求める
-		var PosX = Lng2Tile( Log.ValueOfIndex( "Longitude", frame ), param.Zoom ); var TileX = ~~PosX;
-		var PosY = Lat2Tile( Log.ValueOfIndex( "Latitude",  frame ), param.Zoom ); var TileY = ~~PosY;
+		var PosX = Lng2Tile( Log.ValueOfIndex( "Longitude", frame ), param.TileZoom ); var TileX = ~~PosX;
+		var PosY = Lat2Tile( Log.ValueOfIndex( "Latitude",  frame ), param.TileZoom ); var TileY = ~~PosY;
 		PosX = ~~(( PosX - TileX ) * param.TileSize );
 		PosY = ~~(( PosY - TileY ) * param.TileSize );
 		
@@ -376,9 +379,9 @@ Vsd.DrawRoadMap = function( param ){
 				var key = x + "," + y;
 				if( param.MapImg[ key ] === undefined ){
 					if( param.Maptype == "openstreetmap" ){
-						url = "http://" + String.fromCharCode( 0x61 + ~~( Math.random() * 3 )) + ".tile.openstreetmap.org/" + param.Zoom + "/" + x + "/" + y + ".png";
+						url = "http://" + String.fromCharCode( 0x61 + ~~( Math.random() * 3 )) + ".tile.openstreetmap.org/" + param.TileZoom + "/" + x + "/" + y + ".png";
 					}else{
-						url = param.GMapURL + Tile2Lat( y + 0.5, param.Zoom ) + "," + Tile2Lng( x + 0.5, param.Zoom );
+						url = param.GMapURL + Tile2Lat( y + 0.5, param.TileZoom ) + "," + Tile2Lng( x + 0.5, param.TileZoom );
 					}
 					param.MapImg[ key ] = new Image( url, IMG_INET_ASYNC );
 					//Print( "new " + key + "=" + url + "\n" );
@@ -387,6 +390,15 @@ Vsd.DrawRoadMap = function( param ){
 		}
 	}
 	
+	// 走行軌跡
+	if( param.PathColor != -1 ){
+		Vsd.DrawMap(
+			param.X, param.Y, param.X + param.Width - 1, param.Y + param.Height - 1,
+			DRAW_LOADMAP, param.PathWidth, param.Zoom, param.PathColor
+		);
+	}
+	
+	// 自車インジケータ
 	Vsd.DrawCarIndicator(
 		param.X + param.Width  / 2,
 		param.Y + param.Height / 2,

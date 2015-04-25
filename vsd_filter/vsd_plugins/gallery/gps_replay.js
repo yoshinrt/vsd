@@ -41,6 +41,10 @@ function Initialize(){
 		Width:	Vsd.Width,
 		Height:	Vsd.Height,
 		
+		// 走行軌跡
+		PathColor:	0xFF0000,	// -1 で非表示
+		PathWidth:	5 * Scale,
+		
 		// 自車インジケータ
 		IndicatorSize:	12 * Scale,		// サイズ
 		IndicatorColor:	0x0080FF,		// 色
