@@ -603,9 +603,14 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					
 					// 方位を作る
 					if( bCreateDirection ){
-						double dDir = atan2( Y0( iCnt ) - Y0( iCnt - 1 ), X0( iCnt ) - X0( iCnt - 1 )) / ToRAD + 90;
-						if( dDir < 0 ) dDir += 360;
-						SetDirection( iCnt, dDir );
+						// 停止なら，直前の方位を引き継ぐ
+						if( Distance( iCnt ) == Distance( iCnt - 1 )){
+							SetDirection( iCnt, Direction( iCnt - 1 ));
+						}else{
+							double dDir = atan2( Y0( iCnt ) - Y0( iCnt - 1 ), X0( iCnt ) - X0( iCnt - 1 )) / ToRAD + 90;
+							if( dDir < 0 ) dDir += 360;
+							SetDirection( iCnt, dDir );
+						}
 					}
 					
 					// 前のログから TIME_STOP 離れていてかつ 指定km/h 以下なら，停止とみなす
@@ -626,7 +631,10 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						AddStopRecord( iCnt,     GetTime( iCnt - 1 ) + TIME_STOP_MARGIN ); // A'
 						AddStopRecord( iCnt + 1, GetTime( iCnt + 2 ) - TIME_STOP_MARGIN ); // B'
 						
-						if( uIdxDirection != ~0 ) SetDirection( iCnt + 2, Direction( iCnt - 1 ));
+						if( uIdxDirection != ~0 ){
+							SetDirection( iCnt + 1, Direction( iCnt - 1 ));
+							SetDirection( iCnt + 2, Direction( iCnt - 1 ));
+						}
 					}else{
 						// 停止期間でなければ，ログ Hz を計算する
 						iLogHzTime += iDiffTime;
@@ -664,6 +672,18 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			}
 			// ログ Hz 最終集計
 			m_dFreq = 1000.0 * iLogHzCnt / iLogHzTime;
+			
+			// 番犬の Direction 修正
+			if( uIdxDirection != ~0 ){
+				for( int i = 0; i < GetCnt(); ++i ){
+					if( Direction( i ) != 0 ){
+						for( int j = 0; j < i; ++j ){
+							SetDirection( j, Direction( i ));
+						}
+						break;
+					}
+				}
+			}
 		}
 	}
 	
@@ -677,7 +697,6 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		CopyRecord( iCnt + 1, iCnt - 1 );
 		AddStopRecord( iCnt,     GetTime( iCnt - 1 ) + TIME_STOP_MARGIN );
 		AddStopRecord( iCnt + 1, WATCHDOG_TIME );
-		
 		
 		#define DUMP_LOG
 		#if defined DEBUG && defined DUMP_LOG
