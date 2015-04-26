@@ -20,6 +20,46 @@ LPCWSTR CScript::m_szErrorMsgID[] = {
 	#include "def_error.h"
 };
 
+/*** コンストラクタ *********************************************************/
+
+CScript::CScript( CVsdFilter *pVsd ){
+	DebugMsgD( ":CScript::CScript():%X\n", GetCurrentThreadId());
+	
+	m_pIsolate = v8::Isolate::New();
+	v8::Isolate::Scope IsolateScope( m_pIsolate );
+	
+	DebugMsgD( ":CScript::CScript():m_pIsolate = %X\n", m_pIsolate );
+	
+	DebugMsgD( ":CScript::CScript():m_Context\n" );
+	m_Context.Clear();
+	
+	if( pVsd ) m_pVsd = pVsd;
+	//m_pSemaphore = new CSemaphore;
+	
+	m_szErrorMsg	= NULL;
+	m_uError		= ERR_OK;
+}
+
+/*** デストラクタ ***********************************************************/
+
+CScript::~CScript(){
+	DebugMsgD( ":CScript::~CScript():%X\n", GetCurrentThreadId());
+	DebugMsgD( ":CScript::~CScript():m_pIsolate = %X\n", m_pIsolate );
+	
+	Dispose();
+	
+	{
+		v8::Isolate::Scope IsolateScope( m_pIsolate );
+		m_Context.Dispose();
+		while( !v8::V8::IdleNotification());
+	}
+	m_pIsolate->Dispose();
+	
+	//delete m_pSemaphore;
+	
+	delete [] m_szErrorMsg;
+}
+
 /*** Exception メッセージ表示 ***********************************************/
 
 #define MSGBUF_SIZE	( 4 * 1024 )
@@ -71,47 +111,31 @@ LPWSTR CScript::ReportException( LPWSTR pMsg, TryCatch& try_catch ){
 	return pMsg;
 }
 
-/*** コンストラクタ *********************************************************/
-
-CScript::CScript( CVsdFilter *pVsd ){
-	DebugMsgD( ":CScript::CScript():%X\n", GetCurrentThreadId());
-	
-	m_pIsolate = v8::Isolate::New();
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
-	
-	DebugMsgD( ":CScript::CScript():m_pIsolate = %X\n", m_pIsolate );
-	
-	DebugMsgD( ":CScript::CScript():m_Context\n" );
-	m_Context.Clear();
-	
-	if( pVsd ) m_pVsd = pVsd;
-	
-	m_szErrorMsg	= NULL;
-	m_uError		= ERR_OK;
-}
-
-/*** デストラクタ ***********************************************************/
-
-CScript::~CScript(){
-	DebugMsgD( ":CScript::~CScript():%X\n", GetCurrentThreadId());
-	DebugMsgD( ":CScript::~CScript():m_pIsolate = %X\n", m_pIsolate );
-	
-	{
-		v8::Isolate::Scope IsolateScope( m_pIsolate );
-		m_Context.Dispose();
-		while( !v8::V8::IdleNotification());
-	}
-	m_pIsolate->Dispose();
-	
-	delete [] m_szErrorMsg;
-}
-
 /*** JavaScript オブジェクトディスポーザ ************************************/
 
 void CScript::Dispose( void ){
-	if( Run( L"DisposeAll", TRUE )){
-		m_pVsd->DispErrorMessage( GetErrorMessage());
+	v8::Isolate::Scope IsolateScope( m_pIsolate );
+	v8::HandleScope handle_scope;
+	v8::Context::Scope context_scope( m_Context );
+	
+	// global obj 取得
+	v8::Local<v8::Array> hGlobal = v8::Local<v8::Array>::Cast(
+		m_Context->Global()
+	);
+	
+	// Log の key 取得
+	v8::Local<v8::Array> Keys = hGlobal->GetPropertyNames();
+	
+	for( UINT u = 0; u < Keys->Length(); ++u ){
+		#ifdef DEBUG
+			v8::String::AsciiValue strKey( Keys->Get( u ));
+			char *pKey = *strKey;
+			DebugMsgD( "js var %s = undef\n", pKey );
+		#endif
+		hGlobal->Set( Keys->Get( u ), v8::Undefined());
 	}
+	
+	while( !v8::V8::IdleNotification());
 }
 
 /*** Print ******************************************************************/
@@ -282,7 +306,7 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 /*** function 名指定実行，引数なし ******************************************/
 
 UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
-	//CSemaphoreLock sem;
+	//CSemaphoreLock lock( m_pSemaphore );
 	
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
@@ -292,7 +316,7 @@ UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
 }
 
 UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
-	//CSemaphoreLock sem;
+	//CSemaphoreLock lock( m_pSemaphore );
 	
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
@@ -305,7 +329,7 @@ UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
 }
 
 UINT CScript::Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc ){
-	//CSemaphoreLock sem;
+	//CSemaphoreLock lock( m_pSemaphore );
 	
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;

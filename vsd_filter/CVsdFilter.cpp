@@ -73,6 +73,7 @@ void CVsdFilter::Constructor( void ){
 /*** デストラクタ ***********************************************************/
 
 void CVsdFilter::Destructor( void ){
+	delete m_Script;
 	delete m_VsdLog;
 	delete m_GPSLog;
 	delete m_LapLog;
@@ -88,7 +89,6 @@ void CVsdFilter::Destructor( void ){
 	delete [] m_szPluginDirW;
 	delete [] m_Polygon;
 	delete m_pFont;
-	delete m_Script;
 	
 	//---- GDI+の解放
 	Gdiplus::GdiplusShutdown( m_gdiplusToken );

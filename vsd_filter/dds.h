@@ -166,16 +166,19 @@ static int C_DECL DebugPrintfD( char *szFormat, ... ){
 /*** no debug macros ********************************************************/
 
 #else	/* _DEBUG */
+# ifndef _WIN32
+#  define __noop			0&&
+# endif
 # define IfDebug			if( 0 )
 # define IfNoDebug			if( 1 )
 # define DebugCmd( x )
 # define NoDebugCmd( x )	x
 # define DebugParam( x, y )	( y )
-# define DebugMsg			0&&
-# define DebugMsgW			0&&
-# define DebugMsgD			0&&
-# define DebugPrintf		0&&
-# define DebugPrintfD		0&&
+# define DebugMsg			__noop
+# define DebugMsgW			__noop
+# define DebugMsgD			__noop
+# define DebugPrintf		__noop
+# define DebugPrintfD		__noop
 #endif	/* _DEBUG */
 
 /*** constants definition ***************************************************/

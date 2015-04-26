@@ -47,22 +47,6 @@ function GetGear( GearRatio ){
 	return Gear;
 }
 
-function DisposeAll(){
-	if( typeof this[ "Dispose" ] == 'function' ){
-		Dispose();
-	}
-	
-	for( var obj in this ){
-		if(
-			typeof this[ obj ] == 'object' &&
-			typeof this[ obj ].Dispose == 'function'
-		){
-			this[ obj ].Dispose();
-			this[ obj ] = null;
-		}
-	}
-}
-
 //*** グラフ描画 *************************************************************
 
 Vsd.MakeGraphParam = function( params ){

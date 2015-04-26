@@ -18,6 +18,8 @@ class CSemaphore {
 	}
 	
 	~CSemaphore(){
+		Lock();
+		Release();
 		CloseHandle( m_hSemaphore );
 	}
 	

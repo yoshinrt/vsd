@@ -5,7 +5,6 @@
 
 ● vsd_filter
 ・馬力計測スキン
-・google map 用走行軌跡描画
 ・img copy & 変形
 ・Image をフォントにする
 ・buildin コード
@@ -27,7 +26,6 @@
 ・コントロールライン位置補正
 ・サウンドレーサーテクノロジ
 ・ActiveXObject の callback
-・ストリートビュースキン終了時の不正アクセス
 
 ● vsdroid
 ・全世界に配信www

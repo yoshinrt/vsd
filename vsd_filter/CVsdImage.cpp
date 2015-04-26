@@ -50,8 +50,6 @@ CVsdImage::~CVsdImage(){
 	
 	// ASync ƒ[ƒhŠ®—¹‚Ü‚Å‘Ò‚Â
 	if( m_pSemaphore ){
-		m_pSemaphore->Lock();
-		m_pSemaphore->Release();
 		delete m_pSemaphore;
 	}
 	

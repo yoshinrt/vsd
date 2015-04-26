@@ -504,7 +504,6 @@ class CVsdFilter
 	
 	void DeleteScript( void ){
 		if( m_Script ){
-			m_Script->Dispose();
 			delete m_Script;
 			m_Script = NULL;
 		}

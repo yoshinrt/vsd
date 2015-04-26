@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "CSemaphore.h"
 #include "error_code.h"
 
 typedef v8::Local<v8::Array> v8Array;
@@ -19,7 +20,6 @@ class CScript {
 	CScript( CVsdFilter *pVsd );
 	~CScript( void );
 	
-	void Dispose( void );
 	void Initialize( void );
 	UINT RunFile( LPCWSTR szFileName );
 	UINT RunFileCore( LPCWSTR szFileName );
@@ -92,6 +92,8 @@ class CScript {
 	}
 	
   private:
-	
+	//CSemaphore *m_pSemaphore;
 	static LPCWSTR m_szErrorMsgID[];
+	
+	void Dispose( void );
 };
