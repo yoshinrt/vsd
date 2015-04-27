@@ -15,7 +15,7 @@ function Initialize(){
 		UpdateTime:		Vsd.IsSaving ? 1 : 4,		// [frame]
 		
 		// 画像先読み数
-		ImgCacheCnt:	10,
+		ImgCacheCnt:	Vsd.IsSaving ? 30 : 10,
 	};
 	
 	MapParam = {
