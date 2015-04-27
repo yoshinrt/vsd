@@ -68,6 +68,11 @@ void CVsdFilter::Constructor( void ){
 	//---- GDI+の初期設定
 	COle::Initialize();
 	Gdiplus::GdiplusStartup( &m_gdiplusToken, &m_gdiplusStartupInput, NULL );
+	
+	// WinInet 同時接続数
+	DWORD		uMaxConnect = 30;
+	InternetSetOption( NULL, INTERNET_OPTION_MAX_CONNS_PER_SERVER, &uMaxConnect, sizeof( DWORD ));
+	InternetSetOption( NULL, INTERNET_OPTION_MAX_CONNS_PER_1_0_SERVER, &uMaxConnect, sizeof( DWORD ));
 }
 
 /*** デストラクタ ***********************************************************/

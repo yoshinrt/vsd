@@ -49,9 +49,7 @@ CVsdImage::~CVsdImage(){
 	DebugMsgD( "delete CVsdImage %X\n", this );
 	
 	// ASync ロード完了まで待つ
-	if( m_pSemaphore ){
-		delete m_pSemaphore;
-	}
+	if( m_pSemaphore ) delete m_pSemaphore;
 	
 	if( m_pFileName ) delete [] m_pFileName;
 	delete [] m_pBuf;
@@ -126,6 +124,10 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 		DWORD		dwReadSize;
 		BOOL		bResult;
 		
+		#ifdef DEBUG
+			UINT uStartTime = GetTickCount();
+		#endif
+		
 		do{
 			if(
 				!(
@@ -190,6 +192,10 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 		/* 後処理 */
 		if( hFile )		InternetCloseHandle( hFile );
 		if( hInternet )	InternetCloseHandle( hInternet );
+		
+		#ifdef DEBUG
+			DebugMsgD( "Async image: get in %dms\n", GetTickCount() - uStartTime );
+		#endif
 	}else{
 		//--- 画像ファイルを開く
 		//  【対応画像形式】  BMP, JPEG, PNG, GIF, TIFF, WMF, EMF

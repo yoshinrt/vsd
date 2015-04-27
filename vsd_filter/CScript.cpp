@@ -119,9 +119,7 @@ void CScript::Dispose( void ){
 	v8::Context::Scope context_scope( m_Context );
 	
 	// global obj Žæ“¾
-	v8::Local<v8::Array> hGlobal = v8::Local<v8::Array>::Cast(
-		m_Context->Global()
-	);
+	v8::Local<v8::Object> hGlobal = m_Context->Global();
 	
 	// Log ‚Ì key Žæ“¾
 	v8::Local<v8::Array> Keys = hGlobal->GetPropertyNames();

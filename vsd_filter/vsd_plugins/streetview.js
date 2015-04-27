@@ -15,7 +15,7 @@ function Initialize(){
 		UpdateTime:		Vsd.IsSaving ? 1 : 4,		// [frame]
 		
 		// 画像先読み数
-		ImgCacheCnt:	30,
+		ImgCacheCnt:	10,
 	};
 	
 	MapParam = {
@@ -112,13 +112,14 @@ DrawStreetView = function( param ){
 	// 画像 cache 数だけ先読み
 	if( param.FrameCnt != Vsd.FrameCnt ){
 		for( var i = 0; i < param.ImgCacheCnt; ++i ){
-			param.StViewImg[ i ] = new Image( GetImageURL( FrameCnt + i * param.UpdateTime ), IMG_INET_ASYNC );
+			param.StViewImg[( ImgIdx + i ) % param.ImgCacheCnt ] =
+				new Image( GetImageURL( FrameCnt + i * param.UpdateTime ), IMG_INET_ASYNC );
 		}
 		
-		param.DispIdx = 0;
+		param.DispIdx = ( ImgIdx + param.ImgCacheCnt - 1 ) % param.ImgCacheCnt;
 		param.FrameCnt = Vsd.FrameCnt + 1;
 		
-		param.StViewImg[ 0 ].WaitAsyncLoadComplete( 10000 );
+		param.StViewImg[ ImgIdx ].WaitAsyncLoadComplete( 10000 );
 	}else{
 		++param.FrameCnt;
 	}
@@ -155,6 +156,7 @@ DrawStreetView = function( param ){
 		}
 		Vsd.PutImage( param.X, param.Y, param.StViewImg[ param.DispIdx ]);
 	}
+	//Print( ImgIdx + ":" + param.DispIdx + "\n" );
 	
 	// 画像 URL 生成
 	function GetImageURL( FrameCnt ){
