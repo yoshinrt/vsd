@@ -19,7 +19,7 @@ GoogleAPIKey = [
 	"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
 	"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
 	"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
-//#REL#"",
+//	"",	//#REL#
 ];
 
 //*** 設定ここまで ***********************************************************

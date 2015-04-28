@@ -25,7 +25,7 @@ function Initialize(){
 		// 地図タイプ
 		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:地図+航空写真 //#DEL#
 		Maptype: "roadmap",	//#DEL#
-//#REL#	Maptype: "openstreetmap",
+//		Maptype: "openstreetmap",	//#REL#
 		
 		// 地図表示位置，サイズ(最大 640x640)
 		X:		Vsd.Width - 308 * Scale,
