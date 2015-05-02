@@ -179,7 +179,7 @@ function SmoothLowFreqLogSingle( Ary, Cnt ){
 					// 無効データが含まれていた
 					NanFlag ||
 					// データが連続時間が 1秒以内
-					Log.Time[ i ] - Log.Time[ PrevIdx ] <= 1000
+					Log.Time[ i - 1 ] - Log.Time[ PrevIdx ] <= 1000
 				)
 			){
 				for( var j = PrevIdx + 1; j < i; ++j ){
