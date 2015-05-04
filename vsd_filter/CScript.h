@@ -39,8 +39,6 @@ class CScript {
 	
 	static LPWSTR ReportException( LPWSTR pMsg, v8::TryCatch& try_catch );
 	
-	static LPWSTR Sprintf( const v8::Arguments& args );
-	
 	CVsdFilter	*m_pVsd;	// エ…
 	
 	v8::Persistent<v8::Context> m_Context;
@@ -56,20 +54,10 @@ class CScript {
 	UINT InitLogReader( void );
 	
 	// Global オブジェクト
-	static void DebugPrint( LPCWSTR strMsg ){	// !js_func
-		OutputDebugStringW( strMsg );
-		OutputDebugStringW( L"\n" );
-	}
-	
-	static void MessageBox( LPCWSTR strMsg ){	// !js_func
-		MessageBoxW(
-			NULL, strMsg,
-			L"VSD filter JavaScript message",
-			MB_OK
-		);
-	}
-	
-	static void Print( LPCWSTR strMsg );	// !js_func
+	static void DebugPrint( const v8::Arguments& args );	// !js_func
+	static void MessageBox( const v8::Arguments& args );	// !js_func
+	static void Print( const v8::Arguments& args );	// !js_func
+	static LPWSTR Sprintf( const v8::Arguments& args );
 	
 	// this へのアクセスヘルパ
 	template<typename T>

@@ -156,7 +156,7 @@ UCHAR *CVsdFile::ReadBin( int iSize ){
 	if( m_fp )	switch( m_uMode ){
 		case MODE_NORMAL:		fread( cBuf, 1, iSize, m_fp );
 		Case MODE_GZIP:			gzread( m_gzfp, cBuf, iSize );
-		//Case MODE_ZIP:			return V8ErrorZipNotOpened;
+		Case MODE_ZIP:			V8ErrorZipNotOpened;
 		Case MODE_ZIP_OPENED: {
 			// buf Žc—Ê‚ª‘«‚è‚È‚©‚Á‚½‚çC“Ç‚Þ
 			if( iSize > ( int )( m_uBufSize - m_uBufPtr )) ReadZip();

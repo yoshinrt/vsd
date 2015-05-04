@@ -309,6 +309,7 @@ sub MakeJsIF {
 			/(\S+)\s+\*?([\w_][\w_\d]*)\s*\(/;
 			( $RetType, $FuncName ) = ( $1, $2 );
 			
+			$NoArgNumCheck = '';
 			$ArgNum = 0;
 			$ArgMin = 0;
 			@Args = ();
@@ -398,6 +399,11 @@ sub MakeJsIF {
 					$Args[ $ArgNum ] = "v8::Local<v8::Array>::Cast( args[ $ArgPos ] )";
 				}
 				
+				elsif( $Type eq 'v8::Arguments&' ){
+					$Args[ $ArgNum ] = 'args';
+					$NoArgNumCheck = '//';
+				}
+				
 				elsif( $Type eq 'void' ){
 					next;
 				}
@@ -455,8 +461,8 @@ sub MakeJsIF {
 #-----
 			$param->{ FunctionIF } .= << "-----" if( !$param->{ bGlobal } );
 	static v8::Handle<v8::Value> Func_$FuncName( const v8::Arguments& args ){
-		int iLen = args.Length();
-		if( CScript::CheckArgs( $Len )) return v8::Undefined();
+		${NoArgNumCheck}int iLen = args.Length();
+		${NoArgNumCheck}if( CScript::CheckArgs( $Len )) return v8::Undefined();
 		$Defs
 		$param->{ Class } *thisObj = CScript::GetThis<$param->{ Class }>( args.This());
 		if( !thisObj ) return v8::Undefined();
@@ -467,8 +473,8 @@ sub MakeJsIF {
 -----
 			$param->{ FunctionIF } .= << "-----" if( $param->{ bGlobal } );
 	static v8::Handle<v8::Value> Func_$FuncName( const v8::Arguments& args ){
-		int iLen = args.Length();
-		if( CScript::CheckArgs( $Len )) return v8::Undefined();
+		${NoArgNumCheck}int iLen = args.Length();
+		${NoArgNumCheck}if( CScript::CheckArgs( $Len )) return v8::Undefined();
 		$Defs
 		CScript::$FuncName($Args);
 		

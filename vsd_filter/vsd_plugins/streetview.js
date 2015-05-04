@@ -166,11 +166,13 @@ DrawStreetView = function( param ){
 			key = "&key=" + GoogleAPIKey[ Vsd.FrameCnt % GoogleAPIKey.length ];
 		}
 		
-		return "http://maps.googleapis.com/maps/api/streetview?sensor=false" +
-			"&size=" + ~~param.Width + "x" + ~~param.Height + "&location=" +
-			Log.ValueOfIndex( "Latitude", FrameCnt ) + "," +
-			Log.ValueOfIndex( "Longitude", FrameCnt ) + "&heading=" +
-			Log.ValueOfIndex( "Direction", FrameCnt ) + key;
+		return Sprintf(
+			"http://maps.googleapis.com/maps/api/streetview?sensor=false&size=%dx%d&location=%.6f,%.6f&heading=%d%s",
+			param.Width, param.Height,
+			Log.ValueOfIndex( "Latitude", FrameCnt ),
+			Log.ValueOfIndex( "Longitude", FrameCnt ),
+			Log.ValueOfIndex( "Direction", FrameCnt ), key
+		);
 	}
 }
 
@@ -213,28 +215,24 @@ function Draw(){
 	date.setTime( Vsd.DateTime );
 	
 	Vsd.DrawText( 0, Y,
-		"Date: " + date.getFullYear() + "/" +
-			( date.getMonth() < 9 ? "0" : "" ) + ( date.getMonth() + 1 ) + "/" +
-			( date.getDate() < 10 ? "0" : "" ) + date.getDate(),
+		Sprintf( "Date: %04d/%02d/%02d", date.getFullYear(), date.getMonth(), date.getDate()),
 		FontM, FontColor
 	);
 	Y += FontM.Height;
 	
 	Vsd.DrawText( 0, Y,
-		"Time: " + ( date.getHours() < 10 ? "0" : "" ) + date.getHours() + ":" +
-			( date.getMinutes() < 10 ? "0" : "" ) + date.getMinutes() + ":" +
-			( date.getSeconds() < 10 ? "0" : "" ) + date.getSeconds(),
+		Sprintf( "Time: %02d:%02d:%02d", date.getHours(), date.getMinutes(), date.getSeconds()),
 		FontM, FontColor
 	);
 	Y += FontM.Height;
 	
 	if( Log.Longitude === undefined ) return;
 	
-	Vsd.DrawText( 0, Y, "Lat.: " + Math.abs( Log.Latitude ).toFixed( 5 ) + ( Log.Latitude >= 0 ? 'N' : 'S' ), FontM, FontColor );
+	Vsd.DrawText( 0, Y, Sprintf( "Lat.:%10.5f%s", Math.abs( Log.Latitude ), ( Log.Latitude >= 0 ? 'N' : 'S' )), FontM, FontColor );
 	Y += FontM.Height;
-	Vsd.DrawText( 0, Y, "Lng.: " + Math.abs( Log.Longitude ).toFixed( 5 ) + ( Log.Longitude >= 0 ? 'E' : 'W' ), FontM, FontColor );
+	Vsd.DrawText( 0, Y, Sprintf( "Lng.:%10.5f%s", Math.abs( Log.Longitude ), ( Log.Longitude >= 0 ? 'E' : 'W' )), FontM, FontColor );
 	Y += FontM.Height;
 	Vsd.DrawText( 0, Y, "Alt.: " + ( Log.Altitude !== undefined ? Log.Altitude.toFixed( 1 ) + "m" : "---" ), FontM, FontColor );
 	Y += FontM.Height;
-	Vsd.DrawText( 0, Y, "Dist.:" + ( Log.Distance / 1000 ).toFixed( 2 ) + "km", FontM, FontColor );
+	Vsd.DrawText( 0, Y, Sprintf( "Dist.:%6.2fkm", Log.Distance / 1000 ), FontM, FontColor );
 }
