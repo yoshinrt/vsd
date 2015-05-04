@@ -193,9 +193,8 @@ MakeJsIF({
 				
 				obj = new CVsdImage( *obj0 );
 			}else{
-				return v8::ThrowException( v8::Exception::Error( v8::String::New(
-					"arg[ 0 ] must be Image or string"
-				)));
+				V8TypeError( "arg[ 0 ] must be Image or string" );
+				return v8::Undefined();
 			}
 		}else{
 			// ファイル名指定で画像ロード

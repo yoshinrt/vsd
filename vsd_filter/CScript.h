@@ -11,6 +11,15 @@
 #include "CSemaphore.h"
 #include "error_code.h"
 
+#define V8AnyError( type, msg )	v8::ThrowException( v8::Exception::type( v8::String::New( msg )))
+#define V8RangeError( msg )		V8AnyError( RangeError, msg )
+#define V8ReferenceError( msg )	V8AnyError( ReferenceError, msg )
+#define V8SyntaxError( msg )	V8AnyError( SyntaxError, msg )
+#define V8TypeError( msg )		V8AnyError( TypeError, msg )
+#define V8Error( msg )			V8AnyError( Error, msg )
+
+#define V8Int( i )	v8::Integer::New( i )
+
 typedef v8::Local<v8::Array> v8Array;
 
 class CVsdFilter;
@@ -29,6 +38,8 @@ class CScript {
 	UINT RunArg( LPCWSTR szFunc, int iArgNum, v8::Handle<v8::Value> Args[], BOOL bNoFunc = FALSE );
 	
 	static LPWSTR ReportException( LPWSTR pMsg, v8::TryCatch& try_catch );
+	
+	static LPWSTR Sprintf( const v8::Arguments& args );
 	
 	CVsdFilter	*m_pVsd;	// エ…
 	
@@ -64,7 +75,7 @@ class CScript {
 	template<typename T>
 	static T* GetThis( v8::Local<v8::Object> handle ){
 		if( handle->GetInternalField( 0 )->IsUndefined()){
-			v8::ThrowException( v8::Exception::TypeError( v8::String::New( "Object is undefined" )));
+			V8TypeError( "Object is undefined" );
 			return NULL;
 		}
 		
@@ -75,9 +86,7 @@ class CScript {
 	// 引数の数チェック
 	static BOOL CheckArgs( BOOL cond ){
 		if( !( cond )){
-			v8::ThrowException( v8::Exception::Error( v8::String::New(
-				"invalid number of args"
-			)));
+			V8SyntaxError( "invalid number of args" );
 			return TRUE;
 		}
 		return FALSE;
@@ -85,7 +94,7 @@ class CScript {
 	
 	static BOOL CheckClass( v8::Local<v8::Object> obj, char *name, char *msg ){
 		if( strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name )){
-			v8::ThrowException( v8::Exception::TypeError( v8::String::New( msg )));
+			V8TypeError( msg );
 			return TRUE;
 		}
 		return FALSE;

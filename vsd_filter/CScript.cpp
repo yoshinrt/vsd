@@ -142,6 +142,108 @@ void CScript::Print( LPCWSTR strMsg ){
 	CVsdFilter::Print( strMsg );
 }
 
+/*** sprintf ****************************************************************/
+
+#define SPRINTF_BUF_SIZE	1024
+
+LPWSTR CScript::Sprintf( const v8::Arguments& args ){
+	
+	// arg 用 buf
+	UINT *puArgBuf	= new UINT[ args.Length() * 2 ];
+	UINT uArgBufPtr	= 0;
+	int iArgNum	= 1;
+	LPWSTR wszBuf	= NULL;
+	std::vector<v8::String::Value *> vecStrValue;
+	
+	// Fmt 文字列取得
+	v8::String::Value str( args[ 0 ] );
+	LPCWSTR wszFmt = ( LPCWSTR )*str;
+	LPCWSTR p = wszFmt;
+	
+	// % 引数解析
+	for( ;; ++iArgNum, ++p ){
+		// % サーチ
+		if(( p = wcschr( p, L'%' )) == NULL ) break;
+		
+		// 型フィールドサーチ
+		for( ++p; *p && wcschr( L"+-0123456789.#", *p ); ++p );
+		
+		// %% だったら次いってみよー
+		if( *p == L'%' ){
+			--iArgNum;
+			continue;
+		}
+		
+		// arg 数チェック
+		if( args.Length() <= iArgNum ){
+			//  引数が足りないエラー
+			V8SyntaxError( "unmatch number of sprintf arg num" );
+			goto ErrorExit;
+		}
+		
+		if( *p == L's' ){
+			// strint 型
+			v8::String::Value *pvalue = new v8::String::Value( args[ iArgNum ]);
+			
+			vecStrValue.push_back( pvalue );
+			*( LPCWSTR *)&puArgBuf[ uArgBufPtr++ ] = ( LPCWSTR )**pvalue;
+		}else if( wcschr( L"cCdiouxX", *p )){
+			// int 型
+			puArgBuf[ uArgBufPtr++ ] = args[ iArgNum ]->Int32Value();
+		}else if( wcschr( L"eEfgGaA", *p )){
+			// double 型
+			*( double *)&puArgBuf[ uArgBufPtr ] = args[ iArgNum ]->NumberValue();
+			uArgBufPtr += 2;
+		}else{
+			// 非対応の型
+			V8SyntaxError( "unknown sprintf type field" );
+			goto ErrorExit;
+		}
+	}
+	
+	// 引数あまりチェック
+	if( args.Length() != iArgNum ){
+		V8SyntaxError( "unmatch number of sprintf arg num" );
+		goto ErrorExit;
+	}
+	
+	// vsprintf 起動
+	va_list vargs;
+	va_start( vargs, puArgBuf[ -1 ] );
+	
+	wszBuf = new WCHAR[ SPRINTF_BUF_SIZE ];
+	vswprintf( wszBuf, SPRINTF_BUF_SIZE - 1, wszFmt, vargs );
+	
+	va_end( vargs );
+	
+	// 後処理
+  ErrorExit:
+	delete [] puArgBuf;
+	
+	for( UINT u = 0; u < vecStrValue.size(); ++u ){
+		delete vecStrValue[ u ];
+	}
+	
+	return wszBuf;
+}
+
+static v8::Handle<v8::Value> Func_Sprintf( const v8::Arguments& args ){
+	v8::HandleScope handle_scope;
+	
+	if( CScript::CheckArgs( args.Length() >= 1 )){
+		V8SyntaxError( "required sprintf format string" );
+		return v8::Undefined();
+	}
+	
+	LPWSTR str = CScript::Sprintf( args );
+	if( !str ) return v8::Undefined();
+	
+	v8::Local<v8::String> v8str = v8::String::New(( uint16_t *)str );
+	delete [] str;
+	
+	return handle_scope.Close( v8str );
+}
+
 /*** include ****************************************************************/
 
 static v8::Handle<v8::Value> Func_Include( const v8::Arguments& args ){
@@ -189,6 +291,7 @@ void CScript::Initialize( void ){
 	global->Set( v8::String::New( "__CVsdFilter" ), v8::External::New( m_pVsd ));
 	global->Set( v8::String::New( "__CScript" ), v8::External::New( this ));
 	global->Set( v8::String::New( "__Include" ), v8::FunctionTemplate::New( Func_Include ));
+	global->Set( v8::String::New( "Sprintf" ), v8::FunctionTemplate::New( Func_Sprintf ));
 	
 	// グローバルオブジェクトから環境を生成
 	m_Context = Context::New( NULL, global );

@@ -8,19 +8,15 @@
 
 #include "StdAfx.h"
 #include "CVsdFile.h"
+#include "CScript.h"
 
 #ifdef PUBLIC_MODE
 	BOOL IsFileWriteEnabled( void );
 #endif
 
-#define V8Error( msg )	\
-	v8::ThrowException( v8::Exception::Error( v8::String::New( msg )))
-
 #define V8ErrorClosedHandle		V8Error( "operation not permitted on closed handle" )
 #define V8ErrorZipNotSupported	V8Error( "operation not supported on zip-mode" )
 #define V8ErrorZipNotOpened		V8Error( "file in zip not opened" )
-
-#define V8Int( i )	v8::Integer::New( i )
 
 /*** ファイルオープン *******************************************************/
 
