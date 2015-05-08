@@ -11,15 +11,17 @@ function Read_nmea( Files ){
 	Log.Time		= [];
 	Log.Longitude	= [];
 	Log.Latitude	= [];
+	Log.Speed		= [];
+	Log.Altitude	= [];
 	
 	var	Cnt = 0;
 	var Line;
-	var bSpeed		= false;
-	var bAltitude	= false;
 	
 	for( var i = 0; i < Files.length; ++i ){
 		var file = new File();
-		if( file.Open( Files[ i ], "zr" )){
+		try{
+			file.Open( Files[ i ], "zr" );
+		}catch( e ){
 			MessageBox( "ファイルが開けません: " + Files[ i ] );
 			return 0;
 		}
@@ -63,10 +65,6 @@ function Read_nmea( Files ){
 				
 				// Speed がある場合は Array 作成
 				if( Param[ 7 ] != '' ){
-					if( !bSpeed ){
-						Log.Speed = [];
-						bSpeed = true;
-					}
 					Log.Speed[ Cnt ] = +Param[ 7 ] * 1.85200;
 				}
 				
@@ -80,10 +78,6 @@ function Read_nmea( Files ){
 				
 				// 高度がある場合は Array 作成
 				if( Param[ 9 ] != '' ){
-					if( !bAltitude ){
-						Log.Altitude = [];
-						bAltitude = true;
-					}
 					Log.Altitude[ +Param[ 1 ] == Time ? Cnt - 1 : Cnt ] = +Param[ 9 ];
 				}
 				var Time	= +Param[ 1 ];
@@ -92,5 +86,5 @@ function Read_nmea( Files ){
 		file.Close();
 	}
 	
-	return Cnt;
+	return Cnt ? Cnt : INVALID_FORMAT;
 }

@@ -96,6 +96,11 @@ function ReadLog( FileName, ReaderFunc ){
 			return 0;
 		}
 		
+		// 空の property を削除
+		for( var v in Log ) if( Log[ v ].length == 0 ){
+			delete Log[ v ];
+		}
+		
 		//DumpLog( "dump.csv" );
 		
 		return Cnt;

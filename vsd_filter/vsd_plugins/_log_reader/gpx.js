@@ -9,19 +9,24 @@ LogReaderInfo.push({
 function Read_gpx( Files ){
 	
 	Log.Time		= [];
+	Log.Speed		= [];
+	Log.Altitude	= [];
 	Log.Longitude	= [];
 	Log.Latitude	= [];
 	
 	var	Cnt			= 0;
-	var bSpeed		= false;
-	var bAltitude	= false;
 	var Buf			= '';
 	
 	// 一旦全ファイルを Buf に溜める
 	for( var i = 0; i < Files.length; ++i ){
 		// kml を普通に open
 		var file = new File();
-		file.Open( Files[ i ], "zrb" );
+		try{
+			file.Open( Files[ i ], "zrb" );
+		}catch( e ){
+			MessageBox( "ファイルが開けません: " + Files[ i ] );
+			return 0;
+		}
 		
 		do{
 			Buf += file.ReadLine();
@@ -61,19 +66,11 @@ function Read_gpx( Files ){
 			
 			// Speed がある場合は Array 作成
 			if( Point.match( /<speed>([\d\.]+)/ )){
-				if( !bSpeed ){
-					Log.Speed = [];
-					bSpeed = true;
-				}
 				Log.Speed[ Cnt ] = 3.6 * RegExp.$1;
 			}
 			
 			// ele がある場合は Array 作成
 			if( Point.match( /<ele>([\d\.]+)/ )){
-				if( !bAltitude ){
-					Log.Altitude = [];
-					bAltitude = true;
-				}
 				Log.Altitude[ Cnt ] = +RegExp.$1;
 			}
 			++Cnt;

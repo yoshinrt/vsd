@@ -7,7 +7,9 @@ function ReadCSV( Files, ParamDef ){
 	
 	for( var i = 0; i < Files.length; ++i ){
 		var file = new File();
-		if( file.Open( Files[ i ], "zr" )){
+		try{
+			file.Open( Files[ i ], "zr" );
+		}catch( e ){
 			MessageBox( "ファイルが開けません: " + Files[ i ] );
 			return 0;
 		}
@@ -41,12 +43,6 @@ function ReadCSV( Files, ParamDef ){
 			++Cnt;
 		}
 		file.Close();
-	}
-	
-	// 最後まで GPS が捕捉できなければ，Long Lati を削除
-	if( typeof Log.Latitude == 'object' && Log.Latitude.length == 0 ){
-		delete Log.Longitude;
-		delete Log.Latitude;
 	}
 	
 	return Cnt;

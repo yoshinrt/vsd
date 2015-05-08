@@ -49,7 +49,9 @@ function Read_dp3x( Files, Hz ){
 	
 	for( var i = 0; i < Files.length; ++i ){
 		var file = new File();
-		if( file.Open( Files[ i ], "rb" )){
+		try{
+			file.Open( Files[ i ], "rb" );
+		}catch( e ){
 			MessageBox( "ファイルが開けません: " + Files[ i ] );
 			return 0;
 		}

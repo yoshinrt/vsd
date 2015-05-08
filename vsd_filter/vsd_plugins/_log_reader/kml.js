@@ -26,11 +26,21 @@ function Read_kml( Files ){
 		if( Files[ i ].match( /\.kmz$/ )){
 			
 			// kmz を unzip
-			file.Open( Files[ i ], "Zrb" );
+			try{
+				file.Open( Files[ i ], "Zrb" );
+			}catch( e ){
+				MessageBox( "ファイルが開けません: " + Files[ i ] );
+				return 0;
+			}
 			while( !file.ZipNextFile().match( /\.kml$/i ));
 		}else{
 			// kml を普通に open
-			file.Open( Files[ i ], "rb" );
+			try{
+				file.Open( Files[ i ], "rb" );
+			}catch( e ){
+				MessageBox( "ファイルが開けません: " + Files[ i ] );
+				return 0;
+			}
 		}
 		
 		do{
