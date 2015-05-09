@@ -242,8 +242,10 @@ static v8::Handle<v8::Value> Func_Sprintf( const v8::Arguments& args ){
 
 void CScript::Printf( const v8::Arguments& args ){
 	LPCWSTR wsz = Sprintf( args );
-	CVsdFilter::Print( wsz );
-	delete [] wsz;
+	if( wsz ){
+		CVsdFilter::Print( wsz );
+		delete [] wsz;
+	}
 }
 
 void CScript::Print( LPCWSTR szMsg ){
