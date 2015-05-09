@@ -19,7 +19,7 @@
 #define V8TypeError( msg )		V8AnyError( TypeError, msg )
 #define V8Error( msg )			V8AnyError( Error, msg )
 
-#define V8Int( i )	v8::Integer::New( i )
+#define V8Int( i )			v8::Integer::New( i )
 #define LocalUndefined()	v8::Local<v8::Value>( *v8::Undefined())
 
 typedef v8::Local<v8::Array> v8Array;

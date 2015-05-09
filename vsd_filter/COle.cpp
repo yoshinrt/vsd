@@ -405,8 +405,6 @@ v8::Local<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Local<v8::Context> Co
 		long i;
 		long *pID, *pLB, *pUB;
 		VARIANT variant;
-		v8::Local<v8::Value> val;
-		v8::Local<v8::Array> val2;
 		
 		int dim = SafeArrayGetDim( psa );
 		VariantInit( &variant );

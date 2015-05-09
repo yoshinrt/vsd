@@ -269,7 +269,6 @@ MakeJsIF({
 
 MakeJsIF({
 	Class		=> 'CScript',
-	bGlobal		=> 1,
 });
 
 ##############################################################################
@@ -281,7 +280,7 @@ sub MakeJsIF {
 		$param->{ Class } *obj = new $param->{ Class }();
 -----
 	
-	$param->{ bGlobal }		= defined( $param->{ bGlobal } ) && $param->{ bGlobal };
+	$param->{ bGlobal }		= $param->{ Class } eq 'CScript';
 	$param->{ FunctionIF }	= '' if( !defined( $param->{ FunctionIF } ));
 	$param->{ ExtraInit }	= '' if( !defined( $param->{ ExtraInit } ));
 	$param->{ ExtraNew }	= '' if( !defined( $param->{ ExtraNew } ));
@@ -414,62 +413,55 @@ sub MakeJsIF {
 				"iLen == $ArgNum" :
 				"$ArgMin <= iLen && iLen <= $ArgNum";
 			
+			
+			$PostRet	= ');';
+			
 			# 返り値
 			if( $RetType eq 'void' ){
-				$RetVar   = '';
-				$RetValue = 'v8::Undefined()';
+				$PreRet		= '';
+				$PostRet	= '; return v8::Undefined();';
 			}
 			
 			elsif( $RetType eq 'int' || $RetType eq 'UINT' ){
-				$RetVar   = "int ret = ";
-				$RetValue = "v8::Integer::New( ret )";
+				$PreRet		= "return v8::Integer::New( ";
 			}
 			
 			elsif( $RetType eq 'char' ){
-				$RetVar   = "char *ret = ";
-				$RetValue = "v8::String::New( ret )";
+				$PreRet		= "return v8::String::New( ";
 			}
 			
-			elsif( $RetType =~ /^LPC?WSTR$/ ){
-				$RetVar   = "$RetType ret = ";
-				$RetValue = "v8::String::New(( uint16_t *)ret )";
+			elsif( $RetType	=~ /^LPC?WSTR$/ ){
+				$PreRet		= "return v8::String::New(( uint16_t *)";
 			}
 			
 			elsif( $RetType eq 'double' ){
-				$RetVar   = "double ret = ";
-				$RetValue = "v8::Number::New( ret )";
+				$PreRet		= "return v8::Number::New( ";
 			}
 			
-			elsif( $RetType =~ /^v8::Handle\b/ ){
-				$RetVar   = "$RetType ret = ";
-				$RetValue = "ret";
+			elsif( $RetType	=~ /^v8::(Handle|Local)\b/ ){
+				$PreRet		= "return ( ";
 			}
 			
 			else{
-				$RetVar   = "unknown type:$RetType = ";
-				$RetValue = '???';
+				$PreRet		= '???';
+				$PostRet	= " unknown type:$RetType	= ";
 			}
 #-----
-			$param->{ FunctionIF } .= << "-----" if( !$param->{ bGlobal } );
+			$param->{ FunctionIF } .= $param->{ bGlobal } ? << "-----" : << "-----";
+	static v8::Handle<v8::Value> Func_$FuncName( const v8::Arguments& args ){
+		${NoArgNumCheck}int iLen = args.Length();
+		${NoArgNumCheck}if( CScript::CheckArgs( $Len )) return v8::Undefined();
+		$Defs
+		${PreRet}CScript::$FuncName($Args)$PostRet
+	}
+-----
 	static v8::Handle<v8::Value> Func_$FuncName( const v8::Arguments& args ){
 		${NoArgNumCheck}int iLen = args.Length();
 		${NoArgNumCheck}if( CScript::CheckArgs( $Len )) return v8::Undefined();
 		$Defs
 		$param->{ Class } *thisObj = CScript::GetThis<$param->{ Class }>( args.This());
 		if( !thisObj ) return v8::Undefined();
-		${RetVar}thisObj->$FuncName($Args);
-		
-		return $RetValue;
-	}
------
-			$param->{ FunctionIF } .= << "-----" if( $param->{ bGlobal } );
-	static v8::Handle<v8::Value> Func_$FuncName( const v8::Arguments& args ){
-		${NoArgNumCheck}int iLen = args.Length();
-		${NoArgNumCheck}if( CScript::CheckArgs( $Len )) return v8::Undefined();
-		$Defs
-		${RetVar}CScript::$FuncName($Args);
-		
-		return $RetValue;
+		${PreRet}thisObj->$FuncName($Args)$PostRet
 	}
 -----
 		}
@@ -486,12 +478,12 @@ sub MakeJsIF {
 			$RealVar = $1;
 			
 			$Ret =
-				/\b(?:int|UINT)\b/	? "v8::Integer::New( obj->$RealVar )" :
-				/\bdouble\b/		? "v8::Number::New( obj->$RealVar )" :
-				/\bchar\b/			? "v8::String::New( obj->$RealVar )" :
-				/\bLPC?WSTR\b/		? "v8::String::New(( uint16_t *)obj->$RealVar )" :
-				/^v8::Handle\b/		? "obj->$RealVar" :
-									  "unknown ret type obj->$RealVar";
+				/\b(?:int|UINT)\b/		? "v8::Integer::New( obj->$RealVar )" :
+				/\bdouble\b/			? "v8::Number::New( obj->$RealVar )" :
+				/\bchar\b/				? "v8::String::New( obj->$RealVar )" :
+				/\bLPC?WSTR\b/			? "v8::String::New(( uint16_t *)obj->$RealVar )" :
+				/^v8::(Handle|Local)\b/	? "obj->$RealVar" :
+										  "unknown ret type obj->$RealVar";
 #-----
 			$AccessorIF .= << "-----";
 	static v8::Handle<v8::Value> Get_$JSvar( v8::Local<v8::String> propertyName, const v8::AccessorInfo& info ){
@@ -609,11 +601,11 @@ $param->{ FunctionIF }
 		tmpl->SetClassName( v8::String::New( "$param->{ JsClass }" ));
 		
 		// フィールドなどはこちらに
-		v8::Handle<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
+		v8::Local<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
 		inst->SetInternalFieldCount( 1 );
 $Accessor
 		// メソッドはこちらに
-		v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
+		v8::Local<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
 		proto->Set( v8::String::New( "Dispose" ), v8::FunctionTemplate::New( Func_Dispose ));
 $Function
 $Const

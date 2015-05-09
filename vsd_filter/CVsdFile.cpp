@@ -20,7 +20,7 @@
 
 /*** ファイルオープン *******************************************************/
 
-v8::Handle<v8::Value> CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
+int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 	
 	LPCWSTR pMode = szMode;
 	
@@ -30,7 +30,8 @@ v8::Handle<v8::Value> CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 			wcschr( szMode, L'w' ) != NULL &&
 			!IsFileWriteEnabled()
 		){
-			return V8Error( "write operation not permitted by user." );
+			V8Error( "write operation not permitted by user." );
+			return -1;
 		}
 	#endif
 	
@@ -66,7 +67,8 @@ v8::Handle<v8::Value> CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 		m_fp = _wfopen( szFile, szMode );
 	}
 	
-	return m_fp != NULL ? V8Int( 0 ) : V8Error( "can't open file" );
+	if( m_fp == NULL ) V8Error( "can't open file" );
+	return 0;
 }
 
 /*** ファイルクローズ *******************************************************/
@@ -87,13 +89,19 @@ void CVsdFile::Close( void ){
 v8::Handle<v8::Value> CVsdFile::ReadLine( void ){
 	*m_cBuf = '\0';
 	
-	if( !m_fp ) return V8ErrorClosedHandle;
+	if( !m_fp ){
+		V8ErrorClosedHandle;
+		return v8::Undefined();
+	}
 	
 	switch( m_uMode ){
 		case MODE_NORMAL:		fgets( m_cBuf, FILEBUF_LEN, m_fp );
 		Case MODE_GZIP:			gzgets( m_gzfp, m_cBuf, FILEBUF_LEN );
 		
-		Case MODE_ZIP:			return V8ErrorZipNotOpened;
+		Case MODE_ZIP: {
+			V8ErrorZipNotOpened;
+			return v8::Undefined();
+		}
 		
 		Case MODE_ZIP_OPENED: {
 			
@@ -120,30 +128,38 @@ v8::Handle<v8::Value> CVsdFile::ReadLine( void ){
 
 /*** ラインライト ***********************************************************/
 
-v8::Handle<v8::Value> CVsdFile::WriteLine( char *str ){
+int CVsdFile::WriteLine( char *str ){
 	
 	if( m_fp ) switch( m_uMode ){
-		case MODE_NORMAL:		return V8Int( fputs( str, m_fp ));
-		case MODE_GZIP:			return V8Int( gzputs( m_gzfp, str ));
+		case MODE_NORMAL:		return fputs( str, m_fp );
+		case MODE_GZIP:			return gzputs( m_gzfp, str );
 		
 		case MODE_ZIP:
-		case MODE_ZIP_OPENED:	return V8ErrorZipNotSupported;
+		case MODE_ZIP_OPENED: {
+			V8ErrorZipNotSupported;
+			return 0;
+		}
 	}
-	return V8ErrorClosedHandle;;
+	V8ErrorClosedHandle;
+	return 0;
 }
 
 /*** seek *******************************************************************/
 
-v8::Handle<v8::Value> CVsdFile::Seek( int iOffs, int iOrg ){
+int CVsdFile::Seek( int iOffs, int iOrg ){
 	
 	if( m_fp ) switch( m_uMode ){
-		case MODE_NORMAL:		return V8Int( fseek( m_fp, iOffs, iOrg ));
-		case MODE_GZIP:			return V8Int( gzseek( m_gzfp, iOffs, iOrg ) >= 0 ? 0 : -1 );
+		case MODE_NORMAL:		return fseek( m_fp, iOffs, iOrg );
+		case MODE_GZIP:			return gzseek( m_gzfp, iOffs, iOrg ) >= 0 ? 0 : -1;
 		
 		case MODE_ZIP:
-		case MODE_ZIP_OPENED:	return V8ErrorZipNotSupported;
+		case MODE_ZIP_OPENED: {
+			V8ErrorZipNotSupported;
+			return 0;
+		}
 	}
-	return V8ErrorClosedHandle;
+	V8ErrorClosedHandle;
+	return 0;
 }
 
 /*** バイナリリード *********************************************************/
@@ -172,32 +188,39 @@ UCHAR *CVsdFile::ReadBin( int iSize ){
 
 /*** バイナリライト *********************************************************/
 
-v8::Handle<v8::Value>  CVsdFile::WriteBin( void *pBuf, int iSize ){
+int CVsdFile::WriteBin( void *pBuf, int iSize ){
 	if( m_fp ) switch( m_uMode ){
-		case MODE_NORMAL:		return V8Int( fwrite( pBuf, 1, iSize, m_fp ));
-		case MODE_GZIP:			return V8Int( gzread( m_gzfp, pBuf, iSize ));
+		case MODE_NORMAL:		return fwrite( pBuf, 1, iSize, m_fp );
+		case MODE_GZIP:			return gzread( m_gzfp, pBuf, iSize );
 		
 		case MODE_ZIP:
-		case MODE_ZIP_OPENED:	return V8ErrorZipNotSupported;
+		case MODE_ZIP_OPENED: {
+			V8ErrorZipNotSupported;
+			return 0;
+		}
 	}
-	return V8ErrorClosedHandle;
+	V8ErrorClosedHandle;
+	return 0;
 }
 
 /*** eof チェック ***********************************************************/
 
-v8::Handle<v8::Value> CVsdFile::IsEOF( void ){
+int CVsdFile::IsEOF( void ){
 	if( m_fp ) switch( m_uMode ){
-		case MODE_NORMAL:		return V8Int( feof( m_fp ));
-		case MODE_GZIP:			return V8Int( gzeof( m_gzfp ));
+		case MODE_NORMAL:		return feof( m_fp );
+		case MODE_GZIP:			return gzeof( m_gzfp );
 		
-		case MODE_ZIP:			return V8ErrorZipNotOpened;
+		case MODE_ZIP: {
+			V8ErrorZipNotSupported;
+			return 0;
+		}
 		
-		case MODE_ZIP_OPENED: return V8Int(
+		case MODE_ZIP_OPENED: return
 			!( m_uFlag & FLAG_EOF ) ? 0 :
-			m_uBufPtr == m_uBufSize ? -1 : 0
-		);
+			m_uBufPtr == m_uBufSize ? -1 : 0;
 	}
-	return V8ErrorClosedHandle;
+	V8ErrorClosedHandle;
+	return 0;
 }
 
 /*** zip 次のファイル *******************************************************/
@@ -211,7 +234,8 @@ v8::Handle<v8::Value> CVsdFile::ZipNextFile( void ){
 	
 	// zip じゃなければ ret
 	if( !( MODE_ZIP <= m_uMode && m_uMode <= MODE_ZIP_OPENED )){
-		return V8Error( "not opened by zip-mode" );
+		V8Error( "not opened by zip-mode" );
+		return v8::Undefined();
 	}
 	
 	m_uFlag &= ~FLAG_EOF;	// eof クリア
@@ -239,7 +263,8 @@ v8::Handle<v8::Value> CVsdFile::ZipNextFile( void ){
 				NULL, 0, NULL, 0
 			) != UNZ_OK
 		){
-			return V8Error( "zlib: unzGetCurrentFileInfo failed (maybe wrong zip format?)" );;
+			V8Error( "zlib: unzGetCurrentFileInfo failed (maybe wrong zip format?)" );
+			return v8::Undefined();
 		}
 		
 		// unicode 変換
@@ -260,7 +285,8 @@ v8::Handle<v8::Value> CVsdFile::ZipNextFile( void ){
 		return v8strFileName;
 	}
 	
-	return V8Error( "zlib: can't open file in zip (maybe wrong zip format?)" );;
+	V8Error( "zlib: can't open file in zip (maybe wrong zip format?)" );
+	return v8::Undefined();
 }
 
 /*** zip ファイルの body リード *********************************************/

@@ -67,7 +67,7 @@ CScript::~CScript(){
 LPWSTR CScript::ReportException( LPWSTR pMsg, TryCatch& try_catch ){
 	HandleScope handle_scope;
 	String::Value exception( try_catch.Exception());
-	Handle<Message> message = try_catch.Message();
+	Local<Message> message = try_catch.Message();
 	
 	if( !pMsg ) pMsg = new WCHAR[ MSGBUF_SIZE ];
 	UINT	u = 0;
@@ -303,7 +303,7 @@ void CScript::Initialize( void ){
 	HandleScope handle_scope;
 	
 	// グローバルオブジェクトの生成
-	Handle<ObjectTemplate> global = ObjectTemplate::New();
+	Local<ObjectTemplate> global = ObjectTemplate::New();
 	
 	// Image クラス登録
 	CVsdImageIF::InitializeClass( global );
@@ -413,7 +413,7 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 		while( *p != '\0' && *p++ != 0xA );
 	}
 	
-	Handle<Script> script = Script::Compile(
+	Local<Script> script = Script::Compile(
 		String::New( szBuf ), String::New(( uint16_t *)szFileName )
 	);
 	
@@ -425,7 +425,7 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 	}
 	
 	// とりあえず初期化処理
-	Handle<Value> result = script->Run();
+	Local<Value> result = script->Run();
 	
 	return m_uError = ERR_OK;
 }
@@ -449,9 +449,11 @@ UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_Context );
 	
-	Handle<Value> Args[] = {
-		str0 ? String::New(( uint16_t *)str0 ) : v8::Undefined()
-	};
+	Local<Value> Args[ 1 ];
+	
+	if( str0 ) Args[ 0 ] = String::New(( uint16_t *)str0 );
+	else Args[ 0 ] = LocalUndefined();
+
 	return RunArg( szFunc, 1, Args, bNoFunc );
 }
 
@@ -462,10 +464,13 @@ UINT CScript::Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc )
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_Context );
 	
-	Handle<Value> Args[] = {
-		str0 ? String::New(( uint16_t *)str0 ) : v8::Undefined(),
-		str1 ? String::New(( uint16_t *)str1 ) : v8::Undefined()
-	};
+	Local<Value> Args[ 2 ];
+
+	if( str0 ) Args[ 0 ] = String::New(( uint16_t *)str0 );
+	else Args[ 0 ] = LocalUndefined();
+	if( str1 ) Args[ 1 ] = String::New(( uint16_t *)str1 );
+	else Args[ 1 ] = LocalUndefined();
+
 	return RunArg( szFunc, 2, Args, bNoFunc );
 }
 
@@ -480,7 +485,7 @@ UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bN
 		swprintf( m_szErrorMsg, MSGBUF_SIZE, L"Undefined function \"%s()\"\n", szFunc );
 		return m_uError = ERR_SCRIPT;
 	}
-	Handle<Value> result = hFunction->Call( m_Context->Global(), iArgNum, Args );
+	Local<Value> result = hFunction->Call( m_Context->Global(), iArgNum, Args );
 	
 	if( try_catch.HasCaught()){
 		m_szErrorMsg = ReportException( m_szErrorMsg, try_catch );

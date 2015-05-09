@@ -24,19 +24,19 @@ class CVsdFile {
 		Close();
 	}
 	
-	v8::Handle<v8::Value> Open( LPCWSTR szFile, LPCWSTR szMode );	// !js_func
+	int Open( LPCWSTR szFile, LPCWSTR szMode );	// !js_func
 	void Close( void ); // !js_func
 	v8::Handle<v8::Value> ReadLine( void ); // !js_func
-	v8::Handle<v8::Value> WriteLine( char *str ); // !js_func
-	v8::Handle<v8::Value> Seek( int iOffs, int iOrg );	// !js_func
-	v8::Handle<v8::Value> IsEOF( void ); // !js_func
+	int WriteLine( char *str ); // !js_func
+	int Seek( int iOffs, int iOrg );	// !js_func
+	int IsEOF( void ); // !js_func
 	
 	v8::Handle<v8::Value> ZipNextFile( void ); // !js_func
 	int ReadZip( void );
 	
 	// バイナリアクセス
 	UCHAR *ReadBin( int iSize );
-	v8::Handle<v8::Value> WriteBin( void *pBuf, int iSize );
+	int WriteBin( void *pBuf, int iSize );
 	
 	int ReadChar	( void ){ return *( char *)ReadBin( 1 ); }	// !js_func
 	int ReadUChar	( void ){ return *( UCHAR *)ReadBin( 1 ); }	// !js_func
@@ -75,27 +75,27 @@ class CVsdFile {
 		);
 	}
 	
-	v8::Handle<v8::Value> WriteChar	( int iVal ){ return WriteBin( &iVal, 1 ); }	// !js_func
-	v8::Handle<v8::Value> WriteShortL	( int iVal ){ return WriteBin( &iVal, 2 ); }	// !js_func
+	int WriteChar	( int iVal ){ return WriteBin( &iVal, 1 ); }	// !js_func
+	int WriteShortL	( int iVal ){ return WriteBin( &iVal, 2 ); }	// !js_func
 	
-	v8::Handle<v8::Value> WriteIntL( double dVal ){	// !js_func
+	int WriteIntL( double dVal ){	// !js_func
 		dVal += ( double )( 1 << 31 ) * 2;
 		UINT uTmp = ( UINT )fmod( dVal, ( double )( 1 << 31 ) * 2 );
 		return WriteBin( &uTmp, 4 );
 	}
 	
-	v8::Handle<v8::Value> WriteFloat ( double dVal ){	// !js_func
+	int WriteFloat ( double dVal ){	// !js_func
 		float fVal = ( float )dVal;
 		return WriteBin( &fVal, 4 );
 	}
-	v8::Handle<v8::Value> WriteDouble( double dVal ){ return WriteBin( &dVal, 8 ); }	// !js_func
+	int WriteDouble( double dVal ){ return WriteBin( &dVal, 8 ); }	// !js_func
 	
-	v8::Handle<v8::Value> WriteShortB( int iVal ){	// !js_func
+	int WriteShortB( int iVal ){	// !js_func
 		int iTmp = (( UINT )iVal >> 8 ) | (( iVal & 0xFF ) << 8 );
 		return WriteShortL( iTmp );
 	}
 	
-	v8::Handle<v8::Value> WriteIntB( double dVal ){	// !js_func
+	int WriteIntB( double dVal ){	// !js_func
 		dVal += ( double )( 1 << 31 ) * 2;
 		UINT uTmp = ( UINT )fmod( dVal, ( double )( 1 << 31 ) * 2 );
 		UINT uTmp2 =

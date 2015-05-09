@@ -384,8 +384,8 @@ void CVsdFilter::AddAccessorSub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> 
 	
 	char szBuf[ 256 ];
 	
-	v8::Handle<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
-	v8::Handle<v8::ObjectTemplate> inst  = tmpl->InstanceTemplate();
+	v8::Local<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
+	v8::Local<v8::ObjectTemplate> inst  = tmpl->InstanceTemplate();
 	std::map<std::string, CLog *>::iterator it;
 	
 	for( it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it ){
