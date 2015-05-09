@@ -109,7 +109,7 @@ function Read_kml( Files ){
 						Log.Latitude [ Cnt - 1 ] != Log.Latitude [ Cnt ]
 					){
 						// 60km/h における所要時間を求める
-						Log.Time[ Cnt ] = Log.Time[ Cnt - 1 ] + GetDistance(
+						Log.Time[ Cnt ] = Log.Time[ Cnt - 1 ] + GetDistanceByLngLat(
 							Log.Longitude[ Cnt - 1 ],
 							Log.Latitude [ Cnt - 1 ],
 							Log.Longitude[ Cnt ],
@@ -125,21 +125,4 @@ function Read_kml( Files ){
 	}
 	if( bMyTracks ) SmoothLowFreqLog();
 	return Cnt;
-	
-	// 緯度・経度から距離算出
-	function GetDistance( dLong0, dLati0, dLong1, dLati1 ){
-		var a	= 6378137.000;
-		var b	= 6356752.314245;
-		var e2	= ( a * a - b * b ) / ( a * a );
-		var ToRAD = Math.PI / 180;
-		
-		var dx	= ( dLong1 - dLong0 ) * ToRAD;
-		var dy	= ( dLati1 - dLati0 ) * ToRAD;
-		var uy	= ( dLati0 + dLati1 ) / 2 * ToRAD;
-		var W	= Math.sqrt( 1 - e2 * Math.sin( uy ) * Math.sin( uy ));
-		var M	= a * ( 1 - e2 ) / Math.pow( W, 3 );
-		var N	= a / W;
-		
-		return	Math.sqrt( dy * dy * M * M + Math.pow( dx * N * Math.cos( uy ), 2 ));
-	}
 }

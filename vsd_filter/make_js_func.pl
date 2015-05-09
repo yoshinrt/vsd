@@ -366,32 +366,17 @@ sub MakeJsIF {
 				}
 				
 				elsif( $Type eq 'double' ){
-					if( defined( $Default )){
-						$Args[ $ArgNum ] = "iLen <= $ArgPos ? $Default : args[ $ArgPos ]->NumberValue()";
-						--$ArgMin;
-					}else{
-						$Args[ $ArgNum ] = "args[ $ArgPos ]->NumberValue()";
-					}
+					$Args[ $ArgNum ] = "args[ $ArgPos ]->NumberValue()";
 				}
 				
 				elsif( $Type eq 'int' || $Type eq 'UINT' ){
 					# int/UINT ·¿
-					if( defined( $Default )){
-						$Args[ $ArgNum ] = "iLen <= $ArgPos ? $Default : args[ $ArgPos ]->Int32Value()";
-						--$ArgMin;
-					}else{
-						$Args[ $ArgNum ] = "args[ $ArgPos ]->Int32Value()";
-					}
+					$Args[ $ArgNum ] = "args[ $ArgPos ]->Int32Value()";
 				}
 				
 				elsif( $Type eq 'CPixelArg' ){
 					# (¡¦¢Ï¡¦)¥é¥ô¥£!!
-					if( defined( $Default )){
-						$Args[ $ArgNum ] = "iLen <= $ArgPos ? $Default : CPixel( args[ $ArgPos ]->Int32Value())";
-						--$ArgMin;
-					}else{
-						$Args[ $ArgNum ] = "CPixel( args[ $ArgPos ]->Int32Value())";
-					}
+					$Args[ $ArgNum ] = "CPixel( args[ $ArgPos ]->Int32Value())";
 				}
 				
 				elsif( $Type eq 'v8Array' ){
@@ -411,7 +396,13 @@ sub MakeJsIF {
 				else{
 					$Args[ $ArgNum ] = "????";
 				}
-				++$ArgMin;
+				
+				if( defined( $Default )){
+					$Args[ $ArgNum ] = "iLen <= $ArgPos ? $Default : $Args[ $ArgNum ]";
+				}else{
+					++$ArgMin;
+				}
+				
 				++$ArgNum;
 			}
 			
@@ -476,7 +467,7 @@ sub MakeJsIF {
 		${NoArgNumCheck}int iLen = args.Length();
 		${NoArgNumCheck}if( CScript::CheckArgs( $Len )) return v8::Undefined();
 		$Defs
-		CScript::$FuncName($Args);
+		${RetVar}CScript::$FuncName($Args);
 		
 		return $RetValue;
 	}

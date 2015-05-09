@@ -240,48 +240,32 @@ static v8::Handle<v8::Value> Func_Sprintf( const v8::Arguments& args ){
 
 /*** Print ******************************************************************/
 
-void CScript::Print( const v8::Arguments& args ){
-	int iLen = args.Length();
-	if( CScript::CheckArgs( iLen >= 1 )) return;
-	
-	if( iLen == 1 ){
-		v8::String::Value str( args[ 0 ]);
-		CVsdFilter::Print(( LPCWSTR )*str );
-	}else{
-		LPCWSTR wsz = Sprintf( args );
-		CVsdFilter::Print( wsz );
-		delete [] wsz;
-	}
+void CScript::Printf( const v8::Arguments& args ){
+	LPCWSTR wsz = Sprintf( args );
+	CVsdFilter::Print( wsz );
+	delete [] wsz;
 }
 
-void CScript::MessageBox( const v8::Arguments& args ){
-	int iLen = args.Length();
-	if( CScript::CheckArgs( iLen >= 1 )) return;
-	
-	if( iLen == 1 ){
-		v8::String::Value str( args[ 0 ]);
-		MessageBoxW( NULL, ( LPCWSTR )*str, L"VSD filter JavaScript message", MB_OK );
-	}else{
-		LPCWSTR wsz = Sprintf( args );
-		MessageBoxW( NULL, wsz, L"VSD filter JavaScript message", MB_OK );
-		delete [] wsz;
-	}
+void CScript::Print( LPCWSTR szMsg ){
+	CVsdFilter::Print( szMsg );
+}
+
+int CScript::MessageBox(
+	LPCWSTR szMsg,
+	LPCWSTR szCaption,
+	UINT	uType
+){
+	return MessageBoxW( NULL, szMsg,
+		szCaption ? szCaption : L"VSD filter JavaScript message",
+		uType
+	);
 }
 
 void CScript::DebugPrint( const v8::Arguments& args ){
-	int iLen = args.Length();
-	if( CScript::CheckArgs( iLen >= 1 )) return;
-	
-	if( iLen == 1 ){
-		v8::String::Value str( args[ 0 ]);
-		OutputDebugStringW(( LPCWSTR )*str );
-		OutputDebugStringW( L"\n" );
-	}else{
-		LPCWSTR wsz = Sprintf( args );
-		OutputDebugStringW( wsz );
-		OutputDebugStringW( L"\n" );
-		delete [] wsz;
-	}
+	LPCWSTR wsz = Sprintf( args );
+	OutputDebugStringW( wsz );
+	OutputDebugStringW( L"\n" );
+	delete [] wsz;
 }
 
 /*** include ****************************************************************/

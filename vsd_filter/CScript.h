@@ -9,6 +9,7 @@
 #pragma once
 
 #include "CSemaphore.h"
+#include "CVsdLog.h"
 #include "error_code.h"
 
 #define V8AnyError( type, msg )	v8::ThrowException( v8::Exception::type( v8::String::New( msg )))
@@ -55,9 +56,23 @@ class CScript {
 	
 	// Global オブジェクト
 	static void DebugPrint( const v8::Arguments& args );	// !js_func
-	static void MessageBox( const v8::Arguments& args );	// !js_func
-	static void Print( const v8::Arguments& args );	// !js_func
+	static int MessageBox(	// !js_func
+		LPCWSTR szMsg,
+		LPCWSTR szCaption,	// !default:NULL
+		UINT	uType		// !default:MB_OK
+	);
+	
+	static void Print( LPCWSTR szMsg );	// !js_func
+	static void Printf( const v8::Arguments& args );	// !js_func
 	static LPWSTR Sprintf( const v8::Arguments& args );
+	
+	// 距離取得
+	static double GetDistanceByLngLat(	// !js_func
+		double dLong0, double dLati0,
+		double dLong1, double dLati1
+	){
+		return CVsdLog::GPSLogGetLength( dLong0, dLati0, dLong1, dLati1 );
+	}
 	
 	// this へのアクセスヘルパ
 	template<typename T>

@@ -332,7 +332,7 @@ class CVsdLog {
 	
 	int ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog *&pLapLog );
 	
-	double GPSLogGetLength(
+	static double GPSLogGetLength(
 		double dLong0, double dLati0,
 		double dLong1, double dLati1
 	);

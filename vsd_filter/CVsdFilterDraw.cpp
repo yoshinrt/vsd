@@ -643,7 +643,9 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, CPixelArg yc ){
 				y2 = EdgeList[ u ].y;
 			}
 			
-			for( int y = y1; y <= y2; ++y ){
+			PutPixel( EdgeList[ u ].x, EdgeList[ u ].y, yc, IMG_FILL );
+			
+			for( int y = y1 + 1; y < y2; ++y ){
 				PutPixel(
 					ToInt(
 						( EdgeList[ v ].dx - EdgeList[ u ].dx ) *
