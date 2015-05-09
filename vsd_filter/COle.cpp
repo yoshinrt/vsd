@@ -35,7 +35,7 @@ UINT COle::CreateInstance( LPCWSTR strServer ){
 /*** JavaScript IF èâä˙âªí«â¡èàóù *******************************************/
 
 void COle::InitJS( v8::Local<v8::FunctionTemplate> tmpl ){
-	v8::Handle<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
+	v8::Local<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
 	// Default function ìoò^
 	inst->SetCallAsFunctionHandler( COle::CallAsFunctionHandler, v8::Int32::New( 0 ));
 }
@@ -65,7 +65,7 @@ v8::Handle<v8::Value> COle::CallAsFunctionHandler(
 ){
 	v8::HandleScope handle_scope;
 	COle *obj = CScript::GetThis<COle>( args.This());
-	if( !obj ) return v8::Undefined();
+	if( !obj ) return LocalUndefined();
 	
 	return handle_scope.Close(
 		obj->Invoke(
@@ -216,9 +216,9 @@ HRESULT COle::AddOLEFunction( v8::Local<v8::Object> ThisObj, ITypeInfo *pTypeInf
 
 /*** IDispatch -> ActiveXObject *********************************************/
 
-v8::Handle<v8::Value> COle::CreateActiveXObject(
+v8::Local<v8::Value> COle::CreateActiveXObject(
 	IDispatch *pDispatch,
-	v8::Handle<v8::Context> Context
+	v8::Local<v8::Context> Context
 ){
 	// ActiveXObject Ç New Ç∑ÇÈ
 	v8::Local<v8::Function> hFunction = v8::Local<v8::Function>::Cast(
@@ -228,7 +228,7 @@ v8::Handle<v8::Value> COle::CreateActiveXObject(
 		v8::ThrowException( v8::Exception::Error( v8::String::New(
 			"Internal error : Can't call ActiveXOjbect constructor"
 		)));
-		return v8::Undefined();
+		return LocalUndefined();
 	}
 	
 	v8::Local<v8::Object> JSObj = hFunction->NewInstance( 0, NULL );
@@ -251,27 +251,50 @@ struct oleparam {
 	OLECHAR** pNamedArgs;
 };
 
+void COle::V8Array2SafeArray(
+	v8::Local<v8::Context> Context,
+	v8::Local<v8::Array> val,
+	SAFEARRAY *psa,
+	long *pUB, long *pID,
+	int iMaxDim, int iDim
+){
+	VARIANT variant;
+	
+	for( pID[ iDim ] = 0; pID[ iDim ] <= pUB[ iDim ]; ++pID[ iDim ]){
+		if( iDim == iMaxDim - 1 ){
+			// óvëfÇèëÇ≠
+			HRESULT hr = SafeArrayPtrOfIndex( psa, pID, &V_BYREF( &variant ));
+			if( FAILED( hr )) break;
+			Val2Variant( val->Get( pID[ iDim ]), &variant, Context );
+		}else{
+			// éq array Ç walk
+			V8Array2SafeArray( Context, v8::Local<v8::Array>::Cast( val->Get( pID[ iDim ])), psa, pUB, pID, iMaxDim, iDim + 1 );
+		}
+	}
+}
+
 void COle::Val2Variant(
 	v8::Local<v8::Value> val,
 	VARIANT *var,
-	v8::Handle<v8::Context> Context
+	v8::Local<v8::Context> Context
 ){
 #if 0
 	struct oledata *pole;
-	if(rb_obj_is_kind_of(val, cWIN32OLE)) {
-		Data_Get_Struct(val, struct oledata, pole);
-		OLE_ADDREF(pole->pDispatch);
-		V_VT(var) = VT_DISPATCH;
-		V_DISPATCH(var) = pole->pDispatch;
+	if( rb_obj_is_kind_of( val, cWIN32OLE )){
+		Data_Get_Struct( val, struct oledata, pole );
+		OLE_ADDREF( pole->pDispatch );
+		V_VT( var ) = VT_DISPATCH;
+		V_DISPATCH( var ) = pole->pDispatch;
 		return;
 	}
-	if (rb_obj_is_kind_of(val, rb_cTime)) {
-		V_VT(var) = VT_DATE;
-		V_DATE(var) = time_object2date(val);
+	if( rb_obj_is_kind_of( val, rb_cTime )){
+		V_VT( var ) = VT_DATE;
+		V_DATE( var ) = time_object2date( val );
 		return;
 	}
+#endif
 	if( val->IsArray()){
-		v8::Handle<v8::Value> val1;
+		v8::Local<v8::Value> val1;
 		long dim = 0;
 		int  i = 0;
 
@@ -281,53 +304,48 @@ void COle::Val2Variant(
 		long	  *pub, *pid;
 
 		val1 = val;
-		while(TYPE(val1) == T_ARRAY) {
-			val1 = rb_ary_entry(val1, 0);
+		while( val1->IsArray()){
+			val1 = v8::Local<v8::Array>::Cast( val1 )->Get( 0 );
 			dim += 1;
 		}
-		psab = ALLOC_N(SAFEARRAYBOUND, dim);
-		pub  = ALLOC_N(long, dim);
-		pid  = ALLOC_N(long, dim);
+		psab = new SAFEARRAYBOUND[ dim ];
+		pub  = new long[ dim ];
+		pid  = new long[ dim ];
 
-		if(!psab || !pub || !pid) {
-			if(pub) free(pub);
-			if(psab) free(psab);
-			if(pid) free(pid);
-			rb_raise(rb_eRuntimeError, "memory allocate error");
+		if( !psab || !pub || !pid ){
+			if( pub ) delete [] pub;
+			if( psab ) delete [] psab;
+			if( pid ) delete [] pid;
+			V8Error( "memory allocate error" );
 		}
 		val1 = val;
 		i = 0;
-		while(TYPE(val1) == T_ARRAY) {
-			psab[ i ].cElements = RARRAY(val1)->len;
+		while( val1->IsArray()){
+			psab[ i ].cElements = v8::Local<v8::Array>::Cast( val1 )->Length();
 			psab[ i ].lLbound = 0;
 			pub[ i ] = psab[ i ].cElements;
 			pid[ i ] = 0;
 			i ++;
-			val1 = rb_ary_entry(val1, 0);
+			val1 = v8::Local<v8::Array>::Cast( val1 )->Get( 0 );
 		}
 		/* Create and fill VARIANT array */
-		psa = SafeArrayCreate(VT_VARIANT, dim, psab);
-		if (psa == NULL)
-			hr = E_OUTOFMEMORY;
-		else
-			hr = SafeArrayLock(psa);
-		if (SUCCEEDED(hr)) {
-			ole_set_safe_array(dim-1, psa, pid, pub, val, dim-1);
-			hr = SafeArrayUnlock(psa);
+		psa = SafeArrayCreate( VT_VARIANT, dim, psab );
+		if( psa == NULL ) hr = E_OUTOFMEMORY;
+		else hr = SafeArrayLock( psa );
+		
+		if( SUCCEEDED( hr )){
+			V8Array2SafeArray( Context, v8::Local<v8::Array>::Cast( val ), psa, pub, pid, dim, 0 );
+			hr = SafeArrayUnlock( psa );
 		}
-		if(pub) free(pub);
-		if(psab) free(psab);
-		if(pid) free(pid);
-
-		if (SUCCEEDED(hr)) {
-			V_VT(var) = VT_VARIANT | VT_ARRAY;
-			V_ARRAY(var) = psa;
-		}
-		else if (psa != NULL)
-			SafeArrayDestroy(psa);
-	}else
-#endif
-	if( val->IsString()){
+		if( pub ) delete [] pub;
+		if( psab ) delete [] psab;
+		if( pid ) delete [] pid;
+		
+		if( SUCCEEDED( hr )){
+			V_VT( var ) = VT_VARIANT | VT_ARRAY;
+			V_ARRAY( var ) = psa;
+		}else if( psa != NULL ) SafeArrayDestroy( psa );
+	}else if( val->IsString()){
 		V_VT(var) = VT_BSTR;
 		v8::String::Value str( val );
 		V_BSTR(var) = SysAllocString(( LPCWSTR )*str );
@@ -354,14 +372,14 @@ void COle::Val2Variant(
 	}
 }
 
-v8::Handle<v8::Value> COle::SafeArray2V8Array(
-	v8::Handle<v8::Context> Context,
+v8::Local<v8::Value> COle::SafeArray2V8Array(
+	v8::Local<v8::Context> Context,
 	VARIANT& variant,
 	SAFEARRAY *psa,
 	long *pLB, long *pUB, long *pID,
 	int iMaxDim, int iDim
 ){
-	v8::Handle<v8::Array> ret = v8::Array::New( 0 );
+	v8::Local<v8::Array> ret = v8::Array::New( 0 );
 	
 	for( pID[ iDim ] = pLB[ iDim ]; pID[ iDim ] <= pUB[ iDim ]; ++pID[ iDim ]){
 		if( iDim == iMaxDim - 1 ){
@@ -377,8 +395,8 @@ v8::Handle<v8::Value> COle::SafeArray2V8Array(
 	return ret;
 }
 
-v8::Handle<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> Context ){
-	v8::Handle<v8::Value> ret = v8::Undefined();
+v8::Local<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Local<v8::Context> Context ){
+	v8::Local<v8::Value> ret;
 	
 	while( V_VT( pvar ) == ( VT_BYREF | VT_VARIANT )) pvar = V_VARIANTREF( pvar );
 	
@@ -387,8 +405,8 @@ v8::Handle<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> 
 		long i;
 		long *pID, *pLB, *pUB;
 		VARIANT variant;
-		v8::Handle<v8::Value> val;
-		v8::Handle<v8::Array> val2;
+		v8::Local<v8::Value> val;
+		v8::Local<v8::Array> val2;
 		
 		int dim = SafeArrayGetDim( psa );
 		VariantInit( &variant );
@@ -403,39 +421,13 @@ v8::Handle<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> 
 			if( pLB ) delete [] pLB;
 			if( pUB ) delete [] pUB;
 			V8Error( "memory allocate error" );
-			return ret;
+			return LocalUndefined();
 		}
 		
 		for( i = 0; i < dim; ++i ){
 			SafeArrayGetLBound( psa, i + 1, &pLB[ i ] );
 			SafeArrayGetUBound( psa, i + 1, &pUB[ i ] );
-			//SafeArrayGetLBound( psa, i + 1, &pID[ i ] );
 		}
-		
-		/*
-		HRESULT hr = SafeArrayLock( psa );
-		if( SUCCEEDED( hr )){
-			val2 = v8::Array::New( 0 );
-			
-			while( i >= 0 ){
-				hr = SafeArrayPtrOfIndex( psa, pID, &V_BYREF( &variant ));
-				if( FAILED( hr )) break;
-				
-				val = Variant2Val( &variant, Context );
-				val2->Set( val2->Length(), val );
-				for( i = dim - 1 ; i >= 0 ; --i ){
-					if( ++pID[ i ] <= pUB[ i ] ) break;
-					
-					pID[ i ] = pLB[ i ];
-					if( i > 0 ){
-						if( ret == Qnil ) ret = rb_ary_new();
-						ret->Set( ret->Length(), val2 );
-						val2 = rb_ary_new();
-					}
-				}
-			}
-			SafeArrayUnlock( psa );
-		}*/
 		
 		HRESULT hr = SafeArrayLock( psa );
 		if( SUCCEEDED( hr )){
@@ -452,10 +444,10 @@ v8::Handle<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> 
 	
 	switch( V_VT( pvar ) & ~VT_BYREF ){
 	  case VT_EMPTY:
-		ret = v8::Undefined();
+		return v8::Local<v8::Value>( *LocalUndefined());
 		
 	  Case VT_NULL:
-		ret = v8::Null();
+		return v8::Local<v8::Value>( *v8::Null());
 		
 	  Case VT_UI1:
 		ret = v8::Integer::New( V_ISBYREF( pvar ) ? *V_UI1REF( pvar ) : V_UI1( pvar ));
@@ -479,7 +471,9 @@ v8::Handle<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> 
 		ret = v8::Integer::New( V_ISBYREF( pvar ) ? *V_ERRORREF( pvar ) : V_ERROR( pvar ));
 		
 	  Case VT_BOOL:
-		ret = ( V_ISBYREF( pvar ) ? *V_BOOLREF( pvar ) : V_BOOL( pvar )) ? v8::True() : v8::False();
+		ret = v8::Local<v8::Value>( *(
+			( V_ISBYREF( pvar ) ? *V_BOOLREF( pvar ) : V_BOOL( pvar )) ? v8::True() : v8::False()
+		));
 		
 	  Case VT_DISPATCH:
 		ret = CreateActiveXObject( V_ISBYREF( pvar ) ? *V_DISPATCHREF( pvar ) : V_DISPATCH( pvar ), Context );
@@ -529,8 +523,8 @@ v8::Handle<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> 
 	return ret;
 }
 
-v8::Handle<v8::Value> COle::Invoke(
-	v8::Handle<v8::Context>	Context,
+v8::Local<v8::Value> COle::Invoke(
+	v8::Local<v8::Context>	Context,
 	DISPID DispID,
 	const v8::Arguments& args,
 	v8::Local<v8::Value> value,
@@ -626,10 +620,10 @@ v8::Handle<v8::Value> COle::Invoke(
 		VariantClear(&op.dp.rgvarg[ i ]);
 	}
 	
-	v8::Handle<v8::Value> ret;
+	v8::Local<v8::Value> ret;
 	if( FAILED( hr )) {
 		ThrowHResultError( hr );
-		ret = v8::Undefined();
+		ret = LocalUndefined();
 	}else{
 		ret = Variant2Val( &result, Context );
 		VariantClear(&result);

@@ -88,28 +88,37 @@ class COle {
 	UINT CreateInstance( LPCWSTR strServer );
 	static void InitJS( v8::Local<v8::FunctionTemplate> tmpl );
 	
-	static v8::Handle<v8::Value> CreateActiveXObject(
+	static v8::Local<v8::Value> CreateActiveXObject(
 		IDispatch *pDispatch,
-		v8::Handle<v8::Context> Context
+		v8::Local<v8::Context> Context
 	);
 	
 	// Ruby win32ole à⁄êAï®
+	static void V8Array2SafeArray(
+		v8::Local<v8::Context> Context,
+		v8::Local<v8::Array> val,
+		SAFEARRAY *psa,
+		long *pUB, long *pID,
+		int iMaxDim, int iDim
+	);
+	
 	static void Val2Variant(
 		v8::Local<v8::Value> val,
 		VARIANT *var,
-		v8::Handle<v8::Context> Context
+		v8::Local<v8::Context> Context
 	);
-	static v8::Handle<v8::Value> SafeArray2V8Array(
-		v8::Handle<v8::Context> Context,
+	
+	static v8::Local<v8::Value> SafeArray2V8Array(
+		v8::Local<v8::Context> Context,
 		VARIANT& variant,
 		SAFEARRAY *psa,
 		long *pLB, long *pUB, long *pID,
 		int iMaxDim, int iDim
 	);
 	
-	static v8::Handle<v8::Value> Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> Context );
-	v8::Handle<v8::Value> Invoke(
-		v8::Handle<v8::Context>	Context,
+	static v8::Local<v8::Value> Variant2Val( VARIANT *pvar, v8::Local<v8::Context> Context );
+	v8::Local<v8::Value> Invoke(
+		v8::Local<v8::Context>	Context,
 		DISPID DispID,
 		const 	v8::Arguments& args,
 		v8::Local<v8::Value> value,
