@@ -99,6 +99,14 @@ class COle {
 		VARIANT *var,
 		v8::Handle<v8::Context> Context
 	);
+	static v8::Handle<v8::Value> SafeArray2V8Array(
+		v8::Handle<v8::Context> Context,
+		VARIANT& variant,
+		SAFEARRAY *psa,
+		long *pLB, long *pUB, long *pID,
+		int iMaxDim, int iDim
+	);
+	
 	static v8::Handle<v8::Value> Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> Context );
 	v8::Handle<v8::Value> Invoke(
 		v8::Handle<v8::Context>	Context,

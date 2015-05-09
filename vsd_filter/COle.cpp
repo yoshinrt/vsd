@@ -271,7 +271,7 @@ void COle::Val2Variant(
 		return;
 	}
 	if( val->IsArray()){
-		VALUE val1;
+		v8::Handle<v8::Value> val1;
 		long dim = 0;
 		int  i = 0;
 
@@ -298,10 +298,10 @@ void COle::Val2Variant(
 		val1 = val;
 		i = 0;
 		while(TYPE(val1) == T_ARRAY) {
-			psab[i].cElements = RARRAY(val1)->len;
-			psab[i].lLbound = 0;
-			pub[i] = psab[i].cElements;
-			pid[i] = 0;
+			psab[ i ].cElements = RARRAY(val1)->len;
+			psab[ i ].lLbound = 0;
+			pub[ i ] = psab[ i ].cElements;
+			pid[ i ] = 0;
 			i ++;
 			val1 = rb_ary_entry(val1, 0);
 		}
@@ -354,198 +354,176 @@ void COle::Val2Variant(
 	}
 }
 
+v8::Handle<v8::Value> COle::SafeArray2V8Array(
+	v8::Handle<v8::Context> Context,
+	VARIANT& variant,
+	SAFEARRAY *psa,
+	long *pLB, long *pUB, long *pID,
+	int iMaxDim, int iDim
+){
+	v8::Handle<v8::Array> ret = v8::Array::New( 0 );
+	
+	for( pID[ iDim ] = pLB[ iDim ]; pID[ iDim ] <= pUB[ iDim ]; ++pID[ iDim ]){
+		if( iDim == iMaxDim - 1 ){
+			// 要素をpush
+			HRESULT hr = SafeArrayPtrOfIndex( psa, pID, &V_BYREF( &variant ));
+			if( FAILED( hr )) break;
+			ret->Set( ret->Length(), Variant2Val( &variant, Context ));
+		}else{
+			// 子 array を push
+			ret->Set( ret->Length(), SafeArray2V8Array( Context, variant, psa, pLB, pUB, pID, iMaxDim, iDim + 1 ));
+		}
+	}
+	return ret;
+}
+
 v8::Handle<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Handle<v8::Context> Context ){
 	v8::Handle<v8::Value> ret = v8::Undefined();
 	
-	while ( V_VT(pvar) == (VT_BYREF | VT_VARIANT) )
-		pvar = V_VARIANTREF(pvar);
-
-#if 0
-	if(V_ISARRAY(pvar)) {
-		SAFEARRAY *psa = V_ISBYREF(pvar) ? *V_ARRAYREF(pvar) : V_ARRAY(pvar);
+	while( V_VT( pvar ) == ( VT_BYREF | VT_VARIANT )) pvar = V_VARIANTREF( pvar );
+	
+	if( V_ISARRAY( pvar )){
+		SAFEARRAY *psa = V_ISBYREF( pvar ) ? *V_ARRAYREF( pvar ) : V_ARRAY( pvar );
 		long i;
 		long *pID, *pLB, *pUB;
 		VARIANT variant;
-		VALUE val;
-		VALUE val2;
-
-		int dim = SafeArrayGetDim(psa);
-		VariantInit(&variant);
-		V_VT(&variant) = (V_VT(pvar) & ~VT_ARRAY) | VT_BYREF;
-
-		pID = ALLOC_N(long, dim);
-		pLB = ALLOC_N(long, dim);
-		pUB = ALLOC_N(long, dim);
-
-		if(!pID || !pLB || !pUB) {
-			if(pID) free(pID);
-			if(pLB) free(pLB);
-			if(pUB) free(pUB);
-			rb_raise(rb_eRuntimeError, "memory allocate error");
+		v8::Handle<v8::Value> val;
+		v8::Handle<v8::Array> val2;
+		
+		int dim = SafeArrayGetDim( psa );
+		VariantInit( &variant );
+		V_VT( &variant ) = ( V_VT( pvar ) & ~VT_ARRAY ) | VT_BYREF;
+		
+		pID = new long[ dim ];
+		pLB = new long[ dim ];
+		pUB = new long[ dim ];
+		
+		if( !pID || !pLB || !pUB ){
+			if( pID ) delete [] pID;
+			if( pLB ) delete [] pLB;
+			if( pUB ) delete [] pUB;
+			V8Error( "memory allocate error" );
+			return ret;
 		}
-
-		ret = Qnil;
-
-		for(i = 0; i < dim; ++i) {
-			SafeArrayGetLBound(psa, i+1, &pLB[i]);
-			SafeArrayGetLBound(psa, i+1, &pID[i]);
-			SafeArrayGetUBound(psa, i+1, &pUB[i]);
+		
+		for( i = 0; i < dim; ++i ){
+			SafeArrayGetLBound( psa, i + 1, &pLB[ i ] );
+			SafeArrayGetUBound( psa, i + 1, &pUB[ i ] );
+			//SafeArrayGetLBound( psa, i + 1, &pID[ i ] );
 		}
-
-		hr = SafeArrayLock(psa);
-		if (SUCCEEDED(hr)) {
-			val2 = rb_ary_new();
-			while (i >= 0) {
-				hr = SafeArrayPtrOfIndex(psa, pID, &V_BYREF(&variant));
-				if (FAILED(hr))
-					break;
-
-				val = ole_variant2val(&variant);
-				rb_ary_push(val2, val);
-				for (i = dim-1 ; i >= 0 ; --i) {
-					if (++pID[i] <= pUB[i])
-						break;
-
-					pID[i] = pLB[i];
-					if (i > 0) {
-						if (ret == Qnil)
-							ret = rb_ary_new();
-						rb_ary_push(ret, val2);
+		
+		/*
+		HRESULT hr = SafeArrayLock( psa );
+		if( SUCCEEDED( hr )){
+			val2 = v8::Array::New( 0 );
+			
+			while( i >= 0 ){
+				hr = SafeArrayPtrOfIndex( psa, pID, &V_BYREF( &variant ));
+				if( FAILED( hr )) break;
+				
+				val = Variant2Val( &variant, Context );
+				val2->Set( val2->Length(), val );
+				for( i = dim - 1 ; i >= 0 ; --i ){
+					if( ++pID[ i ] <= pUB[ i ] ) break;
+					
+					pID[ i ] = pLB[ i ];
+					if( i > 0 ){
+						if( ret == Qnil ) ret = rb_ary_new();
+						ret->Set( ret->Length(), val2 );
 						val2 = rb_ary_new();
 					}
 				}
 			}
-			SafeArrayUnlock(psa);
-		}
-		if(pID) free(pID);
-		if(pLB) free(pLB);
-		if(pUB) free(pUB);
-		return (ret == Qnil) ? val2 : ret;
-	}
-#endif
-	switch(V_VT(pvar) & ~VT_BYREF){
-	case VT_EMPTY:
-		break;
-	case VT_NULL:
-		break;
-	case VT_UI1:
-		if(V_ISBYREF(pvar)) 
-			ret = v8::Integer::New(*V_UI1REF(pvar));
-		else 
-			ret = v8::Integer::New(V_UI1(pvar));
-		break;
-
-	case VT_I2:
-		if(V_ISBYREF(pvar))
-			ret = v8::Integer::New(*V_I2REF(pvar));
-		else 
-			ret = v8::Integer::New(V_I2(pvar));
-		break;
-
-	case VT_I4:
-		if(V_ISBYREF(pvar))
-			ret = v8::Integer::New(*V_I4REF(pvar));
-		else 
-			ret = v8::Integer::New(V_I4(pvar));
-		break;
-
-	case VT_R4:
-		if(V_ISBYREF(pvar))
-			ret = v8::Number::New(*V_R4REF(pvar));
-		else
-			ret = v8::Number::New(V_R4(pvar));
-		break;
-
-	case VT_R8:
-		if(V_ISBYREF(pvar))
-			ret = v8::Number::New(*V_R8REF(pvar));
-		else
-			ret = v8::Number::New(V_R8(pvar));
-		break;
-
-	case VT_BSTR:
-	{
-		if(V_ISBYREF(pvar))
-			ret = v8::String::New(( uint16_t *)*V_BSTRREF(pvar));
-		else
-			ret = v8::String::New(( uint16_t *)V_BSTR(pvar));
-		break;
-	}
-
-	case VT_ERROR:
-		if(V_ISBYREF(pvar))
-			ret = v8::Integer::New(*V_ERRORREF(pvar));
-		else
-			ret = v8::Integer::New(V_ERROR(pvar));
-		break;
-
-	case VT_BOOL:
-		if (V_ISBYREF(pvar))
-			ret = (*V_BOOLREF(pvar) ? v8::True() : v8::False());
-		else
-			ret = (V_BOOL(pvar) ? v8::True() : v8::False());
-		break;
-
-	case VT_DISPATCH:
-	{
-		IDispatch *pDispatch;
-
-		if (V_ISBYREF(pvar))
-			pDispatch = *V_DISPATCHREF(pvar);
-		else
-			pDispatch = V_DISPATCH(pvar);
+			SafeArrayUnlock( psa );
+		}*/
 		
-		ret = CreateActiveXObject( pDispatch, Context );
-		break;
-	}
-
-	case VT_UNKNOWN:
-	{
-		/* get IDispatch interface from IUnknown interface */
-		IUnknown *punk;
-		IDispatch *pDispatch;
-		HRESULT hr;
-
-		if (V_ISBYREF(pvar))
-			punk = *V_UNKNOWNREF(pvar);
-		else
-			punk = V_UNKNOWN(pvar);
-
-		if(punk != NULL) {
-		   hr = punk->QueryInterface( IID_IDispatch, (void **)&pDispatch);
-		   if(SUCCEEDED(hr)) {
-			   ret = CreateActiveXObject( pDispatch, Context );
-		   }
+		HRESULT hr = SafeArrayLock( psa );
+		if( SUCCEEDED( hr )){
+			ret = SafeArray2V8Array( Context, variant, psa, pLB, pUB, pID, dim, 0 );
+			SafeArrayUnlock( psa );
 		}
-		break;
+		
+		if( pID ) delete [] pID;
+		if( pLB ) delete [] pLB;
+		if( pUB ) delete [] pUB;
+		
+		return ret;
 	}
-
-#if 0
-	case VT_DATE:
-	{
-		DATE date;
-		if(V_ISBYREF(pvar))
-			date = *V_DATEREF(pvar);
-		else
-			date = V_DATE(pvar);
-
-		ret =  date2time_str(date);
-		break;
-	}
-	case VT_CY:
-#endif
-	default:
+	
+	switch( V_VT( pvar ) & ~VT_BYREF ){
+	  case VT_EMPTY:
+		ret = v8::Undefined();
+		
+	  Case VT_NULL:
+		ret = v8::Null();
+		
+	  Case VT_UI1:
+		ret = v8::Integer::New( V_ISBYREF( pvar ) ? *V_UI1REF( pvar ) : V_UI1( pvar ));
+		
+	  Case VT_I2:
+		ret = v8::Integer::New( V_ISBYREF( pvar ) ? *V_I2REF( pvar ) : V_I2( pvar ));
+		
+	  Case VT_I4:
+		ret = v8::Integer::New( V_ISBYREF( pvar ) ? *V_I4REF( pvar ) : V_I4( pvar ));
+		
+	  Case VT_R4:
+		ret = v8::Number::New( V_ISBYREF( pvar ) ? *V_R4REF( pvar ) : V_R4( pvar ));
+		
+	  Case VT_R8:
+		ret = v8::Number::New( V_ISBYREF( pvar ) ? *V_R8REF( pvar ) : V_R8( pvar ));
+		
+	  Case VT_BSTR:
+		ret = v8::String::New( V_ISBYREF( pvar ) ? ( uint16_t *)*V_BSTRREF( pvar ) : ( uint16_t *)V_BSTR( pvar ));
+		
+	  Case VT_ERROR:
+		ret = v8::Integer::New( V_ISBYREF( pvar ) ? *V_ERRORREF( pvar ) : V_ERROR( pvar ));
+		
+	  Case VT_BOOL:
+		ret = ( V_ISBYREF( pvar ) ? *V_BOOLREF( pvar ) : V_BOOL( pvar )) ? v8::True() : v8::False();
+		
+	  Case VT_DISPATCH:
+		ret = CreateActiveXObject( V_ISBYREF( pvar ) ? *V_DISPATCHREF( pvar ) : V_DISPATCH( pvar ), Context );
+		
+	  Case VT_UNKNOWN:
 		{
-		HRESULT hr;
-		VARIANT variant;
-		VariantInit(&variant);
-		hr = VariantChangeTypeEx(&variant, pvar, 
-								  LOCALE_SYSTEM_DEFAULT, 0, VT_BSTR);
-		if (SUCCEEDED(hr) && V_VT(&variant) == VT_BSTR) {
-			ret = v8::String::New(( uint16_t *)V_BSTR(&variant));
+			/* get IDispatch interface from IUnknown interface */
+			IUnknown *punk;
+			IDispatch *pDispatch;
+			HRESULT hr;
+			
+			punk = V_ISBYREF( pvar ) ? *V_UNKNOWNREF( pvar ) : V_UNKNOWN( pvar );
+			
+			if( punk != NULL ){
+				hr = punk->QueryInterface( IID_IDispatch, ( void **)&pDispatch );
+				if( SUCCEEDED( hr )) {
+					ret = CreateActiveXObject( pDispatch, Context );
+				}
+			}
+			break;
 		}
-		VariantClear(&variant);
-		break;
+		
+		/*
+	  case VT_DATE:
+		{
+			DATE date;
+			date = V_ISBYREF( pvar ) ? *V_DATEREF( pvar ) : V_DATE( pvar );
+			ret =  date2time_str( date );
+			break;
+		}
+	  case VT_CY:
+		*/
+		
+	  default:
+		{
+			HRESULT hr;
+			VARIANT variant;
+			VariantInit( &variant );
+			hr = VariantChangeTypeEx( &variant, pvar, LOCALE_SYSTEM_DEFAULT, 0, VT_BSTR );
+			if( SUCCEEDED( hr ) && V_VT( &variant ) == VT_BSTR ){
+				ret = v8::String::New(( uint16_t *)V_BSTR( &variant ));
+			}
+			VariantClear( &variant );
+			break;
 		}
 	}
 	return ret;
@@ -584,12 +562,12 @@ v8::Handle<v8::Value> COle::Invoke(
 		op.dp.rgvarg	= ALLOCA_N(VARIANTARG, op.dp.cArgs);
 		
 		for(i = 0; i < op.dp.cArgs; i++) {
-			VariantInit(&realargs[i]);
-			VariantInit(&op.dp.rgvarg[i]);
+			VariantInit(&realargs[ i ]);
+			VariantInit(&op.dp.rgvarg[ i ]);
 			
 			Val2Variant( args[ op.dp.cArgs - i - 1 ], &realargs[ i ], Context );
-			V_VT(&op.dp.rgvarg[i]) = VT_VARIANT | VT_BYREF;
-			V_VARIANTREF(&op.dp.rgvarg[i]) = &realargs[i];
+			V_VT(&op.dp.rgvarg[ i ]) = VT_VARIANT | VT_BYREF;
+			V_VARIANTREF(&op.dp.rgvarg[ i ]) = &realargs[ i ];
 		}
 	}
 	
@@ -619,7 +597,7 @@ v8::Handle<v8::Value> COle::Invoke(
 		if(op.dp.cArgs > 0) {
 			for(i = 0; i < op.dp.cArgs; i++) {
 				// ★prop セットの時ぬるぽ
-				Val2Variant( args[ i ], &op.dp.rgvarg[i], Context );
+				Val2Variant( args[ i ], &op.dp.rgvarg[ i ], Context );
 			}
 			memset(&excepinfo, 0, sizeof(EXCEPINFO));
 			hr = m_pApp->Invoke( DispID, 
@@ -627,7 +605,7 @@ v8::Handle<v8::Value> COle::Invoke(
 												 &op.dp, NULL,
 												 &excepinfo, &argErr);
 			for(i = 0; i < op.dp.cArgs; i++) {
-				VariantClear(&op.dp.rgvarg[i]);
+				VariantClear(&op.dp.rgvarg[ i ]);
 			}
 		}
 		/* mega kludge. if a method in WORD is called and we ask
@@ -645,7 +623,7 @@ v8::Handle<v8::Value> COle::Invoke(
 	}
 	/* clear dispatch parameter */
 	for(i = 0; i < op.dp.cArgs; i++) {
-		VariantClear(&op.dp.rgvarg[i]);
+		VariantClear(&op.dp.rgvarg[ i ]);
 	}
 	
 	v8::Handle<v8::Value> ret;
