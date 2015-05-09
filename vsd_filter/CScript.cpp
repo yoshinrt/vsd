@@ -171,7 +171,7 @@ LPWSTR CScript::Sprintf( const v8::Arguments& args ){
 		// arg 数チェック
 		if( args.Length() <= iArgNum ){
 			//  引数が足りないエラー
-			V8SyntaxError( "unmatch number of sprintf arg num" );
+			V8SyntaxError( "unmatch number of printf arg" );
 			goto ErrorExit;
 		}
 		
@@ -197,7 +197,7 @@ LPWSTR CScript::Sprintf( const v8::Arguments& args ){
 	
 	// 引数あまりチェック
 	if( args.Length() != iArgNum ){
-		V8SyntaxError( "unmatch number of sprintf arg num" );
+		V8SyntaxError( "unmatch number of printf arg" );
 		goto ErrorExit;
 	}
 	

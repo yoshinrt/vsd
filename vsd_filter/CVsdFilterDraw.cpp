@@ -1163,13 +1163,13 @@ void CVsdFilter::DrawMap(
 	// センター座標
 	for( int iStep = -1; iStep <= 1; iStep += 2 ){
 		int iX, iY;
-		int iPrevX = ( x1 + x2 ) / 2;
-		int iPrevY = ( y1 + y2 ) / 2;
-		int iOffsX = iPrevX - Lng2Pix( m_CurLog->Longitude(), iZoomLv );
-		int iOffsY = iPrevY - Lat2Pix( m_CurLog->Latitude(),  iZoomLv );
+		int iOffsX = ( x1 + x2 ) / 2 - Lng2Pix( m_CurLog->Longitude(), iZoomLv );
+		int iOffsY = ( y1 + y2 ) / 2 - Lat2Pix( m_CurLog->Latitude(),  iZoomLv );
+		int iPrevX = Lng2Pix( m_CurLog->Longitude( m_CurLog->m_iLogNum ), iZoomLv ) + iOffsX;
+		int iPrevY = Lat2Pix( m_CurLog->Latitude ( m_CurLog->m_iLogNum ), iZoomLv ) + iOffsY;
 		
 		for(
-			int iLogIdx = m_CurLog->m_iLogNum + ( iStep > 0 ? 1 : 0 );
+			int iLogIdx = m_CurLog->m_iLogNum + iStep;
 			0 <= iLogIdx && iLogIdx < m_CurLog->GetCnt();
 			iLogIdx += iStep
 		){
