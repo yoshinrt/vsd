@@ -160,7 +160,7 @@ LPWSTR CScript::Sprintf( const v8::Arguments& args ){
 		if(( p = wcschr( p, L'%' )) == NULL ) break;
 		
 		// 型フィールドサーチ
-		for( ++p; *p && wcschr( L"+-0123456789.#", *p ); ++p );
+		for( ++p; *p && wcschr( L"+-0123456789.# ", *p ); ++p );
 		
 		// %% だったら次いってみよー
 		if( *p == L'%' ){
