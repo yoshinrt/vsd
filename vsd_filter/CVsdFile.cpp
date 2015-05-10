@@ -135,12 +135,10 @@ int CVsdFile::WriteLine( char *str ){
 		case MODE_GZIP:			return gzputs( m_gzfp, str );
 		
 		case MODE_ZIP:
-		case MODE_ZIP_OPENED: {
-			V8ErrorZipNotSupported;
-			return 0;
-		}
+		case MODE_ZIP_OPENED:	V8ErrorZipNotSupported;
 	}
-	V8ErrorClosedHandle;
+	else V8ErrorClosedHandle;
+	
 	return 0;
 }
 
@@ -153,12 +151,10 @@ int CVsdFile::Seek( int iOffs, int iOrg ){
 		case MODE_GZIP:			return gzseek( m_gzfp, iOffs, iOrg ) >= 0 ? 0 : -1;
 		
 		case MODE_ZIP:
-		case MODE_ZIP_OPENED: {
-			V8ErrorZipNotSupported;
-			return 0;
-		}
+		case MODE_ZIP_OPENED:	V8ErrorZipNotSupported;
 	}
-	V8ErrorClosedHandle;
+	else V8ErrorClosedHandle;
+	
 	return 0;
 }
 
@@ -194,12 +190,9 @@ int CVsdFile::WriteBin( void *pBuf, int iSize ){
 		case MODE_GZIP:			return gzread( m_gzfp, pBuf, iSize );
 		
 		case MODE_ZIP:
-		case MODE_ZIP_OPENED: {
-			V8ErrorZipNotSupported;
-			return 0;
-		}
+		case MODE_ZIP_OPENED:	V8ErrorZipNotSupported;
 	}
-	V8ErrorClosedHandle;
+	else V8ErrorClosedHandle;
 	return 0;
 }
 
@@ -210,16 +203,13 @@ int CVsdFile::IsEOF( void ){
 		case MODE_NORMAL:		return feof( m_fp );
 		case MODE_GZIP:			return gzeof( m_gzfp );
 		
-		case MODE_ZIP: {
-			V8ErrorZipNotSupported;
-			return 0;
-		}
+		case MODE_ZIP:			V8ErrorZipNotSupported;
 		
 		case MODE_ZIP_OPENED: return
 			!( m_uFlag & FLAG_EOF ) ? 0 :
 			m_uBufPtr == m_uBufSize ? -1 : 0;
 	}
-	V8ErrorClosedHandle;
+	else V8ErrorClosedHandle;
 	return 0;
 }
 
@@ -228,8 +218,6 @@ int CVsdFile::IsEOF( void ){
 v8::Handle<v8::Value> CVsdFile::ZipNextFile( void ){
 	unz_file_info fileInfo;
 	
-	#define MAX_PATH_LEN	256
-	char szFileName[ MAX_PATH_LEN ];
 	LPWSTR	wszFileName = NULL;
 	
 	// zip じゃなければ ret
@@ -259,7 +247,7 @@ v8::Handle<v8::Value> CVsdFile::ZipNextFile( void ){
 		if(
 			unzGetCurrentFileInfo(
 				m_unzfp, &fileInfo,
-				szFileName, MAX_PATH_LEN - 1,
+				m_cBuf, FILEBUF_LEN - 1,
 				NULL, 0, NULL, 0
 			) != UNZ_OK
 		){
@@ -268,7 +256,7 @@ v8::Handle<v8::Value> CVsdFile::ZipNextFile( void ){
 		}
 		
 		// unicode 変換
-		StringNew( wszFileName, szFileName );
+		StringNew( wszFileName, m_cBuf );
 		
 		// '/' で終わっていたら dir なのでスキップ
 		int iLen = wcslen( wszFileName ) - 1;

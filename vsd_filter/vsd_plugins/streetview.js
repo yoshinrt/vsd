@@ -215,7 +215,7 @@ function Draw(){
 	date.setTime( Vsd.DateTime );
 	
 	Vsd.DrawText( 0, Y,
-		Sprintf( "Date: %04d/%02d/%02d", date.getFullYear(), date.getMonth(), date.getDate()),
+		Sprintf( "Date: %04d/%02d/%02d", date.getFullYear(), date.getMonth() + 1, date.getDate()),
 		FontM, FontColor
 	);
 	Y += FontM.Height;

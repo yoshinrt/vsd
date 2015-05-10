@@ -140,7 +140,12 @@ void CScript::Dispose( void ){
 
 #define SPRINTF_BUF_SIZE	1024
 
-LPWSTR CScript::Sprintf( const v8::Arguments& args ){
+LPWSTR CScript::SprintfSub( const v8::Arguments& args ){
+	
+	if( CScript::CheckArgs( args.Length() >= 1 )){
+		V8SyntaxError( "required sprintf format string" );
+		return NULL;
+	}
 	
 	// arg 用 buf
 	UINT *puArgBuf	= new UINT[ args.Length() * 2 ];
@@ -221,15 +226,10 @@ LPWSTR CScript::Sprintf( const v8::Arguments& args ){
 	return wszBuf;
 }
 
-static v8::Handle<v8::Value> Func_Sprintf( const v8::Arguments& args ){
+v8::Handle<v8::Value> CScript::Sprintf( const v8::Arguments& args ){
 	v8::HandleScope handle_scope;
 	
-	if( CScript::CheckArgs( args.Length() >= 1 )){
-		V8SyntaxError( "required sprintf format string" );
-		return v8::Undefined();
-	}
-	
-	LPWSTR str = CScript::Sprintf( args );
+	LPWSTR str = CScript::SprintfSub( args );
 	if( !str ) return v8::Undefined();
 	
 	v8::Local<v8::String> v8str = v8::String::New(( uint16_t *)str );
@@ -241,7 +241,7 @@ static v8::Handle<v8::Value> Func_Sprintf( const v8::Arguments& args ){
 /*** Print ******************************************************************/
 
 void CScript::Printf( const v8::Arguments& args ){
-	LPCWSTR wsz = Sprintf( args );
+	LPCWSTR wsz = SprintfSub( args );
 	if( wsz ){
 		CVsdFilter::Print( wsz );
 		delete [] wsz;
@@ -264,7 +264,7 @@ int CScript::MessageBox(
 }
 
 void CScript::DebugPrint( const v8::Arguments& args ){
-	LPCWSTR wsz = Sprintf( args );
+	LPCWSTR wsz = SprintfSub( args );
 	OutputDebugStringW( wsz );
 	OutputDebugStringW( L"\n" );
 	delete [] wsz;
@@ -317,7 +317,6 @@ void CScript::Initialize( void ){
 	global->Set( v8::String::New( "__CVsdFilter" ), v8::External::New( m_pVsd ));
 	global->Set( v8::String::New( "__CScript" ), v8::External::New( this ));
 	global->Set( v8::String::New( "__Include" ), v8::FunctionTemplate::New( Func_Include ));
-	global->Set( v8::String::New( "Sprintf" ), v8::FunctionTemplate::New( Func_Sprintf ));
 	
 	// グローバルオブジェクトから環境を生成
 	m_Context = Context::New( NULL, global );

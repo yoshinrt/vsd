@@ -65,7 +65,8 @@ class CScript {
 	
 	static void Print( LPCWSTR szMsg );	// !js_func
 	static void Printf( const v8::Arguments& args );	// !js_func
-	static LPWSTR Sprintf( const v8::Arguments& args );
+	static v8::Handle<v8::Value> Sprintf( const v8::Arguments& args );	// !js_func
+	static LPWSTR SprintfSub( const v8::Arguments& args );
 	
 	// ‹——£Žæ“¾
 	static double GetDistanceByLngLat(	// !js_func

@@ -65,7 +65,7 @@ v8::Handle<v8::Value> COle::CallAsFunctionHandler(
 ){
 	v8::HandleScope handle_scope;
 	COle *obj = CScript::GetThis<COle>( args.This());
-	if( !obj ) return LocalUndefined();
+	if( !obj ) return v8::Undefined();
 	
 	return handle_scope.Close(
 		obj->Invoke(
