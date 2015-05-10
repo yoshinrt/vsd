@@ -667,6 +667,8 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 ){
 	//CSemaphoreLock sem;
 	
+	DebugMsgD( ">ICallbackJSFunc::Invoke\n" );
+	
 	v8::Isolate::Scope IsolateScope( g_Vsd->m_Script->m_pIsolate );
 	v8::HandleScope handle_scope;
 	v8::Context::Scope context_scope( g_Vsd->m_Script->m_Context );
@@ -679,5 +681,7 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 		fputws( pMsg, stdout );
 		delete [] pMsg;
 	}
+	
+	DebugMsgD( "<ICallbackJSFunc::Invoke\n" );
 	return S_OK;
 }

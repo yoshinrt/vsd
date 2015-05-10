@@ -31,15 +31,13 @@ rev_num.h:
 		echo $@ updated; \
 	fi
 
-SVN	=	file:///home/yoshi/.svnrepos/vsd/trunk/vsd_filter/vsd_plugins
+SVN_PLUGINS	=	file:///home/yoshi/.svnrepos/vsd/trunk/vsd_filter/vsd_plugins
 release:
 	rm -rf zrelease; cp -r release_files zrelease; cd zrelease; \
 	mv "/cygdrive/d/Program Files/AVIUTL/Plugins/vsd_filter.auf" vsd_filter_gps.auf; \
-	svn export -N $(SVN); \
-	svn export -N $(SVN)/_log_reader \
-		vsd_plugins/_log_reader; \
+	svn export $(SVN_PLUGINS); \
 	cd vsd_plugins; \
-	rm _log_reader/vsd_log.js; \
+	rm -rf _log_reader/vsd_log.js gallery; \
 	for a in `find . -name '*.js'`; do \
 		perl -pe 's@.*//#DEL#.*\n@@; s@//(.*\S)\s*//#REL#@$$1@' $$a > $$a.z; mv $$a.z $$a; \
 	done; \
