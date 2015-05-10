@@ -753,9 +753,8 @@ int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 	{
 		// JavaScript オブジェクト初期化
 		CScript Script( pVsd );
-		Script.Initialize();
 		
-		if( Script.RunFile( L"_log_reader\\_LapChartReader.js" ) == ERR_OK ){
+		if( Script.Initialize( L"_system/InitLapChartReader.js" ) == ERR_OK ){
 			// スクリプト実行
 			LPWSTR pStr = NULL;
 			LPWSTR pReader = NULL;

@@ -277,18 +277,13 @@ void CScript::Include( LPCWSTR wszFileName ){
 	UINT uRet = RunFileCore( wszFileName );
 	
 	if( uRet == ERR_FILE_NOT_FOUND ){
-		v8::ThrowException( v8::Exception::Error(
-			v8::String::Concat(
-				v8::String::New( "Include file not found:\n  " ),
-				v8::String::New(( uint16_t *)wszFileName )
-			)
-		));
+		V8Error( "Include file not found" );
 	}
 }
 
 /*** JavaScript interface のセットアップ ************************************/
 
-void CScript::Initialize( void ){
+UINT CScript::Initialize( LPCWSTR wszFileName ){
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	
 	// 準備
@@ -311,6 +306,10 @@ void CScript::Initialize( void ){
 	
 	// グローバルオブジェクトから環境を生成
 	m_Context = Context::New( NULL, global );
+	
+	if( wszFileName ) return RunFile( wszFileName );
+	
+	return ERR_OK;
 }
 
 /*** スクリプトファイルの実行 ***********************************************/
@@ -520,9 +519,14 @@ BOOL LogReaderCallback( const char *szPath, const char *szFile, void *pParam ){
 }
 
 UINT CScript::InitLogReader( void ){
-	Initialize();
+	Initialize( L"_system/InitLogReader.js" );
+	if( m_uError ){
+		// エラー
+		m_pVsd->DispErrorMessage( GetErrorMessage());
+		return m_uError;
+	}
 	
-	{
+	/*{
 		v8::Isolate::Scope IsolateScope( m_pIsolate );
 		v8::HandleScope handle_scope;
 		v8::Context::Scope context_scope( m_Context );
@@ -530,7 +534,7 @@ UINT CScript::InitLogReader( void ){
 		// log 用の global array 登録
 		m_Context->Global()->Set( v8::String::New( "Log" ), v8::Array::New( 0 ));
 		m_Context->Global()->Set( v8::String::New( "LogReaderInfo" ), v8::Array::New( 0 ));
-	}
+	}*/
 	
 	// スクリプトロード
 	char szBuf[ MAX_PATH + 1 ];

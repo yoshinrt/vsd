@@ -1,5 +1,8 @@
 "use strict";
 
+Include( "_system/common.js" );
+Include( "_user_config.js" );
+
 //****************************************************************************
 
 var Vsd = new __VSD_System__( __CVsdFilter );

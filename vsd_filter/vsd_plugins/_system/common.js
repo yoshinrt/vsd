@@ -2,8 +2,6 @@
 
 //****************************************************************************
 
-Include( "_user_config.js" );
-
 var SEEK_SET	= 0;
 var SEEK_CUR	= 1;
 var SEEK_END	= 2;
@@ -47,9 +45,3 @@ var IDOK							= 0x00000001;
 var IDRETRY							= 0x00000004;
 var IDTRYAGAIN						= 0x0000000A;
 var IDYES							= 0x00000006;
-
-if( typeof( Log ) == 'undefined' ){
-	Include( "_initialize_skin.js" );
-}else{
-	Include( "_initialize_logreader.js" );
-}

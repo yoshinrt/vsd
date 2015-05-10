@@ -1873,9 +1873,8 @@ BOOL CVsdFilter::DrawVSD( void ){
 	DebugMsgD( ":DrawVSD():Running script... %X\n", GetCurrentThreadId());
 	if( !m_Script && m_szSkinFile ){
 		m_Script = new CScript( this );
-		m_Script->Initialize();
 		
-		if( m_Script->RunFile( L"_initialize.js" ) == ERR_OK ){
+		if( m_Script->Initialize( L"_system/InitSkin.js" ) == ERR_OK ){
 			LPWSTR p = NULL;
 			StringNew( p, m_szSkinFile );
 			m_Script->RunFile( p );

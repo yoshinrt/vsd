@@ -1,12 +1,13 @@
 "use strict";
 
+Include( "_system/common.js" );
+Include( "_user_config.js" );
+
 var GlobalInstance = this;
-
-var SEEK_SET	= 0;
-var SEEK_CUR	= 1;
-var SEEK_END	= 2;
-
 var INVALID_FORMAT	= -1;
+
+var Log = [];
+var LogReaderInfo = [];
 
 //*** ログファイルリーダ エントリ関数 ****************************************
 

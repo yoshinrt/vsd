@@ -31,7 +31,7 @@ class CScript {
 	CScript( CVsdFilter *pVsd );
 	~CScript( void );
 	
-	void Initialize( void );
+	UINT Initialize( LPCWSTR wszFileName = NULL );
 	UINT RunFile( LPCWSTR szFileName );
 	UINT RunFileCore( LPCWSTR szFileName );
 	UINT Run( LPCWSTR szFunc, BOOL bNoFunc = FALSE );

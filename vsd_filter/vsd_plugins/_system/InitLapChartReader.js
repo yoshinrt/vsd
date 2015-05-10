@@ -1,3 +1,7 @@
+"use strict";
+
+var LapTime = [];
+
 function ReadLapChart( filename ){
 	
 	var file = new File();
@@ -8,7 +12,7 @@ function ReadLapChart( filename ){
 		return 0;
 	}
 	
-	LapTime = [];
+	var CameraCarID;
 	var CameraCarName = '';
 	var Line;
 	var Drivers = [];
