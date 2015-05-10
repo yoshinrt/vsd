@@ -1,7 +1,9 @@
 function ReadLapChart( filename ){
 	
 	var file = new File();
-	if( file.Open( filename, "zr" )){
+	try{
+		file.Open( filename, "zr" );
+	}catch( e ){
 		MessageBox( "ファイルが開けません: " + filename );
 		return 0;
 	}

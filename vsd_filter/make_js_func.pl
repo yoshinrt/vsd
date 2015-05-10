@@ -447,19 +447,13 @@ sub MakeJsIF {
 				$PostRet	= " unknown type:$RetType	= ";
 			}
 #-----
-			$param->{ FunctionIF } .= $param->{ bGlobal } ? << "-----" : << "-----";
+			$GetThis = $param->{ bGlobal } ? 'CScript::GetCScript' : "CScript::GetThis<$param->{ Class }>";
+			$param->{ FunctionIF } .= << "-----";
 	static v8::Handle<v8::Value> Func_$FuncName( const v8::Arguments& args ){
 		${NoArgNumCheck}int iLen = args.Length();
 		${NoArgNumCheck}if( CScript::CheckArgs( $Len )) return v8::Undefined();
 		$Defs
-		${PreRet}CScript::$FuncName($Args)$PostRet
-	}
------
-	static v8::Handle<v8::Value> Func_$FuncName( const v8::Arguments& args ){
-		${NoArgNumCheck}int iLen = args.Length();
-		${NoArgNumCheck}if( CScript::CheckArgs( $Len )) return v8::Undefined();
-		$Defs
-		$param->{ Class } *thisObj = CScript::GetThis<$param->{ Class }>( args.This());
+		$param->{ Class } *thisObj = $GetThis( args.This());
 		if( !thisObj ) return v8::Undefined();
 		${PreRet}thisObj->$FuncName($Args)$PostRet
 	}
@@ -637,7 +631,7 @@ $Function
 $Const
 $param->{ ExtraInit }
 		#undef inst
-		#undef GlobalTmpl
+		#undef proto
 	}
 };
 -----

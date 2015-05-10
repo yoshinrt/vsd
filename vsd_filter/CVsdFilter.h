@@ -345,7 +345,6 @@ class CVsdFilter
 	enum {
 		IMG_FILL		= ( 1 << 0 ),
 		IMG_NOCLOSE		= ( 1 << 1 ),
-		IMG_LOADMAP		= ( 1 << 2 ),
 	};
 	
 	enum {
@@ -355,7 +354,8 @@ class CVsdFilter
 		ALIGN_RIGHT		= 1 << 1,
 		ALIGN_VCENTER	= 1 << 2,
 		ALIGN_BOTTOM	= 1 << 3,
-		DRAW_MAP_START	= 1 << 4,	// DrawMap 専用フラグ
+		DRAW_MAP_START	= 1 << 4,	// DrawMap 専用フラグ，スタートライン描画
+		IMG_LOADMAP		= 1 << 5,	// 地図用軌跡描画
 		LMS_VERTICAL	= 1 << 4,	// DrawLinearMeterScale 専用フラグ
 	};
 	

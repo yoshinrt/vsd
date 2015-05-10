@@ -56,6 +56,7 @@ class CScript {
 	UINT InitLogReader( void );
 	
 	// Global オブジェクト
+	void Include( LPCWSTR wszFileName );	// !js_func
 	static void DebugPrint( const v8::Arguments& args );	// !js_func
 	static int MessageBox(	// !js_func
 		LPCWSTR szMsg,
@@ -86,6 +87,13 @@ class CScript {
 		
 		void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
 		return static_cast<T*>( pThis );
+	}
+	
+	static CScript *GetCScript( v8::Local<v8::Object> handle ){
+		v8::HandleScope handle_scope;
+		
+		void *pObj = v8::Local<v8::External>::Cast( handle->Get( v8::String::New( "__CScript" )))->Value();
+		return static_cast<CScript *>( pObj );
 	}
 	
 	// 引数の数チェック

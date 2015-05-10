@@ -272,26 +272,18 @@ void CScript::DebugPrint( const v8::Arguments& args ){
 
 /*** include ****************************************************************/
 
-static v8::Handle<v8::Value> Func_Include( const v8::Arguments& args ){
+void CScript::Include( LPCWSTR wszFileName ){
 	
-	int iLen = args.Length();
-	if( CScript::CheckArgs( iLen == 2 )) return v8::Undefined();
-	
-	CScript *obj = static_cast<CScript *>( v8::Local<v8::External>::Cast( args[ 1 ] )->Value());
-	if( !obj ) return v8::Undefined();
-	
-	v8::String::Value str( args[ 0 ] );
-	UINT uRet = obj->RunFileCore(( LPCWSTR )*str );
+	UINT uRet = RunFileCore( wszFileName );
 	
 	if( uRet == ERR_FILE_NOT_FOUND ){
-		return v8::ThrowException( v8::Exception::Error(
+		v8::ThrowException( v8::Exception::Error(
 			v8::String::Concat(
 				v8::String::New( "Include file not found:\n  " ),
-				v8::Local<v8::String>::Cast( args[ 0 ] )
+				v8::String::New(( uint16_t *)wszFileName )
 			)
 		));
 	}
-	return v8::Undefined();
 }
 
 /*** JavaScript interface のセットアップ ************************************/
@@ -316,7 +308,6 @@ void CScript::Initialize( void ){
 	
 	global->Set( v8::String::New( "__CVsdFilter" ), v8::External::New( m_pVsd ));
 	global->Set( v8::String::New( "__CScript" ), v8::External::New( this ));
-	global->Set( v8::String::New( "__Include" ), v8::FunctionTemplate::New( Func_Include ));
 	
 	// グローバルオブジェクトから環境を生成
 	m_Context = Context::New( NULL, global );
