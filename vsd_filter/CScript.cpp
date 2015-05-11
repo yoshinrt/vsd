@@ -393,11 +393,9 @@ UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_Context );
 	
-	Local<Value> Args[ 1 ];
-	
-	if( str0 ) Args[ 0 ] = String::New(( uint16_t *)str0 );
-	else Args[ 0 ] = LocalUndefined();
-
+	Handle<Value> Args[] = {
+		str0 ? String::New(( uint16_t *)str0 ) : v8::Undefined()
+	};
 	return RunArg( szFunc, 1, Args, bNoFunc );
 }
 
@@ -408,13 +406,10 @@ UINT CScript::Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc )
 	HandleScope handle_scope;
 	Context::Scope context_scope( m_Context );
 	
-	Local<Value> Args[ 2 ];
-
-	if( str0 ) Args[ 0 ] = String::New(( uint16_t *)str0 );
-	else Args[ 0 ] = LocalUndefined();
-	if( str1 ) Args[ 1 ] = String::New(( uint16_t *)str1 );
-	else Args[ 1 ] = LocalUndefined();
-
+	Handle<Value> Args[] = {
+		str0 ? String::New(( uint16_t *)str0 ) : v8::Undefined(),
+		str1 ? String::New(( uint16_t *)str1 ) : v8::Undefined()
+	};
 	return RunArg( szFunc, 2, Args, bNoFunc );
 }
 

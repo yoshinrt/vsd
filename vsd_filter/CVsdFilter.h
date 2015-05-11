@@ -565,7 +565,7 @@ class CVsdFilter
 	int	GetHeight( void )	{ return m_SrcFrame->GetHeight(); }	// !js_var:Height
 	int	GetFrameMax( void )	{ return vi.num_frames; }	// !js_var:MaxFrameCnt
 	int	GetFrameCnt( void )	{ return m_iFrameCnt; }	// !js_var:FrameCnt
-	double	GetFPS( void )	{ return ( double )vi.fps_numerator / vi.fps_denominator; }
+	double GetFPS( void )	{ return ( double )vi.fps_numerator / vi.fps_denominator; } // !js_var:FramePerSecond
 	int IsSaving( void )	{ return 0; }	// !js_var:IsSaving
 	
 	// ƒpƒ‰ƒ[ƒ^
