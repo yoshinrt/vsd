@@ -1,6 +1,5 @@
 "use strict";
 
-Print( "hogeああああ\n" );
 Include( "_system/common.js" );
 Include( "_user_config.js" );
 
