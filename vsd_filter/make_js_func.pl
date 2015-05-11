@@ -127,16 +127,6 @@ MakeJsIF({
 		v8::String::AsciiValue str( propertyName );
 		return obj ? obj->GetValue( *str ) : v8::Undefined();
 	}
-	
-	/*** デバッグ用 *************************************************************/
-	
-	// 関数オブジェクト print の実体
-	static v8::Handle<v8::Value> Func_print(const v8::Arguments& args) {
-		v8::String::AsciiValue str( args[ 0 ] );
-		DebugMsgD( "%s\n", *str );
-		return v8::Undefined();
-	}
-	
 -----
 	ExtraInit	=> << '-----',
 		(( CVsdFilter *)pClass )->AddAccessor( tmpl );

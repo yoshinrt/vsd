@@ -10,6 +10,7 @@
 
 #include "CSemaphore.h"
 #include "CVsdLog.h"
+#include "CV8Map.h"
 #include "error_code.h"
 
 #define V8AnyError( type, msg )	v8::ThrowException( v8::Exception::type( v8::String::New( msg )))
@@ -92,8 +93,7 @@ class CScript {
 	static CScript *GetCScript( v8::Local<v8::Object> handle ){
 		v8::HandleScope handle_scope;
 		
-		void *pObj = v8::Local<v8::External>::Cast( handle->Get( v8::String::New( "__CScript" )))->Value();
-		return static_cast<CScript *>( pObj );
+		return CV8Map::Cast( handle )[ "__CScript" ].GetObj<CScript>();
 	}
 	
 	// 引数の数チェック

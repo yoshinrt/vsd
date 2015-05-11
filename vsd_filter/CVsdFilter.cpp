@@ -438,8 +438,7 @@ void CVsdFilter::AddLogAccessorSub(
 	CVsdLog *pLog,
 	v8::Local<v8::Object> objLog,
 	v8::Local<v8::Array> objMin,
-	v8::Local<v8::Array> objMax,
-	v8::Local<v8::Array> objGet
+	v8::Local<v8::Array> objMax
 ){
 	if( !pLog ) return;
 	
@@ -480,10 +479,9 @@ void CVsdFilter::AddLogAccessor( v8::Local<v8::Object> thisObj ){
 	
 	AddLogObj( Min );
 	AddLogObj( Max );
-	AddLogObj( Get );
 	
-	AddLogAccessorSub( m_VsdLog, thisObj, objMin, objMax, objGet );
-	AddLogAccessorSub( m_GPSLog, thisObj, objMin, objMax, objGet );
+	AddLogAccessorSub( m_VsdLog, thisObj, objMin, objMax );
+	AddLogAccessorSub( m_GPSLog, thisObj, objMin, objMax );
 }
 
 /*** 位置指定ログアクセス ***************************************************/

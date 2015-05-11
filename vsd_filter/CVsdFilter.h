@@ -495,8 +495,7 @@ class CVsdFilter
 		CVsdLog *pLog,
 		v8::Local<v8::Object> objLog,
 		v8::Local<v8::Array> objMin,
-		v8::Local<v8::Array> objMax,
-		v8::Local<v8::Array> objGet
+		v8::Local<v8::Array> objMax
 	);
 	void AddLogAccessor( v8::Local<v8::Object> thisObj );
 	

@@ -273,7 +273,6 @@ void CScript::DebugPrint( const v8::Arguments& args ){
 /*** include ****************************************************************/
 
 void CScript::Include( LPCWSTR wszFileName ){
-	
 	UINT uRet = RunFileCore( wszFileName );
 	
 	if( uRet == ERR_FILE_NOT_FOUND ){
@@ -335,7 +334,6 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 	return uRet;
 }
 
-#define INCLUDE_CMD	"//#include"
 UINT CScript::RunFileCore( LPCWSTR szFileName ){
 	
 	FILE *fp;
