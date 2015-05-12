@@ -128,9 +128,6 @@ MakeJsIF({
 		return obj ? obj->GetValue( *str ) : v8::Undefined();
 	}
 -----
-	ExtraInit	=> << '-----',
-		(( CVsdFilter *)pClass )->AddAccessor( tmpl );
------
 });
 
 ### CVsdFilter_Log ###############################################################

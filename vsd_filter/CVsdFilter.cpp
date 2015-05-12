@@ -377,61 +377,6 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 	return iRet;
 }
 
-/*** Vsd.Speed 等のアクセサ追加 *********************************************/
-
-void CVsdFilter::AddAccessorSub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl ){
-	if( !pLog ) return;
-	
-	char szBuf[ 256 ];
-	
-	v8::Local<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
-	v8::Local<v8::ObjectTemplate> inst  = tmpl->InstanceTemplate();
-	std::map<std::string, CLog *>::iterator it;
-	
-	for( it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it ){
-		const char *szName = it->first.c_str();
-		
-		if(
-			// 救済措置でシステム組み込みプロパティは残す
-			#define DEF_LOG( name ) strcmp( #name, szName ) == 0 ||
-			#include "def_log.h"
-			0
-		){
-			if( m_VsdLog == NULL || pLog == m_VsdLog || m_VsdLog->GetElement( szName ) == NULL ){
-				// Max 登録
-				sprintf( szBuf, "Max%s", szName );
-				proto->Set(
-					v8::String::New( szBuf ),
-					v8::Number::New( pLog->GetMax( szName ))
-				);
-				
-				// Min 登録
-				sprintf( szBuf, "Min%s", szName );
-				proto->Set(
-					v8::String::New( szBuf ),
-					v8::Number::New( pLog->GetMin( szName ))
-				);
-				
-				// 現在値登録
-				if( 0 );
-				#define DEF_LOG( name ) \
-				else if( strcmp( szName, #name ) == 0 ){ \
-					inst->SetAccessor( v8::String::New( #name ), CVsdFilterIF::Get_##name ); \
-				}
-				#include "def_log.h"
-				else{
-					inst->SetAccessor( v8::String::New( szName ), CVsdFilterIF::Get_Value );
-				}
-			}
-		}
-	}
-}
-
-void CVsdFilter::AddAccessor( v8::Local<v8::FunctionTemplate> tmpl ){
-	AddAccessorSub( m_VsdLog, tmpl );
-	AddAccessorSub( m_GPSLog, tmpl );
-}
-
 /*** Log.Speed 等のアクセサ追加 *********************************************/
 
 void CVsdFilter::AddLogAccessorSub(

@@ -24,10 +24,7 @@ function PrintObj( prefix, obj ){
 	for( var v in obj ){
 		if( typeof obj[ v ] == 'object' ){
 			PrintObj( prefix + v + '.', obj[ v ] );
-		}else if(
-			typeof obj[ v ] != 'function' &&
-			!( prefix == "Vsd." && v.match( /^(Min|Max)?(Time|Speed|Tacho|Distance|Direction|Longitude|Latitude|X|Y|Gx|Gy|TurnR)$/ ))
-		){
+		}else if( typeof obj[ v ] != 'function' ){
 			print( prefix + v + ": " + obj[ v ] );
 		}
 	}

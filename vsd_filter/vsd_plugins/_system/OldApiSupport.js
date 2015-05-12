@@ -1,6 +1,6 @@
 "use strict";
 
-SetupOldApi(){
+function SetupOldApi(){
 	if( TargetVSDRevision === undefined ){
 		Print(
 			"このスキンが動作する VSD のリビジョン番号を\n" +
@@ -13,21 +13,38 @@ SetupOldApi(){
 	if( TargetVSDRevision >= 779 ) return;
 	if( GoogleAPIKey[ 0 ] == '' ){
 		Vsd.__DrawGoogleMaps_r779 = Vsd.DrawGoogleMaps;
+		
+		/*
 		Vsd.DrawGoogleMaps = funcion( param ){
 			GoogleAPIKey[ 0 ] = param.APIKey;
 			
 			Vsd.DrawGoogleMaps = Vsd.__DrawGoogleMaps_r779;
 			delete Vsd.__DrawGoogleMaps_r779;
 		}
+		*/
 	}
 	
 	// Vsd.Speed -> Log.Speed, Vsd.MaxSpeed -> Log.Max.Speed に変更
 	if( TargetVSDRevision >= 769 ) return;
+	/*
 	for( var prop in Log ){
-		Vsd.[ "Max" + prop ] = Log.Max[ prop ];
-		Vsd.[ "Min" + prop ] = Log.Min[ prop ];
-		Vsd.[ prop ] = get function(){ return Log[ prop ]; }
-	}
+		if(
+			typeof( Log[ prop ]) != 'object' &&
+			typeof( Log[ prop ]) != 'function'
+		){
+			Vsd[ "Max" + prop ] = Log.Max[ prop ];
+			Vsd[ "Min" + prop ] = Log.Min[ prop ];
+			PropName_r769.push( prop );
+			Vsd.__defineGetter__( prop, function(){ return Log[ PropName_r769[ PropName_r769.length - 1 ]]; });
+if( prop == "Speed" ) break;
+		}
+Printf( "%s:%s:%d\n", prop, typeof( Vsd[ prop ]), Vsd[ prop ] );
+	}*/
+	var prop = "Longitude"
+	Vsd.__defineGetter__( "Longitude", function(){ return Log[ prop ]; });
+	var prop = "Latitude"
+	Vsd.__defineGetter__( "Latitude", function(){ return Log[ prop ]; });
+	
 	
 	// DrawOpenStreetMap → Vsd.DrawRoadMap に変更
 	if( TargetVSDRevision >= 743 ) return;

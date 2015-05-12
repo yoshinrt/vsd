@@ -488,9 +488,6 @@ class CVsdFilter
 		return v8::Undefined();
 	}
 	
-	void AddAccessor( v8::Local<v8::FunctionTemplate> tmpl );
-	void AddAccessorSub( CVsdLog *pLog, v8::Local<v8::FunctionTemplate> tmpl );
-	
 	void AddLogAccessorSub(
 		CVsdLog *pLog,
 		v8::Local<v8::Object> objLog,
