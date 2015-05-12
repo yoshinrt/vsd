@@ -319,7 +319,7 @@ class CVsdFilter
 	LPCWSTR FormatTime( int iTime ); // !js_func
 	
 	static inline v8::Handle<v8::Value> UndefIfTimeNone( int i ){
-		return i == TIME_NONE ? v8::Undefined() : v8::Integer::New( i );
+		return i == TIME_NONE ? v8::Undefined() : v8::Int32::New( i );
 	}
 	
 	v8::Handle<v8::Value> CurTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iCurTime ) : v8::Undefined(); }	// !js_var:ElapsedTime

@@ -448,13 +448,13 @@ v8::Local<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Local<v8::Context> Co
 		return v8::Local<v8::Value>( *v8::Null());
 		
 	  Case VT_UI1:
-		ret = v8::Integer::New( V_ISBYREF( pvar ) ? *V_UI1REF( pvar ) : V_UI1( pvar ));
+		ret = v8::Int32::New( V_ISBYREF( pvar ) ? *V_UI1REF( pvar ) : V_UI1( pvar ));
 		
 	  Case VT_I2:
-		ret = v8::Integer::New( V_ISBYREF( pvar ) ? *V_I2REF( pvar ) : V_I2( pvar ));
+		ret = v8::Int32::New( V_ISBYREF( pvar ) ? *V_I2REF( pvar ) : V_I2( pvar ));
 		
 	  Case VT_I4:
-		ret = v8::Integer::New( V_ISBYREF( pvar ) ? *V_I4REF( pvar ) : V_I4( pvar ));
+		ret = v8::Int32::New( V_ISBYREF( pvar ) ? *V_I4REF( pvar ) : V_I4( pvar ));
 		
 	  Case VT_R4:
 		ret = v8::Number::New( V_ISBYREF( pvar ) ? *V_R4REF( pvar ) : V_R4( pvar ));
@@ -466,7 +466,7 @@ v8::Local<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Local<v8::Context> Co
 		ret = v8::String::New( V_ISBYREF( pvar ) ? ( uint16_t *)*V_BSTRREF( pvar ) : ( uint16_t *)V_BSTR( pvar ));
 		
 	  Case VT_ERROR:
-		ret = v8::Integer::New( V_ISBYREF( pvar ) ? *V_ERRORREF( pvar ) : V_ERROR( pvar ));
+		ret = v8::Int32::New( V_ISBYREF( pvar ) ? *V_ERRORREF( pvar ) : V_ERROR( pvar ));
 		
 	  Case VT_BOOL:
 		ret = v8::Local<v8::Value>( *(

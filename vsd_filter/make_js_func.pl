@@ -413,7 +413,7 @@ sub MakeJsIF {
 			}
 			
 			elsif( $RetType eq 'int' || $RetType eq 'UINT' ){
-				$PreRet		= "return v8::Integer::New( ";
+				$PreRet		= "return v8::Int32::New( ";
 			}
 			
 			elsif( $RetType eq 'char' ){
@@ -462,7 +462,7 @@ sub MakeJsIF {
 			$RealVar = $1;
 			
 			$Ret =
-				/\b(?:int|UINT)\b/		? "v8::Integer::New( obj->$RealVar )" :
+				/\b(?:int|UINT)\b/		? "v8::Int32::New( obj->$RealVar )" :
 				/\bdouble\b/			? "v8::Number::New( obj->$RealVar )" :
 				/\bchar\b/				? "v8::String::New( obj->$RealVar )" :
 				/\bLPC?WSTR\b/			? "v8::String::New(( uint16_t *)obj->$RealVar )" :
@@ -489,7 +489,7 @@ sub MakeJsIF {
 			$RealVar = $1;
 			
 			$Type =
-				/\b(?:int|UINT)\b/	? "Integer" :
+				/\b(?:int|UINT)\b/	? "Int32" :
 				/\bdouble\b/		? "Number" :
 				/\bchar\b/			? "String" :
 				/\bLPC?WSTR\b/		? "String" :
