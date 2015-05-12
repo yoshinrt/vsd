@@ -57,6 +57,7 @@ class CScript {
 	UINT InitLogReader( void );
 	
 	// Global オブジェクト
+	v8::Handle<v8::Value> Eval( const v8::Arguments& args );	// !js_func
 	void Include( LPCWSTR wszFileName );	// !js_func
 	static void DebugPrint( const v8::Arguments& args );	// !js_func
 	static int MessageBox(	// !js_func

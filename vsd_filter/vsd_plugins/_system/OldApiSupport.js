@@ -41,7 +41,8 @@ if( prop == "Speed" ) break;
 Printf( "%s:%s:%d\n", prop, typeof( Vsd[ prop ]), Vsd[ prop ] );
 	}*/
 	var prop = "Longitude"
-	Vsd.__defineGetter__( "Longitude", function(){ return Log[ prop ]; });
+	//Vsd.__defineGetter__( "Longitude", function(){ return Log[ prop ]; });
+	Vsd.Longitude = Log.Longitude;
 	var prop = "Latitude"
 	Vsd.__defineGetter__( "Latitude", function(){ return Log[ prop ]; });
 	

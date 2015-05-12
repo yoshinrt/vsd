@@ -270,9 +270,35 @@ void CScript::DebugPrint( const v8::Arguments& args ){
 	delete [] wsz;
 }
 
+/*** Eval *******************************************************************/
+
+v8::Handle<v8::Value> CScript::Eval( const v8::Arguments& args ){
+	
+	HandleScope handle_scope;
+	
+	if( CScript::CheckArgs( args.Length() == 1 )){
+		V8SyntaxError( "required script string" );
+		return v8::Undefined();
+	}
+	
+	Local<Script> script = Script::Compile(
+		v8::Handle<v8::String>::Cast( args[ 0 ]),
+		v8::String::New( "Eval() script" )
+	);
+	
+	if( script.IsEmpty()){
+		//V8Error( "Syntax error in Eval() script" );
+		return v8::Undefined();
+	}
+	
+	return handle_scope.Close( script->Run());
+}
+
 /*** include ****************************************************************/
 
 void CScript::Include( LPCWSTR wszFileName ){
+	HandleScope handle_scope;
+	
 	UINT uRet = RunFileCore( wszFileName );
 	
 	if( uRet == ERR_FILE_NOT_FOUND ){
