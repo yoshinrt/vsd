@@ -430,20 +430,3 @@ Vsd.DrawLinearMeterScale = function( param ){
 		param.NumPos, param.FontColor, param.Font
 	);
 }
-
-// 後方互換性のための function
-Vsd.DrawMeterScale = function(
-	x, y, r,
-	line1_len, line1_width, line1_color,
-	line2_len, line2_width, line2_color, line2_cnt,
-	min_angle, max_angle, r_num, max_val, line1_cnt,
-	color, font
-){
-	return Vsd.DrawRoundMeterScaleSub(
-		x, y, r,
-		line1_len, line1_width, line1_color, line1_cnt,
-		line2_len, line2_width, line2_color, line2_cnt,
-		min_angle, max_angle, 0, max_val,
-		r_num, color, font
-	);
-}
