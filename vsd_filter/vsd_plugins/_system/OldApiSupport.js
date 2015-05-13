@@ -43,7 +43,7 @@ function SetupOldApi(){
 	Vsd.DrawOpenStreetMap = Vsd.DrawRoadMap;
 	
 	// DrawMeterScale 廃止
-	if( TargetVSDRevision >= 723 ) return;
+	if( TargetVSDRevision >= 721 ) return;
 	Vsd.DrawMeterScale = function(
 		x, y, r,
 		line1_len, line1_width, line1_color,
