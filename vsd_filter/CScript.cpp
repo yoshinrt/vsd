@@ -275,23 +275,31 @@ void CScript::DebugPrint( const v8::Arguments& args ){
 v8::Handle<v8::Value> CScript::Eval( const v8::Arguments& args ){
 	
 	HandleScope handle_scope;
+	ret = v8::Handle<Value> ret;
 	
 	if( CScript::CheckArgs( args.Length() == 1 )){
 		V8SyntaxError( "required script string" );
 		return v8::Undefined();
 	}
 	
+	TryCatch try_catch;
+	
 	Local<Script> script = Script::Compile(
 		v8::Handle<v8::String>::Cast( args[ 0 ]),
 		v8::String::New( "Eval() script" )
 	);
 	
-	if( script.IsEmpty()){
-		//V8Error( "Syntax error in Eval() script" );
+	if( !try_catch.HasCaught()){
+		ret = handle_scope.Close( script->Run());
+	}
+	
+	if( try_catch.HasCaught()){
+		m_pVsd->DispErrorMessage( ReportException( m_szErrorMsg, try_catch ));
+		V8Error( "Above error occur in Eval() script" );
 		return v8::Undefined();
 	}
 	
-	return handle_scope.Close( script->Run());
+	return handle_scope.Close( ret );
 }
 
 /*** include ****************************************************************/
@@ -401,7 +409,6 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 /*** function 名指定実行，引数なし ******************************************/
 
 UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
-	//CSemaphoreLock lock( m_pSemaphore );
 	
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
@@ -411,7 +418,6 @@ UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
 }
 
 UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
-	//CSemaphoreLock lock( m_pSemaphore );
 	
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
@@ -424,7 +430,6 @@ UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
 }
 
 UINT CScript::Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc ){
-	//CSemaphoreLock lock( m_pSemaphore );
 	
 	v8::Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope;
@@ -455,13 +460,6 @@ UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bN
 		return m_uError = ERR_SCRIPT;
 	}
 	
-	/*
-	if( !result->IsUndefined()) {
-		// If all went well and the result wasn't undefined then print
-		// the returned value.
-		return m_uError = result->Int32Value();
-	}
-	*/
 	// ガーベッジコレクション?
 	//while( !v8::V8::IdleNotification());
 	//v8::V8::IdleNotification();
@@ -499,16 +497,6 @@ UINT CScript::InitLogReader( void ){
 		m_pVsd->DispErrorMessage( GetErrorMessage());
 		return m_uError;
 	}
-	
-	/*{
-		v8::Isolate::Scope IsolateScope( m_pIsolate );
-		v8::HandleScope handle_scope;
-		v8::Context::Scope context_scope( m_Context );
-		
-		// log 用の global array 登録
-		m_Context->Global()->Set( v8::String::New( "Log" ), v8::Array::New( 0 ));
-		m_Context->Global()->Set( v8::String::New( "LogReaderInfo" ), v8::Array::New( 0 ));
-	}*/
 	
 	// スクリプトロード
 	char szBuf[ MAX_PATH + 1 ];
