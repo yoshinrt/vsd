@@ -1,5 +1,5 @@
 DEF_ERROR( ERR_OK,					"OK" )
-DEF_ERROR( ERR_NUM_OF_ARG			"invalid number of argument" )
+DEF_ERROR( ERR_NUM_OF_ARG,			"invalid number of argument" )
 DEF_ERROR( ERR_NOT_ENOUGH_MEMORY,	"not enough memory" )
 DEF_ERROR( ERR_CANT_OPEN_FILE,		"can't open file" )
 DEF_ERROR( ERR_SCRIPT,				"JavaScript error" )

@@ -756,7 +756,7 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMax
 
 /*** PutImage の座標，width 等補正関数 **************************************/
 
-UINT CVsdFilter::PutImage(
+void CVsdFilter::PutImage(
 	int x, int y, CVsdImage &img, UINT uAlign,
 	int iImgX, int iImgY, int iImgW, int iImgH
 ){
@@ -832,7 +832,7 @@ UINT CVsdFilter::PutImage(
 	if( GetHeight() < y + iImgH ) iImgH = GetHeight() - y;
 	iy_ed = iy_st + iImgH;
 	
-	return PutImage0( x, y, img, ix_st, iy_st, ix_ed, iy_ed );
+	PutImage0( x, y, img, ix_st, iy_st, ix_ed, iy_ed );
 }
 
 /*** パラメータ調整用スピードグラフ *****************************************/

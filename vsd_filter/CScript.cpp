@@ -275,7 +275,7 @@ void CScript::DebugPrint( const v8::Arguments& args ){
 v8::Handle<v8::Value> CScript::Eval( const v8::Arguments& args ){
 	
 	HandleScope handle_scope;
-	ret = v8::Handle<Value> ret;
+	v8::Handle<Value> ret;
 	
 	if( CScript::CheckArgs( args.Length() == 1 )){
 		V8ErrorNumOfArg();

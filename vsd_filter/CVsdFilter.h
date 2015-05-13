@@ -128,7 +128,7 @@ class CVsdFilter
 	
 	void FillLine( int x1, int y1, int x2, CPixelArg yc, UINT uPattern = 0xFFFFFFFF );
 	
-	UINT PutImage(	// !js_func
+	void PutImage(	// !js_func
 		int x, int y, CVsdImage &img,
 		UINT uAlign = 0,		// !default:0
 		int iImgX = 0,			// !default:0

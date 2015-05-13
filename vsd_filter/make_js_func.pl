@@ -234,6 +234,7 @@ MakeJsIF({
 		
 		// 引数チェック
 		if( args.Length() >= 1 ){
+			v8::String::Value strServer( args[ 0 ]);
 			
 			UINT uRet = obj->CreateInstance(( LPCWSTR )*strServer );
 			if( uRet != ERR_OK ){

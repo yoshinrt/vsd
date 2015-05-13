@@ -11,12 +11,11 @@ function SetupOldApi(){
 	
 	// APIKey の設定を _user_config.js に分離
 	if( TargetVSDRevision >= 779 ) return;
-	if( GoogleAPIKey[ 0 ] == '' ){
+	if( !GoogleAPIKey[ 0 ]){
 		Vsd.__DrawGoogleMaps_r779 = Vsd.DrawGoogleMaps;
 		
-		Vsd.DrawGoogleMaps = funcion( param ){
+		Vsd.DrawGoogleMaps = function( param ){
 			GoogleAPIKey[ 0 ] = param.APIKey;
-			
 			Vsd.DrawGoogleMaps = Vsd.__DrawGoogleMaps_r779;
 			delete Vsd.__DrawGoogleMaps_r779;
 		}
