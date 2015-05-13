@@ -300,7 +300,7 @@ void CVsdFilter::FillLine( int x1, int y1, int x2, const CPixelArg yc, UINT uPat
 
 /*** PutImage ***************************************************************/
 
-UINT CVsdFilter::PutImage0(
+void CVsdFilter::PutImage0(
 	int x, int y, CVsdImage &img,
 	int ix_st, int iy_st, int ix_ed, int iy_ed
 ){
@@ -327,8 +327,6 @@ UINT CVsdFilter::PutImage0(
 			}
 		}
 	}
-	
-	return ERR_OK;
 }
 
 /*** “¯Šúî•ñ•`‰æ ***********************************************************/

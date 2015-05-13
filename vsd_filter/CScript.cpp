@@ -289,13 +289,11 @@ v8::Handle<v8::Value> CScript::Eval( const v8::Arguments& args ){
 		v8::String::New( "Eval() script" )
 	);
 	
-	if( !try_catch.HasCaught()){
-		ret = handle_scope.Close( script->Run());
-	}
+	if( !try_catch.HasCaught()) ret = script->Run();
 	
 	if( try_catch.HasCaught()){
 		m_pVsd->DispErrorMessage( ReportException( m_szErrorMsg, try_catch ));
-		V8Error( "Above error occur in Eval() script" );
+		V8Error( "above error occurs in Eval() script" );
 		return v8::Undefined();
 	}
 	

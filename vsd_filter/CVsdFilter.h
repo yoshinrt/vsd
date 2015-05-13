@@ -137,7 +137,7 @@ class CVsdFilter
 		int iImgH = INT_MIN		// !default:INT_MIN
 	);
 	// À•WCwidth “™•â³Œã
-	UINT PutImage0(
+	void PutImage0(
 		int x, int y, CVsdImage &img,
 	int ix_st, int iy_st, int ix_ed, int iy_ed
 	);
