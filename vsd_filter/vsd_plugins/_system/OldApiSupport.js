@@ -14,38 +14,30 @@ function SetupOldApi(){
 	if( GoogleAPIKey[ 0 ] == '' ){
 		Vsd.__DrawGoogleMaps_r779 = Vsd.DrawGoogleMaps;
 		
-		/*
 		Vsd.DrawGoogleMaps = funcion( param ){
 			GoogleAPIKey[ 0 ] = param.APIKey;
 			
 			Vsd.DrawGoogleMaps = Vsd.__DrawGoogleMaps_r779;
 			delete Vsd.__DrawGoogleMaps_r779;
 		}
-		*/
 	}
 	
 	// Vsd.Speed -> Log.Speed, Vsd.MaxSpeed -> Log.Max.Speed に変更
 	if( TargetVSDRevision >= 769 ) return;
-	/*
-	for( var prop in Log ){
-		if(
-			typeof( Log[ prop ]) != 'object' &&
-			typeof( Log[ prop ]) != 'function'
-		){
-			Vsd[ "Max" + prop ] = Log.Max[ prop ];
-			Vsd[ "Min" + prop ] = Log.Min[ prop ];
-			PropName_r769.push( prop );
-			Vsd.__defineGetter__( prop, function(){ return Log[ PropName_r769[ PropName_r769.length - 1 ]]; });
-if( prop == "Speed" ) break;
+	{
+		var Getter = '';
+		for( var prop in Log ){
+			if(
+				typeof( Log[ prop ]) != 'object' &&
+				typeof( Log[ prop ]) != 'function'
+			){
+				Vsd[ "Max" + prop ] = Log.Max[ prop ];
+				Vsd[ "Min" + prop ] = Log.Min[ prop ];
+				Getter += Sprintf( "Vsd.__defineGetter__( '%s', function(){ return Log.%s; });\n", prop, prop );
+			}
 		}
-Printf( "%s:%s:%d\n", prop, typeof( Vsd[ prop ]), Vsd[ prop ] );
-	}*/
-	var prop = "Longitude"
-	//Vsd.__defineGetter__( "Longitude", function(){ return Log[ prop ]; });
-	Vsd.Longitude = Log.Longitude;
-	var prop = "Latitude"
-	Vsd.__defineGetter__( "Latitude", function(){ return Log[ prop ]; });
-	
+		Eval( Getter );
+	}
 	
 	// DrawOpenStreetMap → Vsd.DrawRoadMap に変更
 	if( TargetVSDRevision >= 743 ) return;
