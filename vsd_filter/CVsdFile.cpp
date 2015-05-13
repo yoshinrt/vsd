@@ -30,7 +30,7 @@ int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 			wcschr( szMode, L'w' ) != NULL &&
 			!IsFileWriteEnabled()
 		){
-			V8Error( "write operation not permitted by user." );
+			V8Error( "write operation not permitted by user" );
 			return -1;
 		}
 	#endif
@@ -67,7 +67,7 @@ int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 		m_fp = _wfopen( szFile, szMode );
 	}
 	
-	if( m_fp == NULL ) V8Error( "can't open file" );
+	if( m_fp == NULL ) V8Error( ERR_CANT_OPEN_FILE );
 	return 0;
 }
 

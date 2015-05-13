@@ -13,12 +13,27 @@
 #include "CV8Map.h"
 #include "error_code.h"
 
-#define V8AnyError( type, msg )	v8::ThrowException( v8::Exception::type( v8::String::New( msg )))
-#define V8RangeError( msg )		V8AnyError( RangeError, msg )
-#define V8ReferenceError( msg )	V8AnyError( ReferenceError, msg )
-#define V8SyntaxError( msg )	V8AnyError( SyntaxError, msg )
-#define V8TypeError( msg )		V8AnyError( TypeError, msg )
-#define V8Error( msg )			V8AnyError( Error, msg )
+/*** エラー *****************************************************************/
+
+template <class T>
+static inline V8AnyError( T type, char *msg ){
+	v8::ThrowException( type( v8::String::New( msg )));
+}
+
+template <class T>
+static inline V8AnyError( T type, UINT uID ){
+	V8AnyError( type, CScript.m_szErrorMsgID[ uID ]);
+}
+
+#define V8RangeError( msg )		V8AnyError( v8::Exception::RangeError, msg )
+#define V8ReferenceError( msg )	V8AnyError( v8::Exception::ReferenceError, msg )
+#define V8SyntaxError( msg )	V8AnyError( v8::Exception::SyntaxError, msg )
+#define V8TypeError( msg )		V8AnyError( v8::Exception::TypeError, msg )
+#define V8Error( msg )			V8AnyError( v8::Exception::Error, msg )
+
+#define V8ErrorNumOfArg()		V8SyntaxError( ERR_NUM_OF_ARG )
+
+/****************************************************************************/
 
 #define V8Int( i )			v8::Int32::New( i )
 #define LocalUndefined()	v8::Local<v8::Value>( *v8::Undefined())
@@ -100,7 +115,7 @@ class CScript {
 	// 引数の数チェック
 	static BOOL CheckArgs( BOOL cond ){
 		if( !( cond )){
-			V8SyntaxError( "invalid number of args" );
+			V8ErrorNumOfArg();
 			return TRUE;
 		}
 		return FALSE;

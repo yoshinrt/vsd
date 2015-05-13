@@ -143,7 +143,7 @@ void CScript::Dispose( void ){
 LPWSTR CScript::SprintfSub( const v8::Arguments& args ){
 	
 	if( CScript::CheckArgs( args.Length() >= 1 )){
-		V8SyntaxError( "required sprintf format string" );
+		V8ErrorNumOfArg();
 		return NULL;
 	}
 	
@@ -176,7 +176,7 @@ LPWSTR CScript::SprintfSub( const v8::Arguments& args ){
 		// arg 数チェック
 		if( args.Length() <= iArgNum ){
 			//  引数が足りないエラー
-			V8SyntaxError( "unmatch number of printf arg" );
+			V8ErrorNumOfArg();
 			goto ErrorExit;
 		}
 		
@@ -195,14 +195,14 @@ LPWSTR CScript::SprintfSub( const v8::Arguments& args ){
 			uArgBufPtr += 2;
 		}else{
 			// 非対応の型
-			V8SyntaxError( "unknown sprintf type field" );
+			V8SyntaxError( "unknown printf type field" );
 			goto ErrorExit;
 		}
 	}
 	
 	// 引数あまりチェック
 	if( args.Length() != iArgNum ){
-		V8SyntaxError( "unmatch number of printf arg" );
+		V8ErrorNumOfArg();
 		goto ErrorExit;
 	}
 	
@@ -278,7 +278,7 @@ v8::Handle<v8::Value> CScript::Eval( const v8::Arguments& args ){
 	ret = v8::Handle<Value> ret;
 	
 	if( CScript::CheckArgs( args.Length() == 1 )){
-		V8SyntaxError( "required script string" );
+		V8ErrorNumOfArg();
 		return v8::Undefined();
 	}
 	
@@ -307,8 +307,8 @@ void CScript::Include( LPCWSTR wszFileName ){
 	
 	UINT uRet = RunFileCore( wszFileName );
 	
-	if( uRet == ERR_FILE_NOT_FOUND ){
-		V8Error( "Include file not found" );
+	if( uRet == ERR_CANT_OPEN_FILE ){
+		V8Error( ERR_CANT_OPEN_FILE );
 	}
 }
 
@@ -373,7 +373,7 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 	CPushDir push_dir( m_pVsd->m_szPluginDirA );
 	fp = _wfopen( szFileName, L"r" );
 	
-	if( fp == NULL ) return m_uError = ERR_FILE_NOT_FOUND;
+	if( fp == NULL ) return m_uError = ERR_CANT_OPEN_FILE;
 	
 	// ファイルサイズ取得
 	fseek( fp, 0, SEEK_END );
@@ -501,7 +501,7 @@ UINT CScript::InitLogReader( void ){
 	strcpy( szBuf, m_pVsd->m_szPluginDirA );
 	strcat( szBuf, LOG_READER_DIR "\\" );
 	if( !ListTree( szBuf, "*", LogReaderCallback, this )){
-		return ERR_FILE_NOT_FOUND;
+		return ERR_CANT_OPEN_FILE;
 	}
 	
 	Run( L"SortLogReaderInfo", TRUE );

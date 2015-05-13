@@ -233,7 +233,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 			}
 		}
 	}else{
-		result		= ERR_FILE_NOT_FOUND;
+		result		= ERR_CANT_OPEN_FILE;
 		m_iStatus	= IMG_STATUS_LOAD_FAILED;
 	}
 	

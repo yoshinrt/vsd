@@ -316,7 +316,7 @@ void COle::Val2Variant(
 			if( pub ) delete [] pub;
 			if( psab ) delete [] psab;
 			if( pid ) delete [] pid;
-			V8Error( "memory allocate error" );
+			V8Error( ERR_NOT_ENOUGH_MEMORY );
 		}
 		val1 = val;
 		i = 0;
@@ -418,7 +418,7 @@ v8::Local<v8::Value> COle::Variant2Val( VARIANT *pvar, v8::Local<v8::Context> Co
 			if( pID ) delete [] pID;
 			if( pLB ) delete [] pLB;
 			if( pUB ) delete [] pUB;
-			V8Error( "memory allocate error" );
+			V8Error( ERR_NOT_ENOUGH_MEMORY );
 			return LocalUndefined();
 		}
 		

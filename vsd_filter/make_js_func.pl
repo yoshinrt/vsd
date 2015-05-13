@@ -188,10 +188,12 @@ MakeJsIF({
 			obj = new CVsdImage();
 			v8::String::Value FileName( args[ 0 ] );
 			
-			if( obj->Load(
+			UINT uRet = obj->Load(
 				( LPCWSTR )*FileName,
 				args.Length() <= 1 ? 0 : args[ 1 ]->Int32Value()
-			) != ERR_OK ){
+			);
+			if( uRet != ERR_OK ){
+				V8Error( uRet );
 				delete obj;
 				return v8::Undefined();
 			}
@@ -232,15 +234,12 @@ MakeJsIF({
 		
 		// 引数チェック
 		if( args.Length() >= 1 ){
-			v8::String::Value strServer( args[ 0 ] );
 			
-			if( obj->CreateInstance(( LPCWSTR )*strServer ) != S_OK ){
-				return v8::ThrowException( v8::Exception::Error(
-					v8::String::Concat(
-						v8::String::New( "Can't open OLE server: " ),
-						args[ 0 ]->ToString()
-					)
-				));
+			UINT uRet = obj->CreateInstance(( LPCWSTR )*strServer );
+			if( uRet != ERR_OK ){
+				V8Error( uRet );
+				delete obj;
+				return v8::Undefined();
 			}
 		}
 -----
