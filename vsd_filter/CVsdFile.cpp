@@ -10,10 +10,6 @@
 #include "CVsdFile.h"
 #include "CScript.h"
 
-#ifdef PUBLIC_MODE
-	BOOL IsFileWriteEnabled( void );
-#endif
-
 #define V8ErrorClosedHandle()		V8Error( "operation not permitted on closed handle" )
 #define V8ErrorZipNotSupported()	V8Error( "operation not supported on zip-mode" )
 #define V8ErrorZipNotOpened()		V8Error( "file in zip not opened, execute ZipNextFile() first." )
@@ -23,17 +19,6 @@
 int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 	
 	LPCWSTR pMode = szMode;
-	
-	#ifdef PUBLIC_MODE
-		// ファイルライト不許可時は失敗コードを返す
-		if(
-			wcschr( szMode, L'w' ) != NULL &&
-			!IsFileWriteEnabled()
-		){
-			V8Error( "write operation not permitted by user" );
-			return -1;
-		}
-	#endif
 	
 	// gz open
 	if( *pMode == 'z' ){

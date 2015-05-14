@@ -1571,27 +1571,3 @@ BOOL func_update( FILTER *filter, int status ){
 	
 	return TRUE;
 }
-
-/*** ファイルライト許可取得 *************************************************/
-
-#ifdef PUBLIC_MODE
-BOOL IsFileWriteEnabled( void ){
-	if( g_Vsd->filter->exfunc->ini_load_int( g_Vsd->filter, "accept_file_wite", 0 )){
-		return TRUE;
-	}
-	
-	if(
-		MessageBox( NULL,
-			"VSD for GPS の JavaScript がファイル書き込みすることを許可しますか?\n"
-			"はい を選ぶと，以後のファイル書き込みはすべて許可されます．",
-			"VSD for GPS",
-			MB_YESNO | MB_ICONQUESTION
-		) == IDYES
-	){
-		g_Vsd->filter->exfunc->ini_save_int( g_Vsd->filter, "accept_file_wite", 1 );
-		return TRUE;
-	}
-	
-	return FALSE;
-}
-#endif

@@ -270,36 +270,6 @@ void CScript::DebugPrint( const v8::Arguments& args ){
 	delete [] wsz;
 }
 
-/*** Eval *******************************************************************/
-
-v8::Handle<v8::Value> CScript::Eval( const v8::Arguments& args ){
-	
-	HandleScope handle_scope;
-	v8::Handle<Value> ret;
-	
-	if( CScript::CheckArgs( args.Length() == 1 )){
-		V8ErrorNumOfArg();
-		return v8::Undefined();
-	}
-	
-	TryCatch try_catch;
-	
-	Local<Script> script = Script::Compile(
-		v8::Handle<v8::String>::Cast( args[ 0 ]),
-		v8::String::New( "Eval() script" )
-	);
-	
-	if( !try_catch.HasCaught()) ret = script->Run();
-	
-	if( try_catch.HasCaught()){
-		m_pVsd->DispErrorMessage( ReportException( m_szErrorMsg, try_catch ));
-		V8Error( "above error occurs in Eval() script" );
-		return v8::Undefined();
-	}
-	
-	return handle_scope.Close( ret );
-}
-
 /*** include ****************************************************************/
 
 void CScript::Include( LPCWSTR wszFileName ){

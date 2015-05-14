@@ -35,7 +35,7 @@ function SetupOldApi(){
 				Getter += Sprintf( "Vsd.__defineGetter__( '%s', function(){ return Log.%s; });\n", prop, prop );
 			}
 		}
-		Eval( Getter );
+		eval( Getter );
 	}
 	
 	// DrawOpenStreetMap → Vsd.DrawRoadMap に変更
