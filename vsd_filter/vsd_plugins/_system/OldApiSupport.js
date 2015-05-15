@@ -12,12 +12,12 @@ function SetupOldApi(){
 	// APIKey の設定を _user_config.js に分離
 	if( TargetVSDRevision >= 779 ) return;
 	if( !GoogleAPIKey[ 0 ]){
-		Vsd.__DrawGoogleMaps_r779 = Vsd.DrawGoogleMaps;
+		__VSD_System__.prototype.__DrawGoogleMaps_r779 = __VSD_System__.prototype.DrawGoogleMaps;
 		
-		Vsd.DrawGoogleMaps = function( param ){
+		__VSD_System__.prototype.DrawGoogleMaps = function( param ){
 			GoogleAPIKey[ 0 ] = param.APIKey;
-			Vsd.DrawGoogleMaps = Vsd.__DrawGoogleMaps_r779;
-			delete Vsd.__DrawGoogleMaps_r779;
+			__VSD_System__.prototype.DrawGoogleMaps = __VSD_System__.prototype.__DrawGoogleMaps_r779;
+			delete __VSD_System__.prototype.__DrawGoogleMaps_r779;
 		}
 	}
 	
@@ -30,9 +30,9 @@ function SetupOldApi(){
 				typeof( Log[ prop ]) != 'object' &&
 				typeof( Log[ prop ]) != 'function'
 			){
-				Vsd[ "Max" + prop ] = Log.Max[ prop ];
-				Vsd[ "Min" + prop ] = Log.Min[ prop ];
-				Getter += Sprintf( "Vsd.__defineGetter__( '%s', function(){ return Log.%s; });\n", prop, prop );
+				__VSD_System__.prototype[ "Max" + prop ] = Log.Max[ prop ];
+				__VSD_System__.prototype[ "Min" + prop ] = Log.Min[ prop ];
+				Getter += Sprintf( "__VSD_System__.prototype.__defineGetter__( '%s', function(){ return Log.%s; });\n", prop, prop );
 			}
 		}
 		eval( Getter );
@@ -40,18 +40,18 @@ function SetupOldApi(){
 	
 	// DrawOpenStreetMap → Vsd.DrawRoadMap に変更
 	if( TargetVSDRevision >= 743 ) return;
-	Vsd.DrawOpenStreetMap = Vsd.DrawRoadMap;
+	__VSD_System__.prototype.DrawOpenStreetMap = __VSD_System__.prototype.DrawRoadMap;
 	
 	// DrawMeterScale 廃止
 	if( TargetVSDRevision >= 721 ) return;
-	Vsd.DrawMeterScale = function(
+	__VSD_System__.prototype.DrawMeterScale = function(
 		x, y, r,
 		line1_len, line1_width, line1_color,
 		line2_len, line2_width, line2_color, line2_cnt,
 		min_angle, max_angle, r_num, max_val, line1_cnt,
 		color, font
 	){
-		return Vsd.DrawRoundMeterScaleSub(
+		return this.DrawRoundMeterScaleSub(
 			x, y, r,
 			line1_len, line1_width, line1_color, line1_cnt,
 			line2_len, line2_width, line2_color, line2_cnt,

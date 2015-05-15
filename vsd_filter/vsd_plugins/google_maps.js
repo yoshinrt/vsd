@@ -38,13 +38,16 @@ function Initialize(){
 	function min( a, b ){ return ( a < b ) ? a : b; }
 	
 	if( GoogleAPIKey[ 0 ] == '' ){
-		MessageBox(
+		if( MessageBox(
 			"本スキンを使用するためには初期設定が必要です．詳しくは\n" +
 			"VSD for GPS インストール手順の web ページを参照してください．\n" +
-			"(OK を押すと web ブラウザを開きます)"
-		);
-		var WshShell = new ActiveXObject( "WScript.Shell" );
-		WshShell.Run( "cmd /c start https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install#GoogleAPIKey" );
+			"(OK を押すと web ブラウザを開きます)",
+			undefined,
+			MB_OKCANCEL | MB_ICONINFORMATION
+		) == IDOK ){
+			var WshShell = new ActiveXObject( "WScript.Shell" );
+			WshShell.Run( "cmd /c start https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install#GoogleAPIKey" );
+		}
 	}
 	
 	MeterRight = 1;

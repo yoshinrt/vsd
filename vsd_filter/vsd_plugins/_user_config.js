@@ -16,10 +16,7 @@ REV_LIMIT		= 6500;
 //   参考: https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install#GoogleAPIKey
 GoogleAPIKey = [
 //	"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	// 例
-	"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
-	"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
-	"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
-//	"",	//#REL#
+	"",
 ];
 
 //*** 設定ここまで ***********************************************************

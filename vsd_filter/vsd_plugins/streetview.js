@@ -23,9 +23,7 @@ function Initialize(){
 		Zoom: 14,
 		
 		// 地図タイプ
-		// roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:地図+航空写真 //#DEL#
-		Maptype: "roadmap",	//#DEL#
-//		Maptype: "openstreetmap",	//#REL#
+		Maptype: "openstreetmap",
 		
 		// 地図表示位置，サイズ(最大 640x640)
 		X:		Vsd.Width - 308 * Scale,
@@ -51,13 +49,16 @@ function Initialize(){
 	function min( a, b ){ return ( a < b ) ? a : b; }
 	
 	if( GoogleAPIKey[ 0 ] == '' ){
-		MessageBox(
+		if( MessageBox(
 			"本スキンを使用するためには初期設定が必要です．詳しくは\n" +
 			"VSD for GPS インストール手順の web ページを参照してください．\n" +
-			"(OK を押すと web ブラウザを開きます)"
-		);
-		var WshShell = new ActiveXObject( "WScript.Shell" );
-		WshShell.Run( "cmd /c start https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install#GoogleAPIKey" );
+			"(OK を押すと web ブラウザを開きます)",
+			undefined,
+			MB_OKCANCEL | MB_ICONINFORMATION
+		) == IDOK ){
+			var WshShell = new ActiveXObject( "WScript.Shell" );
+			WshShell.Run( "cmd /c start https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install#GoogleAPIKey" );
+		}
 	}
 	
 	MeterRight = 1;
