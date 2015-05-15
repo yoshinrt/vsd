@@ -165,7 +165,7 @@ LPWSTR CScript::SprintfSub( const v8::Arguments& args ){
 		if(( p = wcschr( p, L'%' )) == NULL ) break;
 		
 		// 型フィールドサーチ
-		for( ++p; *p && wcschr( L"+-0123456789.# ", *p ); ++p );
+		for( ++p; *p && strchr( "+-0123456789.# ", *p ); ++p );
 		
 		// %% だったら次いってみよー
 		if( *p == L'%' ){
@@ -186,10 +186,10 @@ LPWSTR CScript::SprintfSub( const v8::Arguments& args ){
 			
 			vecStrValue.push_back( pvalue );
 			*( LPCWSTR *)&puArgBuf[ uArgBufPtr++ ] = ( LPCWSTR )**pvalue;
-		}else if( wcschr( L"cCdiouxX", *p )){
+		}else if( strchr( "cCdiouxX", *p )){
 			// int 型
 			puArgBuf[ uArgBufPtr++ ] = args[ iArgNum ]->Int32Value();
-		}else if( wcschr( L"eEfgGaA", *p )){
+		}else if( strchr( "eEfgGaA", *p )){
 			// double 型
 			*( double *)&puArgBuf[ uArgBufPtr ] = args[ iArgNum ]->NumberValue();
 			uArgBufPtr += 2;

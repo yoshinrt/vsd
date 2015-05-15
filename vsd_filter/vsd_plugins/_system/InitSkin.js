@@ -46,9 +46,9 @@ function GetGear( GearRatio ){
 
 //*** グラフ描画 *************************************************************
 
-__VSD_System__.prototype.MakeGraphParam = function( params ){
+Vsd.MakeGraphParam = function( params ){
 	for( var i = 0; i < params.length; ){
-		if( this[ params[ i ]] === undefined ){
+		if( Vsd[ params[ i ]] === undefined ){
 			params.splice( i, 3 );	// データがない要素を削除
 		}else{
 			i += 3;
@@ -56,12 +56,12 @@ __VSD_System__.prototype.MakeGraphParam = function( params ){
 	}
 }
 
-__VSD_System__.prototype.DrawGraph = function( x1, y1, x2, y2, font, flags, params ){
+Vsd.DrawGraph = function( x1, y1, x2, y2, font, flags, params ){
 	// グラフを表示しない条件
-	if( !this.Config_graph ) return;
+	if( !Vsd.Config_graph ) return;
 	
 	if( params.Adjust === undefined ){
-		this.MakeGraphParam( params );
+		Vsd.MakeGraphParam( params );
 		params.Adjust = true;
 	}
 	
@@ -83,7 +83,7 @@ __VSD_System__.prototype.DrawGraph = function( x1, y1, x2, y2, font, flags, para
 			Y2 = y1 - 1 + ~~( Height * ( i + 1 ) / GrpNum );
 		}
 		
-		this.DrawGraphSingle(
+		Vsd.DrawGraphSingle(
 			X1, Y1, X2, Y2,
 			params[ i * 3 + 0 ],	// key
 			params[ i * 3 + 1 ],	// unit
@@ -95,7 +95,7 @@ __VSD_System__.prototype.DrawGraph = function( x1, y1, x2, y2, font, flags, para
 
 //*** Google Map 描画 ********************************************************
 
-__VSD_System__.prototype.DrawGoogleMaps = function( param ){
+Vsd.DrawGoogleMaps = function( param ){
 	if( Log.Longitude === undefined ) return;
 	
 	// 一番最初の地図データを同期モードで取得
@@ -109,7 +109,7 @@ __VSD_System__.prototype.DrawGoogleMaps = function( param ){
 		
 		param.MapImg		= new Image( param.GMapURL + Log.Latitude + "," + Log.Longitude );
 		param.Dir			= Log.Direction;
-		param.Time			= this.DateTime;
+		param.Time			= Vsd.DateTime;
 		param.DispLong		= param.Long 	= Log.Longitude;
 		param.DispLati		= param.Lati 	= Log.Latitude;
 		param.Distance		= Log.Distance;
@@ -137,9 +137,9 @@ __VSD_System__.prototype.DrawGoogleMaps = function( param ){
 		Math.log(( 1 + sin_now ) / ( 1 - sin_now ))
 	) / Math.PI * ( 1 << ( 7 - 1 + param.Zoom ));
 	
-	this.PutImage( param.X, param.Y, param.MapImg );
+	Vsd.PutImage( param.X, param.Y, param.MapImg );
 	
-	this.DrawCarIndicator(
+	Vsd.DrawCarIndicator(
 		param.X + param.Width  / 2 + PixLong,
 		param.Y + param.Height / 2 + PixLati,
 		Log.Direction, param.IndicatorSize, param.IndicatorColor
@@ -148,14 +148,14 @@ __VSD_System__.prototype.DrawGoogleMaps = function( param ){
 	// 次のマップデータを非同期モードで取得
 	if(
 		param.MapImgNext === undefined &&
-		Math.abs( param.Time - this.DateTime ) >= param.UpdateTime &&
+		Math.abs( param.Time - Vsd.DateTime ) >= param.UpdateTime &&
 		( PixLong * PixLong + PixLati * PixLati ) >= param.UpdateDistance * param.UpdateDistance
 	){
 		param.MapImgNext = new Image(
 			param.GMapURL + Log.Latitude + "," + Log.Longitude,
 			IMG_INET_ASYNC
 		);
-		param.Time			= this.DateTime;
+		param.Time			= Vsd.DateTime;
 		param.Long			= Log.Longitude;
 		param.Lati			= Log.Latitude;
 		param.NextDir		= Log.Direction;
@@ -163,7 +163,7 @@ __VSD_System__.prototype.DrawGoogleMaps = function( param ){
 }
 
 // 自車マーク描画
-__VSD_System__.prototype.DrawCarIndicator = function( cx, cy, angle, size, color ){
+Vsd.DrawCarIndicator = function( cx, cy, angle, size, color ){
 	angle *= Math.PI / 180;
 	var cos = Math.cos( angle ) * size;
 	var sin = Math.sin( angle ) * size;
@@ -183,20 +183,20 @@ __VSD_System__.prototype.DrawCarIndicator = function( cx, cy, angle, size, color
 		apex[ i + 1 ] = y;
 	}
 	
-	this.DrawPolygon( apex, color, DRAW_FILL );
-	this.DrawCircle( cx, cy, size, color );
+	Vsd.DrawPolygon( apex, color, DRAW_FILL );
+	Vsd.DrawCircle( cx, cy, size, color );
 }
 
 //*** Geocoding 処理 *********************************************************
 
-__VSD_System__.prototype.Geocoding = function( param ){
+Vsd.Geocoding = function( param ){
 	// XMLHttpRequest 作成
 	if( param.HttpRequest === undefined ){
 		param.HttpRequest = CreateXMLHttpRequest();
 		param.Address = undefined;
 		param.Result = undefined;
 		param.SendRequest = 0;
-		param.PrevTime = this.DateTime - param.UpdateTime;
+		param.PrevTime = Vsd.DateTime - param.UpdateTime;
 	}
 	
 	// HTTP リクエスト完了
@@ -224,7 +224,7 @@ __VSD_System__.prototype.Geocoding = function( param ){
 	// リクエスト送信
 	if(
 		!param.SendRequest &&
-		Math.abs( param.PrevTime - this.DateTime ) >= param.UpdateTime
+		Math.abs( param.PrevTime - Vsd.DateTime ) >= param.UpdateTime
 	){
 		param.HttpRequest.open(
 			"GET",
@@ -234,7 +234,7 @@ __VSD_System__.prototype.Geocoding = function( param ){
 		);
 		
 		param.HttpRequest.send();
-		param.PrevTime = this.DateTime;
+		param.PrevTime = Vsd.DateTime;
 		param.SendRequest = 1;
 	}
 	return param.Address;
@@ -250,9 +250,9 @@ __VSD_System__.prototype.Geocoding = function( param ){
 
 //*** OpenStreetMap 描画 *****************************************************
 
-__VSD_System__.prototype.DrawRoadMap = function( param ){
+Vsd.DrawRoadMap = function( param ){
 	if( Log.Longitude === undefined ){
-		NoMap( this, param.X, param.Y, param.X + param.Width - 1, param.Y + param.Height - 1 );
+		NoMap( param.X, param.Y, param.X + param.Width - 1, param.Y + param.Height - 1 );
 		return;
 	}
 	
@@ -279,14 +279,14 @@ __VSD_System__.prototype.DrawRoadMap = function( param ){
 	}
 	
 	// タイル先読み
-	if( this.FrameCnt != param.FrameCnt ){
+	if( Vsd.FrameCnt != param.FrameCnt ){
 		for( var i = 0; i < param.PrefetchFrame; ++i ){
-			FetchMapTile( this.FrameCnt + i, param );
+			FetchMapTile( Vsd.FrameCnt + i, param );
 		}
-		param.FrameCnt = this.FrameCnt;
+		param.FrameCnt = Vsd.FrameCnt;
 	}
 	
-	FetchMapTile( this.FrameCnt + param.PrefetchFrame, param );
+	FetchMapTile( Vsd.FrameCnt + param.PrefetchFrame, param );
 	++param.FrameCnt;
 	
 	// タイル番号，タイル内 x,y 座標を求める
@@ -322,12 +322,12 @@ __VSD_System__.prototype.DrawRoadMap = function( param ){
 			
 			// Image 存在確認
 			var key = TileX + "," + TileY;
-			if( this.IsSaving && param.MapImg[ key ].WaitAsyncLoadComplete( 10000 ));
+			if( Vsd.IsSaving && param.MapImg[ key ].WaitAsyncLoadComplete( 10000 ));
 			
 			if( param.MapImg[ key ].Status == IMG_STATUS_LOAD_COMPLETE ){
-				this.PutImage( param.X + x, param.Y + y, param.MapImg[ key ], 0, OffsX, OffsY, w, h );
+				Vsd.PutImage( param.X + x, param.Y + y, param.MapImg[ key ], 0, OffsX, OffsY, w, h );
 			}else{
-				NoMap( this, param.X + x, param.Y + y, param.X + x + w - 1, param.Y + y + h - 1 );
+				NoMap( param.X + x, param.Y + y, param.X + x + w - 1, param.Y + y + h - 1 );
 			}
 			
 			++TileX;
@@ -375,14 +375,14 @@ __VSD_System__.prototype.DrawRoadMap = function( param ){
 	
 	// 走行軌跡
 	if( param.PathColor != -1 ){
-		this.DrawMap(
+		Vsd.DrawMap(
 			param.X, param.Y, param.X + param.Width - 1, param.Y + param.Height - 1,
 			DRAW_LOADMAP, param.PathWidth, param.Zoom, param.PathColor
 		);
 	}
 	
 	// 自車インジケータ
-	this.DrawCarIndicator(
+	Vsd.DrawCarIndicator(
 		param.X + param.Width  / 2,
 		param.Y + param.Height / 2,
 		Log.Direction, param.IndicatorSize, param.IndicatorColor
@@ -399,18 +399,18 @@ __VSD_System__.prototype.DrawRoadMap = function( param ){
 		return 180 / Math.PI * Math.atan( 0.5 * ( Math.exp( n ) - Math.exp( -n )));
 	}
 	
-	function NoMap( This, x1, y1, x2, y2 ){
-		This.DrawRect( x1, y1, x2, y2, 0xC0C0C0, DRAW_FILL );
-		This.DrawRect( x1, y1, x2, y2, 0x808080 );
-		This.DrawLine( x1, y1, x2, y2, 0x808080 );
-		This.DrawLine( x2, y1, x1, y2, 0x808080 );
+	function NoMap( x1, y1, x2, y2 ){
+		Vsd.DrawRect( x1, y1, x2, y2, 0xC0C0C0, DRAW_FILL );
+		Vsd.DrawRect( x1, y1, x2, y2, 0x808080 );
+		Vsd.DrawLine( x1, y1, x2, y2, 0x808080 );
+		Vsd.DrawLine( x2, y1, x1, y2, 0x808080 );
 	}
 }
 
 //*** メータ用目盛り描画 *****************************************************
 
-__VSD_System__.prototype.DrawRoundMeterScale = function( param ){
-	return this.DrawRoundMeterScaleSub(
+Vsd.DrawRoundMeterScale = function( param ){
+	return Vsd.DrawRoundMeterScaleSub(
 		param.X, param.Y, param.R,
 		param.Line1Len, param.Line1Width, param.Line1Color, param.Line1Cnt,
 		param.Line2Len, param.Line2Width, param.Line2Color, param.Line2Cnt,
@@ -420,8 +420,8 @@ __VSD_System__.prototype.DrawRoundMeterScale = function( param ){
 	);
 }
 
-__VSD_System__.prototype.DrawLinearMeterScale = function( param ){
-	return this.DrawLinearMeterScaleSub(
+Vsd.DrawLinearMeterScale = function( param ){
+	return Vsd.DrawLinearMeterScaleSub(
 		param.Flag,
 		param.X, param.Y, param.Width,
 		param.Line1Len, param.Line1Width, param.Line1Color, param.Line1Cnt,

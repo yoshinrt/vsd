@@ -23,13 +23,13 @@ class CV8Map : public v8::Handle<v8::Value> {
 		return v8::Handle<v8::Array>::Cast( ToValue());
 	}
 	
-	v8::Handle<v8::Value>& ToValue( void ){
-		return *static_cast<v8::Handle<v8::Value> *>( this );
+	v8::Handle<v8::Value> ToValue( void ){
+		return static_cast<v8::Handle<v8::Value>>( *this );
 	}
 	
 	// ’lŽæ“¾
-	int Int32( void ){ return ToValue()->Int32Value(); }
-	int Int32( int iDefault ){
+	int GetInt32( void ){ return ToValue()->Int32Value(); }
+	int GetInt32( int iDefault ){
 		return ToValue()->IsUndefined() ? iDefault : ToValue()->Int32Value();
 	}
 	
