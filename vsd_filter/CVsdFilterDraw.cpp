@@ -27,6 +27,7 @@
 
 #define ClipX( x1, x2 )	( x1 = x1 < m_iClipX1 ? m_iClipX1 : x1, x2 = x2 > m_iClipX2 ? m_iClipX2 : x2 )
 #define ClipY( y1, y2 )	( y1 = y1 < m_iClipY1 ? m_iClipY1 : y1, y2 = y2 > m_iClipY2 ? m_iClipY2 : y2 )
+#define Clip( x1, y1, x2, y2 ) ( ClipX( x1, x2 ), ClipY( y1, y2 ))
 
 /*** put pixel 系 ***********************************************************/
 
@@ -46,24 +47,25 @@ inline void CVsdFilter::PutPixel( int x, int y, CPixelArg yc, UINT uFlag ){
 		if( m_iPolygonMinY > y ) m_iPolygonMinY = y;
 		if( m_iPolygonMaxY < y ) m_iPolygonMaxY = y;
 	}else if( m_iClipX1 <= x && x <= m_iClipX2 && yc.alfa < 255 ){
-		PutPixel( x, y, yc );
+		PutPixelC( x, y, yc );
 	}
 }
 
 /*** DrawLine ***************************************************************/
 
 #define ABS( x )			(( x ) < 0 ? -( x ) : ( x ))
-#define SWAP( x, y, tmp )	( tmp = x, x = y, y = tmp )
 
 void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, CPixelArg yc, UINT uPattern ){
 	
 	int i;
 	
-	if( y1 == y2 ){
-		if( m_iClipY1 <= y1 && y1 <= m_iClipY2 && yc.alfa < 255 ){
-			if( x1 > x2 ) SWAP( x1, x2, i );
+	if( IsClipped( x1, y1, x2, y2 )) return;
+	
+	if( y1 == y2 && uPattern == -1 ){
+		if( !IsClipped( x1, y1, x2 ) && yc.alfa < 255 ){
+			Sort2( x1, x2 );
 			ClipX( x1, x2 );
-			FillLine( x1, y1, x2, yc, uPattern );
+			FillLineC( x1, y1, x2, yc );
 		}
 		return;
 	}
@@ -74,15 +76,15 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, CPixelArg yc, UINT uP
 	int iXsign = ( x2 > x1 ) ? 1 : -1;
 	int iYsign = ( y2 > y1 ) ? 1 : -1;
 	
+	// ★早期終了条件を追加する
 	/* 傾きが1より小さい場合 */
 	if( iXdiff > iYdiff ){
 		int E = iYdiff - 2 * iXdiff;
 		for( i = 0; i < iXdiff; i++ ){
 			
-			if(
-				uPattern == 0xFFFFFFFF ||
-				uPattern & ( 1 << ( x1 & 0x1F ))
-			) PutPixelClip( x1, y1, yc );
+			if( uPattern == 0xFFFFFFFF || uPattern & ( 1 << ( x1 & 0x1F ))){
+				PutPixel( x1, y1, yc );
+			}
 			
 			x1 += iXsign;
 			E += 2 * iYdiff;
@@ -99,7 +101,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, CPixelArg yc, UINT uP
 			if(
 				uPattern == 0xFFFFFFFF ||
 				uPattern & ( 1 << ( y1 & 0x1F ))
-			) PutPixelClip( x1, y1, yc );
+			) PutPixel( x1, y1, yc );
 			
 			y1 += iYsign;
 			E += 2 * iXdiff;
@@ -114,7 +116,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, CPixelArg yc, UINT uP
 void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, CPixelArg yc, UINT uPattern ){
 	if( width < 1 ) width = 1;
 	
-	if( width <= 1 || uPattern != -1 ){
+	if( width == 1 || uPattern != -1 ){
 		#ifdef _OPENMP_AVS
 			#pragma omp parallel for
 			for( int i = 0; i < width * width; ++i ){
@@ -180,19 +182,18 @@ void CVsdFilter::DrawRect(
 ){
 	int	y;
 	
-	if( y1 > y2 ) SWAP( y1, y2, y );
-	if( x1 > x2 ) SWAP( x1, x2, y );
+	if( IsClipped( x1, y1, x2, y2 )) return;
 	
 	if( uFlag & IMG_FILL ){
+		Sort2( x1, x2 );
+		Sort2( y1, y2 );
+		Clip( x1, y1, x2, y2 );
+		
 		#ifdef _OPENMP_AVS
 			#pragma omp parallel for
 		#endif
-		
-		ClipX( x1, x2 );
-		ClipY( y1, y2 );
-		
 		for( y = y1; y <= y2; ++y ){
-			FillLine( x1, y, x2, yc );
+			FillLineC( x1, y, x2, yc );
 		}
 	}else{
 		DrawLine( x1, y1, x2, y1, yc );
@@ -408,6 +409,8 @@ void CVsdFilter::DrawArc(
 }
 
 /*** DrawFont ***************************************************************/
+// DrawFont* の Y Clip, x1 > ClipX2 は DrawText* でやっているので省く
+// x2 < ClipX1 だけチェックすれば良い
 
 int CVsdFilter::DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc ){
 	
@@ -417,7 +420,9 @@ int CVsdFilter::DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc )
 	int iCellIncX = Font.IsFixed() ? Font.GetWidth() : FontGlyph.iCellIncX;
 	int iOrgX = ( iCellIncX - FontGlyph.iW ) / 2;
 	
-	if( !Font.IsNoAntialias()){
+	if( iOrgX + FontGlyph.iW <= m_iClipX1 ){
+		// nop
+	}else if( !Font.IsNoAntialias()){
 		int iBmpW = ( FontGlyph.iW + 3 ) & ~3;
 		
 		#ifdef _OPENMP_AVS
@@ -488,8 +493,11 @@ void CVsdFilter::DrawText( int x, int y, LPCWSTR szMsg, CVsdFont &Font, CPixelAr
 	x = m_iTextPosX;
 	
 	for( int i = 0; szMsg[ i ]; ++i ){
+		if( x > m_iClipX2 ) break;
 		x += DrawFont( x, m_iTextPosY, szMsg[ i ], Font, yc, ycOutline );
 	}
+	
+	if( IsClippedY( y, y + Font.GetHeight() - 1 )) return;
 	
 	m_iTextPosY += Font.GetHeight();
 }
@@ -515,7 +523,10 @@ void CVsdFilter::DrawTextAlign( int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFo
 		y = m_iTextPosY;
 	}
 	
+	if( IsClippedY( y, y + Font.GetHeight() - 1 )) return;
+	
 	for( int i = 0; szMsg[ i ]; ++i ){
+		if( x > m_iClipX2 ) break;
 		x += DrawFont( x, y, szMsg[ i ], Font, yc, ycOutline );
 	}
 	
@@ -549,7 +560,7 @@ inline void CVsdFilter::FillPolygon( CPixelArg yc ){
 			int x2 = m_Polygon[ y ].iRight;
 			ClipX( x1, x2 );
 			
-			FillLine( x1, y, x2, yc );
+			FillLineC( x1, y, x2, yc );
 		}
 		m_Polygon[ y ].iRight	= SHRT_MIN;	// right
 		m_Polygon[ y ].iLeft	= SHRT_MAX;	// left
@@ -705,7 +716,13 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMax
 			
 			if(( EdgeList[ u ].Flag & EDGE_H ) && EdgeList[ u ].y == y ){
 				*ep++ = EdgeList[ u ].x;
-				FillLine( EdgeList[ u ].x, y, EdgeList[ v ].x, yc );
+				int x0 = EdgeList[ u ].x;
+				int x1 = EdgeList[ v ].x;
+				
+				if( !IsClippedX( x0, x1 )){
+					ClipX( x0, x1 );
+					FillLineC( x0, y, EdgeList[ v ].x, yc );
+				}
 			}
 			
 			if( EdgeList[ v ].y == y ){
@@ -749,7 +766,7 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMax
 			ClipX( x0, x1 );
 			
 			// 直線の描画
-			FillLine( x0, y, x1, yc );
+			FillLineC( x0, y, x1, yc );
 		}
 	}
 }
@@ -832,7 +849,7 @@ void CVsdFilter::PutImage(
 	if( GetHeight() < y + iImgH ) iImgH = GetHeight() - y;
 	iy_ed = iy_st + iImgH;
 	
-	PutImage0( x, y, img, ix_st, iy_st, ix_ed, iy_ed );
+	PutImage0C( x, y, img, ix_st, iy_st, ix_ed, iy_ed );
 }
 
 /*** パラメータ調整用スピードグラフ *****************************************/
@@ -1158,7 +1175,7 @@ void CVsdFilter::DrawMap(
 	if( !m_CurLog || !m_CurLog->m_pLogX ) return;
 	if( iLineWidth  < 1 ) iLineWidth  = 1;
 	
-	Clip( x1, y1, x2, y2 );
+	SetClip( x1, y1, x2, y2 );
 	
 	// センター座標
 	for( int iStep = -1; iStep <= 1; iStep += 2 ){
@@ -1197,7 +1214,7 @@ void CVsdFilter::DrawMap(
 		}
 	}
 	
-	Clip();
+	SetClip();
 	SelectLogVsd;
 }
 

@@ -127,7 +127,7 @@ G = Y-0.714Cr-0.344Cb
 B = Y+1.772Cb 
 */
 
-inline void CVsdFilter::PutPixel( int iIndex, const CPixelArg yc, int iAlfa ){
+inline void CVsdFilter::PutPixelC( int iIndex, const CPixelArg yc, int iAlfa ){
 	
 	m_pPlane[ iIndex + 0 ] = ( PIXEL_t )(
 		yc.y + ((  m_pPlane[ iIndex + 0 ] * iAlfa ) >> 8 )
@@ -137,7 +137,7 @@ inline void CVsdFilter::PutPixel( int iIndex, const CPixelArg yc, int iAlfa ){
 	);
 }
 
-void CVsdFilter::PutPixel( int x, int y, const CPixelArg yc ){
+void CVsdFilter::PutPixelC( int x, int y, const CPixelArg yc ){
 	
 	int	iIndex	= GetIndex( x, y );
 	
@@ -147,13 +147,13 @@ void CVsdFilter::PutPixel( int x, int y, const CPixelArg yc ){
 	
 	if( iAlfa ){
 		iAlfa += iAlfa >> 7;
-		PutPixel( iIndex, yc, iAlfa );
+		PutPixelC( iIndex, yc, iAlfa );
 	}else{
 		*( USHORT *)( m_pPlane + iIndex ) = ( x & 1 ) ? yca.ycr : yca.ycb;
 	}
 }
 
-void CVsdFilter::FillLine( int x1, int y1, int x2, const CPixelArg yc, UINT uPattern ){
+void CVsdFilter::FillLineC( int x1, int y1, int x2, const CPixelArg yc ){
 	
 	int iIndex = GetIndex( x1, y1 );
 	
@@ -161,12 +161,10 @@ void CVsdFilter::FillLine( int x1, int y1, int x2, const CPixelArg yc, UINT uPat
 	int iAlfa = yca.alfa;
 	yca.alfa = yca.y;
 	
-	if( iAlfa || uPattern != ~0 ){
+	if( iAlfa ){
 		iAlfa += iAlfa >> 7;
 		for( int x = x1; x <= x2; ++x, iIndex += 2 ){
-			if( uPattern & ( 1 << ( x & 0x1F ))){
-				PutPixel( iIndex, yc, iAlfa );
-			}
+			PutPixelC( iIndex, yc, iAlfa );
 		}
 	}else{
 		// x1, x2 ‚ª”¼’[‚È pixel ‚È‚çC‚»‚ê‚¾‚¯æ‚Éˆ—
@@ -187,7 +185,7 @@ void CVsdFilter::FillLine( int x1, int y1, int x2, const CPixelArg yc, UINT uPat
 
 /*** PutImage ***************************************************************/
 
-void CVsdFilter::PutImage0(
+void CVsdFilter::PutImage0C(
 	int x, int y, CVsdImage &img,
 	int ix_st, int iy_st, int ix_ed, int iy_ed
 ){

@@ -110,23 +110,19 @@ class CVsdFilter
 	void Destructor( void );
 	
 	/*** 画像オペレーション *************************************************/
+	// *C なメソッドは，クリッピングが完了している想定
 	
 	void PutPixel(	// !js_func
 		int x, int y, CPixelArg yc,
 		UINT uFlag	// !default:0
 	);
-	void PutPixel( int x, int y, CPixelArg yc );
+	void PutPixelC( int x, int y, CPixelArg yc );
 	
-	void PutPixelClip( int x, int y, CPixelArg yc ){
-		if(
-			m_iClipX1 <= x && x <= m_iClipX2 &&
-			m_iClipY1 <= y && y <= m_iClipY2
-		){
-			PutPixel( x, y, yc );
-		}
+	void PutPixel( int x, int y, CPixelArg yc ){
+		if( !IsClipped( x, y )) PutPixelC( x, y, yc );
 	}
 	
-	void FillLine( int x1, int y1, int x2, CPixelArg yc, UINT uPattern = 0xFFFFFFFF );
+	void FillLineC( int x1, int y1, int x2, CPixelArg yc );
 	
 	void PutImage(	// !js_func
 		int x, int y, CVsdImage &img,
@@ -137,7 +133,7 @@ class CVsdFilter
 		int iImgH = INT_MIN		// !default:INT_MIN
 	);
 	// 座標，width 等補正後
-	void PutImage0(
+	void PutImage0C(
 		int x, int y, CVsdImage &img,
 	int ix_st, int iy_st, int ix_ed, int iy_ed
 	);
@@ -361,7 +357,7 @@ class CVsdFilter
 	
 	// clip
 	int m_iClipX1, m_iClipY1, m_iClipX2, m_iClipY2;
-	void Clip(
+	void SetClip(
 		int x1 = INVALID_INT,
 		int y1 = INVALID_INT,
 		int x2 = INVALID_INT,
@@ -379,6 +375,41 @@ class CVsdFilter
 		m_iClipX2 = x2;
 		m_iClipY1 = y1;
 		m_iClipY2 = y2;
+	}
+	
+	template <class T>
+	static void Sort2( T &a, T &b ){
+		if( a > b ){
+			T tmp = a;
+			a = b;
+			b = tmp;
+		}
+	}
+	
+	BOOL IsClippedX( int x1, int x2 ){
+		return x1 < m_iClipX1 && x2 < m_iClipX1 || x1 > m_iClipX2 && x2 > m_iClipX2;
+	}
+	
+	BOOL IsClippedY( int y1, int y2 ){
+		return y1 < m_iClipY1 && y2 < m_iClipY1 || y1 > m_iClipY2 && y2 > m_iClipY2;
+	}
+	
+	BOOL IsClipped( int x1, int y1, int x2, int y2 ){
+		return IsClippedX( x1, x2 ) || IsClippedY( y1, y2 );
+	}
+	
+	BOOL IsClipped( int x1, int y1, int x2 ){
+		return (
+			IsClippedX( x1, x2 ) ||
+			( y1 < m_iClipY1 || y1 > m_iClipY2 )
+		);
+	}
+	
+	BOOL IsClipped( int x1, int y1 ){
+		return (
+			( x1 < m_iClipX1 || x1 > m_iClipX2 ) ||
+			( y1 < m_iClipY1 || y1 > m_iClipY2 )
+		);
 	}
 	
 	// ダイアログ設定リード
@@ -555,7 +586,7 @@ class CVsdFilter
 	int GetIndex( int x, int y ){ return m_iBytesPerLine * y + x * 2; }
 	
 	// 仮想関数
-	void PutPixel( int iIndex, CPixelArg yc, int iAlfa );
+	void PutPixelC( int iIndex, CPixelArg yc, int iAlfa );
 	
 	int	GetWidth( void )	{ return m_SrcFrame->GetRowSize()>>1; }	// !js_var:Width
 	int	GetHeight( void )	{ return m_SrcFrame->GetHeight(); }	// !js_var:Height

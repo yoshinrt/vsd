@@ -4,20 +4,20 @@
     <LocalDebuggerWorkingDirectory>D:\Video\Car\Kart\20130331_maishima\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>C:\Program Files (x86)\MediaPlayerClassic\mpc-hc.exe</LocalDebuggerCommand>
-    <LocalDebuggerCommandArguments>/fixedsize 860,533 D:\DDS\z.avs D:\Video\Car\ELISE\20140112_信楽ドライブ\drive.avs</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>/fixedsize 860,533 D:\DDS\z.avs</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerCommand>C:\Program Files (x86)\MediaPlayerClassic\mpc-hc.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerCommandArguments>/fixedsize 860,533 D:\DDS\z.avs D:\Video\Car\ELISE\20140112_信楽ドライブ\drive.avs</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>/fixedsize 860,533 D:\DDS\z.avs</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerWorkingDirectory>D:\Video\Car\Kart\20130331_maishima\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
-    <LocalDebuggerCommandArguments>/fixedsize 860,533 D:\DDS\z.avs D:\Video\Car\ELISE\20140112_信楽ドライブ\drive.avs</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>/fixedsize 860,533 D:\DDS\z.avs</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
     <LocalDebuggerWorkingDirectory>D:\Video\Car\Kart\20130331_maishima\</LocalDebuggerWorkingDirectory>
