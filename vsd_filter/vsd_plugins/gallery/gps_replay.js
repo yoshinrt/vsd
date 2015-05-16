@@ -21,10 +21,6 @@ function Initialize(){
 	//   に制限されています．
 	
 	MapParam = {
-		// Google Maps の API キーを指定します．
-		// 例: APIKey: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-		APIKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
-		
 		// ズームレベルを 0～21 で指定します
 		Zoom: 14,
 		
@@ -54,13 +50,6 @@ function Initialize(){
 		// かつ指定距離以上移動した場合のみ地図を更新します
 		UpdateTime:		1000,	// [ミリ秒]
 		UpdateDistance:	160,	// [ピクセル]
-		
-		// 1に設定すると，地図をスムースにスクロールします．
-		// ★重要★
-		//   地図から Google の権利帰属表示表示が消え，Google Maps の利用規約
-		//   違反になりますので，SmoothScrollMap:1 で作成した動画は絶対にネッ
-		//   ト等で公開しないでください．
-		SmoothScrollMap:	0,
 	};
 	
 	MapParam2 = [];
@@ -101,13 +90,32 @@ function Initialize(){
 	
 	// 座標等を予め計算しておく
 	MeterR  = 100 * Scale;
-	MeterX	= MeterRight ? Vsd.Width  - MeterR * 2: 0;
+	MeterX	= MeterRight ? Vsd.Width  - MeterR * 2 : 0;
 	MeterY	= Vsd.Height - MeterR * 2 * 0.88;
-	MeterCx = MeterX + MeterR;
-	MeterCy = MeterY + MeterR;
 	
 	// スピードメータ用最高速計算
 	MaxSpeed = ~~( Log.Max.Speed / 10 ) * 10;
+	
+	MeterParam = {
+		X:			MeterX + MeterR,
+		Y:			MeterY + MeterR,
+		R:			MeterR,
+		Line1Len:	MeterR * 0.1,
+		Line1Width:	2,
+		Line1Color:	0xFFFFFF,
+		Line1Cnt:	12,
+		Line2Len:	MeterR * 0.05,
+		Line2Width:	1,
+		Line2Color:	0xFFFFFF,
+		Line2Cnt:	2,
+		NumR:		MeterR * 0.78,
+		FontColor:	0xFFFFFF,
+		Font:		FontS,
+		MinAngle:	135,
+		MaxAngle:	45,
+		MinVal:		0,
+		MaxVal:		MaxSpeed,
+	};
 	
 	FontColor   = 0;
 	FontColorOL = 0xFFFFFF;
@@ -124,35 +132,27 @@ function Draw(){
 	Vsd.DrawRect( MapParam2.X, MapParam2.Y, MapParam2.X + MapParam2.Width -1 , MapParam2.Y + MapParam2.Height - 1, 0 );
 	
 	// メーター画像描画
-	Vsd.DrawCircle( MeterCx, MeterCy, MeterR, BGColor, DRAW_FILL );
+	Vsd.DrawCircle( MeterParam.X, MeterParam.Y, MeterR, BGColor, DRAW_FILL );
 	
 	// スピードメーター目盛り描画
-	Vsd.DrawMeterScale(
-		MeterCx, MeterCy, MeterR,
-		MeterR * 0.1,  2, 0xFFFFFF,
-		MeterR * 0.05, 1, 0xFFFFFF,
-		2, 135, 45,
-		MeterR * 0.78,
-		MaxSpeed, 12, 0xFFFFFF,
-		FontS
-	);
+	Vsd.DrawRoundMeterScale( MeterParam );
 	
 	// スピード数値表示
 	Vsd.DrawTextAlign(
-		MeterCx, MeterCy + MeterR * 0.25, 
+		MeterParam.X, MeterParam.Y + MeterR * 0.25, 
 		ALIGN_HCENTER | ALIGN_VCENTER,
 		~~Log.Speed, FontL, 0xFFFFFF
 	);
 	
 	Vsd.DrawTextAlign(
-		MeterCx, MeterCy + MeterR * 0.5,
+		MeterParam.X, MeterParam.Y + MeterR * 0.5,
 		ALIGN_HCENTER | ALIGN_VCENTER,
 		"km/h", FontS, 0xFFFFFF
 	);
 	
 	// スピードメーター針
 	Vsd.DrawNeedle(
-		MeterCx, MeterCy, MeterR * 0.95, MeterR * -0.1,
+		MeterParam.X, MeterParam.Y, MeterR * 0.95, MeterR * -0.1,
 		135, 45, Log.Speed / MaxSpeed, 0xFF0000, 3
 	);
 	

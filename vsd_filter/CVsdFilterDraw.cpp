@@ -1168,6 +1168,8 @@ void CVsdFilter::DrawMap(
 		int iPrevX = Lng2Pix( m_CurLog->Longitude( m_CurLog->m_iLogNum ), iZoomLv ) + iOffsX;
 		int iPrevY = Lat2Pix( m_CurLog->Latitude ( m_CurLog->m_iLogNum ), iZoomLv ) + iOffsY;
 		
+		int iIdxEnd = m_CurLog->m_iLogNum + iStep;
+		
 		for(
 			int iLogIdx = m_CurLog->m_iLogNum + iStep;
 			0 <= iLogIdx && iLogIdx < m_CurLog->GetCnt();
@@ -1182,12 +1184,15 @@ void CVsdFilter::DrawMap(
 				iPrevX = iX;
 				iPrevY = iY;
 				
+				// iIdxEnd は，最後にクリッピング内に描画した idx から *5 したもの，
+				// その範囲を超えたら描画処理終了
 				if(
-					iPrevX < x1 || x2 < iPrevX ||
-					iPrevY < y1 || y2 < iPrevY
+					x1 < iPrevX && iPrevX < x2 &&
+					y1 < iPrevY && iPrevY < y2
 				){
-					break;
+					iIdxEnd = m_CurLog->m_iLogNum + ( iLogIdx - m_CurLog->m_iLogNum ) * 5;
 				}
+				if( iStep > 0 ? iIdxEnd < iLogIdx : iIdxEnd > iLogIdx ) break;
 			}
 		}
 	}
