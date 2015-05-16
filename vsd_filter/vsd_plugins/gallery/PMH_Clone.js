@@ -1,4 +1,7 @@
-﻿//*** 初期化処理 ************************************************************
+TargetVSDRevision = 720;
+Include( "_system/OldApiSupport.js" );
+
+//*** 初期化処理 ************************************************************
 function Initialize(){
 Scale = Vsd.Width / 1920;
 
@@ -20,7 +23,7 @@ function Draw(){
 //画面右上の走行軌跡表示
 Vsd.DrawRect(1550*Scale,0*Scale,1920*Scale,410*Scale,0xE66000000,DRAW_FILL);
 Vsd.DrawTextAlign(1570*Scale,40*Scale,ALIGN_LEFT|ALIGN_BOTTOM,"Map",FontA,0x55CCCCCC)
-Vsd.DrawTextAlign(1900*Scale,40*Scale,ALIGN_RIGHT|ALIGN_BOTTOM,"☄GPS",FontD,0xFF9933)
+Vsd.DrawTextAlign(1900*Scale,40*Scale,ALIGN_RIGHT|ALIGN_BOTTOM,"?GPS",FontD,0xFF9933)
 Vsd.DrawRect(1570*Scale,60*Scale,1900*Scale,390*Scale,0xEFFFFFF)
 
 //VSD for GPSの仕様上、最大で1000秒間(8分40秒)の軌跡しか表示できません

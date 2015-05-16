@@ -1,3 +1,6 @@
+TargetVSDRevision = 720;
+Include( "_system/OldApiSupport.js" );
+
 //*** 初期化処理 ************************************************************
 function Initialize(){
 Scale = Vsd.Width / 1920;
