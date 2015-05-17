@@ -161,6 +161,7 @@
     <ClInclude Include="..\CV8Map.h" />
     <ClInclude Include="..\CVsdFile.h" />
     <ClInclude Include="..\CVsdFilter.h" />
+    <ClInclude Include="..\CVsdFilterLog.h" />
     <ClInclude Include="..\CVsdFont.h" />
     <ClInclude Include="..\CVsdImage.h" />
     <ClInclude Include="..\CVsdLog.h" />

@@ -27,6 +27,7 @@ print fpOut << "-----";
 
 MakeJsIF({
 	Class		=> 'CVsdFilter',
+	NoDestructor=> 1,
 	JsClass		=> '__VSD_System__',
 	NewObject	=> << '-----',
 		int iLen = args.Length();
@@ -133,28 +134,15 @@ MakeJsIF({
 ### CVsdFilter_Log ###############################################################
 
 MakeJsIF({
-	Class		=> 'CVsdFilter',
+	Class		=> 'CVsdFilterLog',
+	NoDestructor=> 1,
 	JsClass		=> '__VSD_SystemLog__',
-	vsdlog		=> 1,
 	NewObject	=> << '-----',
 		int iLen = args.Length();
 		if( CScript::CheckArgs( iLen == 1 )) return v8::Undefined();
 		
-		CVsdFilter *obj = static_cast<CVsdFilter *>( v8::Local<v8::External>::Cast( args[ 0 ] )->Value());
+		CVsdFilterLog *obj = static_cast<CVsdFilterLog *>( v8::Local<v8::External>::Cast( args[ 0 ] )->Value());
 		if( !obj ) return v8::Undefined();
------
-	FunctionIF	=> << '-----',
-	static v8::Handle<v8::Value> Func_ValueOfIndex( const v8::Arguments& args ){
-		int iLen = args.Length();
-		if( CScript::CheckArgs( iLen == 2 )) return v8::Undefined();
-		v8::String::AsciiValue str0( args[ 0 ] );
-		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
-		if( !thisObj ) return v8::Undefined();
-		return thisObj->AccessLog(
-			*str0,
-			args[ 1 ]->NumberValue()
-		);
-	}
 -----
 	ExtraNew	=> << '-----',
 		obj->AddLogAccessor( thisObject );
@@ -282,13 +270,10 @@ sub MakeJsIF {
 	$Function	= '';
 	$Const	= '';
 	
-	$IfNotVsd = $param->{ Class } eq 'CVsdFilter' ? 'if( 0 )' : '';
+	$UseDestructor = $param->{ NoDestructor } ? '0' : '1';
 	
 	open( fpIn,	"< $param->{ Class }.h" );
 	while( <fpIn> ){
-		# インデントを深くしたくないので苦肉の策
-		last if( $param->{ vsdlog });
-		
 		if( /!js_func\b/ ){
 			
 			# 関数名
@@ -507,14 +492,10 @@ sub MakeJsIF {
 	$AccessorIF =~ s/Get_(\w+)/AddAccessor( $1, $param->{ Class } )/ge;
 	$param->{ FunctionIF } =~ s/Func_(\w+)/AddFunction( $1, $param->{ Class } )/ge;
 	
-	$ClassIfName = $param->{ vsdlog } ?
-		"$param->{ Class }_LogIF" :
-		"$param->{ Class }IF";
-	
 	print fpOut << "-----" if( !$param->{ bGlobal } );
 /****************************************************************************/
 
-class $ClassIfName {
+class $param->{ Class }IF {
   public:
 	// クラスコンストラクタ
 	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
@@ -539,7 +520,7 @@ $param->{ ExtraNew }
 	
 	// クラスデストラクタ
 	static void Dispose( v8::Persistent<v8::Value> handle, void* pVoid ){
-		$IfNotVsd {
+		#if $UseDestructor
 			v8::HandleScope handle_scope;
 			$param->{ Class } *thisObj = CScript::GetThis<$param->{ Class }>( handle->ToObject());
 			if( thisObj ){
@@ -548,7 +529,7 @@ $param->{ ExtraNew }
 					DebugMsgD( "<<<del js obj $param->{ Class }:%X\\n", thisObj );
 				#endif
 			}
-		}
+		#endif
 		handle.Dispose();
 	}
 	
@@ -556,15 +537,17 @@ $param->{ ExtraNew }
 	static v8::Handle<v8::Value> Func_Dispose( const v8::Arguments& args ){
 		// obj の Dispose() を呼ぶ
 		$param->{ Class } *thisObj = CScript::GetThis<$param->{ Class }>( args.This());
-		$IfNotVsd if( thisObj ){
-			delete thisObj;
-			#ifdef DEBUG
-				DebugMsgD( "<<<DISPOSE js obj $param->{ Class }:%X\\n", thisObj );
-			#endif
-			
-			// internalfield を null っぽくする
-			args.This()->SetInternalField( 0, v8::External::New( NULL ));
-		}
+		#if $UseDestructor
+			if( thisObj ){
+				delete thisObj;
+				#ifdef DEBUG
+					DebugMsgD( "<<<DISPOSE js obj $param->{ Class }:%X\\n", thisObj );
+				#endif
+				
+				// internalfield を null っぽくする
+				args.This()->SetInternalField( 0, v8::External::New( NULL ));
+			}
+		#endif
 		return v8::Undefined();
 	}
 	

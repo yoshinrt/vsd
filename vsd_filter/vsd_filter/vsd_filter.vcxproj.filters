@@ -90,6 +90,9 @@
     <ClInclude Include="..\CV8Map.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="..\CVsdFilterLog.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\CVsdFilter.cpp">
