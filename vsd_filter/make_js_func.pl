@@ -19,6 +19,7 @@ print fpOut << "-----";
 #pragma once
 
 #include "CVsdFilter.h"
+#include "CVsdFilterLog.h"
 #include "CVsdFile.h"
 #include "COle.h"
 -----
