@@ -85,6 +85,7 @@ function Read_kml( Files ){
 		});
 	}else if( Points = Buf.match( /<coordinates>[\S\s]*?<\/coordinates>/g )){
 		Buf = undefined;
+		var MaxStraightLen = 100;	// 直線を切る長さ [m]
 		
 		// 時刻がない KML，Maps Engine の KML を想定
 		// <coordinates>135.67543,35.05375,0.0 135.6749,35.05453,0.0</coordinates>
@@ -105,16 +106,33 @@ function Read_kml( Files ){
 						Log.Time[ 0 ] = Date.UTC( date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0 );
 						++Cnt;
 					}else if(
-						Log.Longitude[ Cnt - 1 ] != Log.Longitude[ Cnt ] &&
+						Log.Longitude[ Cnt - 1 ] != Log.Longitude[ Cnt ] ||
 						Log.Latitude [ Cnt - 1 ] != Log.Latitude [ Cnt ]
 					){
-						// 60km/h における所要時間を求める
-						Log.Time[ Cnt ] = Log.Time[ Cnt - 1 ] + GetDistanceByLngLat(
+						var Distance = GetDistanceByLngLat(
 							Log.Longitude[ Cnt - 1 ],
 							Log.Latitude [ Cnt - 1 ],
 							Log.Longitude[ Cnt ],
 							Log.Latitude [ Cnt ]
-						) / ( 60 / 3600 );
+						);
+						
+						// 直線が長いと方位がおかしくなので一旦切る
+						if( Distance > MaxStraightLen + 5 ){
+							Log.Longitude[ Cnt + 1 ] = Log.Longitude[ Cnt ];
+							Log.Latitude [ Cnt + 1 ] = Log.Latitude [ Cnt ];
+							Log.Altitude [ Cnt + 1 ] = Log.Altitude [ Cnt ];
+							
+							Log.Longitude[ Cnt ] = Log.Longitude[ Cnt - 1 ] + ( Log.Longitude[ Cnt ] - Log.Longitude[ Cnt - 1 ]) / Distance * MaxStraightLen;
+							Log.Latitude [ Cnt ] = Log.Latitude [ Cnt - 1 ] + ( Log.Latitude [ Cnt ] - Log.Latitude [ Cnt - 1 ]) / Distance * MaxStraightLen;
+							Log.Altitude [ Cnt ] = Log.Altitude [ Cnt - 1 ] + ( Log.Altitude [ Cnt ] - Log.Altitude [ Cnt - 1 ]) / Distance * MaxStraightLen;
+							
+							Log.Time[ Cnt ] = Log.Time[ Cnt - 1 ] + MaxStraightLen / ( 60 / 3600 );
+							++Cnt;
+							Distance -= MaxStraightLen;
+						}
+						
+						// 60km/h における所要時間を求める
+						Log.Time[ Cnt ] = Log.Time[ Cnt - 1 ] + Distance / ( 60 / 3600 );
 						++Cnt;
 					}
 				});

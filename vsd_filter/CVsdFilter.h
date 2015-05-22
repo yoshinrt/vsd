@@ -593,7 +593,7 @@ class CVsdFilter
 	int	GetFrameMax( void )	{ return vi.num_frames; }	// !js_var:MaxFrameCnt
 	int	GetFrameCnt( void )	{ return m_iFrameCnt; }	// !js_var:FrameCnt
 	double GetFPS( void )	{ return ( double )vi.fps_numerator / vi.fps_denominator; } // !js_var:FramePerSecond
-	int IsSaving( void )	{ return 0; }	// !js_var:IsSaving
+	int IsSaving( void )	{ return m_piParamS[ SHADOW_SAVING ]; }	// !js_var:IsSaving
 	
 	// ƒpƒ‰ƒ[ƒ^
 	int	m_iFrameCnt, m_iFrameMax;

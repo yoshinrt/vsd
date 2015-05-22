@@ -492,12 +492,12 @@ void CVsdFilter::DrawText( int x, int y, LPCWSTR szMsg, CVsdFont &Font, CPixelAr
 	
 	x = m_iTextPosX;
 	
-	for( int i = 0; szMsg[ i ]; ++i ){
-		if( x > m_iClipX2 ) break;
-		x += DrawFont( x, m_iTextPosY, szMsg[ i ], Font, yc, ycOutline );
+	if( !IsClippedY( m_iTextPosY, m_iTextPosY + Font.GetHeight() - 1 )){
+		for( int i = 0; szMsg[ i ]; ++i ){
+			if( x > m_iClipX2 ) break;
+			x += DrawFont( x, m_iTextPosY, szMsg[ i ], Font, yc, ycOutline );
+		}
 	}
-	
-	if( IsClippedY( y, y + Font.GetHeight() - 1 )) return;
 	
 	m_iTextPosY += Font.GetHeight();
 }
@@ -523,11 +523,11 @@ void CVsdFilter::DrawTextAlign( int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFo
 		y = m_iTextPosY;
 	}
 	
-	if( IsClippedY( y, y + Font.GetHeight() - 1 )) return;
-	
-	for( int i = 0; szMsg[ i ]; ++i ){
-		if( x > m_iClipX2 ) break;
-		x += DrawFont( x, y, szMsg[ i ], Font, yc, ycOutline );
+	if( !IsClippedY( y, y + Font.GetHeight() - 1 )){
+		for( int i = 0; szMsg[ i ]; ++i ){
+			if( x > m_iClipX2 ) break;
+			x += DrawFont( x, y, szMsg[ i ], Font, yc, ycOutline );
+		}
 	}
 	
 	m_iTextPosY += Font.GetHeight();
