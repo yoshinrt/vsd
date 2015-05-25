@@ -16,7 +16,6 @@ function Read_kml( Files ){
 	Log.Altitude	= [];
 	
 	var	Cnt = 0;
-	var bMyTracks; // Google My Tracks ‚ÌƒoƒO? ‰ñ”ð
 	
 	var Buf = '';
 	var file = new File();

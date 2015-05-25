@@ -15,8 +15,8 @@ function Initialize(){
 		// 地図表示位置，サイズ(最大 640x640)
 		X:		8 * Scale,
 		Y:		8 * Scale,
-		Width:	min( 300 * Scale, 640 ),
-		Height:	min( 300 * Scale, 640 ),
+		Width:	Math.min( 300 * Scale, 640 ),
+		Height:	Math.min( 300 * Scale, 640 ),
 		
 		// 自車インジケータ
 		IndicatorSize:	12 * Scale,		// サイズ
@@ -34,8 +34,6 @@ function Initialize(){
 		// Geocoding 更新間隔
 		UpdateTime:	10000,	// [ミリ秒]
 	};
-	
-	function min( a, b ){ return ( a < b ) ? a : b; }
 	
 	if( GoogleAPIKey[ 0 ] == '' ){
 		if( MessageBox(
