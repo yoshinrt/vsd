@@ -48,7 +48,7 @@ function GetGear( GearRatio ){
 
 Vsd.MakeGraphParam = function( params ){
 	for( var i = 0; i < params.length; ){
-		if( Vsd[ params[ i ]] === undefined ){
+		if( Log[ params[ i ]] === undefined ){
 			params.splice( i, 3 );	// データがない要素を削除
 		}else{
 			i += 3;
