@@ -6,6 +6,16 @@
 
 #define	DEFAULT_PORT	USART1
 
+/*** バッファ ***************************************************************/
+
+#define TXBUF_SIZE	64
+#define RXBUF_SIZE	64
+
+UCHAR	g_cTxBuf[ TXBUF_SIZE ];
+volatile USHORT	g_uTxBufRp = 0, g_uTxBufWp = 0;
+UCHAR	g_cRxBuf[ TXBUF_SIZE ];
+volatile USHORT	g_uRxBufRp = 0, g_uRxBufWp = 0;
+
 /*** 初期化 *****************************************************************/
 
 void UsartInit( UINT uBaudRate ){
@@ -37,19 +47,48 @@ void UsartInit( UINT uBaudRate ){
 	USART_Cmd( DEFAULT_PORT, ENABLE );
 	
 	// 割り込み設定
-	//USART_ITConfig( DEFAULT_PORT
+	//USART_ITConfig( DEFAULT_PORT, USART_RXNE, ENABLE );
+}
+
+/*** 割り込みハンドラ *******************************************************/
+
+void USART1_IRQHandler( void ){
+	
+	// 受信バッファフル
+	
+	// 送信バッファエンプティ
+	if( USART_GetITStatus( DEFAULT_PORT, USART_IT_TXE )){
+		UINT uRp = g_uTxBufRp;
+		USART_SendData( DEFAULT_PORT, g_cTxBuf[ uRp ]);
+		if( ++uRp >= TXBUF_SIZE ) uRp = 0;
+		g_uTxBufRp = uRp;
+		
+		// 送信データが無くなったので割り込み禁止
+		if( uRp == g_uTxBufWp ){
+			USART_ITConfig( DEFAULT_PORT, USART_IT_TXE, DISABLE );
+		}
+	}
 }
 
 /*** 出力 *******************************************************************/
 
 void UsartPutchar( UCHAR c ){
-	if( c == '\n' ) UsartPutchar( '\r' );
-	USART_SendData( DEFAULT_PORT, c );
+	UINT uWp = g_uTxBufWp;
+	UINT uNextWp = uWp + 1;
+	if( uNextWp >= TXBUF_SIZE ) uNextWp = 0;
+	
+	// 送信バッファ Full なので待ち
+	while( uNextWp == g_uTxBufRp );
+	
+	g_cTxBuf[ uWp ] = c;
+	g_uTxBufWp = uNextWp;
+	
+	// tx 割り込み許可
+	USART_ITConfig( DEFAULT_PORT, USART_IT_TXE, ENABLE );
 }
 
 void UsartPutstr( char *szMsg ){
 	while( *szMsg ){
-		while( USART_GetFlagStatus( DEFAULT_PORT, USART_FLAG_TXE ) == RESET );
 		UsartPutchar( *szMsg );
 		++szMsg;
 	}

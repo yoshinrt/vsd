@@ -16,6 +16,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdio.h>
 #include <ST\iostm32f10xxB.h>
+#include "stm32f10x_nvic.h"
 #include "dds.h"
 #include "usart.h"
 
@@ -27,25 +28,43 @@
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
+void PutHex( UINT uNum ){
+	UINT u;
+	for( u = 0; u < 8; ++u ){
+		UINT n = uNum >> 28;
+		
+		if( n > 9 ){
+			UsartPutchar( n + ( 'A' - 10 ));
+		}else{
+			UsartPutchar( n + '0' );
+		}
+		uNum <<= 4;
+	}
+}
+
 void timer( unsigned long i ){
 	while( i-- );
 }
 
 __noreturn void main( void ){
+	// ベクタテーブル再設定
+	NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
+	
+	UsartInit( 38400 );
+	
 	RCC_APB2ENR |= 0x10;     // CPIOCを使用できるようにする。
 	GPIOC_CRL = 0x43444444;   // PC6を出力にする。　　
 	GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
 	
-	UsartInit( 38400 );
-	
 	while(1){
 		for(int t=0; t < 0x1000; t++){
-			timer(100);
+			timer(1000);
 		}
 		
-		//printf( "hgoefuga\n" );
 		UsartPutstr( "hgoefuga\n" );
+		//printf( "hgoefuga\n" );
 		GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
+		//GPIOA_ODR ^= ( 1 << 9 );    // LEDの出力を反転させる。
 	}
 }
 

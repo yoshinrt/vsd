@@ -33,7 +33,7 @@ $_ = ();
 my( $ObjList, %ObjList );
 $ObjList = <<'EOF';
 cortexm3_macro.o
-hw_config.o
+#hw_config.o
 #main.o
 stm32f10x_flash.o
 stm32f10x_gpio.o
