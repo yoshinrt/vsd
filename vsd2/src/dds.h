@@ -15,8 +15,8 @@
 
 /*** new type ***************************************************************/
 
-typedef unsigned		UINT;
-typedef unsigned char	UCHAR;
+//typedef unsigned		UINT;
+//typedef unsigned char	UCHAR;
 //typedef int				BOOL;
 
 /*** debug macros ***********************************************************/

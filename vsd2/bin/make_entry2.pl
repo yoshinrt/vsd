@@ -1,12 +1,18 @@
 #!/usr/bin/perl -w
 
-# $Id: make_entry2.pl 89 2008-06-20 01:34:15Z yoshi $
-
 my( $ExceptList );
 my( %ExceptList );
 
-## 除外する関数名
+## ビルドログから重複するシンボルエラーを pick up
+open( $fp, "../exec_sram/List/vsd2.map" );
+while( <$fp> ){
+	if( /duplicate definitions for "(.*)"/ ){
+		$ExceptList{ $1 } = 1;
+	}
+}
+close( $fp );
 
+## 除外する関数名
 $ExceptList = <<'EOF';
 main
 _main
@@ -17,7 +23,7 @@ _exit
 EOF
 
 foreach ( split( /\n/, $ExceptList )){
-	$ExceptList{ $_ } = '';
+	$ExceptList{ $_ } = 1;
 }
 
 $_ = ();
@@ -26,8 +32,8 @@ $_ = ();
 
 my( $ObjList, %ObjList );
 $ObjList = <<'EOF';
-#cortexm3_macro.o
-#hw_config.o
+cortexm3_macro.o
+hw_config.o
 #main.o
 stm32f10x_flash.o
 stm32f10x_gpio.o
@@ -37,15 +43,15 @@ stm32f10x_rcc.o
 stm32f10x_usart.o
 #stm32f10x_vector.o
 usb_core.o
-#usb_desc.o
-#usb_endp.o
-#usb_init.o
-#usb_int.o
-#usb_istr.o
-#usb_mem.o
-#usb_prop.o
-#usb_pwr.o
-#usb_regs.o
+usb_desc.o
+usb_endp.o
+usb_init.o
+usb_int.o
+usb_istr.o
+usb_mem.o
+usb_prop.o
+usb_pwr.o
+usb_regs.o
 div.o
 exit.o
 #low_level_init.o
@@ -89,12 +95,14 @@ foreach ( split( /\n/, $ObjList )){
 
 my( $VarName );
 my( %Vars );
-while( <> ){
+
+open( $fp, "../Release/List/vsd2.map" );
+while( <$fp> ){
 	last if( /^Entry/ );
 }
-$_ = <>; # 読み捨て
+$_ = <$fp>; # 読み捨て
 
-open( fpOut, "| nkf -Lw > rom_entry.s" );
+open( fpOut, "> ../src/rom_entry.s" );
 
 $IdString = '$I' . 'd$';
 
@@ -115,13 +123,13 @@ EOF
 my( $tmp );
 my( @SymbolList );
 
-while( <> ){
+while( <$fp> ){
 	s/[\x0D\x0A]//g;
 	last if( $_ eq '' );
 	
 	# 2行に別れてるやつを結合
 	if( !/[\-\]]$/ ){
-		$tmp = <>;
+		$tmp = <$fp>;
 		substr( $tmp, 34, 17 ) = ' ';
 		$_ .= $tmp;
 	}else{
