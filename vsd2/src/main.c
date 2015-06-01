@@ -30,7 +30,7 @@
 
 /*** S レコードローダ *******************************************************/
 
-UINT GetCharInfinity( void ){
+UINT GetCharWait( void ){
 	UINT c;
 	while(( c = getchar()) == EOF ) /*_WFI*/;
 	return c;
@@ -44,7 +44,7 @@ UINT GetHex( UINT uBytes ){
 	
 	do{
 		uRet <<= 4;
-		c = GetCharInfinity();
+		c = GetCharWait();
 		
 		if( '0' <= c && c <= '9' )	uRet |= c - '0';
 		else						uRet |= c - ( 'A' - 10 );
@@ -65,10 +65,10 @@ __noreturn void LoadSRecord( void ){
 	
 	while( 1 ){
 		// 'S' までスキップ
-		while( GetCharInfinity() != 'S' );
+		while( GetCharWait() != 'S' );
 		
 		// 終了ヘッダなら break;
-		if(( c = GetCharInfinity()) == '7' ) break;
+		if(( c = GetCharWait()) == '7' ) break;
 		
 		if( c == '3' ){
 			// データを書き込む
@@ -88,9 +88,10 @@ __noreturn void LoadSRecord( void ){
 
 __noreturn void LoadBin( void ){
 	UINT uCnt;
+	UINT uSize = GetCharWait() | ( GetCharWait() << 8 );
 	
-	for( uCnt = 0; uCnt < 0x4800; ++uCnt ){
-		*( UCHAR *)( 0x20000000 + uCnt ) = GetCharInfinity();
+	for( uCnt = 0; uCnt < uSize; ++uCnt ){
+		*( UCHAR *)( 0x20000000 + uCnt ) = GetCharWait();
 	}
 	
 	DbgMsg(( "\nstarting %X...\n", *( u32 *)0x20000004 ));
