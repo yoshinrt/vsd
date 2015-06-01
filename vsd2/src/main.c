@@ -28,6 +28,76 @@
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
+/*** S レコードローダ *******************************************************/
+
+UINT GetCharInfinity( void ){
+	UINT c;
+	while(( c = getchar()) == EOF ) /*_WFI*/;
+	return c;
+}
+
+UINT GetHex( UINT uBytes ){
+	
+	uBytes <<= 1;;
+	UINT	uRet = 0;
+	UINT	c;
+	
+	do{
+		uRet <<= 4;
+		c = GetCharInfinity();
+		
+		if( '0' <= c && c <= '9' )	uRet |= c - '0';
+		else						uRet |= c - ( 'A' - 10 );
+	}while( --uBytes )
+	
+	DbgMsg(( "%02X ", uRet ));
+	return uRet;
+}
+
+__noreturn void JumpTo( u32 uJmpAddr, u32 uSP ){
+	asm( "MSR MSP, r1\nBX r0\n" );
+}
+
+__noreturn void LoadSRecord( void ){
+	
+	UINT	uAddr, uLen;
+	UINT	c;
+	
+	while( 1 ){
+		// 'S' までスキップ
+		while( GetCharInfinity() != 'S' );
+		
+		// 終了ヘッダなら break;
+		if(( c = GetCharInfinity()) == '7' ) break;
+		
+		if( c == '3' ){
+			// データを書き込む
+			uLen	= GetHex( 2 ) - 5;
+			uAddr	= GetHex( 4 );
+			DbgMsg(( "Addr:%X Len:%X\n", uAddr, uLen ));
+			
+			while( uLen-- ) *( UCHAR *)( uAddr++ ) = GetHex( 1 );
+		}
+	}
+	
+	DbgMsg(( "\nstarting %X...\n", *( u32 *)0x20000004 ));
+	JumpTo( *( u32 *)0x20000004, *( u32 *)0x08003000 );
+}
+
+/*** バイナリローダ *********************************************************/
+
+__noreturn void LoadBin( void ){
+	UINT uCnt;
+	
+	for( uCnt = 0; uCnt < 0x4800; ++uCnt ){
+		*( UCHAR *)( 0x20000000 + uCnt ) = GetCharInfinity();
+	}
+	
+	DbgMsg(( "\nstarting %X...\n", *( u32 *)0x20000004 ));
+	JumpTo( *( u32 *)0x20000004, *( u32 *)0x08003000 );
+
+
+/****************************************************************************/
 void PutHex( UINT uNum ){
 	UINT u;
 	for( u = 0; u < 8; ++u ){

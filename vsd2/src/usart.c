@@ -47,7 +47,7 @@ void UsartInit( UINT uBaudRate ){
 	USART_Cmd( DEFAULT_PORT, ENABLE );
 	
 	// 割り込み設定
-	//USART_ITConfig( DEFAULT_PORT, USART_RXNE, ENABLE );
+	USART_ITConfig( DEFAULT_PORT, USART_RXNE, ENABLE );
 }
 
 /*** 割り込みハンドラ *******************************************************/
@@ -55,12 +55,25 @@ void UsartInit( UINT uBaudRate ){
 void USART1_IRQHandler( void ){
 	
 	// 受信バッファフル
+	if( USART_GetITStatus( DEFAULT_PORT, USART_RXNE )){
+		UINT uWp = g_uRxBufWp;
+		g_cRxBuf[ uWp ] = c;
+		
+		uWp = ( uWp + 1 ) & ( RXBUF_SIZE - 1 );
+		g_uRxBufWp = uWp;
+		
+		// RxBuf フルなら，割込み停止
+		uWp = ( uWp + 1 ) & ( RXBUF_SIZE - 1 );
+		if( uWp == g_uRxBufRp ){
+			USART_ITConfig( DEFAULT_PORT, USART_RXNE, DISABLE );
+		}
+	}
 	
 	// 送信バッファエンプティ
 	if( USART_GetITStatus( DEFAULT_PORT, USART_IT_TXE )){
 		UINT uRp = g_uTxBufRp;
 		USART_SendData( DEFAULT_PORT, g_cTxBuf[ uRp ]);
-		if( ++uRp >= TXBUF_SIZE ) uRp = 0;
+		uRp = ( uRp + 1 ) & ( TXBUF_SIZE - 1 );
 		g_uTxBufRp = uRp;
 		
 		// 送信データが無くなったので割り込み禁止
@@ -74,8 +87,7 @@ void USART1_IRQHandler( void ){
 
 void UsartPutchar( UCHAR c ){
 	UINT uWp = g_uTxBufWp;
-	UINT uNextWp = uWp + 1;
-	if( uNextWp >= TXBUF_SIZE ) uNextWp = 0;
+	UINT uNextWp = ( uWp + 1 ) & ( TXBUF_SIZE - 1 );
 	
 	// 送信バッファ Full なので待ち
 	while( uNextWp == g_uTxBufRp );
@@ -85,6 +97,18 @@ void UsartPutchar( UCHAR c ){
 	
 	// tx 割り込み許可
 	USART_ITConfig( DEFAULT_PORT, USART_IT_TXE, ENABLE );
+}
+
+int UsartGetchar( void ){
+	UINT uRp = g_uRxBufRp;
+	if( uRp == g_uRxBufWp ) return EOF;
+	
+	int iRet = g_cRxBuf[ uRp ];
+	g_uRxBufRp = ( uRp + 1 ) & ( RXBUF_SIZE - 1 );
+	
+	// rx 割込み許可
+	USART_ITConfig( DEFAULT_PORT, USART_RXNE, ENABLE );
+	return iRet;
 }
 
 void UsartPutstr( char *szMsg ){
