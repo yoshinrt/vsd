@@ -32,7 +32,7 @@
 
 UINT GetCharWait( void ){
 	UINT c;
-	while(( c = getchar()) == EOF ) /*_WFI*/;
+	while(( c = UsartGetchar()) == EOF ) /*_WFI*/;
 	return c;
 }
 
@@ -96,7 +96,7 @@ __noreturn void LoadBin( void ){
 	
 	DbgMsg(( "\nstarting %X...\n", *( u32 *)0x20000004 ));
 	JumpTo( *( u32 *)0x20000004, *( u32 *)0x08003000 );
-
+}
 
 /****************************************************************************/
 void PutHex( UINT uNum ){
@@ -118,14 +118,20 @@ void timer( unsigned long i ){
 }
 
 __noreturn void main( void ){
+	char cBuf[ 128 ];
+	RCC_APB2ENR |= 0x10;     // CPIOCを使用できるようにする。
+	GPIOC_CRL = 0x43444444;   // PC6を出力にする。　　
+	GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
+	
 	// ベクタテーブル再設定
 	NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
 	
 	UsartInit( 38400 );
-	
-	RCC_APB2ENR |= 0x10;     // CPIOCを使用できるようにする。
-	GPIOC_CRL = 0x43444444;   // PC6を出力にする。　　
-	GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
+	UsartPutstr( "USART test\r\n" );
+	while( 1 ){
+		UsartPutchar( GetCharWait());
+		GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
+	}
 	
 	while(1){
 		for(int t=0; t < 0x1000; t++){

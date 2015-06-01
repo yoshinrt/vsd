@@ -39,7 +39,6 @@ void UsartInit( UINT uBaudRate ){
 	USART_InitTypeDef	Param;
 	USART_StructInit( &Param );
 	Param.USART_BaudRate	= uBaudRate;
-	Param.USART_Clock		= USART_Clock_Enable;
 	
 	// USART ハード初期化
 	USART_DeInit( DEFAULT_PORT );
@@ -47,7 +46,7 @@ void UsartInit( UINT uBaudRate ){
 	USART_Cmd( DEFAULT_PORT, ENABLE );
 	
 	// 割り込み設定
-	USART_ITConfig( DEFAULT_PORT, USART_RXNE, ENABLE );
+	USART_ITConfig( DEFAULT_PORT, USART_IT_RXNE, ENABLE );
 }
 
 /*** 割り込みハンドラ *******************************************************/
@@ -55,30 +54,34 @@ void UsartInit( UINT uBaudRate ){
 void USART1_IRQHandler( void ){
 	
 	// 受信バッファフル
-	if( USART_GetITStatus( DEFAULT_PORT, USART_RXNE )){
+	if( DEFAULT_PORT->SR & ( 1 << 5 )){
 		UINT uWp = g_uRxBufWp;
-		g_cRxBuf[ uWp ] = c;
+		g_cRxBuf[ uWp ] = USART_ReceiveData( DEFAULT_PORT );
 		
 		uWp = ( uWp + 1 ) & ( RXBUF_SIZE - 1 );
 		g_uRxBufWp = uWp;
 		
 		// RxBuf フルなら，割込み停止
+		/*
 		uWp = ( uWp + 1 ) & ( RXBUF_SIZE - 1 );
 		if( uWp == g_uRxBufRp ){
-			USART_ITConfig( DEFAULT_PORT, USART_RXNE, DISABLE );
-		}
+			USART_ITConfig( DEFAULT_PORT, USART_IT_RXNE, DISABLE );
+		}*/
 	}
 	
 	// 送信バッファエンプティ
-	if( USART_GetITStatus( DEFAULT_PORT, USART_IT_TXE )){
+	if( DEFAULT_PORT->SR & ( 1 << 7 )){
 		UINT uRp = g_uTxBufRp;
-		USART_SendData( DEFAULT_PORT, g_cTxBuf[ uRp ]);
-		uRp = ( uRp + 1 ) & ( TXBUF_SIZE - 1 );
-		g_uTxBufRp = uRp;
 		
-		// 送信データが無くなったので割り込み禁止
-		if( uRp == g_uTxBufWp ){
-			USART_ITConfig( DEFAULT_PORT, USART_IT_TXE, DISABLE );
+		if( uRp != g_uTxBufWp ){
+			USART_SendData( DEFAULT_PORT, g_cTxBuf[ uRp ]);
+			uRp = ( uRp + 1 ) & ( TXBUF_SIZE - 1 );
+			g_uTxBufRp = uRp;
+			
+			// 送信データが無くなったので割り込み禁止
+			if( uRp == g_uTxBufWp ){
+				USART_ITConfig( DEFAULT_PORT, USART_IT_TXE, DISABLE );
+			}
 		}
 	}
 }
@@ -107,7 +110,7 @@ int UsartGetchar( void ){
 	g_uRxBufRp = ( uRp + 1 ) & ( RXBUF_SIZE - 1 );
 	
 	// rx 割込み許可
-	USART_ITConfig( DEFAULT_PORT, USART_RXNE, ENABLE );
+	//USART_ITConfig( DEFAULT_PORT, USART_IT_RXNE, ENABLE );
 	return iRet;
 }
 

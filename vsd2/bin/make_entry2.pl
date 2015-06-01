@@ -4,14 +4,13 @@ my( $ExceptList );
 my( %ExceptList );
 
 ## ビルドログから重複するシンボルエラーを pick up
-if( open( $fp, "../exec_sram/List/vsd2.map" )){
-	while( <$fp> ){
-		if( /duplicate definitions for "(.*)"/ ){
-			$ExceptList{ $1 } = 1;
-		}
+open( $fp, "../exec_sram/List/vsd2.map" );
+while( <$fp> ){
+	if( /duplicate definitions for "(.*)"/ ){
+		$ExceptList{ $1 } = 1;
 	}
-	close( $fp );
 }
+close( $fp );
 
 ## 除外する関数名
 $ExceptList = <<'EOF';
@@ -29,60 +28,61 @@ foreach ( split( /\n/, $ExceptList )){
 
 $_ = ();
 
-## 除外する obj 名
+## 使用する obj 名
 
 my( $ObjList, %ObjList );
 $ObjList = <<'EOF';
-#cortexm3_macro.o
-hw_config.o
-main.o
-#stm32f10x_flash.o
-#stm32f10x_gpio.o
-#stm32f10x_it.o
-#stm32f10x_nvic.o
-#stm32f10x_rcc.o
-#stm32f10x_usart.o
-stm32f10x_vector.o
-#usb_core.o
-#usb_desc.o
-#usb_endp.o
-#usb_init.o
-#usb_int.o
-#usb_istr.o
-#usb_mem.o
-#usb_prop.o
-#usb_pwr.o
-#usb_regs.o
-#div.o
-#exit.o
-low_level_init.o
-#sprintf.o
-#xdnorm.o
-#xdscale.o
-#xprintffull.o
-#xsprout.o
-#ABImemcpy.o
-#DblAdd.o
-#DblCmpGe.o
-#DblCmpLe.o
-#DblDiv.o
-#DblMul.o
-#DblSub.o
-#DblSubNrml.o
-#DblToI32.o
-#I32DivMod.o
-#I32ToDbl.o
-#I64DivMod.o
-#I64DivZer.o
-#IntDivZer.o
-#cexit.o
-cmain.o
-copy_init.o
-data_init.o
-#memchr.o
-#strchr.o
-#strlen.o
-zero_init.o
+cortexm3_macro.o
+#hw_config.o
+#main.o
+stm32f10x_flash.o
+stm32f10x_gpio.o
+stm32f10x_it.o
+stm32f10x_nvic.o
+stm32f10x_rcc.o
+stm32f10x_usart.o
+#stm32f10x_vector.o
+usb_core.o
+usb_desc.o
+usb_endp.o
+usb_init.o
+usb_int.o
+usb_istr.o
+usb_mem.o
+usb_prop.o
+usb_pwr.o
+usb_regs.o
+div.o
+exit.o
+#low_level_init.o
+sprintf.o
+xdnorm.o
+xdscale.o
+xprintffull.o
+xsprout.o
+ABImemcpy.o
+DblAdd.o
+DblCmpGe.o
+DblCmpLe.o
+DblDiv.o
+DblMul.o
+DblSub.o
+DblSubNrml.o
+DblToI32.o
+I32DivMod.o
+I32ToDbl.o
+I64DivMod.o
+I64DivZer.o
+IntDivZer.o
+cexit.o
+#cmain.o
+#copy_init.o
+#data_init.o
+memchr.o
+strchr.o
+strlen.o
+#zero_init.o
+exit.o
 EOF
 
 $ObjList =~ s/^#.*\n//gm;
@@ -104,6 +104,8 @@ $_ = <$fp>; # 読み捨て
 
 open( fpOut, "> ../src/rom_entry.s" );
 
+$IdString = '$I' . 'd$';
+
 print fpOut <<"EOF";
 ;*****************************************************************************
 ;	
@@ -111,6 +113,7 @@ print fpOut <<"EOF";
 ;	Copyright(C) by DDS
 ;	
 ;	rom_entry.s -- rom entry point table
+;	$IdString
 ;	
 ;*****************************************************************************
 
@@ -134,32 +137,24 @@ while( <$fp> ){
 	}
 	
 	if(
-		/^([\w_]+)\s+0x([\w]+)\s+(\S+)/ &&
-		!defined( $ObjList{ $3 } ) &&
+		/^([\w_]+)\s+([\w]+)\s+(\S+)/ &&
+		defined( $ObjList{ $3 } ) &&
 		!defined( $ExceptList{ $1 } )
 	){
-		push( @SymbolList, "$2\t$1" );
+		push( @SymbolList, "$3\t$1\t$2" );
 	}
 }
 
-$CurPC = 0x080030EC;
+$PrevObj = '';
 
 for ( sort @SymbolList ){
-	( $Addr, $Symbol ) = split( /\t/, $_ );
+	@_ = split( /\t/, $_ );
 	
-	if( $CurPC < 0x20000000 && hex( $Addr ) >= 0x20000000 ){
-		print( fpOut "\n\tRSEG FLASH_DATA:DATA(4)\n" );
-		$CurPC = hex( $Addr );
+	if( $PrevObj ne $_[ 0 ] ){
+		print fpOut ";*** $_[ 0 ] " . '*' x ( 72 - length( $_[ 0 ] )) . "\n";
+		$PrevObj = $_[ 0 ];
 	}
-	
-	$Offset = sprintf( "0x%X", hex( $Addr ) - $CurPC );
-	$CurPC	= hex( $Addr );
-	print fpOut << "EOF";
-	DS	$Offset
-
-	PUBWEAK	$Symbol
-$Symbol:\t// 0x$Addr
-EOF
+	print fpOut "\tEXPORT $_[ 1 ]\n$_[ 1 ] = $_[ 2 ]\n";
 }
 
 print fpOut "\tEND\n";

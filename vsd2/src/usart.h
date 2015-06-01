@@ -6,6 +6,7 @@
 
 void UsartInit( UINT uBaudRate );
 void UsartPutchar( UCHAR c );
+int UsartGetchar( void );
 void UsartPutstr( char *szMsg );
 
 #endif // _USART_H
