@@ -1,40 +1,25 @@
-/******************** ( C ) COPYRIGHT 2007 STMicroelectronics ********************
-* File Name          : main.c
-* Author             : MCD Application Team
-* Version            : V1.0
-* Date               : 10/08/2007
-* Description        : Virtual Com Port Demo main file
-********************************************************************************
-* THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
-* WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
-* AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
-* INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
-* CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
-* INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
-*******************************************************************************/
+/*****************************************************************************
+	
+	VSD2 - vehicle data logger system2
+	Copyright(C) by DDS
+	
+	main.c -- main routine
+	
+*****************************************************************************/
 
-/* Includes ------------------------------------------------------------------*/
 #include <stdio.h>
 #include <ST\iostm32f10xxB.h>
 #include "stm32f10x_nvic.h"
 #include "dds.h"
 #include "usart.h"
 
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-/* Extern variables ----------------------------------------------------------*/
-/* Private function prototypes -----------------------------------------------*/
-/* Private functions ---------------------------------------------------------*/
-
+/*** macros *****************************************************************/
+/*** const ******************************************************************/
+/*** new type ***************************************************************/
+/*** prototype **************************************************************/
+/*** extern *****************************************************************/
+/*** gloval vars ************************************************************/
 /*** S レコードローダ *******************************************************/
-
-UINT GetCharWait( void ){
-	UINT c;
-	while(( c = UsartGetchar()) == EOF ) /*_WFI*/;
-	return c;
-}
 
 UINT GetHex( UINT uBytes ){
 	
@@ -44,7 +29,7 @@ UINT GetHex( UINT uBytes ){
 	
 	do{
 		uRet <<= 4;
-		c = GetCharWait();
+		c = UsartGetcharWait();
 		
 		if( '0' <= c && c <= '9' )	uRet |= c - '0';
 		else						uRet |= c - ( 'A' - 10 );
@@ -65,10 +50,10 @@ __noreturn void LoadSRecord( void ){
 	
 	while( 1 ){
 		// 'S' までスキップ
-		while( GetCharWait() != 'S' );
+		while( UsartGetcharWait() != 'S' );
 		
 		// 終了ヘッダなら break;
-		if(( c = GetCharWait()) == '7' ) break;
+		if(( c = UsartGetcharWait()) == '7' ) break;
 		
 		if( c == '3' ){
 			// データを書き込む
@@ -88,10 +73,10 @@ __noreturn void LoadSRecord( void ){
 
 __noreturn void LoadBin( void ){
 	UINT uCnt;
-	UINT uSize = GetCharWait() | ( GetCharWait() << 8 );
+	UINT uSize = UsartGetcharWait() | ( UsartGetcharWait() << 8 );
 	
 	for( uCnt = 0; uCnt < uSize; ++uCnt ){
-		*( UCHAR *)( 0x20000000 + uCnt ) = GetCharWait();
+		*( UCHAR *)( 0x20000000 + uCnt ) = UsartGetcharWait();
 	}
 	
 	DbgMsg(( "\nstarting %X...\n", *( u32 *)0x20000004 ));
@@ -99,25 +84,15 @@ __noreturn void LoadBin( void ){
 }
 
 /****************************************************************************/
-void PutHex( UINT uNum ){
-	UINT u;
-	for( u = 0; u < 8; ++u ){
-		UINT n = uNum >> 28;
-		
-		if( n > 9 ){
-			UsartPutchar( n + ( 'A' - 10 ));
-		}else{
-			UsartPutchar( n + '0' );
-		}
-		uNum <<= 4;
-	}
-}
 
 void timer( unsigned long i ){
 	while( i-- );
 }
 
 __noreturn void main( void ){
+	// USART buf
+	USART_BUF_t	UsartBuf;
+	
 	char cBuf[ 128 ];
 	RCC_APB2ENR |= 0x10;     // CPIOCを使用できるようにする。
 	GPIOC_CRL = 0x43444444;   // PC6を出力にする。　　
@@ -126,10 +101,10 @@ __noreturn void main( void ){
 	// ベクタテーブル再設定
 	NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
 	
-	UsartInit( 38400 );
+	UsartInit( 38400, &UsartBuf );
 	UsartPutstr( "USART test\r\n" );
 	while( 1 ){
-		UsartPutchar( GetCharWait());
+		UsartPutchar( UsartGetcharWait());
 		GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
 	}
 	
@@ -144,23 +119,3 @@ __noreturn void main( void ){
 		//GPIOA_ODR ^= ( 1 << 9 );    // LEDの出力を反転させる。
 	}
 }
-
-#ifdef  DEBUG
-/*******************************************************************************
-* Function Name  : assert_failed
-* Description    : Reports the name of the source file and the source line number
-*                  where the assert_param error has occurred.
-* Input          : - file: pointer to the source file name
-*                  - line: assert_param error line source number
-* Output         : None
-* Return         : None
-*******************************************************************************/
-
-void assert_failed( u8* file, u32 line ){
-	/* User can add his own implementation to report the file name and line number,
-		 ex: printf( "Wrong parameters value: file %s on line %d\n\n", file, line ) */
-	
-	/* Infinite loop */
-	while( 1 );
-}
-#endif

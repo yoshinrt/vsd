@@ -1,3 +1,12 @@
+/*****************************************************************************
+	
+	VSD2 - vehicle data logger system2
+	Copyright(C) by DDS
+	
+	uart.c -- USART1 driver
+	
+*****************************************************************************/
+
 #include <stdio.h>
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_gpio.h"
@@ -8,17 +17,13 @@
 
 /*** バッファ ***************************************************************/
 
-#define TXBUF_SIZE	64
-#define RXBUF_SIZE	64
-
-UCHAR	g_cTxBuf[ TXBUF_SIZE ];
-volatile USHORT	g_uTxBufRp = 0, g_uTxBufWp = 0;
-UCHAR	g_cRxBuf[ TXBUF_SIZE ];
-volatile USHORT	g_uRxBufRp = 0, g_uRxBufWp = 0;
+USART_BUF_t	*g_pUsartBuf;
 
 /*** 初期化 *****************************************************************/
 
-void UsartInit( UINT uBaudRate ){
+void UsartInit( UINT uBaudRate, USART_BUF_t *pBuf ){
+	g_pUsartBuf = pBuf;
+	
 	// APB クロック
 	RCC_APB2PeriphClockCmd( RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOA | RCC_APB2Periph_USART1, ENABLE );
 	
@@ -55,64 +60,72 @@ void USART1_IRQHandler( void ){
 	
 	// 受信バッファフル
 	if( DEFAULT_PORT->SR & ( 1 << 5 )){
-		UINT uWp = g_uRxBufWp;
-		g_cRxBuf[ uWp ] = USART_ReceiveData( DEFAULT_PORT );
+		UINT uWp = g_pUsartBuf->uRxBufWp;
+		g_pUsartBuf->cRxBuf[ uWp ] = USART_ReceiveData( DEFAULT_PORT );
 		
-		uWp = ( uWp + 1 ) & ( RXBUF_SIZE - 1 );
-		g_uRxBufWp = uWp;
+		uWp = ( uWp + 1 ) & ( USART_RXBUF_SIZE - 1 );
+		g_pUsartBuf->uRxBufWp = uWp;
 		
 		// RxBuf フルなら，割込み停止
 		/*
-		uWp = ( uWp + 1 ) & ( RXBUF_SIZE - 1 );
-		if( uWp == g_uRxBufRp ){
+		uWp = ( uWp + 1 ) & ( USART_RXBUF_SIZE - 1 );
+		if( uWp == g_pUsartBuf->uRxBufRp ){
 			USART_ITConfig( DEFAULT_PORT, USART_IT_RXNE, DISABLE );
 		}*/
 	}
 	
 	// 送信バッファエンプティ
 	if( DEFAULT_PORT->SR & ( 1 << 7 )){
-		UINT uRp = g_uTxBufRp;
+		UINT uRp = g_pUsartBuf->uTxBufRp;
 		
-		if( uRp != g_uTxBufWp ){
-			USART_SendData( DEFAULT_PORT, g_cTxBuf[ uRp ]);
-			uRp = ( uRp + 1 ) & ( TXBUF_SIZE - 1 );
-			g_uTxBufRp = uRp;
+		if( uRp != g_pUsartBuf->uTxBufWp ){
+			USART_SendData( DEFAULT_PORT, g_pUsartBuf->cTxBuf[ uRp ]);
+			uRp = ( uRp + 1 ) & ( USART_TXBUF_SIZE - 1 );
+			g_pUsartBuf->uTxBufRp = uRp;
 			
 			// 送信データが無くなったので割り込み禁止
-			if( uRp == g_uTxBufWp ){
+			if( uRp == g_pUsartBuf->uTxBufWp ){
 				USART_ITConfig( DEFAULT_PORT, USART_IT_TXE, DISABLE );
 			}
 		}
 	}
 }
 
-/*** 出力 *******************************************************************/
+/*** 1文字入出力 ************************************************************/
 
 void UsartPutchar( UCHAR c ){
-	UINT uWp = g_uTxBufWp;
-	UINT uNextWp = ( uWp + 1 ) & ( TXBUF_SIZE - 1 );
+	UINT uWp = g_pUsartBuf->uTxBufWp;
+	UINT uNextWp = ( uWp + 1 ) & ( USART_TXBUF_SIZE - 1 );
 	
 	// 送信バッファ Full なので待ち
-	while( uNextWp == g_uTxBufRp );
+	while( uNextWp == g_pUsartBuf->uTxBufRp );
 	
-	g_cTxBuf[ uWp ] = c;
-	g_uTxBufWp = uNextWp;
+	g_pUsartBuf->cTxBuf[ uWp ] = c;
+	g_pUsartBuf->uTxBufWp = uNextWp;
 	
 	// tx 割り込み許可
 	USART_ITConfig( DEFAULT_PORT, USART_IT_TXE, ENABLE );
 }
 
 int UsartGetchar( void ){
-	UINT uRp = g_uRxBufRp;
-	if( uRp == g_uRxBufWp ) return EOF;
+	UINT uRp = g_pUsartBuf->uRxBufRp;
+	if( uRp == g_pUsartBuf->uRxBufWp ) return EOF;
 	
-	int iRet = g_cRxBuf[ uRp ];
-	g_uRxBufRp = ( uRp + 1 ) & ( RXBUF_SIZE - 1 );
+	int iRet = g_pUsartBuf->cRxBuf[ uRp ];
+	g_pUsartBuf->uRxBufRp = ( uRp + 1 ) & ( USART_RXBUF_SIZE - 1 );
 	
 	// rx 割込み許可
 	//USART_ITConfig( DEFAULT_PORT, USART_IT_RXNE, ENABLE );
 	return iRet;
 }
+
+int UsartGetcharWait( void ){
+	int c;
+	while(( c = UsartGetchar()) == EOF ) /*_WFI*/;
+	return c;
+}
+
+/*** 文字列入出力 ***********************************************************/
 
 void UsartPutstr( char *szMsg ){
 	while( *szMsg ){
