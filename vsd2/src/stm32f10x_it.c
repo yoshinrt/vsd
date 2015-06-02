@@ -31,7 +31,7 @@
 
 /****************************************************************************/
 
-void ICHandlerNop( void ){}
-void ICHandlerLoop( void ){ while( 1 ); }
+void IntHandlerNop( void ){}
+void IntHandlerLoop( void ){ while( 1 ); }
 
 /******************* (C) COPYRIGHT 2007 STMicroelectronics *****END OF FILE****/

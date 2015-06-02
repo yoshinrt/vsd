@@ -93,7 +93,7 @@ void timer( unsigned long i ){
 
 __noreturn void main( void ){
 	// USART buf
-	USART_BUF_t	UsartBuf;
+	USART_BUF_t	UsartBuf = { 0 };
 	
 	char cBuf[ 128 ];
 	RCC_APB2ENR |= 0x10;     // CPIOCÇégópÇ≈Ç´ÇÈÇÊÇ§Ç…Ç∑ÇÈÅB

@@ -43,8 +43,8 @@ const intvec_elem __vector_table[] =
 	__iar_program_start,
 	
 	#define DEF_HANDLER( func )			func,
-	#define DEF_HANDLER_NOP( func )		ICHandlerNop,
-	#define DEF_HANDLER_LOOP( func )	ICHandlerLoop,
+	#define DEF_HANDLER_NOP( func )		IntHandlerNop,
+	#define DEF_HANDLER_LOOP( func )	IntHandlerLoop,
 	#define DEF_HANDLER_RESERVED()		0,
 	#include "def_int_handler.h"
 };

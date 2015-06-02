@@ -955,6 +955,9 @@
       <name>$PROJ_DIR$\src\rom_entry.s</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\src\stm32f10x_it.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\src\stm32f10x_vector.c</name>
     </file>
     <file>

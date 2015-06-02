@@ -23,8 +23,8 @@
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 
-void ICHandlerNop( void );
-void ICHandlerLoop( void );
+void IntHandlerNop( void );
+void IntHandlerLoop( void );
 
 #define DEF_HANDLER( func ) void func( void );
 #include "def_int_handler.h"
