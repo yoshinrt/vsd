@@ -15,6 +15,8 @@
 
 #define	DEFAULT_PORT	USART1
 
+//#define NO_INT
+
 /*** バッファ ***************************************************************/
 
 USART_BUF_t	*g_pUsartBuf;
@@ -51,7 +53,9 @@ void UsartInit( UINT uBaudRate, USART_BUF_t *pBuf ){
 	USART_Cmd( DEFAULT_PORT, ENABLE );
 	
 	// 割り込み設定
-	USART_ITConfig( DEFAULT_PORT, USART_IT_RXNE, ENABLE );
+	#ifdef NO_INT
+		USART_ITConfig( DEFAULT_PORT, USART_IT_RXNE, ENABLE );
+	#endif
 }
 
 /*** 割り込みハンドラ *******************************************************/
@@ -94,6 +98,14 @@ void USART1_IRQHandler( void ){
 /*** 1文字入出力 ************************************************************/
 
 int putchar( int c ){
+#ifdef NO_INT
+	while( !( DEFAULT_PORT->SR & ( 1 << 7 )));
+	USART_SendData( DEFAULT_PORT, c );
+	return c;
+}
+
+int putchar_int( int c ){
+#endif
 	UINT uWp = g_pUsartBuf->uTxBufWp;
 	UINT uNextWp = ( uWp + 1 ) & ( USART_TXBUF_SIZE - 1 );
 	
@@ -105,11 +117,20 @@ int putchar( int c ){
 	
 	// tx 割り込み許可
 	USART_ITConfig( DEFAULT_PORT, USART_IT_TXE, ENABLE );
-        
-        return c;
+	
+	return c;
 }
 
 int getchar( void ){
+#ifdef NO_INT
+	if( DEFAULT_PORT->SR & ( 1 << 5 )){
+		return USART_ReceiveData( DEFAULT_PORT );
+	}
+	return EOF;
+}
+
+int getchar_int( void ){
+#endif
 	UINT uRp = g_pUsartBuf->uRxBufRp;
 	if( uRp == g_pUsartBuf->uRxBufWp ) return EOF;
 	

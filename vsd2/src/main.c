@@ -70,7 +70,7 @@ __noreturn void LoadSRecord( void ){
 		}
 	}
 	
-	DbgMsg(( "starting %X...\n", *( u32 *)0x20000004 ));
+	printf( "starting %X...\n", *( u32 *)0x20000004 );
 	JumpTo( *( u32 *)0x20000004, *( u32 *)0x08003000 );
 }
 
@@ -105,7 +105,9 @@ __noreturn void main( void ){
 	GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
 	
 	// ベクタテーブル再設定
-	NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
+	#ifdef EXEC_SRAM
+		NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
+	#endif
 	
 	UsartInit( 38400, &UsartBuf );
 	printf( "USART test\n" );

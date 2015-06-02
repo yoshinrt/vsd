@@ -270,6 +270,12 @@ __REV_Word
   REV r0, r0
   BX r14
   
+;*******************************************************************************
+; ã≠êßÉäÉìÉNÇ∑ÇÈ lib
+	extern	printf
+	extern	sprintf
+	require	printf
+	require	sprintf
   END
   
 ;******************* (C) COPYRIGHT 2007 STMicroelectronics *****END OF FILE*****
