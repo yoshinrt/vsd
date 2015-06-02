@@ -65,7 +65,7 @@ __noreturn void LoadSRecord( void ){
 		}
 	}
 	
-	DbgMsg(( "\nstarting %X...\n", *( u32 *)0x20000004 ));
+	DbgMsg(( "starting %X...\n", *( u32 *)0x20000004 ));
 	JumpTo( *( u32 *)0x20000004, *( u32 *)0x08003000 );
 }
 
@@ -75,11 +75,13 @@ __noreturn void LoadBin( void ){
 	UINT uCnt;
 	UINT uSize = UsartGetcharWait() | ( UsartGetcharWait() << 8 );
 	
+	DbgMsg(( "\nloading %d bytes\n", uSize ));
+	
 	for( uCnt = 0; uCnt < uSize; ++uCnt ){
 		*( UCHAR *)( 0x20000000 + uCnt ) = UsartGetcharWait();
 	}
 	
-	DbgMsg(( "\nstarting %X...\n", *( u32 *)0x20000004 ));
+	DbgMsg(( "starting %X...\n", *( u32 *)0x20000004 ));
 	JumpTo( *( u32 *)0x20000004, *( u32 *)0x08003000 );
 }
 
@@ -102,7 +104,7 @@ __noreturn void main( void ){
 	NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
 	
 	UsartInit( 38400, &UsartBuf );
-	UsartPutstr( "USART test\r\n" );
+	UsartPutstr( "USART test\n" );
 	while( 1 ){
 		UsartPutchar( UsartGetcharWait());
 		GPIOC_ODR ^= 0x40;    // LED‚Ìo—Í‚ð”½“]‚³‚¹‚éB
