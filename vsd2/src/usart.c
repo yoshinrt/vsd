@@ -126,12 +126,3 @@ int GetcharWait( void ){
 	while(( c = getchar()) == EOF ) /*_WFI*/;
 	return c;
 }
-
-/*** •¶š—ñ“üo—Í ***********************************************************/
-
-void UsartPutstr( char *szMsg ){
-	while( *szMsg ){
-		putchar( *szMsg );
-		++szMsg;
-	}
-}

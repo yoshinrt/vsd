@@ -10,10 +10,15 @@
 #include <stdio.h>
 #include <ST\iostm32f10xxB.h>
 #include "stm32f10x_nvic.h"
+//#define DEBUG
 #include "dds.h"
 #include "usart.h"
 
 /*** macros *****************************************************************/
+
+#define SRAM_TOP	0x20000000
+#define SRAM_END	0x20005000
+
 /*** const ******************************************************************/
 /*** new type ***************************************************************/
 /*** prototype **************************************************************/
@@ -33,9 +38,9 @@ UINT GetHex( UINT uBytes ){
 		
 		if( '0' <= c && c <= '9' )	uRet |= c - '0';
 		else						uRet |= c - ( 'A' - 10 );
-	}while( --uBytes )
+	}while( --uBytes );
 	
-	DbgMsg(( "%02X ", uRet ));
+	//DbgMsg(( "%02X ", uRet ));
 	return uRet;
 }
 
@@ -57,10 +62,10 @@ __noreturn void LoadSRecord( void ){
 		
 		if( c == '3' ){
 			// データを書き込む
-			uLen	= GetHex( 2 ) - 5;
+			uLen	= GetHex( 1 ) - 5;
 			uAddr	= GetHex( 4 );
-			DbgMsg(( "Addr:%X Len:%X\n", uAddr, uLen ));
 			
+			DbgMsg(( "Addr:%X Len:%X\n", uAddr, uLen ));
 			while( uLen-- ) *( UCHAR *)( uAddr++ ) = GetHex( 1 );
 		}
 	}
@@ -95,7 +100,6 @@ __noreturn void main( void ){
 	// USART buf
 	USART_BUF_t	UsartBuf = { 0 };
 	
-	char cBuf[ 128 ];
 	RCC_APB2ENR |= 0x10;     // CPIOCを使用できるようにする。
 	GPIOC_CRL = 0x43444444;   // PC6を出力にする。　　
 	GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
@@ -105,19 +109,6 @@ __noreturn void main( void ){
 	
 	UsartInit( 38400, &UsartBuf );
 	printf( "USART test\n" );
-	while( 1 ){
-		putchar( GetcharWait());
-		GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
-	}
 	
-	while(1){
-		for(int t=0; t < 0x1000; t++){
-			timer(1000);
-		}
-		
-		printf( "hgoefuga\n" );
-		//printf( "hgoefuga\n" );
-		GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
-		//GPIOA_ODR ^= ( 1 << 9 );    // LEDの出力を反転させる。
-	}
+	LoadSRecord();
 }

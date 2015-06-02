@@ -15,9 +15,6 @@ typedef struct {
 } USART_BUF_t;
 
 void UsartInit( UINT uBaudRate, USART_BUF_t *pBuf );
-void UsartPutchar( UCHAR c );
-int UsartGetchar( void );
-int UsartGetcharWait( void );
-void UsartPutstr( char *szMsg );
+int GetcharWait( void );
 
 #endif // _USART_H

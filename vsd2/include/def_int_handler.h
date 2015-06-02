@@ -15,7 +15,7 @@
 	#define DEF_HANDLER_LOOP( func )
 #endif
 
-#ifndef DEF_HANDLER_RESERVED()
+#ifndef DEF_HANDLER_RESERVED
 	#define DEF_HANDLER_RESERVED()
 #endif
 
