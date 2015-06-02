@@ -7,11 +7,14 @@
 	
 *****************************************************************************/
 
+#define _TIM2
+#define _TIM3
+
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_gpio.h"
-#include "stm32f10x_timer.h"
-#include "dds.h"
+#include "stm32f10x_tim.h"
 #include "main2.h"
+#include "dds.h"
 
 /*** 初期化 *****************************************************************/
 // { TIM3, TIM2 } を 32bit タイマとして連結する
@@ -24,13 +27,15 @@ void TimerInit( void ){
 	TIM_DeInit( TIM3 );
 	
 	// TimeBase 初期化
-	TIM2->APR = 0; TIM3->APR = 0;	// カウンタリロード値
-	TIM2->PSC = 0; TIM3->PSC = 0;	// プリスケーラ
+	TIM2->ARR = -1; TIM3->ARR = -1;	// カウンタ上限値
+	TIM2->PSC = -1; TIM3->PSC = 0;	// プリスケーラ
 	TIM2->CR2 = ( 2 << 4 );			// TIM2 更新イベントを選択
+	TIM2->SMCR = 0;
 	TIM3->SMCR = ( 1 << 4 ) |		// TIM3 は入力として TIM2 を選択
 				7;					// TRGI rise edge でカウント
+	TIM2->EGR = 1; TIM3->EGR = 1;	// UG (プリスケーラ値更新)
 	TIM2->CR1 = TIM3->CR1 =
-		( 1 << 7 ) |	// auto preload
+		( 0 << 7 ) |	// auto preload
 		1;				// counter enable
 }
 
@@ -43,7 +48,7 @@ UINT GetCurrentTime( void ){
 	do{
 		uTimeL = uTimeL2;
 		uTimeH = TIM3->CNT;
-	}while( uTimeL > ( uTimeL2 = TIM2->CNT ))
+	}while( uTimeL > ( uTimeL2 = TIM2->CNT ));
 	
 	return ( uTimeH << 16 ) | uTimeL;
 }
@@ -59,23 +64,18 @@ void PulseInit( void ){
 	TIM_DeInit( TIM3 );
 	
 	// TimeBase 初期化
-	TIM2->APR = 0; TIM3->APR = 0;	// カウンタリロード値
-	TIM2->PSC = 0; TIM3->PSC = 0;	// プリスケーラ
+	TIM2->ARR = 1; TIM3->ARR = 1;	// カウンタリロード値
+	TIM2->PSC = -1; TIM3->PSC = -1;	// プリスケーラ
 	TIM2->CR2 = ( 2 << 4 );			// TIM2 更新イベントを選択
 	TIM3->SMCR = ( 1 << 4 ) |		// TIM3 は入力として TIM2 を選択
 				7;					// TRGI rise edge でカウント
 	TIM2->CR1 = TIM3->CR1 =
 		( 1 << 7 ) |	// auto preload
 		1;				// counter enable
+	TIM2->EGR = 1; TIM3->EGR = 1;	// UG
 }
 
-typedef struct PULSE_t {
-	UINT	uPrevTime;
-	UINT	uLastTime;
-	USHORT	uPulseCnt;
-	USHORT	uVal;
-}
-
+#if 0
 /*** スピードパルス *********************************************************/
 
 PULSE_t	g_Speed;
@@ -197,3 +197,4 @@ void ComputeMeterSpeed( void ){
 	}
 }
 
+#endif

@@ -37,3 +37,5 @@ vsd2.eww の Release が Flash 用
             exec_sram が SRAM 実行用
 vsd2_sram.eww の Release は動かないっぽい
                  exec_sram が Flash リンク SRAM 実行用
+
+●.s19→.dfu 変換はなぜか Win7 で失敗したので，WinXP で実行する

@@ -12,6 +12,13 @@
 
 #include "dds.h"
 
+typedef struct {
+	UINT	uPrevTime;
+	UINT	uLastTime;
+	USHORT	uPulseCnt;
+	USHORT	uVal;
+} PULSE_t;
+
 void TimerInit( void );
 UINT GetCurrentTime( void );
 

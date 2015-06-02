@@ -952,6 +952,9 @@
       <name>$PROJ_DIR$\src\main.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\src\main2.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\src\rom_entry.s</name>
     </file>
     <file>

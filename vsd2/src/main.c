@@ -7,12 +7,18 @@
 	
 *****************************************************************************/
 
+// šb’è
+#define _TIM2
+#define _TIM3
+
 #include <stdio.h>
 #include <ST\iostm32f10xxB.h>
 #include "stm32f10x_nvic.h"
+#include "stm32f10x_tim.h"
 #include "hw_config.h"
 //#define DEBUG
 #include "dds.h"
+#include "main2.h"
 #include "usart.h"
 
 /*** macros *****************************************************************/
@@ -110,18 +116,14 @@ __noreturn void main( void ){
 	NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
 	
 	UsartInit( 38400, &UsartBuf );
-	while( 1 ) putchar( GetcharWait());
 	
-	printf( "USART fowiaejf;oawiefjowif test\n" );
+	TimerInit();
+	while( 1 ) printf( "%08X\n", GetCurrentTime());
+	
+	UINT uPrevTime = 0;
 	while( 1 ){
-		int c = getchar();
-		printf( "%X:%X %04X %04X %04X %04X %02X\n", UsartBuf.uTxBufRp, UsartBuf.uTxBufWp, 
-			USART1->SR,
-			USART1->CR1,
-			USART1->CR2,
-			USART1->CR3,
-		c & 0xFF );
+		while( GetCurrentTime() - uPrevTime < 72000000 );
+		printf( "%d\n", uPrevTime / 72000000 );
+		uPrevTime += 72000000;
 	}
-	
-	LoadSRecord();
 }
