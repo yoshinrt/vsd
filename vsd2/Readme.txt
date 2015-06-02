@@ -37,12 +37,3 @@ vsd2.eww の Release が Flash 用
             exec_sram が SRAM 実行用
 vsd2_sram.eww の Release は動かないっぽい
                  exec_sram が Flash リンク SRAM 実行用
-
-●sram リンク時のシンボル二重定義エラーの回避
-\exec_sram\List\vsd2.map を消す
-bin/make_entry2.pl を実行する
-ビルドすると，二重定義シンボルがすべてリストアップされる
-もう一度 bin/make_entry2.pl を実行する
-
-※rom_entry.s 内の symbol を weak にする方法がわからない．
-(PUBWKEAK だと EQU で怒られる)
