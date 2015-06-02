@@ -29,7 +29,7 @@ UINT GetHex( UINT uBytes ){
 	
 	do{
 		uRet <<= 4;
-		c = UsartGetcharWait();
+		c = GetcharWait();
 		
 		if( '0' <= c && c <= '9' )	uRet |= c - '0';
 		else						uRet |= c - ( 'A' - 10 );
@@ -50,10 +50,10 @@ __noreturn void LoadSRecord( void ){
 	
 	while( 1 ){
 		// 'S' までスキップ
-		while( UsartGetcharWait() != 'S' );
+		while( GetcharWait() != 'S' );
 		
 		// 終了ヘッダなら break;
-		if(( c = UsartGetcharWait()) == '7' ) break;
+		if(( c = GetcharWait()) == '7' ) break;
 		
 		if( c == '3' ){
 			// データを書き込む
@@ -73,12 +73,12 @@ __noreturn void LoadSRecord( void ){
 
 __noreturn void LoadBin( void ){
 	UINT uCnt;
-	UINT uSize = UsartGetcharWait() | ( UsartGetcharWait() << 8 );
+	UINT uSize = GetcharWait() | ( GetcharWait() << 8 );
 	
 	DbgMsg(( "\nloading %d bytes\n", uSize ));
 	
 	for( uCnt = 0; uCnt < uSize; ++uCnt ){
-		*( UCHAR *)( 0x20000000 + uCnt ) = UsartGetcharWait();
+		*( UCHAR *)( 0x20000000 + uCnt ) = GetcharWait();
 	}
 	
 	DbgMsg(( "starting %X...\n", *( u32 *)0x20000004 ));
@@ -104,9 +104,9 @@ __noreturn void main( void ){
 	NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
 	
 	UsartInit( 38400, &UsartBuf );
-	UsartPutstr( "USART test\n" );
+	printf( "USART test\n" );
 	while( 1 ){
-		UsartPutchar( UsartGetcharWait());
+		putchar( GetcharWait());
 		GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
 	}
 	
@@ -115,7 +115,7 @@ __noreturn void main( void ){
 			timer(1000);
 		}
 		
-		UsartPutstr( "hgoefuga\n" );
+		printf( "hgoefuga\n" );
 		//printf( "hgoefuga\n" );
 		GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
 		//GPIOA_ODR ^= ( 1 << 9 );    // LEDの出力を反転させる。

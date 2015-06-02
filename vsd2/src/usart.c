@@ -93,7 +93,7 @@ void USART1_IRQHandler( void ){
 
 /*** 1•¶Žš“üo—Í ************************************************************/
 
-void UsartPutchar( UCHAR c ){
+int putchar( int c ){
 	UINT uWp = g_pUsartBuf->uTxBufWp;
 	UINT uNextWp = ( uWp + 1 ) & ( USART_TXBUF_SIZE - 1 );
 	
@@ -105,9 +105,11 @@ void UsartPutchar( UCHAR c ){
 	
 	// tx Š„‚èž‚Ý‹–‰Â
 	USART_ITConfig( DEFAULT_PORT, USART_IT_TXE, ENABLE );
+        
+        return c;
 }
 
-int UsartGetchar( void ){
+int getchar( void ){
 	UINT uRp = g_pUsartBuf->uRxBufRp;
 	if( uRp == g_pUsartBuf->uRxBufWp ) return EOF;
 	
@@ -119,9 +121,9 @@ int UsartGetchar( void ){
 	return iRet;
 }
 
-int UsartGetcharWait( void ){
+int GetcharWait( void ){
 	int c;
-	while(( c = UsartGetchar()) == EOF ) /*_WFI*/;
+	while(( c = getchar()) == EOF ) /*_WFI*/;
 	return c;
 }
 
@@ -129,7 +131,7 @@ int UsartGetcharWait( void ){
 
 void UsartPutstr( char *szMsg ){
 	while( *szMsg ){
-		UsartPutchar( *szMsg );
+		putchar( *szMsg );
 		++szMsg;
 	}
 }
