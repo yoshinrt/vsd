@@ -626,7 +626,7 @@
       <archiveVersion>1</archiveVersion>
       <data>
         <prebuild></prebuild>
-        <postbuild>Z:\bin\s2bin.exe z:\exec_sram\Exe\vsd2.s19</postbuild>
+        <postbuild></postbuild>
       </data>
     </settings>
     <settings>
@@ -956,9 +956,6 @@
     </file>
     <file>
       <name>$PROJ_DIR$\src\stm32f10x_vector.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\src\usart.c</name>
     </file>
   </group>
   <group>

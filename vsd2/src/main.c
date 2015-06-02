@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <ST\iostm32f10xxB.h>
 #include "stm32f10x_nvic.h"
+#include "hw_config.h"
 //#define DEBUG
 #include "dds.h"
 #include "usart.h"
@@ -92,25 +93,35 @@ __noreturn void LoadBin( void ){
 
 /****************************************************************************/
 
-void timer( unsigned long i ){
-	while( i-- );
-}
-
 __noreturn void main( void ){
+	
+	#ifndef EXEC_SRAM
+		Set_System();
+		GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
+		UsartInit( 38400, NULL );
+		printf( "Waiting for S record...\n" );
+		LoadSRecord();
+	#endif
+	
 	// USART buf
 	USART_BUF_t	UsartBuf = { 0 };
 	
-	RCC_APB2ENR |= 0x10;     // CPIOCを使用できるようにする。
-	GPIOC_CRL = 0x43444444;   // PC6を出力にする。　　
-	GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
-	
 	// ベクタテーブル再設定
-	#ifdef EXEC_SRAM
-		NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
-	#endif
+	NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
 	
 	UsartInit( 38400, &UsartBuf );
-	printf( "USART test\n" );
+	while( 1 ) putchar( GetcharWait());
+	
+	printf( "USART fowiaejf;oawiefjowif test\n" );
+	while( 1 ){
+		int c = getchar();
+		printf( "%X:%X %04X %04X %04X %04X %02X\n", UsartBuf.uTxBufRp, UsartBuf.uTxBufWp, 
+			USART1->SR,
+			USART1->CR1,
+			USART1->CR2,
+			USART1->CR3,
+		c & 0xFF );
+	}
 	
 	LoadSRecord();
 }

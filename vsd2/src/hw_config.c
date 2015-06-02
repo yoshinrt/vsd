@@ -17,6 +17,7 @@
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_flash.h"
+#include "stm32f10x_nvic.h"
 #include "stm32f10x_it.h"
 #include "hw_config.h"
 
@@ -38,6 +39,9 @@ ErrorStatus HSEStartUpStatus;
 *******************************************************************************/
 void Set_System(void)
 {
+  /* Set the Vector Table base location at 0x08000000 */
+  NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x3000);
+  
   GPIO_InitTypeDef GPIO_InitStructure;
 
   /* SYSCLK, HCLK, PCLK2 and PCLK1 configuration -----------------------------*/

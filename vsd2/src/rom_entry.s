@@ -150,236 +150,292 @@ __aeabi_ldiv0:	// 0x08004895 @ I64DivZer.o
 __iar_dadd:	// 0x08004899 @ DblAdd.o
 	DS8	0xD4
 
-	PUBWEAK	USART_DeInit
-USART_DeInit:	// 0x0800496d @ stm32f10x_usart.o
-	DS8	0x58
+	PUBWEAK	RCC_DeInit
+RCC_DeInit:	// 0x0800496d @ stm32f10x_rcc.o
+	DS8	0x40
 
-	PUBWEAK	USART_Init
-USART_Init:	// 0x080049c5 @ stm32f10x_usart.o
-	DS8	0x98
+	PUBWEAK	RCC_HSEConfig
+RCC_HSEConfig:	// 0x080049ad @ stm32f10x_rcc.o
+	DS8	0x32
 
-	PUBWEAK	USART_StructInit
-USART_StructInit:	// 0x08004a5d @ stm32f10x_usart.o
-	DS8	0x20
+	PUBWEAK	RCC_WaitForHSEStartUp
+RCC_WaitForHSEStartUp:	// 0x080049df @ stm32f10x_rcc.o
+	DS8	0x28
 
-	PUBWEAK	USART_Cmd
-USART_Cmd:	// 0x08004a7d @ stm32f10x_usart.o
-	DS8	0x14
+	PUBWEAK	RCC_PLLConfig
+RCC_PLLConfig:	// 0x08004a07 @ stm32f10x_rcc.o
+	DS8	0x10
 
-	PUBWEAK	USART_ITConfig
-USART_ITConfig:	// 0x08004a91 @ stm32f10x_usart.o
-	DS8	0x30
+	PUBWEAK	RCC_PLLCmd
+RCC_PLLCmd:	// 0x08004a17 @ stm32f10x_rcc.o
+	DS8	0x6
 
-	PUBWEAK	USART_SendData
-USART_SendData:	// 0x08004ac1 @ stm32f10x_usart.o
-	DS8	0x8
+	PUBWEAK	RCC_SYSCLKConfig
+RCC_SYSCLKConfig:	// 0x08004a1d @ stm32f10x_rcc.o
+	DS8	0xE
 
-	PUBWEAK	USART_ReceiveData
-USART_ReceiveData:	// 0x08004ac9 @ stm32f10x_usart.o
-	DS8	0x8
+	PUBWEAK	RCC_GetSYSCLKSource
+RCC_GetSYSCLKSource:	// 0x08004a2b @ stm32f10x_rcc.o
+	DS8	0xA
+
+	PUBWEAK	RCC_HCLKConfig
+RCC_HCLKConfig:	// 0x08004a35 @ stm32f10x_rcc.o
+	DS8	0xA
+
+	PUBWEAK	RCC_PCLK1Config
+RCC_PCLK1Config:	// 0x08004a3f @ stm32f10x_rcc.o
+	DS8	0xE
+
+	PUBWEAK	RCC_PCLK2Config
+RCC_PCLK2Config:	// 0x08004a4d @ stm32f10x_rcc.o
+	DS8	0x10
+
+	PUBWEAK	RCC_ADCCLKConfig
+RCC_ADCCLKConfig:	// 0x08004a5d @ stm32f10x_rcc.o
+	DS8	0xA
 
 	PUBWEAK	RCC_GetClocksFreq
-RCC_GetClocksFreq:	// 0x08004ad1 @ stm32f10x_rcc.o
+RCC_GetClocksFreq:	// 0x08004a67 @ stm32f10x_rcc.o
 	DS8	0x7A
 
 	PUBWEAK	RCC_APB2PeriphClockCmd
-RCC_APB2PeriphClockCmd:	// 0x08004b4b @ stm32f10x_rcc.o
+RCC_APB2PeriphClockCmd:	// 0x08004ae1 @ stm32f10x_rcc.o
 	DS8	0x12
 
 	PUBWEAK	RCC_APB2PeriphResetCmd
-RCC_APB2PeriphResetCmd:	// 0x08004b5d @ stm32f10x_rcc.o
+RCC_APB2PeriphResetCmd:	// 0x08004af3 @ stm32f10x_rcc.o
 	DS8	0x12
 
 	PUBWEAK	RCC_APB1PeriphResetCmd
-RCC_APB1PeriphResetCmd:	// 0x08004b6f @ stm32f10x_rcc.o
-	DS8	0x29
+RCC_APB1PeriphResetCmd:	// 0x08004b05 @ stm32f10x_rcc.o
+	DS8	0x12
+
+	PUBWEAK	RCC_GetFlagStatus
+RCC_GetFlagStatus:	// 0x08004b17 @ stm32f10x_rcc.o
+	DS8	0x4D
 
 	PUBWEAK	APBAHBPrescTable
-APBAHBPrescTable:	// 0x08004b98 @ stm32f10x_rcc.o
+APBAHBPrescTable:	// 0x08004b64 @ stm32f10x_rcc.o
 	DS8	0x10
 
 	PUBWEAK	ADCPrescTable
-ADCPrescTable:	// 0x08004ba8 @ stm32f10x_rcc.o
+ADCPrescTable:	// 0x08004b74 @ stm32f10x_rcc.o
 	DS8	0x5
 
 	PUBWEAK	UsartInit
-UsartInit:	// 0x08004bad @ usart.o
-	DS8	0x7E
+UsartInit:	// 0x08004b79 @ usart.o
+	DS8	0xA8
 
 	PUBWEAK	USART1_IRQHandler
-USART1_IRQHandler:	// 0x08004c2b @ usart.o
+USART1_IRQHandler:	// 0x08004c21 @ usart.o
 	DS8	0x64
 
 	PUBWEAK	putchar
-putchar:	// 0x08004c8f @ usart.o
-	DS8	0x16
+putchar:	// 0x08004c85 @ usart.o
+	DS8	0x3E
 
 	PUBWEAK	getchar
-getchar:	// 0x08004ca5 @ usart.o
-	DS8	0x20
+getchar:	// 0x08004cc3 @ usart.o
+	DS8	0x3E
 
 	PUBWEAK	GetcharWait
-GetcharWait:	// 0x08004cc5 @ usart.o
+GetcharWait:	// 0x08004d01 @ usart.o
 	DS8	0x10
 
 	PUBWEAK	GPIO_Init
-GPIO_Init:	// 0x08004cd5 @ stm32f10x_gpio.o
+GPIO_Init:	// 0x08004d11 @ stm32f10x_gpio.o
 	DS8	0xB8
 
 	PUBWEAK	GPIO_StructInit
-GPIO_StructInit:	// 0x08004d8d @ stm32f10x_gpio.o
+GPIO_StructInit:	// 0x08004dc9 @ stm32f10x_gpio.o
+	DS8	0x10
+
+	PUBWEAK	USART_DeInit
+USART_DeInit:	// 0x08004dd9 @ stm32f10x_usart.o
+	DS8	0x58
+
+	PUBWEAK	USART_Init
+USART_Init:	// 0x08004e31 @ stm32f10x_usart.o
+	DS8	0x98
+
+	PUBWEAK	USART_StructInit
+USART_StructInit:	// 0x08004ec9 @ stm32f10x_usart.o
+	DS8	0x20
+
+	PUBWEAK	USART_Cmd
+USART_Cmd:	// 0x08004ee9 @ stm32f10x_usart.o
+	DS8	0x14
+
+	PUBWEAK	USART_ITConfig
+USART_ITConfig:	// 0x08004efd @ stm32f10x_usart.o
+	DS8	0x30
+
+	PUBWEAK	USART_SendData
+USART_SendData:	// 0x08004f2d @ stm32f10x_usart.o
+	DS8	0x8
+
+	PUBWEAK	USART_ReceiveData
+USART_ReceiveData:	// 0x08004f35 @ stm32f10x_usart.o
+	DS8	0x8
+
+	PUBWEAK	NVIC_PriorityGroupConfig
+NVIC_PriorityGroupConfig:	// 0x08004f3d @ stm32f10x_nvic.o
+	DS8	0xA
+
+	PUBWEAK	NVIC_Init
+NVIC_Init:	// 0x08004f47 @ stm32f10x_nvic.o
+	DS8	0x7E
+
+	PUBWEAK	NVIC_SetVectorTable
+NVIC_SetVectorTable:	// 0x08004fc5 @ stm32f10x_nvic.o
+	DS8	0x108
+
+	PUBWEAK	FLASH_SetLatency
+FLASH_SetLatency:	// 0x080050cd @ stm32f10x_flash.o
+	DS8	0x14
+
+	PUBWEAK	FLASH_PrefetchBufferCmd
+FLASH_PrefetchBufferCmd:	// 0x080050e1 @ stm32f10x_flash.o
 	DS8	0x10
 
 	PUBWEAK	GetHex
-GetHex:	// 0x08004d9d @ main.o
+GetHex:	// 0x080050f1 @ main.o
 	DS8	0x24
 
 	PUBWEAK	JumpTo
-JumpTo:	// 0x08004dc1 @ main.o
+JumpTo:	// 0x08005115 @ main.o
 	DS8	0x8
 
 	PUBWEAK	LoadSRecord
-LoadSRecord:	// 0x08004dc9 @ main.o
-	DS8	0xBC
+LoadSRecord:	// 0x0800511d @ main.o
+	DS8	0xB0
 
 	PUBWEAK	printf
-printf:	// 0x08004e85 @ printf.o
+printf:	// 0x080051cd @ printf.o
 	DS8	0x24
 
-	PUBWEAK	__aeabi_memclr4
-__aeabi_memclr4:	// 0x08004ea9 @ ABImemclr4.o
-	DS8	0x8
-
-	PUBWEAK	__iar_Memset4_word
-__iar_Memset4_word:	// 0x08004eb1 @ ABImemset48.o
-	DS8	0x0
-
-	PUBWEAK	__iar_Memset8_word
-__iar_Memset8_word:	// 0x08004eb1 @ ABImemset48.o
-	DS8	0x34
-
 	PUBWEAK	__WFI
-__WFI:	// 0x08004ee5 @ cortexm3_macro.o
+__WFI:	// 0x080051f1 @ cortexm3_macro.o
 	DS8	0x4
 
 	PUBWEAK	__WFE
-__WFE:	// 0x08004ee9 @ cortexm3_macro.o
+__WFE:	// 0x080051f5 @ cortexm3_macro.o
 	DS8	0x4
 
 	PUBWEAK	__SEV
-__SEV:	// 0x08004eed @ cortexm3_macro.o
+__SEV:	// 0x080051f9 @ cortexm3_macro.o
 	DS8	0x4
 
 	PUBWEAK	__ISB
-__ISB:	// 0x08004ef1 @ cortexm3_macro.o
+__ISB:	// 0x080051fd @ cortexm3_macro.o
 	DS8	0x6
 
 	PUBWEAK	__DSB
-__DSB:	// 0x08004ef7 @ cortexm3_macro.o
+__DSB:	// 0x08005203 @ cortexm3_macro.o
 	DS8	0x6
 
 	PUBWEAK	__DMB
-__DMB:	// 0x08004efd @ cortexm3_macro.o
+__DMB:	// 0x08005209 @ cortexm3_macro.o
 	DS8	0x6
 
 	PUBWEAK	__SVC
-__SVC:	// 0x08004f03 @ cortexm3_macro.o
+__SVC:	// 0x0800520f @ cortexm3_macro.o
 	DS8	0x4
 
 	PUBWEAK	__MRS_CONTROL
-__MRS_CONTROL:	// 0x08004f07 @ cortexm3_macro.o
+__MRS_CONTROL:	// 0x08005213 @ cortexm3_macro.o
 	DS8	0x6
 
 	PUBWEAK	__MSR_CONTROL
-__MSR_CONTROL:	// 0x08004f0d @ cortexm3_macro.o
+__MSR_CONTROL:	// 0x08005219 @ cortexm3_macro.o
 	DS8	0xA
 
 	PUBWEAK	__MRS_PSP
-__MRS_PSP:	// 0x08004f17 @ cortexm3_macro.o
+__MRS_PSP:	// 0x08005223 @ cortexm3_macro.o
 	DS8	0x6
 
 	PUBWEAK	__MSR_PSP
-__MSR_PSP:	// 0x08004f1d @ cortexm3_macro.o
+__MSR_PSP:	// 0x08005229 @ cortexm3_macro.o
 	DS8	0x6
 
 	PUBWEAK	__MRS_MSP
-__MRS_MSP:	// 0x08004f23 @ cortexm3_macro.o
+__MRS_MSP:	// 0x0800522f @ cortexm3_macro.o
 	DS8	0x6
 
 	PUBWEAK	__MSR_MSP
-__MSR_MSP:	// 0x08004f29 @ cortexm3_macro.o
+__MSR_MSP:	// 0x08005235 @ cortexm3_macro.o
 	DS8	0x6
 
 	PUBWEAK	__SETPRIMASK
-__SETPRIMASK:	// 0x08004f2f @ cortexm3_macro.o
+__SETPRIMASK:	// 0x0800523b @ cortexm3_macro.o
 	DS8	0x4
 
 	PUBWEAK	__RESETPRIMASK
-__RESETPRIMASK:	// 0x08004f33 @ cortexm3_macro.o
+__RESETPRIMASK:	// 0x0800523f @ cortexm3_macro.o
 	DS8	0x4
 
 	PUBWEAK	__SETFAULTMASK
-__SETFAULTMASK:	// 0x08004f37 @ cortexm3_macro.o
+__SETFAULTMASK:	// 0x08005243 @ cortexm3_macro.o
 	DS8	0x4
 
 	PUBWEAK	__RESETFAULTMASK
-__RESETFAULTMASK:	// 0x08004f3b @ cortexm3_macro.o
+__RESETFAULTMASK:	// 0x08005247 @ cortexm3_macro.o
 	DS8	0x4
 
 	PUBWEAK	__BASEPRICONFIG
-__BASEPRICONFIG:	// 0x08004f3f @ cortexm3_macro.o
+__BASEPRICONFIG:	// 0x0800524b @ cortexm3_macro.o
 	DS8	0x6
 
 	PUBWEAK	__GetBASEPRI
-__GetBASEPRI:	// 0x08004f45 @ cortexm3_macro.o
+__GetBASEPRI:	// 0x08005251 @ cortexm3_macro.o
 	DS8	0x6
 
 	PUBWEAK	__REV_HalfWord
-__REV_HalfWord:	// 0x08004f4b @ cortexm3_macro.o
+__REV_HalfWord:	// 0x08005257 @ cortexm3_macro.o
 	DS8	0x4
 
 	PUBWEAK	__REV_Word
-__REV_Word:	// 0x08004f4f @ cortexm3_macro.o
+__REV_Word:	// 0x0800525b @ cortexm3_macro.o
 	DS8	0x6
 
 	PUBWEAK	sprintf
-sprintf:	// 0x08004f55 @ sprintf.o
+sprintf:	// 0x08005261 @ sprintf.o
 	DS8	0x86
 
 	PUBWEAK	exit
-exit:	// 0x08004fdb @ exit.o
+exit:	// 0x080052e7 @ exit.o
 	DS8	0x12
 
 	PUBWEAK	__exit
-__exit:	// 0x08004fed @ exit.o
+__exit:	// 0x080052f9 @ exit.o
 	DS8	0x14
 
 	PUBWEAK	_Prout
-_Prout:	// 0x08005001 @ xprout.o
+_Prout:	// 0x0800530d @ xprout.o
 	DS8	0x22
 
 	PUBWEAK	IntHandlerNop
-IntHandlerNop:	// 0x08005023 @ stm32f10x_it.o
+IntHandlerNop:	// 0x0800532f @ stm32f10x_it.o
 	DS8	0x2
 
 	PUBWEAK	IntHandlerLoop
-IntHandlerLoop:	// 0x08005025 @ stm32f10x_it.o
+IntHandlerLoop:	// 0x08005331 @ stm32f10x_it.o
 
 	RSEG FLASH_DATA:DATA(1)
 	DS8	0x0
 
-	PUBWEAK	g_pUsartBuf
-g_pUsartBuf:	// 0x20004ffc @ usart.o
-	DS8	0x2000C004
+	PUBWEAK	HSEStatus
+HSEStatus:	// 0x20004ff0 @ stm32f10x_rcc.o
+	DS8	0x4
 
-	PUBWEAK	_A_GPIOC_CRL
-_A_GPIOC_CRL:	// 0x40011000 @ main.o
-	DS8	0xC
+	PUBWEAK	StartUpCounter
+StartUpCounter:	// 0x20004ff4 @ stm32f10x_rcc.o
+	DS8	0x4
+
+	PUBWEAK	g_pUsartBuf
+g_pUsartBuf:	// 0x20004ff8 @ usart.o
+	DS8	0x2000C014
 
 	PUBWEAK	_A_GPIOC_ODR
 _A_GPIOC_ODR:	// 0x4001100c @ main.o
-	DS8	0x1000C
-
-	PUBWEAK	_A_RCC_APB2ENR
-_A_RCC_APB2ENR:	// 0x40021018 @ main.o
 	END

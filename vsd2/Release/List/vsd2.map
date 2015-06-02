@@ -1,6 +1,6 @@
 ###############################################################################
 #
-# IAR ELF Linker V7.40.2.8542/W32 for ARM                 02/Jun/2015  21:59:46
+# IAR ELF Linker V7.40.2.8542/W32 for ARM                 02/Jun/2015  23:15:54
 # Copyright 2007-2015 IAR Systems AB.
 #
 #    Output file  =  Z:\Release\Exe\vsd2.out
@@ -33,7 +33,7 @@ __SystemLibrary = DLib
 
 "A1":  place at 0x08003000 { ro section .intvec };
 "P1":  place in [from 0x080030ec to 0x0801ffff] { ro };
-"P2":  place in [from 0x20004ffc to 0x20004fff] { block RAM_Block };
+"P2":  place in [from 0x20004ff0 to 0x20004fff] { block RAM_Block };
 
   Section          Kind        Address    Size  Object
   -------          ----        -------    ----  ------
@@ -41,7 +41,7 @@ __SystemLibrary = DLib
   .intvec          const    0x08003000    0xec  stm32f10x_vector.o [1]
                           - 0x080030ec    0xec
 
-"P1":                                   0x1f3a
+"P1":                                   0x2246
   .text            ro code  0x080030ec   0xdae  xprintffull.o [3]
   .text            ro code  0x08003e9a    0x22  zero_init3.o [5]
   .text            ro code  0x08003ebc    0x16  strchr.o [5]
@@ -62,45 +62,40 @@ __SystemLibrary = DLib
   .text            ro code  0x08004886     0xe  div.o [3]
   .text            ro code  0x08004894     0x2  I64DivZer.o [5]
   .text            ro code  0x08004898    0xd4  DblAdd.o [4]
-  .text            ro code  0x0800496c   0x164  stm32f10x_usart.o [1]
-  .text            ro code  0x08004ad0    0xdc  stm32f10x_rcc.o [1]
-  .text            ro code  0x08004bac   0x126  usart.o [1]
-  .text            ro code  0x08004cd4    0xc8  stm32f10x_gpio.o [1]
-  .text            ro code  0x08004d9c    0xe8  main.o [1]
-  .text            ro code  0x08004e84    0x24  printf.o [3]
-  .text            ro code  0x08004ea8     0x6  ABImemclr4.o [5]
-  .text            ro code  0x08004eb0    0x32  ABImemset48.o [5]
-  CODE             ro code  0x08004ee4    0x6e  cortexm3_macro.o [1]
-  .text            ro code  0x08004f54    0x34  sprintf.o [3]
-  .text            ro code  0x08004f88    0x28  data_init.o [5]
-  .iar.init_table  const    0x08004fb0    0x10  - Linker created -
-  .text            ro code  0x08004fc0    0x1a  cmain.o [5]
-  .text            ro code  0x08004fda     0x4  exit.o [3]
-  .text            ro code  0x08004fe0     0xa  cexit.o [5]
-  .text            ro code  0x08004fec    0x14  exit.o [6]
-  .text            ro code  0x08005000    0x16  xprout.o [3]
-  .text            ro code  0x08005016     0xc  cstartup_M.o [5]
-  .text            ro code  0x08005022     0x4  stm32f10x_it.o [1]
-  .rodata          const    0x08005026     0x0  zero_init3.o [5]
-                          - 0x08005026  0x1f3a
+  .text            ro code  0x0800496c   0x20c  stm32f10x_rcc.o [1]
+  .text            ro code  0x08004b78   0x196  usart.o [1]
+  .text            ro code  0x08004d10    0xc8  stm32f10x_gpio.o [1]
+  .text            ro code  0x08004dd8   0x164  stm32f10x_usart.o [1]
+  .text            ro code  0x08004f3c    0xb0  stm32f10x_nvic.o [1]
+  .text            ro code  0x08004fec    0xde  hw_config.o [1]
+  .text            ro code  0x080050cc    0x24  stm32f10x_flash.o [1]
+  .text            ro code  0x080050f0    0xdc  main.o [1]
+  .text            ro code  0x080051cc    0x24  printf.o [3]
+  CODE             ro code  0x080051f0    0x6e  cortexm3_macro.o [1]
+  .text            ro code  0x08005260    0x34  sprintf.o [3]
+  .text            ro code  0x08005294    0x28  data_init.o [5]
+  .iar.init_table  const    0x080052bc    0x10  - Linker created -
+  .text            ro code  0x080052cc    0x1a  cmain.o [5]
+  .text            ro code  0x080052e6     0x4  exit.o [3]
+  .text            ro code  0x080052ec     0xa  cexit.o [5]
+  .text            ro code  0x080052f8    0x14  exit.o [6]
+  .text            ro code  0x0800530c    0x16  xprout.o [3]
+  .text            ro code  0x08005322     0xc  cstartup_M.o [5]
+  .text            ro code  0x0800532e     0x4  stm32f10x_it.o [1]
+  .rodata          const    0x08005332     0x0  zero_init3.o [5]
+                          - 0x08005332  0x2246
 
-"P2":                                      0x4
-  RAM_Block                 0x20004ffc     0x4  <Block>
-    CSTACK                  0x20004ffc     0x0  <Block>
-    .bss           zero     0x20004ffc     0x4  usart.o [1]
-                          - 0x20005000     0x4
+"P2":                                     0x10
+  RAM_Block                 0x20004ff0    0x10  <Block>
+    CSTACK                  0x20004ff0     0x0  <Block>
+    .bss           zero     0x20004ff0     0x8  stm32f10x_rcc.o [1]
+    .bss           zero     0x20004ff8     0x4  usart.o [1]
+    .bss           zero     0x20004ffc     0x1  hw_config.o [1]
+                          - 0x20005000    0x10
 
-Absolute sections, part 1 of 3:            0x4
-  .noinit          uninit   0x40011000     0x4  main.o [1]
-                          - 0x40011004     0x4
-
-Absolute sections, part 2 of 3:            0x4
+Absolute sections:                         0x4
   .noinit          uninit   0x4001100c     0x4  main.o [1]
                           - 0x40011010     0x4
-
-Absolute sections, part 3 of 3:            0x4
-  .noinit          uninit   0x40021018     0x4  main.o [1]
-                          - 0x4002101c     0x4
 
 
 *******************************************************************************
@@ -110,8 +105,8 @@ Absolute sections, part 3 of 3:            0x4
           Address     Size
           -------     ----
 Zero (__iar_zero_init3)
-    1 destination range, total size 0x4:
-          0x20004ffc   0x4
+    1 destination range, total size 0xd:
+          0x20004ff0   0xd
 
 
 
@@ -124,15 +119,18 @@ Zero (__iar_zero_init3)
     ------                 -------  -------  -------  -------
 Z:\Release\Obj: [1]
     cortexm3_macro.o           110
-    main.o                     232                         12
+    hw_config.o                222                 1
+    main.o                     220                          4
+    stm32f10x_flash.o           36
     stm32f10x_gpio.o           200
     stm32f10x_it.o               4
-    stm32f10x_rcc.o            220
+    stm32f10x_nvic.o           176
+    stm32f10x_rcc.o            524                 8
     stm32f10x_usart.o          356
     stm32f10x_vector.o                  236
-    usart.o                    294                 4
+    usart.o                    406                 4
     ---------------------------------------------------------
-    Total:                   1 416      236        4       12
+    Total:                   2 254      236       13        4
 
 command line: [2]
     ---------------------------------------------------------
@@ -164,9 +162,7 @@ m7M_tl.a: [4]
     Total:                   2 178
 
 rt7M_tl.a: [5]
-    ABImemclr4.o                 6
     ABImemcpy_unaligned.o      118
-    ABImemset48.o               50
     I64DivMod.o                238
     I64DivZer.o                  2
     cexit.o                     10
@@ -178,17 +174,17 @@ rt7M_tl.a: [5]
     strlen.o                    54
     zero_init3.o                34
     ---------------------------------------------------------
-    Total:                     700
+    Total:                     644
 
 shb_l.a: [6]
     exit.o                      20
     ---------------------------------------------------------
     Total:                      20
 
-    Gaps                        24
+    Gaps                        22
     Linker created                       16
 -------------------------------------------------------------
-    Grand Total:             7 978      252        4       12
+    Grand Total:             8 758      252       13        4
 
 
 *******************************************************************************
@@ -197,70 +193,91 @@ shb_l.a: [6]
 
 Entry                      Address   Size  Type      Object
 -----                      -------   ----  ----      ------
-.iar.init_table$$Base   0x08004fb0          --   Gb  - Linker created -
-.iar.init_table$$Limit  0x08004fc0          --   Gb  - Linker created -
-?main                   0x08004fc1         Code  Gb  cmain.o [5]
-ADCPrescTable           0x08004ba8    0x4  Data  Lc  stm32f10x_rcc.o [1]
-APBAHBPrescTable        0x08004b98   0x10  Data  Lc  stm32f10x_rcc.o [1]
-CSTACK$$Base            0x20004ffc          --   Gb  - Linker created -
-CSTACK$$Limit           0x20004ffc          --   Gb  - Linker created -
-GPIO_Init               0x08004cd5   0xb8  Code  Gb  stm32f10x_gpio.o [1]
-GPIO_StructInit         0x08004d8d   0x10  Code  Gb  stm32f10x_gpio.o [1]
-GetHex                  0x08004d9d   0x22  Code  Gb  main.o [1]
-GetcharWait             0x08004cc5    0xe  Code  Gb  usart.o [1]
-IntHandlerLoop          0x08005025    0x2  Code  Gb  stm32f10x_it.o [1]
-IntHandlerNop           0x08005023    0x2  Code  Gb  stm32f10x_it.o [1]
-JumpTo                  0x08004dc1    0x8  Code  Gb  main.o [1]
+.iar.init_table$$Base   0x080052bc          --   Gb  - Linker created -
+.iar.init_table$$Limit  0x080052cc          --   Gb  - Linker created -
+?main                   0x080052cd         Code  Gb  cmain.o [5]
+ADCPrescTable           0x08004b74    0x4  Data  Lc  stm32f10x_rcc.o [1]
+APBAHBPrescTable        0x08004b64   0x10  Data  Lc  stm32f10x_rcc.o [1]
+CSTACK$$Base            0x20004ff0          --   Gb  - Linker created -
+CSTACK$$Limit           0x20004ff0          --   Gb  - Linker created -
+FLASH_PrefetchBufferCmd
+                        0x080050e1    0xa  Code  Gb  stm32f10x_flash.o [1]
+FLASH_SetLatency        0x080050cd    0xa  Code  Gb  stm32f10x_flash.o [1]
+GPIO_Init               0x08004d11   0xb8  Code  Gb  stm32f10x_gpio.o [1]
+GPIO_StructInit         0x08004dc9   0x10  Code  Gb  stm32f10x_gpio.o [1]
+GetHex                  0x080050f1   0x22  Code  Gb  main.o [1]
+GetcharWait             0x08004d01    0xe  Code  Gb  usart.o [1]
+HSEStartUpStatus        0x20004ffc    0x1  Data  Gb  hw_config.o [1]
+HSEStatus               0x20004ff0    0x1  Data  Lc  stm32f10x_rcc.o [1]
+IntHandlerLoop          0x08005331    0x2  Code  Gb  stm32f10x_it.o [1]
+IntHandlerNop           0x0800532f    0x2  Code  Gb  stm32f10x_it.o [1]
+JumpTo                  0x08005115    0x8  Code  Gb  main.o [1]
 LoadInt                 0x08003679   0x6e  Code  Lc  xprintffull.o [3]
-LoadSRecord             0x08004dc9   0x50  Code  Gb  main.o [1]
-RAM_Block$$Base         0x20004ffc          --   Gb  - Linker created -
+LoadSRecord             0x0800511d   0x50  Code  Gb  main.o [1]
+NVIC_Init               0x08004f47   0x7e  Code  Gb  stm32f10x_nvic.o [1]
+NVIC_PriorityGroupConfig
+                        0x08004f3d    0xa  Code  Gb  stm32f10x_nvic.o [1]
+NVIC_SetVectorTable     0x08004fc5    0xc  Code  Gb  stm32f10x_nvic.o [1]
+RAM_Block$$Base         0x20004ff0          --   Gb  - Linker created -
 RAM_Block$$Limit        0x20005000          --   Gb  - Linker created -
-RCC_APB1PeriphResetCmd  0x08004b6f   0x12  Code  Gb  stm32f10x_rcc.o [1]
-RCC_APB2PeriphClockCmd  0x08004b4b   0x12  Code  Gb  stm32f10x_rcc.o [1]
-RCC_APB2PeriphResetCmd  0x08004b5d   0x12  Code  Gb  stm32f10x_rcc.o [1]
-RCC_GetClocksFreq       0x08004ad1   0x7a  Code  Gb  stm32f10x_rcc.o [1]
-Region$$Table$$Base     0x08004fb0          --   Gb  - Linker created -
-Region$$Table$$Limit    0x08004fc0          --   Gb  - Linker created -
-USART1_IRQHandler       0x08004c2b   0x64  Code  Gb  usart.o [1]
-USART_Cmd               0x08004a7d   0x14  Code  Gb  stm32f10x_usart.o [1]
-USART_DeInit            0x0800496d   0x58  Code  Gb  stm32f10x_usart.o [1]
-USART_ITConfig          0x08004a91   0x30  Code  Gb  stm32f10x_usart.o [1]
-USART_Init              0x080049c5   0x8a  Code  Gb  stm32f10x_usart.o [1]
-USART_ReceiveData       0x08004ac9    0x8  Code  Gb  stm32f10x_usart.o [1]
-USART_SendData          0x08004ac1    0x8  Code  Gb  stm32f10x_usart.o [1]
-USART_StructInit        0x08004a5d   0x20  Code  Gb  stm32f10x_usart.o [1]
-UsartInit               0x08004bad   0x7e  Code  Gb  usart.o [1]
-_A_GPIOC_CRL            0x40011000    0x4  Data  Gb  main.o [1]
+RCC_ADCCLKConfig        0x08004a5d    0xa  Code  Gb  stm32f10x_rcc.o [1]
+RCC_APB1PeriphResetCmd  0x08004b05   0x12  Code  Gb  stm32f10x_rcc.o [1]
+RCC_APB2PeriphClockCmd  0x08004ae1   0x12  Code  Gb  stm32f10x_rcc.o [1]
+RCC_APB2PeriphResetCmd  0x08004af3   0x12  Code  Gb  stm32f10x_rcc.o [1]
+RCC_DeInit              0x0800496d   0x40  Code  Gb  stm32f10x_rcc.o [1]
+RCC_GetClocksFreq       0x08004a67   0x7a  Code  Gb  stm32f10x_rcc.o [1]
+RCC_GetFlagStatus       0x08004b17   0x22  Code  Gb  stm32f10x_rcc.o [1]
+RCC_GetSYSCLKSource     0x08004a2b    0xa  Code  Gb  stm32f10x_rcc.o [1]
+RCC_HCLKConfig          0x08004a35    0xa  Code  Gb  stm32f10x_rcc.o [1]
+RCC_HSEConfig           0x080049ad   0x32  Code  Gb  stm32f10x_rcc.o [1]
+RCC_PCLK1Config         0x08004a3f    0x8  Code  Gb  stm32f10x_rcc.o [1]
+RCC_PCLK2Config         0x08004a4d    0x8  Code  Gb  stm32f10x_rcc.o [1]
+RCC_PLLCmd              0x08004a17    0x6  Code  Gb  stm32f10x_rcc.o [1]
+RCC_PLLConfig           0x08004a07   0x10  Code  Gb  stm32f10x_rcc.o [1]
+RCC_SYSCLKConfig        0x08004a1d    0xe  Code  Gb  stm32f10x_rcc.o [1]
+RCC_WaitForHSEStartUp   0x080049df   0x28  Code  Gb  stm32f10x_rcc.o [1]
+Region$$Table$$Base     0x080052bc          --   Gb  - Linker created -
+Region$$Table$$Limit    0x080052cc          --   Gb  - Linker created -
+Set_System              0x08004fed   0xc4  Code  Gb  hw_config.o [1]
+StartUpCounter          0x20004ff4    0x4  Data  Lc  stm32f10x_rcc.o [1]
+USART1_IRQHandler       0x08004c21   0x64  Code  Gb  usart.o [1]
+USART_Cmd               0x08004ee9   0x14  Code  Gb  stm32f10x_usart.o [1]
+USART_DeInit            0x08004dd9   0x58  Code  Gb  stm32f10x_usart.o [1]
+USART_ITConfig          0x08004efd   0x30  Code  Gb  stm32f10x_usart.o [1]
+USART_Init              0x08004e31   0x8a  Code  Gb  stm32f10x_usart.o [1]
+USART_ReceiveData       0x08004f35    0x8  Code  Gb  stm32f10x_usart.o [1]
+USART_SendData          0x08004f2d    0x8  Code  Gb  stm32f10x_usart.o [1]
+USART_StructInit        0x08004ec9   0x20  Code  Gb  stm32f10x_usart.o [1]
+UsartInit               0x08004b79   0xa8  Code  Gb  usart.o [1]
 _A_GPIOC_ODR            0x4001100c    0x4  Data  Gb  main.o [1]
-_A_RCC_APB2ENR          0x40021018    0x4  Data  Gb  main.o [1]
 _GenldFull              0x08003bef  0x264  Code  Lc  xprintffull.o [3]
 _LdtobFull              0x080037ed  0x3fc  Code  Lc  xprintffull.o [3]
 _LitobFull              0x080036e7  0x106  Code  Lc  xprintffull.o [3]
 _PrintfFull             0x080030ed  0x586  Code  Gb  xprintffull.o [3]
-_Prout                  0x08005001   0x16  Code  Gb  xprout.o [3]
+_Prout                  0x0800530d   0x16  Code  Gb  xprout.o [3]
 _PutcharsFull           0x08003e53   0x2e  Code  Lc  xprintffull.o [3]
 _SProut                 0x08003ed3    0xa  Code  Gb  xsprout.o [3]
-__BASEPRICONFIG         0x08004f3f         Code  Gb  cortexm3_macro.o [1]
-__DMB                   0x08004efd         Code  Gb  cortexm3_macro.o [1]
-__DSB                   0x08004ef7         Code  Gb  cortexm3_macro.o [1]
-__GetBASEPRI            0x08004f45         Code  Gb  cortexm3_macro.o [1]
-__ISB                   0x08004ef1         Code  Gb  cortexm3_macro.o [1]
-__MRS_CONTROL           0x08004f07         Code  Gb  cortexm3_macro.o [1]
-__MRS_MSP               0x08004f23         Code  Gb  cortexm3_macro.o [1]
-__MRS_PSP               0x08004f17         Code  Gb  cortexm3_macro.o [1]
-__MSR_CONTROL           0x08004f0d         Code  Gb  cortexm3_macro.o [1]
-__MSR_MSP               0x08004f29         Code  Gb  cortexm3_macro.o [1]
-__MSR_PSP               0x08004f1d         Code  Gb  cortexm3_macro.o [1]
-__RESETFAULTMASK        0x08004f3b         Code  Gb  cortexm3_macro.o [1]
-__RESETPRIMASK          0x08004f33         Code  Gb  cortexm3_macro.o [1]
-__REV_HalfWord          0x08004f4b         Code  Gb  cortexm3_macro.o [1]
-__REV_Word              0x08004f4f         Code  Gb  cortexm3_macro.o [1]
-__SETFAULTMASK          0x08004f37         Code  Gb  cortexm3_macro.o [1]
-__SETPRIMASK            0x08004f2f         Code  Gb  cortexm3_macro.o [1]
-__SEV                   0x08004eed         Code  Gb  cortexm3_macro.o [1]
-__SVC                   0x08004f03         Code  Gb  cortexm3_macro.o [1]
-__WFE                   0x08004ee9         Code  Gb  cortexm3_macro.o [1]
-__WFI                   0x08004ee5         Code  Gb  cortexm3_macro.o [1]
+__BASEPRICONFIG         0x0800524b         Code  Gb  cortexm3_macro.o [1]
+__DMB                   0x08005209         Code  Gb  cortexm3_macro.o [1]
+__DSB                   0x08005203         Code  Gb  cortexm3_macro.o [1]
+__GetBASEPRI            0x08005251         Code  Gb  cortexm3_macro.o [1]
+__ISB                   0x080051fd         Code  Gb  cortexm3_macro.o [1]
+__MRS_CONTROL           0x08005213         Code  Gb  cortexm3_macro.o [1]
+__MRS_MSP               0x0800522f         Code  Gb  cortexm3_macro.o [1]
+__MRS_PSP               0x08005223         Code  Gb  cortexm3_macro.o [1]
+__MSR_CONTROL           0x08005219         Code  Gb  cortexm3_macro.o [1]
+__MSR_MSP               0x08005235         Code  Gb  cortexm3_macro.o [1]
+__MSR_PSP               0x08005229         Code  Gb  cortexm3_macro.o [1]
+__RESETFAULTMASK        0x08005247         Code  Gb  cortexm3_macro.o [1]
+__RESETPRIMASK          0x0800523f         Code  Gb  cortexm3_macro.o [1]
+__REV_HalfWord          0x08005257         Code  Gb  cortexm3_macro.o [1]
+__REV_Word              0x0800525b         Code  Gb  cortexm3_macro.o [1]
+__SETFAULTMASK          0x08005243         Code  Gb  cortexm3_macro.o [1]
+__SETPRIMASK            0x0800523b         Code  Gb  cortexm3_macro.o [1]
+__SEV                   0x080051f9         Code  Gb  cortexm3_macro.o [1]
+__SVC                   0x0800520f         Code  Gb  cortexm3_macro.o [1]
+__WFE                   0x080051f5         Code  Gb  cortexm3_macro.o [1]
+__WFI                   0x080051f1         Code  Gb  cortexm3_macro.o [1]
 __aeabi_cdcmple         0x08004115         Code  Gb  DblCmpLe.o [4]
 __aeabi_cdrcmple        0x08004145         Code  Gb  DblCmpGe.o [4]
 __aeabi_d2iz            0x08004285         Code  Gb  DblToI32.o [4]
@@ -270,23 +287,20 @@ __aeabi_dmul            0x0800448d         Code  Gb  DblMul.o [4]
 __aeabi_dsub            0x0800430d         Code  Gb  DblSub.o [4]
 __aeabi_i2d             0x080042dd         Code  Gb  I32ToDbl.o [4]
 __aeabi_ldiv0           0x08004895         Code  Gb  I64DivZer.o [5]
-__aeabi_memclr4         0x08004ea9         Code  Gb  ABImemclr4.o [5]
 __aeabi_ui2d            0x080042f1         Code  Gb  I32ToDbl.o [4]
 __aeabi_uldivmod        0x08003f6d         Code  Gb  I64DivMod.o [5]
-__cmain                 0x08004fc1         Code  Gb  cmain.o [5]
-__exit                  0x08004fed   0x14  Code  Gb  exit.o [6]
+__cmain                 0x080052cd         Code  Gb  cmain.o [5]
+__exit                  0x080052f9   0x14  Code  Gb  exit.o [6]
 __iar_Dnorm             0x080040d3   0x42  Code  Gb  xdnorm.o [4]
 __iar_Dscale            0x08004175  0x110  Code  Gb  xdscale.o [4]
 __iar_Memchr            0x08003f15         Code  Gb  memchr.o [5]
-__iar_Memset4_word      0x08004eb1         Code  Gb  ABImemset48.o [5]
-__iar_Memset8_word      0x08004eb1         Code  Gb  ABImemset48.o [5]
 __iar_Strchr            0x08003ebd         Code  Gb  strchr.o [5]
 __iar_d2uiz             0x080042bd         Code  Gb  DblToI32.o [4]
 __iar_dadd              0x08004899         Code  Gb  DblAdd.o [4]
-__iar_data_init3        0x08004f89   0x28  Code  Gb  data_init.o [5]
+__iar_data_init3        0x08005295   0x28  Code  Gb  data_init.o [5]
 __iar_dsub              0x08004321         Code  Gb  DblSub.o [4]
 __iar_dsubStart         0x08004333         Code  Gb  DblSub.o [4]
-__iar_program_start     0x08005017         Code  Gb  cstartup_M.o [5]
+__iar_program_start     0x08005323         Code  Gb  cstartup_M.o [5]
 __iar_ui2d              0x080042f5         Code  Gb  I32ToDbl.o [4]
 __iar_unaligned___aeabi_memcpy
                         0x0800405d         Code  Gb  ABImemcpy_unaligned.o [5]
@@ -296,18 +310,18 @@ __iar_unaligned___aeabi_memcpy8
                         0x0800407d         Code  Gb  ABImemcpy_unaligned.o [5]
 __iar_zero_init3        0x08003e9b   0x22  Code  Gb  zero_init3.o [5]
 __vector_table          0x08003000   0xec  Data  Gb  stm32f10x_vector.o [1]
-_call_main              0x08004fcd         Code  Gb  cmain.o [5]
-_exit                   0x08004fe1         Code  Gb  cexit.o [5]
-_main                   0x08004fd7         Code  Gb  cmain.o [5]
+_call_main              0x080052d9         Code  Gb  cmain.o [5]
+_exit                   0x080052ed         Code  Gb  cexit.o [5]
+_main                   0x080052e3         Code  Gb  cmain.o [5]
 div                     0x08004887    0xe  Code  Gb  div.o [3]
-exit                    0x08004fdb    0x4  Code  Gb  exit.o [3]
-g_pUsartBuf             0x20004ffc    0x4  Data  Gb  usart.o [1]
-getchar                 0x08004ca5    0xc  Code  Gb  usart.o [1]
-main                    0x08004e19   0x3a  Code  Gb  main.o [1]
+exit                    0x080052e7    0x4  Code  Gb  exit.o [3]
+g_pUsartBuf             0x20004ff8    0x4  Data  Gb  usart.o [1]
+getchar                 0x08004cc3   0x30  Code  Gb  usart.o [1]
+main                    0x0800516d   0x26  Code  Gb  main.o [1]
 memchr                  0x08003f15         Code  Gb  memchr.o [5]
-printf                  0x08004e85   0x24  Code  Gb  printf.o [3]
-putchar                 0x08004c8f   0x16  Code  Gb  usart.o [1]
-sprintf                 0x08004f55   0x34  Code  Gb  sprintf.o [3]
+printf                  0x080051cd   0x24  Code  Gb  printf.o [3]
+putchar                 0x08004c85   0x3e  Code  Gb  usart.o [1]
+sprintf                 0x08005261   0x34  Code  Gb  sprintf.o [3]
 strchr                  0x08003ebd         Code  Gb  strchr.o [5]
 strlen                  0x08003edd         Code  Gb  strlen.o [5]
 
@@ -319,9 +333,9 @@ strlen                  0x08003edd         Code  Gb  strlen.o [5]
 [5] = rt7M_tl.a
 [6] = shb_l.a
 
-  7 978 bytes of readonly  code memory
+  8 758 bytes of readonly  code memory
     252 bytes of readonly  data memory
-      4 bytes of readwrite data memory (+ 12 absolute)
+     13 bytes of readwrite data memory (+ 4 absolute)
 
 Errors: none
 Warnings: none

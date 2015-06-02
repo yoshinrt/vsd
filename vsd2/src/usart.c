@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_gpio.h"
+#include "stm32f10x_nvic.h"
 #include "dds.h"
 #include "usart.h"
 
@@ -22,6 +23,7 @@
 USART_BUF_t	*g_pUsartBuf;
 
 /*** 初期化 *****************************************************************/
+// pBuf == NULL の場合は，割り込み・バッファリングなしで動作する
 
 void UsartInit( UINT uBaudRate, USART_BUF_t *pBuf ){
 	g_pUsartBuf = pBuf;
@@ -53,9 +55,21 @@ void UsartInit( UINT uBaudRate, USART_BUF_t *pBuf ){
 	USART_Cmd( DEFAULT_PORT, ENABLE );
 	
 	// 割り込み設定
-	#ifdef NO_INT
+	if( pBuf ){
+		// NVIC 設定
+		NVIC_InitTypeDef NVIC_InitStructure;
+		
+		NVIC_PriorityGroupConfig( NVIC_PriorityGroup_1 );
+		
+		/* Enable USART1 Interrupt */
+		NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQChannel;
+		NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+		NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+		NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+		NVIC_Init( &NVIC_InitStructure );
+		
 		USART_ITConfig( DEFAULT_PORT, USART_IT_RXNE, ENABLE );
-	#endif
+	}
 }
 
 /*** 割り込みハンドラ *******************************************************/
@@ -98,14 +112,14 @@ void USART1_IRQHandler( void ){
 /*** 1文字入出力 ************************************************************/
 
 int putchar( int c ){
-#ifdef NO_INT
-	while( !( DEFAULT_PORT->SR & ( 1 << 7 )));
-	USART_SendData( DEFAULT_PORT, c );
-	return c;
-}
-
-int putchar_int( int c ){
-#endif
+	// バッファリングなし
+	if( !g_pUsartBuf ){
+		while( !( DEFAULT_PORT->SR & ( 1 << 7 )));
+		USART_SendData( DEFAULT_PORT, c );
+		return c;
+	}
+	
+	// バッファリングあり
 	UINT uWp = g_pUsartBuf->uTxBufWp;
 	UINT uNextWp = ( uWp + 1 ) & ( USART_TXBUF_SIZE - 1 );
 	
@@ -122,15 +136,16 @@ int putchar_int( int c ){
 }
 
 int getchar( void ){
-#ifdef NO_INT
-	if( DEFAULT_PORT->SR & ( 1 << 5 )){
-		return USART_ReceiveData( DEFAULT_PORT );
+	
+	// バッファリングなし
+	if( !g_pUsartBuf ){
+		if( DEFAULT_PORT->SR & ( 1 << 5 )){
+			return USART_ReceiveData( DEFAULT_PORT );
+		}
+		return EOF;
 	}
-	return EOF;
-}
-
-int getchar_int( void ){
-#endif
+	
+	// バッファリングあり
 	UINT uRp = g_pUsartBuf->uRxBufRp;
 	if( uRp == g_pUsartBuf->uRxBufWp ) return EOF;
 	
@@ -146,4 +161,10 @@ int GetcharWait( void ){
 	int c;
 	while(( c = getchar()) == EOF ) /*_WFI*/;
 	return c;
+}
+
+/*** 文字列出力 *************************************************************/
+
+void UsartPutstr( char *szMsg ){
+	while( *szMsg ) putchar( *szMsg++ );
 }
