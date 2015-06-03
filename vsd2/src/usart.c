@@ -59,6 +59,7 @@ void UsartInit( UINT uBaudRate, USART_BUF_t *pBuf ){
 		// NVIC ê›íË
 		NVIC_InitTypeDef NVIC_InitStructure;
 		
+		// ÅöÇ±Ç±Ç…Ç†ÇÈÇÃÇÕÇ®Ç©ÇµÇ¢
 		NVIC_PriorityGroupConfig( NVIC_PriorityGroup_1 );
 		
 		/* Enable USART1 Interrupt */

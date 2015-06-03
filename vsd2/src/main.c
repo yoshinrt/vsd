@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <ST\iostm32f10xxB.h>
 #include "stm32f10x_nvic.h"
+#include "stm32f10x_gpio.h"
 #include "hw_config.h"
 #include "main2.h"
 #include "usart.h"
@@ -97,7 +98,7 @@ __noreturn void main( void ){
 	
 	#ifndef EXEC_SRAM
 		Set_System();
-		GPIOC_ODR ^= 0x40;    // LEDの出力を反転させる。
+		GPIOC->ODR ^= 0x40;    // LEDの出力を反転させる。
 		UsartInit( 38400, NULL );
 		printf( "Waiting for S record...\n" );
 		LoadSRecord();
@@ -110,14 +111,10 @@ __noreturn void main( void ){
 	NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
 	
 	UsartInit( 38400, &UsartBuf );
-	
 	TimerInit();
-	//while( 1 ) printf( "%08X\n", GetCurrentTime());
+	PulseInit();
 	
-	UINT uPrevTime = 0;
 	while( 1 ){
-		while( GetCurrentTime() - uPrevTime < TIMER_HZ );
-		printf( "%d\n", uPrevTime / TIMER_HZ );
-		uPrevTime += TIMER_HZ;
+		printf( "%d %d %d %d\n", g_Speed.uPulseCnt, g_Tacho.uPulseCnt, g_uLapTime, GetCurrentTime() / TIMER_HZ );
 	}
 }

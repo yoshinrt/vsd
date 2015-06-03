@@ -10,6 +10,7 @@
 #include "dds.h"
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_gpio.h"
+#include "stm32f10x_nvic.h"
 #include "stm32f10x_tim.h"
 #include "main2.h"
 
@@ -52,17 +53,58 @@ UINT GetCurrentTime( void ){
 }
 
 /*** 初期化 *****************************************************************/
-// { TIM3, TIM2 } を 32bit タイマとして連結する
+// PD0: speed
+// PD1: tacho
+// PD2: 磁気センサー
 
 void PulseInit( void ){
+	// APB クロック
+	RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOD, ENABLE );
+	
+	// GPIO 設定
+	GPIO_InitTypeDef GPIO_InitStruct;
+	GPIO_StructInit( &GPIO_InitStruct );
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	
+	GPIO_InitStruct.GPIO_Pin  = GPIO_Pin_0;
+	GPIO_Init( GPIOD, &GPIO_InitStruct );
+	GPIO_InitStruct.GPIO_Pin  = GPIO_Pin_1;
+	GPIO_Init( GPIOD, &GPIO_InitStruct );
+	GPIO_InitStruct.GPIO_Pin  = GPIO_Pin_2;
+	GPIO_Init( GPIOD, &GPIO_InitStruct );
+	
+	// GPIO 割り込みイネーブル
+	GPIO_EXTILineConfig( GPIO_PortSourceGPIOD, GPIO_PinSource0 );
+	GPIO_EXTILineConfig( GPIO_PortSourceGPIOD, GPIO_PinSource1 );
+	GPIO_EXTILineConfig( GPIO_PortSourceGPIOD, GPIO_PinSource2 );
+	EXTI->IMR  |= 0x7;
+	EXTI->RTSR |= 0x7;
+	EXTI->FTSR &= ~0x7;
+	
+	// NVIC 設定
+	NVIC_InitTypeDef NVIC_InitStructure;
+	
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQChannel;
+	NVIC_Init( &NVIC_InitStructure );
+	
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQChannel;
+	NVIC_Init( &NVIC_InitStructure );
+	
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQChannel;
+	NVIC_Init( &NVIC_InitStructure );
 }
 
-#if 0
 /*** スピードパルス *********************************************************/
 
 PULSE_t	g_Speed;
 
 void EXTI0_IRQHandler( void ){
+GPIOC->ODR ^= 0x40;    // LEDの出力を反転させる。
+	EXTI->PR = ( 1 << 0 );
 	g_Speed.uLastTime	= GetCurrentTime();
 	++g_Speed.uPulseCnt;
 }
@@ -71,13 +113,23 @@ void EXTI0_IRQHandler( void ){
 
 PULSE_t	g_Tacho;
 
-void EXTI0_IRQHandler( void ){
+void EXTI1_IRQHandler( void ){
+	EXTI->PR = ( 1 << 1 );
 	g_Tacho.uLastTime	= GetCurrentTime();
 	++g_Tacho.uPulseCnt;
 }
 
+/*** 磁気センサ *************************************************************/
+
+UINT g_uLapTime;
+void EXTI2_IRQHandler( void ){
+	EXTI->PR = ( 1 << 2 );
+	++g_uLapTime;
+}
+
 /*** Tacho / Speed 計算 *****************************************************/
 
+#if 0
 UINT g_uSpeedCalcConst = ( UINT )( 3600.0 * 100.0 / PULSE_PER_1KM * ( 1 << 11 ));
 
 // 0rpm に切り下げる EG 回転数のパルス幅 = 200rpm (clk数@16MHz)

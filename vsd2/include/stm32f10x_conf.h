@@ -29,9 +29,9 @@
 
 /* Comment the line below to disable the specific peripheral inclusion */
 /************************************* ADC ************************************/
-//#define _ADC
-//#define _ADC1
-//#define _ADC2
+#define _ADC
+#define _ADC1
+#define _ADC2
 
 /************************************* BKP ************************************/
 //#define _BKP 
@@ -50,7 +50,7 @@
 //#define _DMA_Channel7
 
 /************************************* EXTI ***********************************/
-//#define _EXTI
+#define _EXTI
 
 /************************************* FLASH and Option Bytes *****************/
 #define _FLASH
@@ -65,7 +65,7 @@
 #define _GPIOB
 #define _GPIOC
 #define _GPIOD
-//#define _GPIOE
+#define _GPIOE
 #define _AFIO
 
 /************************************* I2C ************************************/
@@ -101,9 +101,9 @@
 
 /************************************* TIM ************************************/
 //#define _TIM
-//#define _TIM2
-//#define _TIM3
-//#define _TIM4
+#define _TIM2
+#define _TIM3
+#define _TIM4
 
 /************************************* USART **********************************/
 #define _USART
