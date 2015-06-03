@@ -17,9 +17,14 @@
 #define TIMER_HZ	200000
 #define LOG_HZ		16
 
+#define USART_BAUDRATE	38400
+
 // たぶん，ホイル一周が30パルス
 #define PULSE_PER_1KM_NORMAL	(( double )14958.80127 )	// ノーマル
 #define PULSE_PER_1KM			(( double )15473.76689 )	// CE28N
+
+#define SRAM_TOP	0x20000000
+#define SRAM_END	0x20005000
 
 /*** const ******************************************************************/
 /*** new type ***************************************************************/
@@ -45,6 +50,7 @@ void EXTI2_IRQHandler( void );
 void ComputeMeterTacho( void );
 void ComputeMeterSpeed( void );
 void ComputeMeter( void );
+void LoadSRecord( void );
 
 /*** extern *****************************************************************/
 
