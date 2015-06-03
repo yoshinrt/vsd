@@ -8,11 +8,22 @@
 *****************************************************************************/
 
 #include "dds.h"
+#include <stdio.h>
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_nvic.h"
 #include "stm32f10x_tim.h"
 #include "main2.h"
+
+/*** NVIC IE/ID *************************************************************/
+
+void NvicIntEnable( UINT IRQChannel ){
+	NVIC->ISER[(IRQChannel >> 0x05)] = (u32)0x01 << (IRQChannel & (u8)0x1F);
+}
+
+void NvicIntDisable( UINT IRQChannel ){
+	NVIC->ICER[(IRQChannel >> 0x05)] = (u32)0x01 << (IRQChannel & (u8)0x1F);
+}
 
 /*** 初期化 *****************************************************************/
 // { TIM3, TIM2 } を 32bit タイマとして連結する
@@ -50,6 +61,10 @@ UINT GetCurrentTime( void ){
 	}while( uTimeL > ( uTimeL2 = TIM2->CNT ));
 	
 	return ( uTimeH << 16 ) | uTimeL;
+}
+
+UINT GetCurrentTime16( void ){
+	return TIM2->CNT;
 }
 
 /*** 初期化 *****************************************************************/
@@ -100,12 +115,12 @@ void PulseInit( void ){
 
 /*** スピードパルス *********************************************************/
 
+UINT	g_uMileage;
 PULSE_t	g_Speed;
 
 void EXTI0_IRQHandler( void ){
-GPIOC->ODR ^= 0x40;    // LEDの出力を反転させる。
-	EXTI->PR = ( 1 << 0 );
-	g_Speed.uLastTime	= GetCurrentTime();
+	EXTI->PR = 1 << 0;
+	g_Speed.uLastTime	= GetCurrentTime16();
 	++g_Speed.uPulseCnt;
 }
 
@@ -114,30 +129,31 @@ GPIOC->ODR ^= 0x40;    // LEDの出力を反転させる。
 PULSE_t	g_Tacho;
 
 void EXTI1_IRQHandler( void ){
-	EXTI->PR = ( 1 << 1 );
-	g_Tacho.uLastTime	= GetCurrentTime();
+	EXTI->PR = 1 << 1;
+	g_Tacho.uLastTime	= GetCurrentTime16();
 	++g_Tacho.uPulseCnt;
 }
 
 /*** 磁気センサ *************************************************************/
 
 UINT g_uLapTime;
+
 void EXTI2_IRQHandler( void ){
-	EXTI->PR = ( 1 << 2 );
+	EXTI->PR = 1 << 2;
 	++g_uLapTime;
 }
 
 /*** Tacho / Speed 計算 *****************************************************/
 
-#if 0
 UINT g_uSpeedCalcConst = ( UINT )( 3600.0 * 100.0 / PULSE_PER_1KM * ( 1 << 11 ));
 
 // 0rpm に切り下げる EG 回転数のパルス幅 = 200rpm (clk数@16MHz)
-#define TACHO_0RPM_TH	(( ULONG )( H8HZ / ( 200 / 60.0 * 2 )))
+#define TACHO_0RPM_TH	(( UINT )( H8HZ / ( 200 / 60.0 * 2 )))
 
 // 0km/h に切り下げる speed パルス幅 = 1km/h (clk数@16MHz)
-#define SPEED_0KPH_TH	(( ULONG )( H8HZ / ( PULSE_PER_1KM / 3600.0 )))
+#define SPEED_0KPH_TH	(( UINT )( TIMER_HZ / ( PULSE_PER_1KM / 3600.0 )))
 
+#if 0
 void ComputeMeterTacho( void ){
 	ULONG	uPrevTime, uTime;
 	UINT	uPulseCnt;
@@ -172,44 +188,42 @@ void ComputeMeterTacho( void ){
 		g_Tacho.uPrevTime	= uTime - TACHO_0RPM_TH;
 	}
 }
+#endif
 
 void ComputeMeterSpeed( void ){
-	ULONG	uPrevTime, uTime;
+	UINT	uTime;
 	UINT	uPulseCnt;
 	UINT	uPulseCntTmp;
 	
 	// パラメータロード
-	IENR1.BIT.IEN2 = 0;	// Speed IRQ disable
+	NvicIntDisable( EXTI0_IRQChannel );	// Speed IRQ disable
 	uTime				= g_Speed.uLastTime;
 	uPulseCnt			= g_Speed.uPulseCnt;
 	g_Speed.uPulseCnt	= 0;
-	IENR1.BIT.IEN2 = 1;	// Speed IRQ enable
-	uPrevTime			= g_Speed.uPrevTime;
+	NvicIntEnable( EXTI0_IRQChannel );	// Speed IRQ disable
 	
 	uPulseCntTmp = uPulseCnt;
 	
 	// Speed 計算
 	if( uPulseCnt || g_Speed.uVal ){
+		UINT uPrevTime = g_Speed.uPrevTime;
+		
+printf( "%d\n", uPulseCnt );
 		if( uPulseCnt ){
 			g_uMileage += uPulseCnt;
 			g_Speed.uPrevTime = uTime;
 		}else{
 			// パルスが入ってなかったら，パルスが1回だけ入ったものとして速度計算
 			uPulseCnt		= 1;
-			uTime			= GetTimerW32();
+			uTime			= GetCurrentTime16();
 		}
 		
-		// 「ギア計算とか.xls」参照
-		// 5 = 13(本来の定数) - 8(g_uHz のシフト分)
-		g_Speed.uVal = (
-			( UINT )(
-				((( ULONG )g_uHz * uPulseCnt ) >> 5 ) *
-				//( UINT )( 3600.0 * 100.0 / PULSE_PER_1KM * ( 1 << 11 )) /
-				g_uSpeedCalcConst /
-				(( uTime - uPrevTime ) >> 2 )
-			) +
-			g_Speed.uVal
-		) >> 1;
+		UINT uTimeDiff = uTime - uPrevTime;
+		if(( int )uTimeDiff < 0 ) uTimeDiff += 0x10000;
+		
+		g_Speed.uVal = ( UINT )(
+			TIMER_HZ * 3600.0 * 100 / PULSE_PER_1KM
+		) * uPulseCnt / uTimeDiff;
 	}
 	
 	if( uPulseCntTmp ){
@@ -224,11 +238,12 @@ void ComputeMeterSpeed( void ){
 	}
 	
 	// 0-100ゴール待ちモードで100km/hに達したらNewLap起動
+	#if 0
+	// ★あとで
 	if( g_Flags.uLapMode == MODE_ZERO_ONE_WAIT && g_Speed.uVal >= 10000 ){
 		g_IR.uLastTime = GetRTC();
 		g_Flags.bNewLap = TRUE;
 		g_Flags.uLapMode = MODE_LAPTIME;
 	}
+	#endif
 }
-
-#endif

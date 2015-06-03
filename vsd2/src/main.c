@@ -114,7 +114,38 @@ __noreturn void main( void ){
 	TimerInit();
 	PulseInit();
 	
+	
+	UINT uPrevTime = GetCurrentTime16() << 16;
+	UINT uTSC = 0;
+	
+	// デバッグ用
+	UINT uSpdTime = GetCurrentTime();
+	UINT uSpeed = 200;
+	
 	while( 1 ){
-		printf( "%d %d %d %d\n", g_Speed.uPulseCnt, g_Tacho.uPulseCnt, g_uLapTime, GetCurrentTime() / TIMER_HZ );
+		// ログ周期待ち
+		while(( GetCurrentTime16() << 16 ) - uPrevTime < (( TIMER_HZ / LOG_HZ ) << 16 )){
+			
+			if( uSpeed ){
+				UINT uSpdCntDiff = ( UINT )( TIMER_HZ * 3600.0 * 100 / PULSE_PER_1KM ) / uSpeed;
+				// 割り込みエミュレーション
+				if( GetCurrentTime() - uSpdTime > uSpdCntDiff ){
+					GPIOC->ODR ^= 0x40;    // LEDの出力を反転させる。
+					EXTI0_IRQHandler();
+					uSpdTime += uSpdCntDiff;
+				}
+			}
+		}
+		uPrevTime += (( TIMER_HZ / LOG_HZ ) << 16 );
+		
+		ComputeMeterSpeed();
+		printf( "%d %d %d\n", g_Tacho.uVal, g_Speed.uVal, ++uTSC );
+		
+		char c = getchar();
+		if( c == 'a' ) uSpeed -= 1000;
+		if( c == 's' ) uSpeed -= 50;
+		if( c == 'd' ) uSpeed += 50;
+		if( c == 'f' ) uSpeed += 1000;
+		if( c == 'z' ) LoadSRecord();
 	}
 }
