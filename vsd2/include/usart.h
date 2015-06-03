@@ -14,6 +14,8 @@ typedef struct {
 	UCHAR	cRxBuf[ USART_RXBUF_SIZE ];
 } USART_BUF_t;
 
+extern USART_BUF_t	*g_pUsartBuf;
+
 void UsartInit( UINT uBaudRate, USART_BUF_t *pBuf );
 int GetcharWait( void );
 void UsartPutstr( char *szMsg );

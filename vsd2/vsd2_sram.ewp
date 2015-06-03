@@ -973,9 +973,6 @@
       <name>$PROJ_DIR$\library\src\stm32f10x_gpio.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\library\src\stm32f10x_i2c.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_lib.c</name>
     </file>
     <file>
@@ -985,28 +982,10 @@
       <name>$PROJ_DIR$\library\src\stm32f10x_rcc.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\library\src\stm32f10x_spi.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_tim.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_usart.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\library\src\usb_core.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\library\src\usb_init.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\library\src\usb_int.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\library\src\usb_mem.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\library\src\usb_regs.c</name>
     </file>
   </group>
 </project>

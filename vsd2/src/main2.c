@@ -100,20 +100,11 @@ void AdcInit( void ){
 	ADC_ExternalTrigInjectedConvConfig( ADC1, ADC_ExternalTrigInjecConv_None );
 	
 	/* ADC1 regular channel14 configuration to sample time = 55.5 cycles */
+	ADC_InjectedSequencerLengthConfig( ADC1, 4 );
 	ADC_InjectedChannelConfig( ADC1, ADC_Channel_15, 1, ADC_SampleTime_55Cycles5 );
 	ADC_InjectedChannelConfig( ADC1, ADC_Channel_14, 2, ADC_SampleTime_55Cycles5 );
 	ADC_InjectedChannelConfig( ADC1, ADC_Channel_4,  3, ADC_SampleTime_55Cycles5 );
 	ADC_InjectedChannelConfig( ADC1, ADC_Channel_13, 4, ADC_SampleTime_55Cycles5 );
-	
-	// ↑の JSQR の設定が理解不能なので，直接設定
-	ADC1->JSQR =
-		( 3 << 20 ) |
-		( 13 << 15 ) |
-		(  4 << 10 ) |
-		( 14 <<  5 ) |
-		( 15 <<  0 );
-	
-	//ADC_InjectedSequencerLengthConfig( ADC1, 4 );
 	
 	/* Enable ADC1  */
 	ADC_Cmd( ADC1, ENABLE );
@@ -140,7 +131,7 @@ void AdcConversion( void ){
 	while( ADC_GetFlagStatus( ADC1, ADC_FLAG_JEOC ) == RESET );
 }
 
-/*** 初期化 *****************************************************************/
+/*** スピード・タコ・磁気センサー 初期化 ************************************/
 // PD0: speed
 // PD1: tacho
 // PD2: 磁気センサー
@@ -327,7 +318,6 @@ UINT GetHex( UINT uBytes ){
 	return uRet;
 }
 
-#pragma inline
 static __noreturn void JumpTo( u32 uJmpAddr, u32 uSP ){
 	asm( "MSR MSP, r1\nBX r0\n" );
 }
@@ -365,7 +355,7 @@ __noreturn void LoadSRecord( void ){
 	
 	UsartInit( USART_BAUDRATE, NULL );
 	printf( "Waiting for S record...\n" );
-	JumpTo(( u32 )LoadSRecordSub, *( u32 *)0x08003000 );
+	JumpTo(( u32 )LoadSRecordSub, ( u32 )g_pUsartBuf );
 }
 #endif
 

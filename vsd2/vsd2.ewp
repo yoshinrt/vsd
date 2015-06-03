@@ -957,7 +957,13 @@
       <name>$PROJ_DIR$\src\main.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\src\main2.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\src\stm32f10x_it.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\library\src\stm32f10x_tim.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\src\stm32f10x_vector.c</name>
@@ -968,6 +974,9 @@
   </group>
   <group>
     <name>FWLib</name>
+    <file>
+      <name>$PROJ_DIR$\library\src\stm32f10x_adc.c</name>
+    </file>
     <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_flash.c</name>
     </file>

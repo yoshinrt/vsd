@@ -29,7 +29,7 @@ do not initialize  { readwrite, section .noinit };
 place at address mem:__ICFEDIT_region_ROM_start__ { section FLASH_CODE };
 place at address mem:__ICFEDIT_intvec_start__ { readonly section .intvec };
 
-define block RAM_Block with fixed order { readonly, rw, block HEAP };
+define block RAM_Block with fixed order { readonly, rw, block HEAP, section .ButtomOfSram };
 
 //place in ROM_region   { readonly };
 place in RAM_region   { block RAM_Block };
