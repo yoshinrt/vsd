@@ -43,6 +43,8 @@ void NvicIntDisable( UINT IRQChannel );
 void TimerInit( void );
 UINT GetCurrentTime( void );
 UINT GetCurrentTime16( void );
+void AdcInit( void );
+void AdcConversion( void );
 void PulseInit( void );
 void EXTI0_IRQHandler( void );
 void EXTI1_IRQHandler( void );

@@ -12,6 +12,7 @@
 #include <ST\iostm32f10xxB.h>
 #include "stm32f10x_nvic.h"
 #include "stm32f10x_gpio.h"
+#include "stm32f10x_adc.h"
 #include "hw_config.h"
 #include "main2.h"
 #include "usart.h"
@@ -42,38 +43,24 @@ __noreturn void main( void ){
 	TimerInit();
 	PulseInit();
 	
-	
-	UINT uPrevTime = GetCurrentTime16();
-	UINT uTSC = 0;
-	
-	// デバッグ用
-	UINT uTachoTime = GetCurrentTime();
-	UINT uTacho = 1000;
+	printf( "ADC init..." );
+	AdcInit();
+	printf( "done.\n" );
 	
 	while( 1 ){
-		// ログ周期待ち
-		while((( GetCurrentTime16() - uPrevTime ) & 0xFFFF ) < ( TIMER_HZ / LOG_HZ )){
-			
-			if( uTacho ){
-				UINT uTachoCntDiff = ( UINT )( TIMER_HZ * 30 ) / uTacho;
-				// 割り込みエミュレーション
-				if( GetCurrentTime() - uTachoTime > uTachoCntDiff ){
-					GPIOC->ODR ^= 0x40;    // LEDの出力を反転させる。
-					EXTI1_IRQHandler();
-					uTachoTime += uTachoCntDiff;
-				}
-			}
-		}
-		uPrevTime += TIMER_HZ / LOG_HZ;
+		AdcConversion();
 		
-		ComputeMeterTacho();
-		printf( "%d %d %d\n", g_Tacho.uVal, g_Speed.uVal, ++uTSC );
+		printf( "%X %X %X %04X %04X %04X %04X\n",
+			ADC1->JSQR,
+			ADC1->CR1,
+			ADC1->CR2,
+			ADC_GetInjectedConversionValue( ADC1, ADC_InjectedChannel_1 ),
+			ADC_GetInjectedConversionValue( ADC1, ADC_InjectedChannel_2 ),
+			ADC_GetInjectedConversionValue( ADC1, ADC_InjectedChannel_3 ),
+			ADC_GetInjectedConversionValue( ADC1, ADC_InjectedChannel_4 )
+		);
 		
 		char c = getchar();
-		if( c == 'a' ) uTacho -= 100;
-		if( c == 's' ) uTacho -= 50;
-		if( c == 'd' ) uTacho += 50;
-		if( c == 'f' ) uTacho += 100;
 		if( c == 'z' ) LoadSRecord();
 	}
 }

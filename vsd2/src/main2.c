@@ -13,6 +13,7 @@
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_nvic.h"
 #include "stm32f10x_tim.h"
+#include "stm32f10x_adc.h"
 #include "main2.h"
 #include "usart.h"
 
@@ -66,6 +67,77 @@ UINT GetCurrentTime( void ){
 
 UINT GetCurrentTime16( void ){
 	return TIM2->CNT;
+}
+
+/*** AD *********************************************************************/
+
+void AdcInit( void ){
+	GPIO_InitTypeDef	GPIO_InitStructure;
+	ADC_InitTypeDef		ADC_InitStructure;
+	
+	RCC_APB2PeriphClockCmd( RCC_APB2Periph_ADC1 | RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC, ENABLE );
+	
+	GPIO_StructInit( &GPIO_InitStructure );
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+	GPIO_Init( GPIOC, &GPIO_InitStructure );
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+	GPIO_Init( GPIOC, &GPIO_InitStructure );
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+	GPIO_Init( GPIOC, &GPIO_InitStructure );
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+	GPIO_Init( GPIOA, &GPIO_InitStructure );
+	
+	/* ADC1 Configuration ------------------------------------------------------*/
+	ADC_StructInit( &ADC_InitStructure );
+	ADC_InitStructure.ADC_Mode					= ADC_Mode_Independent;
+	ADC_InitStructure.ADC_ScanConvMode			= ENABLE;
+	ADC_InitStructure.ADC_ContinuousConvMode 	= DISABLE;
+	ADC_InitStructure.ADC_ExternalTrigConv   	= ADC_ExternalTrigConv_None;
+	ADC_InitStructure.ADC_DataAlign          	= ADC_DataAlign_Left;
+	ADC_InitStructure.ADC_NbrOfChannel       	= 1;
+	ADC_Init( ADC1, &ADC_InitStructure );
+	ADC_ExternalTrigInjectedConvConfig( ADC1, ADC_ExternalTrigInjecConv_None );
+	
+	/* ADC1 regular channel14 configuration to sample time = 55.5 cycles */
+	ADC_InjectedChannelConfig( ADC1, ADC_Channel_15, 1, ADC_SampleTime_55Cycles5 );
+	ADC_InjectedChannelConfig( ADC1, ADC_Channel_14, 2, ADC_SampleTime_55Cycles5 );
+	ADC_InjectedChannelConfig( ADC1, ADC_Channel_4,  3, ADC_SampleTime_55Cycles5 );
+	ADC_InjectedChannelConfig( ADC1, ADC_Channel_13, 4, ADC_SampleTime_55Cycles5 );
+	
+	// ↑の JSQR の設定が理解不能なので，直接設定
+	ADC1->JSQR =
+		( 3 << 20 ) |
+		( 13 << 15 ) |
+		(  4 << 10 ) |
+		( 14 <<  5 ) |
+		( 15 <<  0 );
+	
+	//ADC_InjectedSequencerLengthConfig( ADC1, 4 );
+	
+	/* Enable ADC1  */
+	ADC_Cmd( ADC1, ENABLE );
+	
+	/* Enable ADC1 reset calibaration register */  
+	ADC_ResetCalibration( ADC1 );
+	
+	/* Check the end of ADC1 reset calibration register */
+	while( ADC_GetResetCalibrationStatus( ADC1 ));
+	
+	/* Start ADC1 calibaration */
+	ADC_StartCalibration( ADC1 );
+	/* Check the end of ADC1 calibration */
+	while( ADC_GetCalibrationStatus( ADC1 ));
+}
+
+/*** ADC 変換 ***************************************************************/
+
+void AdcConversion( void ){
+	// Start ADC1 Software Conversion
+	ADC_SoftwareStartInjectedConvCmd( ADC1, ENABLE );
+	
+	// Wait until conversion completion
+	while( ADC_GetFlagStatus( ADC1, ADC_FLAG_JEOC ) == RESET );
 }
 
 /*** 初期化 *****************************************************************/
@@ -236,6 +308,7 @@ void ComputeMeterSpeed( void ){
 
 /*** S レコードローダ *******************************************************/
 
+#ifndef EXEC_SRAM
 UINT GetHex( UINT uBytes ){
 	
 	uBytes <<= 1;;
@@ -294,3 +367,71 @@ __noreturn void LoadSRecord( void ){
 	printf( "Waiting for S record...\n" );
 	JumpTo(( u32 )LoadSRecordSub, *( u32 *)0x08003000 );
 }
+#endif
+
+/*** バイナリ出力 ***********************************************************/
+
+void SerialOutchar( UINT c ){
+	if( c == 0xFE ){
+		putchar( 0xFE ); putchar( 0x00 );
+	}else if( c == 0xFF ){
+		putchar( 0xFE ); putchar( 0x01 );
+	}else{
+		putchar( c );
+	}
+}
+void SerialPack( UINT uVal, UINT uBytes ){
+	do{
+		SerialOutchar( uVal & 0xFF );
+		uVal >>= 8;
+	}while( --uBytes );
+}
+
+/*** シリアル出力 ***********************************************************/
+
+#if 0
+void OutputSerial( void ){
+	SerialPack( g_Tacho.uVal, 2 );
+	SerialPack( g_Speed.uVal, 2 );
+	SerialPack( g_uMileage, 2 );
+	//SerialPack(( TA.TCA << 8 ) | g_IR.uVal & 0xFF, 2 );
+	//SerialPack( g_DispVal.uGy, 2 );
+	//SerialPack( g_DispVal.uGx, 2 );
+	SerialPack( 0, 6 );
+	
+	/*** ラップタイム表示 ***/
+	if( g_Flags.bNewLap ){
+		g_Flags.bNewLap = FALSE;
+		SerialPack( g_uLapTime, 4 );
+	}
+	
+	putchar( 0xFF );
+}
+
+/*** シリアル入力 ***********************************************************/
+
+UINT g_uParam;
+
+void DoInputSerial( char c ){
+	
+	if( 'A' <= c && c <= 'F' ){
+		g_uParam = ( g_uParam << 4 ) + c - 'A' + 10;
+	}else if( '0' <= c && c <= '9' ){
+		g_uParam = ( g_uParam << 4 ) + c - '0';
+	}else if( !g_Flags.bOpenCmd ){
+		if( c == '*' && g_uParam == 0xF15EF117 ) g_Flags.bOpenCmd = 1;
+	}else{
+		switch( c ){
+			case 'l': g_Flags.uLapMode	= MODE_LAPTIME;		g_uRemainedMillage = 0;
+			Case 'g': g_Flags.uLapMode	= MODE_LAPTIME;		g_uRemainedMillage = g_uParam;
+			Case 'f': g_Flags.uLapMode	= MODE_ZERO_FOUR;	g_uRemainedMillage = 1; g_uStartGTh = g_uParam;
+			Case 'o': g_Flags.uLapMode	= MODE_ZERO_ONE;	g_uRemainedMillage = 1; g_uStartGTh = g_uParam;
+			Case 'c': g_uVideoCaribCnt = 96;	// キャリブレーション
+			Case 'z': GoMonitor();
+			Case 'S': g_Flags.bOutputSerial = g_uParam;
+			Case 'P': g_cLEDBar = g_uParam;
+		}
+		g_uParam = 0;
+	}
+}
+#endif
