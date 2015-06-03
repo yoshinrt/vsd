@@ -7,17 +7,11 @@
 	
 *****************************************************************************/
 
-// ÅöébíË
-#define _TIM2
-#define _TIM3
-
+#include "dds.h"
 #include <stdio.h>
 #include <ST\iostm32f10xxB.h>
 #include "stm32f10x_nvic.h"
-#include "stm32f10x_tim.h"
 #include "hw_config.h"
-//#define DEBUG
-#include "dds.h"
 #include "main2.h"
 #include "usart.h"
 
@@ -118,12 +112,12 @@ __noreturn void main( void ){
 	UsartInit( 38400, &UsartBuf );
 	
 	TimerInit();
-	while( 1 ) printf( "%08X\n", GetCurrentTime());
+	//while( 1 ) printf( "%08X\n", GetCurrentTime());
 	
 	UINT uPrevTime = 0;
 	while( 1 ){
-		while( GetCurrentTime() - uPrevTime < 72000000 );
-		printf( "%d\n", uPrevTime / 72000000 );
-		uPrevTime += 72000000;
+		while( GetCurrentTime() - uPrevTime < TIMER_HZ );
+		printf( "%d\n", uPrevTime / TIMER_HZ );
+		uPrevTime += TIMER_HZ;
 	}
 }

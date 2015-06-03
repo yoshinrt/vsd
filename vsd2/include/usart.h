@@ -1,8 +1,8 @@
 #ifndef _USART_H
 #define _USART_H
 
-#include "stm32f10x_usart.h"
 #include "dds.h"
+#include "stm32f10x_usart.h"
 
 #define USART_TXBUF_SIZE	64
 #define USART_RXBUF_SIZE	64

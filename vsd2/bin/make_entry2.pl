@@ -145,20 +145,26 @@ while( <$fp> ){
 $CurPC = 0x080030EC;
 
 for ( sort @SymbolList ){
-	( $Addr, $Symbol, $Obj ) = split( /\t/, $_ );
+	( $AddrHex, $Symbol, $Obj ) = split( /\t/, $_ );
+	$Addr = hex( $AddrHex );
 	
-	if( $CurPC < 0x20000000 && hex( $Addr ) >= 0x20000000 ){
+	next if( !(
+		0x08000000 <= $Addr && $Addr < 0x08020000 ||
+		0x20000000 <= $Addr && $Addr < 0x20005000
+	));
+	
+	if( $CurPC < 0x20000000 && $Addr >= 0x20000000 ){
 		print( fpOut "\n\tRSEG FLASH_DATA:DATA(1)\n" );
-		$CurPC = hex( $Addr );
+		$CurPC = $Addr;
 	}
 	
-	$Offset = sprintf( "0x%X", hex( $Addr ) - $CurPC );
-	$CurPC	= hex( $Addr );
+	$Offset = sprintf( "0x%X", $Addr - $CurPC );
+	$CurPC	= $Addr;
 	print fpOut << "EOF";
 	DS8	$Offset
 
 	PUBWEAK	$Symbol
-$Symbol:\t// 0x$Addr @ $Obj
+$Symbol:\t// 0x$AddrHex @ $Obj
 EOF
 }
 

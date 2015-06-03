@@ -13,6 +13,11 @@
 #define until( x )	while( !( x ))
 #define INLINE		static __inline
 
+/*** hw config? *************************************************************/
+
+#define _TIM2
+#define _TIM3
+
 /*** new type ***************************************************************/
 
 //typedef unsigned		UINT;

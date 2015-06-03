@@ -434,8 +434,4 @@ StartUpCounter:	// 0x20004ff4 @ stm32f10x_rcc.o
 
 	PUBWEAK	g_pUsartBuf
 g_pUsartBuf:	// 0x20004ff8 @ usart.o
-	DS8	0x2000C014
-
-	PUBWEAK	_A_GPIOC_ODR
-_A_GPIOC_ODR:	// 0x4001100c @ main.o
 	END
