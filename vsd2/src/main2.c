@@ -148,47 +148,36 @@ void EXTI2_IRQHandler( void ){
 UINT g_uSpeedCalcConst = ( UINT )( 3600.0 * 100.0 / PULSE_PER_1KM * ( 1 << 11 ));
 
 // 0rpm に切り下げる EG 回転数のパルス幅 = 200rpm (clk数@16MHz)
-#define TACHO_0RPM_TH	(( UINT )( H8HZ / ( 200 / 60.0 * 2 )))
+#define TACHO_0RPM_TH	(( UINT )( TIMER_HZ / ( 200 / 60.0 * 2 )))
 
 // 0km/h に切り下げる speed パルス幅 = 1km/h (clk数@16MHz)
 #define SPEED_0KPH_TH	(( UINT )( TIMER_HZ / ( PULSE_PER_1KM / 3600.0 )))
 
-#if 0
 void ComputeMeterTacho( void ){
 	ULONG	uPrevTime, uTime;
 	UINT	uPulseCnt;
 	
 	// パラメータロード
-	IENR1.BIT.IEN2 = 0;	// Tacho IRQ disable
+	NvicIntDisable( EXTI1_IRQChannel );	// Tacho IRQ disable
 	uTime				= g_Tacho.uLastTime;
 	uPulseCnt			= g_Tacho.uPulseCnt;
 	g_Tacho.uPulseCnt	= 0;
-	IENR1.BIT.IEN2 = 1;	// Tacho IRQ enable
+	NvicIntEnable( EXTI1_IRQChannel );	// Tacho IRQ enable
 	uPrevTime			= g_Tacho.uPrevTime;
 	
 	// Tacho 計算
 	if( uPulseCnt ){
-		// 30 = 60[min/sec] / 2[pulse/roll]
-		// << 7 は，分母 >> 1 と g_uHz を << 8 する分
-		g_Tacho.uVal = (
-			( UINT )(
-				( ULONG )g_uHz * (( 30 << 7 ) * uPulseCnt ) /
-				(( uTime - uPrevTime ) >> 1 )
-			) +
-			g_Tacho.uVal
-		) >> 1;
-		
 		g_Tacho.uPrevTime = uTime;
+		g_Tacho.uVal = TIMER_HZ * 30 * uPulseCnt / (( uTime - uPrevTime ) & 0xFFFF );
 	}else if(
-		uTime = GetTimerW32(),
+		uTime = GetCurrentTime16(),
 		// 0.2秒後 に0に (0.2s = 150rpm)
-		uTime - uPrevTime >= TACHO_0RPM_TH
+		(( uTime - uPrevTime ) & 0xFFFF ) >= TACHO_0RPM_TH
 	){
 		g_Tacho.uVal		= 0;
 		g_Tacho.uPrevTime	= uTime - TACHO_0RPM_TH;
 	}
 }
-#endif
 
 void ComputeMeterSpeed( void ){
 	UINT	uTime;
@@ -208,7 +197,6 @@ void ComputeMeterSpeed( void ){
 	if( uPulseCnt || g_Speed.uVal ){
 		UINT uPrevTime = g_Speed.uPrevTime;
 		
-printf( "%d\n", uPulseCnt );
 		if( uPulseCnt ){
 			g_uMileage += uPulseCnt;
 			g_Speed.uPrevTime = uTime;
@@ -218,12 +206,9 @@ printf( "%d\n", uPulseCnt );
 			uTime			= GetCurrentTime16();
 		}
 		
-		UINT uTimeDiff = uTime - uPrevTime;
-		if(( int )uTimeDiff < 0 ) uTimeDiff += 0x10000;
-		
 		g_Speed.uVal = ( UINT )(
 			TIMER_HZ * 3600.0 * 100 / PULSE_PER_1KM
-		) * uPulseCnt / uTimeDiff;
+		) * uPulseCnt / (( uTime - uPrevTime ) & 0xFFFF );
 	}
 	
 	if( uPulseCntTmp ){
