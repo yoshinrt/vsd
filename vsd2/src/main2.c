@@ -478,8 +478,8 @@ void Calibration( VSD_DATA_t *pVsd ){
 /*** ステート変化待ち & LED 表示 ********************************************/
 
 void WaitStateChange( VSD_DATA_t *pVsd ){
-	UINT	uGxSum 		= 0;
-	UINT	uGySum 		= 0;
+	UINT	uSumGx 		= 0;
+	UINT	uSumGy 		= 0;
 	UINT	uGx;
 	UINT	uThrottle	= 0;
 	UINT	uCnt		= 0;
@@ -494,8 +494,8 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 	// ログ周期待ち
 	while((( GetCurrentTime16() - pVsd->uOutputPrevTime ) & 0xFFFF ) < uWaitCnt ){
 		if( AdcConversionCompleted()){
-			uGxSum		+= uGx = G_SENSOR_Z;	// 前後 G の検出軸変更
-			uGySum		+= G_SENSOR_Y;
+			uSumGx		+= uGx = G_SENSOR_Z;	// 前後 G の検出軸変更
+			uSumGy		+= G_SENSOR_Y;
 			uThrottle	+= G_SENSOR_THROTTOLE;
 			++uCnt;
 			
@@ -510,7 +510,7 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 	pVsd->uOutputPrevTime += uWaitCnt;
 	
 	// G の計算
-	pVsd->uGx		= uGxSum / uCnt;
-	pVsd->uGy		= uGySum / uCnt;
+	pVsd->uGx		= uSumGx / uCnt;
+	pVsd->uGy		= uSumGy / uCnt;
 	pVsd->uThrottle	= uThrottle / uCnt;
 }
