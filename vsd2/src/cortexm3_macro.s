@@ -274,8 +274,12 @@ __REV_Word
 ; ‹­§ƒŠƒ“ƒN‚·‚é lib
 	extern	printf
 	extern	sprintf
+	extern	puts
+	extern	LoadBin
 	require	printf
 	require	sprintf
+	require	puts
+	require	LoadBin
   END
   
 ;******************* (C) COPYRIGHT 2007 STMicroelectronics *****END OF FILE*****

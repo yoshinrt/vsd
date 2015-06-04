@@ -41,6 +41,7 @@ void Set_System(void)
 {
   /* Set the Vector Table base location at 0x08000000 */
   NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x3000);
+  NVIC_PriorityGroupConfig( NVIC_PriorityGroup_2 );
   
   GPIO_InitTypeDef GPIO_InitStructure;
 

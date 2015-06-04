@@ -103,6 +103,8 @@ void EXTI1_IRQHandler( void );
 void EXTI2_IRQHandler( void );
 void ComputeMeterTacho( VSD_DATA_t *pVsd );
 void ComputeMeterSpeed( VSD_DATA_t *pVsd );
+void SdcInit( void );
+UINT SdcInserted( void );
 void SerialOutchar( UINT c );
 void SerialPack( UINT uVal, UINT uBytes );
 void OutputSerial( VSD_DATA_t *pVsd );

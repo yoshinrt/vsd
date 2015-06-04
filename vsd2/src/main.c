@@ -33,14 +33,23 @@ __noreturn void main( void ){
 	
 	#ifndef EXEC_SRAM
 		Set_System();
+		
+		// SD カードが挿入されていたら，開発用に即 LoadSRecord()
+		SdcInit();
+		if( SdcInserted()){
+			LedOn();
+			LoadSRecord();
+		}
 	#else
 		// ベクタテーブル再設定
 		NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
 	#endif
 	
+	
 	UsartInit( USART_BAUDRATE, &UsartBuf );
 	
-	AdcInit();
+// ★SRAM 実行時に死ぬのであとで対策する
+//	AdcInit();
 	TimerInit();
 	PulseInit();
 	
@@ -60,6 +69,7 @@ __noreturn void main( void ){
 	while( 1 ){
 		LedToggle();
 		WaitStateChange( &Vsd );
+		
 		ComputeMeterSpeed( &Vsd );
 		ComputeMeterTacho( &Vsd );
 		Calibration( &Vsd );
@@ -69,10 +79,11 @@ __noreturn void main( void ){
 			
 			// 3秒接続断なら再起動
 			if( ++Vsd.uConnectWDT > Vsd.uLogHz * 3 ){
-				// リセット
+				// ★リセット
 			}
 		}else{
-			putchar( 0xFF );
+			// ★ FW 再ダウンロード要求
+			//putchar( 0xFF );
 		}
 	}
 }

@@ -34,7 +34,7 @@ INLINE void NvicIntDisable( UINT IRQChannel ){
 /*** S レコードローダ *******************************************************/
 
 #ifndef EXEC_SRAM
-static __noreturn void JumpTo( u32 uJmpAddr, u32 uSP ){
+INLINE __noreturn void JumpTo( u32 uJmpAddr, u32 uSP ){
 	asm( "MSR MSP, r1\nBX r0\n" );
 }
 
@@ -78,7 +78,8 @@ __noreturn void LoadSRecordSub( void ){
 		}
 	}
 	
-	UsartPutstrUnbuffered( "starting program\n" );
+	// ':' は vsdroid 側のために必要
+	UsartPutstrUnbuffered( "starting program:::\n" );
 	JumpTo( *( u32 *)0x20000004, *( u32 *)0x08003000 );
 }
 
@@ -88,9 +89,35 @@ __noreturn void LoadSRecord( void ){
 	NVIC->ICER[ 1 ] = -1;
 	
 	UsartInit( USART_BAUDRATE, NULL );
-	UsartPutstrUnbuffered( "\nWaiting for S record...\n" );
+	UsartPutstrUnbuffered( "\nWaiting for S record:\n" );
 	JumpTo(( u32 )LoadSRecordSub, SRAM_END );
 }
+
+// バイナリローダ
+__noreturn void LoadBinSub( void ){
+	UINT uCnt;
+	UINT uSize = UsartGetcharWaitUnbuffered() | ( UsartGetcharWaitUnbuffered() << 8 );
+	
+	DbgMsg(( "\nloading %d bytes\n", uSize ));
+	
+	for( uCnt = 0; uCnt < uSize; ++uCnt ){
+		*( UCHAR *)( 0x20000000 + uCnt ) = UsartGetcharWaitUnbuffered();
+	}
+	
+	UsartPutstrUnbuffered( "starting program:::\n" );
+	JumpTo( *( u32 *)0x20000004, *( u32 *)0x08003000 );
+}
+
+__noreturn void LoadBin( void ){
+	// 全割り込み禁止
+	NVIC->ICER[ 0 ] = -1;
+	NVIC->ICER[ 1 ] = -1;
+	
+	UsartInit( USART_BAUDRATE, NULL );
+	UsartPutstrUnbuffered( "\nWaiting for bin file:\n" );
+	JumpTo(( u32 )LoadBinSub, SRAM_END );
+}
+
 #endif
 
 /*** 初期化 *****************************************************************/
@@ -238,8 +265,8 @@ void PulseInit( void ){
 	// NVIC 設定
 	NVIC_InitTypeDef NVIC_InitStructure;
 	
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQChannel;
 	NVIC_Init( &NVIC_InitStructure );
@@ -378,6 +405,25 @@ void ComputeMeterSpeed( VSD_DATA_t *pVsd ){
 		pVsd->Flags.bNewLap		= TRUE;
 		pVsd->Flags.uLapMode	= MODE_LAPTIME;
 	}
+}
+
+/*** SD カード (今は card detect スイッチのみ ) *****************************/
+
+void SdcInit( void ){
+	// APB クロック
+	RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOC, ENABLE );
+	
+	// GPIO設定
+	GPIO_InitTypeDef GPIO_InitStruct;
+	
+	GPIO_StructInit( &GPIO_InitStruct );
+	GPIO_InitStruct.GPIO_Pin   = GPIO_Pin_9;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	GPIO_Init( GPIOC, &GPIO_InitStruct );
+}
+
+UINT SdcInserted( void ){
+	return !( GPIOC->IDR & ( 1 << 9 ));
 }
 
 /*** バイナリ出力 ***********************************************************/

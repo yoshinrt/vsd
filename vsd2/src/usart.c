@@ -62,13 +62,10 @@ void UsartInit( UINT uBaudRate, USART_BUF_t *pBuf ){
 		// NVIC ê›íË
 		NVIC_InitTypeDef NVIC_InitStructure;
 		
-		// ÅöÇ±Ç±Ç…Ç†ÇÈÇÃÇÕÇ®Ç©ÇµÇ¢
-		NVIC_PriorityGroupConfig( NVIC_PriorityGroup_1 );
-		
 		/* Enable USART1 Interrupt */
 		NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQChannel;
-		NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-		NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+		NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
+		NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
 		NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 		NVIC_Init( &NVIC_InitStructure );
 		
@@ -140,7 +137,7 @@ int UsartPutcharBuffered( int c ){
 }
 
 int putchar( int c ){
-	return !g_pUsartBuf ? UsartPutcharBuffered( c ) : UsartPutcharUnbuffered( c );
+	return g_pUsartBuf ? UsartPutcharBuffered( c ) : UsartPutcharUnbuffered( c );
 }
 
 int UsartGetcharUnbuffered( void ){
@@ -165,7 +162,7 @@ int UsartGetcharBuffered( void ){
 }
 
 int getchar( void ){
-	return !g_pUsartBuf ? UsartGetcharBuffered() : UsartGetcharUnbuffered();
+	return g_pUsartBuf ? UsartGetcharBuffered() : UsartGetcharUnbuffered();
 }
 
 int UsartGetcharWaitUnbuffered( void ){
