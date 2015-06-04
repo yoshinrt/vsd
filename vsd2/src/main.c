@@ -54,6 +54,9 @@ __noreturn void main( void ){
 	Vsd.uLogHz				= LOG_HZ;
 	Vsd.uOutputPrevTime		= GetCurrentTime16();
 	
+	// ÅöébíË
+	//Vsd.Flags.bConnected = 1;
+	
 	while( 1 ){
 		LedToggle();
 		WaitStateChange( &Vsd );

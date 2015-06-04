@@ -252,13 +252,13 @@ void EXTI0_IRQHandler( void ){
 	++g_pVsd->Speed.uPulseCnt;
 	
 	// Millage 時限爆弾が発動したら，NewLap起動
-	if( g_pVsd->uRemainedMillage && !--g_pVsd->uRemainedMillage ){
-		g_pVsd.uLapTime = GetCurrentTime();
+	if( g_pVsd->uRemainedMileage && !--g_pVsd->uRemainedMileage ){
+		g_pVsd->uLapTime = GetCurrentTime();
 		g_pVsd->Flags.bNewLap = TRUE;
 		
 		if( g_pVsd->Flags.uLapMode == MODE_ZERO_FOUR ){
 			// 0-400モードなら，距離を400mに設定
-			g_pVsd->uRemainedMillage = g_pVsd->uMillage_0_400;
+			g_pVsd->uRemainedMileage = g_pVsd->uMileage_0_400;
 			g_pVsd->Flags.uLapMode = MODE_LAPTIME;
 		}else if( g_pVsd->Flags.uLapMode == MODE_ZERO_ONE ){
 			// 0-100 モードなら，0-100ゴール待ちモードに移行
@@ -283,9 +283,9 @@ void EXTI2_IRQHandler( void ){
 	EXTI->PR = 1 << 2;
 	
 	// 直前の NewLap から 3秒以上あいている
-	if( uNowTime - g_pVsd.uLapTime >= 3 * TIMER_HZ ){
-		g_pVsd.uLapTime = uNowTime;
-		g_Flags.bNewLap = TRUE;
+	if( uNowTime - g_pVsd->uLapTime >= 3 * TIMER_HZ ){
+		g_pVsd->uLapTime = uNowTime;
+		g_pVsd->Flags.bNewLap = TRUE;
 	}
 }
 
@@ -350,7 +350,7 @@ void ComputeMeterSpeed( VSD_DATA_t *pVsd ){
 			uTime			= GetCurrentTime16();
 		}
 		
-		pVsd->Speed.uVal = uComputeMeterConst * uPulseCnt / (( uTime - uPrevTime ) & 0xFFFF );
+		pVsd->Speed.uVal = pVsd->uComputeMeterConst * uPulseCnt / (( uTime - uPrevTime ) & 0xFFFF );
 	}
 	
 	if( uPulseCntTmp ){
@@ -366,7 +366,7 @@ void ComputeMeterSpeed( VSD_DATA_t *pVsd ){
 	
 	// 0-100ゴール待ちモードで100km/hに達したらNewLap起動
 	if( pVsd->Flags.uLapMode == MODE_ZERO_ONE_WAIT && pVsd->Speed.uVal >= 10000 ){
-		pVsd->.uLastTime		= GetCurrentTime();
+		pVsd->uLapTime		    = GetCurrentTime();
 		pVsd->Flags.bNewLap		= TRUE;
 		pVsd->Flags.uLapMode	= MODE_LAPTIME;
 	}
@@ -416,7 +416,7 @@ void InputSerial( VSD_DATA_t *pVsd ){
 	UINT c = getchar();
 	if( c == EOF ) return;
 	
-	Vsd.uConnectWDT = 0;
+	pVsd->uConnectWDT = 0;
 	
 	if( 'A' <= c && c <= 'F' ){
 		pVsd->uInputParam = ( pVsd->uInputParam << 4 ) + c - ( 'A' - 10 );
@@ -426,11 +426,11 @@ void InputSerial( VSD_DATA_t *pVsd ){
 		if( c == '*' && pVsd->uInputParam == 0xF15EF117 ) pVsd->Flags.bConnected = 1;
 	}else{
 		switch( c ){
-			case 'l': pVsd->Flags.uLapMode	= MODE_LAPTIME;		pVsd->uRemainedMillage = 0;
-			Case 'g': pVsd->Flags.uLapMode	= MODE_LAPTIME;		pVsd->uRemainedMillage = pVsd->uInputParam;
-			Case 'f': pVsd->Flags.uLapMode	= MODE_ZERO_FOUR;	pVsd->uRemainedMillage = 1; pVsd->uStartGTh = pVsd->uInputParam;
-			Case 'o': pVsd->Flags.uLapMode	= MODE_ZERO_ONE;	pVsd->uRemainedMillage = 1; pVsd->uStartGTh = pVsd->uInputParam;
-			Case 'c': pVsd->uCaribTimer = 6 * pVsd->uLogHz;	// キャリブレーション
+			case 'l': pVsd->Flags.uLapMode	= MODE_LAPTIME;		pVsd->uRemainedMileage = 0;
+			Case 'g': pVsd->Flags.uLapMode	= MODE_LAPTIME;		pVsd->uRemainedMileage = pVsd->uInputParam;
+			Case 'f': pVsd->Flags.uLapMode	= MODE_ZERO_FOUR;	pVsd->uRemainedMileage = 1; pVsd->uStartGTh = pVsd->uInputParam;
+			Case 'o': pVsd->Flags.uLapMode	= MODE_ZERO_ONE;	pVsd->uRemainedMileage = 1; pVsd->uStartGTh = pVsd->uInputParam;
+			Case 'c': pVsd->uCalibTimer = 6 * pVsd->uLogHz;	// キャリブレーション
 			Case 'z': LoadSRecord();
 		}
 		pVsd->uInputParam = 0;
@@ -451,12 +451,12 @@ void CheckStartByGSensor( VSD_DATA_t *pVsd, UINT uGx ){
 			
 			if( pVsd->Flags.uLapMode == MODE_ZERO_FOUR ){
 				// 0-400モードなら，距離を400mに設定
-				pVsd->uRemainedMillage = pVsd->uMillage_0_400;
+				pVsd->uRemainedMileage = pVsd->uMileage_0_400;
 				pVsd->Flags.uLapMode = MODE_LAPTIME;
 			}else /*if( pVsd->Flags.uLapMode == MODE_ZERO_ONE )*/ {
 				// 0-100 モードなら，0-100ゴール待ちモードに移行
 				pVsd->Flags.uLapMode = MODE_ZERO_ONE_WAIT;
-				pVsd->uRemainedMillage = 0;
+				pVsd->uRemainedMileage = 0;
 			}
 		}
 	}
@@ -466,12 +466,12 @@ void CheckStartByGSensor( VSD_DATA_t *pVsd, UINT uGx ){
 
 void Calibration( VSD_DATA_t *pVsd ){
 	// キャリブレーション
-	if( pVsd->uCalibCnt ){
-		if( pVsd->uCalibCnt <= 4 * pVsd->uLogHz ){
-			pVsd->uSpeed	= -1;
-			pVsd->uTacho	= 0;
+	if( pVsd->uCalibTimer ){
+		if( pVsd->uCalibTimer <= 4 * pVsd->uLogHz ){
+			pVsd->Speed.uVal	= -1;
+			pVsd->Tacho.uVal	= 0;
 		}
-		--pVsd->uCalibCnt;
+		--pVsd->uCalibTimer;
 	}
 }
 
@@ -496,10 +496,10 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 		if( AdcConversionCompleted()){
 			uSumGx		+= uGx = G_SENSOR_Z;	// 前後 G の検出軸変更
 			uSumGy		+= G_SENSOR_Y;
-			uThrottle	+= G_SENSOR_THROTTOLE;
+			uThrottle	+= ADC_THROTTLE;
 			++uCnt;
 			
-			CheckStartByGSensor( vVsd, uGx );	// Gセンサーによるスタート検出
+			CheckStartByGSensor( pVsd, uGx );	// Gセンサーによるスタート検出
 			
 			// 次の変換開始
 			AdcConversion();

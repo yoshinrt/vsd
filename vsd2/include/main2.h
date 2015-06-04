@@ -34,7 +34,7 @@
 //#define	ADC_BRAKE	
 
 #define LedOn()		( GPIOC->ODR |= 0x40 )
-#define LedOff)		( GPIOC->ODR &= ~0x40 )
+#define LedOff()	( GPIOC->ODR &= ~0x40 )
 #define LedToggle()	( GPIOC->ODR ^= 0x40 )
 
 /*** const ******************************************************************/
@@ -77,10 +77,10 @@ typedef struct {
 	USHORT	uStartGTh;						// 発進 G 加速スレッショルド
 	USHORT	uOutputPrevTime;				// シリアル出力 prev time
 	
-	USHORT	uRemainedMillage;				// ラップ開始までの距離
-	USHORT	uMillage_0_400;					// 0-400m のパルス数
+	USHORT	uRemainedMileage;				// ラップ開始までの距離
+	USHORT	uMileage_0_400;					// 0-400m のパルス数
 	
-	UCHAR	uCaribTimer;					// キャリブレーションタイマー
+	UCHAR	uCalibTimer;					// キャリブレーションタイマー
 	UCHAR	uConnectWDT;					// Android 接続 WDT
 	UCHAR	uLogHz;							// ログ Hz
 	
