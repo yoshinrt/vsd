@@ -32,10 +32,8 @@ led output * 4
 ・1/16 秒ごとにシリアル出力 UART or SPI(WiFi)
 ----------------------------
 
-メモ:
-vsd2.eww の Release が Flash 用
-            exec_sram が SRAM 実行用
-vsd2_sram.eww の Release は動かないっぽい
-                 exec_sram が Flash リンク SRAM 実行用
-
 ●.s19→.dfu 変換はなぜか Win7 で失敗したので，WinXP で実行する
+
+●リンカスクリプトの修正
+・Flash 版を make して，SRAM 使用量を調べ，
+  STM32F10x_*.icf のコメント中の数値を修正する

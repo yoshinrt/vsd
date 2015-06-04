@@ -300,6 +300,10 @@ void ComputeMeterSpeed( void ){
 /*** S レコードローダ *******************************************************/
 
 #ifndef EXEC_SRAM
+static __noreturn void JumpTo( u32 uJmpAddr, u32 uSP ){
+	asm( "MSR MSP, r1\nBX r0\n" );
+}
+
 UINT GetHex( UINT uBytes ){
 	
 	uBytes <<= 1;;
@@ -308,7 +312,7 @@ UINT GetHex( UINT uBytes ){
 	
 	do{
 		uRet <<= 4;
-		c = GetcharWait();
+		c = UsartGetcharWaitUnbuffered();
 		
 		if( '0' <= c && c <= '9' )	uRet |= c - '0';
 		else						uRet |= c - ( 'A' - 10 );
@@ -316,10 +320,6 @@ UINT GetHex( UINT uBytes ){
 	
 	//DbgMsg(( "%02X ", uRet ));
 	return uRet;
-}
-
-static __noreturn void JumpTo( u32 uJmpAddr, u32 uSP ){
-	asm( "MSR MSP, r1\nBX r0\n" );
 }
 
 __noreturn void LoadSRecordSub( void ){
@@ -344,7 +344,7 @@ __noreturn void LoadSRecordSub( void ){
 		}
 	}
 	
-	printf( "starting %X...\n", *( u32 *)0x20000004 );
+	UsartPutstrUnbuffered( "starting program\n" );
 	JumpTo( *( u32 *)0x20000004, *( u32 *)0x08003000 );
 }
 
@@ -354,8 +354,8 @@ __noreturn void LoadSRecord( void ){
 	NVIC->ICER[ 1 ] = -1;
 	
 	UsartInit( USART_BAUDRATE, NULL );
-	printf( "Waiting for S record...\n" );
-	JumpTo(( u32 )LoadSRecordSub, ( u32 )g_pUsartBuf );
+	UsartPutstrUnbuffered( "\nWaiting for S record...\n" );
+	JumpTo(( u32 )LoadSRecordSub, SRAM_END );
 }
 #endif
 

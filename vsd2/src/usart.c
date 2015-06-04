@@ -115,14 +115,14 @@ void USART1_IRQHandler( void ){
 
 /*** 1文字入出力 ************************************************************/
 
-int putchar( int c ){
+int UsartPutcharUnbuffered( int c ){
 	// バッファリングなし
-	if( !g_pUsartBuf ){
-		while( !( DEFAULT_PORT->SR & ( 1 << 7 )));
-		USART_SendData( DEFAULT_PORT, c );
-		return c;
-	}
-	
+	while( !( DEFAULT_PORT->SR & ( 1 << 7 )));
+	USART_SendData( DEFAULT_PORT, c );
+	return c;
+}
+
+int UsartPutcharBuffered( int c ){
 	// バッファリングあり
 	UINT uWp = g_pUsartBuf->uTxBufWp;
 	UINT uNextWp = ( uWp + 1 ) & ( USART_TXBUF_SIZE - 1 );
@@ -139,16 +139,19 @@ int putchar( int c ){
 	return c;
 }
 
-int getchar( void ){
-	
+int putchar( int c ){
+	return !g_pUsartBuf ? UsartPutcharBuffered( c ) : UsartPutcharUnbuffered( c );
+}
+
+int UsartGetcharUnbuffered( void ){
 	// バッファリングなし
-	if( !g_pUsartBuf ){
-		if( DEFAULT_PORT->SR & ( 1 << 5 )){
-			return USART_ReceiveData( DEFAULT_PORT );
-		}
-		return EOF;
+	if( DEFAULT_PORT->SR & ( 1 << 5 )){
+		return USART_ReceiveData( DEFAULT_PORT );
 	}
-	
+	return EOF;
+}
+
+int UsartGetcharBuffered( void ){
 	// バッファリングあり
 	UINT uRp = g_pUsartBuf->uRxBufRp;
 	if( uRp == g_pUsartBuf->uRxBufWp ) return EOF;
@@ -161,6 +164,22 @@ int getchar( void ){
 	return iRet;
 }
 
+int getchar( void ){
+	return !g_pUsartBuf ? UsartGetcharBuffered() : UsartGetcharUnbuffered();
+}
+
+int UsartGetcharWaitUnbuffered( void ){
+	int c;
+	while(( c = UsartGetcharUnbuffered()) == EOF ) /*_WFI*/;
+	return c;
+}
+
+int UsartGetcharWaitBuffered( void ){
+	int c;
+	while(( c = UsartGetcharBuffered()) == EOF ) /*_WFI*/;
+	return c;
+}
+
 int GetcharWait( void ){
 	int c;
 	while(( c = getchar()) == EOF ) /*_WFI*/;
@@ -169,6 +188,6 @@ int GetcharWait( void ){
 
 /*** 文字列出力 *************************************************************/
 
-void UsartPutstr( char *szMsg ){
-	while( *szMsg ) putchar( *szMsg++ );
+void UsartPutstrUnbuffered( char *szMsg ){
+	while( *szMsg ) UsartPutcharUnbuffered( *szMsg++ );
 }

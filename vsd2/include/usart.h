@@ -17,6 +17,12 @@ typedef struct {
 extern USART_BUF_t	*g_pUsartBuf;
 
 void UsartInit( UINT uBaudRate, USART_BUF_t *pBuf );
+int UsartPutcharUnbuffered( int c );
+int UsartPutcharBuffered( int c );
+int UsartGetcharUnbuffered( void );
+int UsartGetcharBuffered( void );
+int UsartGetcharWaitUnbuffered( void );
+int UsartGetcharWaitBuffered( void );
 int GetcharWait( void );
 void UsartPutstr( char *szMsg );
 
