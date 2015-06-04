@@ -9,11 +9,10 @@
 
 #include "dds.h"
 #include <stdio.h>
-#include <ST\iostm32f10xxB.h>
+#include "stm32f10x_rcc.h"
 #include "stm32f10x_nvic.h"
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_adc.h"
-#include "hw_config.h"
 #include "main2.h"
 #include "usart.h"
 
@@ -45,16 +44,6 @@ __noreturn void main( void ){
 		NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
 	#endif
 	
-	
-	UsartInit( USART_BAUDRATE, &UsartBuf );
-	
-// ★SRAM 実行時に死ぬのであとで対策する
-//	AdcInit();
-	TimerInit();
-	PulseInit();
-	
-	/*** メインループ *******************************************************/
-	
 	VSD_DATA_t	Vsd	= { 0 };
 	g_pVsd = &Vsd;
 	
@@ -62,6 +51,14 @@ __noreturn void main( void ){
 	Vsd.uMileage_0_400		= ( UINT )( PULSE_PER_1KM * 400 / 1000 + 0.5 );
 	Vsd.uLogHz				= LOG_HZ;
 	Vsd.uOutputPrevTime		= GetCurrentTime16();
+	
+	UsartInit( USART_BAUDRATE, &UsartBuf );
+	
+	AdcInit();
+	TimerInit();
+	PulseInit();
+	
+	/*** メインループ *******************************************************/
 	
 	// ★暫定
 	//Vsd.Flags.bConnected = 1;

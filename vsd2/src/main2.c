@@ -168,6 +168,7 @@ void AdcInit( void ){
 	GPIO_InitTypeDef	GPIO_InitStruct;
 	ADC_InitTypeDef		ADC_InitStructure;
 	
+	ADC_DeInit( ADC1 );
 	RCC_APB2PeriphClockCmd( RCC_APB2Periph_ADC1 | RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC, ENABLE );
 	
 	GPIO_StructInit( &GPIO_InitStruct );

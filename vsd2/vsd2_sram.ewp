@@ -960,6 +960,9 @@
   </group>
   <group>
     <name>FWLib</name>
+    <file>
+      <name>$PROJ_DIR$\library\src\stm32f10x_adc.c</name>
+    </file>
   </group>
 </project>
 
