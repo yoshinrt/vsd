@@ -138,21 +138,29 @@ UINT GetCurrentTime16( void ){
 /*** AD *********************************************************************/
 
 void AdcInit( void ){
-	GPIO_InitTypeDef	GPIO_InitStructure;
+	GPIO_InitTypeDef	GPIO_InitStruct;
 	ADC_InitTypeDef		ADC_InitStructure;
 	
 	RCC_APB2PeriphClockCmd( RCC_APB2Periph_ADC1 | RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC, ENABLE );
 	
-	GPIO_StructInit( &GPIO_InitStructure );
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
-	GPIO_Init( GPIOC, &GPIO_InitStructure );
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
-	GPIO_Init( GPIOC, &GPIO_InitStructure );
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
-	GPIO_Init( GPIOC, &GPIO_InitStructure );
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
-	GPIO_Init( GPIOA, &GPIO_InitStructure );
+	GPIO_StructInit( &GPIO_InitStruct );
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AIN;
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_3;
+	GPIO_Init( GPIOC, &GPIO_InitStruct );
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_4;
+	GPIO_Init( GPIOC, &GPIO_InitStruct );
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5;
+	GPIO_Init( GPIOC, &GPIO_InitStruct );
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_4;
+	GPIO_Init( GPIOA, &GPIO_InitStruct );
+	
+	// G センサフルスケール設定 (PA8)
+	GPIO_StructInit( &GPIO_InitStruct );
+	GPIO_InitStruct.GPIO_Pin   = GPIO_Pin_8;
+	GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_Out_PP;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init( GPIOA, &GPIO_InitStruct );
+	GPIOD->ODR |= ( 1 << 8 );
 	
 	// ADC1 Configuration ------------------------------------------------------
 	ADC_StructInit( &ADC_InitStructure );
@@ -167,9 +175,9 @@ void AdcInit( void ){
 	
 	// ADC1 regular channel14 configuration to sample time = 55.5 cycles
 	ADC_InjectedSequencerLengthConfig( ADC1, 4 );
-	ADC_InjectedChannelConfig( ADC1, ADC_Channel_15, 1, ADC_SampleTime_55Cycles5 );
+	ADC_InjectedChannelConfig( ADC1, ADC_Channel_4 , 1, ADC_SampleTime_55Cycles5 );
 	ADC_InjectedChannelConfig( ADC1, ADC_Channel_14, 2, ADC_SampleTime_55Cycles5 );
-	ADC_InjectedChannelConfig( ADC1, ADC_Channel_4,  3, ADC_SampleTime_55Cycles5 );
+	ADC_InjectedChannelConfig( ADC1, ADC_Channel_15, 3, ADC_SampleTime_55Cycles5 );
 	ADC_InjectedChannelConfig( ADC1, ADC_Channel_13, 4, ADC_SampleTime_55Cycles5 );
 	
 	// Enable ADC1 
@@ -195,7 +203,7 @@ INLINE void AdcConversion( void ){
 }
 
 INLINE BOOL AdcConversionCompleted( void ){
-	return ADC_GetFlagStatus( ADC1, ADC_FLAG_JEOC ) == RESET;
+	return ADC_GetFlagStatus( ADC1, ADC_FLAG_JEOC ) == SET;
 }
 
 /*** スピード・タコ・磁気センサー 初期化 ************************************/
@@ -492,9 +500,10 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 	UINT	uWaitCnt = TIMER_HZ / pVsd->uLogHz;
 	
 	// ログ周期待ち
+	AdcConversion();
 	while((( GetCurrentTime16() - pVsd->uOutputPrevTime ) & 0xFFFF ) < uWaitCnt ){
 		if( AdcConversionCompleted()){
-			uSumGx		+= uGx = G_SENSOR_Z;	// 前後 G の検出軸変更
+			uSumGx		+= uGx = G_SENSOR_X;	// 前後 G の検出軸変更
 			uSumGy		+= G_SENSOR_Y;
 			uThrottle	+= ADC_THROTTLE;
 			++uCnt;
@@ -502,6 +511,7 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 			CheckStartByGSensor( pVsd, uGx );	// Gセンサーによるスタート検出
 			
 			// 次の変換開始
+			ADC1->SR &= ~( 1 << 2 );	// clr JEOC
 			AdcConversion();
 		}
 		
@@ -510,7 +520,7 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 	pVsd->uOutputPrevTime += uWaitCnt;
 	
 	// G の計算
-	pVsd->uGx		= uSumGx / uCnt;
-	pVsd->uGy		= uSumGy / uCnt;
-	pVsd->uThrottle	= uThrottle / uCnt;
+	pVsd->uGx		= ( uSumGx    << 1 ) / uCnt;
+	pVsd->uGy		= ( uSumGy    << 1 ) / uCnt;
+	pVsd->uThrottle	= ( uThrottle << 1 ) / uCnt;
 }
