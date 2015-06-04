@@ -24,6 +24,6 @@ int UsartGetcharBuffered( void );
 int UsartGetcharWaitUnbuffered( void );
 int UsartGetcharWaitBuffered( void );
 int GetcharWait( void );
-void UsartPutstr( char *szMsg );
+void UsartPutstrUnbuffered( char *szMsg );
 
 #endif // _USART_H

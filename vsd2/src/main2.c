@@ -329,10 +329,10 @@ __noreturn void LoadSRecordSub( void ){
 	
 	while( 1 ){
 		// 'S' までスキップ
-		while( GetcharWait() != 'S' );
+		while( UsartGetcharWaitUnbuffered() != 'S' );
 		
 		// 終了ヘッダなら break;
-		if(( c = GetcharWait()) == '7' ) break;
+		if(( c = UsartGetcharWaitUnbuffered()) == '7' ) break;
 		
 		if( c == '3' ){
 			// データを書き込む
