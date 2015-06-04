@@ -425,7 +425,7 @@ void InputSerial( VSD_DATA_t *pVsd, char c ){
 			Case 'g': pVsd->Flags.uLapMode	= MODE_LAPTIME;		pVsd->uRemainedMillage = pVsd->uInputParam;
 			Case 'f': pVsd->Flags.uLapMode	= MODE_ZERO_FOUR;	pVsd->uRemainedMillage = 1; pVsd->uStartGTh = pVsd->uInputParam;
 			Case 'o': pVsd->Flags.uLapMode	= MODE_ZERO_ONE;	pVsd->uRemainedMillage = 1; pVsd->uStartGTh = pVsd->uInputParam;
-			Case 'c': pVsd->uCaribTimer = 6 * LOG_HZ;	// キャリブレーション
+			Case 'c': pVsd->uCaribTimer = 6 * pVsd->uLogHz;	// キャリブレーション
 			Case 'z': LoadSRecord();
 		}
 		pVsd->uInputParam = 0;
@@ -462,7 +462,7 @@ INLINE void CheckStartByGSensor( VSD_DATA_t *pVsd, UINT uGx ){
 void Calibration( VSD_DATA_t *pVsd ){
 	// キャリブレーション
 	if( pVsd->uCalibCnt ){
-		if( pVsd->uCalibCnt <= 4 * LOG_HZ ){
+		if( pVsd->uCalibCnt <= 4 * pVsd->uLogHz ){
 			pVsd->uSpeed	= -1;
 			pVsd->uTacho	= 0;
 		}
@@ -484,8 +484,10 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 	/*** WDT ***/
 	// ★ WDT 処理を入れる
 	
+	UINT	uWaitCnt = TIMER_HZ / pVsd->uLogHz;
+	
 	// ログ周期待ち
-	while((( GetCurrentTime16() - pVsd->uOutputPrevTime ) & 0xFFFF ) < ( TIMER_HZ / LOG_HZ )){
+	while((( GetCurrentTime16() - pVsd->uOutputPrevTime ) & 0xFFFF ) < uWaitCnt ){
 		if( AdcConversionCompleted()){
 			uGxSum		+= uGx = G_SENSOR_Z;	// 前後 G の検出軸変更
 			uGySum		+= G_SENSOR_Y;
@@ -498,7 +500,7 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 			AdcConversion();
 		}
 	}
-	pVsd->uOutputPrevTime += TIMER_HZ / LOG_HZ;
+	pVsd->uOutputPrevTime += uWaitCnt;
 	
 	// G の計算
 	pVsd->uGx		= uGxSum / uCnt;

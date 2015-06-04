@@ -54,6 +54,7 @@ __noreturn void main( void ){
 	
 	Vsd.uComputeMeterConst	= ( UINT )( TIMER_HZ * 3600.0 * 100 / PULSE_PER_1KM );
 	Vsd.uMileage_0_400		= ( UINT )( PULSE_PER_1KM * 400 / 1000 + 0.5 );
+	Vsd.uLogHz				= LOG_HZ;
 	Vsd.uOutputPrevTime		= GetCurrentTime16();
 	
 	while( 1 ){
@@ -67,7 +68,7 @@ __noreturn void main( void ){
 		
 		if( Vsd.Flags.bConnected ){
 			// 3秒接続断なら再起動
-			if( ++Vsd.uConnectWDT > LOG_HZ * 3 ){
+			if( ++Vsd.uConnectWDT > Vsd.uLogHz * 3 ){
 				// リセット
 			}
 		}
