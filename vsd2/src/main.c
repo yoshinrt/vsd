@@ -28,15 +28,15 @@
 __noreturn void main( void ){
 	/*** 初期化 *************************************************************/
 	
-	#ifndef EXEC_SRAM
-		Set_System();
-	#endif
-	
 	// USART buf
 	USART_BUF_t	UsartBuf	= { 0 };
 	
-	// ベクタテーブル再設定
-	NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
+	#ifndef EXEC_SRAM
+		Set_System();
+	#else
+		// ベクタテーブル再設定
+		NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
+	#endif
 	
 	UsartInit( USART_BAUDRATE, &UsartBuf );
 	AdcInit();
@@ -45,7 +45,7 @@ __noreturn void main( void ){
 	
 	/*** メインループ *******************************************************/
 	
-	VSD_DATA_t	Vsd			= { 0 };
+	VSD_DATA_t	Vsd	= { 0 };
 	g_pVsd = &Vsd;
 	
 	Vsd.uComputeMeterConst	= ( UINT )( TIMER_HZ * 3600.0 * 100 / PULSE_PER_1KM );
@@ -55,22 +55,13 @@ __noreturn void main( void ){
 	while( 1 ){
 		LedToggle();
 		WaitStateChange( &Vsd );
-		
 		ComputeMeterSpeed( &Vsd );
 		ComputeMeterTacho( &Vsd );
-		
-		// キャリブレーション
-		if( Vsd.uCalibCnt ){
-			if( Vsd.uCalibCnt <= 4 * LOG_HZ ){
-				Vsd.uSpeed	= -1;
-				Vsd.uTacho	= 0;
-			}
-			--Vsd.uCalibCnt;
-		}
+		Calibration( &Vsd );
 		
 		if( Vsd.Flags.bOutput ) OutputSerial( &Vsd );
 		
-		UINT	c;
+		UINT c;
 		while(( c = getchar()) != EOF ) InputSerial( &Vsd, c );	// serial 入力
 	}
 }

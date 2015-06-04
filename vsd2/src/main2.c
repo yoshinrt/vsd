@@ -458,6 +458,19 @@ INLINE void CheckStartByGSensor( VSD_DATA_t *pVsd, UINT uGx ){
 	}
 }
 
+/*** キャリブレーション *****************************************************/
+
+void Calibration( VSD_DATA_t *pVsd ){
+	// キャリブレーション
+	if( pVsd->uCalibCnt ){
+		if( pVsd->uCalibCnt <= 4 * LOG_HZ ){
+			pVsd->uSpeed	= -1;
+			pVsd->uTacho	= 0;
+		}
+		--pVsd->uCalibCnt;
+	}
+}
+
 /*** ステート変化待ち & LED 表示 ********************************************/
 
 void WaitStateChange( VSD_DATA_t *pVsd ){
