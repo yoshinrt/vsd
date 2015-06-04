@@ -396,7 +396,7 @@ void OutputSerial( VSD_DATA_t *pVsd ){
 	SerialPack( pVsd->Tacho.uVal, 2 );
 	SerialPack( pVsd->Speed.uVal, 2 );
 	SerialPack( pVsd->uMileage, 2 );
-	SerialPack( GetCurrentTime() >> 1000, 2 );	// てきとう
+	SerialPack( GetCurrentTime() >> 10, 2 );	// てきとう
 	SerialPack( pVsd->uGy, 2 );
 	SerialPack( pVsd->uGx, 2 );
 	
@@ -414,11 +414,11 @@ void OutputSerial( VSD_DATA_t *pVsd ){
 void InputSerial( VSD_DATA_t *pVsd, char c ){
 	
 	if( 'A' <= c && c <= 'F' ){
-		pVsd->uInputParam = ( pVsd->uInputParam << 4 ) + c - 'A' + 10;
+		pVsd->uInputParam = ( pVsd->uInputParam << 4 ) + c - ( 'A' - 10 );
 	}else if( '0' <= c && c <= '9' ){
 		pVsd->uInputParam = ( pVsd->uInputParam << 4 ) + c - '0';
-	}else if( !pVsd->Flags.bOpenCmd ){
-		if( c == '*' && pVsd->uInputParam == 0xF15EF117 ) pVsd->Flags.bOpenCmd = 1;
+	}else if( !pVsd->Flags.bConnected ){
+		if( c == '*' && pVsd->uInputParam == 0xF15EF117 ) pVsd->Flags.bConnected = 1;
 	}else{
 		switch( c ){
 			case 'l': pVsd->Flags.uLapMode	= MODE_LAPTIME;		pVsd->uRemainedMillage = 0;
@@ -427,7 +427,6 @@ void InputSerial( VSD_DATA_t *pVsd, char c ){
 			Case 'o': pVsd->Flags.uLapMode	= MODE_ZERO_ONE;	pVsd->uRemainedMillage = 1; pVsd->uStartGTh = pVsd->uInputParam;
 			Case 'c': pVsd->uCaribTimer = 6 * LOG_HZ;	// キャリブレーション
 			Case 'z': LoadSRecord();
-			Case 'S': pVsd->Flags.bOutputSerial = pVsd->uInputParam;
 		}
 		pVsd->uInputParam = 0;
 	}
