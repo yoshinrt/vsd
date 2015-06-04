@@ -106,7 +106,7 @@ void ComputeMeterSpeed( VSD_DATA_t *pVsd );
 void SerialOutchar( UINT c );
 void SerialPack( UINT uVal, UINT uBytes );
 void OutputSerial( VSD_DATA_t *pVsd );
-void InputSerial( VSD_DATA_t *pVsd, char c );
+void InputSerial( VSD_DATA_t *pVsd );
 void Calibration( VSD_DATA_t *pVsd );
 void WaitStateChange( VSD_DATA_t *pVsd );
 

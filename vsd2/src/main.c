@@ -40,9 +40,6 @@ __noreturn void main( void ){
 	
 	UsartInit( USART_BAUDRATE, &UsartBuf );
 	
-	// FW 再ロード要求
-	//for( u = 0; u < 16; ++u ) putchar( 0xFF );
-	
 	AdcInit();
 	TimerInit();
 	PulseInit();
@@ -64,19 +61,15 @@ __noreturn void main( void ){
 		ComputeMeterTacho( &Vsd );
 		Calibration( &Vsd );
 		
-		OutputSerial( &Vsd );
-		
 		if( Vsd.Flags.bConnected ){
+			OutputSerial( &Vsd );
+			
 			// 3秒接続断なら再起動
 			if( ++Vsd.uConnectWDT > Vsd.uLogHz * 3 ){
 				// リセット
 			}
-		}
-		
-		UINT c;
-		while(( c = getchar()) != EOF ){
-			InputSerial( &Vsd, c );	// serial 入力
-			Vsd.uConnectWDT = 0;
+		}else{
+			putchar( 0xFF );
 		}
 	}
 }

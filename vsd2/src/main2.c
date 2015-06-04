@@ -411,7 +411,12 @@ void OutputSerial( VSD_DATA_t *pVsd ){
 
 /*** シリアル入力 ***********************************************************/
 
-void InputSerial( VSD_DATA_t *pVsd, char c ){
+void InputSerial( VSD_DATA_t *pVsd ){
+	
+	UINT c = getchar();
+	if( c == EOF ) return;
+	
+	Vsd.uConnectWDT = 0;
 	
 	if( 'A' <= c && c <= 'F' ){
 		pVsd->uInputParam = ( pVsd->uInputParam << 4 ) + c - ( 'A' - 10 );
@@ -499,6 +504,8 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 			// 次の変換開始
 			AdcConversion();
 		}
+		
+		InputSerial( pVsd );	// serial 入力
 	}
 	pVsd->uOutputPrevTime += uWaitCnt;
 	
