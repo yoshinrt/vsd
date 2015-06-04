@@ -26,41 +26,51 @@
 /****************************************************************************/
 
 __noreturn void main( void ){
+	/*** 初期化 *************************************************************/
+	
 	#ifndef EXEC_SRAM
 		Set_System();
-		GPIOC->ODR ^= 0x40;    // LEDの出力を反転させる。
-		UsartInit( USART_BAUDRATE, NULL );
-		LoadSRecord();
 	#endif
 	
 	// USART buf
-	USART_BUF_t	UsartBuf = { 0 };
+	USART_BUF_t	UsartBuf	= { 0 };
 	
 	// ベクタテーブル再設定
 	NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
 	
 	UsartInit( USART_BAUDRATE, &UsartBuf );
+	AdcInit();
 	TimerInit();
 	PulseInit();
 	
-	printf( "ADC init..." );
-	AdcInit();
-	printf( "done.\n" );
+	/*** メインループ *******************************************************/
+	
+	VSD_DATA_t	Vsd			= { 0 };
+	g_pVsd = &Vsd;
+	
+	Vsd.uComputeMeterConst	= ( UINT )( TIMER_HZ * 3600.0 * 100 / PULSE_PER_1KM );
+	Vsd.uMileage_0_400		= ( UINT )( PULSE_PER_1KM * 400 / 1000 + 0.5 );
+	Vsd.uOutputPrevTime		= GetCurrentTime16();
 	
 	while( 1 ){
-		AdcConversion();
+		LedToggle();
+		WaitStateChange( &Vsd );
 		
-		printf( "%X %X %X %04X %04X %04X %04X\n",
-			ADC1->JSQR,
-			ADC1->CR1,
-			ADC1->CR2,
-			ADC_GetInjectedConversionValue( ADC1, ADC_InjectedChannel_1 ),
-			ADC_GetInjectedConversionValue( ADC1, ADC_InjectedChannel_2 ),
-			ADC_GetInjectedConversionValue( ADC1, ADC_InjectedChannel_3 ),
-			ADC_GetInjectedConversionValue( ADC1, ADC_InjectedChannel_4 )
-		);
+		ComputeMeterSpeed( &Vsd );
+		ComputeMeterTacho( &Vsd );
 		
-		char c = getchar();
-		if( c == 'z' ) LoadSRecord();
+		// キャリブレーション
+		if( Vsd.uCalibCnt ){
+			if( Vsd.uCalibCnt <= 4 * LOG_HZ ){
+				Vsd.uSpeed	= -1;
+				Vsd.uTacho	= 0;
+			}
+			--Vsd.uCalibCnt;
+		}
+		
+		if( Vsd.Flags.bOutput ) OutputSerial( &Vsd );
+		
+		UINT	c;
+		while(( c = getchar()) != EOF ) InputSerial( &Vsd, c );	// serial 入力
 	}
 }

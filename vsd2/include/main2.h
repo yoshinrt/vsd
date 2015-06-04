@@ -26,7 +26,26 @@
 #define SRAM_TOP	0x20000000
 #define SRAM_END	0x20005000
 
+// AD 変換機レジスタ
+#define	G_SENSOR_X		ADC_GetInjectedConversionValue( ADC1, ADC_InjectedChannel_1 )
+#define	G_SENSOR_Y		ADC_GetInjectedConversionValue( ADC1, ADC_InjectedChannel_2 )
+#define	G_SENSOR_Z		ADC_GetInjectedConversionValue( ADC1, ADC_InjectedChannel_3 )
+#define	ADC_THROTTLE	ADC_GetInjectedConversionValue( ADC1, ADC_InjectedChannel_4 )
+//#define	ADC_BRAKE	
+
+#define LedOn()		( GPIOC->ODR |= 0x40 )
+#define LedOff)		( GPIOC->ODR &= ~0x40 )
+#define LedToggle()	( GPIOC->ODR ^= 0x40 )
+
 /*** const ******************************************************************/
+
+enum {
+	MODE_LAPTIME,
+	MODE_ZERO_FOUR,
+	MODE_ZERO_ONE,
+	MODE_ZERO_ONE_WAIT,	// 0-100 ゴール待ち
+};
+
 /*** new type ***************************************************************/
 
 typedef struct {
@@ -36,10 +55,42 @@ typedef struct {
 	USHORT	uVal;
 } PULSE_t;
 
+typedef struct {
+	UINT	uLapTime;						// ラップタイム
+	UINT	uInputParam;					// シリアル入力値
+	UINT	uComputeMeterConst;				// スピード計算定数
+	
+	// 上詰めなので下に追記する ★ほんまか?
+	struct {
+		UCHAR	uLapMode		:2;
+		
+		BOOL	bNewLap			:1;
+		BOOL	bOpenCmd		:1;
+		BOOL	bOutputSerial	:1;
+	} Flags;
+	
+	PULSE_t	Tacho;							// スピードパルス
+	PULSE_t	Speed;							// タコパルス
+	USHORT	uMileage;						// 走行距離
+	USHORT	uGx, uGy;						// G
+	USHORT	uThrottle;						// アクセルペダル
+	
+	USHORT	uStartGTh;						// 発進 G 加速スレッショルド
+	USHORT	uOutputPrevTime;				// シリアル出力 prev time
+	USHORT	uCaribTimer;					// キャリブレーションタイマー
+	
+	USHORT	uRemainedMillage;				// ラップ開始までの距離
+	USHORT	uMillage_0_400;					// 0-400m のパルス数
+	
+} VSD_DATA_t;
+
 /*** prototype **************************************************************/
 
 void NvicIntEnable( UINT IRQChannel );
 void NvicIntDisable( UINT IRQChannel );
+UINT GetHex( UINT uBytes );
+__noreturn void LoadSRecordSub( void );
+__noreturn void LoadSRecord( void );
 void TimerInit( void );
 UINT GetCurrentTime( void );
 UINT GetCurrentTime16( void );
@@ -49,17 +100,17 @@ void PulseInit( void );
 void EXTI0_IRQHandler( void );
 void EXTI1_IRQHandler( void );
 void EXTI2_IRQHandler( void );
-void ComputeMeterTacho( void );
-void ComputeMeterSpeed( void );
-void ComputeMeter( void );
-void LoadSRecord( void );
+void ComputeMeterTacho( VSD_DATA_t *pVsd );
+void ComputeMeterSpeed( VSD_DATA_t *pVsd );
+void SerialOutchar( UINT c );
+void SerialPack( UINT uVal, UINT uBytes );
+void OutputSerial( VSD_DATA_t *pVsd );
+void InputSerial( VSD_DATA_t *pVsd, char c );
+void WaitStateChange( VSD_DATA_t *pVsd );
 
 /*** extern *****************************************************************/
 
-extern PULSE_t	g_Speed;
-extern PULSE_t	g_Tacho;
-extern UINT		g_uMileage;
-extern UINT		g_uLapTime;
+extern VSD_DATA_t	*g_pVsd;
 
 /*** gloval vars ************************************************************/
 
