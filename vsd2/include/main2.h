@@ -65,8 +65,7 @@ typedef struct {
 		UCHAR	uLapMode		:2;
 		
 		BOOL	bNewLap			:1;
-		BOOL	bOpenCmd		:1;
-		BOOL	bOutputSerial	:1;
+		BOOL	bConnected		:1;
 	} Flags;
 	
 	PULSE_t	Tacho;							// スピードパルス
@@ -77,10 +76,13 @@ typedef struct {
 	
 	USHORT	uStartGTh;						// 発進 G 加速スレッショルド
 	USHORT	uOutputPrevTime;				// シリアル出力 prev time
-	USHORT	uCaribTimer;					// キャリブレーションタイマー
 	
 	USHORT	uRemainedMillage;				// ラップ開始までの距離
 	USHORT	uMillage_0_400;					// 0-400m のパルス数
+	
+	UCHAR	uCaribTimer;					// キャリブレーションタイマー
+	UCHAR	uConnectWDT;					// Android 接続 WDT
+	UCHAR	uLogHz;							// ログ Hz
 	
 } VSD_DATA_t;
 
@@ -89,7 +91,6 @@ typedef struct {
 void NvicIntEnable( UINT IRQChannel );
 void NvicIntDisable( UINT IRQChannel );
 UINT GetHex( UINT uBytes );
-__noreturn void LoadSRecordSub( void );
 __noreturn void LoadSRecord( void );
 void TimerInit( void );
 UINT GetCurrentTime( void );
@@ -106,6 +107,7 @@ void SerialOutchar( UINT c );
 void SerialPack( UINT uVal, UINT uBytes );
 void OutputSerial( VSD_DATA_t *pVsd );
 void InputSerial( VSD_DATA_t *pVsd, char c );
+void Calibration( VSD_DATA_t *pVsd );
 void WaitStateChange( VSD_DATA_t *pVsd );
 
 /*** extern *****************************************************************/
