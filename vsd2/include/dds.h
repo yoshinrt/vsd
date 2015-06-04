@@ -11,7 +11,7 @@
 #define	Case		break; case
 #define Default		break; default
 #define until( x )	while( !( x ))
-#define INLINE		static __inline
+#define INLINE		_Pragma( "inline" ) static
 
 /*** new type ***************************************************************/
 

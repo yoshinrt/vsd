@@ -23,11 +23,11 @@ VSD_DATA_t	*g_pVsd;
 
 /*** NVIC IE/ID *************************************************************/
 
-void NvicIntEnable( UINT IRQChannel ){
+INLINE void NvicIntEnable( UINT IRQChannel ){
 	NVIC->ISER[(IRQChannel >> 0x05)] = (u32)0x01 << (IRQChannel & (u8)0x1F);
 }
 
-void NvicIntDisable( UINT IRQChannel ){
+INLINE void NvicIntDisable( UINT IRQChannel ){
 	NVIC->ICER[(IRQChannel >> 0x05)] = (u32)0x01 << (IRQChannel & (u8)0x1F);
 }
 
@@ -189,12 +189,12 @@ void AdcInit( void ){
 
 /*** ADC 変換 ***************************************************************/
 
-void AdcConversion( void ){
+INLINE void AdcConversion( void ){
 	// Start ADC1 Software Conversion
 	ADC_SoftwareStartInjectedConvCmd( ADC1, ENABLE );
 }
 
-BOOL AdcConversionCompleted( void ){
+INLINE BOOL AdcConversionCompleted( void ){
 	return ADC_GetFlagStatus( ADC1, ADC_FLAG_JEOC ) == RESET;
 }
 
@@ -374,7 +374,7 @@ void ComputeMeterSpeed( VSD_DATA_t *pVsd ){
 
 /*** バイナリ出力 ***********************************************************/
 
-void SerialOutchar( UINT c ){
+INLINE void SerialOutchar( UINT c ){
 	if( c == 0xFE ){
 		putchar( 0xFE ); putchar( 0x00 );
 	}else if( c == 0xFF ){
@@ -439,7 +439,7 @@ void InputSerial( VSD_DATA_t *pVsd ){
 
 /*** Gセンサーによるスタート検出 ********************************************/
 
-INLINE void CheckStartByGSensor( VSD_DATA_t *pVsd, UINT uGx ){
+void CheckStartByGSensor( VSD_DATA_t *pVsd, UINT uGx ){
 	if( pVsd->Flags.uLapMode == MODE_ZERO_FOUR || pVsd->Flags.uLapMode == MODE_ZERO_ONE ){
 		
 		if(
