@@ -11,7 +11,13 @@
 #define	Case		break; case
 #define Default		break; default
 #define until( x )	while( !( x ))
-#define INLINE		_Pragma( "inline" ) static
+
+#ifdef EXEC_SRAM
+	#define INLINE		_Pragma( "inline" ) static
+#else
+	#define INLINE		_Pragma( "inline" )
+#endif
+#define BOTTOM		_Pragma( "location=\".BottomOfSram\"" )
 
 /*** new type ***************************************************************/
 

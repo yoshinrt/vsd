@@ -19,7 +19,9 @@
 
 /*** gloval vars ************************************************************/
 
-VSD_DATA_t	*g_pVsd;
+#ifndef EXEC_SRAM
+BOTTOM VSD_DATA_t	*g_pVsd;
+#endif
 
 /*** NVIC IE/ID *************************************************************/
 
@@ -158,7 +160,7 @@ UINT GetCurrentTime( void ){
 	return ( uTimeH << 16 ) | uTimeL;
 }
 
-UINT GetCurrentTime16( void ){
+INLINE UINT GetCurrentTime16( void ){
 	return TIM2->CNT;
 }
 

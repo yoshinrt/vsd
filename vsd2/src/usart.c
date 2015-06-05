@@ -21,8 +21,7 @@
 /*** バッファ ***************************************************************/
 
 #ifndef EXEC_SRAM
-#pragma location = ".ButtomOfSram"
-USART_BUF_t	*g_pUsartBuf;
+BOTTOM USART_BUF_t	*g_pUsartBuf;
 #endif
 
 /*** 初期化 *****************************************************************/
