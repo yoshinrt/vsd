@@ -19,7 +19,7 @@
 #include "dds.h"
 #include "stm32f10x_lib.h"
 #include "stm32f10x_it.h"
-#include "main2.h"
+#include "main.h"
 
 /* Private typedef -----------------------------------------------------------*/
 typedef void( *intfunc )( void );
