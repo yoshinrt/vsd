@@ -90,6 +90,8 @@ __noreturn void LoadSRecord( void ){
 	NVIC->ICER[ 0 ] = -1;
 	NVIC->ICER[ 1 ] = -1;
 	
+	LedOn();
+	
 	UsartInit( USART_BAUDRATE, NULL );
 	UsartPutstrUnbuffered( "\nWaiting for S record:\n" );
 	JumpTo(( u32 )LoadSRecordSub, SRAM_END );
@@ -103,7 +105,7 @@ __noreturn void LoadBinSub( void ){
 	DbgMsg(( "\nloading %d bytes\n", uSize ));
 	
 	for( uCnt = 0; uCnt < uSize; ++uCnt ){
-		*( UCHAR *)( 0x20000000 + uCnt ) = UsartGetcharWaitUnbuffered();
+		*( UCHAR *)( SRAM_TOP + uCnt ) = UsartGetcharWaitUnbuffered();
 	}
 	
 	UsartPutstrUnbuffered( "starting program:::\n" );
@@ -114,6 +116,8 @@ __noreturn void LoadBin( void ){
 	// 全割り込み禁止
 	NVIC->ICER[ 0 ] = -1;
 	NVIC->ICER[ 1 ] = -1;
+	
+	LedOn();
 	
 	UsartInit( USART_BAUDRATE, NULL );
 	UsartPutstrUnbuffered( "\nWaiting for bin file:\n" );
@@ -563,54 +567,12 @@ void Calibration( VSD_DATA_t *pVsd ){
 }
 #endif
 
-/*** ステート変化待ち & LED 表示 ********************************************/
-
-#ifndef EXEC_SRAM
-void WaitStateChange( VSD_DATA_t *pVsd ){
-	UINT	uSumGx 		= 0;
-	UINT	uSumGy 		= 0;
-	UINT	uGx;
-	UINT	uThrottle	= 0;
-	UINT	uCnt		= 0;
-	
-	/*** ステート変化待ち ***/
-	
-	/*** WDT ***/
-	// ★ WDT 処理を入れる
-	
-	UINT	uWaitCnt = TIMER_HZ / pVsd->uLogHz;
-	
-	// ログ周期待ち
-	AdcConversion();
-	while((( GetCurrentTime16() - pVsd->uOutputPrevTime ) & 0xFFFF ) < uWaitCnt ){
-		if( AdcConversionCompleted()){
-			uSumGx		+= uGx = G_SENSOR_X;	// 前後 G の検出軸変更
-			uSumGy		+= G_SENSOR_Y;
-			uThrottle	+= ADC_THROTTLE;
-			++uCnt;
-			
-			CheckStartByGSensor( pVsd, uGx );	// Gセンサーによるスタート検出
-			
-			// 次の変換開始
-			ADC1->SR &= ~( 1 << 2 );	// clr JEOC
-			AdcConversion();
-		}
-		
-		InputSerial( pVsd );	// serial 入力
-	}
-	pVsd->uOutputPrevTime += uWaitCnt;
-	
-	// G の計算
-	pVsd->uGx		= ( uSumGx    << 1 ) / uCnt;
-	pVsd->uGy		= ( uSumGy    << 1 ) / uCnt;
-	pVsd->uThrottle	= ( uThrottle << 1 ) / uCnt;
-}
-#endif
-
 /*** 初期化処理 *************************************************************/
 
 #ifndef zzzEXEC_SRAM
 INLINE void Initialize( USART_BUF_t pBuf ){
+	WdtInit();
+	
 	#ifndef EXEC_SRAM
 		Set_System();
 		
@@ -627,6 +589,58 @@ INLINE void Initialize( USART_BUF_t pBuf ){
 	AdcInit();
 	TimerInit();
 	PulseInit();
+}
+#endif
+
+/*** ステート変化待ち & LED 表示 ********************************************/
+
+#ifndef zzzEXEC_SRAM
+void WaitStateChange( VSD_DATA_t *pVsd ){
+	UINT	uSumGx 		= 0;
+	UINT	uSumGy 		= 0;
+	UINT	uGy;
+	UINT	uThrottle	= 0;
+	UINT	uCnt		= 0;
+	
+	/*** ステート変化待ち ***/
+	
+	/*** WDT ***/
+	// ★ WDT 処理を入れる
+	
+	UINT	uWaitCnt = TIMER_HZ / pVsd->uLogHz;
+	
+	// ログ周期待ち
+	AdcConversion();
+	while((( GetCurrentTime16() - pVsd->uOutputPrevTime ) & 0xFFFF ) < uWaitCnt ){
+		if( AdcConversionCompleted()){
+			uSumGx		+= G_SENSOR_X;
+			uSumGy		+= uGy = G_SENSOR_Y;
+			uThrottle	+= ADC_THROTTLE;
+			++uCnt;
+			
+			CheckStartByGSensor( pVsd, uGy );	// Gセンサーによるスタート検出
+			
+			// 次の変換開始
+			ADC1->SR &= ~( 1 << 2 );	// clr JEOC
+			AdcConversion();
+		}
+		
+		InputSerial( pVsd );	// serial 入力
+	}
+	pVsd->uOutputPrevTime += uWaitCnt;
+	
+	// G の計算
+	// ADC 値は 0-0x7FFF の 15bit．
+	// G の結果は 4.12bit fixed point．
+	pVsd->uGx = ( UINT )(
+		(( ULONG )( uSumGx << 1 ) * ( UINT )( 0x100000000L * 4096 / GX_1G )) >> 32
+	) / uCnt;
+	
+	pVsd->uGy = ( UINT )(
+		(( ULONG )( uSumGy << 1 ) * ( UINT )( 0x100000000L * 4096 / GY_1G )) >> 32
+	) / uCnt;
+	
+	pVsd->uThrottle	= ( uThrottle << 1 ) / uCnt;
 }
 #endif
 
@@ -658,9 +672,9 @@ __noreturn void main( void ){
 		if( Vsd.Flags.bConnected ){
 			OutputSerial( &Vsd );
 			
-			// 3秒接続断なら再起動
+			// 3秒接続断なら disconnected
 			if( ++Vsd.uConnectWDT > Vsd.uLogHz * 3 ){
-				// ★リセット
+				Vsd.Flags.bConnected = 0;
 			}
 			LedToggle();
 		}else{
