@@ -7,10 +7,11 @@
 	
 *****************************************************************************/
 
-#ifndef _MAIN2_H
-#define _MAIN2_H
+#ifndef _MAIN_H
+#define _MAIN_H
 
 #include "dds.h"
+#include "usart.h"
 
 /*** macros *****************************************************************/
 
@@ -93,9 +94,38 @@ typedef struct {
 
 /*** prototype **************************************************************/
 
+void NvicIntEnable( UINT IRQChannel );
+void NvicIntDisable( UINT IRQChannel );
+__noreturn void JumpTo( u32 uJmpAddr, u32 uSP );
+UINT GetHex( UINT uBytes );
+__noreturn void LoadSRecordSub( void );
+__noreturn void LoadSRecord( void );
+__noreturn void LoadBinSub( void );
+__noreturn void LoadBin( void );
+void TimerInit( void );
+UINT GetCurrentTime( void );
+UINT GetCurrentTime16( void );
+void AdcInit( void );
+void AdcConversion( void );
+BOOL AdcConversionCompleted( void );
+void PulseInit( void );
 void EXTI0_IRQHandler( void );
 void EXTI1_IRQHandler( void );
 void EXTI2_IRQHandler( void );
+void ComputeMeterTacho( VSD_DATA_t *pVsd );
+void ComputeMeterSpeed( VSD_DATA_t *pVsd );
+void SdcInit( void );
+UINT SdcInserted( void );
+void WdtInitSub( UINT uMillisec );
+void WdtReload( void );
+void SerialOutchar( UINT c );
+void SerialPack( UINT uVal, UINT uBytes );
+void OutputSerial( VSD_DATA_t *pVsd );
+void InputSerial( VSD_DATA_t *pVsd );
+void CheckStartByGSensor( VSD_DATA_t *pVsd, UINT uGx );
+void Calibration( VSD_DATA_t *pVsd );
+void Initialize( USART_BUF_t *pBuf );
+void WaitStateChange( VSD_DATA_t *pVsd );
 
 /*** extern *****************************************************************/
 
@@ -103,4 +133,4 @@ extern VSD_DATA_t	*g_pVsd;
 
 /*** gloval vars ************************************************************/
 
-#endif	// _MAIN2_H
+#endif	// _MAIN_H

@@ -236,7 +236,7 @@ void AdcInit( void ){
 
 /*** ADC ïœä∑ ***************************************************************/
 
-#ifndef EXEC_SRAM
+#ifndef zzzEXEC_SRAM
 INLINE void AdcConversion( void ){
 	// Start ADC1 Software Conversion
 	ADC_SoftwareStartInjectedConvCmd( ADC1, ENABLE );
@@ -589,7 +589,7 @@ void Calibration( VSD_DATA_t *pVsd ){
 /*** èâä˙âªèàóù *************************************************************/
 
 #ifndef zzzEXEC_SRAM
-INLINE void Initialize( USART_BUF_t pBuf ){
+INLINE void Initialize( USART_BUF_t *pBuf ){
 	//WdtInit( 3000 );
 	
 	#ifndef EXEC_SRAM

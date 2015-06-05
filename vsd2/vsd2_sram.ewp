@@ -963,6 +963,9 @@
     <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_adc.c</name>
     </file>
+    <file>
+      <name>$PROJ_DIR$\library\src\stm32f10x_nvic.c</name>
+    </file>
   </group>
 </project>
 
