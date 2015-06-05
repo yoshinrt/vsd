@@ -86,7 +86,7 @@ typedef struct {
 	USHORT	uMileage_0_400;					// 0-400m のパルス数
 	
 	UCHAR	uCalibTimer;					// キャリブレーションタイマー
-	UCHAR	uConnectWDT;					// Android 接続 WDT
+	UCHAR	Reserved1;						// ★ROM 化の時消す
 	UCHAR	uLogHz;							// ログ Hz
 	
 } VSD_DATA_t;

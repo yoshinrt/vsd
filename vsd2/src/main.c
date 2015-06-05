@@ -454,6 +454,25 @@ INLINE UINT SdcInserted( void ){
 }
 #endif
 
+/*** WDT ********************************************************************/
+
+#ifndef zzzEXEC_SRAM
+void WdtInitSub( UINT uMillisec ){
+/*
+	IWDG_WriteAccessCmd( IWDG_WriteAccess_Enable );
+	IWDG_SetPrescaler( IWDG_Prescaler_32 );
+	IWDG_SetReload( uMillisec );
+	IWDG_Enable();
+*/
+}
+
+#define WdtInit( ms ) WdtInitSub(( USHORT )( ms / 40000.0 * 32 ))
+
+INLINE void WdtReload( void ){
+	//IWDG_ReloadCounter();
+}
+#endif
+
 /*** バイナリ出力 ***********************************************************/
 
 #ifndef EXEC_SRAM
@@ -503,7 +522,7 @@ void InputSerial( VSD_DATA_t *pVsd ){
 	UINT c = getchar();
 	if( c == EOF ) return;
 	
-	pVsd->uConnectWDT = 0;
+	WdtReload();
 	
 	if( 'A' <= c && c <= 'F' ){
 		pVsd->uInputParam = ( pVsd->uInputParam << 4 ) + c - ( 'A' - 10 );
@@ -571,7 +590,7 @@ void Calibration( VSD_DATA_t *pVsd ){
 
 #ifndef zzzEXEC_SRAM
 INLINE void Initialize( USART_BUF_t pBuf ){
-	WdtInit();
+	//WdtInit( 3000 );
 	
 	#ifndef EXEC_SRAM
 		Set_System();
@@ -603,10 +622,6 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 	UINT	uCnt		= 0;
 	
 	/*** ステート変化待ち ***/
-	
-	/*** WDT ***/
-	// ★ WDT 処理を入れる
-	
 	UINT	uWaitCnt = TIMER_HZ / pVsd->uLogHz;
 	
 	// ログ周期待ち
@@ -674,15 +689,11 @@ __noreturn void main( void ){
 		
 		if( Vsd.Flags.bConnected ){
 			OutputSerial( &Vsd );
-			
-			// 3秒接続断なら disconnected
-			if( ++Vsd.uConnectWDT > Vsd.uLogHz * 3 ){
-				Vsd.Flags.bConnected = 0;
-			}
 			LedToggle();
 		}else{
 			// ★ FW 再ダウンロード要求
 			//putchar( 0xFF );
+			WdtReload();
 			LedOn();
 		}
 	}
