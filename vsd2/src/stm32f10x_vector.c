@@ -18,7 +18,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "dds.h"
 #include "stm32f10x_lib.h"
-#include "stm32f10x_it.h"
+#include "stm32f10x_nvic.h"
 #include "main.h"
 
 /* Private typedef -----------------------------------------------------------*/
@@ -29,8 +29,16 @@ typedef union { intfunc __fun; void * __ptr; } intvec_elem;
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
+
+#define DEF_HANDLER( func ) void func( void );
+#include "def_int_handler.h"
+
 /* Private functions ---------------------------------------------------------*/
 
+void IntHandlerNop( void ){}
+void IntHandlerReset( void ){
+	NVIC_GenerateSystemReset();
+}
 
 #pragma language=extended
 #pragma segment="CSTACK"
@@ -45,8 +53,8 @@ const intvec_elem __vector_table[] =
 	__iar_program_start,
 	
 	#define DEF_HANDLER( func )			func,
-	#define DEF_HANDLER_NOP( func )		IntHandlerNop,
-	#define DEF_HANDLER_LOOP( func )	IntHandlerLoop,
+	#define DEF_HANDLER_NOP( func )		IntHandlerReset, //IntHandlerNop,
+	#define DEF_HANDLER_LOOP( func )	IntHandlerReset,
 	#define DEF_HANDLER_RESERVED()		0,
 	#include "def_int_handler.h"
 };

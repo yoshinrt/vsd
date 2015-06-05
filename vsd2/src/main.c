@@ -647,6 +647,9 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 /*** ƒƒCƒ“ƒ‹[ƒv ***********************************************************/
 
 __noreturn void main( void ){
+#ifdef MINIMUM_FIRMWARE
+	NVIC_GenerateSystemReset();
+#else
 	/*** ‰Šú‰» *************************************************************/
 	
 	// USART buf
@@ -684,3 +687,4 @@ __noreturn void main( void ){
 		}
 	}
 }
+#endif
