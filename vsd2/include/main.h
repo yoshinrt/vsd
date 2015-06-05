@@ -88,29 +88,9 @@ typedef struct {
 
 /*** prototype **************************************************************/
 
-void NvicIntEnable( UINT IRQChannel );
-void NvicIntDisable( UINT IRQChannel );
-UINT GetHex( UINT uBytes );
-__noreturn void LoadSRecord( void );
-void TimerInit( void );
-UINT GetCurrentTime( void );
-UINT GetCurrentTime16( void );
-void AdcInit( void );
-void AdcConversion( void );
-void PulseInit( void );
 void EXTI0_IRQHandler( void );
 void EXTI1_IRQHandler( void );
 void EXTI2_IRQHandler( void );
-void ComputeMeterTacho( VSD_DATA_t *pVsd );
-void ComputeMeterSpeed( VSD_DATA_t *pVsd );
-void SdcInit( void );
-UINT SdcInserted( void );
-void SerialOutchar( UINT c );
-void SerialPack( UINT uVal, UINT uBytes );
-void OutputSerial( VSD_DATA_t *pVsd );
-void InputSerial( VSD_DATA_t *pVsd );
-void Calibration( VSD_DATA_t *pVsd );
-void WaitStateChange( VSD_DATA_t *pVsd );
 
 /*** extern *****************************************************************/
 

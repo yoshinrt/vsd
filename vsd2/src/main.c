@@ -607,6 +607,29 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 }
 #endif
 
+/*** 初期化処理 *************************************************************/
+
+#ifndef zzzEXEC_SRAM
+INLINE void Initialize( USART_BUF_t pBuf ){
+	#ifndef EXEC_SRAM
+		Set_System();
+		
+		// SD カードが挿入されていたら，開発用に即 LoadSRecord()
+		SdcInit();
+		if( SdcInserted()) LoadSRecord();
+	#else
+		// ベクタテーブルを SRAM に再設定
+		NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
+	#endif
+	LedOff();
+	
+	UsartInit( USART_BAUDRATE, pBuf );
+	AdcInit();
+	TimerInit();
+	PulseInit();
+}
+#endif
+
 /*** メインループ ***********************************************************/
 
 __noreturn void main( void ){
@@ -614,22 +637,7 @@ __noreturn void main( void ){
 	
 	// USART buf
 	USART_BUF_t	UsartBuf	= { 0 };
-	
-	#ifndef EXEC_SRAM
-		Set_System();
-		
-		// SD カードが挿入されていたら，開発用に即 LoadSRecord()
-		SdcInit();
-		if( SdcInserted()){
-			LedOn();
-			LoadSRecord();
-		}
-	#else
-		// ベクタテーブルを SRAM に再設定
-		NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
-	#endif
-	
-	VSD_DATA_t	Vsd	= { 0 };
+	VSD_DATA_t	Vsd			= { 0 };
 	g_pVsd = &Vsd;
 	
 	Vsd.uComputeMeterConst	= ( UINT )( TIMER_HZ * 3600.0 * 100 / PULSE_PER_1KM );
@@ -637,18 +645,12 @@ __noreturn void main( void ){
 	Vsd.uLogHz				= LOG_HZ;
 	Vsd.uOutputPrevTime		= GetCurrentTime16();
 	
-	UsartInit( USART_BAUDRATE, &UsartBuf );
-	
-	AdcInit();
-	TimerInit();
-	PulseInit();
+	Initialize( &UsartBuf );
 	
 	/*** メインループ *******************************************************/
 	
 	while( 1 ){
-		LedToggle();
 		WaitStateChange( &Vsd );
-		
 		ComputeMeterSpeed( &Vsd );
 		ComputeMeterTacho( &Vsd );
 		Calibration( &Vsd );
@@ -660,9 +662,11 @@ __noreturn void main( void ){
 			if( ++Vsd.uConnectWDT > Vsd.uLogHz * 3 ){
 				// ★リセット
 			}
+			LedToggle();
 		}else{
 			// ★ FW 再ダウンロード要求
 			//putchar( 0xFF );
+			LedOn();
 		}
 	}
 }
