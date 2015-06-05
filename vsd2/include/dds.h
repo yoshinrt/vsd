@@ -24,6 +24,7 @@
 //typedef unsigned		UINT;
 //typedef unsigned char	UCHAR;
 //typedef int				BOOL;
+typedef unsigned long long	ULLONG;
 
 /*** debug macros ***********************************************************/
 

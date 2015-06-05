@@ -18,7 +18,6 @@
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_flash.h"
 #include "stm32f10x_nvic.h"
-#include "stm32f10x_it.h"
 #include "hw_config.h"
 
 /* Private typedef -----------------------------------------------------------*/

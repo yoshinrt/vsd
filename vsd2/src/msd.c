@@ -714,7 +714,7 @@ u8 MSD_GoIdleState(void){
 			MSD_SendCmd(MSD_SEND_OP_COND, 0, 0xFF);
 		}
 		
-		timer( 1000000 );
+		//timer( 1000000 ); // ★コンパイルを通すために外す
 		/* Wait for no error Response (R1 Format) equal to 0x00 */
 		if( !MSD_GetResponse(MSD_RESPONSE_NO_ERROR)) break;
 	}

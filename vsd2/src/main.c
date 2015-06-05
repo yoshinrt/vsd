@@ -14,6 +14,7 @@
 #include "stm32f10x_nvic.h"
 #include "stm32f10x_tim.h"
 #include "stm32f10x_adc.h"
+#include "hw_config.h"
 #include "main.h"
 #include "usart.h"
 
@@ -648,11 +649,11 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 	// ADC ’l‚Í 0-0x7FFF ‚Ì 15bitD
 	// G ‚ÌŒ‹‰Ê‚Í 4.12bit fixed pointD
 	pVsd->uGx = ( UINT )(
-		(( ULONG )( uSumGx << 1 ) * ( UINT )( 0x100000000L * 4096 / GX_1G )) >> 32
+		(( ULLONG )( uSumGx << 1 ) * ( UINT )( 0x100000000L * 4096 / GX_1G )) >> 32
 	) / uCnt;
 	
 	pVsd->uGy = ( UINT )(
-		(( ULONG )( uSumGy << 1 ) * ( UINT )( 0x100000000L * 4096 / GY_1G )) >> 32
+		(( ULLONG )( uSumGy << 1 ) * ( UINT )( 0x100000000L * 4096 / GY_1G )) >> 32
 	) / uCnt;
 	
 	pVsd->uThrottle	= ( uThrottle << 1 ) / uCnt;

@@ -43,7 +43,7 @@
         </option>
         <option>
           <name>Input description</name>
-          <state>Full formatting.</state>
+          <state>&#x30D5;&#x30eB;&#x30D5;&#x30A9;&#x30FC;&#x30De;&#x30C3;&#x30C8;&#x3002;</state>
         </option>
         <option>
           <name>Output variant</name>
@@ -52,7 +52,7 @@
         </option>
         <option>
           <name>Output description</name>
-          <state>Full formatting.</state>
+          <state>&#x30D5;&#x30eB;&#x30D5;&#x30A9;&#x30FC;&#x30De;&#x30C3;&#x30C8;&#x3002;</state>
         </option>
         <option>
           <name>GOutputBinary</name>
@@ -79,7 +79,7 @@
         </option>
         <option>
           <name>RTDescription</name>
-          <state>Use the normal configuration of the C/C++ runtime library. No locale interface, C locale, no file descriptor support, no multibytes in printf and scanf, and no hex floats in strtod.</state>
+          <state>C/C++&#x30e9;&#x30F3;&#x30BF;&#x30A4;&#x30e0;&#x30e9;&#x30A4;&#x30D6;&#x30e9;&#x30eA;&#x306e;&#x901A;&#x5e38;&#x306e;&#x8A2D;&#x5B9A;&#x3092;&#x4F7F;&#x7528;&#x3057;&#x307e;&#x3059;&#x3002;&#x30eD;&#x30B1;&#x30FC;&#x30eB;&#x30A4;&#x30F3;&#x30BF;&#x30D5;&#x30A7;&#x30FC;&#x30B9;&#x306A;&#x3057;&#x3001;C&#x30eD;&#x30B1;&#x30FC;&#x30eB;&#x3001;&#x30D5;&#x30A1;&#x30A4;&#x30eB;&#x8A18;&#x8FF0;&#x5B50;&#x30B5;&#x30DD;&#x30FC;&#x30C8;&#x306A;&#x3057;&#x3001;printf/scanf&#x3067;&#x306e;&#x30De;&#x30eB;&#x30C1;&#x30D0;&#x30A4;&#x30C8;&#x6587;&#x5B57;&#x306A;&#x3057;&#x3001;strtod&#x3067;&#x306e;16&#x9032;&#x6570;&#x6D6e;&#x52D5;&#x5C0F;&#x6570;&#x70B9;&#x6570;&#x306A;&#x3057;&#x3002;</state>
         </option>
         <option>
           <name>OGProductVersion</name>
@@ -323,7 +323,7 @@
         <option>
           <name>CCOptStrategy</name>
           <version>0</version>
-          <state>1</state>
+          <state>2</state>
         </option>
         <option>
           <name>CCOptLevelSlave</name>
@@ -402,7 +402,7 @@
         <option>
           <name>CCOptStrategySlave</name>
           <version>0</version>
-          <state>1</state>
+          <state>2</state>
         </option>
         <option>
           <name>CCGuardCalls</name>
@@ -745,11 +745,11 @@
         </option>
         <option>
           <name>IlinkUseExtraOptions</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>IlinkExtraOptions</name>
-          <state></state>
+          <state>--no_remove</state>
         </option>
         <option>
           <name>IlinkLowLevelInterfaceSlave</name>
@@ -945,10 +945,19 @@
       <data/>
     </settings>
   </configuration>
+  <mfc>
+    <configuration>Release</configuration>
+  </mfc>
   <group>
     <name>Application Files</name>
     <file>
       <name>$PROJ_DIR$\src\cortexm3_macro.s</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\src\diskio.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\src\ff.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\src\hw_config.c</name>
@@ -957,10 +966,7 @@
       <name>$PROJ_DIR$\src\main.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\src\main2.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\src\stm32f10x_it.c</name>
+      <name>$PROJ_DIR$\src\msd.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_tim.c</name>
