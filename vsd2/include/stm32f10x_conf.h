@@ -74,7 +74,7 @@
 //#define _I2C2
 
 /************************************* IWDG ***********************************/
-//#define _IWDG
+#define _IWDG
 
 /************************************* NVIC ***********************************/
 #define _NVIC
@@ -86,21 +86,21 @@
 #define _RCC
 
 /************************************* RTC ************************************/
-//#define _RTC
+#define _RTC
 
 /************************************* SPI ************************************/
 #define _SPI
 #define _SPI1
-//#define _SPI2
+#define _SPI2
 
 /************************************* SysTick ********************************/
-//#define _SysTick
+#define _SysTick
 
 /************************************* TIM1 ***********************************/
-//#define _TIM1
+#define _TIM1
 
 /************************************* TIM ************************************/
-//#define _TIM
+#define _TIM
 #define _TIM2
 #define _TIM3
 #define _TIM4
@@ -108,11 +108,11 @@
 /************************************* USART **********************************/
 #define _USART
 #define _USART1
-//#define _USART2
-//#define _USART3
+#define _USART2
+#define _USART3
 
 /************************************* WWDG ***********************************/
-//#define _WWDG
+#define _WWDG
 
 /* In the following line adjust the value of External High Speed oscillator (HSE)
    used in your application */

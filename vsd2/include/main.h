@@ -35,9 +35,12 @@
 //#define	ADC_BRAKE	
 
 // G ƒZƒ“ƒT‚Ì 1G ’l
-#define GX_1G			5400
-#define GY_1G			5400
-#define GZ_1G			5400
+#define GX_1G		11875
+#define GY_1G		12041
+#define GZ_1G		12212
+#define GX_CENTER	21387
+#define GY_CENTER	21718
+#define GZ_CENTER	21579
 
 #define LedOn()		( GPIOC->ODR |= 0x40 )
 #define LedOff()	( GPIOC->ODR &= ~0x40 )
@@ -116,7 +119,7 @@ void ComputeMeterTacho( VSD_DATA_t *pVsd );
 void ComputeMeterSpeed( VSD_DATA_t *pVsd );
 void SdcInit( void );
 UINT SdcInserted( void );
-void WdtInitSub( UINT uMillisec );
+void WdtInitSub( UINT uMillisec, UINT uPsc );
 void WdtReload( void );
 void SerialOutchar( UINT c );
 void SerialPack( UINT uVal, UINT uBytes );

@@ -946,6 +946,9 @@
       <data/>
     </settings>
   </configuration>
+  <mfc>
+    <configuration>exec_sram</configuration>
+  </mfc>
   <group>
     <name>Application Files</name>
     <file>
@@ -962,6 +965,9 @@
     <name>FWLib</name>
     <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_adc.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\library\src\stm32f10x_iwdg.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_nvic.c</name>

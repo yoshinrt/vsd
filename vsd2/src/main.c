@@ -14,6 +14,7 @@
 #include "stm32f10x_nvic.h"
 #include "stm32f10x_tim.h"
 #include "stm32f10x_adc.h"
+#include "stm32f10x_iwdg.h"
 #include "hw_config.h"
 #include "main.h"
 #include "usart.h"
@@ -199,7 +200,7 @@ void AdcInit( void ){
 	GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_Out_PP;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init( GPIOA, &GPIO_InitStruct );
-	GPIOD->ODR |= ( 1 << 8 );
+	//GPIOA->ODR |= ( 1 << 8 );
 	
 	// ADC1 Configuration ------------------------------------------------------
 	ADC_StructInit( &ADC_InitStructure );
@@ -458,19 +459,31 @@ INLINE UINT SdcInserted( void ){
 /*** WDT ********************************************************************/
 
 #ifndef zzzEXEC_SRAM
-void WdtInitSub( UINT uMillisec ){
-/*
+void WdtInitSub( UINT uMillisec, UINT uPsc ){
 	IWDG_WriteAccessCmd( IWDG_WriteAccess_Enable );
-	IWDG_SetPrescaler( IWDG_Prescaler_32 );
+	IWDG_SetPrescaler( uPsc );
 	IWDG_SetReload( uMillisec );
 	IWDG_Enable();
-*/
 }
 
-#define WdtInit( ms ) WdtInitSub(( USHORT )( ms / 40000.0 * 32 ))
+INLINE void WdtInit( UINT ms ){
+	UINT uCnt = ms * 40;
+	UINT uPsc;
+	
+	if     ( uCnt >= ( 0x1000 << 6 )){ uCnt >>= 7; uPsc = 7; }
+	else if( uCnt >= ( 0x1000 << 5 )){ uCnt >>= 6; uPsc = 6; }
+	else if( uCnt >= ( 0x1000 << 4 )){ uCnt >>= 5; uPsc = 5; }
+	else if( uCnt >= ( 0x1000 << 3 )){ uCnt >>= 4; uPsc = 4; }
+	else if( uCnt >= ( 0x1000 << 2 )){ uCnt >>= 3; uPsc = 3; }
+	else if( uCnt >= ( 0x1000 << 1 )){ uCnt >>= 2; uPsc = 2; }
+	else if( uCnt >= ( 0x1000 << 0 )){ uCnt >>= 1; uPsc = 1; }
+	else                             {             uPsc = 0; }
+	
+	WdtInitSub( uCnt, uPsc );
+}
 
 INLINE void WdtReload( void ){
-	//IWDG_ReloadCounter();
+	IWDG_ReloadCounter();
 }
 #endif
 
@@ -649,18 +662,20 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 	// ADC 値は 0-0x7FFF の 15bit．
 	// G の結果は 4.12bit fixed point．
 	pVsd->uGx = ( UINT )(
-		(( ULLONG )( uSumGx << 1 ) * ( UINT )( 0x100000000L * 4096 / GX_1G )) >> 32
-	) / uCnt;
+		(( ULLONG )uSumGx * ( UINT )( 0x100000000L * 4096 * 2 / GX_1G )) >> 32
+	) / uCnt + GX_CENTER;
 	
 	pVsd->uGy = ( UINT )(
-		(( ULLONG )( uSumGy << 1 ) * ( UINT )( 0x100000000L * 4096 / GY_1G )) >> 32
-	) / uCnt;
+		(( ULLONG )uSumGy * ( UINT )( 0x100000000L * 4096 * 2 / GY_1G )) >> 32
+	) / uCnt + GY_CENTER;
 	
 	pVsd->uThrottle	= ( uThrottle << 1 ) / uCnt;
 }
 #endif
 
 /*** メインループ ***********************************************************/
+
+//#define MINIMUM_FIRMWARE
 
 __noreturn void main( void ){
 #ifdef MINIMUM_FIRMWARE
@@ -698,5 +713,5 @@ __noreturn void main( void ){
 			LedOn();
 		}
 	}
-}
 #endif
+}

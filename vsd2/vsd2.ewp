@@ -969,9 +969,6 @@
       <name>$PROJ_DIR$\src\msd.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\library\src\stm32f10x_tim.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\src\stm32f10x_vector.c</name>
     </file>
     <file>
@@ -990,6 +987,12 @@
       <name>$PROJ_DIR$\library\src\stm32f10x_gpio.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\library\src\stm32f10x_i2c.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\library\src\stm32f10x_iwdg.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_lib.c</name>
     </file>
     <file>
@@ -1000,6 +1003,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_spi.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\library\src\stm32f10x_tim.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_usart.c</name>
