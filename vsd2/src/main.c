@@ -3,7 +3,7 @@
 	VSD2 - vehicle data logger system2
 	Copyright(C) by DDS
 	
-	speed.c -- speed, tacho, ラップセンサ
+	main.c -- メイン
 	
 *****************************************************************************/
 
@@ -254,7 +254,7 @@ INLINE BOOL AdcConversionCompleted( void ){
 // PD1: tacho
 // PD2: 磁気センサー
 
-#ifndef EXEC_SRAM
+#ifndef zzzEXEC_SRAM
 void PulseInit( void ){
 	// APB クロック
 	RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOD, ENABLE );
@@ -268,16 +268,18 @@ void PulseInit( void ){
 	GPIO_Init( GPIOD, &GPIO_InitStruct );
 	GPIO_InitStruct.GPIO_Pin  = GPIO_Pin_1;
 	GPIO_Init( GPIOD, &GPIO_InitStruct );
+	
 	GPIO_InitStruct.GPIO_Pin  = GPIO_Pin_2;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU;	// pull up
 	GPIO_Init( GPIOD, &GPIO_InitStruct );
 	
 	// GPIO 割り込みイネーブル
 	GPIO_EXTILineConfig( GPIO_PortSourceGPIOD, GPIO_PinSource0 );
 	GPIO_EXTILineConfig( GPIO_PortSourceGPIOD, GPIO_PinSource1 );
 	GPIO_EXTILineConfig( GPIO_PortSourceGPIOD, GPIO_PinSource2 );
-	EXTI->IMR  |= 0x7;
-	EXTI->RTSR |= 0x7;
-	EXTI->FTSR &= ~0x7;
+	EXTI->IMR  |=  0x7;
+	EXTI->RTSR |=  0x3;	// 磁気センサ [2] のみ fall edge
+	EXTI->FTSR &= ~0x3;
 	
 	// NVIC 設定
 	NVIC_InitTypeDef NVIC_InitStructure;
@@ -614,7 +616,7 @@ INLINE void Initialize( USART_BUF_t *pBuf ){
 		if( SdcInserted()) LoadSRecord();
 	#else
 		// ベクタテーブルを SRAM に再設定
-		NVIC_SetVectorTable( NVIC_VectTab_RAM, 0 );
+		NVIC_SetVectorTable( 0, __vector_table );
 	#endif
 	LedOff();
 	

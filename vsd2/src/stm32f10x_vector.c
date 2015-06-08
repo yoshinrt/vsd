@@ -35,18 +35,28 @@ typedef union { intfunc __fun; void * __ptr; } intvec_elem;
 
 /* Private functions ---------------------------------------------------------*/
 
+#ifndef EXEC_SRAM
 void IntHandlerNop( void ){}
 void IntHandlerReset( void ){
 	NVIC_GenerateSystemReset();
 }
+#endif
 
 #pragma language=extended
 #pragma segment="CSTACK"
 
 void __iar_program_start( void );
 
-#pragma location = ".intvec"
 /* STM32F10x Vector Table entries */
+#pragma location = ".intvec"
+#ifdef EXEC_SRAM
+// エントリアドレスのみが有効なダミーのベクタテーブル
+const intvec_elem __vector_table_dummy[] =
+{
+	0,
+	__iar_program_start,
+};
+#else
 const intvec_elem __vector_table[] =
 {
 	{ .__ptr = __sfe( "CSTACK" ) },
@@ -58,6 +68,7 @@ const intvec_elem __vector_table[] =
 	#define DEF_HANDLER_RESERVED()		0,
 	#include "def_int_handler.h"
 };
+#endif
 
 /******************* (C) COPYRIGHT 2007 STMicroelectronics *****END OF FILE****/
 
