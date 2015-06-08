@@ -157,14 +157,12 @@ void TimerInit( void ){
 
 #ifndef EXEC_SRAM
 UINT GetCurrentTime( void ){
-	UINT uTimeL, uTimeL2, uTimeH;
+	UINT uTimeL = TIM2->CNT;
+	UINT uTimeH = TIM3->CNT;
 	
-	uTimeL2 = TIM2->CNT;
-	do{
-		uTimeL = uTimeL2;
-		uTimeH = TIM3->CNT;
-	}while( uTimeL > ( uTimeL2 = TIM2->CNT ));
-	
+	if( uTimeL > TIM2->CNT ){
+		uTimeH = TIM3->CNT - 1;
+	}
 	return ( uTimeH << 16 ) | uTimeL;
 }
 
@@ -391,6 +389,7 @@ void ComputeMeterSpeed( VSD_DATA_t *pVsd ){
 	UINT	uTime;
 	UINT	uPulseCnt;
 	UINT	uPulseCntTmp;
+	UINT	uSpeed = 0;
 	
 	// パラメータロード
 	NvicIntDisable( EXTI0_IRQChannel );	// Speed IRQ disable
@@ -414,26 +413,30 @@ void ComputeMeterSpeed( VSD_DATA_t *pVsd ){
 			uTime			= GetCurrentTime16();
 		}
 		
-		pVsd->Speed.uVal = pVsd->uComputeMeterConst * uPulseCnt / (( uTime - uPrevTime ) & 0xFFFF );
+		uSpeed = pVsd->uComputeMeterConst * uPulseCnt / (( uTime - uPrevTime ) & 0xFFFF );
+		
+		// 0-100ゴール待ちモードで100km/hに達したらNewLap起動
+		if( pVsd->Flags.uLapMode == MODE_ZERO_ONE_WAIT && uSpeed >= 10000 ){
+			pVsd->uLapTime		    = GetCurrentTime();
+			pVsd->Flags.bNewLap		= TRUE;
+			pVsd->Flags.uLapMode	= MODE_LAPTIME;
+		}
 	}
 	
 	if( uPulseCntTmp ){
 		// パルスが入ったときは必ず 1km/h 以上
-		if( pVsd->Speed.uVal < 100 ) pVsd->Speed.uVal = 100;
-	}else{
-		// 1km/h 未満は 0km/h 扱い
-		if( pVsd->Speed.uVal < 100 ){
-			pVsd->Speed.uVal = 0;
-			pVsd->Speed.uPrevTime = uTime - SPEED_0KPH_TH;
-		}
+		if( uSpeed < 100 ) uSpeed = 100;
+	}else if( uSpeed < 100 ){
+		// パルスなし && 1km/h 未満は 0km/h 扱い
+		uSpeed = 0;
+		pVsd->Speed.uPrevTime = uTime - SPEED_0KPH_TH;
+	}else if( uSpeed > pVsd->Speed.uVal ){
+		// パルスなしで，前回のスピードより速かったら
+		// 前回スピードのままにする
+		return;
 	}
 	
-	// 0-100ゴール待ちモードで100km/hに達したらNewLap起動
-	if( pVsd->Flags.uLapMode == MODE_ZERO_ONE_WAIT && pVsd->Speed.uVal >= 10000 ){
-		pVsd->uLapTime		    = GetCurrentTime();
-		pVsd->Flags.bNewLap		= TRUE;
-		pVsd->Flags.uLapMode	= MODE_LAPTIME;
-	}
+	pVsd->Speed.uVal = uSpeed;
 }
 #endif
 
