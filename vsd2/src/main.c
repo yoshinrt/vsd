@@ -607,6 +607,10 @@ void Calibration( VSD_DATA_t *pVsd ){
 
 /*** 初期化処理 *************************************************************/
 
+#ifdef EXEC_SRAM
+	#define SPEED_SIM
+#endif
+
 #ifndef zzzEXEC_SRAM
 INLINE void Initialize( USART_BUF_t *pBuf ){
 	//WdtInit( 3000 );
@@ -627,6 +631,16 @@ INLINE void Initialize( USART_BUF_t *pBuf ){
 	AdcInit();
 	TimerInit();
 	PulseInit();
+	
+	#ifdef SPEED_SIM
+		// PA13 J3:36 に擬似スピードパルス出力
+		GPIO_InitTypeDef	GPIO_InitStruct;
+		GPIO_StructInit( &GPIO_InitStruct );
+		GPIO_InitStruct.GPIO_Pin   = GPIO_Pin_13;
+		GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_Out_PP;
+		GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+		GPIO_Init( GPIOA, &GPIO_InitStruct );
+	#endif
 }
 #endif
 
@@ -639,6 +653,11 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 	UINT	uGy;
 	UINT	uThrottle	= 0;
 	UINT	uCnt		= 0;
+	
+	#ifdef SPEED_SIM
+		static UINT	uSpeedSimTime;
+		static UINT	uSpeedSim	= 10;
+	#endif
 	
 	/*** ステート変化待ち ***/
 	UINT	uWaitCnt = TIMER_HZ / pVsd->uLogHz;
@@ -660,6 +679,16 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 		}
 		
 		InputSerial( pVsd );	// serial 入力
+		
+		#ifdef SPEED_SIM
+			if( uSpeedSim ){
+				UINT uSpdCntDiff = ( UINT )( TIMER_HZ * 3600.0 * 100 / PULSE_PER_1KM / 2 ) / uSpeedSim;
+				if( GetCurrentTime() - uSpeedSimTime > uSpdCntDiff ){
+					GPIOA->ODR ^= ( 1 << 13 );
+					uSpeedSimTime += uSpdCntDiff;
+				}
+			}
+		#endif
 	}
 	pVsd->uOutputPrevTime += uWaitCnt;
 	
@@ -708,6 +737,7 @@ __noreturn void main( void ){
 		ComputeMeterTacho( &Vsd );
 		Calibration( &Vsd );
 		
+printf( "%d\n", Vsd.Speed.uVal );
 		if( Vsd.Flags.bConnected ){
 			OutputSerial( &Vsd );
 			LedToggle();
