@@ -626,7 +626,7 @@
       <archiveVersion>1</archiveVersion>
       <data>
         <prebuild></prebuild>
-        <postbuild></postbuild>
+        <postbuild>Z:\bin\magic.bat</postbuild>
       </data>
     </settings>
     <settings>
@@ -946,9 +946,9 @@
       <data/>
     </settings>
   </configuration>
-  <mfc>
+  <mfc_discard>
     <configuration>exec_sram</configuration>
-  </mfc>
+  </mfc_discard>
   <group>
     <name>Application Files</name>
     <file>

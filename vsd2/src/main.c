@@ -619,7 +619,7 @@ INLINE void Initialize( USART_BUF_t *pBuf ){
 		if( SdcInserted()) LoadSRecord();
 	#else
 		// ベクタテーブルを SRAM に再設定
-		NVIC_SetVectorTable( 0, __vector_table );
+		//NVIC_SetVectorTable( 0, __vector_table );
 	#endif
 	LedOff();
 	

@@ -51,7 +51,7 @@ void __iar_program_start( void );
 #pragma location = ".intvec"
 #ifdef EXEC_SRAM
 // エントリアドレスのみが有効なダミーのベクタテーブル
-const intvec_elem __vector_table_dummy[] =
+const intvec_elem __vector_table[] =
 {
 	0,
 	__iar_program_start,
