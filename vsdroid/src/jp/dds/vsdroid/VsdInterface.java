@@ -44,10 +44,6 @@ class VsdInterface implements Runnable {
 	static final double ACC_1G_Y	= 6667.738702;
 	static final double ACC_1G_Z	= 6842.591839;
 
-	// VSD ドライバからのメッセージ
-	static final int	MSG_LOG_UPDATE	= 0;
-	static final int	MSG_OPEN_FAILED	= 1;
-
 	SharedPreferences Pref;
 	Thread VsdThread = null;
 
@@ -83,9 +79,6 @@ class VsdInterface implements Runnable {
 	int 	iLapNum			= 0;
 	int 	iTimeLastRaw	= 0;
 	int 	iTimeBestRaw	= 0;
-
-	// ステータスメッセージ
-	int iMessage = R.string.statmsg_normal;
 
 	// G センサー用
 	int	iPhoneGxRaw = 0;
@@ -230,7 +223,7 @@ class VsdInterface implements Runnable {
 			fsLog    = new BufferedWriter( new FileWriter( s ));
 			fsBinLog = new BufferedOutputStream( new FileOutputStream( s + ".bin" ));
 		}catch( Exception e ){
-			iMessage = R.string.statmsg_log_open_failed;
+			MsgHandler.sendEmptyMessage( R.string.statmsg_mklog_failed );
 			return -1;
 		}
 
@@ -249,6 +242,7 @@ class VsdInterface implements Runnable {
 	public int Open(){
 		if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open" );
 
+		MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_connecting );
 		while( !bKillThread ){
 			try{
 				// ソケットの作成
@@ -258,11 +252,14 @@ class VsdInterface implements Runnable {
 				if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:connected" );
 				InStream	= Sock.getInputStream();
 				OutStream	= Sock.getOutputStream();
+				MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_connected );
 				return 0;
 			}catch( SocketTimeoutException e ){
 				if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:timeout" );
+				MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_timeout );
 			}catch( IOException e ){
 				if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:IOException" );
+				MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_IOerror );
 			}
 
 			if( Sock != null ) try{
@@ -272,7 +269,6 @@ class VsdInterface implements Runnable {
 
 			Sleep( 1000 );
 		}
-		iMessage = R.string.statmsg_socket_open_failed;
 		return -1;
 	}
 
@@ -282,7 +278,6 @@ class VsdInterface implements Runnable {
 		try{
 			iReadSize = InStream.read( Buf, iStart, iLen );
 		}catch( IOException e ){
-			iMessage = R.string.statmsg_socket_rw_failed;
 			return -1;
 		}
 		return iReadSize;
@@ -300,7 +295,7 @@ class VsdInterface implements Runnable {
 
 		iReadSize = RawRead( iBufLen, iBufSize - iBufLen );
 		if( iReadSize < 0 ){
-			iMessage = R.string.statmsg_socket_rw_failed;
+			MsgHandler.sendEmptyMessage( R.string.statmsg_read_disconnected );
 			return -1;
 		}
 
@@ -323,7 +318,7 @@ class VsdInterface implements Runnable {
 			iSpeedRaw	= Unpack();
 
 			// ここで描画要求
-			MsgHandler.sendEmptyMessage( MSG_LOG_UPDATE );
+			MsgHandler.sendEmptyMessage( R.string.statmsg_update );
 
 			if( iBufPtr < iEOLPos ){
 				iMileage16	= Unpack();
@@ -568,40 +563,53 @@ class VsdInterface implements Runnable {
 		InputStream	fsFirm = null;
 
 		int iReadSize = 0;
-		int iPtr, i = 0;
+		int i = 0;
 
+		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_loading );
+		
 		try{
+			// .mot オープン
+			fsFirm = new FileInputStream( Pref.getString( "key_roms", null ));
+			
 			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending magic code" );
-			SendCmd( "F15EF117*\rz\r" );
-
+			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_magic );
+			SendCmd( "F15EF117*z" );
+			
 			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware" );
 			try{
-				fsFirm = new FileInputStream( Pref.getString( "key_roms", null ));
-
-				WaitChar( ':' ); SendCmd( "l\r" );	// FW があったときだけ l コマンド
-
-				// FW の \n を削除しつつ送信
+				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
+				WaitChar( ':' );
+				
+				// FW 送信
+				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_sending );
 				while(( iReadSize = fsFirm.read( Buf, 0, iBufSize )) > 0 ){
-					for( iPtr = i = 0; i < iReadSize; ++i ){
-						if( Buf[ i ] != ( byte )0x0A ) Buf[ iPtr++ ] = Buf[ i ];
-					}
-					OutStream.write( Buf, 0, iPtr );
+					OutStream.write( Buf, 0, iReadSize );
 				}
-			}catch( Exception e ){
+			}catch( Exception e1 ){
+				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_senderror );
 				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware canceled" );
 			}
-
-			if( fsFirm != null ) fsFirm.close();
-
+			
+			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
 			if( bDebug ) Log.d( "VSDroid", "LoadFirm::go" );
-			WaitChar( ':' ); SendCmd( "g\r" );
-
+			WaitChar( ':' );
+			
+		}catch( IOException e ){
+			// FW がない場合ここに飛ぶ
+			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware canceled" );
+			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_none );
+		}
+		
+		if( fsFirm != null ) fsFirm.close();
+		
+		try{
 			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending log output request" );
 			Sleep( 100 );
-			// 1S: Serial output ON  s: speed  1a: auto mode
-			SendCmd( "F15EF117*1Ss1a" );
+			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_magic );
+			SendCmd( "F15EF117*" );
 
 			// 最初の 0xFF までスキップ
+			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
 			if( bDebug ) Log.d( "VSDroid", "LoadFirm::waiting first log record" );
 
 			int iRetryCnt = 100;
@@ -627,14 +635,17 @@ class VsdInterface implements Runnable {
 				}
 			}else{
 				// タイムアウト
-				iMessage = R.string.statmsg_vsd_initialize_failed;
+				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_timeout );
+				// ★再試行すべき
 				return -1;
 			}
 		}catch( IOException e ){
-			iMessage = R.string.statmsg_socket_rw_failed;
+			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_ioerror );
+			// ★再試行すべき
 			return -1;
 		}
 
+		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_loaded );
 		if( bDebug ) Log.d( "VSDroid", "LoadFirm::completed." );
 		return 0;
 	}
@@ -702,20 +713,19 @@ class VsdInterface implements Runnable {
 		bKillThread = false;
 
 		if( bDebug ) Log.d( "VSDroid", "run_loop()" );
-
-		if(
-			Open()			>= 0 &&
-			LoadFirmWare()	>= 0 &&
-			OpenLog()		>= 0
-		){
-			while( !bKillThread && Read() >= 0 );
+		
+		while( !bKillThread ){
+			Close(); // 開いていたら一旦 close
+			
+			if( Open() || LoadFirmWare()) continue;
+			if( fsLog == null && OpenLog()) break;
+			while( !bKillThread ) if( Read() < 0 ) break;
 		}
-
-		if( bDebug ) Log.d( "VSDroid", String.format( "run() loop extting. reason = %X", iMessage ));
+		
+		if( bDebug ) Log.d( "VSDroid", String.format( "run() loop extting." ));
 
 		Close();
 		CloseLog();
-		if( !bKillThread ) MsgHandler.sendEmptyMessage( MSG_OPEN_FAILED );;
 
 		bKillThread	= false;
 		if( bDebug ) Log.d( "VSDroid", "exit_run()" );

@@ -40,11 +40,6 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		EditIPAddr		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_ip_addr" );
 
 		Bundle extras = getIntent().getExtras();
-		if( extras != null ){
-			getPreferenceScreen().findPreference( "key_status" ).
-				setTitle( extras.getCharSequence( "Message" ));
-		}
-
 		setResult( RESULT_OK );
 
 		//////////////////////////////////////////////////////////////////////

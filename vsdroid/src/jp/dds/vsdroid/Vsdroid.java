@@ -126,7 +126,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open" );
 			// If the adapter is null, then Bluetooth is not supported
 			if( mBluetoothAdapter == null ){
-				iMessage = R.string.statmsg_bluetooth_not_available;
+				//iMessage = R.string.statmsg_bluetooth_not_available;
 				return -1;
 			}
 
@@ -143,7 +143,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			// BT の MAC アドレスを求める
 			String s = Pref.getString( "key_bt_devices", null );
 			if( s == null ){
-				iMessage = R.string.statmsg_bluetooth_device_not_selected;
+				//iMessage = R.string.statmsg_bluetooth_device_not_selected;
 				return -1;
 			}
 			device = mBluetoothAdapter.getRemoteDevice( s.substring( s.length() - 17 ));
@@ -159,7 +159,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 					BTSock = null;
 				}catch( IOException e1 ){}
 
-				iMessage = R.string.statmsg_bluetooth_server_error;
+				//iMessage = R.string.statmsg_bluetooth_server_error;
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket:Failed" );
 				return -1;
 			}
@@ -183,7 +183,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				BTSock = null;
 			}catch( IOException e ){}
 
-			iMessage = R.string.statmsg_bluetooth_connection_failed;
+			//iMessage = R.string.statmsg_bluetooth_connection_failed;
 			return -1;
 		}
 
@@ -264,7 +264,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				}
 
 			}catch( Exception e ){
-				iMessage = R.string.statmsg_emulog_open_failed;
+				//iMessage = R.string.statmsg_emulog_open_failed;
 				return -1;
 			}
 			return 0;
@@ -283,7 +283,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 			try{
 				if(( strBuf = brEmuLog.readLine()) == null ){
-					iMessage = R.string.statmsg_log_replay_finished;
+					//iMessage = R.string.statmsg_log_replay_finished;
 					return -1;
 				}
 
@@ -348,7 +348,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				if( i > 0 ) Sleep( i );
 
 			}catch( IOException e ){
-				iMessage = R.string.statmsg_log_replay_failed;
+				//iMessage = R.string.statmsg_log_replay_failed;
 				return -1;
 			}
 
@@ -376,18 +376,26 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		@Override public int LoadFirmWare(){ return 0; }
 	}
 
-	//************************************************************************
-
+	//*** 画面更新 or メッセージログ *****************************************
+	
+	private static final int MAX_MSG_LOG = 10
+	private int iMsgLog[ MAX_MSG_LOG ];
+	private int iMsgLogNum = 0;
+	private int iMsgLogPtr = 0;
+	private boolean bMsgLogShow = false;
+	
 	Handler VsdMsgHandler = new Handler(){
 		public void handleMessage( Message Msg ){
-			switch( Msg.what ){
-			  case VsdInterface.MSG_LOG_UPDATE:
-				if( VsdScreen != null ) VsdScreen.Draw();
-				break;
-
-			  case VsdInterface.MSG_OPEN_FAILED:
-				Config();
+			if( Msg.what == R.string.statmsg_update ){
+				bMsgLogShow = false;
+			}else{
+				bMsgLogShow = true;
+				iMsgLog[ iMsgLogPtr ] = Msg.what;
+				if( iMsgLogNum < MAX_MSG_LOG ) ++iMsgLogNum;
+				iMsgLogPtr = ( iMsgLogPtr + 1 ) % MAX_MSG_LOG;
 			}
+			
+			if( VsdScreen != null ) VsdScreen.Draw();
 		}
 	};
 
@@ -591,7 +599,18 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				canvas.drawText( String.format( "Gx(dev): %.2f", Vsd.iPhoneGx / 1000.0 ), 0, y += 30, paint );
 				canvas.drawText( String.format( "Gy(dev): %.2f", Vsd.iPhoneGy / 1000.0 ), 0, y += 30, paint );
 			}
-
+			
+			// メッセージログ
+			if( bMsgLogShow ){
+				paint.setTextSize( 30 );
+				
+				for( int i = 0; i < iMsgLogNum; ++i ){
+					String msg = getString[( iMsgLogPtr + i - iMsgLogNum + MAX_MSG_LOG ) % MAX_MSG_LOG ];
+					paint.setColor( msg.startsWith( "[" ) ? getColor.RED : getStColor.CYAN );
+					canvas.drawText( msg, 0, i * 30, paint );
+				}
+			}
+			
 			getHolder().unlockCanvasAndPost( canvas );
 		}
 	}
@@ -613,8 +632,6 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		ed.commit();
 
 		Intent intent = new Intent( Vsdroid.this, Preference.class );
-		intent.putExtra( "Message", getString( Vsd == null ? R.string.statmsg_normal : Vsd.iMessage ));
-
 		startActivityForResult( intent, SHOW_CONFIG );
 	}
 
