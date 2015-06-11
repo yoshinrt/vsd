@@ -57,10 +57,6 @@ class VsdInterface implements Runnable {
 
 	int		iGx, iGy;
 	int		iGx0, iGy0;
-	int		iPhoneGx;
-	int		iPhoneGy;
-	int		iPhoneGx0;
-	int		iPhoneGy0;
 	int		iThrottle;
 	int		iThrottleRaw;
 	int		iThrottle0;
@@ -75,10 +71,6 @@ class VsdInterface implements Runnable {
 	int 	iLapNum			= 0;
 	int 	iTimeLastRaw	= 0;
 	int 	iTimeBestRaw	= 0;
-
-	// G センサー用
-	int	iPhoneGxRaw = 0;
-	int	iPhoneGyRaw = 0;
 
 	private static final int iBufSize = 256;
 
@@ -169,8 +161,6 @@ class VsdInterface implements Runnable {
 
 		iGx0 = iGy0		= 0;
 		iGCaribCnt		= iGCaribCntMax;
-		iPhoneGx0		= 0;
-		iPhoneGy0		= 0;
 
 		InStream		= null;
 		OutStream		= null;
@@ -330,15 +320,11 @@ class VsdInterface implements Runnable {
 					// センサーキャリブレーション中
 					iGx0		+= iGx;
 					iGy0		+= iGy;
-					iPhoneGx0	+= iPhoneGxRaw;
-					iPhoneGy0	+= iPhoneGyRaw;
 					iThrottle0	+= iThrottleRaw;
 
 					if( iGCaribCnt == 0 ){
 						iGx0		/= iGCaribCntMax;
 						iGy0		/= iGCaribCntMax;
-						iPhoneGx0	/= iGCaribCntMax;
-						iPhoneGy0	/= iGCaribCntMax;
 						iThrottle0	/= iGCaribCntMax;
 
 						iThrottleFull = iThrottle0 - 10000;	// スロットル全開の暫定値
@@ -346,14 +332,10 @@ class VsdInterface implements Runnable {
 
 					iGx			= 0;
 					iGy			= 0;
-					iPhoneGx	= 0;
-					iPhoneGy	= 0;
 					iThrottle	= 0;
 				}else{
 					iGx			= iGx - iGx0;
 					iGy			= iGy - iGy0;
-					iPhoneGx	= iPhoneGxRaw - iPhoneGx0;
-					iPhoneGy	= iPhoneGyRaw - iPhoneGy0;
 
 					// スロットル全開値補正
 					if( iThrottleRaw < iThrottleFull ){
@@ -459,7 +441,7 @@ class VsdInterface implements Runnable {
 			"%04d-%02d-%02d" +
 			"T%02d:%02d:%02d.%03dZ\t" +
 			"%d\t%.2f\t%.2f\t" +
-			"%.3f\t%.3f\t%.3f\t%.3f\t" +
+			"%.3f\t%.3f\t" +
 			"%.1f\t%d\t%d",
 			Cal.get( Calendar.YEAR ),
 			Cal.get( Calendar.MONTH ) + 1,
@@ -470,7 +452,7 @@ class VsdInterface implements Runnable {
 			Cal.get( Calendar.MILLISECOND ),
 			iTacho, iSpeedRaw / 100.0,
 			iMileageRaw * ( 1000 / PULSE_PER_1KM ),
-			iGy / 4096.0, iGx / 4096.0, iPhoneGx / 1000.0, iPhoneGy / 1000.0,
+			iGy / 4096.0, iGx / 4096.0,
 			iThrottle / 10.0, iThrottleRaw,
 			iIRCnt
 		);

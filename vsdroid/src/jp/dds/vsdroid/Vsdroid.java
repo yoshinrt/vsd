@@ -39,7 +39,7 @@ import java.util.*;
 import jp.dds.vsdroid.VsdInterface;
 
 @SuppressLint("DefaultLocale")
-public class Vsdroid extends Activity implements SensorEventListener {
+public class Vsdroid extends Activity {
 
 	static final boolean	bDebug		= BuildConfig.DEBUG;
 
@@ -52,8 +52,6 @@ public class Vsdroid extends Activity implements SensorEventListener {
 	private static final int SHOW_CONFIG		= 0;
 	private static final int REQUEST_ENABLE_BT	= 1;
 
-	private static final double GRAVITY = 9.80665;
-
 	// VSD コミュニケーション
 	VsdInterface Vsd = null;
 
@@ -61,9 +59,6 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 	// config
 	SharedPreferences Pref;
-
-	// G センサー用
-	private SensorManager manager;
 
 	// カメラ
 	Camera Cam = null;
@@ -683,10 +678,8 @@ public class Vsdroid extends Activity implements SensorEventListener {
 					canvas.drawText( String.format( "Throttle(full): %d", Vsd.iThrottleFull ), 0, y += 30, paint );
 					canvas.drawText( String.format( "Throttle(cm): %.2f", ( Vsd.iThrottleRaw / ( double )0x7FFFFFFF - 7.5395E-06 ) / 2.5928E-06 ), 0, y += 30, paint );
 					canvas.drawText( String.format( "Throttle(%%): %.1f", Vsd.iThrottle / 10.0 ), 0, y += 30, paint );
-					canvas.drawText( String.format( "Gx: %.2f", Vsd.iGx / 1000.0 ), 0, y += 30, paint );
-					canvas.drawText( String.format( "Gy: %.2f", Vsd.iGy / 1000.0 ), 0, y += 30, paint );
-					canvas.drawText( String.format( "Gx(dev): %.2f", Vsd.iPhoneGx / 1000.0 ), 0, y += 30, paint );
-					canvas.drawText( String.format( "Gy(dev): %.2f", Vsd.iPhoneGy / 1000.0 ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Gx: %.2f", Vsd.iGx / 4096.0 ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Gy: %.2f", Vsd.iGy / 4096.0 ), 0, y += 30, paint );
 				}
 			}
 			
@@ -807,7 +800,6 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		getWindow().addFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
 
 		setContentView( new VsdSurfaceView( this ));
-		manager = ( SensorManager )getSystemService( SENSOR_SERVICE );
 
 		// preference 参照
 		Pref = PreferenceManager.getDefaultSharedPreferences( this );
@@ -825,13 +817,6 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		if( bDebug ) Log.d( "VSDroid", "onResume" );
 
 		super.onResume();
-		// Listenerの登録
-		if( manager != null ){
-			manager.registerListener( this,
-				manager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER ),
-				SensorManager.SENSOR_DELAY_UI
-			);
-		}
 
 		// カメラ (フラッシュ) オープン
 		if( Cam == null && ( Cam = Camera.open()) != null ){
@@ -844,23 +829,10 @@ public class Vsdroid extends Activity implements SensorEventListener {
 	protected void onStop() {
 		if( bDebug ) Log.d( "VSDroid", "onStop" );
 		super.onStop();
-		// Listenerの登録解除
-		if( manager != null ){
-			manager.unregisterListener( this );
-			manager = null;
-		}
 
 		SetFlash( FLASH_STATE.OFF );
 		if( Cam != null ) Cam.release();
 		Cam = null;
-	}
-
-	@Override
-	public void onSensorChanged( SensorEvent event ){
-		if( Vsd != null && event.sensor.getType() == Sensor.TYPE_ACCELEROMETER ){
-			Vsd.iPhoneGxRaw = ( int )( -event.values[ SensorManager.DATA_Y ] * ( 1000 / GRAVITY ));
-			Vsd.iPhoneGyRaw = ( int )( -event.values[ SensorManager.DATA_Z ] * ( 1000 / GRAVITY ));
-		}
 	}
 
 	void CreateVsdInterface(){
@@ -904,7 +876,4 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		Vsd.KillThread();
 		if( bDebug ) Log.d( "VSDroid", "Activity::onDestroy finished" );
 	}
-
-	@Override
-	public void onAccuracyChanged(Sensor arg0, int arg1) {}
 }
