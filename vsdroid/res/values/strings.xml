@@ -37,13 +37,16 @@
 	<string name="statmsg_loadfw_timeout">[E] FW: タイムアウト</string>
 	<string name="statmsg_loadfw_ioerror">[E] FW: IO エラー</string>
 	<string name="statmsg_loadfw_senderror">[E] FW: コード送信中のエラー</string>
+	<string name="statmsg_bluetooth_connecting">Bluetooth: 接続中</string>
+	<string name="statmsg_bluetooth_connected">Bluetooth: 接続完了</string>
+	<string name="statmsg_bluetooth_timeout">[E] Bluetooth: タイムアウト</string>
+	<string name="statmsg_bluetooth_ioerror">[E] Bluetooth: IO エラー</string>
+	<string name="statmsg_bluetooth_server_error">[E] Bluetooth: サーバソケット作成失敗</string>
+	<string name="statmsg_bluetooth_na">[E] Bluetooth: BT が無効</string>
+	<string name="statmsg_bluetooth_dev_not_selected">[E] Bluetooth: デバイスが選択されていません</string>
 	<string name="statmsg_mklog_failed">[E] ログファイル作成失敗</string>
 	<string name="statmsg_read_disconnected">[E] VSD との接続切断</string>
-	<string name="statmsg_emulog_open_failed">vsd/vsd.logが見つかりません</string>
-	<string name="statmsg_log_replay_failed">ログ再生中にエラー発生</string>
-	<string name="statmsg_log_replay_finished">ログ再生終了</string>
-	<string name="statmsg_bluetooth_not_available">Bluetooth が無効です</string>
-	<string name="statmsg_bluetooth_server_error">Bluetooth サーバーエラー</string>
-	<string name="statmsg_bluetooth_device_not_selected">Bluetoothデバイスを選択して下さい</string>
-	<string name="statmsg_bluetooth_connection_failed">Bluetooth接続エラー</string>
+	<string name="statmsg_emulog_finished">ログ再生終了</string>
+	<string name="statmsg_emulog_open_failed">[E] 再生ログが見つかりません</string>
+	<string name="statmsg_emulog_failed">[E] ログ再生中にエラー発生</string>
 </resources>

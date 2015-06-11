@@ -116,7 +116,10 @@ class VsdInterface implements Runnable {
 		UPDATE,
 		SECTOR,
 	};
-
+	
+	static final int ERROR			= -1;
+	static final int FATAL_ERROR	= -2;
+	
 	//*** utils **************************************************************
 
 	void Sleep( int ms ){
@@ -224,7 +227,7 @@ class VsdInterface implements Runnable {
 			fsBinLog = new BufferedOutputStream( new FileOutputStream( s + ".bin" ));
 		}catch( Exception e ){
 			MsgHandler.sendEmptyMessage( R.string.statmsg_mklog_failed );
-			return -1;
+			return FATAL_ERROR;
 		}
 
 		// ヘッダ
@@ -243,33 +246,30 @@ class VsdInterface implements Runnable {
 		if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open" );
 
 		MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_connecting );
-		while( !bKillThread ){
-			try{
-				// ソケットの作成
-				Sock = new Socket();
-				SocketAddress adr = new InetSocketAddress( Pref.getString( "key_ip_addr", null ), 12345 );
-				Sock.connect( adr, 1000 );
-				if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:connected" );
-				InStream	= Sock.getInputStream();
-				OutStream	= Sock.getOutputStream();
-				MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_connected );
-				return 0;
-			}catch( SocketTimeoutException e ){
-				if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:timeout" );
-				MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_timeout );
-			}catch( IOException e ){
-				if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:IOException" );
-				MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_IOerror );
-			}
-
-			if( Sock != null ) try{
-				Sock.close();
-				Sock = null;
-			}catch( IOException e ){}
-
-			Sleep( 1000 );
+		try{
+			// ソケットの作成
+			Sock = new Socket();
+			SocketAddress adr = new InetSocketAddress( Pref.getString( "key_ip_addr", null ), 12345 );
+			Sock.connect( adr, 1000 );
+			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:connected" );
+			InStream	= Sock.getInputStream();
+			OutStream	= Sock.getOutputStream();
+			MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_connected );
+			return 0;
+		}catch( SocketTimeoutException e ){
+			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:timeout" );
+			MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_timeout );
+		}catch( IOException e ){
+			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:IOException" );
+			MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_IOerror );
 		}
-		return -1;
+
+		if( Sock != null ) try{
+			Sock.close();
+			Sock = null;
+		}catch( IOException e ){}
+		
+		return ERROR;
 	}
 
 	public int RawRead( int iStart, int iLen ){
@@ -278,12 +278,12 @@ class VsdInterface implements Runnable {
 		try{
 			iReadSize = InStream.read( Buf, iStart, iLen );
 		}catch( IOException e ){
-			return -1;
+			return ERROR;
 		}
 		return iReadSize;
 	}
 
-	// 1 <= :受信したレコード数  0:新データなし -1:エラー
+	// 1 <= :受信したレコード数  0:新データなし 0>:エラー
 	public int Read(){
 		int	iReadSize;
 		int	iMileage16;
@@ -296,7 +296,7 @@ class VsdInterface implements Runnable {
 		iReadSize = RawRead( iBufLen, iBufSize - iBufLen );
 		if( iReadSize < 0 ){
 			MsgHandler.sendEmptyMessage( R.string.statmsg_read_disconnected );
-			return -1;
+			return iReadSize;
 		}
 
 		try{
@@ -554,7 +554,7 @@ class VsdInterface implements Runnable {
 				Sleep( 30 );
 			}
 		}
-		return -1;
+		return ERROR;
 	}
 
 	//*** FW ロード ******************************************************
@@ -637,12 +637,12 @@ class VsdInterface implements Runnable {
 				// タイムアウト
 				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_timeout );
 				// ★再試行すべき
-				return -1;
+				return ERROR;
 			}
 		}catch( IOException e ){
 			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_ioerror );
 			// ★再試行すべき
-			return -1;
+			return ERROR;
 		}
 
 		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_loaded );
@@ -711,13 +711,18 @@ class VsdInterface implements Runnable {
 
 	public void run(){
 		bKillThread = false;
+		int iRet;
 
 		if( bDebug ) Log.d( "VSDroid", "run_loop()" );
 		
 		while( !bKillThread ){
 			Close(); // 開いていたら一旦 close
 			
-			if( Open() || LoadFirmWare()) continue;
+			if(( iRet = Open()) || ( iRet == LoadFirmWare())){
+				if( iRet == FATAL_ERROR ) break;
+				Sleep( 1000 );
+				continue;
+			}
 			if( fsLog == null && OpenLog()) break;
 			while( !bKillThread ) if( Read() < 0 ) break;
 		}

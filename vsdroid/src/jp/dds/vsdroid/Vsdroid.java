@@ -126,8 +126,8 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open" );
 			// If the adapter is null, then Bluetooth is not supported
 			if( mBluetoothAdapter == null ){
-				//iMessage = R.string.statmsg_bluetooth_not_available;
-				return -1;
+				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_na );
+				return FATAL_ERROR;
 			}
 
 			// BT ON でなければエラーで帰るが，
@@ -137,17 +137,18 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				Intent enableIntent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE );
 				startActivityForResult( enableIntent, REQUEST_ENABLE_BT );
 				bKillThread = true;
-				return -1;
+				return ERROR;
 			}
 
 			// BT の MAC アドレスを求める
 			String s = Pref.getString( "key_bt_devices", null );
 			if( s == null ){
-				//iMessage = R.string.statmsg_bluetooth_device_not_selected;
-				return -1;
+				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_dev_not_selected );
+				return FATAL_ERROR;
 			}
 			device = mBluetoothAdapter.getRemoteDevice( s.substring( s.length() - 17 ));
 
+			MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_connecting );
 			// Get a BluetoothSocket for a connection with the
 			// given BluetoothDevice
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket" );
@@ -159,9 +160,9 @@ public class Vsdroid extends Activity implements SensorEventListener {
 					BTSock = null;
 				}catch( IOException e1 ){}
 
-				//iMessage = R.string.statmsg_bluetooth_server_error;
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket:Failed" );
-				return -1;
+				MsgHandler.sendEmptyMessage( statmsg_bluetooth_server_error );
+				return ERROR;
 			}
 
 			try{
@@ -171,11 +172,14 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				InStream	= BTSock.getInputStream();
 				OutStream	= BTSock.getOutputStream();
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connected" );
+				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_connected );
 				return 0;
 			}catch( SocketTimeoutException e ){
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:timeout" );
+				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_timeout );
 			}catch( IOException e ){
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:IOException" );
+				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_ioerror );
 			}
 
 			if( BTSock != null ) try{
@@ -183,8 +187,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				BTSock = null;
 			}catch( IOException e ){}
 
-			//iMessage = R.string.statmsg_bluetooth_connection_failed;
-			return -1;
+			return ERROR;
 		}
 
 		@Override
@@ -264,7 +267,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				}
 
 			}catch( Exception e ){
-				//iMessage = R.string.statmsg_emulog_open_failed;
+				MsgHandler.sendEmptyMessage( R.string.statmsg_emulog_open_failed );
 				return -1;
 			}
 			return 0;
@@ -283,8 +286,8 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 			try{
 				if(( strBuf = brEmuLog.readLine()) == null ){
-					//iMessage = R.string.statmsg_log_replay_finished;
-					return -1;
+					MsgHandler.sendEmptyMessage( R.string.statmsg_emulog_finished );
+					return ERROR;
 				}
 
 				StringTokenizer Token = new StringTokenizer( strBuf );
@@ -348,8 +351,8 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				if( i > 0 ) Sleep( i );
 
 			}catch( IOException e ){
-				//iMessage = R.string.statmsg_log_replay_failed;
-				return -1;
+				MsgHandler.sendEmptyMessage( R.string.statmsg_emulog_failed );
+				return FATAL_ERROR;
 			}
 
 			// EOL 追加
@@ -606,7 +609,11 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				
 				for( int i = 0; i < iMsgLogNum; ++i ){
 					String msg = getString[( iMsgLogPtr + i - iMsgLogNum + MAX_MSG_LOG ) % MAX_MSG_LOG ];
-					paint.setColor( msg.startsWith( "[" ) ? getColor.RED : getStColor.CYAN );
+					paint.setColor(
+						msg.startsWith( "[E" ) ? getColor.RED :
+						msg.startsWith( "[W" ) ? getColor.YELLOW :
+												 getColor.WHITE
+					);
 					canvas.drawText( msg, 0, i * 30, paint );
 				}
 			}
@@ -682,7 +689,6 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			break;
 
 		  case KeyEvent.KEYCODE_MENU:
-			// Vsd.iMessage = R.string.statmsg_normal;
 			Config();
 			break;
 
@@ -763,7 +769,9 @@ public class Vsdroid extends Activity implements SensorEventListener {
 	void CreateVsdInterface(){
 		// VsdInterface が動いている時に呼び出されたらおかしい
 		if( bDebug ) assert !Vsd.VsdThread.isAlive();
-
+		
+		iMsgLogNum = 0;
+		
 		// VSD コネクション
 		int iMode = Integer.parseInt( Pref.getString( "key_connection_mode", "0" ));
 		switch( iMode ){
