@@ -40,10 +40,6 @@ class VsdInterface implements Runnable {
 	// たぶん，ホイル一周が30パルス
 	static final double PULSE_PER_1KM	= 15473.76689;	// ELISE(CE28N)
 
-	//static final double ACC_1G_X	= 6762.594337;
-	static final double ACC_1G_Y	= 6667.738702;
-	static final double ACC_1G_Z	= 6842.591839;
-
 	SharedPreferences Pref;
 	Thread VsdThread = null;
 
@@ -103,7 +99,7 @@ class VsdInterface implements Runnable {
 
 	Handler	MsgHandler	= null;
 
-	private static final int iStartGThrethold		= 500;
+	private static final int iStartGThrethold		= 1024;	// 0.25G
 	private static final int iGCaribCntMax			= 30;
 
 	static final int CONN_MODE_ETHER		= 0;
@@ -326,8 +322,8 @@ class VsdInterface implements Runnable {
 				iIRCnt		= iTSCRaw;
 				iTSCRaw		>>= 8;
 
-				iGy			= ( int )( Unpack() * ( 1000 / ACC_1G_Y / 0.86054332 ));	// 斜めに設置しているので補正
-				iGx			= ( int )( Unpack() * ( 1000 / ACC_1G_Z ));
+				iGy			= Unpack();
+				iGx			= Unpack();
 				iThrottleRaw	= 0x7FFFFFFF / Unpack();
 
 				if( iGCaribCnt-- > 0 ){
@@ -472,9 +468,9 @@ class VsdInterface implements Runnable {
 			Cal.get( Calendar.MINUTE ),
 			Cal.get( Calendar.SECOND ),
 			Cal.get( Calendar.MILLISECOND ),
-			iTacho, ( double )iSpeedRaw / 100,
-			( double )iMileageRaw / PULSE_PER_1KM * 1000,
-			iGy / 1000.0, iGx / 1000.0, iPhoneGx / 1000.0, iPhoneGy / 1000.0,
+			iTacho, iSpeedRaw / 100.0,
+			iMileageRaw * ( 1000 / PULSE_PER_1KM ),
+			iGy / 4096.0, iGx / 4096.0, iPhoneGx / 1000.0, iPhoneGy / 1000.0,
 			iThrottle / 10.0, iThrottleRaw,
 			iIRCnt
 		);

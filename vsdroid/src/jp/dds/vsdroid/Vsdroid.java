@@ -305,8 +305,8 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				iIdx = Pack( iIdx, 0 );
 
 				// G
-				iIdx = Pack( iIdx, iIdxGy < iTokCnt ? ( int )( -Double.parseDouble( strToken[ iIdxGy ] ) * ACC_1G_Y ) + 32000 : 0 );
-				iIdx = Pack( iIdx, iIdxGx < iTokCnt ? ( int )(  Double.parseDouble( strToken[ iIdxGx ] ) * ACC_1G_Z ) + 32000 : 0 );
+				iIdx = Pack( iIdx, iIdxGy < iTokCnt ? ( int )( -Double.parseDouble( strToken[ iIdxGy ] ) * 4096 ) + 0x8000 : 0 );
+				iIdx = Pack( iIdx, iIdxGx < iTokCnt ? ( int )(  Double.parseDouble( strToken[ iIdxGx ] ) * 4096 ) + 0x8000 : 0 );
 
 				// Throttle
 				iIdx = Pack( iIdx, iIdxThrottle < iTokCnt ? Integer.parseInt( strToken[ iIdxThrottle ] ) : 0x8000 );
