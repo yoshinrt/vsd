@@ -13,8 +13,6 @@
 #define BUF_SIZE	1024
 char szBuf[ BUF_SIZE ];
 
-#define max( a, b ) (( a ) > ( b ) ? ( a ) : ( b ))
-
 //#define DEBUG
 
 #ifdef DEBUG
@@ -22,6 +20,10 @@ char szBuf[ BUF_SIZE ];
 #else
 	#define DebugMsg( fmt, ... )
 #endif
+
+static inline max( int a, int b ){
+	return a > b ? a : b;
+}
 
 /*** xfer *******************************************************************/
 
@@ -76,7 +78,7 @@ int main( int argc, char **argv ){
 	struct sockaddr_in addr, client;
 	int iLen;
 	int i;
-	fd_set rfds;
+	fd_set rfds, rfds_tmp;
 	struct termios ioOld, ioNew;
 	
 	int	iBaud = B9600;
@@ -123,7 +125,7 @@ int main( int argc, char **argv ){
 		return 1;
 	}
 	
-	if( listen( fdSockListen, 5 ) != 0 ){
+	if( listen( fdSockListen, 3 ) != 0 ){
 		perror( "listen" );
 		return 1;
 	}
@@ -146,7 +148,7 @@ int main( int argc, char **argv ){
 			return 1;
 		}
 		
-		tcgetattr( fdSeri, &ioOld ); /* 現在のポート設定を待避 */
+		//tcgetattr( fdSeri, &ioOld ); /* 現在のポート設定を待避 */
 		
 		bzero( &ioNew, sizeof( ioNew ));
 		ioNew.c_cflag = iBaud | CS8 | CLOCAL | CREAD;
@@ -163,25 +165,34 @@ int main( int argc, char **argv ){
 		DebugMsg( "tcsetattr:%d\n", i );
 		
 		// データが尽きるまでループ
+		int fdMax = max( max( fdSock, fdSeri ), fdSockListen ) + 1;
+		FD_ZERO( &rfds );
+		FD_SET( fdSock, &rfds );
+		FD_SET( fdSeri, &rfds );
+		FD_SET( fdSockListen, &rfds );
+		
 		while( 1 ){
-			
 			// リード fdSeri コレクション
-			FD_ZERO( &rfds );
-			FD_SET( fdSock, &rfds );
-			FD_SET( fdSeri, &rfds );
-			i = select( max( fdSock, fdSeri ) + 1, &rfds, NULL, NULL, NULL );
+			rfds_tmp = rfds;
+			i = select( fdMax, &rfds_tmp, NULL, NULL, NULL );
 			
 			if( i < 0 ){
 				perror( "select" );
-				goto EndSession;
+				break;
 			}
 			DebugMsg( "sel_exit%d\n", i );
 			
-			if( FD_ISSET( fdSock, &rfds ) && Repeater( fdSeri, fdSock ) <= 0 ) break;
-			if( FD_ISSET( fdSeri, &rfds ) && Repeater( fdSock, fdSeri ) <= 0 ) break;
+			// リッスンソケットに接続があったら，現接続は切断
+			if( FD_ISSET( fdSockListen, &rfds_tmp )){
+				DebugMsg( "new connection\n" );
+				break;
+			}
+			
+			// データをリピートする
+			if( FD_ISSET( fdSock, &rfds_tmp ) && Repeater( fdSeri, fdSock ) <= 0 ) break;
+			if( FD_ISSET( fdSeri, &rfds_tmp ) && Repeater( fdSock, fdSeri ) <= 0 ) break;
 		}
 		
-	  EndSession:
 		DebugMsg( "end session\n" );
 		//tcsetattr( fdSeri, TCSANOW, &ioOld );
 		close( fdSeri );

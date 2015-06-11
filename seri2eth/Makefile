@@ -1,6 +1,6 @@
 #.tab=4
 
-XToolRoot	= /home/yoshi/fon_develo/8.09/staging_dir/toolchain-mips_gcc4.1.2/bin
+XToolRoot	= /home/yoshi/8.09/staging_dir/toolchain-mips_gcc4.1.2/bin
 XTool		= PATH=$PATH:$(XToolRoot) mips-linux-uclibc-
 
 all: seri2eth
