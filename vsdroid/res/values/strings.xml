@@ -30,7 +30,7 @@
 	<string name="statmsg_tcpip_ioerror">[E] TCP/IP: IO エラー</string>
 	<string name="statmsg_loadfw_loading">FW: ロード中</string>
 	<string name="statmsg_loadfw_loaded">FW: ロード完了</string>
-	<string name="statmsg_loadfw_none">FW: 指定された FW はありません</string>
+	<string name="statmsg_loadfw_none">[W] FW: 指定された FW はありません</string>
 	<string name="statmsg_loadfw_magic">FW: マジック送信</string>
 	<string name="statmsg_loadfw_wait">FW: VSD からの通信待機中</string>
 	<string name="statmsg_loadfw_sending">FW: コード送信中</string>
