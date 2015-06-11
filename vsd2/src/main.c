@@ -84,7 +84,7 @@ __noreturn void LoadSRecordSub( void ){
 	
 	// ':' ‚Í vsdroid ‘¤‚Ì‚½‚ß‚É•K—v
 	UsartPutstrUnbuffered( "starting program:::\n" );
-	JumpTo( *( u32 *)0x20000004, *( u32 *)0x08003000 );
+	JumpTo( GetHex( 5 ), INIT_SP );
 }
 
 __noreturn void LoadSRecord( void ){
@@ -111,7 +111,7 @@ __noreturn void LoadBinSub( void ){
 	}
 	
 	UsartPutstrUnbuffered( "starting program:::\n" );
-	JumpTo( *( u32 *)0x20000004, *( u32 *)0x08003000 );
+	JumpTo( *( u32 *)SRAM_TOP, INIT_SP );
 }
 
 __noreturn void LoadBin( void ){

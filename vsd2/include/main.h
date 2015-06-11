@@ -26,6 +26,7 @@
 
 #define SRAM_TOP	0x20000000
 #define SRAM_END	0x20005000
+#define INIT_SP		( *( u32 *)0x08003000 )
 
 // AD 変換機レジスタ
 #define	G_SENSOR_X		ADC_GetInjectedConversionValue( ADC1, ADC_InjectedChannel_1 )

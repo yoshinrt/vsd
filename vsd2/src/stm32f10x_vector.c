@@ -53,7 +53,7 @@ void __iar_program_start( void );
 // エントリアドレスのみが有効なダミーのベクタテーブル
 const intvec_elem __vector_table[] =
 {
-	0,
+	__iar_program_start,
 	__iar_program_start,
 };
 #else
