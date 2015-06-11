@@ -10,6 +10,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff.Mode;
+import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -41,7 +44,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 	static final boolean	bDebug		= BuildConfig.DEBUG;
 
 	// シフトインジケータの表示
-	private static final int iTachoBar[] = { 1336, 800, 600, 472, 388 };
+	private static final int iTachoBarList[] = { 1336, 800, 600, 472, 388 };
 	private static final int iRevLimit = 6500;
 
 	private static final UUID BT_UUID = UUID.fromString( "00001101-0000-1000-8000-00805F9B34FB" );
@@ -67,6 +70,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 	Camera.Parameters CamParam;
 	boolean	bRevWarn		= false;
 	boolean	bEcoMode		= false;
+	boolean	bDebugInfo		= false;
 
 	enum FLASH_STATE {
 		OFF,
@@ -157,7 +161,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				}catch( IOException e1 ){}
 
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket:Failed" );
-				MsgHandler.sendEmptyMessage( statmsg_bluetooth_server_error );
+				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_server_error );
 				return ERROR;
 			}
 
@@ -377,8 +381,8 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 	//*** 画面更新 or メッセージログ *****************************************
 	
-	private static final int MAX_MSG_LOG = 10
-	private int iMsgLog[ MAX_MSG_LOG ];
+	private static final int MAX_MSG_LOG = 15;
+	private int iMsgLog[] = new int[ MAX_MSG_LOG ];
 	private int iMsgLogNum = 0;
 	private int iMsgLogPtr = 0;
 	private boolean bMsgLogShow = false;
@@ -423,13 +427,6 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			// Paint 取得・初期設定
 			paint = new Paint();
 			//paint.setAntiAlias( true );
-
-			bitmap = new Bitmap[ 5 ];
-			bitmap[ 0 ] = BitmapFactory.decodeResource( getContext().getResources(), R.drawable.meter0 );
-			bitmap[ 1 ] = BitmapFactory.decodeResource( getContext().getResources(), R.drawable.meter1 );
-			bitmap[ 2 ] = BitmapFactory.decodeResource( getContext().getResources(), R.drawable.meter2 );
-			bitmap[ 3 ] = BitmapFactory.decodeResource( getContext().getResources(), R.drawable.meter3 );
-			bitmap[ 4 ] = BitmapFactory.decodeResource( getContext().getResources(), R.drawable.meter4 );
 		}
 
 		@Override
@@ -453,15 +450,9 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				fScale = fScaleY;
 				fOffsX = ( getWidth()  - BASE_WIDTH  * fScale ) / 2 * fScale;
 			}
-
+			
 			try{
-				Canvas canvas = getHolder().lockCanvas();
-				if( bDebug ) assert canvas != null;
-				canvas.translate( fOffsX / fScale, fOffsY / fScale );
-				canvas.scale( fScale, fScale );
-
-				canvas.drawBitmap( bitmap[ 0 ], 0, 0, null );
-				getHolder().unlockCanvasAndPost( canvas );
+				Draw();
 			}catch( Exception e ){
 				if( bDebug ) Log.d( "VSDroid", "surfaceCreated::LockCanvas failed" );
 			}
@@ -480,17 +471,17 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		private static final int iMeterR 			= 265;	// メータ目盛り円弧半径
 		private static final float fMeterScaleW		= ( int )( iMeterR * 0.256 );	// メータ目盛り円弧幅
 		private static final float fMeterNeedleR	= ( float )( iMeterR * 1.1 );	// 針
-		private static final float fMeterLineR1		= ( float )( iMeterR * ( 1 + 0.02 ) + fMeterScaleW * 0.5 );	// 目盛り線
-		private static final float fMeterLineR2		= ( float )( iMeterR *              + fMeterScaleW * 0.5 );	// 目盛り線
-		private static final float fMeterLineR3		= ( float )( iMeterR * ( 1 - 0.02 ) + fMeterScaleW * 0.5 );	// 目盛り線
-		private static final float fMeterLineR4		= ( float )( iMeterR *              - fMeterScaleW * 0.1 );	// 目盛り線
+		private static final float fMeterLineR1		= ( float )( iMeterR * ( 1 + 0.025 ) + fMeterScaleW * 0.5 );	// 目盛り線
+		private static final float fMeterLineR2		= ( float )( iMeterR                 + fMeterScaleW * 0.5 );	// 目盛り線
+		private static final float fMeterLineR3		= ( float )( iMeterR * ( 1 - 0.025 ) + fMeterScaleW * 0.5 );	// 目盛り線
+		private static final float fMeterLineR4		= ( float )( iMeterR                 - fMeterScaleW * 0.1 );	// 目盛り線
 		private static final float fMeterRedZoneW	= ( int )( iMeterR * 0.06 );	// レッドゾーン円弧幅
-		private static final float fMeterRedZoneR	= ( float )( fMeterLineR2 - iMeterRedZone * 0.5 );	// レッドゾーン円弧幅
-		private static final int iMeterFontSize		= 30;	// メータ目盛り数値サイズ
+		private static final float fMeterRedZoneR	= ( float )( fMeterLineR2 - fMeterRedZoneW * 0.5 );	// レッドゾーン円弧幅
+		private static final int iMeterFontSize		= 44;	// メータ目盛り数値サイズ
 		private static final int iStartAngle		= 150;	// 開始角
 		private static final int iSweepAngle		= 240;	// 範囲角
-		private static final int iMeterRevMax		= 7;	// タコメータ最大値
-		private static final int iRedZoneSweepAngle = ( int )(( 1 - iRevLimit / iMeterRevMax * 1000.0 ) * iSweepAngle );
+		private static final int iMeterMaxRev		= 7;	// タコメータ最大値
+		private static final int iRedZoneSweepAngle = ( int )(( 1 - iRevLimit / ( iMeterMaxRev * 1000.0 )) * iSweepAngle );
 		private static final int iRedZoneStartAngle = iStartAngle + iSweepAngle - iRedZoneSweepAngle;
 		private static final int iGearLeft			= 669;
 		private static final int iGearTop			= 13;
@@ -506,17 +497,19 @@ public class Vsdroid extends Activity implements SensorEventListener {
 		int iTachoBar	= 0;
 		
 		private void Draw(){
-
+			RectF rectf;
+			String s;
+			int	iGear = 1;
+			
 			Canvas canvas = getHolder().lockCanvas();
 			canvas.translate( fOffsX / fScale, fOffsY / fScale );
 			canvas.scale( fScale, fScale );
-
+			
 			if( Vsd != null ){
 				iTacho = bEcoMode ? Vsd.iTacho * 2 : Vsd.iTacho;
 				
 				// ギアを求める
 				double dGearRatio = ( double )Vsd.iSpeedRaw / Vsd.iTacho;
-				int	iGear;
 				if( Vsd.iTacho == 0 )							 iGear = 1;
 				else if( dGearRatio < VsdInterface.GEAR_RATIO1 ) iGear = 1;
 				else if( dGearRatio < VsdInterface.GEAR_RATIO2 ) iGear = 2;
@@ -529,7 +522,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 					iTachoBar = iSweepAngle / 2;
 				}else{
 					// LED の表示 LV を求める
-					iTachoBar = ( iTacho - iRevLimit + iTachoBar[ iGear - 1 ]) * ( iSweepAngle / 2 ) / iTachoBar[ iGear - 1 ];
+					iTachoBar = ( iTacho - iRevLimit + iTachoBarList[ iGear - 1 ]) * ( iSweepAngle / 2 ) / iTachoBarList[ iGear - 1 ];
 					
 					if( iTachoBar < 0 ){
 						iTachoBar = 0;
@@ -541,101 +534,100 @@ public class Vsdroid extends Activity implements SensorEventListener {
 			}
 			
 			// フラッシュライト
-			SetFlash( iBarLv > 0 ? FLASH_STATE.ON : FLASH_STATE.OFF );
+			SetFlash( iTachoBar > 0 ? FLASH_STATE.ON : FLASH_STATE.OFF );
 			
 			// メーターパネル
-			//canvas.drawBitmap( bitmap[ iBarLv ], 0, 0, null );
+			paint.setTypeface( Typeface.DEFAULT_BOLD );
 			canvas.drawColor( 0, Mode.CLEAR );
 			
 			// メーター目盛り円弧
 			paint.setStyle( Paint.Style.STROKE );
 			paint.setStrokeWidth( fMeterScaleW );
 			paint.setColor( COLOR_PURPLE );
-			canvas.drawArc(
+			
+			rectf = new RectF(
 				iMeterCx - iMeterR, iMeterCy - iMeterR,
-				iMeterCx + iMeterR, iMeterCy + iMeterR,
-				iStartAngle, iSweepAngle, false, paint
+				iMeterCx + iMeterR, iMeterCy + iMeterR
 			);
+			canvas.drawArc( rectf, iStartAngle, iSweepAngle, false, paint );
 			
 			// タコバー描画
 			if( iTachoBar > 0 ){
 				paint.setColor( Color.CYAN );
-				canvas.drawArc(
+				rectf = new RectF(
 					iMeterCx - iMeterR, iMeterCy - iMeterR,
-					iMeterCx + iMeterR, iMeterCy + iMeterR,
-					iStartAngle, iTachoBar, false, paint
+					iMeterCx + iMeterR, iMeterCy + iMeterR
 				);
-				canvas.drawArc(
-					iMeterCx - iMeterR, iMeterCy - iMeterR,
-					iMeterCx + iMeterR, iMeterCy + iMeterR,
-					iStartAngle + iSweepAngle - iTachoBar, iTachoBar, false, paint
-				);
+				canvas.drawArc( rectf, iStartAngle, iTachoBar, false, paint );
+				canvas.drawArc( rectf, iStartAngle + iSweepAngle - iTachoBar, iTachoBar, false, paint );
 			}
 			
 			// レッドゾーン円弧
 			paint.setStrokeWidth( fMeterRedZoneW );
 			paint.setColor( COLOR_ORANGE );
-			canvas.drawArc(
+			rectf = new RectF(
 				iMeterCx - fMeterRedZoneR, iMeterCy - fMeterRedZoneR,
-				iMeterCx + fMeterRedZoneR, iMeterCy + fMeterRedZoneR,
-				iRedZoneStartAngle, iRedZoneSweepAngle, false, paint
+				iMeterCx + fMeterRedZoneR, iMeterCy + fMeterRedZoneR
 			);
+			canvas.drawArc( rectf, iRedZoneStartAngle, iRedZoneSweepAngle, false, paint );
 			
 			// 目盛線・数値
-			paint.setStrokeWidth( 10 );
+			paint.setStrokeWidth( 6 );
 			paint.setColor( Color.WHITE );
 			paint.setTextSize( iMeterFontSize );
-			for( int i = 0; i <= iMeterRevMax * 2; ++i ){
-				double dAngle = Math.toRadians( iMeterStartAngle + i * ( iMeterSweepAngle / ( double )( iMeterRevMax * 2 )));
+			for( int i = 0; i <= iMeterMaxRev * 2; ++i ){
+				paint.setStyle( Paint.Style.STROKE );
+				double dAngle = Math.toRadians( iStartAngle + i * ( iSweepAngle / ( double )( iMeterMaxRev * 2 )));
 				// 目盛り点
 				canvas.drawLine(
-					iMeterCx + ( Math.cos( dAngle ) * fMeterLineR1 ),
-					iMeterCy + ( Math.sin( dAngle ) * fMeterLineR1 ),
-					iMeterCx + ( Math.cos( dAngle ) * fMeterLineR2 ),
-					iMeterCy + ( Math.sin( dAngle ) * fMeterLineR2 ),
+					( float )( iMeterCx + ( Math.cos( dAngle ) * fMeterLineR1 )),
+					( float )( iMeterCy + ( Math.sin( dAngle ) * fMeterLineR1 )),
+					( float )( iMeterCx + ( Math.cos( dAngle ) * fMeterLineR2 )),
+					( float )( iMeterCy + ( Math.sin( dAngle ) * fMeterLineR2 )),
 					paint
 				);
 				
-				if( i & 1 ){
+				if(( i & 1 ) != 0 ){
 					// 目盛線
 					canvas.drawLine(
-						iMeterCx + ( Math.cos( dAngle ) * fMeterLineR3 ),
-						iMeterCy + ( Math.sin( dAngle ) * fMeterLineR3 ),
-						iMeterCx + ( Math.cos( dAngle ) * fMeterLineR4 ),
-						iMeterCy + ( Math.sin( dAngle ) * fMeterLineR4 ),
+						( float )( iMeterCx + ( Math.cos( dAngle ) * fMeterLineR3 )),
+						( float )( iMeterCy + ( Math.sin( dAngle ) * fMeterLineR3 )),
+						( float )( iMeterCx + ( Math.cos( dAngle ) * fMeterLineR4 )),
+						( float )( iMeterCy + ( Math.sin( dAngle ) * fMeterLineR4 )),
 						paint
 					);
 				}else{
 					// 目盛り数値
 					s = Integer.toString( i / 2 );
+					paint.setStyle( Paint.Style.FILL );
 					canvas.drawText( s,
-						( BASE_WIDTH - ,
-						iMeterCx + ( Math.cos( dAngle ) * iMeterR ) - paint.measureText( s ) / 2,
-						iMeterCy + ( Math.sin( dAngle ) * iMeterR ) - iMeterFontSize / 2,
+						( float )( iMeterCx + ( Math.cos( dAngle ) * iMeterR ) - paint.measureText( s ) / 2 ),
+						( float )( iMeterCy + ( Math.sin( dAngle ) * iMeterR ) + iMeterFontSize / 2 ),
 						paint
 					);
 				}
 			}
 			
+			canvas.drawLine( 214, 292, 586, 292, paint );
+			
 			// ギア箱
 			paint.setColor( COLOR_ORANGE );
 			paint.setStyle( Paint.Style.FILL );
-			canvas.drawRountRect( iGearLeft, iGearTop, iGearRight, iGearBottom, 28, 28, paint );
+			rectf = new RectF( iGearLeft, iGearTop, iGearRight, iGearBottom );
+			canvas.drawRoundRect( rectf, 28, 28, paint );
 			
 			if( Vsd != null ){
 				// Vsd.iTacho 針
 				paint.setColor( Color.RED );
 				paint.setStrokeWidth( 10 );
 				
-				double dTachoAngle = Math.toRadians( iMeterStartAngle + ( iMeterSweepAngle * iTacho / ( iMeterMaxRev * 1000.0 )));
+				double dTachoAngle = Math.toRadians( iStartAngle + ( iSweepAngle * iTacho / ( iMeterMaxRev * 1000.0 )));
 				canvas.drawLine(
 					iMeterCx, iMeterCy,
-					iMeterCx + ( int )( Math.cos( dTachoAngle ) * iMeterNeedleR ),
-					iMeterCy + ( int )( Math.sin( dTachoAngle ) * iMeterNeedleR ),
+					iMeterCx + ( int )( Math.cos( dTachoAngle ) * fMeterNeedleR ),
+					iMeterCy + ( int )( Math.sin( dTachoAngle ) * fMeterNeedleR ),
 					paint
 				);
-				
-				String s;
 				
 				// スピード
 				paint.setColor( Color.WHITE );
@@ -649,10 +641,11 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				s = Integer.toString( iGear );
 				canvas.drawText( s,
 					( iGearRight + iGearLeft - paint.measureText( s )) / 2,
-					( iGearTop + iGearBottom - iGearFontSize ) / 2,
+					( iGearTop + iGearBottom + ( int )( iGearFontSize * 0.7 )) / 2,
 					paint
 				);
 				
+				paint.setTypeface( Typeface.DEFAULT );
 				// タイム
 				switch( Vsd.iMainMode ){
 					case VsdInterface.MODE_LAPTIME:		s = "Lap";			break;
@@ -666,6 +659,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 					s += " ready";
 				}
 				
+				paint.setColor( Color.GRAY );
 				paint.setTextSize( 32 );
 				canvas.drawText( s, 220, 355, paint );
 				paint.setTextSize( 64 );
@@ -680,7 +674,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				paint.setColor( Color.GRAY );
 				canvas.drawText( FormatTime( Vsd.iTimeBestRaw ), 340, 470, paint );
 				
-				if( bDebug ){
+				if( bDebugInfo ){
 					// デバッグ用
 					int	y = 0;
 					paint.setColor( Color.CYAN );
@@ -696,6 +690,8 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				}
 			}
 			
+			paint.setTypeface( Typeface.DEFAULT );
+			
 			// 時計
 			Calendar cal = Calendar.getInstance();
 			s = String.format( "%02d:%02d", cal.get( Calendar.HOUR_OF_DAY ), cal.get( Calendar.MINUTE ));
@@ -709,13 +705,13 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				paint.setTextSize( 30 );
 				
 				for( int i = 0; i < iMsgLogNum; ++i ){
-					String msg = getString[( iMsgLogPtr + i - iMsgLogNum + MAX_MSG_LOG ) % MAX_MSG_LOG ];
+					String msg = getString( iMsgLog[( iMsgLogPtr + i - iMsgLogNum + MAX_MSG_LOG ) % MAX_MSG_LOG ]);
 					paint.setColor(
-						msg.startsWith( "[E" ) ? getColor.RED :
-						msg.startsWith( "[W" ) ? getColor.YELLOW :
-												 getColor.WHITE
+						msg.startsWith( "[E" ) ? Color.RED :
+						msg.startsWith( "[W" ) ? Color.YELLOW :
+												 Color.WHITE
 					);
-					canvas.drawText( msg, 0, i * 30, paint );
+					canvas.drawText( msg, 0, ( i + 1 ) * 30, paint );
 				}
 			}
 			
@@ -896,6 +892,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 	}
 
 	void SetupMode(){
+		bDebugInfo = Pref.getBoolean( "key_debug_info", false );
 		bEcoMode = Pref.getBoolean( "key_eco_mode", false );	// エコモードw
 		bRevWarn = Pref.getBoolean( "key_flash", false );		// レブリミット警告
 		if( Vsd != null ) Vsd.SetupMode();

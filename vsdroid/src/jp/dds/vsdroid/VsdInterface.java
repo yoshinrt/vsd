@@ -257,7 +257,7 @@ class VsdInterface implements Runnable {
 			MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_timeout );
 		}catch( IOException e ){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:IOException" );
-			MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_IOerror );
+			MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_ioerror );
 		}
 
 		if( Sock != null ) try{
@@ -590,13 +590,15 @@ class VsdInterface implements Runnable {
 			if( bDebug ) Log.d( "VSDroid", "LoadFirm::go" );
 			WaitChar( ':' );
 			
-		}catch( IOException e ){
+		}catch( Exception e ){
 			// FW がない場合ここに飛ぶ
 			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware canceled" );
 			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_none );
 		}
 		
-		if( fsFirm != null ) fsFirm.close();
+		try {
+			if( fsFirm != null ) fsFirm.close();
+		}catch( IOException e1 ){}
 		
 		try{
 			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending log output request" );
@@ -714,12 +716,12 @@ class VsdInterface implements Runnable {
 		while( !bKillThread ){
 			Close(); // 開いていたら一旦 close
 			
-			if(( iRet = Open()) || ( iRet == LoadFirmWare())){
+			if(( iRet = Open()) < 0 || ( iRet = LoadFirmWare()) < 0 ){
 				if( iRet == FATAL_ERROR ) break;
 				Sleep( 1000 );
 				continue;
 			}
-			if( fsLog == null && OpenLog()) break;
+			if( fsLog == null && OpenLog() < 0 ) break;
 			
 			while( !bKillThread && ( iRet = Read()) >= 0 );
 			if( iRet == FATAL_ERROR ) break;

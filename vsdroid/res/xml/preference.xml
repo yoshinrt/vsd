@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
-	<Preference android:title="Status" android:key="key_status" android:selectable="false" android:summary="@string/pref_summery_status"></Preference>
 	<CheckBoxPreference android:key="key_reopen_log" android:title="@string/pref_reopen_log"></CheckBoxPreference>
 	<CheckBoxPreference android:key="key_caribration" android:title="@string/pref_caribration"></CheckBoxPreference>
 	<CheckBoxPreference android:key="key_flash" android:title="@string/pref_flash"/>
@@ -24,4 +23,5 @@
 		android:key="key_system_dir" android:dialogTitle="@string/pref_system_dir" android:title="@string/pref_system_dir"
 		select_mode="2"
 	/>
+	<CheckBoxPreference android:key="key_debug_info" android:title="@string/pref_debug_info"/>
 </PreferenceScreen>
