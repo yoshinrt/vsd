@@ -41,7 +41,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 	static final boolean	bDebug		= BuildConfig.DEBUG;
 
 	// シフトインジケータの表示
-	private static final int iTachoBar[] = { 334, 200, 150, 118, 97 };
+	private static final int iTachoBar[] = { 1336, 800, 600, 472, 388 };
 	private static final int iRevLimit = 6500;
 
 	private static final UUID BT_UUID = UUID.fromString( "00001101-0000-1000-8000-00805F9B34FB" );
@@ -90,16 +90,14 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 	//*** カメラフラッシュ設定 ***********************************************
 
-	boolean bToggle = false;
 	public void SetFlash( FLASH_STATE Switch ){
-		if( Cam != null){
+		if( Cam != null ){
 			// フラッシュモードを設定
 			CamParam.setFlashMode(
 				bRevWarn && Switch == FLASH_STATE.ON ?
 					Camera.Parameters.FLASH_MODE_TORCH :
 					Camera.Parameters.FLASH_MODE_OFF
 			);
-			bToggle = !bToggle;
 
 			// パラメータを設定
 			Cam.setParameters( CamParam );
@@ -130,14 +128,12 @@ public class Vsdroid extends Activity implements SensorEventListener {
 				return FATAL_ERROR;
 			}
 
-			// BT ON でなければエラーで帰るが，
-			// bKillThread = true にすることで，config を出さずにスレッドを抜ける
+			// BT ON でなければエラーで帰る
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Enable" );
 			if( !mBluetoothAdapter.isEnabled()){
 				Intent enableIntent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE );
 				startActivityForResult( enableIntent, REQUEST_ENABLE_BT );
-				bKillThread = true;
-				return ERROR;
+				return FATAL_ERROR;
 			}
 
 			// BT の MAC アドレスを求める
@@ -426,7 +422,6 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 			// Paint 取得・初期設定
 			paint = new Paint();
-			paint.setStrokeWidth( 10 );
 			//paint.setAntiAlias( true );
 
 			bitmap = new Bitmap[ 5 ];
@@ -480,131 +475,237 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 		//*** 描画 ***********************************************************
 
-		private static final int iMeterCx = 399;
-		private static final int iMeterCy = 310;
-		private static final int iMeterR  = 292;
-
-		boolean bBlink = false;
-
+		private static final int iMeterCx			= 400;
+		private static final int iMeterCy			= 310;
+		private static final int iMeterR 			= 265;	// メータ目盛り円弧半径
+		private static final float fMeterScaleW		= ( int )( iMeterR * 0.256 );	// メータ目盛り円弧幅
+		private static final float fMeterNeedleR	= ( float )( iMeterR * 1.1 );	// 針
+		private static final float fMeterLineR1		= ( float )( iMeterR * ( 1 + 0.02 ) + fMeterScaleW * 0.5 );	// 目盛り線
+		private static final float fMeterLineR2		= ( float )( iMeterR *              + fMeterScaleW * 0.5 );	// 目盛り線
+		private static final float fMeterLineR3		= ( float )( iMeterR * ( 1 - 0.02 ) + fMeterScaleW * 0.5 );	// 目盛り線
+		private static final float fMeterLineR4		= ( float )( iMeterR *              - fMeterScaleW * 0.1 );	// 目盛り線
+		private static final float fMeterRedZoneW	= ( int )( iMeterR * 0.06 );	// レッドゾーン円弧幅
+		private static final float fMeterRedZoneR	= ( float )( fMeterLineR2 - iMeterRedZone * 0.5 );	// レッドゾーン円弧幅
+		private static final int iMeterFontSize		= 30;	// メータ目盛り数値サイズ
+		private static final int iStartAngle		= 150;	// 開始角
+		private static final int iSweepAngle		= 240;	// 範囲角
+		private static final int iMeterRevMax		= 7;	// タコメータ最大値
+		private static final int iRedZoneSweepAngle = ( int )(( 1 - iRevLimit / iMeterRevMax * 1000.0 ) * iSweepAngle );
+		private static final int iRedZoneStartAngle = iStartAngle + iSweepAngle - iRedZoneSweepAngle;
+		private static final int iGearLeft			= 669;
+		private static final int iGearTop			= 13;
+		private static final int iGearRight			= 788;
+		private static final int iGearBottom		= 155;
+		private static final int iGearFontSize		= 140;
+		
+		private static final int COLOR_ORANGE		= 0xFFFF6000;
+		private static final int COLOR_PURPLE		= 0xFF4400A8;
+		
+		boolean bBlink	= false;
+		int iTacho		= 0;
+		int iTachoBar	= 0;
+		
 		private void Draw(){
-
-			if( Vsd == null ) return;
 
 			Canvas canvas = getHolder().lockCanvas();
 			canvas.translate( fOffsX / fScale, fOffsY / fScale );
 			canvas.scale( fScale, fScale );
 
-			int iTacho = bEcoMode ? Vsd.iTacho * 2 : Vsd.iTacho;
-
-			// ギアを求める
-			double dGearRatio = ( double )Vsd.iSpeedRaw / Vsd.iTacho;
-			int	iGear;
-			if( Vsd.iTacho == 0 )							 iGear = 1;
-			else if( dGearRatio < VsdInterface.GEAR_RATIO1 ) iGear = 1;
-			else if( dGearRatio < VsdInterface.GEAR_RATIO2 ) iGear = 2;
-			else if( dGearRatio < VsdInterface.GEAR_RATIO3 ) iGear = 3;
-			else if( dGearRatio < VsdInterface.GEAR_RATIO4 ) iGear = 4;
-			else											 iGear = 5;
-
-			int iBarLv;
-
-			if(( Vsd.iSpeedRaw >= 30000 ) && ( Vsd.iTacho == 0 )){
-				// キャリブレーション表示
-				iBarLv = 4;
-			}else if( iTacho >= iRevLimit ){
-				iBarLv = 5;
-			}else{
-				// LED の表示 LV を求める
-				iBarLv = 3 - ( iRevLimit - iTacho ) / iTachoBar[ iGear - 1 ];
-				if( iBarLv < 0 ) iBarLv = 0;
+			if( Vsd != null ){
+				iTacho = bEcoMode ? Vsd.iTacho * 2 : Vsd.iTacho;
+				
+				// ギアを求める
+				double dGearRatio = ( double )Vsd.iSpeedRaw / Vsd.iTacho;
+				int	iGear;
+				if( Vsd.iTacho == 0 )							 iGear = 1;
+				else if( dGearRatio < VsdInterface.GEAR_RATIO1 ) iGear = 1;
+				else if( dGearRatio < VsdInterface.GEAR_RATIO2 ) iGear = 2;
+				else if( dGearRatio < VsdInterface.GEAR_RATIO3 ) iGear = 3;
+				else if( dGearRatio < VsdInterface.GEAR_RATIO4 ) iGear = 4;
+				else											 iGear = 5;
+				
+				if(( Vsd.iSpeedRaw == 0xFFFF ) && ( Vsd.iTacho == 0 )){
+					// キャリブレーション表示
+					iTachoBar = iSweepAngle / 2;
+				}else{
+					// LED の表示 LV を求める
+					iTachoBar = ( iTacho - iRevLimit + iTachoBar[ iGear - 1 ]) * ( iSweepAngle / 2 ) / iTachoBar[ iGear - 1 ];
+					
+					if( iTachoBar < 0 ){
+						iTachoBar = 0;
+					}else if( iTachoBar > iSweepAngle / 2 ){
+						iTachoBar = bBlink ? iSweepAngle / 2 : 0;
+						bBlink = !bBlink;
+					}
+				}
 			}
-
-			if( iBarLv >= 5 ){
-				iBarLv = bBlink ? 4 : 0;
-				bBlink = !bBlink;
-			}else{
-				bBlink = true;
-			}
-
+			
+			// フラッシュライト
+			SetFlash( iBarLv > 0 ? FLASH_STATE.ON : FLASH_STATE.OFF );
+			
 			// メーターパネル
-			canvas.drawBitmap( bitmap[ iBarLv ], 0, 0, null );
-			SetFlash( iBarLv >= 2 ? FLASH_STATE.ON : FLASH_STATE.OFF );
-
-			// Vsd.iTacho 針
-			paint.setColor( Color.RED );
-			double dTachoAngle = ( 210 - ( 240 * iTacho / 8000.0 )) * Math.PI / 180;
-			canvas.drawLine(
-				iMeterCx, iMeterCy,
-				iMeterCx + ( int )( Math.cos( dTachoAngle ) * iMeterR ),
-				iMeterCy - ( int )( Math.sin( dTachoAngle ) * iMeterR ),
-				paint
+			//canvas.drawBitmap( bitmap[ iBarLv ], 0, 0, null );
+			canvas.drawColor( 0, Mode.CLEAR );
+			
+			// メーター目盛り円弧
+			paint.setStyle( Paint.Style.STROKE );
+			paint.setStrokeWidth( fMeterScaleW );
+			paint.setColor( COLOR_PURPLE );
+			canvas.drawArc(
+				iMeterCx - iMeterR, iMeterCy - iMeterR,
+				iMeterCx + iMeterR, iMeterCy + iMeterR,
+				iStartAngle, iSweepAngle, false, paint
 			);
-
-			String s;
-
-			// スピード
+			
+			// タコバー描画
+			if( iTachoBar > 0 ){
+				paint.setColor( Color.CYAN );
+				canvas.drawArc(
+					iMeterCx - iMeterR, iMeterCy - iMeterR,
+					iMeterCx + iMeterR, iMeterCy + iMeterR,
+					iStartAngle, iTachoBar, false, paint
+				);
+				canvas.drawArc(
+					iMeterCx - iMeterR, iMeterCy - iMeterR,
+					iMeterCx + iMeterR, iMeterCy + iMeterR,
+					iStartAngle + iSweepAngle - iTachoBar, iTachoBar, false, paint
+				);
+			}
+			
+			// レッドゾーン円弧
+			paint.setStrokeWidth( fMeterRedZoneW );
+			paint.setColor( COLOR_ORANGE );
+			canvas.drawArc(
+				iMeterCx - fMeterRedZoneR, iMeterCy - fMeterRedZoneR,
+				iMeterCx + fMeterRedZoneR, iMeterCy + fMeterRedZoneR,
+				iRedZoneStartAngle, iRedZoneSweepAngle, false, paint
+			);
+			
+			// 目盛線・数値
+			paint.setStrokeWidth( 10 );
 			paint.setColor( Color.WHITE );
-			s = Integer.toString( Vsd.iSpeedRaw / 100 );
-			paint.setTextSize( 180 );
-			canvas.drawText( s, ( BASE_WIDTH - paint.measureText( s )) / 2, 270, paint );
-
-			// ギア
-			paint.setColor( Color.BLACK );
-			paint.setTextSize( 140 );
-			s = Integer.toString( iGear );
-			canvas.drawText( s, 692, 132, paint );
-
+			paint.setTextSize( iMeterFontSize );
+			for( int i = 0; i <= iMeterRevMax * 2; ++i ){
+				double dAngle = Math.toRadians( iMeterStartAngle + i * ( iMeterSweepAngle / ( double )( iMeterRevMax * 2 )));
+				// 目盛り点
+				canvas.drawLine(
+					iMeterCx + ( Math.cos( dAngle ) * fMeterLineR1 ),
+					iMeterCy + ( Math.sin( dAngle ) * fMeterLineR1 ),
+					iMeterCx + ( Math.cos( dAngle ) * fMeterLineR2 ),
+					iMeterCy + ( Math.sin( dAngle ) * fMeterLineR2 ),
+					paint
+				);
+				
+				if( i & 1 ){
+					// 目盛線
+					canvas.drawLine(
+						iMeterCx + ( Math.cos( dAngle ) * fMeterLineR3 ),
+						iMeterCy + ( Math.sin( dAngle ) * fMeterLineR3 ),
+						iMeterCx + ( Math.cos( dAngle ) * fMeterLineR4 ),
+						iMeterCy + ( Math.sin( dAngle ) * fMeterLineR4 ),
+						paint
+					);
+				}else{
+					// 目盛り数値
+					s = Integer.toString( i / 2 );
+					canvas.drawText( s,
+						( BASE_WIDTH - ,
+						iMeterCx + ( Math.cos( dAngle ) * iMeterR ) - paint.measureText( s ) / 2,
+						iMeterCy + ( Math.sin( dAngle ) * iMeterR ) - iMeterFontSize / 2,
+						paint
+					);
+				}
+			}
+			
+			// ギア箱
+			paint.setColor( COLOR_ORANGE );
+			paint.setStyle( Paint.Style.FILL );
+			canvas.drawRountRect( iGearLeft, iGearTop, iGearRight, iGearBottom, 28, 28, paint );
+			
+			if( Vsd != null ){
+				// Vsd.iTacho 針
+				paint.setColor( Color.RED );
+				paint.setStrokeWidth( 10 );
+				
+				double dTachoAngle = Math.toRadians( iMeterStartAngle + ( iMeterSweepAngle * iTacho / ( iMeterMaxRev * 1000.0 )));
+				canvas.drawLine(
+					iMeterCx, iMeterCy,
+					iMeterCx + ( int )( Math.cos( dTachoAngle ) * iMeterNeedleR ),
+					iMeterCy + ( int )( Math.sin( dTachoAngle ) * iMeterNeedleR ),
+					paint
+				);
+				
+				String s;
+				
+				// スピード
+				paint.setColor( Color.WHITE );
+				s = Integer.toString( Vsd.iSpeedRaw / 100 );
+				paint.setTextSize( 180 );
+				canvas.drawText( s, ( BASE_WIDTH - paint.measureText( s )) / 2, 270, paint );
+				
+				// ギア
+				paint.setColor( Color.BLACK );
+				paint.setTextSize( iGearFontSize );
+				s = Integer.toString( iGear );
+				canvas.drawText( s,
+					( iGearRight + iGearLeft - paint.measureText( s )) / 2,
+					( iGearTop + iGearBottom - iGearFontSize ) / 2,
+					paint
+				);
+				
+				// タイム
+				switch( Vsd.iMainMode ){
+					case VsdInterface.MODE_LAPTIME:		s = "Lap";			break;
+					case VsdInterface.MODE_GYMKHANA:	s = "Gymkhana"; 	break;
+					case VsdInterface.MODE_ZERO_FOUR:	s = "0-400m";		break;
+					case VsdInterface.MODE_ZERO_ONE:	s = "0-100km/h";
+				}
+				
+				if( Vsd.iRtcPrevRaw == 0 ){
+					// まだスタートしてない
+					s += " ready";
+				}
+				
+				paint.setTextSize( 32 );
+				canvas.drawText( s, 220, 355, paint );
+				paint.setTextSize( 64 );
+				canvas.drawText( String.format( "%02d", Vsd.iLapNum ), 220, 410, paint );
+				
+				paint.setColor(
+					Vsd.iTimeLastRaw == 0					? Color.GRAY :
+					Vsd.iTimeLastRaw <= Vsd.iTimeBestRaw	? Color.CYAN :
+															  Color.RED
+				);
+				canvas.drawText( FormatTime( Vsd.iTimeLastRaw ), 340, 410, paint );
+				paint.setColor( Color.GRAY );
+				canvas.drawText( FormatTime( Vsd.iTimeBestRaw ), 340, 470, paint );
+				
+				if( bDebug ){
+					// デバッグ用
+					int	y = 0;
+					paint.setColor( Color.CYAN );
+					paint.setTextSize( 30 );
+					canvas.drawText( String.format( "Throttle(raw): %d", Vsd.iThrottleRaw ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Throttle(full): %d", Vsd.iThrottleFull ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Throttle(cm): %.2f", ( Vsd.iThrottleRaw / ( double )0x7FFFFFFF - 7.5395E-06 ) / 2.5928E-06 ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Throttle(%%): %.1f", Vsd.iThrottle / 10.0 ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Gx: %.2f", Vsd.iGx / 1000.0 ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Gy: %.2f", Vsd.iGy / 1000.0 ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Gx(dev): %.2f", Vsd.iPhoneGx / 1000.0 ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Gy(dev): %.2f", Vsd.iPhoneGy / 1000.0 ), 0, y += 30, paint );
+				}
+			}
+			
 			// 時計
 			Calendar cal = Calendar.getInstance();
 			s = String.format( "%02d:%02d", cal.get( Calendar.HOUR_OF_DAY ), cal.get( Calendar.MINUTE ));
 			paint.setColor( Color.GRAY );
 			paint.setTextSize( 64 );
 			canvas.drawText( s, 0, paint.getTextSize(), paint );
-
-			// タイム
-			switch( Vsd.iMainMode ){
-				case VsdInterface.MODE_LAPTIME:		s = "Lap";			break;
-				case VsdInterface.MODE_GYMKHANA:	s = "Gymkhana"; 	break;
-				case VsdInterface.MODE_ZERO_FOUR:	s = "0-400m";		break;
-				case VsdInterface.MODE_ZERO_ONE:	s = "0-100km/h";
-			}
-
-			if( Vsd.iRtcPrevRaw == 0 ){
-				// まだスタートしてない
-				s += " ready";
-			}
-
-			paint.setTextSize( 32 );
-			canvas.drawText( s, 220, 355, paint );
-			paint.setTextSize( 64 );
-			canvas.drawText( String.format( "%02d", Vsd.iLapNum ), 220, 410, paint );
-
-			paint.setColor(
-				Vsd.iTimeLastRaw == 0					? Color.GRAY :
-				Vsd.iTimeLastRaw <= Vsd.iTimeBestRaw	? Color.CYAN :
-														  Color.RED
-			);
-			canvas.drawText( FormatTime( Vsd.iTimeLastRaw ), 340, 410, paint );
-			paint.setColor( Color.GRAY );
-			canvas.drawText( FormatTime( Vsd.iTimeBestRaw ), 340, 470, paint );
-
-			if( bDebug ){
-				// デバッグ用
-				int	y = 0;
-				paint.setColor( Color.CYAN );
-				paint.setTextSize( 30 );
-				canvas.drawText( String.format( "Throttle(raw): %d", Vsd.iThrottleRaw ), 0, y += 30, paint );
-				canvas.drawText( String.format( "Throttle(full): %d", Vsd.iThrottleFull ), 0, y += 30, paint );
-				canvas.drawText( String.format( "Throttle(cm): %.2f", ( Vsd.iThrottleRaw / ( double )0x7FFFFFFF - 7.5395E-06 ) / 2.5928E-06 ), 0, y += 30, paint );
-				canvas.drawText( String.format( "Throttle(%%): %.1f", Vsd.iThrottle / 10.0 ), 0, y += 30, paint );
-				canvas.drawText( String.format( "Gx: %.2f", Vsd.iGx / 1000.0 ), 0, y += 30, paint );
-				canvas.drawText( String.format( "Gy: %.2f", Vsd.iGy / 1000.0 ), 0, y += 30, paint );
-				canvas.drawText( String.format( "Gx(dev): %.2f", Vsd.iPhoneGx / 1000.0 ), 0, y += 30, paint );
-				canvas.drawText( String.format( "Gy(dev): %.2f", Vsd.iPhoneGy / 1000.0 ), 0, y += 30, paint );
-			}
 			
 			// メッセージログ
 			if( bMsgLogShow ){
+				canvas.drawColor( 0x80000000 );	// 暗くする
 				paint.setTextSize( 30 );
 				
 				for( int i = 0; i < iMsgLogNum; ++i ){

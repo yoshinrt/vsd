@@ -724,7 +724,9 @@ class VsdInterface implements Runnable {
 				continue;
 			}
 			if( fsLog == null && OpenLog()) break;
-			while( !bKillThread ) if( Read() < 0 ) break;
+			
+			while( !bKillThread && ( iRet = Read()) >= 0 );
+			if( iRet == FATAL_ERROR ) break;
 		}
 		
 		if( bDebug ) Log.d( "VSDroid", String.format( "run() loop extting." ));
