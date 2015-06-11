@@ -257,8 +257,8 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 				for( int i = 0; Token.hasMoreTokens(); ++i ){
 					strToken = Token.nextToken();
-					if(      strToken.equals( "Tacho"			)) iIdxTacho		= i;
-					else if( strToken.equals( "Speed"			)) iIdxSpeed		= i;
+					if(      strToken.equals( "Tacho"			)) iIdxTacho	= i;
+					else if( strToken.equals( "Speed"			)) iIdxSpeed	= i;
 					else if( strToken.equals( "Distance"		)) iIdxDistance	= i;
 					else if( strToken.equals( "Gx"				)) iIdxGx		= i;
 					else if( strToken.equals( "Gy"				)) iIdxGy		= i;
@@ -268,7 +268,7 @@ public class Vsdroid extends Activity implements SensorEventListener {
 
 			}catch( Exception e ){
 				MsgHandler.sendEmptyMessage( R.string.statmsg_emulog_open_failed );
-				return -1;
+				return FATAL_ERROR;
 			}
 			return 0;
 		}
