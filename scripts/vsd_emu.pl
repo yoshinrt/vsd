@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use Socket;
 use Time::HiRes qw(sleep);
@@ -86,7 +86,7 @@ select( STDOUT );
 $Buf = '';
 
 WaitCmd( 'z' ); SendData( ':' );
-WaitCmd( 'Ss1a' ); SendData( ':' );	# l
+WaitCmd( 'S7' ); SendData( ':' );	# l
 # GetData();
 
 $PULSE_PER_1KM	= 15473.76689;	# ELISE(CE28N)
@@ -138,6 +138,8 @@ sub GetData {
 	my( $tmp );
 	
 	recv( $SockClient, $_, 1024, defined( $param ) ? $param : 0 );
+	
+	return $_ if( !$_ );
 	$tmp = $_;
 	
 	s/([\x00-\x1F\[\x7E\-\xFF])/sprintf( '[%02X]', ord( $1 ))/ge;
