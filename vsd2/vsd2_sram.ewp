@@ -595,7 +595,7 @@
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>vsd2.s19</state>
+          <state>vsd2.mot</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>
@@ -626,7 +626,7 @@
       <archiveVersion>1</archiveVersion>
       <data>
         <prebuild></prebuild>
-        <postbuild>Z:\bin\magic.bat</postbuild>
+        <postbuild></postbuild>
       </data>
     </settings>
     <settings>
@@ -946,9 +946,9 @@
       <data/>
     </settings>
   </configuration>
-  <mfc_discard>
+  <mfc>
     <configuration>exec_sram</configuration>
-  </mfc_discard>
+  </mfc>
   <group>
     <name>Application Files</name>
     <file>

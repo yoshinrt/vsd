@@ -92,7 +92,7 @@ __noreturn void LoadSRecordSub( void ){
 	
 	// ':' は vsdroid 側のために必要
 	UsartPutstrUnbuffered( "starting program:::\n" );
-	JumpTo( GetHex( 5 ), INIT_SP );
+	JumpTo( *( u32 *)SRAM_TOP, INIT_SP );
 }
 
 __noreturn void LoadSRecord( void ){
@@ -173,11 +173,11 @@ UINT GetCurrentTime( void ){
 	}
 	return ( uTimeH << 16 ) | uTimeL;
 }
+#endif
 
 INLINE UINT GetCurrentTime16( void ){
 	return TIM2->CNT;
 }
-#endif
 
 /*** AD *********************************************************************/
 
@@ -244,7 +244,6 @@ void AdcInit( void ){
 
 /*** ADC 変換 ***************************************************************/
 
-#ifndef zzzEXEC_SRAM
 INLINE void AdcConversion( void ){
 	// Start ADC1 Software Conversion
 	ADC_SoftwareStartInjectedConvCmd( ADC1, ENABLE );
@@ -253,14 +252,13 @@ INLINE void AdcConversion( void ){
 INLINE BOOL AdcConversionCompleted( void ){
 	return ADC_GetFlagStatus( ADC1, ADC_FLAG_JEOC ) == SET;
 }
-#endif
 
 /*** スピード・タコ・磁気センサー 初期化 ************************************/
 // PD0: speed
 // PD1: tacho
 // PD2: 磁気センサー
 
-#ifndef zzzEXEC_SRAM
+#ifndef EXEC_SRAM
 void PulseInit( void ){
 	// APB クロック
 	RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOD, ENABLE );
@@ -471,7 +469,7 @@ INLINE UINT SdcInserted( void ){
 
 /*** WDT ********************************************************************/
 
-#ifndef zzzEXEC_SRAM
+#ifndef EXEC_SRAM
 void WdtInitSub( UINT uMillisec, UINT uPsc ){
 	IWDG_WriteAccessCmd( IWDG_WriteAccess_Enable );
 	IWDG_SetPrescaler( uPsc );
@@ -479,8 +477,8 @@ void WdtInitSub( UINT uMillisec, UINT uPsc ){
 	IWDG_Enable();
 }
 
-INLINE void WdtInit( UINT ms ){
-	UINT uCnt = ms * 40;
+void WdtInit( UINT ms ){
+	UINT uCnt = ms * 10;
 	UINT uPsc;
 	
 	if     ( uCnt >= ( 0x1000 << 6 )){ uCnt >>= 7; uPsc = 7; }
@@ -494,11 +492,11 @@ INLINE void WdtInit( UINT ms ){
 	
 	WdtInitSub( uCnt, uPsc );
 }
+#endif
 
 INLINE void WdtReload( void ){
 	IWDG_ReloadCounter();
 }
-#endif
 
 /*** バイナリ出力 ***********************************************************/
 
@@ -616,8 +614,7 @@ void Calibration( VSD_DATA_t *pVsd ){
 
 /*** 初期化処理 *************************************************************/
 
-#ifndef zzzEXEC_SRAM
-INLINE void Initialize( USART_BUF_t *pBuf ){
+void Initialize( USART_BUF_t *pBuf ){
 	#ifndef EXEC_SRAM
 		Set_System();
 		
@@ -627,20 +624,19 @@ INLINE void Initialize( USART_BUF_t *pBuf ){
 	#else
 		// ベクタテーブルを SRAM に再設定
 		//NVIC_SetVectorTable( 0, __vector_table );
+		WdtInit( 3000 );
 	#endif
 	
-	WdtInit( 3000 );
 	LedOff();
 	UsartInit( USART_BAUDRATE, pBuf );
 	AdcInit();
 	TimerInit();
 	PulseInit();
 }
-#endif
 
 /*** ステート変化待ち & LED 表示 ********************************************/
 
-#ifndef zzzEXEC_SRAM
+#ifndef EXEC_SRAM
 void WaitStateChange( VSD_DATA_t *pVsd ){
 	UINT	uSumGx 		= 0;
 	UINT	uSumGy 		= 0;

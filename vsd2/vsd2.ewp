@@ -987,9 +987,6 @@
       <name>$PROJ_DIR$\library\src\stm32f10x_gpio.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\library\src\stm32f10x_i2c.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\library\src\stm32f10x_iwdg.c</name>
     </file>
     <file>

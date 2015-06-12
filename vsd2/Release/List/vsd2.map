@@ -1,23 +1,23 @@
 ###############################################################################
 #
-# IAR ELF Linker V7.40.2.8542/W32 for ARM                 04/Jun/2015  22:50:49
+# IAR ELF Linker V7.40.2.8542/W32 for ARM                 12/Jun/2015  22:16:20
 # Copyright 2007-2015 IAR Systems AB.
 #
 #    Output file  =  Z:\Release\Exe\vsd2.out
 #    Map file     =  Z:\Release\List\vsd2.map
 #    Command line =  
-#        Z:\Release\Obj\cortexm3_macro.o Z:\Release\Obj\hw_config.o
-#        Z:\Release\Obj\main.o Z:\Release\Obj\main2.o
-#        Z:\Release\Obj\stm32f10x_adc.o Z:\Release\Obj\stm32f10x_flash.o
-#        Z:\Release\Obj\stm32f10x_gpio.o Z:\Release\Obj\stm32f10x_it.o
-#        Z:\Release\Obj\stm32f10x_lib.o Z:\Release\Obj\stm32f10x_nvic.o
-#        Z:\Release\Obj\stm32f10x_rcc.o Z:\Release\Obj\stm32f10x_spi.o
-#        Z:\Release\Obj\stm32f10x_tim.o Z:\Release\Obj\stm32f10x_usart.o
-#        Z:\Release\Obj\stm32f10x_vector.o Z:\Release\Obj\usart.o --redirect
-#        _Printf=_PrintfFull --redirect _Scanf=_ScanfFull -o
-#        Z:\Release\Exe\vsd2.out --map Z:\Release\List\vsd2.map --config
-#        Z:\STM32F10x_FLASH.icf --semihosting --entry __iar_program_start
-#        --inline --vfe
+#        Z:\Release\Obj\cortexm3_macro.o Z:\Release\Obj\diskio.o
+#        Z:\Release\Obj\ff.o Z:\Release\Obj\hw_config.o Z:\Release\Obj\main.o
+#        Z:\Release\Obj\msd.o Z:\Release\Obj\stm32f10x_adc.o
+#        Z:\Release\Obj\stm32f10x_flash.o Z:\Release\Obj\stm32f10x_gpio.o
+#        Z:\Release\Obj\stm32f10x_iwdg.o Z:\Release\Obj\stm32f10x_lib.o
+#        Z:\Release\Obj\stm32f10x_nvic.o Z:\Release\Obj\stm32f10x_rcc.o
+#        Z:\Release\Obj\stm32f10x_spi.o Z:\Release\Obj\stm32f10x_tim.o
+#        Z:\Release\Obj\stm32f10x_usart.o Z:\Release\Obj\stm32f10x_vector.o
+#        Z:\Release\Obj\usart.o --redirect _Printf=_PrintfFull --redirect
+#        _Scanf=_ScanfFull -o Z:\Release\Exe\vsd2.out --map
+#        Z:\Release\List\vsd2.map --config Z:\STM32F10x_FLASH.icf --no_remove
+#        --semihosting --entry __iar_program_start --inline --vfe
 #
 ###############################################################################
 
@@ -35,83 +35,79 @@ __SystemLibrary = DLib
 
 "A1":  place at 0x08003000 { ro section .intvec };
 "P1":  place in [from 0x080030ec to 0x0801ffff] { ro };
-"P2":  place in [from 0x20004fe4 to 0x20004fff] { block RAM_Block };
+"P2":  place in [from 0x20004fe0 to 0x20004fff] { block RAM_Block };
 
-  Section            Kind        Address    Size  Object
-  -------            ----        -------    ----  ------
-"A1":                                       0xec
-  .intvec            const    0x08003000    0xec  stm32f10x_vector.o [1]
-                            - 0x080030ec    0xec
+  Section                Kind        Address    Size  Object
+  -------                ----        -------    ----  ------
+"A1":                                           0xec
+  .intvec                const    0x08003000    0xec  diskio.o [1]
+                                - 0x080030ec    0xec
 
-"P1":                                     0x2da4
-  .text              ro code  0x080030ec   0xdae  xprintffull.o [3]
-  .text              ro code  0x08003e9a    0x22  zero_init3.o [5]
-  .text              ro code  0x08003ebc    0x16  strchr.o [5]
-  .text              ro code  0x08003ed2     0xa  xsprout.o [3]
-  .text              ro code  0x08003edc    0x36  strlen.o [5]
-  .text              ro code  0x08003f14    0x58  memchr.o [5]
-  .text              ro code  0x08003f6c    0xee  I64DivMod.o [5]
-  .text              ro code  0x0800405c    0x76  ABImemcpy_unaligned.o [5]
-  .text              ro code  0x080040d2    0x42  xdnorm.o [4]
-  .text              ro code  0x08004114    0x2e  DblCmpLe.o [4]
-  .text              ro code  0x08004144    0x2e  DblCmpGe.o [4]
-  .text              ro code  0x08004174   0x110  xdscale.o [4]
-  .text              ro code  0x08004284    0x58  DblToI32.o [4]
-  .text              ro code  0x080042dc    0x30  I32ToDbl.o [4]
-  .text              ro code  0x0800430c   0x180  DblSub.o [4]
-  .text              ro code  0x0800448c   0x1a2  DblMul.o [4]
-  .text              ro code  0x08004630   0x256  DblDiv.o [4]
-  .text              ro code  0x08004886     0xe  div.o [3]
-  .text              ro code  0x08004894     0x2  I64DivZer.o [5]
-  .text              ro code  0x08004898    0xd4  DblAdd.o [4]
-  .text              ro code  0x0800496c   0x7ec  main2.o [1]
-  .text              ro code  0x08005158   0x1c4  usart.o [1]
-  .text              ro code  0x0800531c   0x224  stm32f10x_rcc.o [1]
-  .text              ro code  0x08005540    0x50  stm32f10x_tim.o [1]
-  .text              ro code  0x08005590    0xf0  stm32f10x_gpio.o [1]
-  .text              ro code  0x08005680   0x132  stm32f10x_adc.o [1]
-  .text              ro code  0x080057b4    0xb0  stm32f10x_nvic.o [1]
-  .text              ro code  0x08005864   0x164  stm32f10x_usart.o [1]
-  .text              ro code  0x080059c8    0xe6  hw_config.o [1]
-  .text              ro code  0x08005ab0    0x24  stm32f10x_flash.o [1]
-  .text              ro code  0x08005ad4    0xac  main.o [1]
-  .text              ro code  0x08005b80     0x6  ABImemclr4.o [5]
-  .text              ro code  0x08005b88    0x32  ABImemset48.o [5]
-  CODE               ro code  0x08005bbc    0x6e  cortexm3_macro.o [1]
-  .text              ro code  0x08005c2c    0x6c  iarttio.o [6]
-  .text              ro code  0x08005c98     0x8  XShttio.o [3]
-  .text              ro code  0x08005ca0    0x35  puts.o [3]
-  .text              ro code  0x08005cd6    0x10  write.o [6]
-  .text              ro code  0x08005ce6    0x1e  dwrite.o [6]
-  .text              ro code  0x08005d04    0x20  iarwstd.o [6]
-  .text              ro code  0x08005d24    0x22  iarwrite.o [6]
-  .text              ro code  0x08005d48    0x34  sprintf.o [3]
-  .text              ro code  0x08005d7c    0x2c  copy_init3.o [5]
-  .text              ro code  0x08005da8    0x28  data_init.o [5]
-  .text              ro code  0x08005dd0    0x24  printf.o [3]
-  .iar.init_table    const    0x08005df4    0x2c  - Linker created -
-  .text              ro code  0x08005e20    0x1a  cmain.o [5]
-  .text              ro code  0x08005e3a     0x4  exit.o [3]
-  .text              ro code  0x08005e40     0xa  cexit.o [5]
-  .text              ro code  0x08005e4c    0x14  exit.o [6]
-  .text              ro code  0x08005e60    0x16  xprout.o [3]
-  .text              ro code  0x08005e76     0xc  cstartup_M.o [5]
-  Initializer bytes  const    0x08005e84     0x8  <for rw-1>
-  .text              ro code  0x08005e8c     0x4  stm32f10x_it.o [1]
-  .rodata            const    0x08005e90     0x0  zero_init3.o [5]
-  .rodata            const    0x08005e90     0x0  copy_init3.o [5]
-                            - 0x08005e90  0x2da4
+"P1":                                         0x7e10
+  .text                  ro code  0x080030ec  0x607c  diskio.o [1]
+  .text                  ro code  0x08009168    0x66  ABImemset.o [5]
+  .text                  ro code  0x080091ce    0x22  zero_init3.o [5]
+  .text                  ro code  0x080091f0    0x62  memcmp_unaligned.o [5]
+  .text                  ro code  0x08009252     0xa  xsprout.o [3]
+  .text                  ro code  0x0800925c     0x6  ABImemclr.o [5]
+  .text                  ro code  0x08009264     0x6  ABImemclr4.o [5]
+  .text                  ro code  0x0800926c    0x76  ABImemcpy_unaligned.o [5]
+  .text                  ro code  0x080092e4     0x8  diskio.o [1]
+  CODE                   ro code  0x080092ec    0x6e  cortexm3_macro.o [1]
+  .text                  ro code  0x0800935c    0x3a  ABImemset48.o [5]
+  .text                  ro code  0x08009398   0xdae  xprintffull.o [3]
+  .text                  ro code  0x0800a148    0x16  strchr.o [5]
+  .text                  ro code  0x0800a160    0x36  strlen.o [5]
+  .text                  ro code  0x0800a198    0x58  memchr.o [5]
+  .text                  ro code  0x0800a1f0   0x132  I64DivMod.o [5]
+  .text                  ro code  0x0800a322    0x42  xdnorm.o [4]
+  .text                  ro code  0x0800a364    0x2e  DblCmpLe.o [4]
+  .text                  ro code  0x0800a394    0x2e  DblCmpGe.o [4]
+  .text                  ro code  0x0800a3c4   0x110  xdscale.o [4]
+  .text                  ro code  0x0800a4d4    0x58  DblToI32.o [4]
+  .text                  ro code  0x0800a52c    0x30  I32ToDbl.o [4]
+  .text                  ro code  0x0800a55c   0x180  DblSub.o [4]
+  .text                  ro code  0x0800a6dc   0x1a2  DblMul.o [4]
+  .text                  ro code  0x0800a880   0x256  DblDiv.o [4]
+  .text                  ro code  0x0800aad6     0xe  div.o [3]
+  .text                  ro code  0x0800aae4     0x2  I64DivZer.o [5]
+  .text                  ro code  0x0800aae8    0xe8  DblAdd.o [4]
+  .rodata                const    0x0800abd0    0xc0  diskio.o [1]
+  .text                  ro code  0x0800ac90    0x6c  iarttio.o [6]
+  .text                  ro code  0x0800acfc     0x8  XShttio.o [3]
+  .text                  ro code  0x0800ad04    0x35  puts.o [3]
+  .text                  ro code  0x0800ad3a    0x10  write.o [6]
+  .text                  ro code  0x0800ad4a    0x1e  dwrite.o [6]
+  .text                  ro code  0x0800ad68    0x20  iarwstd.o [6]
+  .text                  ro code  0x0800ad88    0x22  iarwrite.o [6]
+  .text                  ro code  0x0800adac    0x34  sprintf.o [3]
+  .text                  ro code  0x0800ade0    0x2c  copy_init3.o [5]
+  .text                  ro code  0x0800ae0c    0x28  data_init.o [5]
+  .text                  ro code  0x0800ae34    0x24  printf.o [3]
+  .iar.init_table        const    0x0800ae58    0x2c  - Linker created -
+  .text                  ro code  0x0800ae84    0x1a  cmain.o [5]
+  .text                  ro code  0x0800ae9e     0x4  exit.o [3]
+  .text                  ro code  0x0800aea4    0x16  cexit.o [5]
+  .text                  ro code  0x0800aebc    0x14  exit.o [6]
+  .text                  ro code  0x0800aed0    0x16  xprout.o [3]
+  .text                  ro code  0x0800aee6     0xc  cstartup_M.o [5]
+  Initializer bytes      const    0x0800aef4     0x8  <for rw-1>
+  CSTACK                 const    0x0800aefc     0x0  diskio.o [1]
+  __DLIB_PERTHREAD       const    0x0800aefc     0x0  diskio.o [1]
+  __DLIB_PERTHREAD_init  const    0x0800aefc     0x0  diskio.o [1]
+  .rodata                const    0x0800aefc     0x0  zero_init3.o [5]
+  .rodata                const    0x0800aefc     0x0  copy_init3.o [5]
+                                - 0x0800aefc  0x7e10
 
-"P2":                                       0x1c
-  RAM_Block                   0x20004fe4    0x1c  <Block>
-    CSTACK                    0x20004fe4     0x0  <Block>
-    rw-1                      0x20004fe4     0x8  <Init block>
-      .data          inited   0x20004fe4     0x8  XShttio.o [3]
-    .bss             zero     0x20004fec     0x4  main2.o [1]
-    .bss             zero     0x20004ff0     0x8  stm32f10x_rcc.o [1]
-    .bss             zero     0x20004ff8     0x1  hw_config.o [1]
-    .ButtomOfSram    zero     0x20004ffc     0x4  usart.o [1]
-                            - 0x20005000    0x1c
+"P2":                                           0x20
+  RAM_Block                       0x20004fe0    0x20  <Block>
+    CSTACK                        0x20004fe0     0x0  <Block>
+    rw-1                          0x20004fe0     0x8  <Init block>
+      .data              inited   0x20004fe0     0x8  XShttio.o [3]
+    .bss                 zero     0x20004fe8     0x8  diskio.o [1]
+    .bss                 zero     0x20004ff0     0x8  diskio.o [1]
+    .BottomOfSram        zero     0x20004ff8     0x8  diskio.o [1]
+                                - 0x20005000    0x20
 
 
 *******************************************************************************
@@ -121,15 +117,15 @@ __SystemLibrary = DLib
           Address     Size
           -------     ----
 Zero (__iar_zero_init3)
-    2 destination ranges, total size 0x11:
-          0x20004fec   0xd
-          0x20004ffc   0x4
+    2 destination ranges, total size 0x18:
+          0x20004fe8  0x10
+          0x20004ff8   0x8
 
 Copy (__iar_copy_init3)
     1 source range, total size 0x8:
-          0x08005e84   0x8
+          0x0800aef4   0x8
     1 destination range, total size 0x8:
-          0x20004fe4   0x8
+          0x20004fe0   0x8
 
 
 
@@ -141,21 +137,9 @@ Copy (__iar_copy_init3)
     ------                 -------  -------  -------
 Z:\Release\Obj: [1]
     cortexm3_macro.o           110
-    hw_config.o                230                 1
-    main.o                     172
-    main2.o                  2 028                 4
-    stm32f10x_adc.o            306
-    stm32f10x_flash.o           36
-    stm32f10x_gpio.o           240
-    stm32f10x_it.o               4
-    stm32f10x_nvic.o           176
-    stm32f10x_rcc.o            548                 8
-    stm32f10x_tim.o             80
-    stm32f10x_usart.o          356
-    stm32f10x_vector.o                  236
-    usart.o                    452                 4
+    diskio.o                24 708      428       24
     ------------------------------------------------
-    Total:                   4 738      236       17
+    Total:                  24 818      428       24
 
 command line: [2]
     ------------------------------------------------
@@ -175,7 +159,7 @@ dl7M_tln.a: [3]
     Total:                   3 701        8        8
 
 m7M_tl.a: [4]
-    DblAdd.o                   212
+    DblAdd.o                   232
     DblCmpGe.o                  46
     DblCmpLe.o                  46
     DblDiv.o                   598
@@ -186,25 +170,28 @@ m7M_tl.a: [4]
     xdnorm.o                    66
     xdscale.o                  272
     ------------------------------------------------
-    Total:                   2 178
+    Total:                   2 198
 
 rt7M_tl.a: [5]
+    ABImemclr.o                  6
     ABImemclr4.o                 6
     ABImemcpy_unaligned.o      118
-    ABImemset48.o               50
-    I64DivMod.o                238
+    ABImemset.o                102
+    ABImemset48.o               58
+    I64DivMod.o                306
     I64DivZer.o                  2
-    cexit.o                     10
+    cexit.o                     22
     cmain.o                     26
     copy_init3.o                44
     cstartup_M.o                12
     data_init.o                 40
     memchr.o                    88
+    memcmp_unaligned.o          98
     strchr.o                    22
     strlen.o                    54
     zero_init3.o                34
     ------------------------------------------------
-    Total:                     744
+    Total:                   1 038
 
 shb_l.a: [6]
     dwrite.o                    30
@@ -216,10 +203,10 @@ shb_l.a: [6]
     ------------------------------------------------
     Total:                     240
 
-    Gaps                        29                 3
+    Gaps                        31
     Linker created                       46
 ----------------------------------------------------
-    Grand Total:            11 630      290       28
+    Grand Total:            32 026      482       32
 
 
 *******************************************************************************
@@ -228,202 +215,481 @@ shb_l.a: [6]
 
 Entry                      Address   Size  Type      Object
 -----                      -------   ----  ----      ------
-.iar.init_table$$Base   0x08005df4          --   Gb  - Linker created -
-.iar.init_table$$Limit  0x08005e20          --   Gb  - Linker created -
-?main                   0x08005e21         Code  Gb  cmain.o [5]
-ADCPrescTable           0x0800553c    0x4  Data  Lc  stm32f10x_rcc.o [1]
-ADC_Cmd                 0x080056cf   0x12  Code  Gb  stm32f10x_adc.o [1]
+.iar.init_table$$Base   0x0800ae58          --   Gb  - Linker created -
+.iar.init_table$$Limit  0x0800ae84          --   Gb  - Linker created -
+?main                   0x0800ae85         Code  Gb  cmain.o [5]
+ADC_AnalogWatchdogCmd   0x08007751    0xe  Code  Gb  diskio.o [1]
+ADC_AnalogWatchdogSingleChannelConfig
+                        0x08007765    0xc  Code  Gb  diskio.o [1]
+ADC_AnalogWatchdogThresholdsConfig
+                        0x0800775f    0x6  Code  Gb  diskio.o [1]
+ADC_AutoInjectedConvCmd
+                        0x08007681   0x12  Code  Gb  diskio.o [1]
+ADC_ClearFlag           0x08007795    0xa  Code  Gb  diskio.o [1]
+ADC_ClearITPendingBit   0x080077b7    0xa  Code  Gb  diskio.o [1]
+ADC_Cmd                 0x08007543   0x12  Code  Gb  diskio.o [1]
+ADC_DMACmd              0x08007555   0x14  Code  Gb  diskio.o [1]
+ADC_DeInit              0x080074b3   0x3e  Code  Gb  diskio.o [1]
+ADC_DiscModeChannelCountConfig
+                        0x080075bf   0x12  Code  Gb  diskio.o [1]
+ADC_DiscModeCmd         0x080075d1   0x12  Code  Gb  diskio.o [1]
+ADC_ExternalTrigConvCmd
+                        0x08007661   0x12  Code  Gb  diskio.o [1]
+ADC_ExternalTrigInjectedConvCmd
+                        0x080076b1   0x12  Code  Gb  diskio.o [1]
 ADC_ExternalTrigInjectedConvConfig
-                        0x08005705    0xc  Code  Gb  stm32f10x_adc.o [1]
+                        0x080076a5    0xc  Code  Gb  diskio.o [1]
 ADC_GetCalibrationStatus
-                        0x080056fb    0x4  Code  Gb  stm32f10x_adc.o [1]
-ADC_GetFlagStatus       0x080057a5    0xe  Code  Gb  stm32f10x_adc.o [1]
+                        0x08007599    0xa  Code  Gb  diskio.o [1]
+ADC_GetConversionValue  0x08007673    0x6  Code  Gb  diskio.o [1]
+ADC_GetDualModeConversionValue
+                        0x08007679    0x8  Code  Gb  diskio.o [1]
+ADC_GetFlagStatus       0x08007787    0xe  Code  Gb  diskio.o [1]
+ADC_GetITStatus         0x0800779f   0x18  Code  Gb  diskio.o [1]
 ADC_GetInjectedConversionValue
-                        0x08005793    0x8  Code  Gb  stm32f10x_adc.o [1]
+                        0x08007749    0x8  Code  Gb  diskio.o [1]
 ADC_GetResetCalibrationStatus
-                        0x080056eb    0x6  Code  Gb  stm32f10x_adc.o [1]
-ADC_Init                0x08005681   0x3c  Code  Gb  stm32f10x_adc.o [1]
+                        0x08007585    0xa  Code  Gb  diskio.o [1]
+ADC_GetSoftwareStartConvStatus
+                        0x080075b5    0xa  Code  Gb  diskio.o [1]
+ADC_GetSoftwareStartInjectedConvCmdStatus
+                        0x080076d5    0xa  Code  Gb  diskio.o [1]
+ADC_ITConfig            0x08007569   0x12  Code  Gb  diskio.o [1]
+ADC_Init                0x080074f1   0x40  Code  Gb  diskio.o [1]
 ADC_InjectedChannelConfig
-                        0x08005723   0x22  Code  Gb  stm32f10x_adc.o [1]
+                        0x080076df   0x54  Code  Gb  diskio.o [1]
+ADC_InjectedDiscModeCmd
+                        0x08007693   0x12  Code  Gb  diskio.o [1]
 ADC_InjectedSequencerLengthConfig
-                        0x08005781   0x12  Code  Gb  stm32f10x_adc.o [1]
-ADC_ResetCalibration    0x080056e1    0xa  Code  Gb  stm32f10x_adc.o [1]
+                        0x08007733   0x12  Code  Gb  diskio.o [1]
+ADC_RegularChannelConfig
+                        0x080075e3   0x7e  Code  Gb  diskio.o [1]
+ADC_ResetCalibration    0x0800757b    0xa  Code  Gb  diskio.o [1]
+ADC_SetInjectedOffset   0x08007745    0x4  Code  Gb  diskio.o [1]
+ADC_SoftwareStartConvCmd
+                        0x080075a3   0x12  Code  Gb  diskio.o [1]
 ADC_SoftwareStartInjectedConvCmd
-                        0x08005711   0x12  Code  Gb  stm32f10x_adc.o [1]
-ADC_StartCalibration    0x080056f1    0xa  Code  Gb  stm32f10x_adc.o [1]
-ADC_StructInit          0x080056bd   0x12  Code  Gb  stm32f10x_adc.o [1]
-APBAHBPrescTable        0x0800552c   0x10  Data  Lc  stm32f10x_rcc.o [1]
-AdcInit                 0x08004ae9  0x106  Code  Gb  main2.o [1]
-CSTACK$$Base            0x20004fe4          --   Gb  - Linker created -
-CSTACK$$Limit           0x20004fe4          --   Gb  - Linker created -
-Calibration             0x08004fef   0x20  Code  Gb  main2.o [1]
-CheckStartByGSensor     0x08004f8f   0x42  Code  Gb  main2.o [1]
-ComputeMeterSpeed       0x08004d89   0x8e  Code  Gb  main2.o [1]
-ComputeMeterTacho       0x08004d3f   0x4a  Code  Gb  main2.o [1]
-EXTI0_IRQHandler        0x08004ca7   0x4e  Code  Gb  main2.o [1]
-EXTI1_IRQHandler        0x08004cf5   0x1e  Code  Gb  main2.o [1]
-EXTI2_IRQHandler        0x08004d13   0x2c  Code  Gb  main2.o [1]
+                        0x080076c3   0x12  Code  Gb  diskio.o [1]
+ADC_StartCalibration    0x0800758f    0xa  Code  Gb  diskio.o [1]
+ADC_StructInit          0x08007531   0x12  Code  Gb  diskio.o [1]
+ADC_TempSensorVrefintCmd
+                        0x08007771   0x16  Code  Gb  diskio.o [1]
+AdcInit                 0x080053c1  0x208  Code  Gb  diskio.o [1]
+CSTACK$$Base            0x20004fe0          --   Gb  - Linker created -
+CSTACK$$Limit           0x20004fe0          --   Gb  - Linker created -
+Calibration             0x08005e01   0x26  Code  Gb  diskio.o [1]
+CheckStartByGSensor     0x08005d91   0x68  Code  Gb  diskio.o [1]
+ComputeMeterSpeed       0x08005893   0xa8  Code  Gb  diskio.o [1]
+ComputeMeterTacho       0x0800583f   0x54  Code  Gb  diskio.o [1]
+EXTI0_IRQHandler        0x08005769   0x72  Code  Gb  diskio.o [1]
+EXTI1_IRQHandler        0x080057e1   0x1e  Code  Gb  diskio.o [1]
+EXTI2_IRQHandler        0x080057ff   0x40  Code  Gb  diskio.o [1]
+FLASH_HalfCycleAccessCmd
+                        0x080077d5   0x14  Code  Gb  diskio.o [1]
 FLASH_PrefetchBufferCmd
-                        0x08005ac5    0xa  Code  Gb  stm32f10x_flash.o [1]
-FLASH_SetLatency        0x08005ab1    0xa  Code  Gb  stm32f10x_flash.o [1]
-GPIO_EXTILineConfig     0x08005659   0x22  Code  Gb  stm32f10x_gpio.o [1]
-GPIO_Init               0x08005591   0xb8  Code  Gb  stm32f10x_gpio.o [1]
-GPIO_StructInit         0x08005649   0x10  Code  Gb  stm32f10x_gpio.o [1]
-GetCurrentTime          0x08004ac7   0x1a  Code  Gb  main2.o [1]
-GetCurrentTime16        0x08004ae1    0x8  Code  Gb  main2.o [1]
-GetHex                  0x08004999   0x22  Code  Gb  main2.o [1]
-HSEStartUpStatus        0x20004ff8    0x1  Data  Gb  hw_config.o [1]
-HSEStatus               0x20004ff0    0x1  Data  Lc  stm32f10x_rcc.o [1]
-InputSerial             0x08004ed5   0xba  Code  Gb  main2.o [1]
-IntHandlerLoop          0x08005e8f    0x2  Code  Gb  stm32f10x_it.o [1]
-IntHandlerNop           0x08005e8d    0x2  Code  Gb  stm32f10x_it.o [1]
-JumpTo                  0x08004991    0x8  Code  Lc  main2.o [1]
-LoadBin                 0x08004a4d   0x1a  Code  Gb  main2.o [1]
-LoadBinSub              0x08004a11   0x22  Code  Gb  main2.o [1]
-LoadInt                 0x08003679   0x6e  Code  Lc  xprintffull.o [3]
-LoadSRecord             0x080049f7   0x1a  Code  Gb  main2.o [1]
-LoadSRecordSub          0x080049bb   0x3c  Code  Gb  main2.o [1]
-NVIC_Init               0x080057bf   0x7e  Code  Gb  stm32f10x_nvic.o [1]
+                        0x080077e9   0x14  Code  Gb  diskio.o [1]
+FLASH_SetLatency        0x080077c1   0x14  Code  Gb  diskio.o [1]
+GPIO_AFIODeInit         0x08007895   0x16  Code  Gb  diskio.o [1]
+GPIO_DeInit             0x080077fd   0x98  Code  Gb  diskio.o [1]
+GPIO_EXTILineConfig     0x08007a21   0x26  Code  Gb  diskio.o [1]
+GPIO_EventOutputCmd     0x080079e1    0x8  Code  Gb  diskio.o [1]
+GPIO_EventOutputConfig  0x080079c9   0x18  Code  Gb  diskio.o [1]
+GPIO_Init               0x080078ad   0xbe  Code  Gb  diskio.o [1]
+GPIO_PinLockConfig      0x080079b9   0x10  Code  Gb  diskio.o [1]
+GPIO_PinRemapConfig     0x080079e9   0x38  Code  Gb  diskio.o [1]
+GPIO_ReadInputData      0x08007989    0x6  Code  Gb  diskio.o [1]
+GPIO_ReadInputDataBit   0x0800797b    0xe  Code  Gb  diskio.o [1]
+GPIO_ReadOutputData     0x0800799d    0x6  Code  Gb  diskio.o [1]
+GPIO_ReadOutputDataBit  0x0800798f    0xe  Code  Gb  diskio.o [1]
+GPIO_ResetBits          0x080079a7    0x4  Code  Gb  diskio.o [1]
+GPIO_SetBits            0x080079a3    0x4  Code  Gb  diskio.o [1]
+GPIO_StructInit         0x0800796b   0x10  Code  Gb  diskio.o [1]
+GPIO_Write              0x080079b5    0x4  Code  Gb  diskio.o [1]
+GPIO_WriteBit           0x080079ab    0xa  Code  Gb  diskio.o [1]
+GetCurrentTime          0x08005379   0x1c  Code  Gb  diskio.o [1]
+GetHex                  0x080049f1  0x132  Code  Gb  diskio.o [1]
+GetcharWait             0x080090e9   0x34  Code  Gb  diskio.o [1]
+HSEStartUpStatus        0x20004ff0    0x1  Data  Gb  diskio.o [1]
+IWDG_Enable             0x08007a6b    0xc  Code  Gb  diskio.o [1]
+IWDG_GetFlagStatus      0x08007a77   0x12  Code  Gb  diskio.o [1]
+IWDG_ReloadCounter      0x08007a5f    0xc  Code  Gb  diskio.o [1]
+IWDG_SetPrescaler       0x08007a4f    0x8  Code  Gb  diskio.o [1]
+IWDG_SetReload          0x08007a57    0x8  Code  Gb  diskio.o [1]
+IWDG_WriteAccessCmd     0x08007a47    0x8  Code  Gb  diskio.o [1]
+Initialize              0x08005e29  0x292  Code  Gb  diskio.o [1]
+InputSerial             0x08005bbd  0x1d4  Code  Gb  diskio.o [1]
+IntHandlerNop           0x08008e43    0x2  Code  Gb  diskio.o [1]
+IntHandlerReset         0x08008e45    0x8  Code  Gb  diskio.o [1]
+JumpTo                  0x080092e5    0x8  Code  Gb  diskio.o [1]
+LoadBin                 0x08005219   0xe2  Code  Gb  diskio.o [1]
+LoadBinSub              0x0800518f   0x72  Code  Gb  diskio.o [1]
+LoadInt                 0x08009925   0x6e  Code  Lc  xprintffull.o [3]
+LoadSGetcharWait        0x080048d5  0x116  Code  Gb  diskio.o [1]
+LoadSRecord             0x080050a9   0xe6  Code  Gb  diskio.o [1]
+LoadSRecordSub          0x08004b25  0x582  Code  Gb  diskio.o [1]
+MSD_GetCIDRegister      0x08006ef1  0x1b0  Code  Gb  diskio.o [1]
+MSD_GetCSDRegister      0x08006c99  0x252  Code  Gb  diskio.o [1]
+MSD_GetDataResponse     0x08007133   0x42  Code  Gb  diskio.o [1]
+MSD_GetResponse         0x0800719d   0x36  Code  Gb  diskio.o [1]
+MSD_GetResponse2        0x08007179   0x24  Code  Gb  diskio.o [1]
+MSD_GetStatus           0x080071d3   0x94  Code  Gb  diskio.o [1]
+MSD_GoIdleState         0x0800727d  0x20e  Code  Gb  diskio.o [1]
+MSD_Init                0x080065f5   0xe8  Code  Gb  diskio.o [1]
+MSD_ReadBlock           0x0800687d  0x14a  Code  Gb  diskio.o [1]
+MSD_ReadBuffer          0x08006b3d  0x142  Code  Gb  diskio.o [1]
+MSD_ReadByte            0x08007499   0x1a  Code  Gb  diskio.o [1]
+MSD_SendCmd             0x080070d1   0x62  Code  Gb  diskio.o [1]
+MSD_WaitRdy             0x080070a1   0x30  Code  Gb  diskio.o [1]
+MSD_WriteBlock          0x080066e9  0x17e  Code  Gb  diskio.o [1]
+MSD_WriteBuffer         0x080069d1  0x168  Code  Gb  diskio.o [1]
+MSD_WriteByte           0x0800748b    0xe  Code  Gb  diskio.o [1]
+NVIC_BASEPRICONFIG      0x08007b8b    0x6  Code  Gb  diskio.o [1]
+NVIC_ClearIRQChannelPendingBit
+                        0x08007bc9   0x14  Code  Gb  diskio.o [1]
+NVIC_ClearSystemHandlerPendingBit
+                        0x08007cf7   0x18  Code  Gb  diskio.o [1]
+NVIC_DeInit             0x08007a89   0x22  Code  Gb  diskio.o [1]
+NVIC_GenerateCoreReset  0x08007c2d    0xc  Code  Gb  diskio.o [1]
+NVIC_GenerateSystemReset
+                        0x08007c21    0xc  Code  Gb  diskio.o [1]
+NVIC_GetBASEPRI         0x08007b91    0x4  Code  Gb  diskio.o [1]
+NVIC_GetCPUID           0x08007c09    0x8  Code  Gb  diskio.o [1]
+NVIC_GetCurrentActiveHandler
+                        0x08007bdd    0xc  Code  Gb  diskio.o [1]
+NVIC_GetCurrentPendingIRQChannel
+                        0x08007b95    0xc  Code  Gb  diskio.o [1]
+NVIC_GetFaultAddress    0x08007d5f   0x12  Code  Gb  diskio.o [1]
+NVIC_GetFaultHandlerSources
+                        0x08007d2f   0x30  Code  Gb  diskio.o [1]
+NVIC_GetIRQChannelActiveBitStatus
+                        0x08007be9   0x20  Code  Gb  diskio.o [1]
+NVIC_GetIRQChannelPendingBitStatus
+                        0x08007ba1   0x20  Code  Gb  diskio.o [1]
+NVIC_GetSystemHandlerActiveBitStatus
+                        0x08007d0f   0x20  Code  Gb  diskio.o [1]
+NVIC_GetSystemHandlerPendingBitStatus
+                        0x08007cc1   0x20  Code  Gb  diskio.o [1]
+NVIC_Init               0x08007ae7   0x88  Code  Gb  diskio.o [1]
 NVIC_PriorityGroupConfig
-                        0x080057b5    0xa  Code  Gb  stm32f10x_nvic.o [1]
-NVIC_SetVectorTable     0x0800583d    0xc  Code  Gb  stm32f10x_nvic.o [1]
-NvicIntDisable          0x0800497b    0xc  Code  Lc  main2.o [1]
-NvicIntEnable           0x0800496d    0xe  Code  Lc  main2.o [1]
-OutputSerial            0x08004e81   0x50  Code  Gb  main2.o [1]
-PulseInit               0x08004bf5   0x9c  Code  Gb  main2.o [1]
-RAM_Block$$Base         0x20004fe4          --   Gb  - Linker created -
+                        0x08007ad9    0xe  Code  Gb  diskio.o [1]
+NVIC_RESETFAULTMASK     0x08007b87    0x4  Code  Gb  diskio.o [1]
+NVIC_RESETPRIMASK       0x08007b7f    0x4  Code  Gb  diskio.o [1]
+NVIC_SCBDeInit          0x08007aab   0x2e  Code  Gb  diskio.o [1]
+NVIC_SETFAULTMASK       0x08007b83    0x4  Code  Gb  diskio.o [1]
+NVIC_SETPRIMASK         0x08007b7b    0x4  Code  Gb  diskio.o [1]
+NVIC_SetIRQChannelPendingBit
+                        0x08007bc1    0x8  Code  Gb  diskio.o [1]
+NVIC_SetSystemHandlerPendingBit
+                        0x08007ce1   0x16  Code  Gb  diskio.o [1]
+NVIC_SetVectorTable     0x08007c11   0x10  Code  Gb  diskio.o [1]
+NVIC_StructInit         0x08007b6f    0xc  Code  Gb  diskio.o [1]
+NVIC_SystemHandlerConfig
+                        0x08007c4d   0x1e  Code  Gb  diskio.o [1]
+NVIC_SystemHandlerPriorityConfig
+                        0x08007c6b   0x56  Code  Gb  diskio.o [1]
+NVIC_SystemLPConfig     0x08007c39   0x14  Code  Gb  diskio.o [1]
+OutputSerial            0x08005b19   0xa4  Code  Gb  diskio.o [1]
+PulseInit               0x080055dd  0x18c  Code  Gb  diskio.o [1]
+RAM_Block$$Base         0x20004fe0          --   Gb  - Linker created -
 RAM_Block$$Limit        0x20005000          --   Gb  - Linker created -
-RCC_ADCCLKConfig        0x0800540d    0xa  Code  Gb  stm32f10x_rcc.o [1]
-RCC_APB1PeriphClockCmd  0x080054a3   0x12  Code  Gb  stm32f10x_rcc.o [1]
-RCC_APB1PeriphResetCmd  0x080054c7   0x12  Code  Gb  stm32f10x_rcc.o [1]
-RCC_APB2PeriphClockCmd  0x08005491   0x12  Code  Gb  stm32f10x_rcc.o [1]
-RCC_APB2PeriphResetCmd  0x080054b5   0x12  Code  Gb  stm32f10x_rcc.o [1]
-RCC_DeInit              0x0800531d   0x40  Code  Gb  stm32f10x_rcc.o [1]
-RCC_GetClocksFreq       0x08005417   0x7a  Code  Gb  stm32f10x_rcc.o [1]
-RCC_GetFlagStatus       0x080054d9   0x22  Code  Gb  stm32f10x_rcc.o [1]
-RCC_GetSYSCLKSource     0x080053db    0xa  Code  Gb  stm32f10x_rcc.o [1]
-RCC_HCLKConfig          0x080053e5    0xa  Code  Gb  stm32f10x_rcc.o [1]
-RCC_HSEConfig           0x0800535d   0x32  Code  Gb  stm32f10x_rcc.o [1]
-RCC_PCLK1Config         0x080053ef    0x8  Code  Gb  stm32f10x_rcc.o [1]
-RCC_PCLK2Config         0x080053fd    0x8  Code  Gb  stm32f10x_rcc.o [1]
-RCC_PLLCmd              0x080053c7    0x6  Code  Gb  stm32f10x_rcc.o [1]
-RCC_PLLConfig           0x080053b7   0x10  Code  Gb  stm32f10x_rcc.o [1]
-RCC_SYSCLKConfig        0x080053cd    0xe  Code  Gb  stm32f10x_rcc.o [1]
-RCC_WaitForHSEStartUp   0x0800538f   0x28  Code  Gb  stm32f10x_rcc.o [1]
-Region$$Table$$Base     0x08005df4          --   Gb  - Linker created -
-Region$$Table$$Limit    0x08005e20          --   Gb  - Linker created -
-SdcInit                 0x08004e17   0x26  Code  Gb  main2.o [1]
-SdcInserted             0x08004e45   0x10  Code  Gb  main2.o [1]
-SerialPack              0x08004e55   0x2c  Code  Gb  main2.o [1]
-Set_System              0x080059c9   0xcc  Code  Gb  hw_config.o [1]
-StartUpCounter          0x20004ff4    0x4  Data  Lc  stm32f10x_rcc.o [1]
-TIM_DeInit              0x08005541   0x46  Code  Gb  stm32f10x_tim.o [1]
-TimerInit               0x08004a7d   0x4a  Code  Gb  main2.o [1]
-USART1_IRQHandler       0x080051f7   0x64  Code  Gb  usart.o [1]
-USART_Cmd               0x08005975   0x14  Code  Gb  stm32f10x_usart.o [1]
-USART_DeInit            0x08005865   0x58  Code  Gb  stm32f10x_usart.o [1]
-USART_ITConfig          0x08005989   0x30  Code  Gb  stm32f10x_usart.o [1]
-USART_Init              0x080058bd   0x8a  Code  Gb  stm32f10x_usart.o [1]
-USART_ReceiveData       0x080059c1    0x8  Code  Gb  stm32f10x_usart.o [1]
-USART_SendData          0x080059b9    0x8  Code  Gb  stm32f10x_usart.o [1]
-USART_StructInit        0x08005955   0x20  Code  Gb  stm32f10x_usart.o [1]
-UsartGetcharBuffered    0x080052bf   0x1e  Code  Gb  usart.o [1]
-UsartGetcharUnbuffered  0x080052ad    0xc  Code  Gb  usart.o [1]
+RCC_ADCCLKConfig        0x08007ec1   0x10  Code  Gb  diskio.o [1]
+RCC_AHBPeriphClockCmd   0x08007f95   0x14  Code  Gb  diskio.o [1]
+RCC_APB1PeriphClockCmd  0x08007fbd   0x14  Code  Gb  diskio.o [1]
+RCC_APB1PeriphResetCmd  0x08007fe3   0x14  Code  Gb  diskio.o [1]
+RCC_APB2PeriphClockCmd  0x08007fa9   0x14  Code  Gb  diskio.o [1]
+RCC_APB2PeriphResetCmd  0x08007fd1   0x12  Code  Gb  diskio.o [1]
+RCC_AdjustHSICalibrationValue
+                        0x08007e1f   0x12  Code  Gb  diskio.o [1]
+RCC_BackupResetCmd      0x08007ff7    0x8  Code  Gb  diskio.o [1]
+RCC_ClearFlag           0x0800802f    0xc  Code  Gb  diskio.o [1]
+RCC_ClearITPendingBit   0x0800804b    0x6  Code  Gb  diskio.o [1]
+RCC_ClockSecuritySystemCmd
+                        0x08007fff    0x6  Code  Gb  diskio.o [1]
+RCC_DeInit              0x08007d71   0x46  Code  Gb  diskio.o [1]
+RCC_GetClocksFreq       0x08007f09   0x88  Code  Gb  diskio.o [1]
+RCC_GetFlagStatus       0x0800800b   0x24  Code  Gb  diskio.o [1]
+RCC_GetITStatus         0x0800803b   0x10  Code  Gb  diskio.o [1]
+RCC_GetSYSCLKSource     0x08007e63    0xc  Code  Gb  diskio.o [1]
+RCC_HCLKConfig          0x08007e6f   0x10  Code  Gb  diskio.o [1]
+RCC_HSEConfig           0x08007db7   0x36  Code  Gb  diskio.o [1]
+RCC_HSICmd              0x08007e31    0x8  Code  Gb  diskio.o [1]
+RCC_ITConfig            0x08007ea5   0x14  Code  Gb  diskio.o [1]
+RCC_LSEConfig           0x08007ed1   0x18  Code  Gb  diskio.o [1]
+RCC_LSICmd              0x08007ee9    0x8  Code  Gb  diskio.o [1]
+RCC_MCOConfig           0x08008005    0x6  Code  Gb  diskio.o [1]
+RCC_PCLK1Config         0x08007e7f   0x10  Code  Gb  diskio.o [1]
+RCC_PCLK2Config         0x08007e8f   0x12  Code  Gb  diskio.o [1]
+RCC_PLLCmd              0x08007e4b    0x8  Code  Gb  diskio.o [1]
+RCC_PLLConfig           0x08007e39   0x12  Code  Gb  diskio.o [1]
+RCC_RTCCLKCmd           0x08007efd    0x8  Code  Gb  diskio.o [1]
+RCC_RTCCLKConfig        0x08007ef1    0xc  Code  Gb  diskio.o [1]
+RCC_SYSCLKConfig        0x08007e53   0x10  Code  Gb  diskio.o [1]
+RCC_USBCLKConfig        0x08007eb9    0x8  Code  Gb  diskio.o [1]
+RCC_WaitForHSEStartUp   0x08007ded   0x32  Code  Gb  diskio.o [1]
+Region$$Table$$Base     0x0800ae58          --   Gb  - Linker created -
+Region$$Table$$Limit    0x0800ae84          --   Gb  - Linker created -
+SPI_BiDirectionalLineConfig
+                        0x080081a5   0x16  Code  Gb  diskio.o [1]
+SPI_CalculateCRC        0x08008181   0x14  Code  Gb  diskio.o [1]
+SPI_ClearFlag           0x080081c9   0x22  Code  Gb  diskio.o [1]
+SPI_ClearITPendingBit   0x08008211   0x2c  Code  Gb  diskio.o [1]
+SPI_Cmd                 0x080080f7   0x14  Code  Gb  diskio.o [1]
+SPI_DMACmd              0x08008125   0x10  Code  Gb  diskio.o [1]
+SPI_DataSizeConfig      0x08008165   0x12  Code  Gb  diskio.o [1]
+SPI_DeInit              0x08008055   0x38  Code  Gb  diskio.o [1]
+SPI_GetCRC              0x08008195    0xc  Code  Gb  diskio.o [1]
+SPI_GetCRCPolynomial    0x080081a1    0x4  Code  Gb  diskio.o [1]
+SPI_GetFlagStatus       0x080081bb    0xe  Code  Gb  diskio.o [1]
+SPI_GetITStatus         0x080081eb   0x26  Code  Gb  diskio.o [1]
+SPI_ITConfig            0x0800810b   0x1a  Code  Gb  diskio.o [1]
+SPI_Init                0x080080b1   0x2e  Code  Gb  diskio.o [1]
+SPI_NSSInternalSoftwareConfig
+                        0x0800813d   0x14  Code  Gb  diskio.o [1]
+SPI_ReceiveData         0x08008139    0x4  Code  Gb  diskio.o [1]
+SPI_SSOutputCmd         0x08008151   0x14  Code  Gb  diskio.o [1]
+SPI_SendData            0x08008135    0x4  Code  Gb  diskio.o [1]
+SPI_StructInit          0x080080df   0x18  Code  Gb  diskio.o [1]
+SPI_TransmitCRC         0x08008177    0xa  Code  Gb  diskio.o [1]
+SdcInit                 0x0800593d   0x46  Code  Gb  diskio.o [1]
+SerialPack              0x08005a15  0x104  Code  Gb  diskio.o [1]
+Set_System              0x0800471d  0x1b8  Code  Gb  diskio.o [1]
+TIM_ARRPreloadConfig    0x08008737   0x14  Code  Gb  diskio.o [1]
+TIM_ClearFlag           0x0800897f    0xa  Code  Gb  diskio.o [1]
+TIM_ClearITPendingBit   0x0800899d    0xa  Code  Gb  diskio.o [1]
+TIM_ClearOC1Ref         0x080087d5    0xe  Code  Gb  diskio.o [1]
+TIM_ClearOC2Ref         0x080087e3    0xe  Code  Gb  diskio.o [1]
+TIM_ClearOC3Ref         0x080087f1    0xe  Code  Gb  diskio.o [1]
+TIM_ClearOC4Ref         0x080087ff    0xe  Code  Gb  diskio.o [1]
+TIM_Cmd                 0x0800857f   0x14  Code  Gb  diskio.o [1]
+TIM_CounterModeConfig   0x080086ed    0xe  Code  Gb  diskio.o [1]
+TIM_DMACmd              0x080085af   0x10  Code  Gb  diskio.o [1]
+TIM_DMAConfig           0x080085a3    0xc  Code  Gb  diskio.o [1]
+TIM_DeInit              0x0800823d   0x5a  Code  Gb  diskio.o [1]
+TIM_ETRClockMode1Config
+                        0x0800865d   0x3a  Code  Gb  diskio.o [1]
+TIM_ETRClockMode2Config
+                        0x08008697   0x1e  Code  Gb  diskio.o [1]
+TIM_ETRConfig           0x080086b5   0x16  Code  Gb  diskio.o [1]
+TIM_EncoderInterfaceConfig
+                        0x08008821   0x32  Code  Gb  diskio.o [1]
+TIM_ForcedOC1Config     0x080086fb    0xe  Code  Gb  diskio.o [1]
+TIM_ForcedOC2Config     0x08008709   0x10  Code  Gb  diskio.o [1]
+TIM_ForcedOC3Config     0x08008719    0xe  Code  Gb  diskio.o [1]
+TIM_ForcedOC4Config     0x08008727   0x10  Code  Gb  diskio.o [1]
+TIM_GenerateEvent       0x08008853    0x8  Code  Gb  diskio.o [1]
+TIM_GetCapture1         0x08008957    0x4  Code  Gb  diskio.o [1]
+TIM_GetCapture2         0x0800895b    0x4  Code  Gb  diskio.o [1]
+TIM_GetCapture3         0x0800895f    0x4  Code  Gb  diskio.o [1]
+TIM_GetCapture4         0x08008963    0x6  Code  Gb  diskio.o [1]
+TIM_GetCounter          0x08008969    0x4  Code  Gb  diskio.o [1]
+TIM_GetFlagStatus       0x08008971    0xe  Code  Gb  diskio.o [1]
+TIM_GetITStatus         0x08008989   0x14  Code  Gb  diskio.o [1]
+TIM_GetPrescaler        0x0800896d    0x4  Code  Gb  diskio.o [1]
+TIM_ICInit              0x0800842d  0x124  Code  Gb  diskio.o [1]
+TIM_ICStructInit        0x08008569   0x16  Code  Gb  diskio.o [1]
+TIM_ITConfig            0x08008593   0x10  Code  Gb  diskio.o [1]
+TIM_ITRxExternalClockConfig
+                        0x080085cb   0x16  Code  Gb  diskio.o [1]
+TIM_InternalClockConfig
+                        0x080085bf    0xc  Code  Gb  diskio.o [1]
+TIM_OC1FastConfig       0x08008799    0xe  Code  Gb  diskio.o [1]
+TIM_OC1PolarityConfig   0x0800885b    0xe  Code  Gb  diskio.o [1]
+TIM_OC1PreloadConfig    0x0800875d    0xe  Code  Gb  diskio.o [1]
+TIM_OC2FastConfig       0x080087a7   0x10  Code  Gb  diskio.o [1]
+TIM_OC2PolarityConfig   0x08008869   0x10  Code  Gb  diskio.o [1]
+TIM_OC2PreloadConfig    0x0800876b   0x10  Code  Gb  diskio.o [1]
+TIM_OC3FastConfig       0x080087b7    0xe  Code  Gb  diskio.o [1]
+TIM_OC3PolarityConfig   0x08008879   0x10  Code  Gb  diskio.o [1]
+TIM_OC3PreloadConfig    0x0800877b    0xe  Code  Gb  diskio.o [1]
+TIM_OC4FastConfig       0x080087c5   0x10  Code  Gb  diskio.o [1]
+TIM_OC4PolarityConfig   0x08008889   0x10  Code  Gb  diskio.o [1]
+TIM_OC4PreloadConfig    0x08008789   0x10  Code  Gb  diskio.o [1]
+TIM_OCInit              0x0800834b   0xd2  Code  Gb  diskio.o [1]
+TIM_OCStructInit        0x0800855d    0xc  Code  Gb  diskio.o [1]
+TIM_PrescalerConfig     0x080086d9   0x14  Code  Gb  diskio.o [1]
+TIM_SelectCCDMA         0x0800874b   0x12  Code  Gb  diskio.o [1]
+TIM_SelectHallSensor    0x080088ad   0x14  Code  Gb  diskio.o [1]
+TIM_SelectInputTrigger  0x080086cb    0xe  Code  Gb  diskio.o [1]
+TIM_SelectMasterSlaveMode
+                        0x080088e9    0xe  Code  Gb  diskio.o [1]
+TIM_SelectOnePulseMode  0x080088c1    0xe  Code  Gb  diskio.o [1]
+TIM_SelectOutputTrigger
+                        0x080088cf    0xc  Code  Gb  diskio.o [1]
+TIM_SelectSlaveMode     0x080088db    0xe  Code  Gb  diskio.o [1]
+TIM_SetAutoreload       0x080088fb    0x4  Code  Gb  diskio.o [1]
+TIM_SetClockDivision    0x0800894d    0xa  Code  Gb  diskio.o [1]
+TIM_SetCompare1         0x080088ff    0x4  Code  Gb  diskio.o [1]
+TIM_SetCompare2         0x08008903    0x4  Code  Gb  diskio.o [1]
+TIM_SetCompare3         0x08008907    0x4  Code  Gb  diskio.o [1]
+TIM_SetCompare4         0x0800890b    0x6  Code  Gb  diskio.o [1]
+TIM_SetCounter          0x080088f7    0x4  Code  Gb  diskio.o [1]
+TIM_SetIC1Prescaler     0x08008911    0xe  Code  Gb  diskio.o [1]
+TIM_SetIC2Prescaler     0x0800891f   0x10  Code  Gb  diskio.o [1]
+TIM_SetIC3Prescaler     0x0800892f    0xe  Code  Gb  diskio.o [1]
+TIM_SetIC4Prescaler     0x0800893d   0x10  Code  Gb  diskio.o [1]
+TIM_TIxExternalClockConfig
+                        0x080085e1   0x7c  Code  Gb  diskio.o [1]
+TIM_TimeBaseInit        0x0800832d   0x1e  Code  Gb  diskio.o [1]
+TIM_TimeBaseStructInit  0x08008551    0xc  Code  Gb  diskio.o [1]
+TIM_UpdateDisableConfig
+                        0x0800880d   0x14  Code  Gb  diskio.o [1]
+TIM_UpdateRequestConfig
+                        0x08008899   0x14  Code  Gb  diskio.o [1]
+TimerInit               0x08005315   0x64  Code  Gb  diskio.o [1]
+USART1_IRQHandler       0x08008f67   0x54  Code  Gb  diskio.o [1]
+USART_ClearFlag         0x08008de9    0xa  Code  Gb  diskio.o [1]
+USART_ClearITPendingBit
+                        0x08008e31   0x12  Code  Gb  diskio.o [1]
+USART_Cmd               0x08008c8d   0x14  Code  Gb  diskio.o [1]
+USART_DMACmd            0x08008cd1   0x10  Code  Gb  diskio.o [1]
+USART_DeInit            0x08008af5   0x58  Code  Gb  diskio.o [1]
+USART_GetFlagStatus     0x08008ddb    0xe  Code  Gb  diskio.o [1]
+USART_GetITStatus       0x08008df3   0x3e  Code  Gb  diskio.o [1]
+USART_HalfDuplexCmd     0x08008da1   0x14  Code  Gb  diskio.o [1]
+USART_ITConfig          0x08008ca1   0x30  Code  Gb  diskio.o [1]
+USART_Init              0x08008b61   0xd8  Code  Gb  diskio.o [1]
+USART_IrDACmd           0x08008dc7   0x14  Code  Gb  diskio.o [1]
+USART_IrDAConfig        0x08008db5   0x12  Code  Gb  diskio.o [1]
+USART_LINBreakDetectLengthConfig
+                        0x08008d19   0x12  Code  Gb  diskio.o [1]
+USART_LINCmd            0x08008d2b   0x14  Code  Gb  diskio.o [1]
+USART_ReceiveData       0x08008d47    0x8  Code  Gb  diskio.o [1]
+USART_ReceiverWakeUpCmd
+                        0x08008d05   0x14  Code  Gb  diskio.o [1]
+USART_SendBreak         0x08008d4f    0xa  Code  Gb  diskio.o [1]
+USART_SendData          0x08008d3f    0x8  Code  Gb  diskio.o [1]
+USART_SetAddress        0x08008ce1   0x12  Code  Gb  diskio.o [1]
+USART_SetGuardTime      0x08008d59   0x10  Code  Gb  diskio.o [1]
+USART_SetPrescaler      0x08008d69   0x10  Code  Gb  diskio.o [1]
+USART_SmartCardCmd      0x08008d79   0x14  Code  Gb  diskio.o [1]
+USART_SmartCardNACKCmd  0x08008d8d   0x14  Code  Gb  diskio.o [1]
+USART_StructInit        0x08008c6d   0x20  Code  Gb  diskio.o [1]
+USART_WakeUpConfig      0x08008cf3   0x12  Code  Gb  diskio.o [1]
+UsartGetcharBuffered    0x08009051   0x22  Code  Gb  diskio.o [1]
+UsartGetcharUnbuffered  0x0800903b   0x16  Code  Gb  diskio.o [1]
+UsartGetcharWaitBuffered
+                        0x080090c7   0x22  Code  Gb  diskio.o [1]
 UsartGetcharWaitUnbuffered
-                        0x080052f9    0xe  Code  Gb  usart.o [1]
-UsartInit               0x08005159   0x9e  Code  Gb  usart.o [1]
-UsartPutcharBuffered    0x08005271   0x2e  Code  Gb  usart.o [1]
-UsartPutcharUnbuffered  0x0800525b   0x16  Code  Gb  usart.o [1]
-UsartPutstrUnbuffered   0x08005307   0x16  Code  Gb  usart.o [1]
-WaitStateChange         0x0800500f   0xa4  Code  Gb  main2.o [1]
-_GenldFull              0x08003bef  0x264  Code  Lc  xprintffull.o [3]
-_LdtobFull              0x080037ed  0x3fc  Code  Lc  xprintffull.o [3]
-_LitobFull              0x080036e7  0x106  Code  Lc  xprintffull.o [3]
-_PrintfFull             0x080030ed  0x586  Code  Gb  xprintffull.o [3]
-_Prout                  0x08005e61   0x16  Code  Gb  xprout.o [3]
-_PutcharsFull           0x08003e53   0x2e  Code  Lc  xprintffull.o [3]
-_SProut                 0x08003ed3    0xa  Code  Gb  xsprout.o [3]
-__BASEPRICONFIG         0x08005c17         Code  Gb  cortexm3_macro.o [1]
-__DMB                   0x08005bd5         Code  Gb  cortexm3_macro.o [1]
-__DSB                   0x08005bcf         Code  Gb  cortexm3_macro.o [1]
-__GetBASEPRI            0x08005c1d         Code  Gb  cortexm3_macro.o [1]
-__ISB                   0x08005bc9         Code  Gb  cortexm3_macro.o [1]
-__MRS_CONTROL           0x08005bdf         Code  Gb  cortexm3_macro.o [1]
-__MRS_MSP               0x08005bfb         Code  Gb  cortexm3_macro.o [1]
-__MRS_PSP               0x08005bef         Code  Gb  cortexm3_macro.o [1]
-__MSR_CONTROL           0x08005be5         Code  Gb  cortexm3_macro.o [1]
-__MSR_MSP               0x08005c01         Code  Gb  cortexm3_macro.o [1]
-__MSR_PSP               0x08005bf5         Code  Gb  cortexm3_macro.o [1]
-__RESETFAULTMASK        0x08005c13         Code  Gb  cortexm3_macro.o [1]
-__RESETPRIMASK          0x08005c0b         Code  Gb  cortexm3_macro.o [1]
-__REV_HalfWord          0x08005c23         Code  Gb  cortexm3_macro.o [1]
-__REV_Word              0x08005c27         Code  Gb  cortexm3_macro.o [1]
-__SETFAULTMASK          0x08005c0f         Code  Gb  cortexm3_macro.o [1]
-__SETPRIMASK            0x08005c07         Code  Gb  cortexm3_macro.o [1]
-__SEV                   0x08005bc5         Code  Gb  cortexm3_macro.o [1]
-__SVC                   0x08005bdb         Code  Gb  cortexm3_macro.o [1]
-__WFE                   0x08005bc1         Code  Gb  cortexm3_macro.o [1]
-__WFI                   0x08005bbd         Code  Gb  cortexm3_macro.o [1]
-__aeabi_cdcmple         0x08004115         Code  Gb  DblCmpLe.o [4]
-__aeabi_cdrcmple        0x08004145         Code  Gb  DblCmpGe.o [4]
-__aeabi_d2iz            0x08004285         Code  Gb  DblToI32.o [4]
-__aeabi_d2uiz           0x080042b1         Code  Gb  DblToI32.o [4]
-__aeabi_ddiv            0x08004631         Code  Gb  DblDiv.o [4]
-__aeabi_dmul            0x0800448d         Code  Gb  DblMul.o [4]
-__aeabi_dsub            0x0800430d         Code  Gb  DblSub.o [4]
-__aeabi_i2d             0x080042dd         Code  Gb  I32ToDbl.o [4]
-__aeabi_ldiv0           0x08004895         Code  Gb  I64DivZer.o [5]
-__aeabi_memclr4         0x08005b81         Code  Gb  ABImemclr4.o [5]
-__aeabi_ui2d            0x080042f1         Code  Gb  I32ToDbl.o [4]
-__aeabi_uldivmod        0x08003f6d         Code  Gb  I64DivMod.o [5]
-__cmain                 0x08005e21         Code  Gb  cmain.o [5]
-__dwrite                0x08005ce7   0x1e  Code  Gb  dwrite.o [6]
-__exit                  0x08005e4d   0x14  Code  Gb  exit.o [6]
-__iar_Dnorm             0x080040d3   0x42  Code  Gb  xdnorm.o [4]
-__iar_Dscale            0x08004175  0x110  Code  Gb  xdscale.o [4]
-__iar_Memchr            0x08003f15         Code  Gb  memchr.o [5]
-__iar_Memset4_word      0x08005b89         Code  Gb  ABImemset48.o [5]
-__iar_Memset8_word      0x08005b89         Code  Gb  ABImemset48.o [5]
-__iar_Strchr            0x08003ebd         Code  Gb  strchr.o [5]
-__iar_close_ttio        0x08005c2d   0x2e  Code  Gb  iarttio.o [6]
-__iar_copy_init3        0x08005d7d   0x2c  Code  Gb  copy_init3.o [5]
-__iar_d2uiz             0x080042bd         Code  Gb  DblToI32.o [4]
-__iar_dadd              0x08004899         Code  Gb  DblAdd.o [4]
-__iar_data_init3        0x08005da9   0x28  Code  Gb  data_init.o [5]
-__iar_dsub              0x08004321         Code  Gb  DblSub.o [4]
-__iar_dsubStart         0x08004333         Code  Gb  DblSub.o [4]
-__iar_get_ttio          0x08005c5d   0x38  Code  Gb  iarttio.o [6]
-__iar_lookup_ttioh      0x08005c99    0x8  Code  Gb  XShttio.o [3]
-__iar_program_start     0x08005e77         Code  Gb  cstartup_M.o [5]
-__iar_sh_stdout         0x08005d05   0x20  Code  Gb  iarwstd.o [6]
-__iar_sh_write          0x08005d25   0x22  Code  Gb  iarwrite.o [6]
-__iar_ttio_handles      0x20004fe4    0x8  Data  Lc  XShttio.o [3]
-__iar_ui2d              0x080042f5         Code  Gb  I32ToDbl.o [4]
+                        0x080090b1   0x16  Code  Gb  diskio.o [1]
+UsartInit               0x08008e5d  0x10a  Code  Gb  diskio.o [1]
+UsartPutcharBuffered    0x08008fcb   0x2c  Code  Gb  diskio.o [1]
+UsartPutcharUnbuffered  0x08008fbb   0x10  Code  Gb  diskio.o [1]
+UsartPutstrUnbuffered   0x0800911d   0x16  Code  Gb  diskio.o [1]
+WaitStateChange         0x080060c5   0xae  Code  Gb  diskio.o [1]
+WdtInit                 0x0800599d   0x72  Code  Gb  diskio.o [1]
+WdtInitSub              0x08005983   0x1a  Code  Gb  diskio.o [1]
+_GenldFull              0x08009e9b  0x264  Code  Lc  xprintffull.o [3]
+_LdtobFull              0x08009a99  0x3fc  Code  Lc  xprintffull.o [3]
+_LitobFull              0x08009993  0x106  Code  Lc  xprintffull.o [3]
+_PrintfFull             0x08009399  0x586  Code  Gb  xprintffull.o [3]
+_Prout                  0x0800aed1   0x16  Code  Gb  xprout.o [3]
+_PutcharsFull           0x0800a0ff   0x2e  Code  Lc  xprintffull.o [3]
+_SProut                 0x08009253    0xa  Code  Gb  xsprout.o [3]
+__BASEPRICONFIG         0x08009347         Code  Gb  cortexm3_macro.o [1]
+__DMB                   0x08009305         Code  Gb  cortexm3_macro.o [1]
+__DSB                   0x080092ff         Code  Gb  cortexm3_macro.o [1]
+__GetBASEPRI            0x0800934d         Code  Gb  cortexm3_macro.o [1]
+__ISB                   0x080092f9         Code  Gb  cortexm3_macro.o [1]
+__MRS_CONTROL           0x0800930f         Code  Gb  cortexm3_macro.o [1]
+__MRS_MSP               0x0800932b         Code  Gb  cortexm3_macro.o [1]
+__MRS_PSP               0x0800931f         Code  Gb  cortexm3_macro.o [1]
+__MSR_CONTROL           0x08009315         Code  Gb  cortexm3_macro.o [1]
+__MSR_MSP               0x08009331         Code  Gb  cortexm3_macro.o [1]
+__MSR_PSP               0x08009325         Code  Gb  cortexm3_macro.o [1]
+__RESETFAULTMASK        0x08009343         Code  Gb  cortexm3_macro.o [1]
+__RESETPRIMASK          0x0800933b         Code  Gb  cortexm3_macro.o [1]
+__REV_HalfWord          0x08009353         Code  Gb  cortexm3_macro.o [1]
+__REV_Word              0x08009357         Code  Gb  cortexm3_macro.o [1]
+__SETFAULTMASK          0x0800933f         Code  Gb  cortexm3_macro.o [1]
+__SETPRIMASK            0x08009337         Code  Gb  cortexm3_macro.o [1]
+__SEV                   0x080092f5         Code  Gb  cortexm3_macro.o [1]
+__SVC                   0x0800930b         Code  Gb  cortexm3_macro.o [1]
+__WFE                   0x080092f1         Code  Gb  cortexm3_macro.o [1]
+__WFI                   0x080092ed         Code  Gb  cortexm3_macro.o [1]
+__aeabi_cdcmple         0x0800a365         Code  Gb  DblCmpLe.o [4]
+__aeabi_cdrcmple        0x0800a395         Code  Gb  DblCmpGe.o [4]
+__aeabi_d2iz            0x0800a4d5         Code  Gb  DblToI32.o [4]
+__aeabi_d2uiz           0x0800a501         Code  Gb  DblToI32.o [4]
+__aeabi_dadd            0x0800aae9         Code  Gb  DblAdd.o [4]
+__aeabi_ddiv            0x0800a881         Code  Gb  DblDiv.o [4]
+__aeabi_dmul            0x0800a6dd         Code  Gb  DblMul.o [4]
+__aeabi_dsub            0x0800a55d         Code  Gb  DblSub.o [4]
+__aeabi_i2d             0x0800a52d         Code  Gb  I32ToDbl.o [4]
+__aeabi_ldiv0           0x0800aae5         Code  Gb  I64DivZer.o [5]
+__aeabi_ldivmod         0x0800a1f1         Code  Gb  I64DivMod.o [5]
+__aeabi_memclr          0x0800925d         Code  Gb  ABImemclr.o [5]
+__aeabi_memclr4         0x08009265         Code  Gb  ABImemclr4.o [5]
+__aeabi_memset          0x08009169         Code  Gb  ABImemset.o [5]
+__aeabi_memset4         0x0800935d         Code  Gb  ABImemset48.o [5]
+__aeabi_memset8         0x0800935d         Code  Gb  ABImemset48.o [5]
+__aeabi_ui2d            0x0800a541         Code  Gb  I32ToDbl.o [4]
+__aeabi_uldivmod        0x0800a235         Code  Gb  I64DivMod.o [5]
+__cexit_call_dtors      0x0800aea7         Code  Gb  cexit.o [5]
+__cexit_clearlocks      0x0800aeaf         Code  Gb  cexit.o [5]
+__cexit_closeall        0x0800aeab         Code  Gb  cexit.o [5]
+__cmain                 0x0800ae85         Code  Gb  cmain.o [5]
+__dwrite                0x0800ad4b   0x1e  Code  Gb  dwrite.o [6]
+__exit                  0x0800aebd   0x14  Code  Gb  exit.o [6]
+__iar_Dnorm             0x0800a323   0x42  Code  Gb  xdnorm.o [4]
+__iar_Dscale            0x0800a3c5  0x110  Code  Gb  xdscale.o [4]
+__iar_Memchr            0x0800a199         Code  Gb  memchr.o [5]
+__iar_Memset            0x08009169         Code  Gb  ABImemset.o [5]
+__iar_Memset4_word      0x08009365         Code  Gb  ABImemset48.o [5]
+__iar_Memset8_word      0x08009365         Code  Gb  ABImemset48.o [5]
+__iar_Memset_word       0x08009171         Code  Gb  ABImemset.o [5]
+__iar_Strchr            0x0800a149         Code  Gb  strchr.o [5]
+__iar_close_ttio        0x0800ac91   0x2e  Code  Gb  iarttio.o [6]
+__iar_copy_init3        0x0800ade1   0x2c  Code  Gb  copy_init3.o [5]
+__iar_d2uiz             0x0800a50d         Code  Gb  DblToI32.o [4]
+__iar_dadd              0x0800aafd         Code  Gb  DblAdd.o [4]
+__iar_data_init3        0x0800ae0d   0x28  Code  Gb  data_init.o [5]
+__iar_dsub              0x0800a571         Code  Gb  DblSub.o [4]
+__iar_dsubStart         0x0800a583         Code  Gb  DblSub.o [4]
+__iar_get_ttio          0x0800acc1   0x38  Code  Gb  iarttio.o [6]
+__iar_lookup_ttioh      0x0800acfd    0x8  Code  Gb  XShttio.o [3]
+__iar_program_start     0x0800aee7         Code  Gb  cstartup_M.o [5]
+__iar_sh_stdout         0x0800ad69   0x20  Code  Gb  iarwstd.o [6]
+__iar_sh_write          0x0800ad89   0x22  Code  Gb  iarwrite.o [6]
+__iar_ttio_handles      0x20004fe0    0x8  Data  Lc  XShttio.o [3]
+__iar_ui2d              0x0800a545         Code  Gb  I32ToDbl.o [4]
 __iar_unaligned___aeabi_memcpy
-                        0x0800405d         Code  Gb  ABImemcpy_unaligned.o [5]
+                        0x0800926d         Code  Gb  ABImemcpy_unaligned.o [5]
 __iar_unaligned___aeabi_memcpy4
-                        0x0800407d         Code  Gb  ABImemcpy_unaligned.o [5]
+                        0x0800928d         Code  Gb  ABImemcpy_unaligned.o [5]
 __iar_unaligned___aeabi_memcpy8
-                        0x0800407d         Code  Gb  ABImemcpy_unaligned.o [5]
-__iar_zero_init3        0x08003e9b   0x22  Code  Gb  zero_init3.o [5]
-__vector_table          0x08003000   0xec  Data  Gb  stm32f10x_vector.o [1]
-__write                 0x08005cd7   0x10  Code  Gb  write.o [6]
-_call_main              0x08005e2d         Code  Gb  cmain.o [5]
-_exit                   0x08005e41         Code  Gb  cexit.o [5]
-_main                   0x08005e37         Code  Gb  cmain.o [5]
-div                     0x08004887    0xe  Code  Gb  div.o [3]
-exit                    0x08005e3b    0x4  Code  Gb  exit.o [3]
-g_pUsartBuf             0x20004ffc    0x4  Data  Gb  usart.o [1]
-g_pVsd                  0x20004fec    0x4  Data  Gb  main2.o [1]
-getchar                 0x080052dd    0xe  Code  Gb  usart.o [1]
-main                    0x08005ad5   0xa0  Code  Gb  main.o [1]
-memchr                  0x08003f15         Code  Gb  memchr.o [5]
-printf                  0x08005dd1   0x24  Code  Gb  printf.o [3]
-putchar                 0x0800529f    0xe  Code  Gb  usart.o [1]
-puts                    0x08005ca1   0x34  Code  Gb  puts.o [3]
-sprintf                 0x08005d49   0x34  Code  Gb  sprintf.o [3]
-strchr                  0x08003ebd         Code  Gb  strchr.o [5]
-strlen                  0x08003edd         Code  Gb  strlen.o [5]
+                        0x0800928d         Code  Gb  ABImemcpy_unaligned.o [5]
+__iar_unaligned_memcmp  0x080091f1         Code  Gb  memcmp_unaligned.o [5]
+__iar_zero_init3        0x080091cf   0x22  Code  Gb  zero_init3.o [5]
+__vector_table          0x08003000   0xec  Data  Gb  diskio.o [1]
+__write                 0x0800ad3b   0x10  Code  Gb  write.o [6]
+_call_main              0x0800ae91         Code  Gb  cmain.o [5]
+_exit                   0x0800aea5         Code  Gb  cexit.o [5]
+_main                   0x0800ae9b         Code  Gb  cmain.o [5]
+disk_initialize         0x080030ed    0x4  Code  Gb  diskio.o [1]
+disk_ioctl              0x08003121   0x4c  Code  Gb  diskio.o [1]
+disk_read               0x080030f5   0x16  Code  Gb  diskio.o [1]
+disk_status             0x080030f1    0x4  Code  Gb  diskio.o [1]
+disk_write              0x0800310b   0x16  Code  Gb  diskio.o [1]
+div                     0x0800aad7    0xe  Code  Gb  div.o [3]
+exit                    0x0800ae9f    0x4  Code  Gb  exit.o [3]
+f_close                 0x0800470b   0x10  Code  Gb  diskio.o [1]
+f_mount                 0x08003e85   0x22  Code  Gb  diskio.o [1]
+f_open                  0x08003ead  0x306  Code  Gb  diskio.o [1]
+f_read                  0x080041b3  0x152  Code  Gb  diskio.o [1]
+f_sync                  0x080045af  0x15c  Code  Gb  diskio.o [1]
+f_write                 0x08004305  0x2aa  Code  Gb  diskio.o [1]
+g_pUsartBuf             0x20004ffc    0x4  Data  Gb  diskio.o [1]
+g_pVsd                  0x20004ff8    0x4  Data  Gb  diskio.o [1]
+get_fattime             0x0800316d    0x4  Code  Gb  diskio.o [1]
+getchar                 0x08009079   0x34  Code  Gb  diskio.o [1]
+main                    0x0800619d  0x440  Code  Gb  diskio.o [1]
+memchr                  0x0800a199         Code  Gb  memchr.o [5]
+printf                  0x0800ae35   0x24  Code  Gb  printf.o [3]
+putchar                 0x08008ff9   0x42  Code  Gb  diskio.o [1]
+puts                    0x0800ad05   0x34  Code  Gb  puts.o [3]
+sprintf                 0x0800adad   0x34  Code  Gb  sprintf.o [3]
+strchr                  0x0800a149         Code  Gb  strchr.o [5]
+strlen                  0x0800a161         Code  Gb  strlen.o [5]
 
 
 [1] = Z:\Release\Obj
@@ -433,9 +699,9 @@ strlen                  0x08003edd         Code  Gb  strlen.o [5]
 [5] = rt7M_tl.a
 [6] = shb_l.a
 
-  11 630 bytes of readonly  code memory
-     290 bytes of readonly  data memory
-      28 bytes of readwrite data memory
+  32 026 bytes of readonly  code memory
+     482 bytes of readonly  data memory
+      32 bytes of readwrite data memory
 
 Errors: none
 Warnings: none

@@ -54,7 +54,6 @@ void __iar_program_start( void );
 const intvec_elem __vector_table[] =
 {
 	__iar_program_start,
-	__iar_program_start,
 };
 #else
 const intvec_elem __vector_table[] =
