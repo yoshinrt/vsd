@@ -166,6 +166,8 @@ public class Vsdroid extends Activity {
 				BTSock.connect();
 				InStream	= BTSock.getInputStream();
 				OutStream	= BTSock.getOutputStream();
+				InStream.setSoTimeout( 2000 );	// リードタイムアウト時間
+				
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connected" );
 				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_connected );
 				return 0;
@@ -282,7 +284,7 @@ public class Vsdroid extends Activity {
 			try{
 				if(( strBuf = brEmuLog.readLine()) == null ){
 					MsgHandler.sendEmptyMessage( R.string.statmsg_emulog_finished );
-					return ERROR;
+					return FATAL_ERROR;
 				}
 
 				StringTokenizer Token = new StringTokenizer( strBuf );

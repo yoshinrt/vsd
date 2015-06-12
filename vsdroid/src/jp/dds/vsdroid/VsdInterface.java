@@ -240,6 +240,8 @@ class VsdInterface implements Runnable {
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:connected" );
 			InStream	= Sock.getInputStream();
 			OutStream	= Sock.getOutputStream();
+			InStream.setSoTimeout( 2000 );	// リードタイムアウト時間
+			
 			MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_connected );
 			return 0;
 		}catch( SocketTimeoutException e ){
@@ -263,10 +265,13 @@ class VsdInterface implements Runnable {
 		int iReadSize = 0;
 		try{
 			iReadSize = InStream.read( Buf, iStart, iLen );
+			if( iReadSize > 0 ) return iReadSize;
+		}catch( SocketTimeoutException e ){
 		}catch( IOException e ){
-			return ERROR;
 		}
-		return iReadSize;
+		
+		MsgHandler.sendEmptyMessage( R.string.statmsg_read_disconnected );
+		return ERROR;
 	}
 
 	// 1 <= :受信したレコード数  0:新データなし 0>:エラー
@@ -280,10 +285,7 @@ class VsdInterface implements Runnable {
 		//if( bDebug ) Log.d( "VSDroid", "VsdInterface::Read" );
 
 		iReadSize = RawRead( iBufLen, iBufSize - iBufLen );
-		if( iReadSize < 0 ){
-			MsgHandler.sendEmptyMessage( R.string.statmsg_read_disconnected );
-			return iReadSize;
-		}
+		if( iReadSize <= 0 ) return iReadSize;	// エラー
 
 		try{
 			if( fsBinLog != null ) fsBinLog.write( Buf, iBufLen, iReadSize );
@@ -616,12 +618,10 @@ class VsdInterface implements Runnable {
 			}else{
 				// タイムアウト
 				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_timeout );
-				// ★再試行すべき
 				return ERROR;
 			}
 		}catch( IOException e ){
 			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_ioerror );
-			// ★再試行すべき
 			return ERROR;
 		}
 
@@ -705,7 +705,9 @@ class VsdInterface implements Runnable {
 			}
 			if( fsLog == null && OpenLog() < 0 ) break;
 			
-			while( !bKillThread && ( iRet = Read()) >= 0 );
+			while( !bKillThread && ( iRet = Read()) >= 0 ){
+				SendCmd( "*" );	// ビーコン送信
+			}
 			if( iRet == FATAL_ERROR ) break;
 		}
 		
