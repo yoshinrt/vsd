@@ -44,6 +44,7 @@ INLINE __noreturn void JumpTo( u32 uJmpAddr, u32 uSP ){
 
 // LoadS 専用の GetcharWait(), z でやり直し
 int LoadSGetcharWait(){
+	WdtReload();
 	int c = UsartGetcharWaitUnbuffered();
 	if( c == 'z' ) LoadSRecord();
 	return c;
@@ -556,6 +557,7 @@ void InputSerial( VSD_DATA_t *pVsd ){
 		pVsd->uInputParam = ( pVsd->uInputParam << 4 ) + c - '0';
 	}else if( !pVsd->Flags.bConnected ){
 		if( c == '*' && pVsd->uInputParam == 0xF15EF117 ) pVsd->Flags.bConnected = 1;
+		else pVsd->uInputParam = 0;
 	}else{
 		switch( c ){
 			case 'l': pVsd->Flags.uLapMode	= MODE_LAPTIME;		pVsd->uRemainedMileage = 0;
@@ -616,8 +618,6 @@ void Calibration( VSD_DATA_t *pVsd ){
 
 #ifndef zzzEXEC_SRAM
 INLINE void Initialize( USART_BUF_t *pBuf ){
-	//WdtInit( 3000 );
-	
 	#ifndef EXEC_SRAM
 		Set_System();
 		
@@ -628,6 +628,7 @@ INLINE void Initialize( USART_BUF_t *pBuf ){
 		// ベクタテーブルを SRAM に再設定
 		//NVIC_SetVectorTable( 0, __vector_table );
 	#endif
+	WdtInit( 3000 );
 	LedOff();
 	
 	UsartInit( USART_BAUDRATE, pBuf );
@@ -719,8 +720,6 @@ __noreturn void main( void ){
 			OutputSerial( &Vsd );
 			LedToggle();
 		}else{
-			// ★ FW 再ダウンロード要求
-			//putchar( 0xFF );
 			WdtReload();
 			LedOn();
 		}
