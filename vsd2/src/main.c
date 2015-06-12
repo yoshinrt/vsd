@@ -42,6 +42,13 @@ INLINE __noreturn void JumpTo( u32 uJmpAddr, u32 uSP ){
 	asm( "MSR MSP, r1\nBX r0\n" );
 }
 
+// LoadS 専用の GetcharWait(), z でやり直し
+int LoadSGetcharWait(){
+	int c = UsartGetcharWaitUnbuffered();
+	if( c == 'z' ) LoadSRecord();
+	return c;
+}
+
 UINT GetHex( UINT uBytes ){
 	
 	uBytes <<= 1;;
@@ -50,7 +57,7 @@ UINT GetHex( UINT uBytes ){
 	
 	do{
 		uRet <<= 4;
-		c = UsartGetcharWaitUnbuffered();
+		c = LoadSGetcharWait();
 		
 		if( '0' <= c && c <= '9' )	uRet |= c - '0';
 		else						uRet |= c - ( 'A' - 10 );
@@ -67,10 +74,10 @@ __noreturn void LoadSRecordSub( void ){
 	
 	while( 1 ){
 		// 'S' までスキップ
-		while( UsartGetcharWaitUnbuffered() != 'S' );
+		while( LoadSGetcharWait() != 'S' );
 		
 		// 終了ヘッダなら break;
-		if(( c = UsartGetcharWaitUnbuffered()) == '7' ) break;
+		if(( c = LoadSGetcharWait()) == '7' ) break;
 		
 		if( c == '3' ){
 			// データを書き込む
