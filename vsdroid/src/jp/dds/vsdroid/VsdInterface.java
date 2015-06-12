@@ -240,7 +240,6 @@ class VsdInterface implements Runnable {
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:connected" );
 			InStream	= Sock.getInputStream();
 			OutStream	= Sock.getOutputStream();
-			InStream.setSoTimeout( 2000 );	// リードタイムアウト時間
 			
 			MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_connected );
 			return 0;
@@ -266,7 +265,6 @@ class VsdInterface implements Runnable {
 		try{
 			iReadSize = InStream.read( Buf, iStart, iLen );
 			if( iReadSize > 0 ) return iReadSize;
-		}catch( SocketTimeoutException e ){
 		}catch( IOException e ){
 		}
 		
@@ -283,7 +281,7 @@ class VsdInterface implements Runnable {
 		int i;
 
 		//if( bDebug ) Log.d( "VSDroid", "VsdInterface::Read" );
-
+		
 		iReadSize = RawRead( iBufLen, iBufSize - iBufLen );
 		if( iReadSize <= 0 ) return iReadSize;	// エラー
 
@@ -689,10 +687,13 @@ class VsdInterface implements Runnable {
 		VsdThread.start();
 	}
 
+	volatile int uReadWdt;
 	public void run(){
 		bKillThread = false;
 		int iRet;
-
+		
+		Timer ReadWdt;
+		
 		if( bDebug ) Log.d( "VSDroid", "run_loop()" );
 		
 		while( !bKillThread ){
@@ -705,9 +706,32 @@ class VsdInterface implements Runnable {
 			}
 			if( fsLog == null && OpenLog() < 0 ) break;
 			
+			// Read WDT 発動
+			uReadWdt = 0;
+			ReadWdt = new Timer();
+			ReadWdt.scheduleAtFixedRate(
+				new TimerTask(){
+					@Override
+					public void run(){
+						if( ++uReadWdt > 4 ){
+							// 0.5 * 4sec Read できなければ
+							// ソケット強制クローズで Read() を失敗させる
+							Close();
+						}
+					}
+				}, 0, 500
+			);
+			
 			while( !bKillThread && ( iRet = Read()) >= 0 ){
-				SendCmd( "*" );	// ビーコン送信
+				try{
+					uReadWdt = 0;
+					SendCmd( "*" );	// ビーコン送信
+				}catch( IOException e ){
+					break;
+				}
 			}
+			
+			ReadWdt.cancel();
 			if( iRet == FATAL_ERROR ) break;
 		}
 		
