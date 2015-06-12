@@ -628,9 +628,9 @@ INLINE void Initialize( USART_BUF_t *pBuf ){
 		// ベクタテーブルを SRAM に再設定
 		//NVIC_SetVectorTable( 0, __vector_table );
 	#endif
+	
 	WdtInit( 3000 );
 	LedOff();
-	
 	UsartInit( USART_BAUDRATE, pBuf );
 	AdcInit();
 	TimerInit();
