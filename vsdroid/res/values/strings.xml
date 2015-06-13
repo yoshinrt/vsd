@@ -15,7 +15,12 @@
 	<string name="pref_roms">VSDファームウェア</string>
 	<string name="pref_flash">レブリミット警告灯</string>
 	<string name="pref_replay_log">再生するログ</string>
-	<string name="pref_system_dir">VSD ディレクトリ</string><string name="pref_debug_info">デバッグ情報</string>
+	<string name="pref_system_dir">VSD ディレクトリ</string>
+	<string name="pref_debug_info">デバッグ情報</string>
+	<string name="pref_log_hz">ログ Hz</string>
+	<string name="pref_wheel_select">ホイール選択</string>
+	<string name="pref_wheel_select_normal">ノーマルホイール</string>
+	<string name="pref_wheel_select_CE28N">CE28N</string>
 	<string name="mode_laptime">ラップタイム</string>
 	<string name="mode_gymkhana">ジムカーナ</string>
 	<string name="mode_0_400">0-400m</string>
@@ -49,5 +54,4 @@
 	<string name="statmsg_emulog_finished">ログ再生終了</string>
 	<string name="statmsg_emulog_open_failed">[E] 再生ログが見つかりません</string>
 	<string name="statmsg_emulog_failed">[E] ログ再生中にエラー発生</string>
-	
 </resources>

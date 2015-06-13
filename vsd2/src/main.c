@@ -520,12 +520,12 @@ void SerialPack( UINT uVal, UINT uBytes ){
 
 /*** シリアル出力 ***********************************************************/
 
-#ifndef EXEC_SRAM
+#ifndef zzzEXEC_SRAM
 void OutputSerial( VSD_DATA_t *pVsd ){
 	SerialPack( pVsd->Tacho.uVal, 2 );
 	SerialPack( pVsd->Speed.uVal, 2 );
 	SerialPack( pVsd->uMileage, 2 );
-	SerialPack( GetCurrentTime() >> 10, 2 );	// てきとう
+	SerialPack( GetCurrentTime() >> 8, 2 );
 	SerialPack( pVsd->uGy, 2 );
 	SerialPack( pVsd->uGx, 2 );
 	
@@ -541,7 +541,7 @@ void OutputSerial( VSD_DATA_t *pVsd ){
 
 /*** シリアル入力 ***********************************************************/
 
-#ifndef EXEC_SRAM
+#ifndef zzzEXEC_SRAM
 void InputSerial( VSD_DATA_t *pVsd ){
 	
 	UINT c = getchar();
@@ -563,6 +563,15 @@ void InputSerial( VSD_DATA_t *pVsd ){
 			Case 'f': pVsd->Flags.uLapMode	= MODE_ZERO_FOUR;	pVsd->uRemainedMileage = 1; pVsd->uStartGTh = pVsd->uInputParam;
 			Case 'o': pVsd->Flags.uLapMode	= MODE_ZERO_ONE;	pVsd->uRemainedMileage = 1; pVsd->uStartGTh = pVsd->uInputParam;
 			Case 'c': pVsd->uCalibTimer = 6 * pVsd->uLogHz;	// キャリブレーション
+			
+			// ホイール定数設定
+			// uParam は PP1KM << 18
+			Case 'w': {
+				pVsd->uComputeMeterConst	= ( UINT )(( TIMER_HZ * 3600.0 * 100 * ( 1 << 18 )) / pVsd->uInputParam );
+				pVsd->uMileage_0_400		= ( UINT )( pVsd->uInputParam * ( 400.0 / 1000 / ( 1 << 18 )) + 0.5 );
+			}
+			
+			Case 'h': pVsd->uLogHz = pVsd->uInputParam;
 			Case 'z': LoadSRecord();
 		}
 		pVsd->uInputParam = 0;
@@ -636,7 +645,7 @@ void Initialize( USART_BUF_t *pBuf ){
 
 /*** ステート変化待ち & LED 表示 ********************************************/
 
-#ifndef EXEC_SRAM
+#ifndef zzzEXEC_SRAM
 void WaitStateChange( VSD_DATA_t *pVsd ){
 	UINT	uSumGx 		= 0;
 	UINT	uSumGy 		= 0;

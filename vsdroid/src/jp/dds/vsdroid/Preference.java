@@ -20,6 +20,8 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 	private ListPreference		ListSectors;
 	private ListPreference		ListConnMode;
 	private ListPreference		ListBTDevices;
+	private ListPreference		ListLogHz;
+	private ListPreference		ListWheelSelect;
 	private EditTextPreference	EditGymkhaStart;
 	private EditTextPreference	EditIPAddr;
 
@@ -36,6 +38,8 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		ListSectors		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_sectors" );
 		ListConnMode	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_connection_mode" );
 		ListBTDevices	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_bt_devices" );
+		ListLogHz		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_log_hz" );
+		ListWheelSelect	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_wheel_select" );
 		EditGymkhaStart	= ( EditTextPreference )getPreferenceScreen().findPreference( "key_gymkha_start" );
 		EditIPAddr		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_ip_addr" );
 
@@ -145,6 +149,22 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 
 		if( key == null || key.equals( "key_bt_devices" )){
 			ListBTDevices.setSummary( sharedPreferences.getString( "key_bt_devices", "Not selected" ));
+		}
+		
+		if( key == null || key.equals( "key_log_hz" )){
+			String s = sharedPreferences.getString( "key_log_hz", "16" );
+			try{
+				Integer.parseInt( s );
+			}catch( NumberFormatException e ){
+				s = "16";
+			}
+			ListLogHz.setSummary( s );
+		}
+
+		if( key == null || key.equals( "key_wheel_select" )){
+			ListWheelSelect.setSummary(
+				sharedPreferences.getString( "key_wheel_select", "CE28N" )
+			);
 		}
 	}
 

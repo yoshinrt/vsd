@@ -25,9 +25,7 @@ class VsdInterface implements Runnable {
 	static final int MODE_ZERO_ONE	= 3;
 	static final int MODE_NUM		= 4;
 
-	//static final double H8HZ			= 16030000;
-	//static final double SERIAL_DIVCNT	= 16;		// シリアル出力を行う周期
-	static final double LOG_FREQ		= 16;
+	static final int TIMER_HZ	= 200000;
 
 	// スピード * 100/Taco 比
 	// ELISE
@@ -38,7 +36,9 @@ class VsdInterface implements Runnable {
 	static final double GEAR_RATIO4 = 2.95059529470571;
 
 	// たぶん，ホイル一周が30パルス
-	static final double PULSE_PER_1KM	= 15473.76689;	// ELISE(CE28N)
+	static final double PULSE_PER_1KM_CE28N		= 15473.76689;	// CE28N
+	static final double PULSE_PER_1KM_NORMAL	= 14958.80127;	// ノーマル
+	double dPulsePer1Km	= PULSE_PER_1KM_CE28N;
 
 	SharedPreferences Pref;
 	Thread VsdThread = null;
@@ -50,7 +50,6 @@ class VsdInterface implements Runnable {
 	int		iRtcPrevRaw		= 0;
 	int		iMileageRaw		= 0;
 	int		iTSCRaw			= 0;
-	int		iIRCnt			= 0;
 	int 	iSectorCnt		= 0;
 	int 	iSectorCntMax	= 1;
 	Calendar	Cal;
@@ -134,7 +133,6 @@ class VsdInterface implements Runnable {
 		iRtcPrevRaw		= 0;
 		iMileageRaw		= 0;
 		iTSCRaw			= 0;
-		iIRCnt			= 0;
 		iThrottle0		= 0;
 		iSectorCnt		= 0;
 		iSectorCntMax	= 1;
@@ -220,7 +218,7 @@ class VsdInterface implements Runnable {
 		try{
 			if( fsLog != null ) fsLog.write(
 				"Date/Time\tTacho\tSpeed\tDistance\t" +
-				"Gy\tGx\tGx(Device)\tGy(Device)\tThrottle\tThrottle(raw)\t" +
+				"Gy\tGx\tThrottle\tThrottle(raw)\t" +
 				"AuxInfo\tLapTime\tSectorTime\r\n"
 			);
 		}catch( IOException e ){}
@@ -309,9 +307,6 @@ class VsdInterface implements Runnable {
 			if( iBufPtr < iEOLPos ){
 				iMileage16	= Unpack();
 				iTSCRaw		= Unpack();
-				iIRCnt		= iTSCRaw;
-				iTSCRaw		>>= 8;
-
 				iGy			= Unpack();
 				iGx			= Unpack();
 				iThrottleRaw	= 0x7FFFFFFF / Unpack();
@@ -409,7 +404,7 @@ class VsdInterface implements Runnable {
 	}
 
 	long	iLogTimeMilli;
-	int		iLogTSC;
+	int		iTSC;	// 200KHz >> 8
 
 	public void WriteLog(){
 		String s;
@@ -417,11 +412,9 @@ class VsdInterface implements Runnable {
 		if( !bLogStart ){
 			if( iSpeedRaw > 0 ){
 				// 動いたので Log 開始
-				bLogStart = true;
-
-				//iLogTSC			= iTSCRaw;
-				iLogTimeMilli	= System.currentTimeMillis()
-					- iTSCRaw * 1000 / ( int )LOG_FREQ;
+				bLogStart		= true;
+				iTSC			= iTSCRaw;
+				iLogTimeMilli	= System.currentTimeMillis() - ( int )( iTSC * ( 256.0 * 1000 / TIMER_HZ ));
 			}else{
 				// まだ動いていないので，Log 保留
 				return;
@@ -429,12 +422,9 @@ class VsdInterface implements Runnable {
 		}
 
 		// iTSCRaw から時刻算出
-		// ★ iLogTSC は ( 2 << 31 ) / 1000 / 16 / 3600 = 37時間，が max
-		//if( iTSCRaw < ( iLogTSC & 0xFF )) iLogTSC += 0x100;
-		//iLogTSC = ( iLogTSC & ~0xFF ) | iTSCRaw;
-		// ★よくわからないが iTSCRaw が信用出来ない
-		++iLogTSC;
-		Cal.setTimeInMillis( iLogTimeMilli + iLogTSC * 1000 / ( int )LOG_FREQ );
+		if(( iTSC & 0xFFFF ) > iTSCRaw ) iTSC += 0x10000;
+		iTSC = ( iTSC & 0xFFFF0000 ) | iTSCRaw;
+		Cal.setTimeInMillis( iLogTimeMilli + ( int )( iTSC * ( 256.0 * 1000 / TIMER_HZ )));
 
 		// 基本データ
 		s = String.format(
@@ -451,10 +441,10 @@ class VsdInterface implements Runnable {
 			Cal.get( Calendar.SECOND ),
 			Cal.get( Calendar.MILLISECOND ),
 			iTacho, iSpeedRaw / 100.0,
-			iMileageRaw * ( 1000 / PULSE_PER_1KM ),
+			iMileageRaw * ( 1000 / dPulsePer1Km ),
 			iGy / 4096.0, iGx / 4096.0,
 			iThrottle / 10.0, iThrottleRaw,
-			iIRCnt
+			iTSCRaw
 		);
 
 		// ラップタイム
@@ -532,7 +522,7 @@ class VsdInterface implements Runnable {
 				Sleep( 30 );
 			}
 		}
-		return ERROR;
+		throw new IOException( "WaitChar() time out" );
 	}
 
 	//*** FW ロード ******************************************************
@@ -546,15 +536,16 @@ class VsdInterface implements Runnable {
 		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_loading );
 		
 		try{
-			// .mot オープン
-			fsFirm = new FileInputStream( Pref.getString( "key_roms", null ));
-			
-			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending magic code" );
-			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_magic );
-			SendCmd( "F15EF117*z" );
-			
-			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware" );
 			try{
+				// .mot オープン
+				fsFirm = new FileInputStream( Pref.getString( "key_roms", null ));
+				
+				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending magic code" );
+				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_magic );
+				SendCmd( "F15EF117*z" );
+				
+				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware" );
+				
 				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
 				WaitChar( ':' );
 				
@@ -563,26 +554,21 @@ class VsdInterface implements Runnable {
 				while(( iReadSize = fsFirm.read( Buf, 0, iBufSize )) > 0 ){
 					OutStream.write( Buf, 0, iReadSize );
 				}
-			}catch( Exception e1 ){
-				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_senderror );
+				
+				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
+				if( bDebug ) Log.d( "VSDroid", "LoadFirm::go" );
+				WaitChar( ':' );
+					
+			}catch( FileNotFoundException e ){
+				// FW がない場合ここに飛ぶ
 				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware canceled" );
+				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_none );
 			}
 			
-			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
-			if( bDebug ) Log.d( "VSDroid", "LoadFirm::go" );
-			WaitChar( ':' );
+			try {
+				if( fsFirm != null ) fsFirm.close();
+			}catch( IOException e1 ){}
 			
-		}catch( Exception e ){
-			// FW がない場合ここに飛ぶ
-			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware canceled" );
-			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_none );
-		}
-		
-		try {
-			if( fsFirm != null ) fsFirm.close();
-		}catch( IOException e1 ){}
-		
-		try{
 			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending log output request" );
 			Sleep( 100 );
 			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_magic );
@@ -630,7 +616,7 @@ class VsdInterface implements Runnable {
 
 	//*** config に従って設定 ********************************************
 
-	public void SetupMode(){
+	public int SetupMode(){
 		int i;
 
 		// セクタ数
@@ -646,7 +632,11 @@ class VsdInterface implements Runnable {
 		}catch( NumberFormatException e ){
 			dGymkhaStart = 1.0;
 		}
-
+		
+		// ホイール設定
+		dPulsePer1Km = Pref.getString( "key_wheel_select", "CE28N" ).equals( "CE28N" )
+			? PULSE_PER_1KM_CE28N : PULSE_PER_1KM_NORMAL;
+		
 		// メインモード
 		try{
 			iMainMode = Integer.parseInt( Pref.getString( "key_vsd_mode", "0" ));
@@ -661,7 +651,7 @@ class VsdInterface implements Runnable {
 
 			  case MODE_GYMKHANA:
 				// * は g_lParam をいったんクリアする意図
-				i = ( int )( dGymkhaStart * PULSE_PER_1KM / 1000 + 0.5 );
+				i = ( int )( dGymkhaStart * dPulsePer1Km / 1000 + 0.5 );
 				if( i < 1 ) i = 1;
 				SendCmd( String.format( "*%Xg", i ));
 				break;
@@ -673,10 +663,29 @@ class VsdInterface implements Runnable {
 			  case MODE_ZERO_ONE:
 				SendCmd( String.format( "*%Xo", iStartGThrethold ));
 			}
-		}catch( IOException e ){}
-
+			
+			// ホイール・Hz 設定
+			
+			// 再び sio on と wheel 設定
+			int iLogHz = 16;
+			try{
+				iLogHz = Integer.parseInt( Pref.getString( "key_log_hz", "16" ));
+			}catch( NumberFormatException e ){}
+			
+			SendCmd( String.format(
+				"*%Xw%Xh",
+				( int )( dPulsePer1Km * ( 1 << 18 ) - ( 0x40000000 * 2.0 )) ^ 0x80000000,
+				iLogHz
+			));
+		}catch( IOException e ){
+			return ERROR;
+		}
+		
 		iRtcPrevRaw		= 0;
 		iSectorCnt		= 0;
+		bLogStart		= false;	// TSC と実時間の同期を取り直す
+		
+		return 0;
 	}
 
 	//*** データ処理スレッド *********************************************
@@ -699,7 +708,11 @@ class VsdInterface implements Runnable {
 		while( !bKillThread ){
 			Close(); // 開いていたら一旦 close
 			
-			if(( iRet = Open()) < 0 || ( iRet = LoadFirmWare()) < 0 ){
+			if(
+				( iRet = Open()) < 0 ||
+				( iRet = LoadFirmWare()) < 0 ||
+				( iRet = SetupMode()) < 0
+			){
 				if( iRet == FATAL_ERROR ) break;
 				Sleep( 1000 );
 				continue;

@@ -299,7 +299,7 @@ public class Vsdroid extends Activity {
 				iIdx = Pack( iIdx, iIdxSpeed < iTokCnt ? ( int )( Double.parseDouble( strToken[ iIdxSpeed ] ) * 100 ) : 0 );
 
 				// Mileage
-				iIdx = Pack( iIdx, iIdxDistance < iTokCnt ? ( int )( Double.parseDouble( strToken[ iIdxDistance ] ) / 1000 * PULSE_PER_1KM ) : 0 );
+				iIdx = Pack( iIdx, iIdxDistance < iTokCnt ? ( int )( Double.parseDouble( strToken[ iIdxDistance ] ) / 1000 * PULSE_PER_1KM_CE28N ) : 0 );
 
 				// TSC
 				iIdx = Pack( iIdx, 0 );
@@ -342,7 +342,7 @@ public class Vsdroid extends Activity {
 					Now.get( Calendar.MILLISECOND );
 
 				if( dOutputWaitTime == 0 ) dOutputWaitTime = NowMs;
-				dOutputWaitTime += 1000.0 / LOG_FREQ;
+				dOutputWaitTime += 1000.0 / 16;
 				i = ( int )( dOutputWaitTime - NowMs );
 				if( i > 0 ) Sleep( i );
 

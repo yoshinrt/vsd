@@ -33,5 +33,13 @@
 	<item>1</item>
 	<item>2</item>
 </string-array>
-
+<string-array name="list_log_hz">
+	<item>16</item>
+	<item>20</item>
+	<item>32</item>
+</string-array>
+<string-array name="list_wheel_select">
+	<item>@string/pref_wheel_select_CE28N</item>
+	<item>@string/pref_wheel_select_normal</item>
+</string-array>
 </resources>

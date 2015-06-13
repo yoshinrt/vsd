@@ -3,6 +3,8 @@
 use Socket;
 use Time::HiRes qw(sleep);
 
+$LOG_HZ = 16;
+
 if( $ARGV[ 0 ] =~ /\.gz$/ ){
 	open( fpIn, "gunzip -c $ARGV[ 0 ] |" );
 }else{
@@ -87,6 +89,7 @@ $Buf = '';
 
 WaitCmd( 'z' ); SendData( ':' );
 WaitCmd( 'S7' ); SendData( ':' );	# l
+WaitCmd( 'w' );
 # GetData();
 
 $PULSE_PER_1KM	= 15473.76689;	# ELISE(CE28N)
@@ -107,7 +110,7 @@ while( <fpIn> ){
 		$_[ $IdxTacho ],
 		int( $_[ $IdxSpeed ] * 100 ),
 		int( $_[ $IdxDistance ] / 1000 * $PULSE_PER_1KM ),
-		$iCnt++,	# TSC
+		$iCnt++ * 200000 / 256 / $LOG_HZ,	# TSC
 		int( -$_[ $IdxGy ] * $ACC_1G_Y + 32000 ),
 		int(  $_[ $IdxGx ] * $ACC_1G_Z + 32000 ),
 		$_[ $IdxThrottle ] > 0 ? $_[ $IdxThrottle ] : 0x8000
@@ -126,8 +129,7 @@ while( <fpIn> ){
 	
 	last if( !defined( send( $SockClient, $_ . "\xFF", 0 )));
 	
-	sleep( 1 / 16 );
-#	sleep( 1 / 10 );
+	sleep( 1 / $LOG_HZ );
 	
 	#GetData( MSG_DONTWAIT );
 }
