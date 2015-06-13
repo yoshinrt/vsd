@@ -113,11 +113,19 @@ class VsdInterface implements Runnable {
 		try{ Thread.sleep( ms ); }catch( InterruptedException e ){}
 	}
 
-	String FormatTime2( int iTime ){
+	static String FormatTime( int iTime ){
+		return String.format( "%d'%02d.%03d",
+			iTime / ( TIMER_HZ * 60 ),
+			( iTime / TIMER_HZ ) % 60,
+			1000 * ( iTime % TIMER_HZ ) / TIMER_HZ
+		);
+	}
+
+	static String FormatTime2( int iTime ){
 		return String.format( "%d:%02d.%03d",
-			iTime / ( 256 * 60 ),
-			( iTime >> 8 ) % 60,
-			1000 * ( iTime & 0xFF ) / 256
+			iTime / ( TIMER_HZ * 60 ),
+			( iTime / TIMER_HZ ) % 60,
+			1000 * ( iTime % TIMER_HZ ) / TIMER_HZ
 		);
 	}
 

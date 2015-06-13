@@ -258,7 +258,7 @@ INLINE BOOL AdcConversionCompleted( void ){
 // PD1: tacho
 // PD2: 磁気センサー
 
-#ifndef EXEC_SRAM
+#ifndef zzzEXEC_SRAM
 void PulseInit( void ){
 	// APB クロック
 	RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOD, ENABLE );
@@ -282,8 +282,9 @@ void PulseInit( void ){
 	GPIO_EXTILineConfig( GPIO_PortSourceGPIOD, GPIO_PinSource1 );
 	GPIO_EXTILineConfig( GPIO_PortSourceGPIOD, GPIO_PinSource2 );
 	EXTI->IMR  |=  0x7;
-	EXTI->RTSR |=  0x3;	// 磁気センサ [2] のみ fall edge
-	EXTI->FTSR &= ~0x3;
+	// 磁気センサ [2] のみ fall edge
+	EXTI->RTSR = EXTI->RTSR & ~0x7 | 0x3;
+	EXTI->FTSR = EXTI->FTSR & ~0x7 | 0x4;
 	
 	// NVIC 設定
 	NVIC_InitTypeDef NVIC_InitStructure;
@@ -528,6 +529,7 @@ void OutputSerial( VSD_DATA_t *pVsd ){
 	SerialPack( GetCurrentTime() >> 8, 2 );
 	SerialPack( pVsd->uGy, 2 );
 	SerialPack( pVsd->uGx, 2 );
+	SerialPack( 1, 2 );
 	
 	/*** ラップタイム表示 ***/
 	if( pVsd->Flags.bNewLap ){

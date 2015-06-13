@@ -35,13 +35,6 @@ typedef union { intfunc __fun; void * __ptr; } intvec_elem;
 
 /* Private functions ---------------------------------------------------------*/
 
-#ifndef EXEC_SRAM
-void IntHandlerNop( void ){}
-void IntHandlerReset( void ){
-	NVIC_GenerateSystemReset();
-}
-#endif
-
 #pragma language=extended
 #pragma segment="CSTACK"
 
@@ -56,9 +49,18 @@ const intvec_elem __vector_table[] =
 	__iar_program_start,
 };
 #else
+void IntHandlerNop( void ){}
+void IntHandlerReset( void ){
+	NVIC_GenerateSystemReset();
+}
+
 const intvec_elem __vector_table[] =
 {
-	{ .__ptr = __sfe( "CSTACK" ) },
+	#ifdef EXEC_SRAM
+		__iar_program_start,
+	#else
+		{ .__ptr = __sfe( "CSTACK" ) },
+	#endif
 	__iar_program_start,
 	
 	#define DEF_HANDLER( func )			func,

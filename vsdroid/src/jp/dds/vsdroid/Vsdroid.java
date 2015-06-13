@@ -75,14 +75,6 @@ public class Vsdroid extends Activity {
 
 	//*** utils **************************************************************
 
-	String FormatTime( int iTime ){
-		return String.format( "%d'%02d.%03d",
-			iTime / ( 256 * 60 ),
-			( iTime >> 8 ) % 60,
-			1000 * ( iTime & 0xFF ) / 256
-		);
-	}
-
 	void Sleep( int ms ){
 		try{ Thread.sleep( ms ); }catch( InterruptedException e ){}
 	}
@@ -666,9 +658,9 @@ public class Vsdroid extends Activity {
 					Vsd.iTimeLastRaw <= Vsd.iTimeBestRaw	? Color.CYAN :
 															  Color.RED
 				);
-				canvas.drawText( FormatTime( Vsd.iTimeLastRaw ), 340, 410, paint );
+				canvas.drawText( VsdInterface.FormatTime( Vsd.iTimeLastRaw ), 340, 410, paint );
 				paint.setColor( Color.GRAY );
-				canvas.drawText( FormatTime( Vsd.iTimeBestRaw ), 340, 470, paint );
+				canvas.drawText( VsdInterface.FormatTime( Vsd.iTimeBestRaw ), 340, 470, paint );
 				
 				if( bDebugInfo ){
 					// デバッグ用
