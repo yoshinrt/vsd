@@ -70,7 +70,7 @@ typedef struct {
 	UINT	uInputParam;					// シリアル入力値
 	UINT	uComputeMeterConst;				// スピード計算定数
 	
-	// 上詰めなので下に追記する ★ほんまか?
+	// 上に書かれたものから下詰めなので下に追記する
 	struct {
 		UCHAR	uLapMode		:2;
 		
