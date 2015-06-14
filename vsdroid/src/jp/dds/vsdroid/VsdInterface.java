@@ -15,7 +15,7 @@ import java.util.*;
 
 class VsdInterface implements Runnable {
 
-	static final boolean bDebug = Vsdroid.bDebug;
+	static final boolean bDebug = BuildConfig.DEBUG;
 
 	// モード・config
 	int		iMainMode	= MODE_LAPTIME;
@@ -80,6 +80,7 @@ class VsdInterface implements Runnable {
 	BufferedWriter			fsLog		= null;
 	BufferedOutputStream	fsBinLog	= null;
 
+	boolean			bDebugInfo	= false;
 	boolean			bLogStart	= false;
 	Socket			Sock		= null;
 
@@ -216,7 +217,9 @@ class VsdInterface implements Runnable {
 		// ログファイルオープン
 		try{
 			fsLog    = new BufferedWriter( new FileWriter( s ));
-			fsBinLog = new BufferedOutputStream( new FileOutputStream( s + ".bin" ));
+			if( bDebugInfo ){
+				fsBinLog = new BufferedOutputStream( new FileOutputStream( s + ".bin" ));
+			}
 		}catch( Exception e ){
 			MsgHandler.sendEmptyMessage( R.string.statmsg_mklog_failed );
 			return FATAL_ERROR;
@@ -418,17 +421,21 @@ class VsdInterface implements Runnable {
 		String s;
 
 		if( !bLogStart ){
-			if( iSpeedRaw > 0 ){
+			if( bDebugInfo || iSpeedRaw > 0 ){
 				// 動いたので Log 開始
 				bLogStart		= true;
 				iTSC			= iTSCRaw;
 				iLogTimeMilli	= System.currentTimeMillis() - ( int )( iTSC * ( 256.0 * 1000 / TIMER_HZ ));
+				
+				if( fsLog == null ) OpenLog();
 			}else{
 				// まだ動いていないので，Log 保留
 				return;
 			}
 		}
-
+		
+		if( fsLog == null ) return;
+		
 		// iTSCRaw から時刻算出
 		if(( iTSC & 0xFFFF ) > iTSCRaw ) iTSC += 0x10000;
 		iTSC = ( iTSC & 0xFFFF0000 ) | iTSCRaw;
@@ -651,6 +658,8 @@ class VsdInterface implements Runnable {
 			if( iMainMode < 0 || MODE_NUM <= iMainMode ) iMainMode = MODE_LAPTIME;
 		}catch( NumberFormatException e ){}
 
+		bDebugInfo = Pref.getBoolean( "key_debug_info", false );
+		
 		try{
 			switch( iMainMode ){
 			  case MODE_LAPTIME:
@@ -725,7 +734,6 @@ class VsdInterface implements Runnable {
 				Sleep( 1000 );
 				continue;
 			}
-			if( fsLog == null && OpenLog() < 0 ) break;
 			
 			// Read WDT 発動
 			uReadWdt = 0;
@@ -734,10 +742,11 @@ class VsdInterface implements Runnable {
 				new TimerTask(){
 					@Override
 					public void run(){
-						if( ++uReadWdt > 4 ){
-							// 0.5 * 4sec Read できなければ
+						if( bKillThread || ++uReadWdt > 6 ){
+							// 0.5 * 6sec Read できなければ
 							// ソケット強制クローズで Read() を失敗させる
 							Close();
+							this.cancel();
 						}
 					}
 				}, 0, 500

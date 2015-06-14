@@ -695,12 +695,7 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 
 /*** メインループ ***********************************************************/
 
-//#define MINIMUM_FIRMWARE
-
 __noreturn void main( void ){
-#ifdef MINIMUM_FIRMWARE
-	NVIC_GenerateSystemReset();
-#else
 	/*** 初期化 *************************************************************/
 	
 	// USART buf
@@ -714,6 +709,9 @@ __noreturn void main( void ){
 	Vsd.uOutputPrevTime		= GetCurrentTime16();
 	
 	Initialize( &UsartBuf );
+	
+	// Initialize() 実行後にスピードパルスが入ることがあるらしい?
+	Vsd.Speed.uPulseCnt	= 0;
 	
 	/*** メインループ *******************************************************/
 	
@@ -731,5 +729,4 @@ __noreturn void main( void ){
 			LedOn();
 		}
 	}
-#endif
 }
