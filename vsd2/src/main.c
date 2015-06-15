@@ -633,8 +633,11 @@ void Initialize( USART_BUF_t *pBuf ){
 		SdcInit();
 		if( SdcInserted()) LoadSRecord();
 	#else
-		// ベクタテーブルを SRAM に再設定
-		//NVIC_SetVectorTable( 0, __vector_table );
+		#ifdef USE_SRAM_VECTOR
+			// ベクタテーブルを SRAM に再設定
+			NVIC_SetVectorTable( SRAM_TOP, 0 );
+		#endif
+		
 		WdtInit( 3000 );
 	#endif
 	

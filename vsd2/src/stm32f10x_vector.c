@@ -42,7 +42,7 @@ void __iar_program_start( void );
 
 /* STM32F10x Vector Table entries */
 #pragma location = ".intvec"
-#ifdef EXEC_SRAM
+#ifdef USE_SRAM_VECTOR
 // エントリアドレスのみが有効なダミーのベクタテーブル
 const intvec_elem __vector_table[] =
 {
@@ -56,7 +56,7 @@ void IntHandlerReset( void ){
 
 const intvec_elem __vector_table[] =
 {
-	#ifdef EXEC_SRAM
+	#ifdef USE_SRAM_VECTOR
 		__iar_program_start,
 	#else
 		{ .__ptr = __sfe( "CSTACK" ) },

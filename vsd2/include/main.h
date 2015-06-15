@@ -15,9 +15,12 @@
 
 /*** macros *****************************************************************/
 
-#define TIMER_HZ	200000
-#define LOG_HZ		16
+#ifdef EXEC_SRAM
+	#define USE_SRAM_VECTOR
+#endif
 
+#define TIMER_HZ		200000
+#define LOG_HZ			16
 #define USART_BAUDRATE	38400
 
 // たぶん，ホイル一周が30パルス
