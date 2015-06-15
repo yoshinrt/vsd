@@ -43,12 +43,6 @@ void __iar_program_start( void );
 /* STM32F10x Vector Table entries */
 #pragma location = ".intvec"
 #ifdef USE_SRAM_VECTOR
-// エントリアドレスのみが有効なダミーのベクタテーブル
-const intvec_elem __vector_table[] =
-{
-	__iar_program_start,
-};
-#else
 void IntHandlerNop( void ){}
 void IntHandlerReset( void ){
 	NVIC_GenerateSystemReset();
@@ -68,6 +62,12 @@ const intvec_elem __vector_table[] =
 	#define DEF_HANDLER_LOOP( func )	IntHandlerReset,
 	#define DEF_HANDLER_RESERVED()		0,
 	#include "def_int_handler.h"
+};
+#else
+// エントリアドレスのみが有効なダミーのベクタテーブル
+const intvec_elem __vector_table[] =
+{
+	__iar_program_start,
 };
 #endif
 

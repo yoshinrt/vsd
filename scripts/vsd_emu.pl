@@ -3,7 +3,7 @@
 use Socket;
 use Time::HiRes qw(sleep);
 
-$LOG_HZ = 16;
+$LOG_HZ = 32;
 
 if( $ARGV[ 0 ] =~ /\.gz$/ ){
 	open( fpIn, "gunzip -c $ARGV[ 0 ] |" );
@@ -89,7 +89,6 @@ $Buf = '';
 
 WaitCmd( 'z' ); SendData( ':' );
 WaitCmd( 'S7' ); SendData( ':' );	# l
-WaitCmd( 'w' );
 # GetData();
 
 $PULSE_PER_1KM	= 15473.76689;	# ELISE(CE28N)

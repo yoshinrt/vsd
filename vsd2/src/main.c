@@ -477,13 +477,13 @@ void WdtInitSub( UINT uMillisec, UINT uPsc ){
 	IWDG_SetReload( uMillisec );
 	IWDG_Enable();
 }
+#endif
 
-void WdtInit( UINT ms ){
+INLINE void WdtInit( UINT ms ){
 	UINT uCnt = ms * 10;
 	UINT uPsc;
 	
-	if     ( uCnt >= ( 0x1000 << 6 )){ uCnt >>= 7; uPsc = 7; }
-	else if( uCnt >= ( 0x1000 << 5 )){ uCnt >>= 6; uPsc = 6; }
+	if     ( uCnt >= ( 0x1000 << 5 )){ uCnt >>= 6; uPsc = 6; }
 	else if( uCnt >= ( 0x1000 << 4 )){ uCnt >>= 5; uPsc = 5; }
 	else if( uCnt >= ( 0x1000 << 3 )){ uCnt >>= 4; uPsc = 4; }
 	else if( uCnt >= ( 0x1000 << 2 )){ uCnt >>= 3; uPsc = 3; }
@@ -493,7 +493,6 @@ void WdtInit( UINT ms ){
 	
 	WdtInitSub( uCnt, uPsc );
 }
-#endif
 
 INLINE void WdtReload( void ){
 	IWDG_ReloadCounter();
