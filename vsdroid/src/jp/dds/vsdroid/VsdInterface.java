@@ -108,6 +108,15 @@ class VsdInterface implements Runnable {
 	static final int ERROR			= -1;
 	static final int FATAL_ERROR	= -2;
 	
+	//*** リトライしないerror ************************************************
+	
+	public class UnrecoverableException extends Exception {
+		private static final long serialVersionUID = 1L;
+		public UnrecoverableException( String message ){
+			super( message );
+		}
+	}
+	
 	//*** utils **************************************************************
 
 	void Sleep( int ms ){
@@ -237,7 +246,7 @@ class VsdInterface implements Runnable {
 		return 0;
 	}
 
-	public int Open(){
+	public void Open() throws IOException {
 		if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open" );
 
 		MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_connecting );
@@ -251,38 +260,27 @@ class VsdInterface implements Runnable {
 			OutStream	= Sock.getOutputStream();
 			
 			MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_connected );
-			return 0;
 		}catch( SocketTimeoutException e ){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:timeout" );
-			MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_timeout );
+			Close();
+			throw new IOException( "socket timeout" );
 		}catch( IOException e ){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:IOException" );
-			MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_ioerror );
+			Close();
+			throw e;
 		}
-
-		if( Sock != null ) try{
-			Sock.close();
-			Sock = null;
-		}catch( IOException e ){}
-		
-		return ERROR;
 	}
 
-	public int RawRead( int iStart, int iLen ){
-		//if( bDebug ) Log.d( "VSDroid", "VsdInterface::RawRead" );
-		int iReadSize = 0;
-		try{
-			iReadSize = InStream.read( Buf, iStart, iLen );
-			if( iReadSize > 0 ) return iReadSize;
-		}catch( IOException e ){
+	public int RawRead( int iStart, int iLen ) throws IOException {
+		int iReadSize = InStream.read( Buf, iStart, iLen );
+		if( iReadSize <= 0 ){
+			throw new IOException( "read size < 1" );
 		}
-		
-		MsgHandler.sendEmptyMessage( R.string.statmsg_read_disconnected );
-		return ERROR;
+		return iReadSize;
 	}
 
-	// 1 <= :受信したレコード数  0:新データなし 0>:エラー
-	public int Read(){
+	// 1 <= :受信したレコード数  0:新データなし
+	public int Read() throws IOException {
 		int	iReadSize;
 		int	iMileage16;
 		int	iRet	= 0;
@@ -292,7 +290,6 @@ class VsdInterface implements Runnable {
 		//if( bDebug ) Log.d( "VSDroid", "VsdInterface::Read" );
 		
 		iReadSize = RawRead( iBufLen, iBufSize - iBufLen );
-		if( iReadSize <= 0 ) return iReadSize;	// エラー
 
 		try{
 			if( fsBinLog != null ) fsBinLog.write( Buf, iBufLen, iReadSize );
@@ -300,7 +297,7 @@ class VsdInterface implements Runnable {
 
 		iBufLen += iReadSize;
 
-		while( true ){
+		while( !bKillThread ){
 			// 0xFF をサーチ
 			for( iBufPtr = iEOLPos; iEOLPos < iBufLen; ++iEOLPos ){
 				if( Buf[ iEOLPos ] == ( byte )0xFF ) break;
@@ -528,10 +525,7 @@ class VsdInterface implements Runnable {
 			if( InStream.available() > 0 ){
 				iReadSize = InStream.read( Buf, 0, iBufSize );
 				for( i = 0; i < iReadSize; ++i ){
-					if( Buf[ i ] == ( byte )ch ){
-						iRetryCnt = 0;
-						return i;
-					}
+					if( Buf[ i ] == ( byte )ch ) return i;
 				}
 			}else{
 				Sleep( 30 );
@@ -542,7 +536,7 @@ class VsdInterface implements Runnable {
 
 	//*** FW ロード ******************************************************
 
-	public int LoadFirmWare(){
+	public int LoadFirmWare() throws IOException {
 		InputStream	fsFirm = null;
 
 		int iReadSize = 0;
@@ -551,77 +545,50 @@ class VsdInterface implements Runnable {
 		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_loading );
 		
 		try{
-			try{
-				// .mot オープン
-				fsFirm = new FileInputStream( Pref.getString( "key_roms", null ));
-				
-				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending magic code" );
-				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_magic );
-				SendCmd( "F15EF117*z" );
-				
-				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware" );
-				
-				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
-				WaitChar( ':' );
-				
-				// FW 送信
-				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_sending );
-				while(( iReadSize = fsFirm.read( Buf, 0, iBufSize )) > 0 ){
-					OutStream.write( Buf, 0, iReadSize );
-				}
-				
-				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
-				if( bDebug ) Log.d( "VSDroid", "LoadFirm::go" );
-				WaitChar( ':' );
-					
-			}catch( FileNotFoundException e ){
-				// FW がない場合ここに飛ぶ
-				if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware canceled" );
-				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_none );
-			}
+			// .mot オープン
+			fsFirm = new FileInputStream( Pref.getString( "key_roms", null ));
 			
-			try {
-				if( fsFirm != null ) fsFirm.close();
-			}catch( IOException e1 ){}
-			
-			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending log output request" );
-			Sleep( 100 );
+			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending magic code" );
 			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_magic );
-			SendCmd( "F15EF117*" );
-
-			// 最初の 0xFF までスキップ
+			SendCmd( "F15EF117*z" );
+			
+			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware" );
+			
 			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
-			if( bDebug ) Log.d( "VSDroid", "LoadFirm::waiting first log record" );
-
-			int iRetryCnt = 100;
-			while( iRetryCnt-- != 0 && !bKillThread ){
-				if( InStream.available() > 0 ){
-					iReadSize = InStream.read( Buf, 0, iBufSize );
-					for( i = 0; i < iReadSize; ++i ){
-						if( Buf[ i ] == ( byte )0xFF ){
-							iRetryCnt = 0;
-							break;
-						}
-					}
-				}else{
-					Sleep( 30 );
-				}
+			WaitChar( ':' );
+			
+			// FW 送信
+			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_sending );
+			while(( iReadSize = fsFirm.read( Buf, 0, iBufSize )) > 0 ){
+				OutStream.write( Buf, 0, iReadSize );
 			}
+			
+			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
+			if( bDebug ) Log.d( "VSDroid", "LoadFirm::go" );
+			WaitChar( ':' );
+			
+		}catch( FileNotFoundException e ){
+			// FW がない場合ここに飛ぶ
+			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending firmware canceled" );
+			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_none );
+		}
+		
+		try {
+			if( fsFirm != null ) fsFirm.close();
+		}catch( IOException e1 ){}
+		
+		if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending log output request" );
+		Sleep( 100 );
+		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_magic );
+		SendCmd( "F15EF117*" );
 
-			// 0xFF を見つけた
-			if( i < iReadSize ){
-				++i;
-				for( iBufLen = 0; i < iReadSize; ++i, ++iBufLen ){
-					Buf[ iBufLen ] = Buf[ i ];
-				}
-			}else{
-				// タイムアウト
-				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_timeout );
-				return ERROR;
-			}
-		}catch( IOException e ){
-			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_ioerror );
-			return ERROR;
+		// 最初の 0xFF までスキップ
+		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
+		if( bDebug ) Log.d( "VSDroid", "LoadFirm::waiting first log record" );
+
+		i = WaitChar( 0xFF ) + 1;
+		for( iBufLen = 0; i < iReadSize; ++i, ++iBufLen ){
+			Buf[ iBufLen ] = Buf[ i ];
 		}
 
 		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_loaded );
@@ -631,7 +598,7 @@ class VsdInterface implements Runnable {
 
 	//*** config に従って設定 ********************************************
 
-	public int SetupMode(){
+	public void SetupMode() throws IOException {
 		int i;
 
 		// セクタ数
@@ -660,49 +627,43 @@ class VsdInterface implements Runnable {
 
 		bDebugInfo = Pref.getBoolean( "key_debug_info", false );
 		
-		try{
-			switch( iMainMode ){
-			  case MODE_LAPTIME:
-				SendCmd( "l" );
-				break;
+		switch( iMainMode ){
+		  case MODE_LAPTIME:
+			SendCmd( "l" );
+			break;
 
-			  case MODE_GYMKHANA:
-				// * は g_lParam をいったんクリアする意図
-				i = ( int )( dGymkhaStart * dPulsePer1Km / 1000 + 0.5 );
-				if( i < 1 ) i = 1;
-				SendCmd( String.format( "*%Xg", i ));
-				break;
+		  case MODE_GYMKHANA:
+			// * は g_lParam をいったんクリアする意図
+			i = ( int )( dGymkhaStart * dPulsePer1Km / 1000 + 0.5 );
+			if( i < 1 ) i = 1;
+			SendCmd( String.format( "*%Xg", i ));
+			break;
 
-			  case MODE_ZERO_FOUR:
-				SendCmd( String.format( "*%Xf", iStartGThrethold ));
-				break;
+		  case MODE_ZERO_FOUR:
+			SendCmd( String.format( "*%Xf", iStartGThrethold ));
+			break;
 
-			  case MODE_ZERO_ONE:
-				SendCmd( String.format( "*%Xo", iStartGThrethold ));
-			}
-			
-			// ホイール・Hz 設定
-			
-			// 再び sio on と wheel 設定
-			int iLogHz = 16;
-			try{
-				iLogHz = Integer.parseInt( Pref.getString( "key_log_hz", "16" ));
-			}catch( NumberFormatException e ){}
-			
-			SendCmd( String.format(
-				"*%Xw%Xh",
-				( int )( dPulsePer1Km * ( 1 << 18 ) - ( 0x40000000 * 2.0 )) ^ 0x80000000,
-				iLogHz
-			));
-		}catch( IOException e ){
-			return ERROR;
+		  case MODE_ZERO_ONE:
+			SendCmd( String.format( "*%Xo", iStartGThrethold ));
 		}
+		
+		// ホイール・Hz 設定
+		
+		// 再び sio on と wheel 設定
+		int iLogHz = 16;
+		try{
+			iLogHz = Integer.parseInt( Pref.getString( "key_log_hz", "16" ));
+		}catch( NumberFormatException e ){}
+		
+		SendCmd( String.format(
+			"*%Xw%Xh",
+			( int )( dPulsePer1Km * ( 1 << 18 ) - ( 0x40000000 * 2.0 )) ^ 0x80000000,
+			iLogHz
+		));
 		
 		iRtcPrevRaw		= 0;
 		iSectorCnt		= 0;
 		bLogStart		= false;	// TSC と実時間の同期を取り直す
-		
-		return 0;
 	}
 
 	//*** データ処理スレッド *********************************************
@@ -723,46 +684,42 @@ class VsdInterface implements Runnable {
 		if( bDebug ) Log.d( "VSDroid", "run_loop()" );
 		
 		while( !bKillThread ){
-			Close(); // 開いていたら一旦 close
-			
-			if(
-				( iRet = Open()) < 0 ||
-				( iRet = LoadFirmWare()) < 0 ||
-				( iRet = SetupMode()) < 0
-			){
-				if( iRet == FATAL_ERROR ) break;
-				Sleep( 1000 );
-				continue;
-			}
-			
-			// Read WDT 発動
-			uReadWdt = 0;
-			ReadWdt = new Timer();
-			ReadWdt.scheduleAtFixedRate(
-				new TimerTask(){
-					@Override
-					public void run(){
-						if( bKillThread || ++uReadWdt > 6 ){
-							// 0.5 * 6sec Read できなければ
-							// ソケット強制クローズで Read() を失敗させる
-							Close();
-							this.cancel();
+			try{
+				Close(); // 開いていたら一旦 close
+				Open();
+				LoadFirmWare();
+				SetupMode();
+				
+				// Read WDT 発動
+				uReadWdt = 0;
+				ReadWdt = new Timer();
+				ReadWdt.scheduleAtFixedRate(
+					new TimerTask(){
+						@Override
+						public void run(){
+							if( bKillThread || ++uReadWdt > 6 ){
+								// 0.5 * 6sec Read できなければ
+								// ソケット強制クローズで Read() を失敗させる
+								Close();
+								this.cancel();
+							}
 						}
-					}
-				}, 0, 500
-			);
-			
-			while( !bKillThread && ( iRet = Read()) >= 0 ){
-				try{
+					}, 0, 500
+				);
+				
+				while( !bKillThread && Read() > 0 ){
 					uReadWdt = 0;
 					SendCmd( "*" );	// ビーコン送信
-				}catch( IOException e ){
-					break;
 				}
+			}catch( UnrecoverableException e ){
+				// リトライしない中止要求
+				// メッセージは各個設定しておくこと
+				break;
+			}catch( IOException e ){
+				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_none );
+			}finally{
+				ReadWdt.cancel();
 			}
-			
-			ReadWdt.cancel();
-			if( iRet == FATAL_ERROR ) break;
 		}
 		
 		if( bDebug ) Log.d( "VSDroid", String.format( "run() loop extting." ));

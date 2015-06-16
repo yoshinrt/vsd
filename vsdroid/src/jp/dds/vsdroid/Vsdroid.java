@@ -110,13 +110,13 @@ public class Vsdroid extends Activity {
 		}
 
 		@Override
-		public int Open(){
+		public void Open() throws IOException, UnrecoverableException {
 
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open" );
 			// If the adapter is null, then Bluetooth is not supported
 			if( mBluetoothAdapter == null ){
 				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_na );
-				return FATAL_ERROR;
+				throw new UnrecoverableException( "Bluetooth error" );
 			}
 
 			// BT ON でなければエラーで帰る
@@ -124,35 +124,25 @@ public class Vsdroid extends Activity {
 			if( !mBluetoothAdapter.isEnabled()){
 				Intent enableIntent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE );
 				startActivityForResult( enableIntent, REQUEST_ENABLE_BT );
-				return FATAL_ERROR;
+				throw new UnrecoverableException( "Bluetooth error" );
 			}
 
 			// BT の MAC アドレスを求める
 			String s = Pref.getString( "key_bt_devices", null );
 			if( s == null ){
 				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_dev_not_selected );
-				return FATAL_ERROR;
+				throw new UnrecoverableException( "Bluetooth error" );
 			}
 			device = mBluetoothAdapter.getRemoteDevice( s.substring( s.length() - 17 ));
 
-			MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_connecting );
-			// Get a BluetoothSocket for a connection with the
-			// given BluetoothDevice
-			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket" );
 			try{
+				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_connecting );
+				// Get a BluetoothSocket for a connection with the
+				// given BluetoothDevice
+				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket" );
 				BTSock = device.createInsecureRfcommSocketToServiceRecord( BT_UUID );
-			}catch( IOException e ){
-				if( BTSock != null ) try{
-					BTSock.close();
-					BTSock = null;
-				}catch( IOException e1 ){}
-
-				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket:Failed" );
 				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_server_error );
-				return ERROR;
-			}
-
-			try{
+				
 				// ソケットの作成 12秒でタイムアウトらしい
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connecting..." );
 				BTSock.connect();
@@ -161,30 +151,20 @@ public class Vsdroid extends Activity {
 				
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connected" );
 				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_connected );
-				return 0;
 			}catch( SocketTimeoutException e ){
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:timeout" );
-				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_timeout );
+				Close();
+				throw new IOException( "Bluetooth error" );
 			}catch( IOException e ){
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:IOException" );
-				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_ioerror );
+				Close();
+				throw e;
 			}
-
-			if( BTSock != null ) try{
-				BTSock.close();
-				BTSock = null;
-			}catch( IOException e ){}
-
-			return ERROR;
 		}
 
 		@Override
 		public int Close(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Close" );
-
-			// 念のためログ出力停止，* は g_lParam をいったんクリアする意図
-			try{ SendCmd( "*0S" ); }catch( IOException e ){}
-
 			try{
 				if( BTSock != null ){
 					BTSock.close();
@@ -230,7 +210,7 @@ public class Vsdroid extends Activity {
 		}
 
 		@Override
-		public int Open(){
+		public int Open() throws UnrecoverableException {
 			String strBuf;
 			String strToken;
 
@@ -256,13 +236,12 @@ public class Vsdroid extends Activity {
 
 			}catch( Exception e ){
 				MsgHandler.sendEmptyMessage( R.string.statmsg_emulog_open_failed );
-				return FATAL_ERROR;
+				throw new UnrecoverableException( "log can't open" );
 			}
-			return 0;
 		}
 
 		@Override
-		public int RawRead( int iStart, int iLen ){
+		public int RawRead( int iStart, int iLen ) throws UnrecoverableException {
 
 			String strBuf;
 			String[] strToken = new String[ 16 ];
@@ -275,7 +254,7 @@ public class Vsdroid extends Activity {
 			try{
 				if(( strBuf = brEmuLog.readLine()) == null ){
 					MsgHandler.sendEmptyMessage( R.string.statmsg_emulog_finished );
-					return FATAL_ERROR;
+					throw new UnrecoverableException( "EOF" );
 				}
 
 				StringTokenizer Token = new StringTokenizer( strBuf );
@@ -340,7 +319,7 @@ public class Vsdroid extends Activity {
 
 			}catch( IOException e ){
 				MsgHandler.sendEmptyMessage( R.string.statmsg_emulog_failed );
-				return FATAL_ERROR;
+				throw new UnrecoverableException( "error while reading" );
 			}
 
 			// EOL 追加
