@@ -414,6 +414,10 @@ class VsdInterface implements Runnable {
 	long	iLogTimeMilli;
 	int		iTSC;	// 200KHz >> 8
 
+	static final int Tsc2Milli( int iTSC ){
+		return ( int )( iTSC * (( 1 >> 5 ) * 1000.0 / TIMER_HZ ));
+	}
+	
 	public void WriteLog(){
 		String s;
 
@@ -422,7 +426,7 @@ class VsdInterface implements Runnable {
 				// 動いたので Log 開始
 				bLogStart		= true;
 				iTSC			= iTSCRaw;
-				iLogTimeMilli	= System.currentTimeMillis() - ( int )( iTSC * ( 256.0 * 1000 / TIMER_HZ ));
+				iLogTimeMilli	= System.currentTimeMillis() - Tsc2Milli( iTSC );
 				
 				if( fsLog == null ) OpenLog();
 			}else{
@@ -436,7 +440,7 @@ class VsdInterface implements Runnable {
 		// iTSCRaw から時刻算出
 		if(( iTSC & 0xFFFF ) > iTSCRaw ) iTSC += 0x10000;
 		iTSC = ( iTSC & 0xFFFF0000 ) | iTSCRaw;
-		Cal.setTimeInMillis( iLogTimeMilli + ( int )( iTSC * ( 256.0 * 1000 / TIMER_HZ )));
+		Cal.setTimeInMillis( iLogTimeMilli + Tsc2Milli( iTSC );
 
 		// 基本データ
 		s = String.format(

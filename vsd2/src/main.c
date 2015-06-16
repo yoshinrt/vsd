@@ -525,7 +525,7 @@ void OutputSerial( VSD_DATA_t *pVsd ){
 	SerialPack( pVsd->Tacho.uVal, 2 );
 	SerialPack( pVsd->Speed.uVal, 2 );
 	SerialPack( pVsd->uMileage, 2 );
-	SerialPack( GetCurrentTime() >> 8, 2 );
+	SerialPack( GetCurrentTime() >> 5, 2 );
 	SerialPack( pVsd->uGy, 2 );
 	SerialPack( pVsd->uGx, 2 );
 	SerialPack( 1, 2 );
