@@ -181,6 +181,7 @@ public class Vsdroid extends Activity {
 		BufferedReader brEmuLog = null;
 		double	dOutputWaitTime = 0;
 
+		int	iIdxTime		= 0x7FFFFFFF;
 		int	iIdxTacho		= 0x7FFFFFFF;
 		int	iIdxSpeed		= 0x7FFFFFFF;
 		int	iIdxDistance	= 0x7FFFFFFF;
@@ -225,7 +226,8 @@ public class Vsdroid extends Activity {
 
 				for( int i = 0; Token.hasMoreTokens(); ++i ){
 					strToken = Token.nextToken();
-					if(      strToken.equals( "Tacho"			)) iIdxTacho	= i;
+					if(      strToken.equals( "Date/Time"		)) iIdxTime		= i;
+					else if( strToken.equals( "Tacho"			)) iIdxTacho	= i;
 					else if( strToken.equals( "Speed"			)) iIdxSpeed	= i;
 					else if( strToken.equals( "Distance"		)) iIdxDistance	= i;
 					else if( strToken.equals( "Gx"				)) iIdxGx		= i;
@@ -248,7 +250,9 @@ public class Vsdroid extends Activity {
 			int iIdx = iStart;
 			int iTokCnt;
 			int i, j;
-
+			double dTime;
+			double dTimePrev = -1;
+			
 			//if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::RawRead" );
 
 			try{
@@ -272,8 +276,19 @@ public class Vsdroid extends Activity {
 				// Mileage
 				iIdx = Pack( iIdx, iIdxDistance < iTokCnt ? ( int )( Double.parseDouble( strToken[ iIdxDistance ] ) / 1000 * PULSE_PER_1KM_CE28N ) : 0 );
 
-				// TSC
-				iIdx = Pack( iIdx, 0 );
+				// TSC (Date/Time)
+				// 0000-00-00T00:00:00.000Z
+				// 012345678901234567890123
+				try{
+					dTime =
+						Integer.parseInt( strToken[ iIdxTime ]).substring( 11, 13 )) * 3600 +
+						Integer.parseInt( strToken[ iIdxTime ]).substring( 14, 16 )) * 60 +
+						Double.parseDouble( strToken[ iIdxTime ]).substring( 17, 23 ));
+				}catch( NumberFormatException e ){
+					dTime = dTimePrev + 1.0 / 16;
+				}
+				if( dTime < dTimePrev ) dTime += 24 * 3600;
+				iIdx = Pack( iIdx, ( int )( dTime * VsdInterface.TIMER_HZ ));
 
 				// G
 				iIdx = Pack( iIdx, iIdxGy < iTokCnt ? ( int )( -Double.parseDouble( strToken[ iIdxGy ] ) * 4096 ) + 0x8000 : 0 );
@@ -290,7 +305,7 @@ public class Vsdroid extends Activity {
 						(
 							Double.parseDouble( strToken[ iIdxLapTime ].substring( 0, i )) * 60 +
 							Double.parseDouble( strToken[ iIdxLapTime ].substring( i + 1 ))
-						) * 256
+						) * VsdInterface.TIMER_HZ
 					);
 
 					// LAP モード以外の 0:00.000 をスキップ
@@ -305,17 +320,8 @@ public class Vsdroid extends Activity {
 				}
 
 				// 待つ
-				Calendar Now = Calendar.getInstance();
-				int NowMs =
-					Now.get( Calendar.HOUR_OF_DAY ) * 3600 * 1000 +
-					Now.get( Calendar.MINUTE ) * 60 * 1000 +
-					Now.get( Calendar.SECOND ) * 1000 +
-					Now.get( Calendar.MILLISECOND );
-
-				if( dOutputWaitTime == 0 ) dOutputWaitTime = NowMs;
-				dOutputWaitTime += 1000.0 / 16;
-				i = ( int )( dOutputWaitTime - NowMs );
-				if( i > 0 ) Sleep( i );
+				if( dTimePrev >= 0 ) Sleep(( int )(( dTime - dTimePrev ) * 1000 ));
+				dTimePrev = dTime;
 
 			}catch( IOException e ){
 				MsgHandler.sendEmptyMessage( R.string.statmsg_emulog_failed );

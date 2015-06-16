@@ -26,6 +26,7 @@ class VsdInterface implements Runnable {
 	static final int MODE_NUM		= 4;
 
 	static final int TIMER_HZ	= 200000;
+	static final int TSC_SHIFT	= 5;
 
 	// スピード * 100/Taco 比
 	// ELISE
@@ -389,14 +390,6 @@ class VsdInterface implements Runnable {
 
 				WriteLog();		// テキストログライト
 			}
-
-			// デバッグ用: 複数の 0xFF を破棄する
-			/*
-			if( bDebug ){
-				for( i = iBufLen - 1; i >= 0; --i ) if( Buf[ i ] == ( byte )0xFF ) break;
-				if( i >= 0 ) iEOLPos = i;
-			}
-			*/
 			++iEOLPos;
 		}
 
@@ -415,7 +408,7 @@ class VsdInterface implements Runnable {
 	int		iTSC;	// 200KHz >> 8
 
 	static final int Tsc2Milli( int iTSC ){
-		return ( int )( iTSC * (( 1 >> 5 ) * 1000.0 / TIMER_HZ ));
+		return ( int )( iTSC * (( 1 >> TSC_SHIFT ) * 1000.0 / TIMER_HZ ));
 	}
 	
 	public void WriteLog(){
