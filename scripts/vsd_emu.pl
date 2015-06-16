@@ -102,7 +102,7 @@ while( <fpIn> ){
 	s/[\x0D\x0A]//g;
 	@_ = split( /\t/, $_ );
 	
-	$_[ $IdxDate ] =~ /(\d+):(\d+):([\d\.]+)/
+	$_[ $IdxDate ] =~ /(\d+):(\d+):([\d\.]+)/;
 	$Time = $1 * 3600 + $2 * 60 + $3;
 	
 	$_ = pack( 'S7',
@@ -118,7 +118,7 @@ while( <fpIn> ){
 	# ラップタイム
 	if( defined( $_[ $IdxLapTime ] ) && $_[ $IdxLapTime ] =~ /(.+):(.+)/){
 		# ラップタイム記録発見
-		$PrevLapTime += int(( $1 * 60 + $2 ) * 256 );
+		$PrevLapTime += int(( $1 * 60 + $2 ) * $TIMER_HZ );
 		$_ .= pack( 'I', $PrevLapTime );
 	}
 	
@@ -128,7 +128,7 @@ while( <fpIn> ){
 	
 	last if( !defined( send( $SockClient, $_ . "\xFF", 0 )));
 	
-	if( $PrevTime >= 0 ) sleep( $PrevTime - $Time );
+	sleep( $Time - $PrevTime ) if( $PrevTime >= 0 );
 	$PrevTime = $Time;
 	
 	#GetData( MSG_DONTWAIT );

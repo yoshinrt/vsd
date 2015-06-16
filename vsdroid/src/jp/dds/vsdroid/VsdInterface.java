@@ -247,7 +247,7 @@ class VsdInterface implements Runnable {
 		return 0;
 	}
 
-	public void Open() throws IOException {
+	public void Open() throws IOException, UnrecoverableException {
 		if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open" );
 
 		MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_connecting );
@@ -272,7 +272,7 @@ class VsdInterface implements Runnable {
 		}
 	}
 
-	public int RawRead( int iStart, int iLen ) throws IOException {
+	public int RawRead( int iStart, int iLen ) throws IOException, UnrecoverableException {
 		int iReadSize = InStream.read( Buf, iStart, iLen );
 		if( iReadSize <= 0 ){
 			throw new IOException( "read size < 1" );
@@ -281,7 +281,7 @@ class VsdInterface implements Runnable {
 	}
 
 	// 1 <= :受信したレコード数  0:新データなし
-	public int Read() throws IOException {
+	public int Read() throws IOException, UnrecoverableException {
 		int	iReadSize;
 		int	iMileage16;
 		int	iRet	= 0;
@@ -433,7 +433,7 @@ class VsdInterface implements Runnable {
 		// iTSCRaw から時刻算出
 		if(( iTSC & 0xFFFF ) > iTSCRaw ) iTSC += 0x10000;
 		iTSC = ( iTSC & 0xFFFF0000 ) | iTSCRaw;
-		Cal.setTimeInMillis( iLogTimeMilli + Tsc2Milli( iTSC );
+		Cal.setTimeInMillis( iLogTimeMilli + Tsc2Milli( iTSC ));
 
 		// 基本データ
 		s = String.format(
@@ -583,7 +583,7 @@ class VsdInterface implements Runnable {
 		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
 		if( bDebug ) Log.d( "VSDroid", "LoadFirm::waiting first log record" );
 
-		i = WaitChar( 0xFF ) + 1;
+		i = WaitChar(( char )0xFF ) + 1;
 		for( iBufLen = 0; i < iReadSize; ++i, ++iBufLen ){
 			Buf[ iBufLen ] = Buf[ i ];
 		}
@@ -673,10 +673,8 @@ class VsdInterface implements Runnable {
 
 	volatile int uReadWdt;
 	public void run(){
-		bKillThread = false;
-		int iRet;
-		
-		Timer ReadWdt;
+		bKillThread = false;		
+		Timer ReadWdt = null;
 		
 		if( bDebug ) Log.d( "VSDroid", "run_loop()" );
 		
@@ -713,9 +711,10 @@ class VsdInterface implements Runnable {
 				// メッセージは各個設定しておくこと
 				break;
 			}catch( IOException e ){
-				MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_none );
+				MsgHandler.sendEmptyMessage( R.string.statmsg_disconnected );
+				Sleep( 1000 );
 			}finally{
-				ReadWdt.cancel();
+				if( ReadWdt != null ) ReadWdt.cancel();
 			}
 		}
 		

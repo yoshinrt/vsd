@@ -37,6 +37,7 @@ import java.util.UUID;
 import java.io.*;
 import java.util.*;
 import jp.dds.vsdroid.VsdInterface;
+import jp.dds.vsdroid.VsdInterface.UnrecoverableException;
 
 @SuppressLint("DefaultLocale")
 public class Vsdroid extends Activity {
@@ -141,7 +142,6 @@ public class Vsdroid extends Activity {
 				// given BluetoothDevice
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::createRfcommSocket" );
 				BTSock = device.createInsecureRfcommSocketToServiceRecord( BT_UUID );
-				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_server_error );
 				
 				// ソケットの作成 12秒でタイムアウトらしい
 				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connecting..." );
@@ -211,7 +211,7 @@ public class Vsdroid extends Activity {
 		}
 
 		@Override
-		public int Open() throws UnrecoverableException {
+		public void Open() throws UnrecoverableException {
 			String strBuf;
 			String strToken;
 
@@ -243,7 +243,7 @@ public class Vsdroid extends Activity {
 		}
 
 		@Override
-		public int RawRead( int iStart, int iLen ) throws UnrecoverableException {
+		public int RawRead( int iStart, int iLen ) throws IOException, UnrecoverableException {
 
 			String strBuf;
 			String[] strToken = new String[ 16 ];
@@ -281,9 +281,9 @@ public class Vsdroid extends Activity {
 				// 012345678901234567890123
 				try{
 					dTime =
-						Integer.parseInt( strToken[ iIdxTime ]).substring( 11, 13 )) * 3600 +
-						Integer.parseInt( strToken[ iIdxTime ]).substring( 14, 16 )) * 60 +
-						Double.parseDouble( strToken[ iIdxTime ]).substring( 17, 23 ));
+						Integer.parseInt( strToken[ iIdxTime ].substring( 11, 13 )) * 3600 +
+						Integer.parseInt( strToken[ iIdxTime ].substring( 14, 16 )) * 60 +
+						Double.parseDouble( strToken[ iIdxTime ].substring( 17, 23 ));
 				}catch( NumberFormatException e ){
 					dTime = dTimePrev + 1.0 / 16;
 				}
@@ -845,7 +845,9 @@ public class Vsdroid extends Activity {
 		bDebugInfo = Pref.getBoolean( "key_debug_info", false );
 		bEcoMode = Pref.getBoolean( "key_eco_mode", false );	// エコモードw
 		bRevWarn = Pref.getBoolean( "key_flash", false );		// レブリミット警告
-		if( Vsd != null ) Vsd.SetupMode();
+		if( Vsd != null ) try{
+			Vsd.SetupMode();
+		}catch( IOException e ){}
 	}
 
 	@Override

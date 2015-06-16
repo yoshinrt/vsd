@@ -44,7 +44,7 @@
 	<string name="statmsg_bluetooth_na">[E] Bluetooth: BT が無効</string>
 	<string name="statmsg_bluetooth_dev_not_selected">[E] Bluetooth: デバイスが選択されていません</string>
 	<string name="statmsg_mklog_failed">[E] ログファイル作成失敗</string>
-	<string name="statmsg_disconnected">[E] VSD との接続切断</string>
+	<string name="statmsg_disconnected">[E] 接続切断</string>
 	<string name="statmsg_emulog_finished">ログ再生終了</string>
 	<string name="statmsg_emulog_open_failed">[E] 再生ログが見つかりません</string>
 	<string name="statmsg_emulog_failed">[E] ログ再生中にエラー発生</string>
