@@ -288,7 +288,7 @@ public class Vsdroid extends Activity {
 					dTime = dTimePrev + 1.0 / 16;
 				}
 				if( dTime < dTimePrev ) dTime += 24 * 3600;
-				iIdx = Pack( iIdx, ( int )( dTime * VsdInterface.TIMER_HZ ));
+				iIdx = Pack( iIdx, ( int )( dTime * ( VsdInterface.TIMER_HZ >> VsdInterface.TSC_SHIFT )));
 
 				// G
 				iIdx = Pack( iIdx, iIdxGy < iTokCnt ? ( int )( -Double.parseDouble( strToken[ iIdxGy ] ) * 4096 ) + 0x8000 : 0 );

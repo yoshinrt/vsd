@@ -3,7 +3,7 @@
 use Socket;
 use Time::HiRes qw(sleep);
 
-$LOG_HZ = 32;
+$TIMER_HZ	= 200000;
 
 if( $ARGV[ 0 ] =~ /\.gz$/ ){
 	open( fpIn, "gunzip -c $ARGV[ 0 ] |" );
@@ -93,33 +93,33 @@ WaitCmd( 'S7' ); SendData( ':' );	# l
 
 $PULSE_PER_1KM	= 15473.76689;	# ELISE(CE28N)
 
-#$ACC_1G_X	= 6762.594337;
-$ACC_1G_Y	= 6667.738702;
-$ACC_1G_Z	= 6842.591839;
-
 $iCnt = 0;
-$PrevTime = 1;
+$PrevLapTime = 1;
+$PrevTime = -1;
 
 while( <fpIn> ){
 	
 	s/[\x0D\x0A]//g;
 	@_ = split( /\t/, $_ );
 	
+	$_[ $IdxDate ] =~ /(\d+):(\d+):([\d\.]+)/
+	$Time = $1 * 3600 + $2 * 60 + $3;
+	
 	$_ = pack( 'S7',
 		$_[ $IdxTacho ],
 		int( $_[ $IdxSpeed ] * 100 ),
 		int( $_[ $IdxDistance ] / 1000 * $PULSE_PER_1KM ),
-		$iCnt++ * 200000 / 256 / $LOG_HZ,	# TSC
-		int( -$_[ $IdxGy ] * $ACC_1G_Y + 32000 ),
-		int(  $_[ $IdxGx ] * $ACC_1G_Z + 32000 ),
+		(( $Time * $TIMER_HZ ) >> 5 ) & 0xFFFF,	# TSC
+		int( -$_[ $IdxGy ] * 4096 + 0x8000 ),
+		int(  $_[ $IdxGx ] * 4096 + 0x8000 ),
 		$_[ $IdxThrottle ] > 0 ? $_[ $IdxThrottle ] : 0x8000
 	);
 	
 	# ラップタイム
 	if( defined( $_[ $IdxLapTime ] ) && $_[ $IdxLapTime ] =~ /(.+):(.+)/){
 		# ラップタイム記録発見
-		$PrevTime += int(( $1 * 60 + $2 ) * 256 );
-		$_ .= pack( 'I', $PrevTime );
+		$PrevLapTime += int(( $1 * 60 + $2 ) * 256 );
+		$_ .= pack( 'I', $PrevLapTime );
 	}
 	
 	# 0xFE, FF 処理
@@ -128,7 +128,8 @@ while( <fpIn> ){
 	
 	last if( !defined( send( $SockClient, $_ . "\xFF", 0 )));
 	
-	sleep( 1 / $LOG_HZ );
+	if( $PrevTime >= 0 ) sleep( $PrevTime - $Time );
+	$PrevTime = $Time;
 	
 	#GetData( MSG_DONTWAIT );
 }
