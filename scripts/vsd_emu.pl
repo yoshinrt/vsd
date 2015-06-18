@@ -4,6 +4,7 @@ use Socket;
 use Time::HiRes qw(sleep);
 
 $TIMER_HZ	= 200000;
+$Server		= 0;
 
 if( $ARGV[ 0 ] =~ /\.gz$/ ){
 	open( fpIn, "gunzip -c $ARGV[ 0 ] |" );
@@ -55,33 +56,57 @@ if( 0 ){
 	print( "IdxSectorTime = $IdxSectorTime\n" );
 }
 
-### サーバ
+my $Sock;
 
-# 1. 受付用ソケットの作成
-my $SockListen;
-socket( $SockListen, PF_INET, SOCK_STREAM, getprotobyname( 'tcp' ))
-	or die "Cannot create socket: $!";
-
-setsockopt( $SockListen, SOL_SOCKET, SO_REUSEADDR, 1 );
-
-# 2. 受付用ソケット情報の作成
-my $pack_addr = sockaddr_in( 12345, INADDR_ANY );
-
-# 3. 受付用ソケットと受付用ソケット情報を結びつける
-bind( $SockListen, $pack_addr ) or die "Cannot bind: $!";
-
-# 4. 接続を受け付ける準備をする。
-listen( $SockListen, SOMAXCONN ) or die "Cannot listen: $!";
-
-# 5. 接続を受け付けて応答する。
-my $SockClient; # クライアントとの通信用のソケット
-
-# 接続まち
-accept( $SockClient, $SockListen );
-print "Connected\n";
+if( $Server ){
+	### サーバ
+	# 1. 受付用ソケットの作成
+	my $SockListen;
+	socket( $SockListen, PF_INET, SOCK_STREAM, getprotobyname( 'tcp' ))
+		or die "Cannot create socket: $!";
+	
+	setsockopt( $SockListen, SOL_SOCKET, SO_REUSEADDR, 1 );
+	
+	# 2. 受付用ソケット情報の作成
+	my $pack_addr = sockaddr_in( 12345, INADDR_ANY );
+	
+	# 3. 受付用ソケットと受付用ソケット情報を結びつける
+	bind( $SockListen, $pack_addr ) or die "Cannot bind: $!";
+	
+	# 4. 接続を受け付ける準備をする。
+	listen( $SockListen, SOMAXCONN ) or die "Cannot listen: $!";
+	
+	# 5. 接続を受け付けて応答する。
+	# 接続まち
+	accept( $Sock, $SockListen );
+	print "Connected\n";
+}else{
+	# クライアント
+	# 1. ソケットの作成
+	socket( $Sock, PF_INET, SOCK_STREAM, getprotobyname( 'tcp' ))
+		or die "Cannot create socket: $!";
+	
+	# 2. ソケット情報の作成
+	
+	# 接続先のホスト名
+	my $remote_host = '192.168.0.132';
+	my $packed_remote_host = inet_aton( $remote_host )
+		or die "Cannot pack $remote_host: $!";
+	
+	# 接続先のポート番号
+	my $remote_port = 12345;
+	
+	# ホスト名とポート番号をパック
+	my $sock_addr = sockaddr_in( $remote_port, $packed_remote_host )
+		or die "Cannot pack $remote_host:$remote_port: $!";
+	
+	# 3. ソケットを使って接続
+	connect( $Sock, $sock_addr ) 
+		or die "Cannot connect $remote_host:$remote_port: $!";
+}
 
 # unbuffered
-select( $SockClient );
+select( $Sock );
 $| = 1;
 select( STDOUT );
 
@@ -126,7 +151,7 @@ while( <fpIn> ){
 	s/\xFE/\xFE\x00/g;
 	s/\xFF/\xFE\x01/g;
 	
-	last if( !defined( send( $SockClient, $_ . "\xFF", 0 )));
+	last if( !defined( send( $Sock, $_ . "\xFF", 0 )));
 	
 	sleep( $Time - $PrevTime ) if( $PrevTime >= 0 );
 	$PrevTime = $Time;
@@ -139,7 +164,7 @@ sub GetData {
 	local( $_ );
 	my( $tmp );
 	
-	recv( $SockClient, $_, 1024, defined( $param ) ? $param : 0 );
+	recv( $Sock, $_, 1024, defined( $param ) ? $param : 0 );
 	
 	return $_ if( !$_ );
 	$tmp = $_;
@@ -153,8 +178,8 @@ sub GetData {
 sub SendData {
 	local( $_ ) = @_;
 	
-	send( $SockClient, $_, 0 );
-	#print <$SockClient>;
+	send( $Sock, $_, 0 );
+	#print <$Sock>;
 	
 	s/([\x00-\x1F\[\x7E\-\xFF])/sprintf( '[%02X]', ord( $1 ))/ge;
 	print "Send:$_\n";
