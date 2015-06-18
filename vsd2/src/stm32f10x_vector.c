@@ -41,13 +41,13 @@ typedef union { intfunc __fun; void * __ptr; } intvec_elem;
 void __iar_program_start( void );
 
 /* STM32F10x Vector Table entries */
-#pragma location = ".intvec"
-#ifdef USE_SRAM_VECTOR
+#if !defined EXEC_SRAM || defined USE_SRAM_VECTOR
 void IntHandlerNop( void ){}
 void IntHandlerReset( void ){
 	NVIC_GenerateSystemReset();
 }
 
+#pragma location = ".intvec"
 const intvec_elem __vector_table[] =
 {
 	#ifdef USE_SRAM_VECTOR
@@ -65,6 +65,7 @@ const intvec_elem __vector_table[] =
 };
 #else
 // エントリアドレスのみが有効なダミーのベクタテーブル
+#pragma location = ".intvec"
 const intvec_elem __vector_table[] =
 {
 	__iar_program_start,
@@ -72,4 +73,3 @@ const intvec_elem __vector_table[] =
 #endif
 
 /******************* (C) COPYRIGHT 2007 STMicroelectronics *****END OF FILE****/
-

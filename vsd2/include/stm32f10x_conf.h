@@ -34,20 +34,20 @@
 #define _ADC2
 
 /************************************* BKP ************************************/
-//#define _BKP 
+#define _BKP 
 
 /************************************* CAN ************************************/
 //#define _CAN
 
 /************************************* DMA ************************************/
-//#define _DMA
-//#define _DMA_Channel1
-//#define _DMA_Channel2
-//#define _DMA_Channel3
-//#define _DMA_Channel4
-//#define _DMA_Channel5
-//#define _DMA_Channel6
-//#define _DMA_Channel7
+#define _DMA
+#define _DMA_Channel1
+#define _DMA_Channel2
+#define _DMA_Channel3
+#define _DMA_Channel4
+#define _DMA_Channel5
+#define _DMA_Channel6
+#define _DMA_Channel7
 
 /************************************* EXTI ***********************************/
 #define _EXTI
@@ -69,9 +69,9 @@
 #define _AFIO
 
 /************************************* I2C ************************************/
-//#define _I2C
-//#define _I2C1
-//#define _I2C2
+#define _I2C
+#define _I2C1
+#define _I2C2
 
 /************************************* IWDG ***********************************/
 #define _IWDG
@@ -80,7 +80,7 @@
 #define _NVIC
 
 /************************************* PWR ************************************/
-//#define _PWR
+#define _PWR
 
 /************************************* RCC ************************************/
 #define _RCC

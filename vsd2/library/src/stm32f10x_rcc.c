@@ -101,9 +101,6 @@
 static uc8 APBAHBPrescTable[16] = {0, 0, 0, 0, 1, 2, 3, 4, 1, 2, 3, 4, 6, 7, 8, 9};
 static uc8 ADCPrescTable[4] = {2, 4, 6, 8};
 
-static volatile FlagStatus HSEStatus;
-static vu32 StartUpCounter = 0;
-
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -210,6 +207,9 @@ void RCC_HSEConfig(u32 RCC_HSE)
 *******************************************************************************/
 ErrorStatus RCC_WaitForHSEStartUp(void)
 {
+  volatile FlagStatus HSEStatus;
+  vu32 StartUpCounter = 0;
+
   /* Wait till HSE is ready and if Time out is reached exit */
   do
   {

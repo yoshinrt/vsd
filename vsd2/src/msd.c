@@ -684,7 +684,7 @@ u8 MSD_GoIdleState(void){
 		
 		/* Wait for In Idle State Response (R1 Format) equal to 0x01 */
 		if( MSD_GetResponse2() == MSD_SEND_OP_COND ){
-			// 介袋步が姜位したので·break
+			// 弶婜壔偑廔椆偟偨偺偱丆break
 			break;
 		}
 		
@@ -695,7 +695,7 @@ u8 MSD_GoIdleState(void){
 		}
 	}
 	
-	/*** CMD1 / 41 で介袋步 **************************************************/
+	/*** CMD1 / 41 偱弶婜壔 **************************************************/
 	
 	for( uCnt = 0; uCnt < RETRY_CNT; ++uCnt ){
 		
@@ -704,7 +704,7 @@ u8 MSD_GoIdleState(void){
 			// SD - ACMD41
 			MSD_SendCmd( 55, 0, 0 );
 			if( MSD_GetResponse2() & ( 1 << 2 )){
-				// illegal command なので·CMD1 で介袋步する
+				// illegal command 側偺偱丆CMD1 偱弶婜壔偡傞
 				bACMD = FALSE;
 				continue;
 			}

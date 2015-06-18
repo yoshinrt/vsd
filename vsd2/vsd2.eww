@@ -2,6 +2,9 @@
 
 <workspace>
   <project>
+    <path>$WS_DIR$\lib_rom.ewp</path>
+  </project>
+  <project>
     <path>$WS_DIR$\vsd2.ewp</path>
   </project>
   <project>

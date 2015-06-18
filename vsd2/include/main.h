@@ -21,7 +21,7 @@
 
 #define TIMER_HZ		200000
 #define LOG_HZ			16
-#define USART_BAUDRATE	38400
+#define USART_BAUDRATE	115200
 
 // たぶん，ホイル一周が30パルス
 #define PULSE_PER_1KM	(( double )15473.76689 )	// CE28N
@@ -94,7 +94,6 @@ typedef struct {
 	USHORT	uMileage_0_400;					// 0-400m のパルス数
 	
 	UCHAR	uCalibTimer;					// キャリブレーションタイマー
-	UCHAR	Reserved1;						// ★ROM 化の時消す
 	UCHAR	uLogHz;							// ログ Hz
 	
 } VSD_DATA_t;

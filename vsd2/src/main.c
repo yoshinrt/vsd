@@ -258,7 +258,7 @@ INLINE BOOL AdcConversionCompleted( void ){
 // PD1: tacho
 // PD2: 磁気センサー
 
-#ifndef zzzEXEC_SRAM
+#ifndef EXEC_SRAM
 void PulseInit( void ){
 	// APB クロック
 	RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOD, ENABLE );
@@ -272,9 +272,7 @@ void PulseInit( void ){
 	GPIO_Init( GPIOD, &GPIO_InitStruct );
 	GPIO_InitStruct.GPIO_Pin  = GPIO_Pin_1;
 	GPIO_Init( GPIOD, &GPIO_InitStruct );
-	
 	GPIO_InitStruct.GPIO_Pin  = GPIO_Pin_2;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU;	// pull up
 	GPIO_Init( GPIOD, &GPIO_InitStruct );
 	
 	// GPIO 割り込みイネーブル
@@ -520,7 +518,7 @@ void SerialPack( UINT uVal, UINT uBytes ){
 
 /*** シリアル出力 ***********************************************************/
 
-#ifndef zzzEXEC_SRAM
+#ifndef EXEC_SRAM
 void OutputSerial( VSD_DATA_t *pVsd ){
 	SerialPack( pVsd->Tacho.uVal, 2 );
 	SerialPack( pVsd->Speed.uVal, 2 );
@@ -528,7 +526,7 @@ void OutputSerial( VSD_DATA_t *pVsd ){
 	SerialPack( GetCurrentTime() >> 5, 2 );
 	SerialPack( pVsd->uGy, 2 );
 	SerialPack( pVsd->uGx, 2 );
-	SerialPack( 1, 2 );
+	SerialPack( pVsd->uThrottle, 2 );
 	
 	/*** ラップタイム表示 ***/
 	if( pVsd->Flags.bNewLap ){
@@ -542,7 +540,7 @@ void OutputSerial( VSD_DATA_t *pVsd ){
 
 /*** シリアル入力 ***********************************************************/
 
-#ifndef zzzEXEC_SRAM
+#ifndef EXEC_SRAM
 void InputSerial( VSD_DATA_t *pVsd ){
 	
 	UINT c = getchar();
@@ -649,7 +647,7 @@ void Initialize( USART_BUF_t *pBuf ){
 
 /*** ステート変化待ち & LED 表示 ********************************************/
 
-#ifndef zzzEXEC_SRAM
+#ifndef EXEC_SRAM
 void WaitStateChange( VSD_DATA_t *pVsd ){
 	UINT	uSumGx 		= 0;
 	UINT	uSumGy 		= 0;

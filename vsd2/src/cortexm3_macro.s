@@ -272,12 +272,20 @@ __REV_Word
   
 ;*******************************************************************************
 ; ã≠êßÉäÉìÉNÇ∑ÇÈ lib
-	extern	printf
-	extern	sprintf
-	extern	puts
-	require	printf
-	require	sprintf
-	require	puts
+force_link	macro	sym
+	extern	sym
+	require	sym
+	endm
+	
+	force_link	printf
+	force_link	sprintf
+	force_link	puts
+	force_link	strcat
+	force_link	strncat
+	force_link	strcpy
+	force_link	strncpy
+	force_link	strcmp
+	force_link	strncmp
   END
   
 ;******************* (C) COPYRIGHT 2007 STMicroelectronics *****END OF FILE*****
