@@ -540,7 +540,7 @@ class VsdInterface implements Runnable {
 
 	//*** FW ロード ******************************************************
 
-	public int LoadFirmWare() throws IOException {
+	public void LoadFirmware() throws IOException {
 		InputStream	fsFirm = null;
 
 		int iReadSize = 0;
@@ -597,7 +597,6 @@ class VsdInterface implements Runnable {
 
 		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_loaded );
 		if( bDebug ) Log.d( "VSDroid", "LoadFirm::completed." );
-		return 0;
 	}
 
 	//*** config に従って設定 ********************************************
@@ -689,7 +688,7 @@ class VsdInterface implements Runnable {
 			try{
 				Close(); // 開いていたら一旦 close
 				Open();
-				LoadFirmWare();
+				LoadFirmware();
 				SetupMode();
 				
 				// Read WDT 発動

@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -31,16 +30,11 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.hardware.Camera;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import java.net.SocketTimeoutException;
 import java.util.UUID;
 import java.io.*;
 import java.util.*;
 import jp.dds.vsdroid.VsdInterface;
-import jp.dds.vsdroid.VsdInterface.UnrecoverableException;
 
 @SuppressLint("DefaultLocale")
 public class Vsdroid extends Activity {
@@ -48,7 +42,14 @@ public class Vsdroid extends Activity {
 	static final boolean	bDebug		= BuildConfig.DEBUG;
 
 	// シフトインジケータの表示
-	private static final int iTachoBarList[] = { 1336, 800, 600, 472, 388 };
+	private static final double dTachoBarScale = 0.66;
+	private static final int iTachoBarList[] = {
+		( int )( 1336 * dTachoBarScale ),
+		( int )( 800 * dTachoBarScale ),
+		( int )( 600 * dTachoBarScale ),
+		( int )( 472 * dTachoBarScale ),
+		( int )( 388 * dTachoBarScale )
+	};
 	private static final int iRevLimit = 6500;
 
 	private static final UUID BT_UUID = UUID.fromString( "00001101-0000-1000-8000-00805F9B34FB" );
@@ -190,7 +191,7 @@ public class Vsdroid extends Activity {
 
 	class VsdInterfaceEmulation extends VsdInterface {
 		BufferedReader brEmuLog = null;
-		double	dOutputWaitTime = 0;
+		double dTimePrev;
 
 		int	iIdxTime		= 0x7FFFFFFF;
 		int	iIdxTacho		= 0x7FFFFFFF;
@@ -223,6 +224,8 @@ public class Vsdroid extends Activity {
 
 		@Override
 		public void Open() throws UnrecoverableException {
+			dTimePrev = -1;
+			
 			String strBuf;
 			String strToken;
 
@@ -262,7 +265,6 @@ public class Vsdroid extends Activity {
 			int iTokCnt;
 			int i, j;
 			double dTime;
-			double dTimePrev = -1;
 			
 			//if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::RawRead" );
 
@@ -360,7 +362,7 @@ public class Vsdroid extends Activity {
 		}
 
 		@Override public void SendCmd( String s ){}
-		@Override public int LoadFirmWare(){ return 0; }
+		@Override public void LoadFirmware(){}
 	}
 
 	//*** 画面更新 or メッセージログ *****************************************
