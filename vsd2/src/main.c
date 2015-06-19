@@ -715,11 +715,19 @@ __noreturn void main( void ){
 	
 	/*** ƒƒCƒ“ƒ‹[ƒv *******************************************************/
 	
+	UINT	uSpeed = 0;
+	UINT	uTacho = 0;
+	
 	while( 1 ){
 		WaitStateChange( &Vsd );
 		ComputeMeterSpeed( &Vsd );
 		ComputeMeterTacho( &Vsd );
 		Calibration( &Vsd );
+		
+		uSpeed += 30000 / 16 / 10; if( uSpeed > 30000 ) uSpeed = 0;
+		uTacho += 7000 / 16 / 10; if( uTacho > 7000 ) uTacho = 0;
+		Vsd.Speed.uVal = uSpeed;
+		Vsd.Tacho.uVal = uTacho;
 		
 		if( Vsd.Flags.bConnected ){
 			OutputSerial( &Vsd );

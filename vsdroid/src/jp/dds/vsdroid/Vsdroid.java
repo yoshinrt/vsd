@@ -3,7 +3,9 @@ package jp.dds.vsdroid;
 import java.util.Calendar;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -13,6 +15,7 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -67,7 +70,9 @@ public class Vsdroid extends Activity {
 	boolean	bRevWarn		= false;
 	boolean	bEcoMode		= false;
 	boolean	bDebugInfo		= false;
-
+	
+	int iBattery = 100;
+	
 	enum FLASH_STATE {
 		OFF,
 		ON,
@@ -165,6 +170,12 @@ public class Vsdroid extends Activity {
 		@Override
 		public int Close(){
 			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Close" );
+			
+			// BT 切断すると AT コマンドモードになるので，シリアル出力を止める
+			try{
+				SendCmd( "z" );
+			}catch( IOException e ){}
+			
 			try{
 				if( BTSock != null ){
 					BTSock.close();
@@ -656,12 +667,19 @@ public class Vsdroid extends Activity {
 					canvas.drawText( String.format( "Throttle(full): %d", Vsd.iThrottleFull ), 0, y += 30, paint );
 					canvas.drawText( String.format( "Throttle(cm): %.2f", ( Vsd.iThrottleRaw / ( double )0x7FFFFFFF - 7.5395E-06 ) / 2.5928E-06 ), 0, y += 30, paint );
 					canvas.drawText( String.format( "Throttle(%%): %.1f", Vsd.iThrottle / 10.0 ), 0, y += 30, paint );
-					canvas.drawText( String.format( "Gx: %.2f", Vsd.iGx / 4096.0 ), 0, y += 30, paint );
-					canvas.drawText( String.format( "Gy: %.2f", Vsd.iGy / 4096.0 ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Gx: %+.2f", Vsd.iGx / 4096.0 ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Gy: %+.2f", Vsd.iGy / 4096.0 ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Batt: %d", iBattery ), 0, y += 30, paint );
 				}
 			}
 			
 			paint.setTypeface( Typeface.DEFAULT );
+			
+			// バッテリー
+			if( iBattery <= 30 ){
+				paint.setColor( Color.RED );
+				canvas.drawLine( 0, 480 - 480 * iBattery / 30, 0, 480, paint );
+			}
 			
 			// 時計
 			Calendar cal = Calendar.getInstance();
@@ -746,6 +764,30 @@ public class Vsdroid extends Activity {
 		}
 	}
 
+	
+	/*** バッテリー関係 *****************************************************/
+	
+	private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver(){
+		@Override
+		public void onReceive( Context context, Intent intent ){
+			String action = intent.getAction();
+			
+			if( action.equals( Intent.ACTION_BATTERY_CHANGED )){
+				int iStatus = intent.getIntExtra( "status", 0 );
+				iBattery = (
+					iStatus == BatteryManager.BATTERY_STATUS_DISCHARGING ||
+					iStatus == BatteryManager.BATTERY_STATUS_NOT_CHARGING
+				) ? intent.getIntExtra( "level", 0 ) * 100 / intent.getIntExtra( "scale", 0 ) : 100;
+			}
+		}
+	};
+	
+	@Override
+	protected void onPause(){
+		super.onPause();
+		unregisterReceiver( mBroadcastReceiver );
+	}
+	
 	//************************************************************************
 
 	@Override
@@ -801,6 +843,11 @@ public class Vsdroid extends Activity {
 			CamParam = Cam.getParameters();	//カメラのパラメータを取得
 			Cam.startPreview();				//プレビューをしないと光らない
 		}
+		
+		// バッテリー
+		IntentFilter filter = new IntentFilter();
+		filter.addAction( Intent.ACTION_BATTERY_CHANGED );
+		registerReceiver( mBroadcastReceiver, filter );
 	}
 
 	@Override

@@ -54,6 +54,7 @@ class VsdInterface implements Runnable {
 	int 	iSectorCnt		= 0;
 	int 	iSectorCntMax	= 1;
 	Calendar	Cal;
+	Calendar	CalDev;
 
 	int		iGx, iGy;
 	int		iGx0, iGy0;
@@ -158,6 +159,7 @@ class VsdInterface implements Runnable {
 		dGymkhaStart	= 1;
 
 		Cal				= Calendar.getInstance( TimeZone.getTimeZone( "GMT+0" ));
+		CalDev			= Calendar.getInstance( TimeZone.getTimeZone( "GMT+0" ));
 
 		LapState		= LAP_STATE.NONE;
 
@@ -238,7 +240,7 @@ class VsdInterface implements Runnable {
 		// ヘッダ
 		try{
 			if( fsLog != null ) fsLog.write(
-				"Date/Time\tTacho\tSpeed\tDistance\t" +
+				"Date/Time\tDev Date Time\tTacho\tSpeed\tDistance\t" +
 				"Gy\tGx\tThrottle\tThrottle(raw)\t" +
 				"AuxInfo\tLapTime\tSectorTime\r\n"
 			);
@@ -291,6 +293,7 @@ class VsdInterface implements Runnable {
 		//if( bDebug ) Log.d( "VSDroid", "VsdInterface::Read" );
 		
 		iReadSize = RawRead( iBufLen, iBufSize - iBufLen );
+		if( iReadSize == 0 ) return 0;
 
 		try{
 			if( fsBinLog != null ) fsBinLog.write( Buf, iBufLen, iReadSize );
@@ -408,7 +411,7 @@ class VsdInterface implements Runnable {
 	int		iTSC;	// 200KHz >> 8
 
 	static final int Tsc2Milli( int iTSC ){
-		return ( int )( iTSC * (( 1 >> TSC_SHIFT ) * 1000.0 / TIMER_HZ ));
+		return ( int )( iTSC * (( 1 << TSC_SHIFT ) * 1000.0 / TIMER_HZ ));
 	}
 	
 	public void WriteLog(){
@@ -434,21 +437,19 @@ class VsdInterface implements Runnable {
 		if(( iTSC & 0xFFFF ) > iTSCRaw ) iTSC += 0x10000;
 		iTSC = ( iTSC & 0xFFFF0000 ) | iTSCRaw;
 		Cal.setTimeInMillis( iLogTimeMilli + Tsc2Milli( iTSC ));
+		CalDev.setTimeInMillis( System.currentTimeMillis());
 
 		// 基本データ
 		s = String.format(
-			"%04d-%02d-%02d" +
-			"T%02d:%02d:%02d.%03dZ\t" +
+			"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
+			"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
 			"%d\t%.2f\t%.2f\t" +
 			"%.3f\t%.3f\t" +
 			"%.1f\t%d\t%d",
-			Cal.get( Calendar.YEAR ),
-			Cal.get( Calendar.MONTH ) + 1,
-			Cal.get( Calendar.DATE ),
-			Cal.get( Calendar.HOUR_OF_DAY ),
-			Cal.get( Calendar.MINUTE ),
-			Cal.get( Calendar.SECOND ),
-			Cal.get( Calendar.MILLISECOND ),
+			Cal.get( Calendar.YEAR ), Cal.get( Calendar.MONTH ) + 1, Cal.get( Calendar.DATE ),
+			Cal.get( Calendar.HOUR_OF_DAY ), Cal.get( Calendar.MINUTE ), Cal.get( Calendar.SECOND ), Cal.get( Calendar.MILLISECOND ),
+			CalDev.get( Calendar.YEAR ), CalDev.get( Calendar.MONTH ) + 1, CalDev.get( Calendar.DATE ),
+			CalDev.get( Calendar.HOUR_OF_DAY ), CalDev.get( Calendar.MINUTE ), CalDev.get( Calendar.SECOND ), CalDev.get( Calendar.MILLISECOND ),
 			iTacho, iSpeedRaw / 100.0,
 			iMileageRaw * ( 1000 / dPulsePer1Km ),
 			iGy / 4096.0, iGx / 4096.0,
@@ -491,6 +492,12 @@ class VsdInterface implements Runnable {
 
 	public int Close(){
 		if( bDebug ) Log.d( "VSDroid", "VsdInterface::Close" );
+		
+		// BT 切断すると AT コマンドモードになるので，シリアル出力を止める
+		try{
+			SendCmd( "z" );
+		}catch( IOException e ){}
+		
 		try{
 			if( Sock != null ){
 				Sock.close();
@@ -543,7 +550,7 @@ class VsdInterface implements Runnable {
 		
 		try{
 			// .mot オープン
-			fsFirm = new FileInputStream( Pref.getString( "key_roms", null ));
+			fsFirm = new FileInputStream( Pref.getString( "key_roms", "vsd2.mot" ));
 			
 			if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending magic code" );
 			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_magic );
@@ -673,7 +680,7 @@ class VsdInterface implements Runnable {
 
 	volatile int uReadWdt;
 	public void run(){
-		bKillThread = false;		
+		bKillThread = false;
 		Timer ReadWdt = null;
 		
 		if( bDebug ) Log.d( "VSDroid", "run_loop()" );
@@ -693,6 +700,7 @@ class VsdInterface implements Runnable {
 						@Override
 						public void run(){
 							if( bKillThread || ++uReadWdt > 6 ){
+								if( bDebug ) Log.d( "VSDroid", String.format( "WDT timeout" ));
 								// 0.5 * 6sec Read できなければ
 								// ソケット強制クローズで Read() を失敗させる
 								Close();
@@ -702,7 +710,7 @@ class VsdInterface implements Runnable {
 					}, 0, 500
 				);
 				
-				while( !bKillThread && Read() > 0 ){
+				while( !bKillThread && Read() >= 0 ){
 					uReadWdt = 0;
 					SendCmd( "*" );	// ビーコン送信
 				}
@@ -712,6 +720,7 @@ class VsdInterface implements Runnable {
 				break;
 			}catch( IOException e ){
 				MsgHandler.sendEmptyMessage( R.string.statmsg_disconnected );
+				if( bDebug ) e.printStackTrace();
 				Sleep( 1000 );
 			}finally{
 				if( ReadWdt != null ) ReadWdt.cancel();

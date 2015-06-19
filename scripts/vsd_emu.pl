@@ -4,7 +4,7 @@ use Socket;
 use Time::HiRes qw(sleep);
 
 $TIMER_HZ	= 200000;
-$Server		= 0;
+$Server		= 1;
 
 if( $ARGV[ 0 ] =~ /\.gz$/ ){
 	open( fpIn, "gunzip -c $ARGV[ 0 ] |" );
