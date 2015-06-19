@@ -10,6 +10,7 @@ import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.io.*;
 import java.util.*;
+import java.util.zip.GZIPOutputStream;
 
 //*** VSD アクセス *******************************************************
 
@@ -79,7 +80,7 @@ class VsdInterface implements Runnable {
 	int		iBufLen = 0;
 	int		iBufPtr = 0;
 
-	BufferedWriter			fsLog		= null;
+	GZIPOutputStream		fsLog		= null;
 	BufferedOutputStream	fsBinLog	= null;
 
 	boolean			bDebugInfo	= false;
@@ -216,7 +217,7 @@ class VsdInterface implements Runnable {
 		// 日付
 		Calendar Now = Calendar.getInstance();
 		String s = String.format(
-			"%s/log/vsd%04d%02d%02d_%02d%02d%02d.log",
+			"%s/log/vsd%04d%02d%02d_%02d%02d%02d.log.gz",
 			Pref.getString( "key_system_dir", null ),
 			Now.get( Calendar.YEAR ),
 			Now.get( Calendar.MONTH ) + 1,
@@ -228,7 +229,7 @@ class VsdInterface implements Runnable {
 
 		// ログファイルオープン
 		try{
-			fsLog    = new BufferedWriter( new FileWriter( s ));
+			fsLog = new GZIPOutputStream( new BufferedOutputStream( new FileOutputStream( s )));
 			if( bDebugInfo ){
 				fsBinLog = new BufferedOutputStream( new FileOutputStream( s + ".bin" ));
 			}
@@ -240,9 +241,11 @@ class VsdInterface implements Runnable {
 		// ヘッダ
 		try{
 			if( fsLog != null ) fsLog.write(
-				"Date/Time\tDev Date Time\tTacho\tSpeed\tDistance\t" +
-				"Gy\tGx\tThrottle\tThrottle(raw)\t" +
-				"AuxInfo\tLapTime\tSectorTime\r\n"
+				(
+					"Date/Time\tDev Date Time\tTacho\tSpeed\tDistance\t" +
+					"Gy\tGx\tThrottle\tThrottle(raw)\t" +
+					"AuxInfo\tLapTime\tSectorTime\r\n"
+				).getBytes()
 			);
 		}catch( IOException e ){}
 
@@ -472,7 +475,7 @@ class VsdInterface implements Runnable {
 		}
 
 		try{
-			if( fsLog != null ) fsLog.write( s + "\r\n" );
+			if( fsLog != null ) fsLog.write(( s + "\r\n" ).getBytes());
 		}catch( IOException e ){}
 	}
 
