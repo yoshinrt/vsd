@@ -16,7 +16,7 @@
 /*** macros *****************************************************************/
 
 #ifdef EXEC_SRAM
-	//#define USE_SRAM_VECTOR
+	#define USE_SRAM_VECTOR
 #endif
 
 #define TIMER_HZ		200000

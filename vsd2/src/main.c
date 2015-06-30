@@ -304,36 +304,52 @@ void PulseInit( void ){
 
 /*** スピードパルス *********************************************************/
 
-#ifndef EXEC_SRAM
+#ifndef zzzEXEC_SRAM
 void EXTI0_IRQHandler( void ){
-	EXTI->PR = 1 << 0;
-	g_pVsd->Speed.uLastTime	= GetCurrentTime16();
-	++g_pVsd->Speed.uPulseCnt;
+	UINT uLastTime = GetCurrentTime16();
 	
-	// Millage 時限爆弾が発動したら，NewLap起動
-	if( g_pVsd->uRemainedMileage && !--g_pVsd->uRemainedMileage ){
-		g_pVsd->uLapTime = GetCurrentTime();
-		g_pVsd->Flags.bNewLap = TRUE;
+	if(
+		uLastTime - g_pVsd->Speed.uLastTime >=
+		// Max 250km/h と仮定して，それより短いパルスを無視する
+		( UINT )( TIMER_HZ / ( 250 * PULSE_PER_1KM / 3600.0 ))
+	){
+		g_pVsd->Speed.uLastTime	= uLastTime;
+		++g_pVsd->Speed.uPulseCnt;
 		
-		if( g_pVsd->Flags.uLapMode == MODE_ZERO_FOUR ){
-			// 0-400モードなら，距離を400mに設定
-			g_pVsd->uRemainedMileage = g_pVsd->uMileage_0_400;
-			g_pVsd->Flags.uLapMode = MODE_LAPTIME;
-		}else if( g_pVsd->Flags.uLapMode == MODE_ZERO_ONE ){
-			// 0-100 モードなら，0-100ゴール待ちモードに移行
-			g_pVsd->Flags.uLapMode = MODE_ZERO_ONE_WAIT;
+		// Millage 時限爆弾が発動したら，NewLap起動
+		if( g_pVsd->uRemainedMileage && !--g_pVsd->uRemainedMileage ){
+			g_pVsd->uLapTime = GetCurrentTime();
+			g_pVsd->Flags.bNewLap = TRUE;
+			
+			if( g_pVsd->Flags.uLapMode == MODE_ZERO_FOUR ){
+				// 0-400モードなら，距離を400mに設定
+				g_pVsd->uRemainedMileage = g_pVsd->uMileage_0_400;
+				g_pVsd->Flags.uLapMode = MODE_LAPTIME;
+			}else if( g_pVsd->Flags.uLapMode == MODE_ZERO_ONE ){
+				// 0-100 モードなら，0-100ゴール待ちモードに移行
+				g_pVsd->Flags.uLapMode = MODE_ZERO_ONE_WAIT;
+			}
 		}
 	}
+	EXTI->PR = 1 << 0;
 }
 #endif
 
 /*** タコパルス *************************************************************/
 
-#ifndef EXEC_SRAM
+#ifndef zzzEXEC_SRAM
 void EXTI1_IRQHandler( void ){
+	UINT uLastTime = GetCurrentTime16();
+	
+	if(
+		uLastTime - g_pVsd->Speed.uLastTime >=
+		// Max 9000rpm と仮定して，それより短いパルスを無視する
+		( UINT )( TIMER_HZ / ( 9000 * 2.0 / 60 ))
+	){
+		g_pVsd->Tacho.uLastTime	= uLastTime;
+		++g_pVsd->Tacho.uPulseCnt;
+	}
 	EXTI->PR = 1 << 1;
-	g_pVsd->Tacho.uLastTime	= GetCurrentTime16();
-	++g_pVsd->Tacho.uPulseCnt;
 }
 #endif
 

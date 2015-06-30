@@ -714,7 +714,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>Z:\STM32F10x_SRAM.icf</state>
+          <state>$PROJ_DIR$\STM32F10x_SRAM.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
