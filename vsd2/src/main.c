@@ -309,7 +309,7 @@ void EXTI0_IRQHandler( void ){
 	UINT uLastTime = GetCurrentTime16();
 	
 	if(
-		uLastTime - g_pVsd->Speed.uLastTime >=
+		(( uLastTime - g_pVsd->Speed.uLastTime ) & 0xFFFF ) >=
 		// Max 250km/h と仮定して，それより短いパルスを無視する
 		( UINT )( TIMER_HZ / ( 250 * PULSE_PER_1KM / 3600.0 ))
 	){
@@ -342,7 +342,7 @@ void EXTI1_IRQHandler( void ){
 	UINT uLastTime = GetCurrentTime16();
 	
 	if(
-		uLastTime - g_pVsd->Speed.uLastTime >=
+		(( uLastTime - g_pVsd->Speed.uLastTime ) & 0xFFFF ) >=
 		// Max 9000rpm と仮定して，それより短いパルスを無視する
 		( UINT )( TIMER_HZ / ( 9000 * 2.0 / 60 ))
 	){
