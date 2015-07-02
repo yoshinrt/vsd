@@ -342,7 +342,7 @@ void EXTI1_IRQHandler( void ){
 	UINT uLastTime = GetCurrentTime16();
 	
 	if(
-		(( uLastTime - g_pVsd->Speed.uLastTime ) & 0xFFFF ) >=
+		(( uLastTime - g_pVsd->Tacho.uLastTime ) & 0xFFFF ) >=
 		// Max 9000rpm ‚Æ‰¼’è‚µ‚ÄC‚»‚ê‚æ‚è’Z‚¢ƒpƒ‹ƒX‚ð–³Ž‹‚·‚é
 		( UINT )( TIMER_HZ / ( 9000 * 2.0 / 60 ))
 	){
