@@ -60,9 +60,9 @@ class VsdInterface implements Runnable {
 	int		iGx, iGy;
 	int		iGx0, iGy0;
 	int		iThrottle;
-	int		iThrottleRaw;
 	int		iThrottle0;
-	int		iThrottleFull;
+	int		iThrottleMax;
+	int		iThrottleRaw;
 	double	dGymkhaStart	= 1;
 
 	int		iConnMode		= CONN_MODE_ETHER;
@@ -154,7 +154,8 @@ class VsdInterface implements Runnable {
 		iRtcPrevRaw		= 0;
 		iMileageRaw		= 0;
 		iTSCRaw			= 0;
-		iThrottle0		= 0;
+		iThrottle0		= -48000;	// スロットルの 0地点
+		iThrottleMax	= 8000;		// スロットル 0～100% 幅
 		iSectorCnt		= 0;
 		iSectorCntMax	= 1;
 		dGymkhaStart	= 1;
@@ -192,7 +193,7 @@ class VsdInterface implements Runnable {
 
 		if( Buf[ iBufPtr ] == ( byte )0xFE ){
 			++iBufPtr;
-			iRet = ( Buf[ iBufPtr++ ] + 0xFE ) & 0xFF;
+			iRet = Buf[ iBufPtr++ ] + 0xFE;
 		}else{
 			iRet = Buf[ iBufPtr++ ] & 0xFF;
 		}
@@ -217,7 +218,7 @@ class VsdInterface implements Runnable {
 		// 日付
 		Calendar Now = Calendar.getInstance();
 		String s = String.format(
-			"%s/log/vsd%04d%02d%02d_%02d%02d%02d.log.gz",
+			"%s/log/vsd%04d%02d%02d_%02d%02d%02d",
 			Pref.getString( "key_system_dir", null ),
 			Now.get( Calendar.YEAR ),
 			Now.get( Calendar.MONTH ) + 1,
@@ -229,7 +230,7 @@ class VsdInterface implements Runnable {
 
 		// ログファイルオープン
 		try{
-			fsLog = new GZIPOutputStream( new BufferedOutputStream( new FileOutputStream( s )));
+			fsLog = new GZIPOutputStream( new BufferedOutputStream( new FileOutputStream( s + ".log.gz" )));
 			if( bDebugInfo ){
 				fsBinLog = new BufferedOutputStream( new FileOutputStream( s + ".bin" ));
 			}
@@ -319,83 +320,83 @@ class VsdInterface implements Runnable {
 			// ここで描画要求
 			MsgHandler.sendEmptyMessage( R.string.statmsg_update );
 
-			if( iBufPtr < iEOLPos ){
-				iMileage16	= Unpack();
-				iTSCRaw		= Unpack();
-				iGy			= Unpack();
-				iGx			= Unpack();
-				iThrottleRaw	= 0x7FFFFFFF / Unpack();
+			iMileage16	= Unpack();
+			iTSCRaw		= Unpack();
+			iGy			= Unpack();
+			iGx			= Unpack();
+			
+			iThrottleRaw	= -( 0x7FFFFFFF / Unpack()) - iThrottle0;
 
-				if( iGCaribCnt-- > 0 ){
-					// センサーキャリブレーション中
-					iGx0		+= iGx;
-					iGy0		+= iGy;
-					iThrottle0	+= iThrottleRaw;
-
-					if( iGCaribCnt == 0 ){
-						iGx0		/= iGCaribCntMax;
-						iGy0		/= iGCaribCntMax;
-						iThrottle0	/= iGCaribCntMax;
-
-						iThrottleFull = iThrottle0 - 10000;	// スロットル全開の暫定値
-					}
-
-					iGx			= 0;
-					iGy			= 0;
-					iThrottle	= 0;
-				}else{
-					iGx			= iGx - iGx0;
-					iGy			= iGy - iGy0;
-
-					// スロットル全開値補正
-					if( iThrottleRaw < iThrottleFull ){
-						iThrottleFull -= ( iThrottleFull - iThrottleRaw ) >> 4;	// 1/16 だけ補正する
-					}
-
-					iThrottle	= ( iThrottleRaw - iThrottle0 ) * 1000 / ( iThrottleFull - iThrottle0 );
-					if( iThrottle < 0 ) iThrottle = 0;
-					else if( iThrottle > 1000 ) iThrottle = 1000;
+			if( iGCaribCnt-- > 0 ){
+				// センサーキャリブレーション中
+				iGx0 += iGx;
+				iGy0 += iGy;
+				
+				if( iGCaribCnt == 0 ){
+					iGx0 /= iGCaribCntMax;
+					iGy0 /= iGCaribCntMax;
 				}
 
-				// mileage 補正
-				if(( iMileageRaw & 0xFFFF ) > iMileage16 ) iMileageRaw += 0x10000;
-				iMileageRaw &= 0xFFFF0000;
-				iMileageRaw |= iMileage16;
+				iGx = 0;
+				iGy = 0;
+			}else{
+				iGx = iGx - iGx0;
+				iGy = iGy - iGy0;
 
-				// LapTime が見つかった
-				LapState = LAP_STATE.NONE;
-
-				if( iBufPtr < iEOLPos ){
-					iRtcRaw = Unpack() + ( Unpack() << 16 );
-
-					if( ++iSectorCnt >= iSectorCntMax ){
-						// 規定のセクタを通過したので，NewLap
-						if( iRtcPrevRaw != 0 ){
-							// 1周回った
-							LapState = LAP_STATE.UPDATE;
-
-							++iLapNum;
-							iTimeLastRaw = iRtcRaw - iRtcPrevRaw;
-							if( iTimeBestRaw == 0 || iTimeLastRaw < iTimeBestRaw ) iTimeBestRaw = iTimeLastRaw;
-
-							if( iMainMode != MODE_LAPTIME ){
-								// Laptime モード以外でゴールしたら，Ready 状態に戻す
-								iRtcPrevRaw = 0;
-							}
-						}else{
-							// ラップスタート
-							LapState = LAP_STATE.START;
-						}
-						iRtcPrevRaw	= iRtcRaw;
-						iSectorCnt	= 0;
-					}else if( iRtcPrevRaw != 0 ){
-						// 中間セクタ通過
-						LapState = LAP_STATE.SECTOR;
-					}
+				// スロットル 0, Full 値補正
+				// Raw 値が 0～Full 値を外れたら 1/16 だけ補正する
+				if( iThrottleRaw < 0 ){
+					iThrottle0 += iThrottleRaw >> 4;
+				}else if( iThrottleRaw > iThrottleMax ){
+					iThrottleMax += ( iThrottleRaw - iThrottleMax ) >> 4;
 				}
 
-				WriteLog();		// テキストログライト
+				// 0, 100% 付近の 1/32 ≒ 3% 分は不感帯にする
+				iThrottle = ( iThrottleRaw - ( iThrottleMax >> 32 ))
+					* ( int )( 1000 / ( 1 - 1.0 / 16 )) / iThrottleMax;
+				
+				if( iThrottle < 0 ) iThrottle = 0;
+				else if( iThrottle > 1000 ) iThrottle = 1000;
 			}
+
+			// mileage 補正
+			if(( iMileageRaw & 0xFFFF ) > iMileage16 ) iMileageRaw += 0x10000;
+			iMileageRaw &= 0xFFFF0000;
+			iMileageRaw |= iMileage16;
+
+			// LapTime が見つかった
+			LapState = LAP_STATE.NONE;
+
+			if( iBufPtr < iEOLPos ){
+				iRtcRaw = Unpack() + ( Unpack() << 16 );
+
+				if( ++iSectorCnt >= iSectorCntMax ){
+					// 規定のセクタを通過したので，NewLap
+					if( iRtcPrevRaw != 0 ){
+						// 1周回った
+						LapState = LAP_STATE.UPDATE;
+
+						++iLapNum;
+						iTimeLastRaw = iRtcRaw - iRtcPrevRaw;
+						if( iTimeBestRaw == 0 || iTimeLastRaw < iTimeBestRaw ) iTimeBestRaw = iTimeLastRaw;
+
+						if( iMainMode != MODE_LAPTIME ){
+							// Laptime モード以外でゴールしたら，Ready 状態に戻す
+							iRtcPrevRaw = 0;
+						}
+					}else{
+						// ラップスタート
+						LapState = LAP_STATE.START;
+					}
+					iRtcPrevRaw	= iRtcRaw;
+					iSectorCnt	= 0;
+				}else if( iRtcPrevRaw != 0 ){
+					// 中間セクタ通過
+					LapState = LAP_STATE.SECTOR;
+				}
+			}
+
+			WriteLog();		// テキストログライト
 			++iEOLPos;
 		}
 
@@ -418,20 +419,16 @@ class VsdInterface implements Runnable {
 	}
 	
 	public void WriteLog(){
-		String s;
-
 		if( !bLogStart ){
-			if( bDebugInfo || iSpeedRaw > 0 ){
-				// 動いたので Log 開始
-				bLogStart		= true;
-				iTSC			= iTSCRaw;
-				iLogTimeMilli	= System.currentTimeMillis() - Tsc2Milli( iTSC );
-				
-				if( fsLog == null ) OpenLog();
-			}else{
-				// まだ動いていないので，Log 保留
-				return;
-			}
+			// まだ動いていないので，Log 保留
+			if( !bDebugInfo && iSpeedRaw == 0 ) return;
+			
+			// 動いたので Log 開始
+			bLogStart		= true;
+			iTSC			= iTSCRaw;
+			iLogTimeMilli	= System.currentTimeMillis() - Tsc2Milli( iTSC );
+			
+			if( fsLog == null ) OpenLog();
 		}
 		
 		if( fsLog == null ) return;
@@ -443,39 +440,42 @@ class VsdInterface implements Runnable {
 		CalDev.setTimeInMillis( System.currentTimeMillis());
 
 		// 基本データ
-		s = String.format(
-			"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
-			"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
-			"%d\t%.2f\t%.2f\t" +
-			"%.3f\t%.3f\t" +
-			"%.1f\t%d\t%d",
-			Cal.get( Calendar.YEAR ), Cal.get( Calendar.MONTH ) + 1, Cal.get( Calendar.DATE ),
-			Cal.get( Calendar.HOUR_OF_DAY ), Cal.get( Calendar.MINUTE ), Cal.get( Calendar.SECOND ), Cal.get( Calendar.MILLISECOND ),
-			CalDev.get( Calendar.YEAR ), CalDev.get( Calendar.MONTH ) + 1, CalDev.get( Calendar.DATE ),
-			CalDev.get( Calendar.HOUR_OF_DAY ), CalDev.get( Calendar.MINUTE ), CalDev.get( Calendar.SECOND ), CalDev.get( Calendar.MILLISECOND ),
-			iTacho, iSpeedRaw / 100.0,
-			iMileageRaw * ( 1000 / dPulsePer1Km ),
-			iGy / 4096.0, iGx / 4096.0,
-			iThrottle / 10.0, iThrottleRaw,
-			iTSCRaw
+		StringBuilder s = new StringBuilder(
+			String.format(
+				"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
+				"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
+				"%d\t%.2f\t%.2f\t" +
+				"%.3f\t%.3f\t" +
+				"%.1f\t%d\t%d",
+				Cal.get( Calendar.YEAR ), Cal.get( Calendar.MONTH ) + 1, Cal.get( Calendar.DATE ),
+				Cal.get( Calendar.HOUR_OF_DAY ), Cal.get( Calendar.MINUTE ), Cal.get( Calendar.SECOND ), Cal.get( Calendar.MILLISECOND ),
+				CalDev.get( Calendar.YEAR ), CalDev.get( Calendar.MONTH ) + 1, CalDev.get( Calendar.DATE ),
+				CalDev.get( Calendar.HOUR_OF_DAY ), CalDev.get( Calendar.MINUTE ), CalDev.get( Calendar.SECOND ), CalDev.get( Calendar.MILLISECOND ),
+				iTacho, iSpeedRaw / 100.0,
+				iMileageRaw * ( 1000 / dPulsePer1Km ),
+				iGy / 4096.0, iGx / 4096.0,
+				iThrottle / 10.0, iThrottleRaw,
+				iTSCRaw
+			)
 		);
 
 		// ラップタイム
 		switch( LapState ){
 		  case UPDATE:
-			s += "\t" + FormatTime2( iTimeLastRaw ) + "\t";
+			s.append( "\t" ).append( FormatTime2( iTimeLastRaw )).append( "\t" );
 			break;
 
 		  case START:
-			s += "\t0:00.000\t";
+			s.append( "\t0:00.000\t" );
 			break;
 
 		  case SECTOR:
-			s += "\t\t" + FormatTime2( iRtcRaw - iRtcPrevRaw );
+			s.append( "\t\t" ).append( FormatTime2( iRtcRaw - iRtcPrevRaw ));
 		}
 
+		s.append( "\r\n" );
 		try{
-			if( fsLog != null ) fsLog.write(( s + "\r\n" ).getBytes());
+			if( fsLog != null ) fsLog.write( s.toString().getBytes());
 		}catch( IOException e ){}
 	}
 
@@ -513,13 +513,10 @@ class VsdInterface implements Runnable {
 	//*** sio コマンド関係 ***********************************************
 
 	public void SendCmd( String s ) throws IOException {
-		byte[] Buf;
-
 		if( OutStream == null ) return;
 
 		try{
-			Buf = s.getBytes( "US-ASCII" );
-			OutStream.write( Buf, 0, Buf.length );
+			OutStream.write( s.getBytes());
 		}catch( UnsupportedEncodingException e ){}
 	}
 

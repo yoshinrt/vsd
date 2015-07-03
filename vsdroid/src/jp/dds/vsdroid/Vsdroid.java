@@ -665,9 +665,9 @@ public class Vsdroid extends Activity {
 					int	y = 0;
 					paint.setColor( Color.CYAN );
 					paint.setTextSize( 30 );
-					canvas.drawText( String.format( "Throttle(raw): %d", Vsd.iThrottleRaw ), 0, y += 30, paint );
-					canvas.drawText( String.format( "Throttle(full): %d", Vsd.iThrottleFull ), 0, y += 30, paint );
-					canvas.drawText( String.format( "Throttle(cm): %.2f", ( Vsd.iThrottleRaw / ( double )0x7FFFFFFF - 7.5395E-06 ) / 2.5928E-06 ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Throttle: %d (%d - %d)",
+						Vsd.iThrottleRaw + Vsd.iThrottle0, Vsd.iThrottle0, Vsd.iThrottleMax + Vsd.iThrottle0 ),
+						0, y += 30, paint );
 					canvas.drawText( String.format( "Throttle(%%): %.1f", Vsd.iThrottle / 10.0 ), 0, y += 30, paint );
 					canvas.drawText( String.format( "Gx: %+.2f", Vsd.iGx / 4096.0 ), 0, y += 30, paint );
 					canvas.drawText( String.format( "Gy: %+.2f", Vsd.iGy / 4096.0 ), 0, y += 30, paint );
