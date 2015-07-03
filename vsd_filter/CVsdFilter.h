@@ -634,12 +634,12 @@ class CVsdFilter
 	std::vector<std::string> m_vecReaderFunc;
 	
 	// ‰¼‘zŠÖ”
-	int	GetWidth( void ){ return fpip ? fpip->w : 0; }
-	int	GetHeight( void ){ return fpip ? fpip->h : 0; }
-	int	GetFrameMax( void ){ return fileinfo->frame_n; }
-	int	GetFrameCnt( void ){ return fpip->frame; }
-	double	GetFPS( void ){ return ( double )fileinfo->video_rate / fileinfo->video_scale; }
-	int IsSaving( void ){ return filter->exfunc->is_saving( editp ); }
+	int	GetWidth( void )   { return fpip ? fpip->w : 0; }
+	int	GetHeight( void )  { return fpip ? fpip->h : 0; }
+	int	GetFrameMax( void ){ return fpip ? fpip->frame_n : 0; }
+	int	GetFrameCnt( void ){ return fpip ? fpip->frame   : 0; }
+	double GetFPS( void )  { return ( double )fileinfo->video_rate / fileinfo->video_scale; }
+	int IsSaving( void )   { return filter->exfunc->is_saving( editp ); }
 	
 	// “¯Šúî•ñ•\¦
 	WCHAR *DrawSyncInfoFormatTime(
