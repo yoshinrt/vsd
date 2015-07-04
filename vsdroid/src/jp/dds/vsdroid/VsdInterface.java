@@ -154,7 +154,7 @@ class VsdInterface implements Runnable {
 		iRtcPrevRaw		= 0;
 		iMileageRaw		= 0;
 		iTSCRaw			= 0;
-		iThrottle0		= -48000;	// スロットルの 0地点
+		iThrottle0		= -48650;	// スロットルの 0地点    (実測値 49650-39277)
 		iThrottleMax	= 8000;		// スロットル 0～100% 幅
 		iSectorCnt		= 0;
 		iSectorCntMax	= 1;
@@ -352,7 +352,7 @@ class VsdInterface implements Runnable {
 				}
 
 				// 0, 100% 付近の 1/32 ≒ 3% 分は不感帯にする
-				iThrottle = ( iThrottleRaw - ( iThrottleMax >> 32 ))
+				iThrottle = ( iThrottleRaw - ( iThrottleMax >> 5 ))
 					* ( int )( 1000 / ( 1 - 1.0 / 16 )) / iThrottleMax;
 				
 				if( iThrottle < 0 ) iThrottle = 0;
