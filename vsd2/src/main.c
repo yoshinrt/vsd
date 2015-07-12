@@ -663,7 +663,7 @@ void Initialize( USART_BUF_t *pBuf ){
 
 /*** ステート変化待ち & LED 表示 ********************************************/
 
-#ifndef EXEC_SRAM
+#ifndef zzzEXEC_SRAM
 void WaitStateChange( VSD_DATA_t *pVsd ){
 	UINT	uSumGx 		= 0;
 	UINT	uSumGy 		= 0;
@@ -678,7 +678,7 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 	AdcConversion();
 	while((( GetCurrentTime16() - pVsd->uOutputPrevTime ) & 0xFFFF ) < uWaitCnt ){
 		if( AdcConversionCompleted()){
-			uSumGx		+= G_SENSOR_X;
+			uSumGx		+= G_SENSOR_Z;
 			uSumGy		+= uGy = G_SENSOR_Y;
 			uThrottle	+= ADC_THROTTLE;
 			++uCnt;
@@ -698,8 +698,8 @@ void WaitStateChange( VSD_DATA_t *pVsd ){
 	// ADC 値は 0-0x7FFF の 15bit．
 	// G の結果は 4.12bit fixed point．
 	pVsd->uGx = ( UINT )(
-		(( ULLONG )uSumGx * ( UINT )( 0x100000000L * 4096 * 2 / GX_1G )) >> 32
-	) / uCnt + GX_CENTER;
+		(( ULLONG )uSumGx * ( UINT )( 0x100000000L * 4096 * 2 / GZ_1G )) >> 32
+	) / uCnt + GZ_CENTER;
 	
 	pVsd->uGy = ( UINT )(
 		(( ULLONG )uSumGy * ( UINT )( 0x100000000L * 4096 * 2 / GY_1G )) >> 32
