@@ -4,7 +4,7 @@
 .SILENT:
 .PHONY : release
 
-export PATH := /bin:$(PATH)
+export PATH := /bin:/cygdrive/d/DDS/bin:$(PATH)
 
 all: ScriptIF.h rev_num.h
 
@@ -41,6 +41,8 @@ release:
 	for a in `find . -name '*.js'`; do \
 		perl -pe 's@.*//#DEL#.*\n@@; s@//(.*\S)\s*//#REL#@$$1@' $$a > $$a.z; mv $$a.z $$a; \
 	done; \
-	cd ..; zip -9 -r ../vsd_filter_gps.zip *; \
-	cd ..; perl -ne 'rename( "vsd_filter_gps.zip", "vsd_filter_gps_r$$1.zip" ) if( /#define\s+PROG_REVISION\s+(\d+)/ );' rev_num.h; \
+#	cd ..; zip -9 -r ../vsd_filter_gps.zip *; \
+#	cd ..; perl -ne 'rename( "vsd_filter_gps.zip", "vsd_filter_gps_r$$1.zip" ) if( /#define\s+PROG_REVISION\s+(\d+)/ );' rev_num.h; \
+	cd ..; lha a -d ../vsd_filter_gps.lzh *; \
+	cd ..; perl -ne 'rename( "vsd_filter_gps.lzh", "vsd_filter_gps_r$$1.lzh" ) if( /#define\s+PROG_REVISION\s+(\d+)/ );' rev_num.h; \
 	rm -rf zrelease
