@@ -12,7 +12,7 @@
 /*** macros *****************************************************************/
 
 #define GRAVITY				9.80665
-#define CALIB_MARK_SPEED	300
+#define CALIB_MARK_SPEED	600
 #define MAX_TURN_R			200
 
 /*** コンストラクタ *********************************************************/
@@ -454,6 +454,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			UINT	uIdxDistance	= ~0;
 			UINT	uIdxDirection	= ~0;
 			UINT	uIdxSpeed		= ~0;
+			UINT	uIdxTacho		= ~0;
 			UINT	uIdxLong		= ~0;
 			UINT	uIdxLati		= ~0;
 			
@@ -468,6 +469,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					else if( !strcmp( *strKey, "Distance"  )) uIdxDistance	= uIdx;
 					else if( !strcmp( *strKey, "Direction" )) uIdxDirection	= uIdx;
 					else if( !strcmp( *strKey, "Speed"     )) uIdxSpeed		= uIdx;
+					else if( !strcmp( *strKey, "Tacho"     )) uIdxTacho		= uIdx;
 					else if( !strcmp( *strKey, "Longitude" )) uIdxLong		= uIdx;
 					else if( !strcmp( *strKey, "Latitude"  )) uIdxLati		= uIdx;
 					else if( !strcmp( *strKey, "LapTime"   )){
@@ -545,7 +547,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						time_t t = ( time_t )dVal;
 						if( t < m_iLogStartTime ) t += 24 * 3600 * 1000;
 						SetTime( iCnt, ( double )( t - m_iLogStartTime ));
-					}else if( uKey == uIdxSpeed ){
+					}else if( uKey == uIdxSpeed && uIdxTacho != ~0 ){
 						// キャリブレーション中は，一旦 0km/h にする
 						if( dVal >= CALIB_MARK_SPEED ){
 							++uCalibrating;

@@ -236,4 +236,20 @@ function Draw(){
 	Vsd.DrawText( 0, Y, "Alt.: " + ( Log.Altitude !== undefined ? Log.Altitude.toFixed( 1 ) + "m" : "---" ), FontM, FontColor );
 	Y += FontM.Height;
 	Vsd.DrawText( 0, Y, Sprintf( "Dist.:%6.2fkm", Log.Distance / 1000 ), FontM, FontColor );
+	
+	/*
+	if( !Vsd.IsSaving ){
+		Y += FontM.Height;
+		
+		var Cnt = 0;
+		for( var i = 0; i < StreetViewParam.ImgCacheCnt; ++i ){
+			if( StreetViewParam.StViewImg[ i ].Status == IMG_STATUS_LOAD_COMPLETE ) ++Cnt;
+		}
+		Sprintf( "Time: %02d:%02d:%02d", date.getHours(), date.getMinutes(), date.getSeconds()),
+		Vsd.DrawText( 0, Y,
+			Sprintf( "%2d/%2d", Cnt, StreetViewParam.ImgCacheCnt ),
+			FontM, FontColor
+		);
+	}
+	*/
 }
