@@ -626,9 +626,14 @@ BOOL CVsdFilter::ReadGPSLog( HWND hwnd ){
 BOOL func_proc( FILTER *fp, FILTER_PROC_INFO *fpip ){
 	if( !g_Vsd ) return 0;
 	// クラスに変換
-	g_Vsd->fpip		= fpip;
+	g_Vsd->fpip	= fpip;
 	
-	return g_Vsd->DrawVSD();
+	BOOL bRet = g_Vsd->DrawVSD();
+	#ifdef DEBUG
+	g_Vsd->fpip	= NULL;
+	#endif
+	
+	return bRet;
 }
 
 /*** *.js ファイルリスト取得 ************************************************/
@@ -766,6 +771,17 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 		GetWindowRect( hwndChild, &rect.rect );
 		ScreenToClient( hwnd, &rect.points.topleft );
 		ScreenToClient( hwnd, &rect.points.bottomright );
+		
+		/*
+		if( rect.rect.right  >= POS_TH_EDIT ){
+			// エディットボックスのスタイル変更
+			//SendMessage( hwnd, EM_SETREADONLY, FALSE, 0 );
+			SetWindowLong(
+				hwndChild, GWL_EXSTYLE,
+				GetWindowLong( hwndChild, GWL_EXSTYLE ) | WS_EX_RIGHT | WS_EX_CLIENTEDGE
+			);
+		}
+		*/
 		
 		// ダイアログ左側を延ばす，EDIT ボックスのサイズを伸ばす
 		#define ResizeControl( name ) { \

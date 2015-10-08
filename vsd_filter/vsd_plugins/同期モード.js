@@ -4,7 +4,7 @@ function Initialize(){
 	// 使用する画像・フォントの宣言
 	Scale = Vsd.Height / 720;
 	
-	font = new Font( "ＭＳ　ゴシック", 28 * Scale, FONT_OUTLINE | FONT_NOANTIALIAS );
+	font = new Font( "ＭＳ　ゴシック", 20 * Scale, FONT_OUTLINE | FONT_NOANTIALIAS );
 }
 
 //*** メーター描画処理 ******************************************************
@@ -39,22 +39,17 @@ function Draw(){
 	if( MapX >= 10000 || MapY >= 10000 ){
 		print(
 		"走行軌跡大きさ: " + ~~( MapX / 1000 ) + "km×" + ~~( MapY / 1000 ) + "km",
-		{ x: 0, y: 0, color: 0xFF8000, align: ALIGN_LEFT | ALIGN_TOP } );
+		{ x: Vsd.Width - 1, y: Vsd.Height - 1, color: 0xFF8000, align: ALIGN_RIGHT | ALIGN_BOTTOM } );
 	}
 	
 	Vsd.DrawMap(
-		4, 4, Vsd.Width / 1.5, Vsd.Height / 1.5,
+		4, 4, Vsd.Width - 4, Vsd.Height - 4,
 		ALIGN_TOP | ALIGN_LEFT | DRAW_MAP_START,
-		3 * Scale, 6 * Scale, 0xFF0000, 0xFFFF00, 0x00FF00, 0xFF0000
+		1, 6 * Scale, 0x00FF00, 0x40FF8000, 0x40FF8000, 0x40FF8000
 	);
 	
 	// ラップタイム
-	if( !Vsd.Config_lap_time ){
-		print( "ラップタイム非表示", { x: Vsd.Width - 1, y: 0, align: ALIGN_RIGHT | ALIGN_TOP } );
-	}else if( Vsd.MaxLapCnt == 0 ){
-		print( "スタート地点の映像を表示し", { x: Vsd.Width - 1, y: 0, align: ALIGN_RIGHT | ALIGN_TOP } );
-		print( "Mキーでラップタイム計測" );
-	}else{
+	if( Vsd.Config_lap_time ){
 		Vsd.DrawLapTimeLog( Vsd.Width - 1, 0, ALIGN_RIGHT | ALIGN_TOP, 10, font );
 	}
 	
@@ -63,4 +58,32 @@ function Draw(){
 	
 	// 同期文字情報
 	Vsd.DrawSyncInfo( 0, Vsd.Height - 1, font, ALIGN_LEFT | ALIGN_BOTTOM );
+	
+	// 説明文
+	if( Vsd.PrivateBuild ) return;
+	Vsd.DrawRect( 0, 0, font.GetTextWidth( "画" ) * 35.5, font.Height * 12.5, 0xC0000000, DRAW_FILL );
+	
+	print( "●同期手順", { x: 0, y: 0, align: ALIGN_LEFT | ALIGN_TOP } );
+	if( typeof( Log.Time ) === "undefined" ){
+		print( "・「GPSログ」の「開く」ボタンでGPSログを開きます" );
+	}else{
+		print( "・この画面下のメインスライダを動かし，" );
+		print( "  車両が動き出した瞬間の映像を表示します" );
+		print( "・「GPSログ位置調整」スライダを動かし，スピードグラフが" );
+		print( "  0km/hから動く瞬間のグラフにグラフカーソルを合わせます" );
+		print( "・映像とログが少しずつずれていく場合は，映像の終わり" );
+		print( "  付近でもう一度「GPSログ位置調整」スライダを調整します" );
+		
+	if( Vsd.MaxLapCnt ){
+		print( "・ラップ分割がうまくいっていない場合は「計測地点幅」を調整してください" );
+	}else if( Vsd.Config_lap_time ){
+		print( "・「計測地点幅」をコース幅[m]×10 に設定します" );
+		print( "・メインスライダを動かし，コントロールラインを通過した瞬間の" );
+		print( "  映像を表示します" );
+		print( "・「M」キーを押します" );
+	}else{
+		print( "・ラップタイム表示する場合は「ラップタイム表示」をONにします" );
+	}
+		print( "・すべての調整が終わったら「スキン」をお好みのスキンに変更してください" );
+	}
 }

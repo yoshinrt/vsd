@@ -37,7 +37,7 @@
 	#define VsdEd			m_piParamS[ PARAM_LEd ]
 	#define GPSSt			m_piParamS[ PARAM_GSt ]
 	#define GPSEd			m_piParamS[ PARAM_GEd ]
-	#define DEFAULT_SKIN	"standard_l.js"
+	#define DEFAULT_SKIN	"同期モード.js"
 #else
 	#define VideoSt			m_piParamT[ PARAM_VSt ]
 	#define VideoEd			m_piParamT[ PARAM_VEd ]
@@ -431,6 +431,7 @@ class CVsdFilter
 	
 	// リビジョン番号
 	static const int	m_iRevision;	// !js_const:Revision
+	static const int	m_iPrivateBuild;	// !js_const:PrivateBuild
 	
 	// ログリードヘルパ
 	int ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc );
@@ -634,12 +635,12 @@ class CVsdFilter
 	std::vector<std::string> m_vecReaderFunc;
 	
 	// 仮想関数
-	int	GetWidth( void )   { return fpip ? fpip->w : 0; }
-	int	GetHeight( void )  { return fpip ? fpip->h : 0; }
-	int	GetFrameMax( void ){ return fpip ? fpip->frame_n : 0; }
-	int	GetFrameCnt( void ){ return fpip ? fpip->frame   : 0; }
-	double GetFPS( void )  { return ( double )fileinfo->video_rate / fileinfo->video_scale; }
-	int IsSaving( void )   { return filter->exfunc->is_saving( editp ); }
+	int	GetWidth( void )	{ return fpip->w; }
+	int	GetHeight( void )	{ return fpip->h; }
+	int	GetFrameMax( void )	{ return filter->exfunc->get_frame_n( editp ); }
+	int	GetFrameCnt( void )	{ return fpip->frame; }
+	double	GetFPS( void )	{ return ( double )fileinfo->video_rate / fileinfo->video_scale; }
+	int IsSaving( void )	{ return filter->exfunc->is_saving( editp ); }
 	
 	// 同期情報表示
 	WCHAR *DrawSyncInfoFormatTime(

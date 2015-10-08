@@ -20,7 +20,14 @@
 /*** static member **********************************************************/
 
 HINSTANCE	CVsdFilter::m_hInst 	= NULL;
-const int CVsdFilter::m_iRevision = PROG_REVISION;
+const int CVsdFilter::m_iRevision	= PROG_REVISION;
+
+const int CVsdFilter::m_iPrivateBuild =
+#ifdef PUBLIC_MODE
+	0;
+#else
+	1;
+#endif
 
 CVsdFilter	*g_Vsd;
 
