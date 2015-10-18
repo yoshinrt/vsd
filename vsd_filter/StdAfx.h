@@ -1,5 +1,7 @@
 #pragma once
 
+#define _CRT_NO_VA_START_VALIDATION
+
 #include <windows.h>
 #include <crtdbg.h>
 #include <assert.h>

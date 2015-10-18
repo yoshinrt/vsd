@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -24,18 +24,21 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -79,7 +82,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
       <OutputFile>D:\Program Files\AVIUTL\Plugins\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
@@ -106,7 +109,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
       <OutputFile>D:\Program Files\AVIUTL\Plugins\$(TargetName)$(TargetExt)</OutputFile>
@@ -133,7 +136,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
       <OutputFile>D:\Program Files\AVIUTL\Plugins\$(TargetName)$(TargetExt)</OutputFile>
