@@ -138,6 +138,8 @@ function InstallSub(){
 		Shortcut.Save();
 	}
 	Log( "★すべてのインストールが完了しました．" );
+	Log( 'Web ブラウザの「<a href="https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install">インストール・初期設定手順</a>」にしたがって，初期設定を行ってください．' );
+	ShellApp.ShellExecute( "https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install" );
 }
 
 function Update(){
