@@ -33,16 +33,20 @@ rev_num.h:
 
 SVN_PLUGINS	=	file:///home/yoshi/.svnrepos/vsd/trunk/vsd_filter/vsd_plugins
 release:
-	rm -rf zrelease; cp -r release_files zrelease; cd zrelease; \
-	mv "/cygdrive/d/Program Files/AVIUTL/Plugins/vsd_filter.auf" vsd_filter_gps.auf; \
-	svn export $(SVN_PLUGINS); \
+	rm -rf zrelease; cp -r installer zrelease; \
+	cd zrelease; \
+		mv vsd_filter_gps.exe ..; \
+		mkdir plugins; \
+	cd plugins; \
+		mv "/cygdrive/d/Program Files/AVIUTL/Plugins/vsd_filter.auf" vsd_filter_gps.auf; \
+		svn export $(SVN_PLUGINS); \
 	cd vsd_plugins; \
-	rm -rf _log_reader/vsd_log.js gallery; \
-	for a in `find . -name '*.js'`; do \
-		perl -pe 's@.*//#DEL#.*\n@@; s@//(.*\S)\s*//#REL#@$$1@' $$a > $$a.z; mv $$a.z $$a; \
-	done; \
-#	cd ..; zip -9 -r ../vsd_filter_gps.zip *; \
-#	cd ..; perl -ne 'rename( "vsd_filter_gps.zip", "vsd_filter_gps_r$$1.zip" ) if( /#define\s+PROG_REVISION\s+(\d+)/ );' rev_num.h; \
-	cd ..; lha a -d ../vsd_filter_gps.lzh *; \
-	cd ..; perl -ne 'rename( "vsd_filter_gps.lzh", "vsd_filter_gps_r$$1.lzh" ) if( /#define\s+PROG_REVISION\s+(\d+)/ );' rev_num.h; \
+		rm -rf _log_reader/vsd_log.js gallery; \
+		for a in `find . -name '*.js'`; do \
+			perl -pe 's@.*//#DEL#.*\n@@; s@//(.*\S)\s*//#REL#@$$1@' $$a > $$a.z; mv $$a.z $$a; \
+		done; \
+	cd ../../; \
+		lha a -d ../vsd_filter_gps.exe *; \
+	cd ..; \
+		perl -ne 'rename( "vsd_filter_gps.exe", "vsd_filter_gps_r$$1.exe" ) if( /#define\s+PROG_REVISION\s+(\d+)/ );' rev_num.h
 	rm -rf zrelease

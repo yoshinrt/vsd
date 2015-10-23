@@ -1,0 +1,200 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja">
+<HEAD>
+	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=shift-jis">
+	<title>VSD for GPS インストーラ</title>
+	<script>
+		window.resizeTo( 700, 600 );
+	</script>
+	<HTA:APPLICATION
+		id="idVsdInstaller"
+		innerBorder="no"
+	/>
+</head>
+<style type="text/css">
+BODY {
+	color: WindowText;
+	background-color: ThreeDFace;
+}
+</style>
+
+<body onLoad = "WindowOnLoad()">
+<form name="form1">
+	AviUtl インストールフォルダ<br/>
+	<INPUT TYPE="text" NAME="InstallPath" size="80">
+	<input type="button" value="選択..." OnClick="SelectFolder( 'InstallPath' )"/><br/>
+	
+	オプション<br/>
+	<input type="checkbox" name="update" OnClick="Caption()"/>VSD for GPS のアップデートのみ</br>
+	<input type="checkbox" name="shortcut" />デスクトップにショートカットを作成</br>
+	<input type="checkbox" name="no_ffdshow" />ffdshow をインストールしない</br>
+	<br/>
+	<INPUT TYPE="button" VALUE="インストール or アップデート" name="install" OnClick="Install()">
+</form>
+<SPAN ID="Log"></SPAN>
+
+<script language="JavaScript">
+"use strict";
+
+var WshShell = new ActiveXObject( "WScript.Shell" );
+var ShellApp = new ActiveXObject( "Shell.Application" );
+var FileSys = new ActiveXObject( "Scripting.FileSystemObject" );
+
+var WorkPath;
+var InstallPath;
+
+function WindowOnLoad(){
+	var ScriptName;
+	
+	document.form1.shortcut.checked = true;
+	
+	// 作業 Dir 取得
+	if(
+		idVsdInstaller.commandLine.match( /^\s*"(.*?)"/ ) ||
+		idVsdInstaller.commandLine.match( /\s*(\S+)/ )
+	){
+		ScriptName = RegExp.$1;
+		WorkPath = ScriptName.replace( /[^\\]+$/, "" );
+	}else{
+		throw new Error( "スクリプト名が取得できません" );
+	}
+	
+	// Program Files を探す
+	if( FileSys.FolderExists( "c:\\Program Files (x86)" )){
+		document.form1.InstallPath.value = "c:\\Program Files (x86)\\aviutl";
+	}else if( FileSys.FolderExists( "c:\\Program Files" )){
+		document.form1.InstallPath.value = "c:\\Program Files\\aviutl";
+	}
+	
+	UpdateCheck();
+}
+
+function UpdateCheck(){
+	WorkPath = WorkPath.replace( /\\$/, "" );
+	InstallPath = document.form1.InstallPath.value.replace( /\\$/, "" );
+	
+	document.form1.update.checked = FileSys.FileExists( InstallPath + "\\vsd_filter_gps.auf" );
+	Caption();
+}
+
+function Caption(){
+	LogClear();
+	Log(
+		document.form1.update.checked ?
+			'「VSD for GPS のアップデートのみ」にチェックを入れると，VSD for GPS プラグインのアップデートのみを行います．<br/>' +
+			'vsd_plugins\\_user_config.js 以外は上書きされます．<br/>' :
+			'「インストール開始」を押すと，' +
+			'<a href="http://spring-fragrance.mints.ne.jp/aviutl/">AviUtl</a>, ' +
+			'<a href="https://sites.google.com/site/vsdforgps/home/vsd-for-gps">VSD for GPS</a>，' +
+			'<a href="http://pop.4-bit.jp/">L-SMASH Woks</a>，' +
+			'<a href="https://osdn.jp/projects/ffdshow-tryout/">ffdshow</a>' +
+			' がインストールされます．<br/>'
+	);
+	
+	document.form1.install.value = ( document.form1.update.checked ? "アップデート" : "インストール" ) + "開始";
+}
+
+function Install(){
+	document.form1.install.disabled = true;
+	try{
+		document.form1.update.checked ? Update() : InstallSub();
+		Log( "このウィンドウは閉じてください．" );
+	}catch( e ){
+		Log( "<font color='red'>★インストールに失敗しました<font>" );
+		Log( e.message );
+		document.form1.install.disabled = false;
+	}
+}
+
+function InstallSub(){
+	
+	Download( "http://spring-fragrance.mints.ne.jp/aviutl/aviutl100.zip" );
+	Download( "http://pop.4-bit.jp/bin/l-smash/L-SMASH_Works_r790_plugins.zip" );
+	Log( "ファイルを解凍しています..." );
+	
+	WshShell.Run(
+		'cmd /c cd /d "' + WorkPath + '"&&' +
+		'7za -aoa -o"' + InstallPath + '" x aviutl*.zip&&' +
+		'xcopy /s/y/i "' + WorkPath + '\\plugins" "' + InstallPath + '"&&' +
+		'7za -aoa -o"' + InstallPath + '" x L-SMASH_Works*.zip lwinput.aui',
+		6, 1
+	);
+	
+	Log( "★AviUtl, VSD for GPS, L-SMASH Works のインストール完了" );
+	
+	if( !document.form1.no_ffdshow.checked ){
+		Log( "引き続き ffdshow のインストールを行います．" );
+		WshShell.Run(
+			'"' + WorkPath + '\\ffdshow_rev3631_20101115_clsid.exe"',
+			4, 1
+		);
+	}
+	
+	if( document.form1.shortcut.checked ){
+		var Shortcut = WshShell.CreateShortcut(
+			WshShell.SpecialFolders( "Desktop" ) + "\\AviUtl.lnk"
+		);
+		Shortcut.TargetPath = InstallPath + "\\aviutl.exe";
+		Shortcut.Save();
+	}
+	Log( "★すべてのインストールが完了しました．" );
+}
+
+function Update(){
+	Log( "VSD for GPS をアップデートしています..." );
+	
+	if( !FileSys.FileExists( InstallPath + "\\vsd_filter_gps.auf" )){
+		throw new Error( "インストール済みの vsd_filter_gps.auf が見つかりません．<br/>vsd_filter_gps.auf が存在するフォルダを「AviUtl インストールフォルダ」に指定してください" );
+	}
+	
+	try{
+		FileSys.DeleteFile( WorkPath + "\\plugins\\vsd_plugins\\_user_config.js" );
+	}catch( e ){}
+	
+	WshShell.Run(
+		'cmd /c cd /d "' + WorkPath + '"&&' +
+		'xcopy /s/y/i "' + WorkPath + '\\plugins" "' + InstallPath + '"',
+		6, 1
+	);
+	
+	Log( "★VSD for GPS をアップデート完了" );
+}
+
+function Log( Message ){
+	document.getElementById( "Log" ).innerHTML += Message + "<br />";
+}
+
+function LogClear(){
+	document.getElementById( "Log" ).innerHTML = "";
+}
+
+function Download( url, file ){ 
+	
+	if( file === undefined ){
+		url.match( /.*\/(.*)/ );
+		file = WorkPath + "\\" + RegExp.$1;
+	}
+	
+	Log( file + " をダウンロードしています..." );
+	
+	WshShell.Run(
+		"powershell -NoProfile -ExecutionPolicy Bypass -Command " +
+		"\"$d=new-object System.Net.WebClient;$d.Proxy.Credentials=[System.Net.CredentialCache]::DefaultNetworkCredentials;" +
+		"$d.DownloadFile('" + url + "','" + file + "')\"",
+		6, 1
+	);
+	
+	if( !FileSys.FileExists( file )){
+		throw new Error( file + " がダウンロードできません．しばらく経ってからやり直してみてください．" );
+	}
+	Log( file + " ダウンロード完了" );
+}
+
+function SelectFolder( box ){
+	var folder = ShellApp.BrowseForFolder( 0, 'フォルダ選択', 0x51, "" );
+	if( folder != null ) document.form1[ box ].value = folder.Self.Path;
+	
+	UpdateCheck();
+}
+</script>
+</body></html>
