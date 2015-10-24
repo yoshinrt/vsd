@@ -87,6 +87,9 @@
       <OutputFile>D:\Program Files\AVIUTL\Plugins\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
     <PreBuildEvent />
+    <PostBuildEvent>
+      <Command>del "D:\Program Files\AVIUTL\Plugins\$(TargetName).i*"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -115,6 +118,9 @@
       <OutputFile>D:\Program Files\AVIUTL\Plugins\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
     <PreBuildEvent />
+    <PostBuildEvent>
+      <Command>del "D:\Program Files\AVIUTL\Plugins\$(TargetName).i*"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
     <ClCompile>
@@ -142,6 +148,9 @@
       <OutputFile>D:\Program Files\AVIUTL\Plugins\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
     <PreBuildEvent />
+    <PostBuildEvent>
+      <Command>del "D:\Program Files\AVIUTL\Plugins\$(TargetName).i*"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\COle.h" />

@@ -57,6 +57,15 @@ function Read_kml( Files ){
 	var Points;
 	
 	if( Points = Buf.match( /<when>[\S\s]*?<\/gx:coord>/g )){
+		
+		Log.Speed = Buf
+			.match( /<gx:SimpleArrayData name="speed">[\S\s]*?<\/gx:SimpleArrayData>/g )
+			.join( "\n" )
+			.match( /<gx:value>[^<]*/g )
+			.map( function( speed ){
+				return speed.match( /([\d\.]+)/ ) ? speed * 3.6 : undefined;
+			});
+		
 		Buf = undefined;
 		
 		// Žž•t‚«‚Ì KML

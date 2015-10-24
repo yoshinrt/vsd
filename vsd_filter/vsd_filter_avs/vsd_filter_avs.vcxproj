@@ -76,10 +76,13 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>D:\Program Files\AviSynth 2.5\plugins\$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>D:\Program Files\AviSynth 2.5\plugins\vsd_filter_avs.dll</OutputFile>
     </Link>
     <PreBuildEvent />
     <PreBuildEvent />
+    <PostBuildEvent>
+      <Command>del "D:\Program Files\AviSynth 2.5\plugins\vsd_filter_avs.i*"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -100,10 +103,13 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>D:\Program Files\AviSynth 2.5\plugins\$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>D:\Program Files\AviSynth 2.5\plugins\vsd_filter_avs.dll</OutputFile>
     </Link>
     <PreBuildEvent />
     <PreBuildEvent />
+    <PostBuildEvent>
+      <Command>del "D:\Program Files\AviSynth 2.5\plugins\vsd_filter_avs.i*"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
     <ClCompile>
@@ -123,10 +129,13 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;../$(IntDir)/dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>D:\Program Files\AviSynth 2.5\plugins\$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>D:\Program Files\AviSynth 2.5\plugins\vsd_filter_avs.dll</OutputFile>
     </Link>
     <PreBuildEvent />
     <PreBuildEvent />
+    <PostBuildEvent>
+      <Command>del "D:\Program Files\AviSynth 2.5\plugins\vsd_filter_avs.i*"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\COle.cpp" />
