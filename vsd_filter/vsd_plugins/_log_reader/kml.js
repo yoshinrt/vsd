@@ -63,7 +63,7 @@ function Read_kml( Files ){
 			.join( "\n" )
 			.match( /<gx:value>[^<]*/g )
 			.map( function( speed ){
-				return speed.match( /([\d\.]+)/ ) ? speed * 3.6 : undefined;
+				return speed.match( /([\d\.]+)/ ) ? RegExp.$1 * 3.6 : undefined;
 			});
 		
 		Buf = undefined;
