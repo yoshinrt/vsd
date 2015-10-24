@@ -48,5 +48,7 @@ release:
 	cd ../../; \
 		lha a -d ../vsd_filter_gps.exe *; \
 	cd ..; \
-		perl -ne 'rename( "vsd_filter_gps.exe", "vsd_filter_gps_r$$1.exe" ) if( /#define\s+PROG_REVISION\s+(\d+)/ );' rev_num.h
+		lha a vsd_filter_gps.lzh vsd_filter_gps.exe; \
+		perl -ne 'rename( "vsd_filter_gps.lzh", "vsd_filter_gps_r$$1.lzh" ) if( /#define\s+PROG_REVISION\s+(\d+)/ );' rev_num.h ;\
+		rm vsd_filter_gps.exe
 	rm -rf zrelease
