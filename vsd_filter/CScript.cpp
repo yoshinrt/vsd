@@ -11,8 +11,6 @@
 #include "CScript.h"
 #include "ScriptIF.h"
 
-using namespace v8;
-
 /*** static ƒƒ“ƒoiGL„t¼j***********************************************/
 
 LPCWSTR CScript::m_szErrorMsgID[] = {
@@ -25,16 +23,13 @@ LPCWSTR CScript::m_szErrorMsgID[] = {
 CScript::CScript( CVsdFilter *pVsd ){
 	DebugMsgD( ":CScript::CScript():%X\n", GetCurrentThreadId());
 	
-	m_pIsolate = v8::Isolate::New();
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
+	Isolate::Scope IsolateScope( g_Vsd->GetIsolate());
 	
 	DebugMsgD( ":CScript::CScript():m_pIsolate = %X\n", m_pIsolate );
 	
 	DebugMsgD( ":CScript::CScript():m_Context\n" );
-	m_Context.Clear();
 	
 	if( pVsd ) m_pVsd = pVsd;
-	//m_pSemaphore = new CSemaphore;
 	
 	m_szErrorMsg	= NULL;
 	m_uError		= ERR_OK;
@@ -50,12 +45,9 @@ CScript::~CScript(){
 	
 	{
 		v8::Isolate::Scope IsolateScope( m_pIsolate );
-		m_Context.Dispose();
-		while( !v8::V8::IdleNotification());
+		m_Context.Reset();
+		//šŽb’è while( !V8::IdleNotification());
 	}
-	m_pIsolate->Dispose();
-	
-	//delete m_pSemaphore;
 	
 	delete [] m_szErrorMsg;
 }

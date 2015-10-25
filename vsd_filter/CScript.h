@@ -33,6 +33,44 @@ typedef v8::Local<v8::Array> v8Array;
 
 class CVsdFilter;
 
+class ArrayBufferAllocator : public v8::ArrayBuffer::Allocator {
+public:
+	virtual void* Allocate(size_t length) {
+		void* data = AllocateUninitialized(length);
+		return data == NULL ? data : memset(data, 0, length);
+	}
+	virtual void* AllocateUninitialized(size_t length) { return malloc(length); }
+	virtual void Free(void* data, size_t) { free(data); }
+};
+
+class CScriptRoot {
+  public:
+	CScriptRoot( char *szPath ){
+		// Initialize V8.
+		V8::InitializeICU();
+		V8::InitializeExternalStartupData( szPath );
+		m_Platform = platform::CreateDefaultPlatform();
+		V8::InitializePlatform( m_Platform );
+		V8::Initialize();
+		m_CreateParams.array_buffer_allocator = &m_Allocator;
+		m_pIsolate = Isolate::New( g_Vsd->GetIsolate(), m_CreateParams );
+	}
+	
+	~CScriptRoot(){
+		g_Vsd->GetIsolate()->Dispose();
+		V8::Dispose();
+		V8::ShutdownPlatform();
+		delete m_Platform;
+	}
+	
+	Isolate m_pIsolate;
+
+  private:
+	Platform* m_Platform;
+	ArrayBufferAllocator m_Allocator;
+	Isolate::CreateParams m_CreateParams;
+};
+
 class CScript {
   public:
 	CScript( CVsdFilter *pVsd );
