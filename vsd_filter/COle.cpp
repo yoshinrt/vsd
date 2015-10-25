@@ -46,7 +46,7 @@ void COle::InitJS( v8::Local<v8::FunctionTemplate> tmpl ){
 v8::Handle<v8::Value> COle::OleFuncCaller(
 	const v8::Arguments& args
 ){
-	v8::HandleScope handle_scope;
+	v8::EscapableHandleScope handle_scope;
 	COle *obj = CScript::GetThis<COle>( args.This());
 	if( !obj ) return v8::Undefined();
 	
@@ -63,7 +63,7 @@ v8::Handle<v8::Value> COle::OleFuncCaller(
 v8::Handle<v8::Value> COle::CallAsFunctionHandler(
 	const v8::Arguments& args
 ){
-	v8::HandleScope handle_scope;
+	v8::EscapableHandleScope handle_scope;
 	COle *obj = CScript::GetThis<COle>( args.This());
 	if( !obj ) return v8::Undefined();
 	
@@ -99,7 +99,7 @@ v8::Handle<v8::Value> COle::OleValueGetter(
 	v8::Local<v8::String> propertyName,
 	const v8::AccessorInfo& info
 ){
-	v8::HandleScope handle_scope;
+	v8::EscapableHandleScope handle_scope;
 	COle *obj = CScript::GetThis<COle>( info.Holder());
 	if( !obj ) return v8::Undefined();
 	

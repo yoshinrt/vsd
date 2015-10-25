@@ -500,7 +500,7 @@ class $param->{ Class }IF {
   public:
 	// クラスコンストラクタ
 	static v8::Handle<v8::Value> New( const v8::Arguments& args ){
-		v8::HandleScope handle_scope;
+		v8::EscapableHandleScope handle_scope;
 		
 $param->{ NewObject }
 		// internal field にバックエンドオブジェクトを設定

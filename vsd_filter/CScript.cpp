@@ -219,7 +219,7 @@ LPWSTR CScript::SprintfSub( const v8::Arguments& args ){
 }
 
 v8::Handle<v8::Value> CScript::Sprintf( const v8::Arguments& args ){
-	v8::HandleScope handle_scope;
+	v8::EscapableHandleScope handle_scope;
 	
 	LPWSTR str = CScript::SprintfSub( args );
 	if( !str ) return v8::Undefined();
