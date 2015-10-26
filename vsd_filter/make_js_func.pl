@@ -32,20 +32,26 @@ MakeJsIF({
 	JsClass		=> '__VSD_System__',
 	NewObject	=> << '-----',
 		int iLen = args.Length();
-		if( CScript::CheckArgs( iLen == 1 )) return Undefined( Isolate::GetCurrent());
+		if( CScript::CheckArgs( iLen == 1 )){
+			V8ErrorNumOfArg();
+			return;
+		}
 		
-		CVsdFilter *obj = static_cast<CVsdFilter *>( Local<External>::Cast( args[ 0 ] )->Value());
-		if( !obj ) return Undefined( Isolate::GetCurrent());
+		CVsdFilter *pC_obj = static_cast<CVsdFilter *>( Local<External>::Cast( args[ 0 ] )->Value());
+		if( !pC_obj ){
+			V8Error( ERR_NOT_ENOUGH_MEMORY );
+			return;
+		}
 -----
 	FunctionIF	=> << '-----',
 	/*** DrawArc ****************************************************************/
 	
 	static Handle<Value> Func_DrawArc( const FunctionCallbackInfo<Value>& args ){
 		int iLen = args.Length();
-		if( CScript::CheckArgs( 7 <= iLen && iLen <= 9 )) return Undefined( Isolate::GetCurrent());
+		if( CScript::CheckArgs( 7 <= iLen && iLen <= 9 )) return Undefined( args.GetIsolate());
 		
 		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
-		if( !thisObj ) return Undefined( Isolate::GetCurrent());
+		if( !thisObj ) return Undefined( args.GetIsolate());
 		
 		if( iLen >= 9 ){
 			thisObj->DrawArc(
@@ -71,7 +77,7 @@ MakeJsIF({
 				iLen <= 7 ? 0 : args[ 7 ]->Int32Value()
 			);
 		}
-		return Undefined( Isolate::GetCurrent());
+		return Undefined( args.GetIsolate());
 	}
 	
 	static Handle<Value> Func_DrawMap( const FunctionCallbackInfo<Value>& args ){
@@ -81,9 +87,9 @@ MakeJsIF({
 		UINT uFlag = args[ 4 ]->Int32Value();
 		
 		if( uFlag & CVsdFilter::IMG_LOADMAP ){
-			if( CScript::CheckArgs( 8 == iLen )) return Undefined( Isolate::GetCurrent());
+			if( CScript::CheckArgs( 8 == iLen )) return Undefined( args.GetIsolate());
 			
-			if( !thisObj ) return Undefined( Isolate::GetCurrent());
+			if( !thisObj ) return Undefined( args.GetIsolate());
 			thisObj->DrawMap(
 				args[ 0 ]->Int32Value(),
 				args[ 1 ]->Int32Value(),
@@ -94,9 +100,9 @@ MakeJsIF({
 				CPixel( args[ 7 ]->Int32Value())
 			);
 		}else{
-			if( CScript::CheckArgs( 11 <= iLen && iLen <= 12 )) return Undefined( Isolate::GetCurrent());
+			if( CScript::CheckArgs( 11 <= iLen && iLen <= 12 )) return Undefined( args.GetIsolate());
 			
-			if( !thisObj ) return Undefined( Isolate::GetCurrent());
+			if( !thisObj ) return Undefined( args.GetIsolate());
 			thisObj->DrawMap(
 				args[ 0 ]->Int32Value(),
 				args[ 1 ]->Int32Value(),
@@ -112,22 +118,22 @@ MakeJsIF({
 				iLen <= 11 ? INVALID_INT : args[ 11 ]->Int32Value()
 			);
 		}
-		return Undefined( Isolate::GetCurrent());
+		return Undefined( args.GetIsolate());
 	}
 	
 	/*** ログデータ取得用 *******************************************************/
 	
 	#define DEF_LOG( name ) \
 		static Handle<Value> Get_##name( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){ \
-			CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder()); \
-			return obj ? Number::New( Isolate::GetCurrent(), obj->Get##name() ) : Undefined( Isolate::GetCurrent()); \
+			CVsdFilter *pC_obj = CScript::GetThis<CVsdFilter>( info.Holder()); \
+			return pC_obj ? Number::New( info.GetIsolate(), pC_obj->Get##name() ) : Undefined( info.GetIsolate()); \
 		}
 	#include "def_log.h"
 	
 	static Handle<Value> Get_Value( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){
-		CVsdFilter *obj = CScript::GetThis<CVsdFilter>( info.Holder());
+		CVsdFilter *pC_obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		String::Utf8Value str( propertyName );
-		return obj ? obj->GetValue( *str ) : Undefined( Isolate::GetCurrent());
+		return pC_obj ? pC_obj->GetValue( *str ) : Undefined( info.GetIsolate());
 	}
 -----
 });
@@ -140,13 +146,19 @@ MakeJsIF({
 	JsClass		=> '__VSD_SystemLog__',
 	NewObject	=> << '-----',
 		int iLen = args.Length();
-		if( CScript::CheckArgs( iLen == 1 )) return Undefined( Isolate::GetCurrent());
+		if( CScript::CheckArgs( iLen == 1 )){
+			V8ErrorNumOfArg();
+			return;
+		}
 		
-		CVsdFilterLog *obj = static_cast<CVsdFilterLog *>( Local<External>::Cast( args[ 0 ] )->Value());
-		if( !obj ) return Undefined( Isolate::GetCurrent());
+		CVsdFilterLog *pC_obj = static_cast<CVsdFilterLog *>( Local<External>::Cast( args[ 0 ] )->Value());
+		if( !pC_obj ){
+			V8Error( ERR_NOT_ENOUGH_MEMORY );
+			return;
+		}
 -----
 	ExtraNew	=> << '-----',
-		obj->AddLogAccessor( thisObject );
+		pC_obj->AddLogAccessor( thisObject );
 -----
 });
 
@@ -156,35 +168,38 @@ MakeJsIF({
 	Class		=> 'CVsdImage',
 	NewObject	=> << '-----',
 		// 引数チェック
-		if ( args.Length() <= 0 ) return Undefined( Isolate::GetCurrent());
+		if ( args.Length() <= 0 ){
+			V8ErrorNumOfArg();
+			return;
+		}
 		
-		CVsdImage* obj;
+		CVsdImage* pC_obj;
 		
 		// arg[ 0 ] が Image だった場合，そのコピーを作る
 		if( args[ 0 ]->IsObject()){
 			Local<Object> Image0 = args[ 0 ]->ToObject();
 			if( strcmp( *( String::Utf8Value )( Image0->GetConstructorName()), "Image" ) == 0 ){
 				CVsdImage *obj0 = CScript::GetThis<CVsdImage>( Image0 );
-				if( !obj0 ) return Undefined( Isolate::GetCurrent());
+				if( !obj0 ) return Undefined( args.GetIsolate());
 				
-				obj = new CVsdImage( *obj0 );
+				pC_obj = new CVsdImage( *obj0 );
 			}else{
 				V8TypeError( "arg[ 0 ] must be Image or string" );
-				return Undefined( Isolate::GetCurrent());
+				return;
 			}
 		}else{
 			// ファイル名指定で画像ロード
-			obj = new CVsdImage();
+			pC_obj = new CVsdImage();
 			String::Value FileName( args[ 0 ] );
 			
-			UINT uRet = obj->Load(
+			UINT uRet = pC_obj->Load(
 				( LPCWSTR )*FileName,
 				args.Length() <= 1 ? 0 : args[ 1 ]->Int32Value()
 			);
 			if( uRet != ERR_OK ){
 				V8Error( uRet );
-				delete obj;
-				return Undefined( Isolate::GetCurrent());
+				delete pC_obj;
+				return;
 			}
 		}
 -----
@@ -196,10 +211,13 @@ MakeJsIF({
 	Class		=> 'CVsdFont',
 	NewObject	=> << '-----'
 		// 引数チェック
-		if ( args.Length() < 2 ) return Undefined( Isolate::GetCurrent());
+		if ( args.Length() < 2 ){
+			V8ErrorNumOfArg();
+			return;
+		}
 		
 		String::Value FontName( args[ 0 ] );
-		CVsdFont *obj = new CVsdFont(
+		CVsdFont *pC_obj = new CVsdFont(
 			( LPCWSTR )*FontName,
 			args[ 1 ]->Int32Value(),
 			args.Length() <= 2 ? 0 : args[ 2 ]->Int32Value()
@@ -219,17 +237,17 @@ MakeJsIF({
 	Class		=> 'COle',
 	JsClass		=> 'ActiveXObject',
 	NewObject	=> << '-----',
-		COle *obj = new COle();
+		COle *pC_obj = new COle();
 		
 		// 引数チェック
 		if( args.Length() >= 1 ){
 			String::Value strServer( args[ 0 ]);
 			
-			UINT uRet = obj->CreateInstance(( LPCWSTR )*strServer );
+			UINT uRet = pC_obj->CreateInstance(( LPCWSTR )*strServer );
 			if( uRet != ERR_OK ){
 				V8Error( uRet );
-				delete obj;
-				return Undefined( Isolate::GetCurrent());
+				delete pC_obj;
+				return;
 			}
 		}
 -----
@@ -237,7 +255,7 @@ MakeJsIF({
 		COle::InitJS( tmpl );
 -----
 	ExtraNew	=> << '-----'
-		if( args.Length() >= 1 ) obj->AddOLEFunction( thisObject );
+		if( args.Length() >= 1 ) pC_obj->AddOLEFunction( thisObject );
 -----
 });
 
@@ -253,7 +271,7 @@ sub MakeJsIF {
 	my( $param ) = @_;
 	
 	$param->{ NewObject } = << "-----" if( !defined( $param->{ NewObject } ));
-		$param->{ Class } *obj = new $param->{ Class }();
+		$param->{ Class } *pC_obj = new $param->{ Class }();
 -----
 	
 	$param->{ bGlobal }		= $param->{ Class } eq 'CScript';
@@ -319,9 +337,9 @@ sub MakeJsIF {
 					
 					$ArgPos_p1 = $ArgPos + 1;
 					push( @Defs, "Local<Object> $_$ArgNum = args[ $ArgPos ]->ToObject();" );
-					push( @Defs, "if( CScript::CheckClass( $_$ArgNum, \"$_\", \"arg[ $ArgPos_p1 ] must be $_\" )) return Undefined( Isolate::GetCurrent());" );
+					push( @Defs, "if( CScript::CheckClass( $_$ArgNum, \"$_\", \"arg[ $ArgPos_p1 ] must be $_\" )) return Undefined( args.GetIsolate());" );
 					push( @Defs, "$Type *obj$ArgNum = CScript::GetThis<$Type>( $_$ArgNum );" );
-					push( @Defs, "if( !obj$ArgNum ) return Undefined( Isolate::GetCurrent());" );
+					push( @Defs, "if( !obj$ArgNum ) return Undefined( args.GetIsolate());" );
 					$Args[ $ArgNum ] = "*obj$ArgNum";
 				}
 				
@@ -392,23 +410,23 @@ sub MakeJsIF {
 			# 返り値
 			if( $RetType eq 'void' ){
 				$PreRet		= '';
-				$PostRet	= '; return Undefined( Isolate::GetCurrent());';
+				$PostRet	= '; return Undefined( args.GetIsolate());';
 			}
 			
 			elsif( $RetType eq 'int' || $RetType eq 'UINT' ){
-				$PreRet		= "return Int32::New( Isolate::GetCurrent(), ";
+				$PreRet		= "return Int32::New( args.GetIsolate(), ";
 			}
 			
 			elsif( $RetType eq 'char' ){
-				$PreRet		= "return String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)";
+				$PreRet		= "return String::NewFromOneByte( args.GetIsolate(), ( uint8_t *)";
 			}
 			
 			elsif( $RetType	=~ /^LPC?WSTR$/ ){
-				$PreRet		= "return String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)";
+				$PreRet		= "return String::NewFromTwoByte( args.GetIsolate(), ( uint16_t *)";
 			}
 			
 			elsif( $RetType eq 'double' ){
-				$PreRet		= "return Number::New( Isolate::GetCurrent(), ";
+				$PreRet		= "return Number::New( args.GetIsolate(), ";
 			}
 			
 			elsif( $RetType	=~ /^(Handle|Local)\b/ ){
@@ -424,10 +442,10 @@ sub MakeJsIF {
 			$param->{ FunctionIF } .= << "-----";
 	static Handle<Value> Func_$FuncName( const FunctionCallbackInfo<Value>& args ){
 		${NoArgNumCheck}int iLen = args.Length();
-		${NoArgNumCheck}if( CScript::CheckArgs( $Len )) return Undefined( Isolate::GetCurrent());
+		${NoArgNumCheck}if( CScript::CheckArgs( $Len )) return Undefined( args.GetIsolate());
 		$Defs
 		$param->{ Class } *thisObj = $GetThis( args.This());
-		if( !thisObj ) return Undefined( Isolate::GetCurrent());
+		if( !thisObj ) return Undefined( args.GetIsolate());
 		${PreRet}thisObj->$FuncName($Args)$PostRet
 	}
 -----
@@ -445,17 +463,17 @@ sub MakeJsIF {
 			$RealVar = $1;
 			
 			$Ret =
-				/\b(?:int|UINT)\b/		? "Int32::New( Isolate::GetCurrent(), obj->$RealVar )" :
-				/\bdouble\b/			? "Number::New( Isolate::GetCurrent(), obj->$RealVar )" :
-				/\bchar\b/				? "String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)obj->$RealVar )" :
-				/\bLPC?WSTR\b/			? "String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)obj->$RealVar )" :
-				/^(Handle|Local)\b/	? "obj->$RealVar" :
-										  "unknown ret type obj->$RealVar";
+				/\b(?:int|UINT)\b/		? "Int32::New( args.GetIsolate(), pC_obj->$RealVar )" :
+				/\bdouble\b/			? "Number::New( args.GetIsolate(), pC_obj->$RealVar )" :
+				/\bchar\b/				? "String::NewFromOneByte( args.GetIsolate(), ( uint8_t *)pC_obj->$RealVar )" :
+				/\bLPC?WSTR\b/			? "String::NewFromTwoByte( args.GetIsolate(), ( uint16_t *)pC_obj->$RealVar )" :
+				/^(Handle|Local)\b/	? "pC_obj->$RealVar" :
+										  "unknown ret type pC_obj->$RealVar";
 #-----
 			$AccessorIF .= << "-----";
 	static Handle<Value> Get_$JSvar( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){
-		$param->{ Class } *obj = CScript::GetThis<$param->{ Class }>( info.Holder());
-		return obj ? $Ret : Undefined( Isolate::GetCurrent());
+		$param->{ Class } *pC_obj = CScript::GetThis<$param->{ Class }>( info.Holder());
+		return pC_obj ? $Ret : Undefined( args.GetIsolate());
 	}
 -----
 		}
@@ -484,7 +502,7 @@ sub MakeJsIF {
 			}
 #-----
 			$Const .= << "-----";
-		proto->Set( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)"$JSvar" ), ${Type}::New($Cast(( $param->{ Class } *)pClass )->$RealVar ));
+		proto->Set( String::NewFromOneByte( args.GetIsolate(), ( uint8_t *)"$JSvar" ), ${Type}::New($Cast(( $param->{ Class } *)pClass )->$RealVar ));
 -----
 		}
 	}
@@ -499,57 +517,52 @@ sub MakeJsIF {
 class $param->{ Class }IF {
   public:
 	// クラスコンストラクタ
-	static Handle<Value> New( const FunctionCallbackInfo<Value>& args ){
-		EscapableHandleScope handle_scope( Isolate::GetCurrent() );
+	static void New( const FunctionCallbackInfo<Value>& args ){
+		HandleScope handle_scope( args.GetIsolate());
 		
 $param->{ NewObject }
 		// internal field にバックエンドオブジェクトを設定
 		Local<Object> thisObject = args.This();
-		thisObject->SetInternalField( 0, External::New( Isolate::GetCurrent(), obj ));
+		thisObject->SetInternalField( 0, External::New( args.GetIsolate(), pC_obj ));
 		
 		// JS オブジェクトが GC されるときにデストラクタが呼ばれるおまじない
-		Persistent<Object> objectHolder = Persistent<Object>::New( thisObject );
-		objectHolder.MakeWeak( obj, Dispose );
+		Persistent<Object> *objectHolder = new Persistent<Object>( args.GetIsolate(), thisObject );
+		objectHolder->SetWeak( pC_obj, Dispose );
+		pC_obj->m_pHolder = objectHolder;
 		
 $param->{ ExtraNew }
 		#ifdef DEBUG
-			DebugMsgD( ">>>new js obj $param->{ Class }:%X\\n", obj );
+			DebugMsgD( ">>>new js pC_obj $param->{ Class }:%X\\n", pC_obj );
 		#endif
-		// コンストラクタは this を返すこと。
-		return handle_scope.Escape( thisObject );
 	}
 	
 	// クラスデストラクタ
-	static void Dispose( Persistent<Value> handle, void* pVoid ){
-		#if $UseDestructor
-			HandleScope handle_scope( Isolate::GetCurrent() );
-			$param->{ Class } *thisObj = CScript::GetThis<$param->{ Class }>( handle->ToObject());
-			if( thisObj ){
-				delete static_cast<$param->{ Class }*>( thisObj );
-				#ifdef DEBUG
-					DebugMsgD( "<<<del js obj $param->{ Class }:%X\\n", thisObj );
-				#endif
-			}
-		#endif
-		handle.Dispose();
+	static void Dispose( const WeakCallbackData<Object, $param->{ Class }> &data ){
+		$param->{ Class } *pC_obj = data.GetParameter();
+		Persistent<Object> *holder = pC_obj->m_pHolder;
+		
+		//release instance.
+		m_pHolder->Reset();
+		delete pC_obj;
+		DebugMsgD( "<<<del js pC_obj $param->{ Class }:%X\\n", pC_obj );
 	}
 	
 	// JavaScript からの明示的な破棄
 	static Handle<Value> Func_Dispose( const FunctionCallbackInfo<Value>& args ){
-		// obj の Dispose() を呼ぶ
+		// pC_obj の Dispose() を呼ぶ
 		$param->{ Class } *thisObj = CScript::GetThis<$param->{ Class }>( args.This());
 		#if $UseDestructor
 			if( thisObj ){
 				delete thisObj;
 				#ifdef DEBUG
-					DebugMsgD( "<<<DISPOSE js obj $param->{ Class }:%X\\n", thisObj );
+					DebugMsgD( "<<<DISPOSE js pC_obj $param->{ Class }:%X\\n", thisObj );
 				#endif
 				
 				// internalfield を null っぽくする
-				args.This()->SetInternalField( 0, External::New( Isolate::GetCurrent(), NULL ));
+				args.This()->SetInternalField( 0, External::New( args.GetIsolate(), NULL ));
 			}
 		#endif
-		return Undefined( Isolate::GetCurrent());
+		return Undefined( args.GetIsolate());
 	}
 	
 	///// プロパティアクセサ /////
@@ -559,11 +572,11 @@ $param->{ FunctionIF }
   public:
 	// クラステンプレートの初期化
 	static void InitializeClass( Handle<ObjectTemplate> global, void *pClass = NULL ){
-		HandleScope handle_scope( Isolate::GetCurrent() );
+		HandleScope handle_scope( args.GetIsolate() );
 		
 		// コンストラクタを作成
-		Local<FunctionTemplate> tmpl = FunctionTemplate::New( Isolate::GetCurrent(), New );
-		tmpl->SetClassName( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)"$param->{ JsClass }" ));
+		Local<FunctionTemplate> tmpl = FunctionTemplate::New( args.GetIsolate(), New );
+		tmpl->SetClassName( String::NewFromOneByte( args.GetIsolate(), ( uint8_t *)"$param->{ JsClass }" ));
 		
 		// フィールドなどはこちらに
 		Local<ObjectTemplate> inst = tmpl->InstanceTemplate();
@@ -571,12 +584,12 @@ $param->{ FunctionIF }
 $Accessor
 		// メソッドはこちらに
 		Local<ObjectTemplate> proto = tmpl->PrototypeTemplate();
-		proto->Set( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)"Dispose" ), FunctionTemplate::New( Isolate::GetCurrent(), Func_Dispose ));
+		proto->Set( String::NewFromOneByte( args.GetIsolate(), ( uint8_t *)"Dispose" ), FunctionTemplate::New( args.GetIsolate(), Func_Dispose ));
 $Function
 $Const
 $param->{ ExtraInit }
 		// グローバルオブジェクトにクラスを定義
-		global->Set( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)"$param->{ JsClass }" ), tmpl );
+		global->Set( String::NewFromOneByte( args.GetIsolate(), ( uint8_t *)"$param->{ JsClass }" ), tmpl );
 	}
 };
 -----
@@ -613,7 +626,7 @@ $param->{ ExtraInit }
 sub AddAccessor {
 	my( $Name, $Class )= @_;
 	$Accessor .= << "-----";
-		inst->SetAccessor( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)"$Name" ), Get_$Name );
+		inst->SetAccessor( String::NewFromOneByte( args.GetIsolate(), ( uint8_t *)"$Name" ), Get_$Name );
 -----
 	return "Get_$Name";
 }
@@ -621,7 +634,7 @@ sub AddAccessor {
 sub AddFunction {
 	my( $Name, $Class )= @_;
 	$Function .= << "-----";
-		proto->Set( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)"$Name" ), FunctionTemplate::New( Isolate::GetCurrent(), Func_$Name ));
+		proto->Set( String::NewFromOneByte( args.GetIsolate(), ( uint8_t *)"$Name" ), FunctionTemplate::New( args.GetIsolate(), Func_$Name ));
 -----
 	return "Func_$Name";
 }

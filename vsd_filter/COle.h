@@ -70,6 +70,7 @@ class ICallbackJSFunc : public IDispatch {
 	);
 	
   private:
+	Persistent<Object>		Holder;
 	Persistent<Object>		m_Global;
 	Persistent<Function>	m_CallbackFunc;
 	UINT	m_uRefCnt;

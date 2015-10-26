@@ -105,7 +105,7 @@ Handle<Value> CVsdFile::ReadLine( void ){
 			// •¶Žš—ñ’·•t‚«‚Å String •ÏŠ·
 			int iStr = m_uBufPtr;
 			m_uBufPtr = ( p - m_cBuf + 1 );
-			return String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)m_cBuf + iStr, m_uBufPtr - iStr );
+			return String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)( m_cBuf + iStr ), NewStringType::kNormal, m_uBufPtr - iStr );
 		}
 	}
 	return String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)m_cBuf );

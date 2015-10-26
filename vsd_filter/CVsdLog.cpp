@@ -430,13 +430,13 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
-			Isolate::Scope IsolateScope( Script.Isolate::GetCurrent() );
+			Isolate::Scope IsolateScope( Isolate::GetCurrent() );
 			HandleScope handle_scope( Isolate::GetCurrent() );
-			Context::Scope context_scope( Script.Isolate::GetCurrent()->GetCurrentContext() );
+			Context::Scope context_scope( Isolate::GetCurrent()->GetCurrentContext() );
 			
 			// "Log" 取得
 			Local<Array> hLog = Local<Array>::Cast(
-				Script.Isolate::GetCurrent()->GetCurrentContext()->Global()->Get( String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)L"Log" ))
+				Isolate::GetCurrent()->GetCurrentContext()->Global()->Get( String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)L"Log" ))
 			);
 			if( !hLog->IsArray()) return 0;
 			
@@ -773,18 +773,18 @@ int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
-			Isolate::Scope IsolateScope( Script.Isolate::GetCurrent() );
+			Isolate::Scope IsolateScope( Isolate::GetCurrent() );
 			HandleScope handle_scope( Isolate::GetCurrent() );
-			Context::Scope context_scope( Script.Isolate::GetCurrent()->GetCurrentContext() );
+			Context::Scope context_scope( Isolate::GetCurrent()->GetCurrentContext() );
 			
 			// "LapTime" 取得
 			Local<Array> hLapTime = Local<Array>::Cast(
-				Script.Isolate::GetCurrent()->GetCurrentContext()->Global()->Get( String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)L"LapTime" ))
+				Isolate::GetCurrent()->GetCurrentContext()->Global()->Get( String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)L"LapTime" ))
 			);
 			if( !hLapTime->IsArray()) return 0;
 			
 			// カメラカー No 取得
-			m_iCamCarIdx = Script.Isolate::GetCurrent()->GetCurrentContext()->Global()->Get( String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)L"CameraCarID" ))->Int32Value();
+			m_iCamCarIdx = Isolate::GetCurrent()->GetCurrentContext()->Global()->Get( String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)L"CameraCarID" ))->Int32Value();
 			
 			// LapTime の key 取得
 			Local<Array> Keys = hLapTime->GetPropertyNames();
