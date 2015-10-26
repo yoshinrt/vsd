@@ -63,7 +63,7 @@ class CScriptRoot {
 		delete m_Platform;
 	}
 	
-	Isolate m_pIsolate;
+	Isolate *m_pIsolate;
 
   private:
 	Platform* m_Platform;
