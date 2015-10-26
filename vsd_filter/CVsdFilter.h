@@ -314,15 +314,15 @@ class CVsdFilter
 	// ラップタイム情報
 	LPCWSTR FormatTime( int iTime ); // !js_func
 	
-	static inline v8::Handle<v8::Value> UndefIfTimeNone( int i ){
-		return i == TIME_NONE ? v8::Undefined() : v8::Int32::New( i );
+	static inline Handle<Value> UndefIfTimeNone( int i ){
+		return i == TIME_NONE ? Undefined( Isolate::GetCurrent()) : Int32::New( Isolate::GetCurrent(), i );
 	}
 	
-	v8::Handle<v8::Value> CurTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iCurTime ) : v8::Undefined(); }	// !js_var:ElapsedTime
-	v8::Handle<v8::Value> BestLapTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iBestTime ) : v8::Undefined(); }	// !js_var:BestLapTime
-	v8::Handle<v8::Value> DiffTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iDiffTime ) : v8::Undefined(); }	// !js_var:DiffTime
-	v8::Handle<v8::Value> LapTime( void ){	// !js_var:LapTime
-		if( !m_LapLog || m_LapLog->m_iLapIdx < 0 ) return v8::Undefined();
+	Handle<Value> CurTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iCurTime ) : Undefined( Isolate::GetCurrent()); }	// !js_var:ElapsedTime
+	Handle<Value> BestLapTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iBestTime ) : Undefined( Isolate::GetCurrent()); }	// !js_var:BestLapTime
+	Handle<Value> DiffTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iDiffTime ) : Undefined( Isolate::GetCurrent()); }	// !js_var:DiffTime
+	Handle<Value> LapTime( void ){	// !js_var:LapTime
+		if( !m_LapLog || m_LapLog->m_iLapIdx < 0 ) return Undefined( Isolate::GetCurrent());
 		if( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime ){
 			return UndefIfTimeNone( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime );
 		}
@@ -477,7 +477,7 @@ class CVsdFilter
 	}
 	
 	// ログアクセス
-	v8::Handle<v8::Value> AccessLog(
+	Handle<Value> AccessLog(
 		const char *szKey,
 		double dFrameCnt
 	);
@@ -506,29 +506,29 @@ class CVsdFilter
 	}
 	#include "def_log.h"
 	
-	v8::Handle<v8::Value> DateTime( void ){	// !js_var:DateTime
-		if( m_VsdLog ) return v8::Number::New( m_VsdLog->DateTime());
-		if( m_GPSLog ) return v8::Number::New( m_GPSLog->DateTime());
-		return v8::Undefined();
+	Handle<Value> DateTime( void ){	// !js_var:DateTime
+		if( m_VsdLog ) return Number::New( Isolate::GetCurrent(), m_VsdLog->DateTime());
+		if( m_GPSLog ) return Number::New( Isolate::GetCurrent(), m_GPSLog->DateTime());
+		return Undefined( Isolate::GetCurrent());
 	}
 	
-	v8::Handle<v8::Value> GetValue( char *szKey ){
+	Handle<Value> GetValue( char *szKey ){
 		double dRet;
 		if( m_VsdLog && !_isnan( dRet = m_VsdLog->Get( szKey, m_VsdLog->m_dLogNum )))
-			return v8::Number::New( dRet );
+			return Number::New( Isolate::GetCurrent(), dRet );
 		if( m_GPSLog && !_isnan( dRet = m_GPSLog->Get( szKey, m_GPSLog->m_dLogNum )))
-			return v8::Number::New( dRet );
+			return Number::New( Isolate::GetCurrent(), dRet );
 		
-		return v8::Undefined();
+		return Undefined( Isolate::GetCurrent());
 	}
 	
 	void AddLogAccessorSub(
 		CVsdLog *pLog,
-		v8::Local<v8::Object> objLog,
-		v8::Local<v8::Array> objMin,
-		v8::Local<v8::Array> objMax
+		Local<Object> objLog,
+		Local<Array> objMin,
+		Local<Array> objMax
 	);
-	void AddLogAccessor( v8::Local<v8::Object> thisObj );
+	void AddLogAccessor( Local<Object> thisObj );
 	
 	static HINSTANCE	m_hInst;	// dll handle
 	

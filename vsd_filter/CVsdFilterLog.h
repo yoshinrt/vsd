@@ -15,7 +15,7 @@ class CVsdFilterLog : public CVsdFilter {
 		return static_cast<CVsdFilterLog *>( obj );
 	}
 	
-	v8::Handle<v8::Value> ValueOfIndex(	// !js_func
+	Handle<Value> ValueOfIndex(	// !js_func
 		const char *szPropName, double dIdx
 	){
 		return AccessLog( szPropName, dIdx );

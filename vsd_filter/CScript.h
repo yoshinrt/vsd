@@ -15,7 +15,7 @@
 
 /*** エラー *****************************************************************/
 
-#define V8AnyError( type, msg ) v8::ThrowException( v8::Exception::type( CScript::ErrMsgOrID( msg )))
+#define V8AnyError( type, msg ) Isolate::GetCurrent()->ThrowException( Exception::type( CScript::ErrMsgOrID( msg )))
 #define V8RangeError( msg )		V8AnyError( RangeError, msg )
 #define V8ReferenceError( msg ) V8AnyError( ReferenceError, msg )
 #define V8SyntaxError( msg )	V8AnyError( SyntaxError, msg )
@@ -26,14 +26,14 @@
 
 /****************************************************************************/
 
-#define V8Int( i )			v8::Int32::New( i )
-#define LocalUndefined()	v8::Local<v8::Value>( *v8::Undefined())
+#define V8Int( i )			Int32::New( Isolate::GetCurrent(), i )
+#define LocalUndefined()	Local<Value>( *Undefined( m_pIsolate ))
 
-typedef v8::Local<v8::Array> v8Array;
+typedef Local<Array> v8Array;
 
 class CVsdFilter;
 
-class ArrayBufferAllocator : public v8::ArrayBuffer::Allocator {
+class ArrayBufferAllocator : public ArrayBuffer::Allocator {
 public:
 	virtual void* Allocate(size_t length) {
 		void* data = AllocateUninitialized(length);
@@ -82,14 +82,14 @@ class CScript {
 	UINT Run( LPCWSTR szFunc, BOOL bNoFunc = FALSE );
 	UINT Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc = FALSE );
 	UINT Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc = FALSE );
-	UINT RunArg( LPCWSTR szFunc, int iArgNum, v8::Handle<v8::Value> Args[], BOOL bNoFunc = FALSE );
+	UINT RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bNoFunc = FALSE );
 	
-	static LPWSTR ReportException( LPWSTR pMsg, v8::TryCatch& try_catch );
+	static LPWSTR ReportException( LPWSTR pMsg, TryCatch& try_catch );
 	
 	CVsdFilter	*m_pVsd;	// エ…
 	
-	v8::Persistent<v8::Context> m_Context;
-	v8::Isolate	*m_pIsolate;
+	Persistent<Context> m_Context;
+	Isolate	*m_pIsolate;
 	
 	LPWSTR m_szErrorMsg;
 	UINT m_uError;
@@ -102,7 +102,7 @@ class CScript {
 	
 	// Global オブジェクト
 	void Include( LPCWSTR wszFileName );	// !js_func
-	static void DebugPrint( const v8::Arguments& args );	// !js_func
+	static void DebugPrint( const FunctionCallbackInfo<Value>& args );	// !js_func
 	static int MessageBox(	// !js_func
 		LPCWSTR szMsg,
 		LPCWSTR szCaption,	// !default:NULL
@@ -110,9 +110,9 @@ class CScript {
 	);
 	
 	static void Print( LPCWSTR szMsg );	// !js_func
-	static void Printf( const v8::Arguments& args );	// !js_func
-	static v8::Handle<v8::Value> Sprintf( const v8::Arguments& args );	// !js_func
-	static LPWSTR SprintfSub( const v8::Arguments& args );
+	static void Printf( const FunctionCallbackInfo<Value>& args );	// !js_func
+	static Handle<Value> Sprintf( const FunctionCallbackInfo<Value>& args );	// !js_func
+	static LPWSTR SprintfSub( const FunctionCallbackInfo<Value>& args );
 	
 	// 距離取得
 	static double GetDistanceByLngLat(	// !js_func
@@ -124,18 +124,18 @@ class CScript {
 	
 	// this へのアクセスヘルパ
 	template<typename T>
-	static T* GetThis( v8::Local<v8::Object> handle ){
+	static T* GetThis( Local<Object> handle ){
 		if( handle->GetInternalField( 0 )->IsUndefined()){
 			V8TypeError( "Object is undefined" );
 			return NULL;
 		}
 		
-		void* pThis = v8::Local<v8::External>::Cast( handle->GetInternalField( 0 ))->Value();
+		void* pThis = Local<External>::Cast( handle->GetInternalField( 0 ))->Value();
 		return static_cast<T*>( pThis );
 	}
 	
-	static CScript *GetCScript( v8::Local<v8::Object> handle ){
-		v8::HandleScope handle_scope;
+	static CScript *GetCScript( Local<Object> handle ){
+		HandleScope handle_scope( Isolate::GetCurrent());
 		
 		return CV8Map::Cast( handle )[ "__CScript" ].GetObj<CScript>();
 	}
@@ -149,8 +149,8 @@ class CScript {
 		return FALSE;
 	}
 	
-	static BOOL CheckClass( v8::Local<v8::Object> obj, char *name, char *msg ){
-		if( strcmp( *( v8::String::AsciiValue )( obj->GetConstructorName()), name )){
+	static BOOL CheckClass( Local<Object> obj, char *name, char *msg ){
+		if( strcmp( *( String::Utf8Value )( obj->GetConstructorName()), name )){
 			V8TypeError( msg );
 			return TRUE;
 		}
@@ -158,12 +158,12 @@ class CScript {
 	}
 	
 	// msg であればスルーパス，ERR_ID であればメッセージを返す
-	static v8::Handle<v8::String> ErrMsgOrID( char *szMsg ){
-		return v8::String::New( szMsg );
+	static Handle<String> ErrMsgOrID( char *szMsg ){
+		return String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)szMsg );
 	}
 	
-	static v8::Handle<v8::String> ErrMsgOrID( UINT uID ){
-		return v8::String::New(( uint16_t *)m_szErrorMsgID[ uID ]);
+	static Handle<String> ErrMsgOrID( UINT uID ){
+		return String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)m_szErrorMsgID[ uID ]);
 	}
 	
   private:

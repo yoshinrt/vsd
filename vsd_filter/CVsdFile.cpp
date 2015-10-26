@@ -71,12 +71,12 @@ void CVsdFile::Close( void ){
 
 /*** ラインリード ***********************************************************/
 
-v8::Handle<v8::Value> CVsdFile::ReadLine( void ){
+Handle<Value> CVsdFile::ReadLine( void ){
 	*m_cBuf = '\0';
 	
 	if( !m_fp ){
 		V8ErrorClosedHandle();
-		return v8::Undefined();
+		return Undefined( Isolate::GetCurrent());
 	}
 	
 	switch( m_uMode ){
@@ -85,7 +85,7 @@ v8::Handle<v8::Value> CVsdFile::ReadLine( void ){
 		
 		Case MODE_ZIP: {
 			V8ErrorZipNotOpened();
-			return v8::Undefined();
+			return Undefined( Isolate::GetCurrent());
 		}
 		
 		Case MODE_ZIP_OPENED: {
@@ -102,13 +102,13 @@ v8::Handle<v8::Value> CVsdFile::ReadLine( void ){
 				if( !p ) p = m_cBuf + m_uBufSize - 1;
 			}
 			
-			// 文字列長付きで v8::String 変換
+			// 文字列長付きで String 変換
 			int iStr = m_uBufPtr;
 			m_uBufPtr = ( p - m_cBuf + 1 );
-			return v8::String::New( m_cBuf + iStr, m_uBufPtr - iStr );
+			return String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)m_cBuf + iStr, m_uBufPtr - iStr );
 		}
 	}
-	return v8::String::New( m_cBuf );
+	return String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)m_cBuf );
 }
 
 /*** ラインライト ***********************************************************/
@@ -200,7 +200,7 @@ int CVsdFile::IsEOF( void ){
 
 /*** zip 次のファイル *******************************************************/
 
-v8::Handle<v8::Value> CVsdFile::ZipNextFile( void ){
+Handle<Value> CVsdFile::ZipNextFile( void ){
 	unz_file_info fileInfo;
 	
 	LPWSTR	wszFileName = NULL;
@@ -208,7 +208,7 @@ v8::Handle<v8::Value> CVsdFile::ZipNextFile( void ){
 	// zip じゃなければ ret
 	if( !( MODE_ZIP <= m_uMode && m_uMode <= MODE_ZIP_OPENED )){
 		V8Error( "not opened by zip-mode" );
-		return v8::Undefined();
+		return Undefined( Isolate::GetCurrent());
 	}
 	
 	m_uFlag &= ~FLAG_EOF;	// eof クリア
@@ -223,7 +223,7 @@ v8::Handle<v8::Value> CVsdFile::ZipNextFile( void ){
 		if( m_uFlag & FLAG_2ND_FILE ){
 			// ファイル全部処理した
 			if( unzGoToNextFile( m_unzfp ) == UNZ_END_OF_LIST_OF_FILE ){
-				return v8::Undefined();
+				return Undefined( Isolate::GetCurrent());
 			}
 		}
 		m_uFlag |= FLAG_2ND_FILE;
@@ -237,7 +237,7 @@ v8::Handle<v8::Value> CVsdFile::ZipNextFile( void ){
 			) != UNZ_OK
 		){
 			V8Error( "zlib: unzGetCurrentFileInfo failed (maybe wrong zip format?)" );
-			return v8::Undefined();
+			return Undefined( Isolate::GetCurrent());
 		}
 		
 		// unicode 変換
@@ -252,14 +252,14 @@ v8::Handle<v8::Value> CVsdFile::ZipNextFile( void ){
 	if( unzOpenCurrentFile( m_unzfp ) == UNZ_OK ){
 		m_uMode = MODE_ZIP_OPENED;
 		
-		v8::Local<v8::String> v8strFileName = v8::String::New(( uint16_t *)wszFileName );
+		Local<String> v8strFileName = String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)wszFileName );
 		delete [] wszFileName;
 		
 		return v8strFileName;
 	}
 	
 	V8Error( "zlib: can't open file in zip (maybe wrong zip format?)" );
-	return v8::Undefined();
+	return Undefined( Isolate::GetCurrent());
 }
 
 /*** zip ファイルの body リード *********************************************/

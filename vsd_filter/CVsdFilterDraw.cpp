@@ -589,9 +589,9 @@ enum {
 */
 void CVsdFilter::DrawPolygon( v8Array pixs, CPixelArg yc, UINT uFlag ){
 	
-	v8::Isolate::Scope IsolateScope( m_Script->m_pIsolate );
-	v8::HandleScope handle_scope;
-	v8::Context::Scope context_scope( m_Script->m_Context );
+	Isolate::Scope IsolateScope( Isolate::GetCurrent());
+	HandleScope handle_scope( Isolate::GetCurrent() );
+	Context::Scope context_scope( Isolate::GetCurrent()->GetCurrentContext());
 	
 	if( !( uFlag & IMG_FILL )){
 		int uCnt = pixs->Length();

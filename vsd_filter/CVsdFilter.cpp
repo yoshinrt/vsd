@@ -388,9 +388,9 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 
 void CVsdFilter::AddLogAccessorSub(
 	CVsdLog *pLog,
-	v8::Local<v8::Object> objLog,
-	v8::Local<v8::Array> objMin,
-	v8::Local<v8::Array> objMax
+	Local<Object> objLog,
+	Local<Array> objMin,
+	Local<Array> objMax
 ){
 	if( !pLog ) return;
 	
@@ -400,13 +400,13 @@ void CVsdFilter::AddLogAccessorSub(
 		const char *szName = it->first.c_str();
 		
 		if( m_VsdLog == NULL || pLog == m_VsdLog || m_VsdLog->GetElement( szName ) == NULL ){
-			v8::Local<v8::String> v8strName = v8::String::New( szName );
+			Local<String> v8strName = String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)szName );
 			
 			// Max 登録
-			objMax->Set( v8strName, v8::Number::New( pLog->GetMax( szName )));
+			objMax->Set( v8strName, Number::New( Isolate::GetCurrent(), pLog->GetMax( szName )));
 			
 			// Min 登録
-			objMin->Set( v8strName, v8::Number::New( pLog->GetMin( szName )));
+			objMin->Set( v8strName, Number::New( Isolate::GetCurrent(), pLog->GetMin( szName )));
 			
 			// 現在値登録
 			if( 0 );
@@ -422,12 +422,12 @@ void CVsdFilter::AddLogAccessorSub(
 	}
 }
 
-void CVsdFilter::AddLogAccessor( v8::Local<v8::Object> thisObj ){
+void CVsdFilter::AddLogAccessor( Local<Object> thisObj ){
 	
 	// Vsd.Log, Min, Max, Get を作る
 	#define AddLogObj( name ) \
-		v8::Local<v8::Array> obj##name = v8::Array::New( 0 ); \
-		thisObj->Set( v8::String::New( #name ), obj##name );
+		Local<Array> obj##name = Array::New( Isolate::GetCurrent(), 0 ); \
+		thisObj->Set( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)#name ), obj##name );
 	
 	AddLogObj( Min );
 	AddLogObj( Max );
@@ -438,22 +438,22 @@ void CVsdFilter::AddLogAccessor( v8::Local<v8::Object> thisObj ){
 
 /*** 位置指定ログアクセス ***************************************************/
 
-v8::Handle<v8::Value> CVsdFilter::AccessLog( const char *szKey, double dFrameCnt ){
+Handle<Value> CVsdFilter::AccessLog( const char *szKey, double dFrameCnt ){
 	double dRet;
 	
 	if(
 		m_VsdLog &&
 		!_isnan( dRet = m_VsdLog->Get( szKey, GetLogIndex( dFrameCnt, Vsd, m_VsdLog->m_iLogNum )))
 	){
-		return v8::Number::New( dRet );
+		return Number::New( Isolate::GetCurrent(), dRet );
 	}
 	if(
 		m_GPSLog &&
 		!_isnan( dRet = m_GPSLog->Get( szKey, GetLogIndex( dFrameCnt, GPS, m_GPSLog->m_iLogNum )))
 	){
-		return v8::Number::New( dRet );
+		return Number::New( Isolate::GetCurrent(), dRet );
 	}
-	return v8::Undefined();
+	return Undefined( Isolate::GetCurrent());
 }
 
 /*** ファイルリスト取得 *****************************************************/

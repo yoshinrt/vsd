@@ -26,12 +26,12 @@ class CVsdFile {
 	
 	int Open( LPCWSTR szFile, LPCWSTR szMode );	// !js_func
 	void Close( void ); // !js_func
-	v8::Handle<v8::Value> ReadLine( void ); // !js_func
+	Handle<Value> ReadLine( void ); // !js_func
 	int WriteLine( char *str ); // !js_func
 	int Seek( int iOffs, int iOrg );	// !js_func
 	int IsEOF( void ); // !js_func
 	
-	v8::Handle<v8::Value> ZipNextFile( void ); // !js_func
+	Handle<Value> ZipNextFile( void ); // !js_func
 	int ReadZip( void );
 	
 	// バイナリアクセス
