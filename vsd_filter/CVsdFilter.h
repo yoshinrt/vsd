@@ -418,6 +418,8 @@ class CVsdFilter
 	int DispLap( void ){ return m_piParamC[ CHECK_LAP ]; }			// !js_var:Config_lap_time
 	int DispGraph( void ){ return m_piParamC[ CHECK_GRAPH ]; }		// !js_var:Config_graph
 	
+	CScriptRoot	m_ScriptRoot;
+	
 	char	*m_szLogFile;
 	char	*m_szLogFileReader;
 	char	*m_szGPSLogFile;

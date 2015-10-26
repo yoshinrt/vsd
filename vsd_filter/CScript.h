@@ -45,10 +45,10 @@ public:
 
 class CScriptRoot {
   public:
-	CScriptRoot( char *szPath ){
+	CScriptRoot(){
 		// Initialize V8.
 		V8::InitializeICU();
-		V8::InitializeExternalStartupData( szPath );
+		V8::InitializeExternalStartupData( "." );
 		m_Platform = platform::CreateDefaultPlatform();
 		V8::InitializePlatform( m_Platform );
 		V8::Initialize();
