@@ -53,11 +53,11 @@ class CScriptRoot {
 		V8::InitializePlatform( m_Platform );
 		V8::Initialize();
 		m_CreateParams.array_buffer_allocator = &m_Allocator;
-		m_pIsolate = Isolate::New( g_Vsd->GetIsolate(), m_CreateParams );
+		m_pIsolate = Isolate::New( m_CreateParams );
 	}
 	
 	~CScriptRoot(){
-		g_Vsd->GetIsolate()->Dispose();
+		m_pIsolate->Dispose();
 		V8::Dispose();
 		V8::ShutdownPlatform();
 		delete m_Platform;

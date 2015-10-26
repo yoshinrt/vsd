@@ -23,7 +23,7 @@ LPCWSTR CScript::m_szErrorMsgID[] = {
 CScript::CScript( CVsdFilter *pVsd ){
 	DebugMsgD( ":CScript::CScript():%X\n", GetCurrentThreadId());
 	
-	Isolate::Scope IsolateScope( g_Vsd->GetIsolate());
+	Isolate::Scope IsolateScope( m_pIsolate );
 	
 	DebugMsgD( ":CScript::CScript():m_pIsolate = %X\n", m_pIsolate );
 	
