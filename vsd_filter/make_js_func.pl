@@ -121,16 +121,16 @@ MakeJsIF({
 	#define DEF_LOG( name ) \
 		static void Get_##name( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){ \
 			CVsdFilter *pC_obj = CScript::GetThis<CVsdFilter>( info.Holder()); \
-			if( pC_obj ) info.GetReturnValue().Set( Number::New( info.GetIsolate(), pC_obj->Get##name())); \
-			else         info.GetReturnValue().Set( Undefined( info.GetIsolate())); \
+			if( pC_obj ) info.GetReturnValue().Set( pC_obj->Get##name()); \
+			else         info.GetReturnValue().SetUndefined(); \
 		}
 	#include "def_log.h"
 	
 	static void Get_Value( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){
 		CVsdFilter *pC_obj = CScript::GetThis<CVsdFilter>( info.Holder());
 		String::Utf8Value str( propertyName );
-		if( pC_obj ) info.GetReturnValue().Set( pC_obj->GetValue( *str )); \
-		else         info.GetReturnValue().Set( Undefined( info.GetIsolate())); \
+		if( pC_obj ) pC_obj->GetValue( info.GetReturnValue(), *str ); \
+		else         info.GetReturnValue().SetUndefined(); \
 	}
 -----
 });
@@ -296,6 +296,7 @@ sub MakeJsIF {
 			$NoArgNumCheck = '';
 			$ArgNum = 0;
 			$ArgMin = 0;
+			$HiddenArg = 0;	# ReturnValue 等，C にしかない引数の数
 			@Args = ();
 			@Defs = ();
 			
@@ -373,6 +374,11 @@ sub MakeJsIF {
 					$NoArgNumCheck = '//';
 				}
 				
+				elsif( $Type eq 'ReturnValue<Value>' ){
+					$Args[ $ArgNum ] = 'args.GetReturnValue()';
+					++$HiddenArg;
+				}
+				
 				elsif( $Type eq 'void' ){
 					next;
 				}
@@ -395,8 +401,8 @@ sub MakeJsIF {
 			$Args = "\n\t\t\t$Args\n\t\t" if( $Args ne '' );
 			
 			$Len = $ArgMin == $ArgNum ?
-				"iLen == $ArgNum" :
-				"$ArgMin <= iLen && iLen <= $ArgNum";
+				sprintf( "iLen == %d", $ArgNum - $HiddenArg ) :
+				sprintf( "%d <= iLen && iLen <= %d", $ArgMin - $HiddenArg, $ArgNum - $HiddenArg );
 			
  			$PreRet		= 'args.GetReturnValue().Set( ';
 			$PostRet	= '));';
@@ -407,8 +413,11 @@ sub MakeJsIF {
 				$PostRet	= ';';
 			}
 			
-			elsif( $RetType eq 'int' || $RetType eq 'UINT' ){
-				$PreRet		.= "Int32::New( args.GetIsolate(), ";
+			elsif(
+				$RetType eq 'int' || $RetType eq 'UINT' ||
+				$RetType eq 'double' || $RetType	=~ /^(Handle|Local)\b/
+			){
+				$PreRet		.= "(";
 			}
 			
 			elsif( $RetType eq 'char' ){
@@ -417,14 +426,6 @@ sub MakeJsIF {
 			
 			elsif( $RetType	=~ /^LPC?WSTR$/ ){
 				$PreRet		.= "String::NewFromTwoByte( args.GetIsolate(), ( uint16_t *)";
-			}
-			
-			elsif( $RetType eq 'double' ){
-				$PreRet		.= "Number::New( args.GetIsolate(), ";
-			}
-			
-			elsif( $RetType	=~ /^(Handle|Local)\b/ ){
-				$PostRet	= ");";
 			}
 			
 			else{
@@ -450,25 +451,31 @@ sub MakeJsIF {
 			
 			s/[\x0D\x0A]//g;
 			s/\s*[{=;].*//;
-			s/\(.*\)/()/;
+			s/\(\s*void\s*\)/()/;
+			s/\(\s*ReturnValue<.*?\)/(info.GetReturnValue())/;
 			s/^\s+//g;
-			/(\w+\W*)$/;
+			/(\S+)$/;
 			
 			$RealVar = $1;
 			
 			$Ret =
-				/\b(?:int|UINT)\b/	? "Int32::New( info.GetIsolate(), pC_obj->$RealVar )" :
-				/\bdouble\b/		? "Number::New( info.GetIsolate(), pC_obj->$RealVar )" :
+				/\b(?:int|UINT|double|Handle|Local)\b/
+									? "pC_obj->$RealVar" :
 				/\bchar\b/			? "String::NewFromOneByte( info.GetIsolate(), ( uint8_t *)pC_obj->$RealVar )" :
 				/\bLPC?WSTR\b/		? "String::NewFromTwoByte( info.GetIsolate(), ( uint16_t *)pC_obj->$RealVar )" :
-				/^(Handle|Local)\b/	? "pC_obj->$RealVar" :
-									  "unknown ret type pC_obj->$RealVar";
+									  "unknown ret type:$_ pC_obj->$RealVar";
+			
+			if( /\bvoid\b/ ){
+				$Ret = "pC_obj->$RealVar";
+			}else{
+				$Ret = "info.GetReturnValue().Set( $Ret )";
+			}
 #-----
 			$AccessorIF .= << "-----";
 	static void Get_$JSvar( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){
 		$param->{ Class } *pC_obj = CScript::GetThis<$param->{ Class }>( info.Holder());
-		if( pC_obj ) info.GetReturnValue().Set( $Ret );
-		else         info.GetReturnValue().Set( Undefined( info.GetIsolate()));
+		if( pC_obj ) $Ret;
+		else         info.GetReturnValue().SetUndefined();
 	}
 -----
 		}

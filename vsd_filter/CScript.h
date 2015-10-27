@@ -27,9 +27,6 @@
 
 /****************************************************************************/
 
-#define V8Int( i )			Int32::New( Isolate::GetCurrent(), i )
-#define LocalUndefined()	Local<Value>( *Undefined( m_pIsolate ))
-
 typedef Local<Array> v8Array;
 
 class CVsdFilter;
@@ -111,7 +108,7 @@ class CScript : public CV8If {
 	
 	static void Print( LPCWSTR szMsg );	// !js_func
 	static void Printf( const FunctionCallbackInfo<Value>& args );	// !js_func
-	static Handle<Value> Sprintf( const FunctionCallbackInfo<Value>& args );	// !js_func
+	static void Sprintf( const FunctionCallbackInfo<Value>& args );	// !js_func
 	static LPWSTR SprintfSub( const FunctionCallbackInfo<Value>& args );
 	
 	// ‹——£Žæ“¾

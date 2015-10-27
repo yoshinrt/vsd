@@ -15,9 +15,11 @@ class CVsdFilterLog : public CVsdFilter {
 		return static_cast<CVsdFilterLog *>( obj );
 	}
 	
-	Handle<Value> ValueOfIndex(	// !js_func
-		const char *szPropName, double dIdx
+	void ValueOfIndex(	// !js_func
+		ReturnValue<Value> Ret,
+		const char *szPropName,
+		double dIdx
 	){
-		return AccessLog( szPropName, dIdx );
+		AccessLog( Ret, szPropName, dIdx );
 	}
 };

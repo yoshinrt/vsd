@@ -27,12 +27,12 @@ class CVsdFile : public CV8If {
 	
 	int Open( LPCWSTR szFile, LPCWSTR szMode );	// !js_func
 	void Close( void ); // !js_func
-	Local<Value> ReadLine( void ); // !js_func
+	void ReadLine( ReturnValue<Value> Ret ); // !js_func
 	int WriteLine( char *str ); // !js_func
 	int Seek( int iOffs, int iOrg );	// !js_func
 	int IsEOF( void ); // !js_func
 	
-	Local<Value> ZipNextFile( void ); // !js_func
+	void ZipNextFile( ReturnValue<Value> Ret ); // !js_func
 	int ReadZip( void );
 	
 	// バイナリアクセス

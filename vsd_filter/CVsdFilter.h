@@ -315,21 +315,33 @@ class CVsdFilter : public CV8If
 	// ラップタイム情報
 	LPCWSTR FormatTime( int iTime ); // !js_func
 	
-	static inline Local<Value> UndefIfTimeNone( int i ){
-		if( i == TIME_NONE ) return Undefined( Isolate::GetCurrent());
-		return Int32::New( Isolate::GetCurrent(), i );
+	static inline void UndefIfTimeNone( ReturnValue<Value> Ret, int i ){
+		if( i == TIME_NONE ) Ret.SetUndefined();
+		else Ret.Set( i );
 	}
 	
-	Local<Value> CurTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iCurTime ) : Undefined( Isolate::GetCurrent()); }	// !js_var:ElapsedTime
-	Local<Value> BestLapTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iBestTime ) : Undefined( Isolate::GetCurrent()); }	// !js_var:BestLapTime
-	Local<Value> DiffTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iDiffTime ) : Undefined( Isolate::GetCurrent()); }	// !js_var:DiffTime
-	Local<Value> LapTime( void ){	// !js_var:LapTime
-		if( !m_LapLog || m_LapLog->m_iLapIdx < 0 ) return Undefined( Isolate::GetCurrent());
-		if( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime ){
-			return UndefIfTimeNone( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime );
-		}
-		return UndefIfTimeNone( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].iTime );
+	void CurTime( ReturnValue<Value> Ret ){	// !js_var:ElapsedTime
+		if( m_LapLog ) UndefIfTimeNone( Ret, m_LapLog->m_iCurTime );
+		else Ret.SetUndefined();
 	}
+	void BestLapTime( ReturnValue<Value> Ret ){	// !js_var:BestLapTime
+		if( m_LapLog ) UndefIfTimeNone( Ret, m_LapLog->m_iBestTime );
+		else Ret.SetUndefined();
+	}
+	void DiffTime( ReturnValue<Value> Ret ){	// !js_var:DiffTime
+		if( m_LapLog ) UndefIfTimeNone( Ret, m_LapLog->m_iDiffTime );
+		else Ret.SetUndefined();
+	}
+	void LapTime( ReturnValue<Value> Ret ){	// !js_var:LapTime
+		if( !m_LapLog || m_LapLog->m_iLapIdx < 0 ){
+			Ret.SetUndefined();
+		}else if( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime ){
+			UndefIfTimeNone( Ret, m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime );
+		}else{
+			UndefIfTimeNone( Ret, m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].iTime );
+		}
+	}
+	
 	int LapCnt( void ){ // !js_var:LapCnt
 		if( !m_LapLog ) return 0;
 		return m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].uLap;
@@ -479,7 +491,8 @@ class CVsdFilter : public CV8If
 	}
 	
 	// ログアクセス
-	Handle<Value> AccessLog(
+	void AccessLog(
+		ReturnValue<Value> Ret,
 		const char *szKey,
 		double dFrameCnt
 	);
@@ -508,20 +521,21 @@ class CVsdFilter : public CV8If
 	}
 	#include "def_log.h"
 	
-	Handle<Value> DateTime( void ){	// !js_var:DateTime
-		if( m_VsdLog ) return Number::New( Isolate::GetCurrent(), m_VsdLog->DateTime());
-		if( m_GPSLog ) return Number::New( Isolate::GetCurrent(), m_GPSLog->DateTime());
-		return Undefined( Isolate::GetCurrent());
+	void DateTime( ReturnValue<Value> Ret ){	// !js_var:DateTime
+		if     ( m_VsdLog ) Ret.Set( m_VsdLog->DateTime());
+		else if( m_GPSLog ) Ret.Set( m_GPSLog->DateTime());
+		else Ret.SetUndefined();
 	}
 	
-	Handle<Value> GetValue( char *szKey ){
+	void GetValue( ReturnValue<Value> Ret, char *szKey ){
 		double dRet;
-		if( m_VsdLog && !_isnan( dRet = m_VsdLog->Get( szKey, m_VsdLog->m_dLogNum )))
-			return Number::New( Isolate::GetCurrent(), dRet );
-		if( m_GPSLog && !_isnan( dRet = m_GPSLog->Get( szKey, m_GPSLog->m_dLogNum )))
-			return Number::New( Isolate::GetCurrent(), dRet );
-		
-		return Undefined( Isolate::GetCurrent());
+		if( m_VsdLog && !_isnan( dRet = m_VsdLog->Get( szKey, m_VsdLog->m_dLogNum ))){
+			Ret.Set( dRet );
+		}else if( m_GPSLog && !_isnan( dRet = m_GPSLog->Get( szKey, m_GPSLog->m_dLogNum ))){
+			Ret.Set( dRet );
+		}else{
+			Ret.SetUndefined();
+		}
 	}
 	
 	void AddLogAccessorSub(

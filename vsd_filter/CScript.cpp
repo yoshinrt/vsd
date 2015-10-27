@@ -217,16 +217,18 @@ LPWSTR CScript::SprintfSub( const FunctionCallbackInfo<Value>& args ){
 	return wszBuf;
 }
 
-Handle<Value> CScript::Sprintf( const FunctionCallbackInfo<Value>& args ){
-	EscapableHandleScope handle_scope( Isolate::GetCurrent() );
+void CScript::Sprintf( const FunctionCallbackInfo<Value>& args ){
+	HandleScope handle_scope( Isolate::GetCurrent() );
 	
 	LPWSTR str = CScript::SprintfSub( args );
-	if( !str ) return Undefined( Isolate::GetCurrent() );
+	if( !str ){
+		args.GetReturnValue().SetUndefined();
+	}
 	
-	Local<String> v8str = String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)str );
+	args.GetReturnValue().Set( String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)str ));
 	delete [] str;
 	
-	return handle_scope.Escape( v8str );
+	//return handle_scope.Escape( v8str );
 }
 
 /*** Print ******************************************************************/

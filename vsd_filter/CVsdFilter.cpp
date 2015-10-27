@@ -438,22 +438,22 @@ void CVsdFilter::AddLogAccessor( Local<Object> thisObj ){
 
 /*** 位置指定ログアクセス ***************************************************/
 
-Handle<Value> CVsdFilter::AccessLog( const char *szKey, double dFrameCnt ){
+void CVsdFilter::AccessLog( ReturnValue<Value> Ret, const char *szKey, double dFrameCnt ){
 	double dRet;
 	
 	if(
 		m_VsdLog &&
 		!_isnan( dRet = m_VsdLog->Get( szKey, GetLogIndex( dFrameCnt, Vsd, m_VsdLog->m_iLogNum )))
 	){
-		return Number::New( Isolate::GetCurrent(), dRet );
-	}
-	if(
+		Ret.Set( dRet );
+	}else if(
 		m_GPSLog &&
 		!_isnan( dRet = m_GPSLog->Get( szKey, GetLogIndex( dFrameCnt, GPS, m_GPSLog->m_iLogNum )))
 	){
-		return Number::New( Isolate::GetCurrent(), dRet );
+		Ret.Set( dRet );
+	}else{
+		Ret.SetUndefined();
 	}
-	return Undefined( Isolate::GetCurrent());
 }
 
 /*** ファイルリスト取得 *****************************************************/
