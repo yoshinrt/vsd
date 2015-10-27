@@ -71,7 +71,7 @@ void CVsdFile::Close( void ){
 
 /*** ラインリード ***********************************************************/
 
-Handle<Value> CVsdFile::ReadLine( void ){
+Local<Value> CVsdFile::ReadLine( void ){
 	*m_cBuf = '\0';
 	
 	if( !m_fp ){
@@ -105,7 +105,12 @@ Handle<Value> CVsdFile::ReadLine( void ){
 			// 文字列長付きで String 変換
 			int iStr = m_uBufPtr;
 			m_uBufPtr = ( p - m_cBuf + 1 );
-			return String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)( m_cBuf + iStr ), NewStringType::kNormal, m_uBufPtr - iStr );
+			return Local<String>::Cast(
+				String::NewFromOneByte(
+					Isolate::GetCurrent(), ( uint8_t *)( m_cBuf + iStr ),
+					NewStringType::kNormal, m_uBufPtr - iStr
+				)
+			);
 		}
 	}
 	return String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)m_cBuf );
@@ -200,7 +205,7 @@ int CVsdFile::IsEOF( void ){
 
 /*** zip 次のファイル *******************************************************/
 
-Handle<Value> CVsdFile::ZipNextFile( void ){
+Local<Value> CVsdFile::ZipNextFile( void ){
 	unz_file_info fileInfo;
 	
 	LPWSTR	wszFileName = NULL;

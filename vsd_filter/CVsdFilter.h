@@ -13,6 +13,7 @@
 #include "CScript.h"
 #include "CVsdImage.h"
 #include "CPixel.h"
+#include "CV8If.h"
 
 #ifdef AVS_PLUGIN
 	#include "avisynth.h"
@@ -99,9 +100,9 @@ struct Edge {
 	USHORT	Flag;
 };
 
-class CVsdFilter
+class CVsdFilter : public CV8If
 	#ifdef AVS_PLUGIN
-		: public GenericVideoFilter
+		, public GenericVideoFilter
 	#endif
 {
   public:
@@ -314,14 +315,15 @@ class CVsdFilter
 	// ラップタイム情報
 	LPCWSTR FormatTime( int iTime ); // !js_func
 	
-	static inline Handle<Value> UndefIfTimeNone( int i ){
-		return i == TIME_NONE ? Undefined( Isolate::GetCurrent()) : Int32::New( Isolate::GetCurrent(), i );
+	static inline Local<Value> UndefIfTimeNone( int i ){
+		if( i == TIME_NONE ) return Undefined( Isolate::GetCurrent());
+		return Int32::New( Isolate::GetCurrent(), i );
 	}
 	
-	Handle<Value> CurTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iCurTime ) : Undefined( Isolate::GetCurrent()); }	// !js_var:ElapsedTime
-	Handle<Value> BestLapTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iBestTime ) : Undefined( Isolate::GetCurrent()); }	// !js_var:BestLapTime
-	Handle<Value> DiffTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iDiffTime ) : Undefined( Isolate::GetCurrent()); }	// !js_var:DiffTime
-	Handle<Value> LapTime( void ){	// !js_var:LapTime
+	Local<Value> CurTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iCurTime ) : Undefined( Isolate::GetCurrent()); }	// !js_var:ElapsedTime
+	Local<Value> BestLapTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iBestTime ) : Undefined( Isolate::GetCurrent()); }	// !js_var:BestLapTime
+	Local<Value> DiffTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iDiffTime ) : Undefined( Isolate::GetCurrent()); }	// !js_var:DiffTime
+	Local<Value> LapTime( void ){	// !js_var:LapTime
 		if( !m_LapLog || m_LapLog->m_iLapIdx < 0 ) return Undefined( Isolate::GetCurrent());
 		if( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime ){
 			return UndefIfTimeNone( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime );

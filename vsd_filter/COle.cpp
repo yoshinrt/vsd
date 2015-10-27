@@ -11,8 +11,6 @@
 #include "CScript.h"
 #include "COle.h"
 
-extern CVsdFilter	*g_Vsd;
-
 /*** OLE インスタンス作成 ***************************************************/
 
 UINT COle::CreateInstance( LPCWSTR strServer ){
@@ -43,36 +41,28 @@ void COle::InitJS( Local<FunctionTemplate> tmpl ){
 /*** OLE function 追加 ******************************************************/
 
 // 共通メソッド caller
-Handle<Value> COle::OleFuncCaller(
+void COle::OleFuncCaller(
 	const FunctionCallbackInfo<Value>& args
 ){
-	EscapableHandleScope handle_scope( Isolate::GetCurrent() );
 	COle *obj = CScript::GetThis<COle>( args.This());
-	if( !obj ) return Undefined( Isolate::GetCurrent());
+	if( !obj ) return;
 	
-	return handle_scope.Escape(
-		obj->Invoke(
-			args.This()->CreationContext(),
-			args.Data()->Int32Value(), args,
-			Local<Value>(), DISPATCH_METHOD
-		)
+	obj->Invoke(
+		args.Data()->Int32Value(), args,
+		Local<Value>(), DISPATCH_METHOD
 	);
 }
 
 // 共通メソッド caller
-Handle<Value> COle::CallAsFunctionHandler(
+void COle::CallAsFunctionHandler(
 	const FunctionCallbackInfo<Value>& args
 ){
-	EscapableHandleScope handle_scope( Isolate::GetCurrent() );
 	COle *obj = CScript::GetThis<COle>( args.This());
-	if( !obj ) return Undefined( Isolate::GetCurrent());
+	if( !obj ) return;
 	
-	return handle_scope.Escape(
-		obj->Invoke(
-			args.This()->CreationContext(),
-			args.Data()->Int32Value(), args,
-			Local<Value>(), DISPATCH_PROPERTYGET
-		)
+	obj->Invoke(
+		args.Data()->Int32Value(), args,
+		Local<Value>(), DISPATCH_PROPERTYGET
 	);
 }
 
@@ -83,32 +73,26 @@ void COle::OleValueSetter(
 	Local<Value> value,
 	const PropertyCallbackInfo<Value>& info
 ){
-	HandleScope handle_scope( Isolate::GetCurrent() );
 	COle *obj = CScript::GetThis<COle>( info.Holder());
 	if( !obj ) return;
 	
 	obj->Invoke(
-		info.This()->CreationContext(),
 		info.Data()->Int32Value(), *( FunctionCallbackInfo<Value> *)NULL,
 		value, DISPATCH_PROPERTYPUT
 	);
 }
 
 // 共通プロパティゲッタ
-Handle<Value> COle::OleValueGetter(
+void COle::OleValueGetter(
 	Local<String> propertyName,
 	const PropertyCallbackInfo<Value>& info
 ){
-	EscapableHandleScope handle_scope( Isolate::GetCurrent() );
 	COle *obj = CScript::GetThis<COle>( info.Holder());
-	if( !obj ) return Undefined( Isolate::GetCurrent());
+	if( !obj ) return;
 	
-	return handle_scope.Escape(
-		obj->Invoke(
-			info.Holder()->CreationContext(),
-			info.Data()->Int32Value(), *( FunctionCallbackInfo<Value> *)NULL,
-			Local<Value>(), DISPATCH_PROPERTYGET
-		)
+	obj->Invoke(
+		info.Data()->Int32Value(), *( FunctionCallbackInfo<Value> *)NULL,
+		Local<Value>(), DISPATCH_PROPERTYGET
 	);
 }
 
@@ -217,12 +201,11 @@ HRESULT COle::AddOLEFunction( Local<Object> ThisObj, ITypeInfo *pTypeInfo ){
 /*** IDispatch -> ActiveXObject *********************************************/
 
 Local<Value> COle::CreateActiveXObject(
-	IDispatch *pDispatch,
-	Local<Context> Context
+	IDispatch *pDispatch
 ){
 	// ActiveXObject を New する
 	Local<Function> hFunction = Local<Function>::Cast(
-		Context->Global()->Get( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)"ActiveXObject" ))
+		Isolate::GetCurrent()->GetCurrentContext()->Global()->Get( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)"ActiveXObject" ))
 	);
 	if( hFunction->IsUndefined()){
 		Isolate::GetCurrent()->ThrowException( Exception::Error( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)
@@ -252,7 +235,6 @@ struct oleparam {
 };
 
 void COle::V8Array2SafeArray(
-	Local<Context> Context,
 	Local<Array> val,
 	SAFEARRAY *psa,
 	long *pUB, long *pID,
@@ -265,18 +247,17 @@ void COle::V8Array2SafeArray(
 			// 要素を書く
 			HRESULT hr = SafeArrayPtrOfIndex( psa, pID, &V_BYREF( &variant ));
 			if( FAILED( hr )) break;
-			Val2Variant( val->Get( pID[ iDim ]), &variant, Context );
+			Val2Variant( val->Get( pID[ iDim ]), &variant );
 		}else{
 			// 子 array を walk
-			V8Array2SafeArray( Context, Local<Array>::Cast( val->Get( pID[ iDim ])), psa, pUB, pID, iMaxDim, iDim + 1 );
+			V8Array2SafeArray( Local<Array>::Cast( val->Get( pID[ iDim ])), psa, pUB, pID, iMaxDim, iDim + 1 );
 		}
 	}
 }
 
 void COle::Val2Variant(
 	Local<Value> val,
-	VARIANT *var,
-	Local<Context> Context
+	VARIANT *var
 ){
 #if 0
 	struct oledata *pole;
@@ -334,7 +315,7 @@ void COle::Val2Variant(
 		else hr = SafeArrayLock( psa );
 		
 		if( SUCCEEDED( hr )){
-			V8Array2SafeArray( Context, Local<Array>::Cast( val ), psa, pub, pid, dim, 0 );
+			V8Array2SafeArray( Local<Array>::Cast( val ), psa, pub, pid, dim, 0 );
 			hr = SafeArrayUnlock( psa );
 		}
 		if( pub ) delete [] pub;
@@ -360,12 +341,7 @@ void COle::Val2Variant(
 		V_BOOL(var) = val->IsTrue() ? VARIANT_TRUE : VARIANT_FALSE;
 	}else if( val->IsFunction()){
 		V_VT(var) = VT_DISPATCH;
-		V_DISPATCH(var) = new ICallbackJSFunc(
-			Persistent<Object>::New( Context->Global()),
-			Persistent<Function>::Cast(
-				Persistent<Value>::New( val )
-			)
-		);
+		V_DISPATCH(var) = new ICallbackJSFunc( Local<Function>::Cast( val ));
 	}else{
 		V_VT(var) = VT_ERROR;
 		V_ERROR(var) = DISP_E_PARAMNOTFOUND;
@@ -373,7 +349,6 @@ void COle::Val2Variant(
 }
 
 Local<Value> COle::SafeArray2V8Array(
-	Local<Context> Context,
 	VARIANT& variant,
 	SAFEARRAY *psa,
 	long *pLB, long *pUB, long *pID,
@@ -386,16 +361,16 @@ Local<Value> COle::SafeArray2V8Array(
 			// 要素をpush
 			HRESULT hr = SafeArrayPtrOfIndex( psa, pID, &V_BYREF( &variant ));
 			if( FAILED( hr )) break;
-			ret->Set( ret->Length(), Variant2Val( &variant, Context ));
+			ret->Set( ret->Length(), Variant2Val( &variant ));
 		}else{
 			// 子 array を push
-			ret->Set( ret->Length(), SafeArray2V8Array( Context, variant, psa, pLB, pUB, pID, iMaxDim, iDim + 1 ));
+			ret->Set( ret->Length(), SafeArray2V8Array( variant, psa, pLB, pUB, pID, iMaxDim, iDim + 1 ));
 		}
 	}
 	return ret;
 }
 
-Local<Value> COle::Variant2Val( VARIANT *pvar, Local<Context> Context ){
+Local<Value> COle::Variant2Val( VARIANT *pvar ){
 	Local<Value> ret;
 	
 	while( V_VT( pvar ) == ( VT_BYREF | VT_VARIANT )) pvar = V_VARIANTREF( pvar );
@@ -429,7 +404,7 @@ Local<Value> COle::Variant2Val( VARIANT *pvar, Local<Context> Context ){
 		
 		HRESULT hr = SafeArrayLock( psa );
 		if( SUCCEEDED( hr )){
-			ret = SafeArray2V8Array( Context, variant, psa, pLB, pUB, pID, dim, 0 );
+			ret = SafeArray2V8Array( variant, psa, pLB, pUB, pID, dim, 0 );
 			SafeArrayUnlock( psa );
 		}
 		
@@ -472,7 +447,7 @@ Local<Value> COle::Variant2Val( VARIANT *pvar, Local<Context> Context ){
 		ret = ( V_ISBYREF( pvar ) ? *V_BOOLREF( pvar ) : V_BOOL( pvar )) ? True( Isolate::GetCurrent()) : False( Isolate::GetCurrent());
 		
 	  Case VT_DISPATCH:
-		ret = CreateActiveXObject( V_ISBYREF( pvar ) ? *V_DISPATCHREF( pvar ) : V_DISPATCH( pvar ), Context );
+		ret = CreateActiveXObject( V_ISBYREF( pvar ) ? *V_DISPATCHREF( pvar ) : V_DISPATCH( pvar ));
 		
 	  Case VT_UNKNOWN:
 		{
@@ -486,7 +461,7 @@ Local<Value> COle::Variant2Val( VARIANT *pvar, Local<Context> Context ){
 			if( punk != NULL ){
 				hr = punk->QueryInterface( IID_IDispatch, ( void **)&pDispatch );
 				if( SUCCEEDED( hr )) {
-					ret = CreateActiveXObject( pDispatch, Context );
+					ret = CreateActiveXObject( pDispatch );
 				}
 			}
 			break;
@@ -519,8 +494,7 @@ Local<Value> COle::Variant2Val( VARIANT *pvar, Local<Context> Context ){
 	return ret;
 }
 
-Local<Value> COle::Invoke(
-	Local<Context>	Context,
+void COle::Invoke(
 	DISPID DispID,
 	const FunctionCallbackInfo<Value>& args,
 	Local<Value> value,
@@ -555,7 +529,7 @@ Local<Value> COle::Invoke(
 			VariantInit(&realargs[ i ]);
 			VariantInit(&op.dp.rgvarg[ i ]);
 			
-			Val2Variant( args[ op.dp.cArgs - i - 1 ], &realargs[ i ], Context );
+			Val2Variant( args[ op.dp.cArgs - i - 1 ], &realargs[ i ] );
 			V_VT(&op.dp.rgvarg[ i ]) = VT_VARIANT | VT_BYREF;
 			V_VARIANTREF(&op.dp.rgvarg[ i ]) = &realargs[ i ];
 		}
@@ -574,7 +548,7 @@ Local<Value> COle::Invoke(
 		VariantInit(&realargs[0]);
 		VariantInit(&op.dp.rgvarg[0]);
 		
-		Val2Variant( value, &realargs[ 0 ], Context );
+		Val2Variant( value, &realargs[ 0 ] );
 		V_VT(&op.dp.rgvarg[0]) = VT_VARIANT | VT_BYREF;
 		V_VARIANTREF(&op.dp.rgvarg[0]) = &realargs[0];
 	}
@@ -587,7 +561,7 @@ Local<Value> COle::Invoke(
 		if(op.dp.cArgs > 0) {
 			for(i = 0; i < op.dp.cArgs; i++) {
 				// ★prop セットの時ぬるぽ
-				Val2Variant( args[ i ], &op.dp.rgvarg[ i ], Context );
+				Val2Variant( args[ i ], &op.dp.rgvarg[ i ] );
 			}
 			memset(&excepinfo, 0, sizeof(EXCEPINFO));
 			hr = m_pApp->Invoke( DispID, 
@@ -621,14 +595,14 @@ Local<Value> COle::Invoke(
 		ThrowHResultError( hr );
 		ret = Undefined( Isolate::GetCurrent());
 	}else{
-		ret = Variant2Val( &result, Context );
+		ret = Variant2Val( &result );
 		VariantClear(&result);
 	}
 	
 	delete [] realargs;
 	delete [] op.dp.rgdispidNamedArgs;
 	
-	return ret;
+	args.GetReturnValue().Set( ret );
 }
 
 /*** HRESULT のエラーメッセージを投げる *************************************/
@@ -667,12 +641,15 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 	
 	DebugMsgD( ">ICallbackJSFunc::Invoke\n" );
 	
-	Isolate::Scope IsolateScope( Isolate::GetCurrent());
-	HandleScope handle_scope( Isolate::GetCurrent());
-	Context::Scope context_scope( Isolate::GetCurrent()->GetCurrentContext());
+	Isolate *pIsolate = Isolate::GetCurrent();
+	
+	Isolate::Scope IsolateScope( pIsolate );
+	HandleScope handle_scope( pIsolate );
+	Context::Scope context_scope( pIsolate->GetCurrentContext());
 	TryCatch try_catch;
 	
-	m_CallbackFunc->Call( m_Global, 0, NULL );
+	Local<Function>::New( pIsolate, m_CallbackFunc )
+		->Call( pIsolate->GetCurrentContext()->Global(), 0, NULL );
 	
 	if( try_catch.HasCaught()){
 		LPWSTR pMsg = CScript::ReportException( NULL, try_catch );

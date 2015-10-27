@@ -11,6 +11,7 @@
 #include "CSemaphore.h"
 #include "CVsdLog.h"
 #include "CV8Map.h"
+#include "CV8If.h"
 #include "error_code.h"
 
 /*** エラー *****************************************************************/
@@ -71,7 +72,7 @@ class CScriptRoot {
 	Isolate::CreateParams m_CreateParams;
 };
 
-class CScript {
+class CScript : public CV8If {
   public:
 	CScript( CVsdFilter *pVsd );
 	~CScript( void );
@@ -88,8 +89,7 @@ class CScript {
 	
 	CVsdFilter	*m_pVsd;	// エ…
 	
-	Persistent<Context> m_Context;
-	Isolate	*m_pIsolate;
+	Persistent<Context> *m_pContext;
 	
 	LPWSTR m_szErrorMsg;
 	UINT m_uError;

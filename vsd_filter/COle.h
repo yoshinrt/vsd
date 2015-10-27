@@ -7,23 +7,18 @@
 *****************************************************************************/
 
 #pragma once
+#include "CV8If.h"
 #include "error_code.h"
 
 class ICallbackJSFunc : public IDispatch {
   public:
-	ICallbackJSFunc(
-		Persistent<Object> Global,
-		Persistent<Function> Func
-	) :
-		m_Global( Global ),
-		m_CallbackFunc( Func )
-	{
+	ICallbackJSFunc( Local<Function> Func ){
+		m_CallbackFunc = *( new Persistent<Function>( Isolate::GetCurrent(), Func ));
 		m_uRefCnt = 1;
 	}
 	
 	~ICallbackJSFunc(){
 		if( !m_CallbackFunc.IsEmpty()) m_CallbackFunc.Reset();
-		if( !m_Global.IsEmpty()) m_Global.Reset();
 	}
 	
 	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject){
@@ -71,12 +66,11 @@ class ICallbackJSFunc : public IDispatch {
 	
   private:
 	Persistent<Object>		Holder;
-	Persistent<Object>		m_Global;
-	Persistent<Function>	m_CallbackFunc;
+	Persistent<Function,CopyablePersistentTraits<Function>>	m_CallbackFunc;
 	UINT	m_uRefCnt;
 };
 
-class COle {
+class COle : public CV8If {
   public:
 	COle( void ){
 		m_pApp			= NULL;
@@ -90,13 +84,11 @@ class COle {
 	static void InitJS( Local<FunctionTemplate> tmpl );
 	
 	static Local<Value> CreateActiveXObject(
-		IDispatch *pDispatch,
-		Local<Context> Context
+		IDispatch *pDispatch
 	);
 	
 	// Ruby win32ole à⁄êAï®
 	static void V8Array2SafeArray(
-		Local<Context> Context,
 		Local<Array> val,
 		SAFEARRAY *psa,
 		long *pUB, long *pID,
@@ -105,36 +97,33 @@ class COle {
 	
 	static void Val2Variant(
 		Local<Value> val,
-		VARIANT *var,
-		Local<Context> Context
+		VARIANT *var
 	);
 	
 	static Local<Value> SafeArray2V8Array(
-		Local<Context> Context,
 		VARIANT& variant,
 		SAFEARRAY *psa,
 		long *pLB, long *pUB, long *pID,
 		int iMaxDim, int iDim
 	);
 	
-	static Local<Value> Variant2Val( VARIANT *pvar, Local<Context> Context );
-	Local<Value> Invoke(
-		Local<Context>	Context,
+	static Local<Value> Variant2Val( VARIANT *pvar );
+	void Invoke(
 		DISPID DispID,
 		const 	FunctionCallbackInfo<Value>& args,
 		Local<Value> value,
 		UINT wFlags
 	);
 	
-	static Handle<Value> OleFuncCaller(
+	static void OleFuncCaller(
 		const FunctionCallbackInfo<Value>& args
 	);
 	
-	static Handle<Value> CallAsFunctionHandler(
+	static void CallAsFunctionHandler(
 		const FunctionCallbackInfo<Value>& args
 	);
 	
-	static Handle<Value> OleValueGetter(
+	static void OleValueGetter(
 		Local<String> propertyName,
 		const PropertyCallbackInfo<Value>& info
 	);
