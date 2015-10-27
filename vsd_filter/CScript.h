@@ -74,6 +74,10 @@ class CScript : public CV8If {
 	CScript( CVsdFilter *pVsd );
 	~CScript( void );
 	
+	Local<Context> GetContext( void ){
+		return Local<Context>::New( m_pIsolate, m_Context );
+	}
+	
 	UINT Initialize( LPCWSTR wszFileName = NULL );
 	UINT RunFile( LPCWSTR szFileName );
 	UINT RunFileCore( LPCWSTR szFileName );
@@ -83,13 +87,6 @@ class CScript : public CV8If {
 	UINT RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bNoFunc = FALSE );
 	
 	static LPWSTR ReportException( LPWSTR pMsg, TryCatch& try_catch );
-	
-	CVsdFilter	*m_pVsd;	// エ…
-	
-	Persistent<Context,CopyablePersistentTraits<Context>> m_Context;
-	
-	LPWSTR m_szErrorMsg;
-	UINT m_uError;
 	
 	LPCWSTR GetErrorMessage( void ){
 		return m_szErrorMsg ? m_szErrorMsg : m_szErrorMsgID[ m_uError ];
@@ -163,8 +160,13 @@ class CScript : public CV8If {
 		return String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)m_szErrorMsgID[ uID ]);
 	}
 	
+	CVsdFilter	*m_pVsd;	// エ…
+	Persistent<Context,CopyablePersistentTraits<Context>> m_Context;
+	Isolate *m_pIsolate;
+	LPWSTR m_szErrorMsg;
+	UINT m_uError;
+	
   private:
-	//CSemaphore *m_pSemaphore;
 	static LPCWSTR m_szErrorMsgID[];
 	
 	void Dispose( void );

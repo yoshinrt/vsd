@@ -110,6 +110,7 @@ class COle : public CV8If {
 	static Local<Value> Variant2Val( VARIANT *pvar );
 	void Invoke(
 		DISPID DispID,
+		ReturnValue<Value> Ret,
 		const 	FunctionCallbackInfo<Value>& args,
 		Local<Value> value,
 		UINT wFlags
@@ -131,7 +132,7 @@ class COle : public CV8If {
 	static void OleValueSetter(
 		Local<String> propertyName,
 		Local<Value> value,
-		const PropertyCallbackInfo<Value>& info
+		const PropertyCallbackInfo<void>& info
 	);
 	
 	void AddOLEFunction( Local<Object> ThisObj );

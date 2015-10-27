@@ -567,9 +567,7 @@ $AccessorIF
 $param->{ FunctionIF }
   public:
 	// クラステンプレートの初期化
-	static void InitializeClass( Handle<ObjectTemplate> global, void *pClass = NULL ){
-		Isolate *pIsolate = Isolate::GetCurrent();
-		
+	static void InitializeClass( Isolate *pIsolate, Handle<ObjectTemplate> global, void *pClass = NULL ){
 		HandleScope handle_scope( pIsolate );
 		
 		// コンストラクタを作成
@@ -603,9 +601,7 @@ $AccessorIF
 $param->{ FunctionIF }
   public:
 	// クラステンプレートの初期化
-	static void InitializeClass( Handle<ObjectTemplate> GlobalTmpl ){
-		Isolate *pIsolate = Isolate::GetCurrent();
-		
+	static void InitializeClass( Isolate *pIsolate, Handle<ObjectTemplate> GlobalTmpl ){
 		#define inst	GlobalTmpl
 		#define proto	GlobalTmpl
 		// フィールドなどはこちらに

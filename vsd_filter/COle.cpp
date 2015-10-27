@@ -48,7 +48,8 @@ void COle::OleFuncCaller(
 	if( !obj ) return;
 	
 	obj->Invoke(
-		args.Data()->Int32Value(), args,
+		args.Data()->Int32Value(),
+		args.GetReturnValue(), args,
 		Local<Value>(), DISPATCH_METHOD
 	);
 }
@@ -61,7 +62,8 @@ void COle::CallAsFunctionHandler(
 	if( !obj ) return;
 	
 	obj->Invoke(
-		args.Data()->Int32Value(), args,
+		args.Data()->Int32Value(),
+		args.GetReturnValue(), args,
 		Local<Value>(), DISPATCH_PROPERTYGET
 	);
 }
@@ -71,13 +73,15 @@ void COle::CallAsFunctionHandler(
 void COle::OleValueSetter(
 	Local<String> propertyName,
 	Local<Value> value,
-	const PropertyCallbackInfo<Value>& info
+	const PropertyCallbackInfo<void>& info
 ){
 	COle *obj = CScript::GetThis<COle>( info.Holder());
 	if( !obj ) return;
 	
 	obj->Invoke(
-		info.Data()->Int32Value(), *( FunctionCallbackInfo<Value> *)NULL,
+		info.Data()->Int32Value(),
+		*( ReturnValue<Value> *)NULL,
+		*( FunctionCallbackInfo<Value> *)NULL,
 		value, DISPATCH_PROPERTYPUT
 	);
 }
@@ -91,7 +95,9 @@ void COle::OleValueGetter(
 	if( !obj ) return;
 	
 	obj->Invoke(
-		info.Data()->Int32Value(), *( FunctionCallbackInfo<Value> *)NULL,
+		info.Data()->Int32Value(),
+		info.GetReturnValue(),
+		*( FunctionCallbackInfo<Value> *)NULL,
 		Local<Value>(), DISPATCH_PROPERTYGET
 	);
 }
@@ -496,6 +502,7 @@ Local<Value> COle::Variant2Val( VARIANT *pvar ){
 
 void COle::Invoke(
 	DISPID DispID,
+	ReturnValue<Value> Ret,
 	const FunctionCallbackInfo<Value>& args,
 	Local<Value> value,
 	UINT wFlags
@@ -602,7 +609,7 @@ void COle::Invoke(
 	delete [] realargs;
 	delete [] op.dp.rgdispidNamedArgs;
 	
-	args.GetReturnValue().Set( ret );
+	Ret.Set( ret );
 }
 
 /*** HRESULT のエラーメッセージを投げる *************************************/
@@ -637,8 +644,6 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 	EXCEPINFO *pExcepInfo,
 	UINT *puArgErr
 ){
-	//CSemaphoreLock sem;
-	
 	DebugMsgD( ">ICallbackJSFunc::Invoke\n" );
 	
 	Isolate *pIsolate = Isolate::GetCurrent();
