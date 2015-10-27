@@ -329,7 +329,7 @@ public:
     case PLANAR_U: case PLANAR_V: if (pitchUV) return row_size>>1; else return 0;
     case PLANAR_U_ALIGNED: case PLANAR_V_ALIGNED: 
       if (pitchUV) { 
-        int r = ((row_size+FRAME_ALIGN-1)&(~(FRAME_ALIGN-1)) )>>1; // Aligned rowsize
+        int r = ((row_size+FRAME_ALIGN-1)&(~(FRAME_ALIGN-1)))>>1; // Aligned rowsize
         if (r<=pitchUV) 
           return r; 
         return row_size>>1; 

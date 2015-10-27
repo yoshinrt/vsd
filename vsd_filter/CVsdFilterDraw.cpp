@@ -590,7 +590,7 @@ enum {
 void CVsdFilter::DrawPolygon( v8Array pixs, CPixelArg yc, UINT uFlag ){
 	
 	Isolate::Scope IsolateScope( Isolate::GetCurrent());
-	HandleScope handle_scope( Isolate::GetCurrent() );
+	HandleScope handle_scope( Isolate::GetCurrent());
 	Context::Scope context_scope( Isolate::GetCurrent()->GetCurrentContext());
 	
 	if( !( uFlag & IMG_FILL )){

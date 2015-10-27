@@ -86,7 +86,7 @@ class CScript : public CV8If {
 	
 	CVsdFilter	*m_pVsd;	// ÉGÅc
 	
-	Persistent<Context> *m_pContext;
+	Persistent<Context,CopyablePersistentTraits<Context>> m_Context;
 	
 	LPWSTR m_szErrorMsg;
 	UINT m_uError;

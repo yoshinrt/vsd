@@ -430,9 +430,9 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
-			Isolate::Scope IsolateScope( Isolate::GetCurrent() );
-			HandleScope handle_scope( Isolate::GetCurrent() );
-			Context::Scope context_scope( Isolate::GetCurrent()->GetCurrentContext() );
+			Isolate::Scope IsolateScope( Isolate::GetCurrent());
+			HandleScope handle_scope( Isolate::GetCurrent());
+			Context::Scope context_scope( Isolate::GetCurrent()->GetCurrentContext());
 			
 			// "Log" 取得
 			Local<Array> hLog = Local<Array>::Cast(
@@ -773,9 +773,9 @@ int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
-			Isolate::Scope IsolateScope( Isolate::GetCurrent() );
-			HandleScope handle_scope( Isolate::GetCurrent() );
-			Context::Scope context_scope( Isolate::GetCurrent()->GetCurrentContext() );
+			Isolate::Scope IsolateScope( Isolate::GetCurrent());
+			HandleScope handle_scope( Isolate::GetCurrent());
+			Context::Scope context_scope( Isolate::GetCurrent()->GetCurrentContext());
 			
 			// "LapTime" 取得
 			Local<Array> hLapTime = Local<Array>::Cast(
