@@ -44,6 +44,9 @@ public:
 class CScriptRoot {
   public:
 	CScriptRoot(){
+		char *opt[] = { "hoge", "--expose_gc" };
+		int i = 2;
+		V8::SetFlagsFromCommandLine( &i, opt, 0 );
 		// Initialize V8.
 		V8::InitializeICU();
 		V8::InitializeExternalStartupData( "." );

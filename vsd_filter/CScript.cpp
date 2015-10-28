@@ -46,9 +46,12 @@ CScript::~CScript(){
 	{
 		Isolate::Scope IsolateScope( m_pIsolate );
 		m_Context.Reset();
-		m_pIsolate->IdleNotificationDeadline( 1.0 );
+		while( m_pIsolate->IdleNotificationDeadline( 1.0 ));
 	}
-	m_pIsolate->RequestGarbageCollectionForTesting( Isolate::kFullGarbageCollection );
+	// テスト用
+	#ifdef DEBUG
+		//m_pIsolate->RequestGarbageCollectionForTesting( Isolate::kFullGarbageCollection );
+	#endif
 	
 	delete [] m_szErrorMsg;
 }

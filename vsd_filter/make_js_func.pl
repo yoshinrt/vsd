@@ -522,10 +522,12 @@ $param->{ NewObject }
 		Local<Object> thisObject = args.This();
 		thisObject->SetInternalField( 0, External::New( args.GetIsolate(), pC_obj ));
 		
-		// JS オブジェクトが GC されるときにデストラクタが呼ばれるおまじない
-		Persistent<Object> *objectHolder = new Persistent<Object>( args.GetIsolate(), thisObject );
-		objectHolder->SetWeak( pC_obj, Dispose );
-		pC_obj->m_pHolder = objectHolder;
+		#if $UseDestructor
+			// JS オブジェクトが GC されるときにデストラクタが呼ばれるおまじない
+			Persistent<Object> *objectHolder = new Persistent<Object>( args.GetIsolate(), thisObject );
+			objectHolder->SetWeak( pC_obj, Dispose );
+			pC_obj->m_pHolder = objectHolder;
+		#endif
 		
 $param->{ ExtraNew }
 		#ifdef DEBUG
@@ -534,21 +536,23 @@ $param->{ ExtraNew }
 	}
 	
 	// クラスデストラクタ
-	static void Dispose( const WeakCallbackData<Object, $param->{ Class }> &data ){
-		$param->{ Class } *pC_obj = data.GetParameter();
-		
-		//release instance.
-		pC_obj->m_pHolder->Reset();
-		
-		delete pC_obj;
-		DebugMsgD( "<<<del js pC_obj $param->{ Class }:%X\\n", pC_obj );
-	}
+	#if $UseDestructor
+		static void Dispose( const WeakCallbackData<Object, $param->{ Class }> &data ){
+			$param->{ Class } *pC_obj = data.GetParameter();
+			
+			//release instance.
+			pC_obj->m_pHolder->Reset();
+			
+				delete pC_obj;
+			DebugMsgD( "<<<del js pC_obj $param->{ Class }:%X\\n", pC_obj );
+		}
+	#endif
 	
 	// JavaScript からの明示的な破棄
 	static void Func_Dispose( const FunctionCallbackInfo<Value>& args ){
 		// pC_obj の Dispose() を呼ぶ
-		$param->{ Class } *thisObj = CScript::GetThis<$param->{ Class }>( args.This());
 		#if $UseDestructor
+			$param->{ Class } *thisObj = CScript::GetThis<$param->{ Class }>( args.This());
 			if( thisObj ){
 				delete thisObj;
 				#ifdef DEBUG
