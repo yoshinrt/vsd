@@ -44,9 +44,12 @@ public:
 class CScriptRoot {
   public:
 	CScriptRoot(){
-		char *opt[] = { "hoge", "--expose_gc" };
-		int i = 2;
-		V8::SetFlagsFromCommandLine( &i, opt, 0 );
+		#ifdef DEBUG
+			char *opt[] = { "hoge", "--expose_gc" };
+			int i = 2;
+			V8::SetFlagsFromCommandLine( &i, opt, 0 );
+		#endif
+		
 		// Initialize V8.
 		V8::InitializeICU();
 		V8::InitializeExternalStartupData( "." );
@@ -119,39 +122,10 @@ class CScript : public CV8If {
 		return CVsdLog::GPSLogGetLength( dLong0, dLati0, dLong1, dLati1 );
 	}
 	
-	// this へのアクセスヘルパ
-	template<typename T>
-	static T* GetThis( Local<Object> handle ){
-		if( handle->GetInternalField( 0 )->IsUndefined()){
-			V8TypeError( "Object is undefined" );
-			return NULL;
-		}
-		
-		void* pThis = Local<External>::Cast( handle->GetInternalField( 0 ))->Value();
-		return static_cast<T*>( pThis );
-	}
-	
 	static CScript *GetCScript( Local<Object> handle ){
 		HandleScope handle_scope( Isolate::GetCurrent());
 		
 		return CV8Map::Cast( handle )[ "__CScript" ].GetObj<CScript>();
-	}
-	
-	// 引数の数チェック
-	static BOOL CheckArgs( BOOL cond ){
-		if( !( cond )){
-			V8ErrorNumOfArg();
-			return TRUE;
-		}
-		return FALSE;
-	}
-	
-	static BOOL CheckClass( Local<Object> obj, char *name, char *msg ){
-		if( strcmp( *( String::Utf8Value )( obj->GetConstructorName()), name )){
-			V8TypeError( msg );
-			return TRUE;
-		}
-		return FALSE;
 	}
 	
 	// msg であればスルーパス，ERR_ID であればメッセージを返す

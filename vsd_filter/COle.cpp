@@ -8,7 +8,7 @@
 
 #include "StdAfx.h"
 #include "CVsdFilter.h"
-#include "CScript.h"
+#include "ScriptIF.h"
 #include "COle.h"
 
 /*** OLE インスタンス作成 ***************************************************/
@@ -44,7 +44,7 @@ void COle::InitJS( Local<FunctionTemplate> tmpl ){
 void COle::OleFuncCaller(
 	const FunctionCallbackInfo<Value>& args
 ){
-	COle *obj = CScript::GetThis<COle>( args.This());
+	COle *obj = CScriptIFBase::GetThis<COle>( args.This());
 	if( !obj ) return;
 	
 	obj->Invoke(
@@ -58,7 +58,7 @@ void COle::OleFuncCaller(
 void COle::CallAsFunctionHandler(
 	const FunctionCallbackInfo<Value>& args
 ){
-	COle *obj = CScript::GetThis<COle>( args.This());
+	COle *obj = CScriptIFBase::GetThis<COle>( args.This());
 	if( !obj ) return;
 	
 	obj->Invoke(
@@ -75,7 +75,7 @@ void COle::OleValueSetter(
 	Local<Value> value,
 	const PropertyCallbackInfo<void>& info
 ){
-	COle *obj = CScript::GetThis<COle>( info.Holder());
+	COle *obj = CScriptIFBase::GetThis<COle>( info.Holder());
 	if( !obj ) return;
 	
 	obj->Invoke(
@@ -91,7 +91,7 @@ void COle::OleValueGetter(
 	Local<String> propertyName,
 	const PropertyCallbackInfo<Value>& info
 ){
-	COle *obj = CScript::GetThis<COle>( info.Holder());
+	COle *obj = CScriptIFBase::GetThis<COle>( info.Holder());
 	if( !obj ) return;
 	
 	obj->Invoke(

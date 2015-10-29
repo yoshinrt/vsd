@@ -100,9 +100,9 @@ struct Edge {
 	USHORT	Flag;
 };
 
-class CVsdFilter : public CV8If
+class CVsdFilter
 	#ifdef AVS_PLUGIN
-		, public GenericVideoFilter
+		: public GenericVideoFilter
 	#endif
 {
   public:

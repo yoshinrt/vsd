@@ -22,6 +22,39 @@ print fpOut << "-----";
 #include "CVsdFilterLog.h"
 #include "CVsdFile.h"
 #include "COle.h"
+
+class CScriptIFBase {
+	
+  public:
+	// this へのアクセスヘルパ
+	template<typename T>
+	static T* GetThis( Local<Object> handle ){
+		if( handle->GetInternalField( 0 )->IsUndefined()){
+			V8TypeError( "Object is undefined" );
+			return NULL;
+		}
+		
+		void* pThis = Local<External>::Cast( handle->GetInternalField( 0 ))->Value();
+		return static_cast<T*>( pThis );
+	}
+	
+	// 引数の数チェック
+	static BOOL CheckArgs( BOOL cond ){
+		if( !( cond )){
+			V8ErrorNumOfArg();
+			return TRUE;
+		}
+		return FALSE;
+	}
+	
+	static BOOL CheckClass( Local<Object> obj, char *name, char *msg ){
+		if( strcmp( *( String::Utf8Value )( obj->GetConstructorName()), name )){
+			V8TypeError( msg );
+			return TRUE;
+		}
+		return FALSE;
+	}
+};
 -----
 
 ### CVsdFilter ###############################################################
@@ -32,7 +65,7 @@ MakeJsIF({
 	JsClass		=> '__VSD_System__',
 	NewObject	=> << '-----',
 		int iLen = args.Length();
-		if( CScript::CheckArgs( iLen == 1 )) return;
+		if( CheckArgs( iLen == 1 )) return;
 		
 		CVsdFilter *pC_obj = static_cast<CVsdFilter *>( Local<External>::Cast( args[ 0 ] )->Value());
 		if( !pC_obj ){
@@ -45,13 +78,13 @@ MakeJsIF({
 	
 	static void Func_DrawArc( const FunctionCallbackInfo<Value>& args ){
 		int iLen = args.Length();
-		if( CScript::CheckArgs( 7 <= iLen && iLen <= 9 )) return;
+		if( CheckArgs( 7 <= iLen && iLen <= 9 )) return;
 		
-		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
-		if( !thisObj ) return;
+		CVsdFilter *C_obj = GetThis<CVsdFilter>( args.This());
+		if( !C_obj ) return;
 		
 		if( iLen >= 9 ){
-			thisObj->DrawArc(
+			C_obj->DrawArc(
 				args[ 0 ]->Int32Value(),
 				args[ 1 ]->Int32Value(),
 				args[ 2 ]->Int32Value(),
@@ -63,7 +96,7 @@ MakeJsIF({
 				CPixel( args[ 8 ]->Int32Value())
 			);
 		}else{
-			thisObj->DrawArc(
+			C_obj->DrawArc(
 				args[ 0 ]->Int32Value(),
 				args[ 1 ]->Int32Value(),
 				args[ 2 ]->Int32Value(),
@@ -79,14 +112,14 @@ MakeJsIF({
 	static void Func_DrawMap( const FunctionCallbackInfo<Value>& args ){
 		int iLen = args.Length();
 		
-		CVsdFilter *thisObj = CScript::GetThis<CVsdFilter>( args.This());
+		CVsdFilter *C_obj = GetThis<CVsdFilter>( args.This());
 		UINT uFlag = args[ 4 ]->Int32Value();
 		
 		if( uFlag & CVsdFilter::IMG_LOADMAP ){
-			if( CScript::CheckArgs( 8 == iLen )) return;
+			if( CheckArgs( 8 == iLen )) return;
 			
-			if( !thisObj ) return;
-			thisObj->DrawMap(
+			if( !C_obj ) return;
+			C_obj->DrawMap(
 				args[ 0 ]->Int32Value(),
 				args[ 1 ]->Int32Value(),
 				args[ 2 ]->Int32Value(),
@@ -96,10 +129,10 @@ MakeJsIF({
 				CPixel( args[ 7 ]->Int32Value())
 			);
 		}else{
-			if( CScript::CheckArgs( 11 <= iLen && iLen <= 12 )) return;
+			if( CheckArgs( 11 <= iLen && iLen <= 12 )) return;
 			
-			if( !thisObj ) return;
-			thisObj->DrawMap(
+			if( !C_obj ) return;
+			C_obj->DrawMap(
 				args[ 0 ]->Int32Value(),
 				args[ 1 ]->Int32Value(),
 				args[ 2 ]->Int32Value(),
@@ -120,14 +153,14 @@ MakeJsIF({
 	
 	#define DEF_LOG( name ) \
 		static void Get_##name( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){ \
-			CVsdFilter *pC_obj = CScript::GetThis<CVsdFilter>( info.Holder()); \
+			CVsdFilter *pC_obj = GetThis<CVsdFilter>( info.Holder()); \
 			if( pC_obj ) info.GetReturnValue().Set( pC_obj->Get##name()); \
 			else         info.GetReturnValue().SetUndefined(); \
 		}
 	#include "def_log.h"
 	
 	static void Get_Value( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){
-		CVsdFilter *pC_obj = CScript::GetThis<CVsdFilter>( info.Holder());
+		CVsdFilter *pC_obj = GetThis<CVsdFilter>( info.Holder());
 		String::Utf8Value str( propertyName );
 		if( pC_obj ) pC_obj->GetValue( info.GetReturnValue(), *str ); \
 		else         info.GetReturnValue().SetUndefined(); \
@@ -143,7 +176,7 @@ MakeJsIF({
 	JsClass		=> '__VSD_SystemLog__',
 	NewObject	=> << '-----',
 		int iLen = args.Length();
-		if( CScript::CheckArgs( iLen == 1 )) return;
+		if( CheckArgs( iLen == 1 )) return;
 		
 		CVsdFilterLog *pC_obj = static_cast<CVsdFilterLog *>( Local<External>::Cast( args[ 0 ] )->Value());
 		if( !pC_obj ){
@@ -173,7 +206,7 @@ MakeJsIF({
 		if( args[ 0 ]->IsObject()){
 			Local<Object> Image0 = args[ 0 ]->ToObject();
 			if( strcmp( *( String::Utf8Value )( Image0->GetConstructorName()), "Image" ) == 0 ){
-				CVsdImage *obj0 = CScript::GetThis<CVsdImage>( Image0 );
+				CVsdImage *obj0 = GetThis<CVsdImage>( Image0 );
 				if( !obj0 ) return;
 				
 				pC_obj = new CVsdImage( *obj0 );
@@ -332,51 +365,53 @@ sub MakeJsIF {
 					
 					$ArgPos_p1 = $ArgPos + 1;
 					push( @Defs, "Local<Object> $_$ArgNum = args[ $ArgPos ]->ToObject();" );
-					push( @Defs, "if( CScript::CheckClass( $_$ArgNum, \"$_\", \"arg[ $ArgPos_p1 ] must be $_\" )) return;" );
-					push( @Defs, "$Type *obj$ArgNum = CScript::GetThis<$Type>( $_$ArgNum );" );
+					push( @Defs, "if( CheckClass( $_$ArgNum, \"$_\", \"arg[ $ArgPos_p1 ] must be $_\" )) return;" );
+					push( @Defs, "$Type *obj$ArgNum = GetThis<$Type>( $_$ArgNum );" );
 					push( @Defs, "if( !obj$ArgNum ) return;" );
-					$Args[ $ArgNum ] = "*obj$ArgNum";
+					$Args[ $ArgNum + $HiddenArg ] = "*obj$ArgNum";
 				}
 				
 				elsif( $Type eq 'char' ){
 					# string 型
 					push( @Defs, "String::Utf8Value str$ArgNum( args[ $ArgPos ] );" );
-					$Args[ $ArgNum ] = "*str$ArgNum";
+					$Args[ $ArgNum + $HiddenArg ] = "*str$ArgNum";
 				}
 				
 				elsif( $Type =~ /^LPC?WSTR$/ ){
 					# WCHAR string 型
 					push( @Defs, "String::Value str$ArgNum( args[ $ArgPos ] );" );
-					$Args[ $ArgNum ] = "( $Type )*str$ArgNum";
+					$Args[ $ArgNum + $HiddenArg ] = "( $Type )*str$ArgNum";
 				}
 				
 				elsif( $Type eq 'double' ){
-					$Args[ $ArgNum ] = "args[ $ArgPos ]->NumberValue()";
+					$Args[ $ArgNum + $HiddenArg ] = "args[ $ArgPos ]->NumberValue()";
 				}
 				
 				elsif( $Type eq 'int' || $Type eq 'UINT' ){
 					# int/UINT 型
-					$Args[ $ArgNum ] = "args[ $ArgPos ]->Int32Value()";
+					$Args[ $ArgNum + $HiddenArg ] = "args[ $ArgPos ]->Int32Value()";
 				}
 				
 				elsif( $Type eq 'CPixelArg' ){
 					# (・∀・)ラヴィ!!
-					$Args[ $ArgNum ] = "CPixel( args[ $ArgPos ]->Int32Value())";
+					$Args[ $ArgNum + $HiddenArg ] = "CPixel( args[ $ArgPos ]->Int32Value())";
 				}
 				
 				elsif( $Type eq 'v8Array' ){
 					# V8 array object 
-					$Args[ $ArgNum ] = "Local<Array>::Cast( args[ $ArgPos ] )";
+					$Args[ $ArgNum + $HiddenArg ] = "Local<Array>::Cast( args[ $ArgPos ] )";
 				}
 				
 				elsif( $Type eq 'FunctionCallbackInfo<Value>&' ){
-					$Args[ $ArgNum ] = 'args';
+					$Args[ $ArgNum + $HiddenArg ] = 'args';
 					$NoArgNumCheck = '//';
 				}
 				
 				elsif( $Type eq 'ReturnValue<Value>' ){
-					$Args[ $ArgNum ] = 'args.GetReturnValue()';
+					$Args[ $ArgNum + $HiddenArg ] = 'args.GetReturnValue()';
 					++$HiddenArg;
+					--$ArgMin;
+					--$ArgNum;
 				}
 				
 				elsif( $Type eq 'void' ){
@@ -384,11 +419,11 @@ sub MakeJsIF {
 				}
 				
 				else{
-					$Args[ $ArgNum ] = "????";
+					$Args[ $ArgNum + $HiddenArg ] = "????";
 				}
 				
 				if( defined( $Default )){
-					$Args[ $ArgNum ] = "iLen <= $ArgPos ? $Default : $Args[ $ArgNum ]";
+					$Args[ $ArgNum + $HiddenArg ] = "iLen <= $ArgPos ? $Default : $Args[ $ArgNum + $HiddenArg ]";
 				}else{
 					++$ArgMin;
 				}
@@ -401,8 +436,7 @@ sub MakeJsIF {
 			$Args = "\n\t\t\t$Args\n\t\t" if( $Args ne '' );
 			
 			$Len = $ArgMin == $ArgNum ?
-				sprintf( "iLen == %d", $ArgNum - $HiddenArg ) :
-				sprintf( "%d <= iLen && iLen <= %d", $ArgMin - $HiddenArg, $ArgNum - $HiddenArg );
+				"iLen == $ArgNum" : "$ArgMin <= iLen && iLen <= $ArgNum";
 			
  			$PreRet		= 'args.GetReturnValue().Set( ';
 			$PostRet	= '));';
@@ -433,15 +467,15 @@ sub MakeJsIF {
 				$PostRet	= " unknown type:$RetType	= ";
 			}
 #-----
-			$GetThis = $param->{ bGlobal } ? 'CScript::GetCScript' : "CScript::GetThis<$param->{ Class }>";
+			$GetThis = $param->{ bGlobal } ? 'CScript::GetCScript' : "GetThis<$param->{ Class }>";
 			$param->{ FunctionIF } .= << "-----";
 	static void Func_$FuncName( const FunctionCallbackInfo<Value>& args ){
 		${NoArgNumCheck}int iLen = args.Length();
-		${NoArgNumCheck}if( CScript::CheckArgs( $Len )) return;
+		${NoArgNumCheck}if( CheckArgs( $Len )) return;
 		$Defs
-		$param->{ Class } *thisObj = $GetThis( args.This());
-		if( !thisObj ) return;
-		${PreRet}thisObj->$FuncName($Args)$PostRet
+		$param->{ Class } *C_obj = $GetThis( args.This());
+		if( !C_obj ) return;
+		${PreRet}C_obj->$FuncName($Args)$PostRet
 	}
 -----
 		}
@@ -473,7 +507,7 @@ sub MakeJsIF {
 #-----
 			$AccessorIF .= << "-----";
 	static void Get_$JSvar( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){
-		$param->{ Class } *pC_obj = CScript::GetThis<$param->{ Class }>( info.Holder());
+		$param->{ Class } *pC_obj = GetThis<$param->{ Class }>( info.Holder());
 		if( pC_obj ) $Ret;
 		else         info.GetReturnValue().SetUndefined();
 	}
@@ -511,7 +545,7 @@ sub MakeJsIF {
 	print fpOut << "-----" if( !$param->{ bGlobal } );
 /****************************************************************************/
 
-class $param->{ Class }IF {
+class $param->{ Class }IF : CScriptIFBase {
   public:
 	// クラスコンストラクタ
 	static void New( const FunctionCallbackInfo<Value>& args ){
@@ -524,14 +558,13 @@ $param->{ NewObject }
 		
 		#if $UseDestructor
 			// JS オブジェクトが GC されるときにデストラクタが呼ばれるおまじない
-			Persistent<Object> *objectHolder = new Persistent<Object>( args.GetIsolate(), thisObject );
-			objectHolder->SetWeak( pC_obj, Dispose );
-			pC_obj->m_pHolder = objectHolder;
+			pC_obj->m_pHolder = new Persistent<Object>( args.GetIsolate(), thisObject );
+			pC_obj->m_pHolder->SetWeak( pC_obj, Dispose );
 		#endif
 		
 $param->{ ExtraNew }
 		#ifdef DEBUG
-			DebugMsgD( ">>>new js pC_obj $param->{ Class }:%X\\n", pC_obj );
+			DebugMsgD( ">>>new js obj $param->{ Class }:%X\\n", pC_obj );
 		#endif
 	}
 	
@@ -540,11 +573,11 @@ $param->{ ExtraNew }
 		static void Dispose( const WeakCallbackData<Object, $param->{ Class }> &data ){
 			$param->{ Class } *pC_obj = data.GetParameter();
 			
-			//release instance.
-			pC_obj->m_pHolder->Reset();
+			//release instance. は delete c_Obj で自動的にやる
+			//pC_obj->m_Holder->Reset();
 			
-				delete pC_obj;
-			DebugMsgD( "<<<del js pC_obj $param->{ Class }:%X\\n", pC_obj );
+			delete pC_obj;
+			DebugMsgD( "<<<del by WeakCallback $param->{ Class }:%X\\n", pC_obj );
 		}
 	#endif
 	
@@ -552,11 +585,11 @@ $param->{ ExtraNew }
 	static void Func_Dispose( const FunctionCallbackInfo<Value>& args ){
 		// pC_obj の Dispose() を呼ぶ
 		#if $UseDestructor
-			$param->{ Class } *thisObj = CScript::GetThis<$param->{ Class }>( args.This());
-			if( thisObj ){
-				delete thisObj;
+			$param->{ Class } *C_obj = GetThis<$param->{ Class }>( args.This());
+			if( C_obj ){
+				delete C_obj;
 				#ifdef DEBUG
-					DebugMsgD( "<<<DISPOSE js pC_obj $param->{ Class }:%X\\n", thisObj );
+					DebugMsgD( "<<<Dispose() js obj $param->{ Class }:%X\\n", C_obj );
 				#endif
 				
 				// internalfield を null っぽくする
@@ -597,7 +630,7 @@ $param->{ ExtraInit }
 	print fpOut << "-----" if( $param->{ bGlobal } );
 /****************************************************************************/
 
-class $param->{Class}IF {
+class $param->{ Class }IF : CScriptIFBase {
   public:
 	///// プロパティアクセサ /////
 $AccessorIF

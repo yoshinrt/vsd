@@ -46,11 +46,11 @@ CScript::~CScript(){
 	{
 		Isolate::Scope IsolateScope( m_pIsolate );
 		m_Context.Reset();
-		while( m_pIsolate->IdleNotificationDeadline( 1.0 ));
+		m_pIsolate->IdleNotificationDeadline( 1.0 );
 	}
 	// テスト用
 	#ifdef DEBUG
-		//m_pIsolate->RequestGarbageCollectionForTesting( Isolate::kFullGarbageCollection );
+		m_pIsolate->RequestGarbageCollectionForTesting( Isolate::kFullGarbageCollection );
 	#endif
 	
 	delete [] m_szErrorMsg;
@@ -136,7 +136,7 @@ void CScript::Dispose( void ){
 
 LPWSTR CScript::SprintfSub( const FunctionCallbackInfo<Value>& args ){
 	
-	if( CScript::CheckArgs( args.Length() >= 1 )){
+	if( CScriptIFBase::CheckArgs( args.Length() >= 1 )){
 		V8ErrorNumOfArg();
 		return NULL;
 	}
