@@ -430,21 +430,21 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
-			v8::Isolate::Scope IsolateScope( Script.m_pIsolate );
-			v8::HandleScope handle_scope;
-			v8::Context::Scope context_scope( Script.m_Context );
+			Isolate::Scope IsolateScope( Script.m_pIsolate );
+			HandleScope handle_scope( Script.m_pIsolate );
+			Context::Scope context_scope( Script.GetContext());
 			
 			// "Log" 取得
-			v8::Local<v8::Array> hLog = v8::Local<v8::Array>::Cast(
-				Script.m_Context->Global()->Get( v8::String::New(( uint16_t *)L"Log" ))
+			Local<Array> hLog = Local<Array>::Cast(
+				Script.GetContext()->Global()->Get( String::NewFromTwoByte( Script.m_pIsolate , ( uint16_t *)L"Log" ))
 			);
 			if( !hLog->IsArray()) return 0;
 			
 			// Log の key 取得
-			v8::Local<v8::Array> Keys = hLog->GetPropertyNames();
+			Local<Array> Keys = hLog->GetPropertyNames();
 			
 			// JavaScript Array の vector
-			std::vector<v8::Local<v8::Array> >	JSArrays;
+			std::vector<Local<Array> >	JSArrays;
 			
 			// CLog * の vector
 			std::vector<CLog *>	CArrays;
@@ -460,10 +460,10 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			
 			UINT	uIdx = 0;
 			for( UINT u = 0; u < Keys->Length(); ++u ){
-				v8::String::AsciiValue strKey( Keys->Get( u ));
+				String::Utf8Value strKey( Keys->Get( u ));
 				char *pKey = *strKey;
 				
-				v8::Local<v8::Array> ArrayTmp = v8::Local<v8::Array>::Cast( hLog->Get( Keys->Get( u )));
+				Local<Array> ArrayTmp = Local<Array>::Cast( hLog->Get( Keys->Get( u )));
 				if( ArrayTmp->IsArray()){
 					if     ( !strcmp( *strKey, "Time"      )) uIdxTime		= uIdx;
 					else if( !strcmp( *strKey, "Distance"  )) uIdxDistance	= uIdx;
@@ -773,30 +773,30 @@ int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
-			v8::Isolate::Scope IsolateScope( Script.m_pIsolate );
-			v8::HandleScope handle_scope;
-			v8::Context::Scope context_scope( Script.m_Context );
+			Isolate::Scope IsolateScope( Script.m_pIsolate );
+			HandleScope handle_scope( Script.m_pIsolate );
+			Context::Scope context_scope( Script.GetContext());
 			
 			// "LapTime" 取得
-			v8::Local<v8::Array> hLapTime = v8::Local<v8::Array>::Cast(
-				Script.m_Context->Global()->Get( v8::String::New(( uint16_t *)L"LapTime" ))
+			Local<Array> hLapTime = Local<Array>::Cast(
+				Script.GetContext()->Global()->Get( String::NewFromTwoByte( Script.m_pIsolate , ( uint16_t *)L"LapTime" ))
 			);
 			if( !hLapTime->IsArray()) return 0;
 			
 			// カメラカー No 取得
-			m_iCamCarIdx = Script.m_Context->Global()->Get( v8::String::New(( uint16_t *)L"CameraCarID" ))->Int32Value();
+			m_iCamCarIdx = Script.GetContext()->Global()->Get( String::NewFromTwoByte( Script.m_pIsolate , ( uint16_t *)L"CameraCarID" ))->Int32Value();
 			
 			// LapTime の key 取得
-			v8::Local<v8::Array> Keys = hLapTime->GetPropertyNames();
+			Local<Array> Keys = hLapTime->GetPropertyNames();
 			
 			for( UINT u = 0; u < Keys->Length(); ++u ){
-				v8::String::Value strKey( Keys->Get( u ));
+				String::Value strKey( Keys->Get( u ));
 				m_strName.push_back( reinterpret_cast<LPWSTR>( *strKey ));
 				
 				std::vector<int>	int_vec;	// ダミー
 				m_LapTable.push_back( int_vec );
 				
-				v8::Local<v8::Array> ArrayTmp = v8::Local<v8::Array>::Cast( hLapTime->Get( Keys->Get( u )));
+				Local<Array> ArrayTmp = Local<Array>::Cast( hLapTime->Get( Keys->Get( u )));
 				for( UINT v = 0; v < ArrayTmp->Length(); ++ v ){
 					m_LapTable[ u ].push_back( ArrayTmp->Get( v )->Int32Value());
 				}

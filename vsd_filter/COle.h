@@ -7,23 +7,18 @@
 *****************************************************************************/
 
 #pragma once
+#include "CV8If.h"
 #include "error_code.h"
 
 class ICallbackJSFunc : public IDispatch {
   public:
-	ICallbackJSFunc(
-		v8::Persistent<v8::Object> Global,
-		v8::Persistent<v8::Function> Func
-	) :
-		m_Global( Global ),
-		m_CallbackFunc( Func )
-	{
+	ICallbackJSFunc( Local<Function> Func ){
+		m_CallbackFunc = *( new Persistent<Function>( Isolate::GetCurrent(), Func ));
 		m_uRefCnt = 1;
 	}
 	
 	~ICallbackJSFunc(){
-		if( !m_CallbackFunc.IsEmpty()) m_CallbackFunc.Dispose();
-		if( !m_Global.IsEmpty()) m_Global.Dispose();
+		if( !m_CallbackFunc.IsEmpty()) m_CallbackFunc.Reset();
 	}
 	
 	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject){
@@ -70,12 +65,12 @@ class ICallbackJSFunc : public IDispatch {
 	);
 	
   private:
-	v8::Persistent<v8::Object>		m_Global;
-	v8::Persistent<v8::Function>	m_CallbackFunc;
+	Persistent<Object>		Holder;
+	Persistent<Function,CopyablePersistentTraits<Function>>	m_CallbackFunc;
 	UINT	m_uRefCnt;
 };
 
-class COle {
+class COle : public CV8If {
   public:
 	COle( void ){
 		m_pApp			= NULL;
@@ -86,66 +81,62 @@ class COle {
 	}
 	
 	UINT CreateInstance( LPCWSTR strServer );
-	static void InitJS( v8::Local<v8::FunctionTemplate> tmpl );
+	static void InitJS( Local<FunctionTemplate> tmpl );
 	
-	static v8::Local<v8::Value> CreateActiveXObject(
-		IDispatch *pDispatch,
-		v8::Local<v8::Context> Context
+	static Local<Value> CreateActiveXObject(
+		IDispatch *pDispatch
 	);
 	
 	// Ruby win32ole à⁄êAï®
 	static void V8Array2SafeArray(
-		v8::Local<v8::Context> Context,
-		v8::Local<v8::Array> val,
+		Local<Array> val,
 		SAFEARRAY *psa,
 		long *pUB, long *pID,
 		int iMaxDim, int iDim
 	);
 	
 	static void Val2Variant(
-		v8::Local<v8::Value> val,
-		VARIANT *var,
-		v8::Local<v8::Context> Context
+		Local<Value> val,
+		VARIANT *var
 	);
 	
-	static v8::Local<v8::Value> SafeArray2V8Array(
-		v8::Local<v8::Context> Context,
+	static Local<Value> SafeArray2V8Array(
 		VARIANT& variant,
 		SAFEARRAY *psa,
 		long *pLB, long *pUB, long *pID,
 		int iMaxDim, int iDim
 	);
 	
-	static v8::Local<v8::Value> Variant2Val( VARIANT *pvar, v8::Local<v8::Context> Context );
-	v8::Local<v8::Value> Invoke(
-		v8::Local<v8::Context>	Context,
+	static Local<Value> Variant2Val( VARIANT *pvar );
+	void Invoke(
 		DISPID DispID,
-		const 	v8::Arguments& args,
-		v8::Local<v8::Value> value,
+		ReturnValue<Value> Ret,
+		const 	FunctionCallbackInfo<Value>& args,
+		Local<Value> value,
 		UINT wFlags
 	);
 	
-	static v8::Handle<v8::Value> OleFuncCaller(
-		const v8::Arguments& args
+	static void OleFuncCaller(
+		const FunctionCallbackInfo<Value>& args
 	);
 	
-	static v8::Handle<v8::Value> CallAsFunctionHandler(
-		const v8::Arguments& args
+	static void CallAsFunctionHandler(
+		const FunctionCallbackInfo<Value>& args
 	);
 	
-	static v8::Handle<v8::Value> OleValueGetter(
-		v8::Local<v8::String> propertyName,
-		const v8::AccessorInfo& info
+	static void OleValueGetter(
+		Local<String> propertyName,
+		const PropertyCallbackInfo<Value>& info
 	);
 	
 	static void OleValueSetter(
-		v8::Local<v8::String> propertyName,
-		v8::Local<v8::Value> value,
-		const v8::AccessorInfo& info
+		Local<String> propertyName,
+		Local<Value> value,
+		const PropertyCallbackInfo<void>& info
 	);
 	
-	void AddOLEFunction( v8::Local<v8::Object> ThisObj );
-	HRESULT AddOLEFunction( v8::Local<v8::Object> ThisObj, ITypeInfo *pTypeInfo );
+	void AddOLEFunction( Local<Object> ThisObj );
+	HRESULT AddOLEFunction( Local<Object> ThisObj, ITypeInfo *pTypeInfo );
 	
 	static void ThrowHResultError( HRESULT hr );
 	

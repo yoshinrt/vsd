@@ -13,6 +13,7 @@
 #include "CScript.h"
 #include "CVsdImage.h"
 #include "CPixel.h"
+#include "CV8If.h"
 
 #ifdef AVS_PLUGIN
 	#include "avisynth.h"
@@ -314,20 +315,33 @@ class CVsdFilter
 	// ラップタイム情報
 	LPCWSTR FormatTime( int iTime ); // !js_func
 	
-	static inline v8::Handle<v8::Value> UndefIfTimeNone( int i ){
-		return i == TIME_NONE ? v8::Undefined() : v8::Int32::New( i );
+	static inline void UndefIfTimeNone( ReturnValue<Value> Ret, int i ){
+		if( i == TIME_NONE ) Ret.SetUndefined();
+		else Ret.Set( i );
 	}
 	
-	v8::Handle<v8::Value> CurTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iCurTime ) : v8::Undefined(); }	// !js_var:ElapsedTime
-	v8::Handle<v8::Value> BestLapTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iBestTime ) : v8::Undefined(); }	// !js_var:BestLapTime
-	v8::Handle<v8::Value> DiffTime( void ){ return m_LapLog ? UndefIfTimeNone( m_LapLog->m_iDiffTime ) : v8::Undefined(); }	// !js_var:DiffTime
-	v8::Handle<v8::Value> LapTime( void ){	// !js_var:LapTime
-		if( !m_LapLog || m_LapLog->m_iLapIdx < 0 ) return v8::Undefined();
-		if( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime ){
-			return UndefIfTimeNone( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime );
-		}
-		return UndefIfTimeNone( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].iTime );
+	void CurTime( ReturnValue<Value> Ret ){	// !js_var:ElapsedTime
+		if( m_LapLog ) UndefIfTimeNone( Ret, m_LapLog->m_iCurTime );
+		else Ret.SetUndefined();
 	}
+	void BestLapTime( ReturnValue<Value> Ret ){	// !js_var:BestLapTime
+		if( m_LapLog ) UndefIfTimeNone( Ret, m_LapLog->m_iBestTime );
+		else Ret.SetUndefined();
+	}
+	void DiffTime( ReturnValue<Value> Ret ){	// !js_var:DiffTime
+		if( m_LapLog ) UndefIfTimeNone( Ret, m_LapLog->m_iDiffTime );
+		else Ret.SetUndefined();
+	}
+	void LapTime( ReturnValue<Value> Ret ){	// !js_var:LapTime
+		if( !m_LapLog || m_LapLog->m_iLapIdx < 0 ){
+			Ret.SetUndefined();
+		}else if( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime ){
+			UndefIfTimeNone( Ret, m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime );
+		}else{
+			UndefIfTimeNone( Ret, m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].iTime );
+		}
+	}
+	
 	int LapCnt( void ){ // !js_var:LapCnt
 		if( !m_LapLog ) return 0;
 		return m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].uLap;
@@ -418,6 +432,8 @@ class CVsdFilter
 	int DispLap( void ){ return m_piParamC[ CHECK_LAP ]; }			// !js_var:Config_lap_time
 	int DispGraph( void ){ return m_piParamC[ CHECK_GRAPH ]; }		// !js_var:Config_graph
 	
+	CScriptRoot	m_ScriptRoot;
+	
 	char	*m_szLogFile;
 	char	*m_szLogFileReader;
 	char	*m_szGPSLogFile;
@@ -475,7 +491,8 @@ class CVsdFilter
 	}
 	
 	// ログアクセス
-	v8::Handle<v8::Value> AccessLog(
+	void AccessLog(
+		ReturnValue<Value> Ret,
 		const char *szKey,
 		double dFrameCnt
 	);
@@ -504,29 +521,30 @@ class CVsdFilter
 	}
 	#include "def_log.h"
 	
-	v8::Handle<v8::Value> DateTime( void ){	// !js_var:DateTime
-		if( m_VsdLog ) return v8::Number::New( m_VsdLog->DateTime());
-		if( m_GPSLog ) return v8::Number::New( m_GPSLog->DateTime());
-		return v8::Undefined();
+	void DateTime( ReturnValue<Value> Ret ){	// !js_var:DateTime
+		if     ( m_VsdLog ) Ret.Set( m_VsdLog->DateTime());
+		else if( m_GPSLog ) Ret.Set( m_GPSLog->DateTime());
+		else Ret.SetUndefined();
 	}
 	
-	v8::Handle<v8::Value> GetValue( char *szKey ){
+	void GetValue( ReturnValue<Value> Ret, char *szKey ){
 		double dRet;
-		if( m_VsdLog && !_isnan( dRet = m_VsdLog->Get( szKey, m_VsdLog->m_dLogNum )))
-			return v8::Number::New( dRet );
-		if( m_GPSLog && !_isnan( dRet = m_GPSLog->Get( szKey, m_GPSLog->m_dLogNum )))
-			return v8::Number::New( dRet );
-		
-		return v8::Undefined();
+		if( m_VsdLog && !_isnan( dRet = m_VsdLog->Get( szKey, m_VsdLog->m_dLogNum ))){
+			Ret.Set( dRet );
+		}else if( m_GPSLog && !_isnan( dRet = m_GPSLog->Get( szKey, m_GPSLog->m_dLogNum ))){
+			Ret.Set( dRet );
+		}else{
+			Ret.SetUndefined();
+		}
 	}
 	
 	void AddLogAccessorSub(
 		CVsdLog *pLog,
-		v8::Local<v8::Object> objLog,
-		v8::Local<v8::Array> objMin,
-		v8::Local<v8::Array> objMax
+		Local<Object> objLog,
+		Local<Array> objMin,
+		Local<Array> objMax
 	);
-	void AddLogAccessor( v8::Local<v8::Object> thisObj );
+	void AddLogAccessor( Local<Object> thisObj );
 	
 	static HINSTANCE	m_hInst;	// dll handle
 	

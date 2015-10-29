@@ -107,13 +107,19 @@ DrawStreetView = function( param ){
 	
 	if( param.StViewImg === undefined ){
 		param.StViewImg = [];
-		param.FrameCnt = -1;
+		param.FrameCnt = -99999;
 	}
 	
-	// 画像 cache 数だけ先読み
-	if( param.FrameCnt != Vsd.FrameCnt ){
+	// 初回・シークバーを動かした時に，画像 cache 数だけ先読み
+	if(
+		param.FrameCnt - ~~Vsd.FramePerSecond > Vsd.FrameCnt ||
+		param.FrameCnt + ~~Vsd.FramePerSecond < Vsd.FrameCnt
+	){
 		for( var i = 0; i < param.ImgCacheCnt; ++i ){
-			param.StViewImg[( ImgIdx + i ) % param.ImgCacheCnt ] =
+			var Idx = ( ImgIdx + i ) % param.ImgCacheCnt;
+			
+			if( param.StViewImg[ Idx ] !== undefined ) param.StViewImg[ Idx ].Dispose();
+			param.StViewImg[ Idx ] =
 				new Image( GetImageURL( FrameCnt + i * param.UpdateTime ), IMG_INET_ASYNC );
 		}
 		

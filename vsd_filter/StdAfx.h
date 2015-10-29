@@ -22,6 +22,7 @@
 #include <direct.h>
 #include <tchar.h>
 #include <time.h>
+#include "libplatform/libplatform.h"
 #include <v8.h>
 #include <ole2.h>
 #include <Wininet.h>
@@ -40,6 +41,8 @@
 #include "dds.h"
 #include <assert.h>
 #include "dds_lib/dds_lib.h"
+
+using namespace v8;
 
 #ifdef _OPENMP
 	#include <omp.h>

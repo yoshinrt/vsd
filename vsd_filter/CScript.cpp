@@ -11,8 +11,6 @@
 #include "CScript.h"
 #include "ScriptIF.h"
 
-using namespace v8;
-
 /*** static メンバ（；´д⊂）***********************************************/
 
 LPCWSTR CScript::m_szErrorMsgID[] = {
@@ -25,16 +23,13 @@ LPCWSTR CScript::m_szErrorMsgID[] = {
 CScript::CScript( CVsdFilter *pVsd ){
 	DebugMsgD( ":CScript::CScript():%X\n", GetCurrentThreadId());
 	
-	m_pIsolate = v8::Isolate::New();
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
+	m_pIsolate = pVsd->m_ScriptRoot.m_pIsolate;
+	Isolate::Scope IsolateScope( m_pIsolate );
 	
 	DebugMsgD( ":CScript::CScript():m_pIsolate = %X\n", m_pIsolate );
-	
-	DebugMsgD( ":CScript::CScript():m_Context\n" );
-	m_Context.Clear();
+	DebugMsgD( ":CScript::CScript():m_pContext\n" );
 	
 	if( pVsd ) m_pVsd = pVsd;
-	//m_pSemaphore = new CSemaphore;
 	
 	m_szErrorMsg	= NULL;
 	m_uError		= ERR_OK;
@@ -49,13 +44,14 @@ CScript::~CScript(){
 	Dispose();
 	
 	{
-		v8::Isolate::Scope IsolateScope( m_pIsolate );
-		m_Context.Dispose();
-		while( !v8::V8::IdleNotification());
+		Isolate::Scope IsolateScope( m_pIsolate );
+		m_Context.Reset();
+		m_pIsolate->IdleNotificationDeadline( 1.0 );
 	}
-	m_pIsolate->Dispose();
-	
-	//delete m_pSemaphore;
+	// テスト用
+	#ifdef DEBUG
+		m_pIsolate->RequestGarbageCollectionForTesting( Isolate::kFullGarbageCollection );
+	#endif
 	
 	delete [] m_szErrorMsg;
 }
@@ -65,7 +61,7 @@ CScript::~CScript(){
 #define MSGBUF_SIZE	( 4 * 1024 )
 
 LPWSTR CScript::ReportException( LPWSTR pMsg, TryCatch& try_catch ){
-	HandleScope handle_scope;
+	HandleScope handle_scope( Isolate::GetCurrent());
 	String::Value exception( try_catch.Exception());
 	Local<Message> message = try_catch.Message();
 	
@@ -114,35 +110,33 @@ LPWSTR CScript::ReportException( LPWSTR pMsg, TryCatch& try_catch ){
 /*** JavaScript オブジェクトディスポーザ ************************************/
 
 void CScript::Dispose( void ){
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
-	v8::HandleScope handle_scope;
-	v8::Context::Scope context_scope( m_Context );
+	Isolate::Scope IsolateScope( m_pIsolate );
+	HandleScope handle_scope( m_pIsolate );
+	Context::Scope context_scope( GetContext());
 	
 	// global obj 取得
-	v8::Local<v8::Object> hGlobal = m_Context->Global();
+	Local<Object> hGlobal = GetContext()->Global();
 	
 	// Log の key 取得
-	v8::Local<v8::Array> Keys = hGlobal->GetPropertyNames();
+	Local<Array> Keys = hGlobal->GetPropertyNames();
 	
 	for( UINT u = 0; u < Keys->Length(); ++u ){
 		#ifdef DEBUG
-			v8::String::AsciiValue strKey( Keys->Get( u ));
+			String::Utf8Value strKey( Keys->Get( u ));
 			char *pKey = *strKey;
 			DebugMsgD( "js var %s = undef\n", pKey );
 		#endif
-		hGlobal->Set( Keys->Get( u ), v8::Undefined());
+		hGlobal->Set( Keys->Get( u ), Undefined( m_pIsolate ));
 	}
-	
-	while( !v8::V8::IdleNotification());
 }
 
 /*** sprintf ****************************************************************/
 
 #define SPRINTF_BUF_SIZE	1024
 
-LPWSTR CScript::SprintfSub( const v8::Arguments& args ){
+LPWSTR CScript::SprintfSub( const FunctionCallbackInfo<Value>& args ){
 	
-	if( CScript::CheckArgs( args.Length() >= 1 )){
+	if( CScriptIFBase::CheckArgs( args.Length() >= 1 )){
 		V8ErrorNumOfArg();
 		return NULL;
 	}
@@ -152,10 +146,10 @@ LPWSTR CScript::SprintfSub( const v8::Arguments& args ){
 	UINT uArgBufPtr	= 0;
 	int iArgNum	= 1;
 	LPWSTR wszBuf	= NULL;
-	std::vector<v8::String::Value *> vecStrValue;
+	std::vector<String::Value *> vecStrValue;
 	
 	// Fmt 文字列取得
-	v8::String::Value str( args[ 0 ] );
+	String::Value str( args[ 0 ] );
 	LPCWSTR wszFmt = ( LPCWSTR )*str;
 	LPCWSTR p = wszFmt;
 	
@@ -182,7 +176,7 @@ LPWSTR CScript::SprintfSub( const v8::Arguments& args ){
 		
 		if( *p == L's' ){
 			// strint 型
-			v8::String::Value *pvalue = new v8::String::Value( args[ iArgNum ]);
+			String::Value *pvalue = new String::Value( args[ iArgNum ]);
 			
 			vecStrValue.push_back( pvalue );
 			*( LPCWSTR *)&puArgBuf[ uArgBufPtr++ ] = ( LPCWSTR )**pvalue;
@@ -226,21 +220,23 @@ LPWSTR CScript::SprintfSub( const v8::Arguments& args ){
 	return wszBuf;
 }
 
-v8::Handle<v8::Value> CScript::Sprintf( const v8::Arguments& args ){
-	v8::HandleScope handle_scope;
+void CScript::Sprintf( const FunctionCallbackInfo<Value>& args ){
+	HandleScope handle_scope( args.GetIsolate());
 	
 	LPWSTR str = CScript::SprintfSub( args );
-	if( !str ) return v8::Undefined();
+	if( !str ){
+		args.GetReturnValue().SetUndefined();
+	}
 	
-	v8::Local<v8::String> v8str = v8::String::New(( uint16_t *)str );
+	args.GetReturnValue().Set( String::NewFromTwoByte( args.GetIsolate(), ( uint16_t *)str ));
 	delete [] str;
 	
-	return handle_scope.Close( v8str );
+	//return handle_scope.Escape( v8str );
 }
 
 /*** Print ******************************************************************/
 
-void CScript::Printf( const v8::Arguments& args ){
+void CScript::Printf( const FunctionCallbackInfo<Value>& args ){
 	LPCWSTR wsz = SprintfSub( args );
 	if( wsz ){
 		CVsdFilter::Print( wsz );
@@ -263,7 +259,7 @@ int CScript::MessageBox(
 	);
 }
 
-void CScript::DebugPrint( const v8::Arguments& args ){
+void CScript::DebugPrint( const FunctionCallbackInfo<Value>& args ){
 	LPCWSTR wsz = SprintfSub( args );
 	OutputDebugStringW( wsz );
 	OutputDebugStringW( L"\n" );
@@ -273,7 +269,7 @@ void CScript::DebugPrint( const v8::Arguments& args ){
 /*** include ****************************************************************/
 
 void CScript::Include( LPCWSTR wszFileName ){
-	HandleScope handle_scope;
+	HandleScope handle_scope( m_pIsolate );
 	
 	UINT uRet = RunFileCore( wszFileName );
 	
@@ -285,28 +281,30 @@ void CScript::Include( LPCWSTR wszFileName ){
 /*** JavaScript interface のセットアップ ************************************/
 
 UINT CScript::Initialize( LPCWSTR wszFileName ){
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
+	Isolate::Scope IsolateScope( m_pIsolate );
 	
 	// 準備
-	HandleScope handle_scope;
+	HandleScope handle_scope( m_pIsolate );
 	
 	// グローバルオブジェクトの生成
-	Local<ObjectTemplate> global = ObjectTemplate::New();
+	Local<ObjectTemplate> global = ObjectTemplate::New( m_pIsolate );
 	
 	// Image クラス登録
-	CVsdImageIF::InitializeClass( global );
-	CVsdFontIF::InitializeClass( global );
-	CVsdFilterIF::InitializeClass( global, m_pVsd );
-	CVsdFilterLogIF::InitializeClass( global, m_pVsd );
-	CVsdFileIF::InitializeClass( global );
-	CScriptIF::InitializeClass( global );
-	COleIF::InitializeClass( global );
+	CVsdImageIF::InitializeClass( m_pIsolate, global );
+	CVsdFontIF::InitializeClass( m_pIsolate, global );
+	CVsdFilterIF::InitializeClass( m_pIsolate, global, m_pVsd );
+	CVsdFilterLogIF::InitializeClass( m_pIsolate, global, m_pVsd );
+	CVsdFileIF::InitializeClass( m_pIsolate, global );
+	CScriptIF::InitializeClass( m_pIsolate, global );
+	COleIF::InitializeClass( m_pIsolate, global );
 	
-	global->Set( v8::String::New( "__CVsdFilter" ), v8::External::New( m_pVsd ));
-	global->Set( v8::String::New( "__CScript" ), v8::External::New( this ));
+	global->Set( String::NewFromOneByte( m_pIsolate, ( uint8_t *)"__CVsdFilter" ), External::New( m_pIsolate, m_pVsd ));
+	global->Set( String::NewFromOneByte( m_pIsolate, ( uint8_t *)"__CScript" ), External::New( m_pIsolate, this ));
 	
 	// グローバルオブジェクトから環境を生成
-	m_Context = Context::New( NULL, global );
+	m_Context = *(new Persistent<Context>( m_pIsolate,
+		Context::New( m_pIsolate, NULL, global )
+	));
 	
 	if( wszFileName ) return RunFile( wszFileName );
 	
@@ -316,12 +314,12 @@ UINT CScript::Initialize( LPCWSTR wszFileName ){
 /*** スクリプトファイルの実行 ***********************************************/
 
 UINT CScript::RunFile( LPCWSTR szFileName ){
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
+	Isolate::Scope IsolateScope( m_pIsolate );
 	
-	HandleScope handle_scope;
+	HandleScope handle_scope( m_pIsolate );
 	
 	// 環境からスコープを生成
-	Context::Scope context_scope( m_Context );
+	Context::Scope context_scope( GetContext());
 	
 	TryCatch try_catch;
 	
@@ -358,7 +356,7 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 	szBuf[ iReadSize ] = '\0';
 	
 	Local<Script> script = Script::Compile(
-		String::New( szBuf ), String::New(( uint16_t *)szFileName )
+		String::NewFromOneByte( m_pIsolate, ( uint8_t *)szBuf ), String::NewFromTwoByte( m_pIsolate, ( uint16_t *)szFileName )
 	);
 	
 	delete [] szBuf;
@@ -378,42 +376,46 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 
 UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
 	
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
-	HandleScope handle_scope;
-	Context::Scope context_scope( m_Context );
+	Isolate::Scope IsolateScope( m_pIsolate );
+	HandleScope handle_scope( m_pIsolate );
+	Context::Scope context_scope( GetContext());
 	
 	return RunArg( szFunc, 0, NULL, bNoFunc );
 }
 
 UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
 	
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
-	HandleScope handle_scope;
-	Context::Scope context_scope( m_Context );
+	Isolate::Scope IsolateScope( m_pIsolate );
+	HandleScope handle_scope( m_pIsolate );
+	Context::Scope context_scope( GetContext());
 	
-	Handle<Value> Args[] = {
-		str0 ? String::New(( uint16_t *)str0 ) : v8::Undefined()
-	};
+	#define SetStringArg( arg, str ) \
+		if( str ) Args[ arg ] = String::NewFromTwoByte( m_pIsolate, ( uint16_t *)str ); \
+		else      Args[ arg ] = Undefined( m_pIsolate );
+	
+	Handle<Value> Args[ 1 ];
+	SetStringArg( 0, str0 );
+	
 	return RunArg( szFunc, 1, Args, bNoFunc );
 }
 
 UINT CScript::Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc ){
 	
-	v8::Isolate::Scope IsolateScope( m_pIsolate );
-	HandleScope handle_scope;
-	Context::Scope context_scope( m_Context );
+	Isolate::Scope IsolateScope( m_pIsolate );
+	HandleScope handle_scope( m_pIsolate );
+	Context::Scope context_scope( GetContext());
 	
-	Handle<Value> Args[] = {
-		str0 ? String::New(( uint16_t *)str0 ) : v8::Undefined(),
-		str1 ? String::New(( uint16_t *)str1 ) : v8::Undefined()
-	};
+	Handle<Value> Args[ 2 ];
+	SetStringArg( 0, str0 );
+	SetStringArg( 1, str1 );
+	
 	return RunArg( szFunc, 2, Args, bNoFunc );
 }
 
 UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bNoFunc ){
 	TryCatch try_catch;
 	
-	Local<Function> hFunction = Local<Function>::Cast( m_Context->Global()->Get( String::New(( uint16_t *)szFunc )));
+	Local<Function> hFunction = Local<Function>::Cast( GetContext()->Global()->Get( String::NewFromTwoByte( m_pIsolate, ( uint16_t *)szFunc )));
 	if( hFunction->IsUndefined()){
 		if( bNoFunc ) return ERR_OK;
 		if( !m_szErrorMsg ) m_szErrorMsg = new WCHAR[ MSGBUF_SIZE ];
@@ -421,7 +423,7 @@ UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bN
 		swprintf( m_szErrorMsg, MSGBUF_SIZE, L"Undefined function \"%s()\"\n", szFunc );
 		return m_uError = ERR_SCRIPT;
 	}
-	Local<Value> result = hFunction->Call( m_Context->Global(), iArgNum, Args );
+	Local<Value> result = hFunction->Call( GetContext()->Global(), iArgNum, Args );
 	
 	if( try_catch.HasCaught()){
 		m_szErrorMsg = ReportException( m_szErrorMsg, try_catch );
@@ -429,8 +431,8 @@ UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bN
 	}
 	
 	// ガーベッジコレクション?
-	//while( !v8::V8::IdleNotification());
-	//v8::V8::IdleNotification();
+	//while( !V8::IdleNotification());
+	//V8::IdleNotification();
 	
 	return m_uError = ERR_OK;
 }

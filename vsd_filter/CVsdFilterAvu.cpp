@@ -879,13 +879,13 @@ BOOL CVsdFilter::CreateFilter( void ){
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
-			v8::Isolate::Scope IsolateScope( Script.m_pIsolate );
-			v8::HandleScope handle_scope;
-			v8::Context::Scope context_scope( Script.m_Context );
+			Isolate::Scope IsolateScope( m_ScriptRoot.m_pIsolate );
+			HandleScope handle_scope( m_ScriptRoot.m_pIsolate );
+			Context::Scope context_scope( Script.GetContext());
 			
 			// "LogReaderInfo" 取得
-			v8::Local<v8::Array> hFilter = v8::Local<v8::Array>::Cast(
-				Script.m_Context->Global()->Get( v8::String::New( "LogReaderInfo" ))
+			Local<Array> hFilter = Local<Array>::Cast(
+				Script.GetContext()->Global()->Get( String::NewFromOneByte( m_ScriptRoot.m_pIsolate, ( uint8_t *)"LogReaderInfo" ))
 			);
 			if( !hFilter->IsArray()) return FALSE;
 			
@@ -899,9 +899,9 @@ BOOL CVsdFilter::CreateFilter( void ){
 			pBuf = strchr( pBuf, '\0' ) + 1;
 			
 			for( UINT u = 0; u < hFilter->Length(); ++u ){
-				v8::String::Value      strName( v8::Local<v8::Array>::Cast( hFilter->Get( u ))->Get( v8::String::New( "Caption" )));
-				v8::String::AsciiValue strExt ( v8::Local<v8::Array>::Cast( hFilter->Get( u ))->Get( v8::String::New( "Filter" )));
-				v8::String::AsciiValue strFunc( v8::Local<v8::Array>::Cast( hFilter->Get( u ))->Get( v8::String::New( "ReaderFunc" )));
+				String::Value     strName( Local<Array>::Cast( hFilter->Get( u ))->Get( String::NewFromOneByte( m_ScriptRoot.m_pIsolate, ( uint8_t *)"Caption" )));
+				String::Utf8Value strExt ( Local<Array>::Cast( hFilter->Get( u ))->Get( String::NewFromOneByte( m_ScriptRoot.m_pIsolate, ( uint8_t *)"Filter" )));
+				String::Utf8Value strFunc( Local<Array>::Cast( hFilter->Get( u ))->Get( String::NewFromOneByte( m_ScriptRoot.m_pIsolate, ( uint8_t *)"ReaderFunc" )));
 				
 				WideCharToMultiByte(
 					CP_ACP,					// コードページ
