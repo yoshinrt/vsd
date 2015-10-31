@@ -24,6 +24,7 @@ CScript::CScript( CVsdFilter *pVsd ){
 	DebugMsgD( ":CScript::CScript():%X\n", GetCurrentThreadId());
 	
 	m_pIsolate = pVsd->m_ScriptRoot.m_pIsolate;
+	Locker locker( m_pIsolate );
 	Isolate::Scope IsolateScope( m_pIsolate );
 	
 	DebugMsgD( ":CScript::CScript():m_pIsolate = %X\n", m_pIsolate );
@@ -44,6 +45,7 @@ CScript::~CScript(){
 	Dispose();
 	
 	{
+		Locker locker( m_pIsolate );
 		Isolate::Scope IsolateScope( m_pIsolate );
 		m_Context.Reset();
 		m_pIsolate->IdleNotificationDeadline( 1.0 );
@@ -110,6 +112,7 @@ LPWSTR CScript::ReportException( LPWSTR pMsg, TryCatch& try_catch ){
 /*** JavaScript オブジェクトディスポーザ ************************************/
 
 void CScript::Dispose( void ){
+	Locker locker( m_pIsolate );
 	Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope( m_pIsolate );
 	Context::Scope context_scope( GetContext());
@@ -281,6 +284,7 @@ void CScript::Include( LPCWSTR wszFileName ){
 /*** JavaScript interface のセットアップ ************************************/
 
 UINT CScript::Initialize( LPCWSTR wszFileName ){
+	Locker locker( m_pIsolate );
 	Isolate::Scope IsolateScope( m_pIsolate );
 	
 	// 準備
@@ -314,6 +318,7 @@ UINT CScript::Initialize( LPCWSTR wszFileName ){
 /*** スクリプトファイルの実行 ***********************************************/
 
 UINT CScript::RunFile( LPCWSTR szFileName ){
+	Locker locker( m_pIsolate );
 	Isolate::Scope IsolateScope( m_pIsolate );
 	
 	HandleScope handle_scope( m_pIsolate );
@@ -377,6 +382,7 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 
 UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
 	
+	Locker locker( m_pIsolate );
 	Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope( m_pIsolate );
 	Context::Scope context_scope( GetContext());
@@ -386,6 +392,7 @@ UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
 
 UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
 	
+	Locker locker( m_pIsolate );
 	Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope( m_pIsolate );
 	Context::Scope context_scope( GetContext());
@@ -402,6 +409,7 @@ UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
 
 UINT CScript::Run_ss( LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc ){
 	
+	Locker locker( m_pIsolate );
 	Isolate::Scope IsolateScope( m_pIsolate );
 	HandleScope handle_scope( m_pIsolate );
 	Context::Scope context_scope( GetContext());

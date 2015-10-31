@@ -12,7 +12,12 @@
 
 class ICallbackJSFunc : public IDispatch {
   public:
-	ICallbackJSFunc( Local<Function> Func ){
+	ICallbackJSFunc( Local<Function> Func ) :
+		m_pIsolate( Isolate::GetCurrent())
+	{
+		m_Context = *(new Persistent<Context>( m_pIsolate,
+			m_pIsolate->GetCurrentContext()
+		));
 		m_CallbackFunc = *( new Persistent<Function>( Isolate::GetCurrent(), Func ));
 		m_uRefCnt = 1;
 	}
@@ -65,7 +70,8 @@ class ICallbackJSFunc : public IDispatch {
 	);
 	
   private:
-	Persistent<Object>		Holder;
+	Isolate					*m_pIsolate;
+	Persistent<Context,CopyablePersistentTraits<Context>> m_Context;
 	Persistent<Function,CopyablePersistentTraits<Function>>	m_CallbackFunc;
 	UINT	m_uRefCnt;
 };
@@ -110,9 +116,9 @@ class COle : public CV8If {
 	static Local<Value> Variant2Val( VARIANT *pvar );
 	void Invoke(
 		DISPID DispID,
-		ReturnValue<Value> Ret,
+		ReturnValue<Value>& Ret,
 		const 	FunctionCallbackInfo<Value>& args,
-		Local<Value> value,
+		Local<Value>& value,
 		UINT wFlags
 	);
 	

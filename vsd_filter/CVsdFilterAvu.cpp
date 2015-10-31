@@ -879,6 +879,7 @@ BOOL CVsdFilter::CreateFilter( void ){
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
+			Locker locker( m_ScriptRoot.m_pIsolate );
 			Isolate::Scope IsolateScope( m_ScriptRoot.m_pIsolate );
 			HandleScope handle_scope( m_ScriptRoot.m_pIsolate );
 			Context::Scope context_scope( Script.GetContext());

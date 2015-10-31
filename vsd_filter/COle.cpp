@@ -50,7 +50,7 @@ void COle::OleFuncCaller(
 	obj->Invoke(
 		args.Data()->Int32Value(),
 		args.GetReturnValue(), args,
-		Local<Value>(), DISPATCH_METHOD
+		*( Local<Value> *)NULL, DISPATCH_METHOD
 	);
 }
 
@@ -64,7 +64,7 @@ void COle::CallAsFunctionHandler(
 	obj->Invoke(
 		args.Data()->Int32Value(),
 		args.GetReturnValue(), args,
-		Local<Value>(), DISPATCH_PROPERTYGET
+		*( Local<Value> *)NULL, DISPATCH_PROPERTYGET
 	);
 }
 
@@ -98,7 +98,7 @@ void COle::OleValueGetter(
 		info.Data()->Int32Value(),
 		info.GetReturnValue(),
 		*( FunctionCallbackInfo<Value> *)NULL,
-		Local<Value>(), DISPATCH_PROPERTYGET
+		*( Local<Value> *)NULL, DISPATCH_PROPERTYGET
 	);
 }
 
@@ -502,9 +502,9 @@ Local<Value> COle::Variant2Val( VARIANT *pvar ){
 
 void COle::Invoke(
 	DISPID DispID,
-	ReturnValue<Value> Ret,
+	ReturnValue<Value>& Ret,
 	const FunctionCallbackInfo<Value>& args,
-	Local<Value> value,
+	Local<Value>& value,
 	UINT wFlags
 ){
 	LCID	lcid = LOCALE_SYSTEM_DEFAULT;
@@ -609,7 +609,7 @@ void COle::Invoke(
 	delete [] realargs;
 	delete [] op.dp.rgdispidNamedArgs;
 	
-	Ret.Set( ret );
+	if( &Ret ) Ret.Set( ret );
 }
 
 /*** HRESULT のエラーメッセージを投げる *************************************/
@@ -646,15 +646,15 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 ){
 	DebugMsgD( ">ICallbackJSFunc::Invoke\n" );
 	
-	Isolate *pIsolate = Isolate::GetCurrent();
-	
-	Isolate::Scope IsolateScope( pIsolate );
-	HandleScope handle_scope( pIsolate );
-	Context::Scope context_scope( pIsolate->GetCurrentContext());
+	Locker locker( m_pIsolate );
+	Isolate::Scope IsolateScope( m_pIsolate );
+	HandleScope handle_scope( m_pIsolate );
+	Local<Context> context = Local<Context>::New( m_pIsolate, m_Context );
+	Context::Scope context_scope( context );
 	TryCatch try_catch;
 	
-	Local<Function>::New( pIsolate, m_CallbackFunc )
-		->Call( pIsolate->GetCurrentContext()->Global(), 0, NULL );
+	Local<Function>::New( m_pIsolate, m_CallbackFunc )
+		->Call( context->Global(), 0, NULL );
 	
 	if( try_catch.HasCaught()){
 		LPWSTR pMsg = CScript::ReportException( NULL, try_catch );

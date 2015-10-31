@@ -430,6 +430,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
+			Locker locker( Script.m_pIsolate );
 			Isolate::Scope IsolateScope( Script.m_pIsolate );
 			HandleScope handle_scope( Script.m_pIsolate );
 			Context::Scope context_scope( Script.GetContext());
@@ -773,6 +774,7 @@ int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
+			Locker locker( Script.m_pIsolate );
 			Isolate::Scope IsolateScope( Script.m_pIsolate );
 			HandleScope handle_scope( Script.m_pIsolate );
 			Context::Scope context_scope( Script.GetContext());
