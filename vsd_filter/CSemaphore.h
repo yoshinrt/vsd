@@ -18,8 +18,6 @@ class CSemaphore {
 	}
 	
 	~CSemaphore(){
-		Lock();
-		Release();
 		CloseHandle( m_hSemaphore );
 	}
 	
@@ -29,6 +27,13 @@ class CSemaphore {
 		DebugMsgD( "Semaphore%08X: entering critical section\n", this );
 	}
 	
+	DWORD LockTest( void ){
+		DebugMsgD( "Semaphore%08X: waiting\n", this );
+		DWORD ret = WaitForSingleObject( m_hSemaphore, 0 );
+		DebugMsgD( "Semaphore%08X: entering critical section\n", this );
+		return ret;
+	}
+	
 	void Release( void ){
 		DebugMsgD( "Semaphore%08X: exiting critical section\n", this );
 		ReleaseSemaphore( m_hSemaphore, 1, NULL );
@@ -36,19 +41,4 @@ class CSemaphore {
 	
   private:
 	HANDLE m_hSemaphore;
-};
-
-class CSemaphoreLock {
-	
-  public:
-	CSemaphoreLock( CSemaphore *pSemaphore ) : m_pSemaphore( pSemaphore ){
-		m_pSemaphore->Lock();
-	}
-	
-	~CSemaphoreLock(){
-		m_pSemaphore->Release();
-	}
-	
-  private:
-	CSemaphore *m_pSemaphore;
 };

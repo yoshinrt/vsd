@@ -230,6 +230,9 @@ MakeJsIF({
 			}
 		}
 -----
+	Dispose	=> << '-----',
+					C_obj->DeleteAsync();
+-----
 });
 
 ### CVsdFont #################################################################
@@ -290,6 +293,7 @@ MakeJsIF({
 
 MakeJsIF({
 	Class		=> 'CScript',
+	JsClass		=> 'dummy'
 });
 
 ##############################################################################
@@ -305,6 +309,13 @@ sub MakeJsIF {
 	$param->{ FunctionIF }	= '' if( !defined( $param->{ FunctionIF } ));
 	$param->{ ExtraInit }	= '' if( !defined( $param->{ ExtraInit } ));
 	$param->{ ExtraNew }	= '' if( !defined( $param->{ ExtraNew } ));
+	
+	if( defined( $param->{ Dispose })){
+		$UseCustomDispose = 1;
+	}else{
+		$param->{ Dispose } = '';
+		$UseCustomDispose = 0;
+	}
 	
 	if( !defined( $param->{ 'JsClass' })){
 		$param->{ 'Class' }		=~ /^CVsd(.+)/;
@@ -588,7 +599,13 @@ $param->{ ExtraNew }
 		#if $UseDestructor
 			$param->{ Class } *C_obj = GetThis<$param->{ Class }>( args.This());
 			if( C_obj ){
-				delete C_obj;
+				
+				#if $UseCustomDispose
+$param->{ Dispose }
+				#else
+					delete C_obj;
+				#endif
+				
 				#ifdef DEBUG
 					DebugMsgD( "<<<Dispose() js obj $param->{ Class }:%X\\n", C_obj );
 				#endif

@@ -20,6 +20,8 @@ class CVsdImage : public CV8If {
 	CVsdImage( CVsdImage &Org );
 	~CVsdImage();
 	
+	void DeleteAsync( void );
+	
 	UINT Load( LPCWSTR szFileName, UINT uFlag = 0 );
 	
 	inline UINT GetPixel0( int x, int y ){
@@ -67,7 +69,7 @@ class CVsdImage : public CV8If {
 	int m_iOffsY;
 	
 	LPWSTR		m_pFileName;
-	CSemaphore	*m_pSemaphore;
+	CSemaphore	* volatile m_pSemaphore;
   private:
 	CPixelImg		*m_pBuf;
 };

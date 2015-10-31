@@ -34,6 +34,7 @@
 #include <map>
 #include <functional>
 #include <limits>
+#include <thread>
 
 #include <zconf.h>
 #include <zlib.h>

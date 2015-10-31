@@ -49,26 +49,27 @@ CVsdImage::~CVsdImage(){
 	DebugMsgD( "delete CVsdImage %X\n", this );
 	
 	// ASync ロード完了まで待つ
-	if( m_pSemaphore ) delete m_pSemaphore;
+	if( m_pSemaphore ){
+		m_pSemaphore->Lock();
+		if( m_pSemaphore ) m_pSemaphore->Release();
+		if( m_pSemaphore ) delete m_pSemaphore;
+	}
 	
 	if( m_pFileName ) delete [] m_pFileName;
 	delete [] m_pBuf;
 }
 
-/*** イメージのロード *******************************************************/
-
-DWORD WINAPI CVsdImage_LoadAsync(
-	LPVOID lpParameter   // スレッドのデータ
-){
-	CVsdImage *pImg = reinterpret_cast<CVsdImage *>( lpParameter );
-	pImg->Load( pImg->m_pFileName );
-	delete [] pImg->m_pFileName;
-	pImg->m_pFileName = NULL;
-	
-	pImg->m_pSemaphore->Release();
-	
-	return 0;
+void CVsdImage::DeleteAsync( void ){
+	if( m_pSemaphore == NULL ){
+		// セマフォがない
+		delete this;
+	}else{
+		std::thread AsyncDelete([=]{ delete this; });
+		AsyncDelete.detach();
+	}
 }
+
+/*** イメージのロード *******************************************************/
 
 UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 	
@@ -105,15 +106,19 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 			m_pSemaphore = new CSemaphore();
 			m_pSemaphore->Lock();
 			
-			CreateThread(
-				NULL,					// セキュリティ記述子
-				0,						// 初期のスタックサイズ
-				CVsdImage_LoadAsync,	// スレッドの機能
-				this,					// スレッドの引数
-				0,						// 作成オプション
-				NULL					// スレッド識別子
-			);
+			std::thread LoadThread([&]{
+				Load( m_pFileName );
+				delete [] m_pFileName;
+				m_pFileName = NULL;
+				
+				CSemaphore *pSem = m_pSemaphore;
+				m_pSemaphore = NULL;
+				
+				pSem->Release();
+				delete pSem;
+			});
 			
+			LoadThread.detach();
 			return result;
 		}
 		
@@ -615,7 +620,9 @@ UINT CVsdImage::Clip( int x1, int y1, int x2, int y2 ){
 /*** async ロード完了待ち ***************************************************/
 
 UINT CVsdImage::WaitAsyncLoadComplete( int iMsec ){
-	m_pSemaphore->Lock();
-	m_pSemaphore->Release();
+	if( m_pSemaphore ){
+		m_pSemaphore->Lock();
+		if( m_pSemaphore ) m_pSemaphore->Release();
+	}
 	return m_iStatus;
 }

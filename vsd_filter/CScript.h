@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "CSemaphore.h"
 #include "CVsdLog.h"
 #include "CV8Map.h"
 #include "CV8If.h"
