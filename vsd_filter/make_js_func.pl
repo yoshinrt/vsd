@@ -301,7 +301,7 @@ sub MakeJsIF {
 		$param->{ Class } *pC_obj = new $param->{ Class }();
 -----
 	
-	$param->{ bGlobal }		= $param->{ Class } eq 'CScript';
+	$param->{ bGlobal }		= $param->{ Class } eq 'CScript' ? 1 : 0;
 	$param->{ FunctionIF }	= '' if( !defined( $param->{ FunctionIF } ));
 	$param->{ ExtraInit }	= '' if( !defined( $param->{ ExtraInit } ));
 	$param->{ ExtraNew }	= '' if( !defined( $param->{ ExtraNew } ));
@@ -542,11 +542,12 @@ sub MakeJsIF {
 	$AccessorIF =~ s/Get_(\w+)/AddAccessor( $1, $param->{ Class } )/ge;
 	$param->{ FunctionIF } =~ s/Func_(\w+)/AddFunction( $1, $param->{ Class } )/ge;
 	
-	print fpOut << "-----" if( !$param->{ bGlobal } );
+	print fpOut << "-----";
 /****************************************************************************/
 
 class $param->{ Class }IF : CScriptIFBase {
   public:
+#if !$param->{ bGlobal }
 	// クラスコンストラクタ
 	static void New( const FunctionCallbackInfo<Value>& args ){
 		HandleScope handle_scope( args.GetIsolate());
@@ -597,6 +598,7 @@ $param->{ ExtraNew }
 			}
 		#endif
 	}
+#endif
 	
 	///// プロパティアクセサ /////
 $AccessorIF
@@ -607,48 +609,34 @@ $param->{ FunctionIF }
 	static void InitializeClass( Isolate *pIsolate, Handle<ObjectTemplate> global, void *pClass = NULL ){
 		HandleScope handle_scope( pIsolate );
 		
+	#if $param->{ bGlobal }
+		#define inst	global
+		#define proto	global
+	#else
 		// コンストラクタを作成
+		Local<String> ClassName = String::NewFromOneByte( pIsolate, ( uint8_t *)"$param->{ JsClass }" );
 		Local<FunctionTemplate> tmpl = FunctionTemplate::New( pIsolate, New );
-		tmpl->SetClassName( String::NewFromOneByte( pIsolate, ( uint8_t *)"$param->{ JsClass }" ));
-		
+		tmpl->SetClassName( ClassName );
 		// フィールドなどはこちらに
 		Local<ObjectTemplate> inst = tmpl->InstanceTemplate();
 		inst->SetInternalFieldCount( 1 );
+	#endif
+	
 $Accessor
 		// メソッドはこちらに
+	#if !$param->{ bGlobal }
 		Local<ObjectTemplate> proto = tmpl->PrototypeTemplate();
 		proto->Set( String::NewFromOneByte( pIsolate, ( uint8_t *)"Dispose" ), FunctionTemplate::New( pIsolate, Func_Dispose ));
+	#endif
 $Function
 $Const
 $param->{ ExtraInit }
+	#if !$param->{ bGlobal }
 		// グローバルオブジェクトにクラスを定義
-		global->Set( String::NewFromOneByte( pIsolate, ( uint8_t *)"$param->{ JsClass }" ), tmpl );
-	}
-};
------
-	
-	print fpOut << "-----" if( $param->{ bGlobal } );
-/****************************************************************************/
-
-class $param->{ Class }IF : CScriptIFBase {
-  public:
-	///// プロパティアクセサ /////
-$AccessorIF
-	///// メソッドコールバック /////
-$param->{ FunctionIF }
-  public:
-	// クラステンプレートの初期化
-	static void InitializeClass( Isolate *pIsolate, Handle<ObjectTemplate> GlobalTmpl ){
-		#define inst	GlobalTmpl
-		#define proto	GlobalTmpl
-		// フィールドなどはこちらに
-$Accessor
-		// メソッドはこちらに
-$Function
-$Const
-$param->{ ExtraInit }
+		global->Set( ClassName, tmpl );
 		#undef inst
 		#undef proto
+	#endif
 	}
 };
 -----

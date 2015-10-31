@@ -356,7 +356,8 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 	szBuf[ iReadSize ] = '\0';
 	
 	Local<Script> script = Script::Compile(
-		String::NewFromOneByte( m_pIsolate, ( uint8_t *)szBuf ), String::NewFromTwoByte( m_pIsolate, ( uint16_t *)szFileName )
+		String::NewFromUtf8( m_pIsolate, szBuf ),
+		String::NewFromTwoByte( m_pIsolate, ( uint16_t *)szFileName )
 	);
 	
 	delete [] szBuf;

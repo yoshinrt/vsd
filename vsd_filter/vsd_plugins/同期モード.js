@@ -60,7 +60,7 @@ function Draw(){
 	Vsd.DrawSyncInfo( 0, Vsd.Height - 1, font, ALIGN_LEFT | ALIGN_BOTTOM );
 	
 	// 説明文
-	if( Vsd.PrivateBuild ) return;
+//	if( Vsd.PrivateBuild ) return;
 	Vsd.DrawRect( 0, 0, font.GetTextWidth( "画" ) * 35.5, font.Height * 12.5, 0xC0000000, DRAW_FILL );
 	
 	print( "●同期手順", { x: 0, y: 0, align: ALIGN_LEFT | ALIGN_TOP } );
