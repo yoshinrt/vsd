@@ -225,9 +225,7 @@ void CScript::Sprintf( const FunctionCallbackInfo<Value>& args ){
 	HandleScope handle_scope( args.GetIsolate());
 	
 	LPWSTR str = CScript::SprintfSub( args );
-	if( !str ){
-		args.GetReturnValue().SetUndefined();
-	}
+	if( !str ) return;
 	
 	args.GetReturnValue().Set( String::NewFromTwoByte( args.GetIsolate(), ( uint16_t *)str ));
 	delete [] str;

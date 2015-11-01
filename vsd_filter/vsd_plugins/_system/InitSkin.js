@@ -100,11 +100,14 @@ Vsd.DrawGoogleMaps = function( param ){
 	
 	// 一番最初の地図データを同期モードで取得
 	if( param.MapImg === undefined ){
+		param.Scale  = param.Scale == 2 ? 2 : 1;
+		
 		param.GMapURL = "http://maps.googleapis.com/maps/api/staticmap?sensor=false&language=ja" +
 			( GoogleAPIKey[ 0 ] != '' ? "&key=" + GoogleAPIKey[ 0 ] : '' ) +
+			( param.Scale == 2 ? "&scale=2" : "" ) +
 			"&maptype=" + param.Maptype +
 			"&zoom=" + param.Zoom +
-			"&size=" + ~~param.Width + "x" + ~~param.Height +
+			"&size=" + ~~( param.Width / param.Scale ) + "x" + ~~( param.Height / param.Scale ) +
 			"&center=";
 		
 		param.MapImg		= new Image( param.GMapURL + Log.Latitude + "," + Log.Longitude );
@@ -193,7 +196,7 @@ Vsd.Geocoding = function( param ){
 	// XMLHttpRequest 作成
 	if( param.HttpRequest === undefined ){
 		param.HttpRequest = CreateXMLHttpRequest();
-		param.Address = undefined;
+		param.Address = "(取得しています...)";
 		param.Result = undefined;
 		param.SendRequest = 0;
 		param.PrevTime = Vsd.DateTime - param.UpdateTime;
@@ -204,7 +207,7 @@ Vsd.Geocoding = function( param ){
 		param.SendRequest = 0;
 		
 		if( param.HttpRequest.status === 200 || param.HttpRequest.status === 0 ){
-			param.Result = eval( "(" + param.HttpRequest.responseText + ")" );
+			param.Result = JSON.parse( param.HttpRequest.responseText );
 			if( param.Result.results.length > 0 ){
 				var i;
 				

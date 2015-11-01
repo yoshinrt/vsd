@@ -155,7 +155,6 @@ MakeJsIF({
 		static void Get_##name( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){ \
 			CVsdFilter *pC_obj = GetThis<CVsdFilter>( info.Holder()); \
 			if( pC_obj ) info.GetReturnValue().Set( pC_obj->Get##name()); \
-			else         info.GetReturnValue().SetUndefined(); \
 		}
 	#include "def_log.h"
 	
@@ -163,7 +162,6 @@ MakeJsIF({
 		CVsdFilter *pC_obj = GetThis<CVsdFilter>( info.Holder());
 		String::Utf8Value str( propertyName );
 		if( pC_obj ) pC_obj->GetValue( info.GetReturnValue(), *str ); \
-		else         info.GetReturnValue().SetUndefined(); \
 	}
 -----
 });
@@ -520,7 +518,6 @@ sub MakeJsIF {
 	static void Get_$JSvar( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){
 		$param->{ Class } *pC_obj = GetThis<$param->{ Class }>( info.Holder());
 		if( pC_obj ) $Ret;
-		else         info.GetReturnValue().SetUndefined();
 	}
 -----
 		}

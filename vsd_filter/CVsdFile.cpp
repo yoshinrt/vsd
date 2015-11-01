@@ -76,7 +76,6 @@ void CVsdFile::ReadLine( ReturnValue<Value> Ret ){
 	
 	if( !m_fp ){
 		V8ErrorClosedHandle();
-		Ret.SetUndefined();
 		return;
 	}
 	
@@ -86,7 +85,6 @@ void CVsdFile::ReadLine( ReturnValue<Value> Ret ){
 		
 		Case MODE_ZIP: {
 			V8ErrorZipNotOpened();
-			Ret.SetUndefined();
 			return;
 		}
 		
@@ -216,7 +214,6 @@ void CVsdFile::ZipNextFile( ReturnValue<Value> Ret ){
 	// zip じゃなければ ret
 	if( !( MODE_ZIP <= m_uMode && m_uMode <= MODE_ZIP_OPENED )){
 		V8Error( "not opened by zip-mode" );
-		Ret.SetUndefined();
 		return;
 	}
 	
@@ -232,7 +229,6 @@ void CVsdFile::ZipNextFile( ReturnValue<Value> Ret ){
 		if( m_uFlag & FLAG_2ND_FILE ){
 			// ファイル全部処理した
 			if( unzGoToNextFile( m_unzfp ) == UNZ_END_OF_LIST_OF_FILE ){
-				Ret.SetUndefined();
 				return;
 			}
 		}
@@ -247,7 +243,6 @@ void CVsdFile::ZipNextFile( ReturnValue<Value> Ret ){
 			) != UNZ_OK
 		){
 			V8Error( "zlib: unzGetCurrentFileInfo failed (maybe wrong zip format?)" );
-			Ret.SetUndefined();
 			return;
 		}
 		
@@ -269,7 +264,6 @@ void CVsdFile::ZipNextFile( ReturnValue<Value> Ret ){
 	}
 	
 	V8Error( "zlib: can't open file in zip (maybe wrong zip format?)" );
-	Ret.SetUndefined();
 }
 
 /*** zip ファイルの body リード *********************************************/

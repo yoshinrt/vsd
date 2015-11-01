@@ -451,8 +451,6 @@ void CVsdFilter::AccessLog( ReturnValue<Value> Ret, const char *szKey, double dF
 		!_isnan( dRet = m_GPSLog->Get( szKey, GetLogIndex( dFrameCnt, GPS, m_GPSLog->m_iLogNum )))
 	){
 		Ret.Set( dRet );
-	}else{
-		Ret.SetUndefined();
 	}
 }
 

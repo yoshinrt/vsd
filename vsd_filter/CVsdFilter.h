@@ -316,25 +316,21 @@ class CVsdFilter
 	LPCWSTR FormatTime( int iTime ); // !js_func
 	
 	static inline void UndefIfTimeNone( ReturnValue<Value> Ret, int i ){
-		if( i == TIME_NONE ) Ret.SetUndefined();
-		else Ret.Set( i );
+		if( i != TIME_NONE ) Ret.Set( i );
 	}
 	
 	void CurTime( ReturnValue<Value> Ret ){	// !js_var:ElapsedTime
 		if( m_LapLog ) UndefIfTimeNone( Ret, m_LapLog->m_iCurTime );
-		else Ret.SetUndefined();
 	}
 	void BestLapTime( ReturnValue<Value> Ret ){	// !js_var:BestLapTime
 		if( m_LapLog ) UndefIfTimeNone( Ret, m_LapLog->m_iBestTime );
-		else Ret.SetUndefined();
 	}
 	void DiffTime( ReturnValue<Value> Ret ){	// !js_var:DiffTime
 		if( m_LapLog ) UndefIfTimeNone( Ret, m_LapLog->m_iDiffTime );
-		else Ret.SetUndefined();
 	}
 	void LapTime( ReturnValue<Value> Ret ){	// !js_var:LapTime
 		if( !m_LapLog || m_LapLog->m_iLapIdx < 0 ){
-			Ret.SetUndefined();
+			//Ret.SetUndefined();
 		}else if( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime ){
 			UndefIfTimeNone( Ret, m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime );
 		}else{
@@ -524,7 +520,6 @@ class CVsdFilter
 	void DateTime( ReturnValue<Value> Ret ){	// !js_var:DateTime
 		if     ( m_VsdLog ) Ret.Set( m_VsdLog->DateTime());
 		else if( m_GPSLog ) Ret.Set( m_GPSLog->DateTime());
-		else Ret.SetUndefined();
 	}
 	
 	void GetValue( ReturnValue<Value> Ret, char *szKey ){
@@ -533,8 +528,6 @@ class CVsdFilter
 			Ret.Set( dRet );
 		}else if( m_GPSLog && !_isnan( dRet = m_GPSLog->Get( szKey, m_GPSLog->m_dLogNum ))){
 			Ret.Set( dRet );
-		}else{
-			Ret.SetUndefined();
 		}
 	}
 	
