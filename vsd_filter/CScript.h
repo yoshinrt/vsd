@@ -43,11 +43,9 @@ public:
 class CScriptRoot {
   public:
 	CScriptRoot(){
-		#ifdef DEBUG
-			char *opt[] = { "hoge", "--expose_gc" };
-			int i = 2;
-			V8::SetFlagsFromCommandLine( &i, opt, 0 );
-		#endif
+		char *opt[] = { NULL, "--expose_gc" };
+		int i = 2;
+		V8::SetFlagsFromCommandLine( &i, opt, 0 );
 		
 		// Initialize V8.
 		V8::InitializeICU();

@@ -51,9 +51,7 @@ CScript::~CScript(){
 		m_pIsolate->IdleNotificationDeadline( 1.0 );
 	}
 	// テスト用
-	#ifdef DEBUG
-		m_pIsolate->RequestGarbageCollectionForTesting( Isolate::kFullGarbageCollection );
-	#endif
+	m_pIsolate->RequestGarbageCollectionForTesting( Isolate::kFullGarbageCollection );
 	
 	delete [] m_szErrorMsg;
 }
