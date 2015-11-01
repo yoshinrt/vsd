@@ -226,7 +226,7 @@ Vsd.Geocoding = function( param ){
 	
 	// リクエスト送信
 	if(
-		( !param.SendRequest || param.HttpRequest.readyState == 1 )&&
+		!param.SendRequest &&
 		Math.abs( param.PrevTime - Vsd.DateTime ) >= param.UpdateTime
 	){
 		param.HttpRequest.open(
