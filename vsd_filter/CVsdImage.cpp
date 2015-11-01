@@ -47,6 +47,7 @@ CVsdImage::CVsdImage( CVsdImage &Org ){
 
 CVsdImage::~CVsdImage(){
 	DebugMsgD( "delete CVsdImage %X\n", this );
+	m_iStatus	= IMG_STATUS_DESTROYED;
 	
 	// ASync ロード完了まで待つ
 	if( m_pSemaphore ){
@@ -60,6 +61,8 @@ CVsdImage::~CVsdImage(){
 }
 
 void CVsdImage::DeleteAsync( void ){
+	m_iStatus	= IMG_STATUS_DESTROYED;
+	/*
 	if( m_pSemaphore == NULL ){
 		// セマフォがない
 		delete this;
@@ -72,6 +75,8 @@ void CVsdImage::DeleteAsync( void ){
 		std::thread AsyncDelete([=]{ delete this; });
 		AsyncDelete.detach();
 	}
+	*/
+	delete this;
 }
 
 /*** イメージのロード *******************************************************/
@@ -187,11 +192,17 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 				uTotalSize += dwReadSize;
 				
 				/* 全て読み込んだらループを抜ける */
-			}while( !( bResult && ( dwReadSize == 0 )));
+			}while(
+				!( bResult && ( dwReadSize == 0 )) &&
+				m_iStatus != IMG_STATUS_DESTROYED
+			);
 			
 	        IStream* pIStream;
-			if( CreateStreamOnHGlobal( hBuffer, FALSE, &pIStream ) == S_OK )
-				pBitmap = Gdiplus::Bitmap::FromStream( pIStream );
+			if(
+				m_iStatus != IMG_STATUS_DESTROYED &&
+				CreateStreamOnHGlobal( hBuffer, FALSE, &pIStream ) == S_OK
+			) pBitmap = Gdiplus::Bitmap::FromStream( pIStream );
+			
 		}while( 0 );
 		
 		/* 後処理 */

@@ -55,12 +55,12 @@ class CVsdImage : public CV8If {
 	int m_iWidth;	// !js_var:Width
 	int m_iHeight;	// !js_var:Height
 	
-	int	m_iStatus;	// !js_var:Status
+	volatile int	m_iStatus;	// !js_var:Status
 	enum {
 		IMG_STATUS_LOAD_COMPLETE,
 		IMG_STATUS_LOAD_INCOMPLETE,
 		IMG_STATUS_LOAD_FAILED,
-		IMG_STATUS_OBJ_DESTROYED,
+		IMG_STATUS_DESTROYED,
 	};
 	
 	int m_iRawWidth;
@@ -69,7 +69,8 @@ class CVsdImage : public CV8If {
 	int m_iOffsY;
 	
 	LPWSTR		m_pFileName;
-	CSemaphore	* volatile m_pSemaphore;
+	CSemaphore	* m_pSemaphore;
+	
   private:
 	CPixelImg		*m_pBuf;
 };
