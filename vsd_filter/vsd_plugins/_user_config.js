@@ -22,4 +22,12 @@ GoogleAPIKey = [
 //	"",	//#REL#
 ];
 
+GoogleGeocodingAPIKey = [
+//	"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	// 例
+	"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
+	"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
+	"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	//#DEL#
+//	"",	//#REL#
+];
+
 //*** 設定ここまで ***********************************************************

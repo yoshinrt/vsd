@@ -443,8 +443,11 @@ Local<Value> COle::Variant2Val( VARIANT *pvar ){
 	  Case VT_R8:
 		ret = Number::New( Isolate::GetCurrent(), V_ISBYREF( pvar ) ? *V_R8REF( pvar ) : V_R8( pvar ));
 		
-	  Case VT_BSTR:
-		ret = String::NewFromTwoByte( Isolate::GetCurrent(), V_ISBYREF( pvar ) ? ( uint16_t *)*V_BSTRREF( pvar ) : ( uint16_t *)V_BSTR( pvar ));
+	  Case VT_BSTR: {
+			uint16_t *str =  V_ISBYREF( pvar ) ? ( uint16_t *)*V_BSTRREF( pvar ) : ( uint16_t *)V_BSTR( pvar );
+			if( str == NULL ) return Null( Isolate::GetCurrent());
+			ret = String::NewFromTwoByte( Isolate::GetCurrent(), str );
+		}
 		
 	  Case VT_ERROR:
 		ret = Int32::New( Isolate::GetCurrent(), V_ISBYREF( pvar ) ? *V_ERRORREF( pvar ) : V_ERROR( pvar ));

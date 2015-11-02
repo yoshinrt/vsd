@@ -45,7 +45,7 @@ function Initialize(){
 	// Geocoding の設定
 	GeocodingParam = {
 		// Geocoding 更新間隔
-		UpdateTime:	100000,	// [ミリ秒]
+		UpdateTime:	10000,	// [ミリ秒]
 	};
 	
 	if( GoogleAPIKey[ 0 ] == '' ){
@@ -167,18 +167,12 @@ DrawStreetView = function( param ){
 	
 	// 画像 URL 生成
 	function GetImageURL( FrameCnt ){
-		var key = '';
-		
-		if( GoogleAPIKey[ 0 ] != '' ){
-			key = "&key=" + GoogleAPIKey[ Vsd.FrameCnt % GoogleAPIKey.length ];
-		}
-		
 		return Sprintf(
 			"http://maps.googleapis.com/maps/api/streetview?sensor=false&size=%dx%d&location=%.6f,%.6f&heading=%d%s",
 			param.Width, param.Height,
 			Log.ValueOfIndex( "Latitude", FrameCnt ),
 			Log.ValueOfIndex( "Longitude", FrameCnt ),
-			Log.ValueOfIndex( "Direction", FrameCnt ), key
+			Log.ValueOfIndex( "Direction", FrameCnt ), GetAPIKey( GoogleAPIKey, "&key=" )
 		);
 	}
 }
@@ -243,7 +237,6 @@ function Draw(){
 	Y += FontM.Height;
 	Vsd.DrawText( 0, Y, Sprintf( "Dist.:%6.2fkm", Log.Distance / 1000 ), FontM, FontColor );
 	
-	/*
 	if( !Vsd.IsSaving ){
 		Y += FontM.Height;
 		
@@ -257,5 +250,4 @@ function Draw(){
 			FontM, FontColor
 		);
 	}
-	*/
 }

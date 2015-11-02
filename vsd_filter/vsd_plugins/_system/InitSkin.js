@@ -95,6 +95,11 @@ Vsd.DrawGraph = function( x1, y1, x2, y2, font, flags, params ){
 
 //*** Google Map 描画 ********************************************************
 
+function GetAPIKey( keys, prefix ){
+	if( keys === undefined || keys[ 0 ] == "" ) return "";
+	return prefix + keys[( Vsd.FrameCnt >> 16 ) % keys.length ];
+}
+
 Vsd.DrawGoogleMaps = function( param ){
 	if( Log.Longitude === undefined ) return;
 	
@@ -198,48 +203,50 @@ Vsd.Geocoding = function( param ){
 		param.HttpRequest = CreateXMLHttpRequest();
 		param.Address = "(取得しています...)";
 		param.Result = undefined;
-		param.SendRequest = 0;
-		param.PrevTime = Vsd.DateTime - param.UpdateTime;
-	}
-	
-	// HTTP リクエスト完了
-	if( param.SendRequest && param.HttpRequest.readyState === 4 ){
-		param.SendRequest = 0;
+		param.PrevTime = -0x7FFFFFFF;
 		
-		if( param.HttpRequest.status === 200 || param.HttpRequest.status === 0 ){
-			param.Result = JSON.parse( param.HttpRequest.responseText );
-			if( param.Result.results.length > 0 ){
-				var i;
-				
-				// 道路名，郵便番号 をスキップ
-				for( i = 0; i < param.Result.results.length - 1; ++i ){
-					if(( "" + param.Result.results[ i ].types ).match( /political/ )) break;
+		// HTTP リクエスト完了
+		param.HttpRequest.onreadystatechange = function(){
+			if( param.HttpRequest.readyState == 4 ){
+				if( param.HttpRequest.status === 200 || param.HttpRequest.status === 0 ){
+					param.Result = JSON.parse( param.HttpRequest.responseText );
+					if( param.Result.results.length > 0 ){
+						var i;
+						
+						// 道路名，郵便番号 をスキップ
+						for( i = 0; i < param.Result.results.length - 1; ++i ){
+							if(( "" + param.Result.results[ i ].types ).match( /political/ )) break;
+						}
+						
+						param.Address = param.Result.results[ i ].formatted_address
+							.replace( /^日本, (?:〒\d+.\d+ )?/, "" );
+					}else{
+						param.Address = "(取得できません)";
+					}
 				}
-				
-				param.Address = param.Result.results[ i ].formatted_address
-					.replace( /^日本, (?:〒\d+.\d+ )?/, "" );
-			}else{
-				param.Address = "(取得できません)";
 			}
 		}
 	}
 	
 	// リクエスト送信
 	if(
-		!param.SendRequest &&
-		Math.abs( param.PrevTime - Vsd.DateTime ) >= param.UpdateTime
+		(
+			param.HttpRequest.readyState == 0 ||
+			param.HttpRequest.readyState == 4
+		) &&
+		Math.abs( param.PrevTime - Vsd.FrameCnt / Vsd.FramePerSecond * 1000 ) >= param.UpdateTime
 	){
 		param.HttpRequest.open(
 			"GET",
-			"http://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng=" +
-				Log.Latitude + "," + Log.Longitude,
+			"https://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng=" +
+				Log.Latitude + "," + Log.Longitude + GetAPIKey( GoogleGeocodingAPIKey, "&key=" ),
 			true
 		);
 		
 		param.HttpRequest.send();
-		param.PrevTime = Vsd.DateTime;
-		param.SendRequest = 1;
+		param.PrevTime = Vsd.FrameCnt / Vsd.FramePerSecond * 1000;
 	}
+	
 	return param.Address;
 	
 	// XMLHttpRequest 生成
