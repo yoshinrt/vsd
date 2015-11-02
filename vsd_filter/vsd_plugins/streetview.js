@@ -145,10 +145,19 @@ DrawStreetView = function( param ){
 			);
 		}
 	}else{
-		if(
-			ImgIdx != param.DispIdx &&
-			param.StViewImg[( param.DispIdx + 1 ) % param.ImgCacheCnt ].Status == IMG_STATUS_LOAD_COMPLETE
-		){
+		if( ImgIdx != param.DispIdx ){
+			var DispIdxNext = ( param.DispIdx + 1 ) % param.ImgCacheCnt;
+			
+			if( param.StViewImg[ DispIdxNext ].Status != IMG_STATUS_LOAD_COMPLETE ){
+				// DispIdx + 1 を表示する時間になっても DispIdx + 1 が
+				// ロードできていない時は DispIdx + 1 ⇔ DispIdx を swap
+				// して，DispIdx を引き続き表示
+				
+				var tmp = param.StViewImg[ DispIdxNext ];
+				param.StViewImg[ DispIdxNext ] = param.StViewImg[ param.DispIdx ];
+				param.StViewImg[ param.DispIdx ] = tmp;
+			}
+			
 			param.StViewImg[ param.DispIdx ].Dispose();
 			param.StViewImg[ param.DispIdx ] = new Image(
 				GetImageURL(
@@ -159,7 +168,7 @@ DrawStreetView = function( param ){
 				),
 				IMG_INET_ASYNC
 			);
-			param.DispIdx = ( param.DispIdx + 1 ) % param.ImgCacheCnt;
+			param.DispIdx = DispIdxNext;
 		}
 		Vsd.PutImage( param.X, param.Y, param.StViewImg[ param.DispIdx ]);
 	}
@@ -244,7 +253,6 @@ function Draw(){
 		for( var i = 0; i < StreetViewParam.ImgCacheCnt; ++i ){
 			if( StreetViewParam.StViewImg[ i ].Status == IMG_STATUS_LOAD_COMPLETE ) ++Cnt;
 		}
-		Sprintf( "Time: %02d:%02d:%02d", date.getHours(), date.getMinutes(), date.getSeconds()),
 		Vsd.DrawText( 0, Y,
 			Sprintf( "%2d/%2d", Cnt, StreetViewParam.ImgCacheCnt ),
 			FontM, FontColor
