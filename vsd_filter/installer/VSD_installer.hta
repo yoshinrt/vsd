@@ -180,9 +180,12 @@ function Download( url, file ){
 	Log( file + " をダウンロードしています..." );
 	
 	WshShell.Run(
+		/*
 		"powershell -NoProfile -ExecutionPolicy Bypass -Command " +
 		"\"$d=new-object System.Net.WebClient;$d.Proxy.Credentials=[System.Net.CredentialCache]::DefaultNetworkCredentials;" +
 		"$d.DownloadFile('" + url + "','" + file + "')\"",
+		*/
+		'httpget "' + url + '" "' + file + '"',
 		6, 1
 	);
 	
