@@ -104,10 +104,10 @@ function Read_kml( Files ){
 			if( Coordinates && Coordinates.length > 1 ){
 				Coordinates.forEach( function( Point ){
 					
-					Point.match( /^(.*),(.*),(.*)/ );
+					Point.match( /^(.*),(.*),(.*)/ ) || Point.match( /^(.*),(.*)/ );
 					Log.Longitude[ Cnt ] = +RegExp.$1;
 					Log.Latitude [ Cnt ] = +RegExp.$2;
-					Log.Altitude [ Cnt ] = +RegExp.$3;
+					if( RegExp.$3 !== undefined ) Log.Altitude [ Cnt ] = +RegExp.$3;
 					
 					if( Cnt == 0 ){
 						var date = new Date;

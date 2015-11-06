@@ -246,7 +246,7 @@ function Draw(){
 	Y += FontM.Height;
 	Vsd.DrawText( 0, Y, Sprintf( "Dist.:%6.2fkm", Log.Distance / 1000 ), FontM, FontColor );
 	
-	if( !Vsd.IsSaving ){
+	if( Vsd.PrivateBuild && !Vsd.IsSaving ){
 		Y += FontM.Height;
 		
 		var Cnt = 0;

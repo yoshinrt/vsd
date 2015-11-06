@@ -70,11 +70,14 @@ function WindowOnLoad(){
 }
 
 function UpdateCheck(){
-	WorkPath = WorkPath.replace( /\\$/, "" );
-	InstallPath = document.form1.InstallPath.value.replace( /\\$/, "" );
-	
+	GetPath();
 	document.form1.update.checked = FileSys.FileExists( InstallPath + "\\vsd_filter_gps.auf" );
 	Caption();
+}
+
+function GetPath(){
+	WorkPath = WorkPath.replace( /\\$/, "" );
+	InstallPath = document.form1.InstallPath.value.replace( /\\$/, "" );
 }
 
 function Caption(){
@@ -96,20 +99,30 @@ function Caption(){
 
 function Install(){
 	document.form1.install.disabled = true;
+	GetPath();
 	try{
 		document.form1.update.checked ? Update() : InstallSub();
 		Log( "このウィンドウは閉じてください．" );
 	}catch( e ){
 		Log( "<font color='red'>★インストールに失敗しました<font>" );
-		Log( e.message );
 		document.form1.install.disabled = false;
+		if( e.message != '' ){
+			Log( e.message );
+		}else{
+			throw e;
+		}
 	}
 }
 
 function InstallSub(){
 	
 	Download( "http://spring-fragrance.mints.ne.jp/aviutl/aviutl100.zip" );
-	Download( "http://pop.4-bit.jp/bin/l-smash/L-SMASH_Works_r790_plugins.zip" );
+	Download( "http://pop.4-bit.jp/bin/l-smash/L-SMASH_Works_r804_plugins.zip" );
+	
+	if( !document.form1.no_ffdshow.checked ){
+		Download( "https://sites.google.com/site/vsdforgps/home/sono-ta/ffdshow_rev3631_20101115_clsid.exe_?attredirects=0&d=1", "ffdshow_rev3631_20101115_clsid.exe" );
+	}
+	
 	Log( "ファイルを解凍しています..." );
 	
 	WshShell.Run(
@@ -185,7 +198,7 @@ function Download( url, file ){
 		"\"$d=new-object System.Net.WebClient;$d.Proxy.Credentials=[System.Net.CredentialCache]::DefaultNetworkCredentials;" +
 		"$d.DownloadFile('" + url + "','" + file + "')\"",
 		*/
-		'httpget "' + url + '" "' + file + '"',
+		'httpget "' +  url + '" "' + file + '"',
 		6, 1
 	);
 	
