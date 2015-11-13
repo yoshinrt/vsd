@@ -120,7 +120,7 @@ function InstallSub(){
 	Download( "http://pop.4-bit.jp/bin/l-smash/L-SMASH_Works_r804_plugins.zip" );
 	
 	if( !document.form1.no_ffdshow.checked ){
-		Download( "https://sites.google.com/site/vsdforgps/home/sono-ta/ffdshow_rev3631_20101115_clsid.exe_?attredirects=0&d=1", "ffdshow_rev3631_20101115_clsid.exe" );
+		Download( "https://sites.google.com/site/vsdforgps/home/sono-ta/ffdshow_rev3631_20101115_clsid.exe_?attredirects=0&d=1", WorkPath + "\\ffdshow_rev3631_20101115_clsid.exe" );
 	}
 	
 	Log( "ファイルを解凍しています..." );
@@ -192,18 +192,20 @@ function Download( url, file ){
 	
 	Log( file + " をダウンロードしています..." );
 	
-	WshShell.Run(
-		/*
-		"powershell -NoProfile -ExecutionPolicy Bypass -Command " +
-		"\"$d=new-object System.Net.WebClient;$d.Proxy.Credentials=[System.Net.CredentialCache]::DefaultNetworkCredentials;" +
-		"$d.DownloadFile('" + url + "','" + file + "')\"",
-		*/
-		'httpget "' +  url + '" "' + file + '"',
-		6, 1
-	);
-	
 	if( !FileSys.FileExists( file )){
-		throw new Error( file + " がダウンロードできません．しばらく経ってからやり直してみてください．" );
+		WshShell.Run(
+			/*
+			"powershell -NoProfile -ExecutionPolicy Bypass -Command " +
+			"\"$d=new-object System.Net.WebClient;$d.Proxy.Credentials=[System.Net.CredentialCache]::DefaultNetworkCredentials;" +
+			"$d.DownloadFile('" + url + "','" + file + "')\"",
+			*/
+			'httpget "' +  url + '" "' + file + '"',
+			6, 1
+		);
+		
+		if( !FileSys.FileExists( file )){
+			throw new Error( file + " がダウンロードできません．しばらく経ってからやり直してみてください．" );
+		}
 	}
 	Log( file + " ダウンロード完了" );
 }
