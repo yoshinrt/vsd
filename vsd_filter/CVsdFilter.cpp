@@ -31,6 +31,8 @@ const int CVsdFilter::m_iPrivateBuild =
 
 CVsdFilter	*g_Vsd;
 
+CScriptRoot	CVsdFilter::m_ScriptRoot;
+
 /*** コンストラクタ *********************************************************/
 
 void CVsdFilter::Constructor( void ){
