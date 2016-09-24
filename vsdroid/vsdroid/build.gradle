@@ -23,7 +23,7 @@ android {
 
     task('incrementVersionCode') << {
         exec {
-            commandLine 'cscript', 'd:/dds/bin/scripter.wsf', '-w', '../../set_svn_version.pl', 'src/main/AndroidManifest.xml'
+            commandLine 'cscript', 'd:/dds/bin/scripter.wsf', '-w', '../../../android/set_svn_version.pl', 'src/main/AndroidManifest.xml'
         }
     }
 
