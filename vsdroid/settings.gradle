@@ -1,0 +1,3 @@
+include ':dds_lib'
+include ':vsdroid'
+project(':dds_lib').projectDir = new File(settingsDir, '../dds_lib/app')

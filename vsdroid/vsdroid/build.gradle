@@ -1,0 +1,39 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "24.0.2"
+
+    defaultConfig {
+        applicationId "jp.dds.vsdroid"
+        minSdkVersion 10
+        targetSdkVersion 10
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+        }
+    }
+
+    lintOptions {
+        disable 'MissingTranslation'
+    }
+
+    task('incrementVersionCode') << {
+        exec {
+            commandLine 'cscript', 'd:/dds/bin/scripter.wsf', '-w', '../../set_svn_version.pl', 'src/main/AndroidManifest.xml'
+        }
+    }
+
+    tasks.whenTaskAdded { task ->
+        if (task.name == 'generateReleaseBuildConfig') {
+            task.dependsOn 'incrementVersionCode'
+        }
+    }
+}
+
+dependencies {
+    compile project(':dds_lib')
+}
