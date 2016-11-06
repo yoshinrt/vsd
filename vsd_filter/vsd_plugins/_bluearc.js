@@ -99,11 +99,11 @@ function Draw(){
 	
 	// スロットル・ブレーキ
 	//   データがないときは縦 G を表示
-	if( Vsd.MaxAccel > 0 ){
+	if( Log.Max.Accel !== undefined ){
 		Vsd.DrawRect(
 			MeterParam.X - 70 * Scale,
 			MeterParam.Y + 80 * Scale,
-			MeterParam.X + ( -70 + 140 * Vsd.Accel / Vsd.MaxAccel ) * Scale,
+			MeterParam.X + ( -70 + 140 * Log.Accel / Log.Max.Accel ) * Scale,
 			MeterParam.Y + 100 * Scale - 1,
 			0x00FF00, DRAW_FILL
 		);
@@ -117,11 +117,11 @@ function Draw(){
 		);
 	}
 	
-	if( Vsd.MaxBrake > 0 ){
+	if( Log.Max.Brake !== undefined ){
 		Vsd.DrawRect(
 			MeterParam.X - 70 * Scale,
 			MeterParam.Y + 100 * Scale,
-			MeterParam.X + ( -70 + 140 * Vsd.Brake / Vsd.MaxBrake ) * Scale,
+			MeterParam.X + ( -70 + 140 * Log.Brake / Log.Max.Brake ) * Scale,
 			MeterParam.Y + 120 * Scale - 1,
 			0xFF0000, DRAW_FILL
 		);

@@ -142,7 +142,7 @@ function Draw(){
 	}
 	
 	// アクセル
-	if( Vsd.MaxAccel > 0 ){
+	if( Log.Max.Accel > 0 ){
 		Vsd.DrawLine(
 			MeterParam.X - MeterR * 0.45,
 			MeterParam.Y + MeterR * 0.65,
@@ -153,7 +153,7 @@ function Draw(){
 		Vsd.DrawLine(
 			MeterParam.X - MeterR * 0.45,
 			MeterParam.Y + MeterR * 0.65,
-			MeterParam.X + MeterR * 0.45 * ( 2 * Vsd.Accel / Vsd.MaxAccel - 1 ),
+			MeterParam.X + MeterR * 0.45 * ( 2 * Log.Accel / Log.Max.Accel - 1 ),
 			MeterParam.Y + MeterR * 0.65,
 			0x00C0C0, 4 * Scale
 		);
