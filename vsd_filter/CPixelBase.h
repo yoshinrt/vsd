@@ -90,10 +90,19 @@ class CPixelBase {
 		alfa= ( yc0.alfa * uAlfaM + yc1.alfa * uAlfa ) / uAlfaMax;
 	}
 	
+	// ITU-R BT.601 / ITU-R BT.709
   private:
-	static int GetY(  int r, int g, int b ){ return  306 * r + 601 * g + 117 * b; }
-	static int GetCb( int r, int g, int b ){ return -173 * r - 339 * g + 512 * b; }
-	static int GetCr( int r, int g, int b ){ return  512 * r - 429 * g -  83 * b; }
+	#ifdef PIXEL_AVU
+		// ƒtƒ‹ƒŒƒ“ƒW
+		static int GetY(  int r, int g, int b ){ return  306 * r + 601 * g + 117 * b; }
+		static int GetCb( int r, int g, int b ){ return -173 * r - 339 * g + 512 * b; }
+		static int GetCr( int r, int g, int b ){ return  512 * r - 429 * g -  83 * b; }
+	#else
+		// Y[16:235], UV[16:240]
+		static int GetY(  int r, int g, int b ){ return  263 * r + 517 * g + 100 * b + 16 * 1024; }
+		static int GetCb( int r, int g, int b ){ return -152 * r - 298 * g + 450 * b; }
+		static int GetCr( int r, int g, int b ){ return  450 * r - 377 * g -  73 * b; }
+	#endif
 };
 
 #undef PIXEL_AVU
