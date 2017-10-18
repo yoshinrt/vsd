@@ -21,10 +21,6 @@ function Initialize(){
 	//   に制限されています．
 	
 	GoogleMapsParam = {
-		// Google Maps の API キーを指定します．
-		// 例: APIKey: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-		APIKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",
-		
 		// ズームレベルを 0～21 で指定します
 		Zoom: 17,
 		

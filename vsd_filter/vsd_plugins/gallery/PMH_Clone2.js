@@ -10,7 +10,7 @@ Scale = Vsd.Width / 1920;
 //に書いてある通りに、GoogleアカウントでログインしてAPIキーを発行して下さい
 //マップの表示は1日25,000アクセスまでなので注意してね
 
-GoogleMapsParam = {APIKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",		
+GoogleMapsParam = {
 // ズームレベルを 0～21 で指定
 Zoom: 17,
 // 地図タイプ roadmap:地図  satellite:航空写真  terrain:地形図  hybrid:地図+航空写真
