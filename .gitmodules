@@ -1,0 +1,3 @@
+[submodule "vsd_filter/dds_lib"]
+	path = vsd_filter/dds_lib
+	url = git@github.com:yoshinrt/dds_lib.git
