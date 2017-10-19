@@ -42,7 +42,7 @@ release:
 		( cd ../../; git archive --format tar HEAD vsd_plugins ) | tar -x; \
 	cd vsd_plugins; \
 		rm -rf _log_reader/vsd_log.js gallery; \
-		mv _user_config.js.sample _user_config.js
+		mv _user_config.js.sample _user_config.js; \
 	cd ../../; \
 		lha a -d ../vsd_filter_gps.exe *; \
 	cd ..; \
