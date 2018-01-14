@@ -14,7 +14,9 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.hardware.camera2.CameraManager;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -66,20 +68,17 @@ public class Vsdroid extends Activity {
 	SharedPreferences Pref;
 
 	// カメラ
-	Camera Cam = null;
-	Camera.Parameters CamParam;
+	private Camera Cam = null;
+	private Camera.Parameters CamParam;
+	private CameraManager CamMgr	= null;
+	private String			CamID	= null;
+	
 	boolean	bRevWarn		= false;
 	boolean	bEcoMode		= false;
 	boolean	bDebugInfo		= false;
 	
 	int iBattery = 100;
 	
-	enum FLASH_STATE {
-		OFF,
-		ON,
-		BLINK,
-	};
-
 	//*** utils **************************************************************
 
 	void Sleep( int ms ){
@@ -88,15 +87,20 @@ public class Vsdroid extends Activity {
 
 	//*** カメラフラッシュ設定 ***********************************************
 
-	public void SetFlash( FLASH_STATE Switch ){
-		if( Cam != null ){
+	public void SetFlash( boolean sw ){
+		
+		if( Build.VERSION.SDK_INT >= 23 ){
+			if( CamID != null ){
+				try{ CamMgr.setTorchMode( CamID, sw ); }catch( android.hardware.camera2.CameraAccessException e ){}
+			}
+		}else if( Cam != null ){
 			// フラッシュモードを設定
 			CamParam.setFlashMode(
-				bRevWarn && Switch == FLASH_STATE.ON ?
+				sw ?
 					Camera.Parameters.FLASH_MODE_TORCH :
 					Camera.Parameters.FLASH_MODE_OFF
 			);
-
+			
 			// パラメータを設定
 			Cam.setParameters( CamParam );
 		}
@@ -520,7 +524,7 @@ public class Vsdroid extends Activity {
 			}
 			
 			// フラッシュライト
-			SetFlash( iTachoBar > 0 ? FLASH_STATE.ON : FLASH_STATE.OFF );
+			SetFlash( bRevWarn && iTachoBar > 0 );
 			
 			// メーターパネル
 			paint.setTypeface( Typeface.DEFAULT_BOLD );
@@ -841,7 +845,20 @@ public class Vsdroid extends Activity {
 		super.onResume();
 
 		// カメラ (フラッシュ) オープン
-		if( Cam == null && ( Cam = Camera.open()) != null ){
+		if( Build.VERSION.SDK_INT >= 23 ){
+			if( CamMgr == null ){
+				CamMgr = ( CameraManager )getSystemService( Context.CAMERA_SERVICE );
+				CamMgr.registerTorchCallback( new CameraManager.TorchCallback(){
+					//トーチモードが変更された時の処理
+					@Override
+					public void onTorchModeChanged( String cameraId, boolean enabled ){
+						super.onTorchModeChanged( cameraId, enabled );
+						//カメラIDをセット
+						CamID = cameraId;
+					}
+				}, new Handler());
+			}
+		}else if( Cam == null && ( Cam = Camera.open()) != null ){
 			CamParam = Cam.getParameters();	//カメラのパラメータを取得
 			Cam.startPreview();				//プレビューをしないと光らない
 		}
@@ -857,7 +874,7 @@ public class Vsdroid extends Activity {
 		if( bDebug ) Log.d( "VSDroid", "onStop" );
 		super.onStop();
 
-		SetFlash( FLASH_STATE.OFF );
+		SetFlash( false );
 		if( Cam != null ) Cam.release();
 		Cam = null;
 	}
