@@ -44,7 +44,7 @@ release:
 		rm -rf _log_reader/vsd_log.js gallery; \
 		mv _user_config.js.sample _user_config.js; \
 	cd ../../; \
-		lha a -d ../vsd_filter_gps.exe *; \
+		zip -9r ../vsd_filter_gps.exe *; \
 	cd ..; \
 		perl -ne 'rename( "vsd_filter_gps.exe", "vsd_filter_gps_r$$1.exe" ) if( /#define\s+PROG_REVISION\s+(\d+)/ );' rev_num.h
 	rm -rf zrelease
