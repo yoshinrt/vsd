@@ -11,7 +11,14 @@
 		file_filter="\\.mot$" select_mode="1"
 	/>
 	<ListPreference android:entryValues="@array/list_connection_mode_values" android:entries="@array/list_connection_mode" android:dialogTitle="@string/pref_connection_mode" android:key="key_connection_mode" android:title="@string/pref_connection_mode"/>
-	<ListPreference android:key="key_bt_devices" android:dialogTitle="@string/pref_bt_devices" android:title="@string/pref_bt_devices"/>
+	<ListPreference
+		android:dialogTitle="@string/pref_bt_devices_vsd"
+		android:key="key_bt_devices_vsd"
+		android:title="@string/pref_bt_devices_vsd"/>
+	<ListPreference
+		android:dialogTitle="@string/pref_bt_devices_gps"
+		android:key="key_bt_devices_gps"
+		android:title="@string/pref_bt_devices_gps"/>
 	<EditTextPreference android:key="key_ip_addr" android:defaultValue="192.168.0.1" android:title="@string/pref_ip_addr" android:dialogTitle="@string/pref_ip_addr" android:inputType="text"></EditTextPreference>
 	<jp.dds.dds_lib.FileOpenPreference
 		android:key="key_replay_log" android:dialogTitle="@string/pref_replay_log" android:title="@string/pref_replay_log"

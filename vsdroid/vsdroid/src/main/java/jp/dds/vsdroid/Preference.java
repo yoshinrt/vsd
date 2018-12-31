@@ -19,7 +19,8 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 	private ListPreference		ListMode;
 	private ListPreference		ListSectors;
 	private ListPreference		ListConnMode;
-	private ListPreference		ListBTDevices;
+	private ListPreference		ListBTDevicesVsd;
+	private ListPreference		ListBTDevicesGps;
 	private ListPreference		ListLogHz;
 	private ListPreference		ListWheelSelect;
 	private EditTextPreference	EditGymkhaStart;
@@ -34,14 +35,15 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource( R.xml.preference );
 
-		ListMode		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_vsd_mode" );
-		ListSectors		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_sectors" );
-		ListConnMode	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_connection_mode" );
-		ListBTDevices	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_bt_devices" );
-		ListLogHz		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_log_hz" );
-		ListWheelSelect	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_wheel_select" );
-		EditGymkhaStart	= ( EditTextPreference )getPreferenceScreen().findPreference( "key_gymkha_start" );
-		EditIPAddr		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_ip_addr" );
+		ListMode			= ( ListPreference	 )getPreferenceScreen().findPreference( "key_vsd_mode" );
+		ListSectors			= ( ListPreference	 )getPreferenceScreen().findPreference( "key_sectors" );
+		ListConnMode		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_connection_mode" );
+		ListBTDevicesVsd	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_bt_devices_vsd" );
+		ListBTDevicesGps	= ( ListPreference	 )getPreferenceScreen().findPreference( "key_bt_devices_gps" );
+		ListLogHz			= ( ListPreference	 )getPreferenceScreen().findPreference( "key_log_hz" );
+		ListWheelSelect		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_wheel_select" );
+		EditGymkhaStart		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_gymkha_start" );
+		EditIPAddr			= ( EditTextPreference )getPreferenceScreen().findPreference( "key_ip_addr" );
 
 		Bundle extras = getIntent().getExtras();
 		setResult( RESULT_OK );
@@ -67,8 +69,10 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		// 各配列を再度当てはめる。
 		CharSequence entries[]		= entriesList.toArray( new CharSequence[]{} );
 		Arrays.sort( entries );
-		ListBTDevices.setEntries( entries );
-		ListBTDevices.setEntryValues( entries );
+		ListBTDevicesVsd.setEntries( entries );
+		ListBTDevicesVsd.setEntryValues( entries );
+		ListBTDevicesGps.setEntries( entries );
+		ListBTDevicesGps.setEntryValues( entries );
 	}
 
 	static FilenameFilter getFileExtensionFilter( String extension ){
@@ -147,8 +151,12 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 			EditIPAddr.setSummary( sharedPreferences.getString( "key_ip_addr", null ));
 		}
 
-		if( key == null || key.equals( "key_bt_devices" )){
-			ListBTDevices.setSummary( sharedPreferences.getString( "key_bt_devices", "Not selected" ));
+		if( key == null || key.equals( "key_bt_devices_vsd" )){
+			ListBTDevicesVsd.setSummary( sharedPreferences.getString( "key_bt_devices_vsd", "Not selected" ));
+		}
+		
+		if( key == null || key.equals( "key_bt_devices_gps" )){
+			ListBTDevicesGps.setSummary( sharedPreferences.getString( "key_bt_devices_gps", "Not selected" ));
 		}
 		
 		if( key == null || key.equals( "key_log_hz" )){

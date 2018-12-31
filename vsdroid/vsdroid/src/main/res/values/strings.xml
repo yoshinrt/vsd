@@ -9,7 +9,8 @@
 	<string name="pref_gymkhana_start">ジムカーナ スタート距離</string>
 	<string name="pref_connection_mode">接続モード</string>
 	<string name="pref_ip_addr">IPアドレス</string>
-	<string name="pref_bt_devices">Bluetoothデバイス</string>
+    <string name="pref_bt_devices_vsd">Bluetoothデバイス (VSD)</string>
+    <string name="pref_bt_devices_gps">Bluetoothデバイス (GPS)</string>
 	<string name="pref_eco_mode">エコモード</string>
 	<string name="pref_summery_eco_mode">エコ運転を促す</string>
 	<string name="pref_roms">VSDファームウェア</string>

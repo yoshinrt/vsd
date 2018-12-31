@@ -139,7 +139,7 @@ public class Vsdroid extends Activity {
 			}
 
 			// BT の MAC アドレスを求める
-			String s = Pref.getString( "key_bt_devices", null );
+			String s = Pref.getString( "key_bt_devices_vsd", null );
 			if( s == null ){
 				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_dev_not_selected );
 				throw new UnrecoverableException( "Bluetooth error" );
