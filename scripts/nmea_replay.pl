@@ -6,8 +6,14 @@ $Scale	= 10;	# 倍速設定
 $Dist	= 10;	# 最低移動距離 [m]
 
 # BT COM の着信を有効，COMn の n - 1 をttySm に設定
-open( fpCom, "> /dev/ttyS3" ) || die( "Can't open COM\n" );
+open( fpCom, "> /dev/ttyS4" ) || die( "Can't open COM\n" );
 #open( fpCom, "| cat" ) || die( "Can't open COM\n" );
+
+if( $ARGV[ 0 ] =~ /\.gz$/ ){
+	open( fpIn, "gunzip -c $ARGV[ 0 ] |" );
+}else{
+	open( fpIn, "< $ARGV[ 0 ]" );
+}
 
 $PrevTime = 0;
 $PrevLon = 0;
@@ -35,7 +41,7 @@ sub Distance{
 	sqrt(( $dy * $M ) ** 2 + ( $dx * $N * cos( $My )) ** 2 );
 };
 
-while( <> ){
+while( <fpIn> ){
 	s/[\x0D\x0A]+//g;
 	s/\*..$//;
 	

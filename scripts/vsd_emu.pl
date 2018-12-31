@@ -4,7 +4,7 @@ use Socket;
 use Time::HiRes qw(sleep);
 
 $TIMER_HZ	= 200000;
-$Server		= 1;
+$ConnMode	= 1;	# 0:ether client  1:ether server 2:com
 
 if( $ARGV[ 0 ] =~ /\.gz$/ ){
 	open( fpIn, "gunzip -c $ARGV[ 0 ] |" );
@@ -56,57 +56,62 @@ if( 0 ){
 	print( "IdxSectorTime = $IdxSectorTime\n" );
 }
 
-my $Sock;
+my $Handle;
 
-if( $Server ){
-	### サーバ
-	# 1. 受付用ソケットの作成
-	my $SockListen;
-	socket( $SockListen, PF_INET, SOCK_STREAM, getprotobyname( 'tcp' ))
-		or die "Cannot create socket: $!";
-	
-	setsockopt( $SockListen, SOL_SOCKET, SO_REUSEADDR, 1 );
-	
-	# 2. 受付用ソケット情報の作成
-	my $pack_addr = sockaddr_in( 12345, INADDR_ANY );
-	
-	# 3. 受付用ソケットと受付用ソケット情報を結びつける
-	bind( $SockListen, $pack_addr ) or die "Cannot bind: $!";
-	
-	# 4. 接続を受け付ける準備をする。
-	listen( $SockListen, SOMAXCONN ) or die "Cannot listen: $!";
-	
-	# 5. 接続を受け付けて応答する。
-	# 接続まち
-	accept( $Sock, $SockListen );
-	print "Connected\n";
+if( $ConnMode == 2 ){
+	# BT COM の着信を有効，COMn の n - 1 をttySm に設定
+	open( $Handle, "> /dev/ttyS4" ) || die( "Can't open COM\n" );
 }else{
-	# クライアント
-	# 1. ソケットの作成
-	socket( $Sock, PF_INET, SOCK_STREAM, getprotobyname( 'tcp' ))
-		or die "Cannot create socket: $!";
-	
-	# 2. ソケット情報の作成
-	
-	# 接続先のホスト名
-	my $remote_host = '192.168.0.132';
-	my $packed_remote_host = inet_aton( $remote_host )
-		or die "Cannot pack $remote_host: $!";
-	
-	# 接続先のポート番号
-	my $remote_port = 12345;
-	
-	# ホスト名とポート番号をパック
-	my $sock_addr = sockaddr_in( $remote_port, $packed_remote_host )
-		or die "Cannot pack $remote_host:$remote_port: $!";
-	
-	# 3. ソケットを使って接続
-	connect( $Sock, $sock_addr ) 
-		or die "Cannot connect $remote_host:$remote_port: $!";
+	if( $ConnMode == 1 ){
+		### サーバ
+		# 1. 受付用ソケットの作成
+		my $SockListen;
+		socket( $SockListen, PF_INET, SOCK_STREAM, getprotobyname( 'tcp' ))
+			or die "Cannot create socket: $!";
+		
+		setsockopt( $SockListen, SOL_SOCKET, SO_REUSEADDR, 1 );
+		
+		# 2. 受付用ソケット情報の作成
+		my $pack_addr = sockaddr_in( 12345, INADDR_ANY );
+		
+		# 3. 受付用ソケットと受付用ソケット情報を結びつける
+		bind( $SockListen, $pack_addr ) or die "Cannot bind: $!";
+		
+		# 4. 接続を受け付ける準備をする。
+		listen( $SockListen, SOMAXCONN ) or die "Cannot listen: $!";
+		
+		# 5. 接続を受け付けて応答する。
+		# 接続まち
+		accept( $Handle, $SockListen );
+		print "Connected\n";
+	}else{
+		# クライアント
+		# 1. ソケットの作成
+		socket( $Handle, PF_INET, SOCK_STREAM, getprotobyname( 'tcp' ))
+			or die "Cannot create socket: $!";
+		
+		# 2. ソケット情報の作成
+		
+		# 接続先のホスト名
+		my $remote_host = '192.168.0.132';
+		my $packed_remote_host = inet_aton( $remote_host )
+			or die "Cannot pack $remote_host: $!";
+		
+		# 接続先のポート番号
+		my $remote_port = 12345;
+		
+		# ホスト名とポート番号をパック
+		my $sock_addr = sockaddr_in( $remote_port, $packed_remote_host )
+			or die "Cannot pack $remote_host:$remote_port: $!";
+		
+		# 3. ソケットを使って接続
+		connect( $Handle, $sock_addr ) 
+			or die "Cannot connect $remote_host:$remote_port: $!";
+	}
 }
 
 # unbuffered
-select( $Sock );
+select( $Handle );
 $| = 1;
 select( STDOUT );
 
@@ -151,7 +156,7 @@ while( <fpIn> ){
 	s/\xFE/\xFE\x00/g;
 	s/\xFF/\xFE\x01/g;
 	
-	last if( !defined( send( $Sock, $_ . "\xFF", 0 )));
+	last if( !SendData( $_ . "\xFF" ));
 	
 	sleep( $Time - $PrevTime ) if( $PrevTime >= 0 );
 	$PrevTime = $Time;
@@ -164,12 +169,16 @@ sub GetData {
 	local( $_ );
 	my( $tmp );
 	
-	recv( $Sock, $_, 1024, defined( $param ) ? $param : 0 );
+	if( $ConnMode == 2 ){
+		sysread( $Handle, $_, 1 );
+	}else{
+		recv( $Handle, $_, 1024, defined( $param ) ? $param : 0 );
+	}
 	
 	return $_ if( !$_ );
 	$tmp = $_;
 	
-	s/([\x00-\x1F\[\x7E\-\xFF])/sprintf( '[%02X]', ord( $1 ))/ge;
+	s/([\x00-\x1F\[\x7E-\xFF])/sprintf( '[%02X]', ord( $1 ))/ge;
 	print "Recv:$_\n";
 	
 	$tmp;
@@ -177,11 +186,15 @@ sub GetData {
 
 sub SendData {
 	local( $_ ) = @_;
+	my $ret;
 	
-	send( $Sock, $_, 0 );
-	#print <$Sock>;
+	if( $ConnMode == 2 ){
+		$ret = print $Handle $_;
+	}else{
+		$ret = send( $Handle, $_, 0 ) ? 1 : 0;
+	}
 	
-	s/([\x00-\x1F\[\x7E\-\xFF])/sprintf( '[%02X]', ord( $1 ))/ge;
+	s/([\x00-\x1F\[\x7E-\xFF])/sprintf( '[%02X]', ord( $1 ))/ge;
 	print "Send:$_\n";
 }
 
@@ -191,6 +204,7 @@ sub WaitCmd {
 	print( "Waiting $_\n" );
 	
 	while( $Buf !~ /$_/ ){
+		print $Buf;
 		$Buf .= GetData();
 	}
 	print( "OK\n" );
