@@ -919,7 +919,7 @@ public class Vsdroid extends Activity {
 	@Override
 	protected void onDestroy(){
 		super.onDestroy();
-		Vsd.KillThread();
+		if( Vsd != null ) Vsd.KillThread();
 		if( bDebug ) Log.d( "VSDroid", "Activity::onDestroy finished" );
 	}
 }
