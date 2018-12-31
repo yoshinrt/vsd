@@ -32,11 +32,13 @@ class VsdInterface implements Runnable {
 	// スピード * 100/Taco 比
 	// ELISE
 	// ギア比 * マージンじゃなくて，ave( ギアn, ギアn+1 ) に変更
-	static final double GEAR_RATIO1 = 1.2381712993947;
-	static final double GEAR_RATIO2 = 1.82350889069989;
-	static final double GEAR_RATIO3 = 2.37581451065366;
-	static final double GEAR_RATIO4 = 2.95059529470571;
-
+	static final double GEAR_RATIO[] = {
+		1.2381712993947,
+		1.82350889069989,
+		2.37581451065366,
+		2.95059529470571,
+	};
+	
 	// たぶん，ホイル一周が30パルス
 	static final double PULSE_PER_1KM_CE28N		= 15473.76689;	// CE28N
 	static final double PULSE_PER_1KM_NORMAL	= 14958.80127;	// ノーマル

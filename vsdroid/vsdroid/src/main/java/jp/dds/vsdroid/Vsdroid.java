@@ -500,12 +500,10 @@ public class Vsdroid extends Activity {
 				
 				// ギアを求める
 				double dGearRatio = ( double )Vsd.iSpeedRaw / Vsd.iTacho;
-				if( Vsd.iTacho == 0 )							 iGear = 1;
-				else if( dGearRatio < VsdInterface.GEAR_RATIO1 ) iGear = 1;
-				else if( dGearRatio < VsdInterface.GEAR_RATIO2 ) iGear = 2;
-				else if( dGearRatio < VsdInterface.GEAR_RATIO3 ) iGear = 3;
-				else if( dGearRatio < VsdInterface.GEAR_RATIO4 ) iGear = 4;
-				else											 iGear = 5;
+				if( Vsd.iTacho == 0 ) iGear = 1;
+				else for( iGear = 1; iGear <= VsdInterface.GEAR_RATIO.length; ++iGear ){
+					if( dGearRatio < VsdInterface.GEAR_RATIO[ iGear - 1 ]) break;
+				}
 				
 				if(( Vsd.iSpeedRaw == 0xFFFF ) && ( Vsd.iTacho == 0 )){
 					// キャリブレーション表示
