@@ -5,8 +5,7 @@
 	android:versionName="r952" >
 	
 	<uses-sdk
-		android:minSdkVersion="10"
-		android:targetSdkVersion="10" />
+        android:targetSdkVersion="10" />
 	<uses-permission android:name="android.permission.BLUETOOTH"/>
 	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>

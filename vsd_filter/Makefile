@@ -1,4 +1,4 @@
-#.tab=4
+# -*- tab-width: 4 -*-
 
 .PHONY: rev_num.h
 .SILENT:
