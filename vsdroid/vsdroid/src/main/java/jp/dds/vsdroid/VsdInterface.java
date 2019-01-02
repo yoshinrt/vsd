@@ -1,15 +1,16 @@
 package jp.dds.vsdroid;
 
-import java.util.Calendar;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
-import java.io.*;
 import java.util.*;
+import java.util.Calendar;
 import java.util.zip.GZIPOutputStream;
 
 //*** VSD アクセス *******************************************************
@@ -513,12 +514,41 @@ class VsdInterface implements Runnable {
 		}catch( IOException e ){}
 		return 0;
 	}
-
+	
+	//*** GPS message handler ********************************************
+	
+	Handler	GpsMsgHandler	= new Handler(){
+		public void handleMessage( Message Msg ){
+			if( Msg.what == R.string.statmsg_gps_updated ){
+				UpdateGps();
+			}else{
+				MsgHandler.sendEmptyMessage( Msg.what );
+			}
+		}
+	};
+	
+	private void UpdateGps(){
+		// まだ動いていないので，Log 保留
+		if( fsLog == null ) return;
+		
+		try{
+			fsLog.write(
+				String.format(
+					"GPS\t%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
+					"%.8f\t%.8f\t%.3f\t%.3f\n",
+					Gps.GpsTime.get( Calendar.YEAR ), Gps.GpsTime.get( Calendar.MONTH ) + 1, Gps.GpsTime.get( Calendar.DATE ),
+					Gps.GpsTime.get( Calendar.HOUR_OF_DAY ), Gps.GpsTime.get( Calendar.MINUTE ), Gps.GpsTime.get( Calendar.SECOND ), Gps.GpsTime.get( Calendar.MILLISECOND ),
+					Gps.dLong, Gps.dLati, Gps.dAlt, Gps.dSpeed
+				).getBytes()
+			);
+		}catch( IOException e ){}
+	}
+	
 	//*** VSD + GPS open / close *****************************************
 	
 	public void Open() throws UnrecoverableException, IOException {
 		OpenVsdIf();
-		Gps = new GpsInterface( MsgHandler, Pref );
+		Gps = new GpsInterface( GpsMsgHandler, Pref );
 		Gps.Start();
 	}
 	

@@ -1,16 +1,16 @@
 package jp.dds.vsdroid;
 
-import android.content.SharedPreferences;
-import android.os.Handler;
-import android.util.Log;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
-import java.io.*;
-import java.util.UUID;
-
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.SharedPreferences;
+import android.os.Handler;
+import android.util.Log;
+import java.io.*;
+import java.net.SocketTimeoutException;
+import java.util.*;
+import java.util.Calendar;
+import java.util.UUID;
 
 //*** VSD アクセス *******************************************************
 
@@ -37,6 +37,16 @@ class GpsInterface implements Runnable {
 
     private static final UUID BT_UUID = UUID.fromString( "00001101-0000-1000-8000-00805F9B34FB" );
 	
+	// GPS データ
+	int		iCurrentYear;
+	int			iNmeaFlag	= 0;
+	int			iNmeaTime	= -1;
+	Calendar	GpsTime;
+	double		dLong;
+	double		dLati;
+	double		dAlt;
+	double		dSpeed;
+	
 	//*** リトライしないerror ************************************************
 	
 	public class UnrecoverableException extends Exception {
@@ -56,6 +66,10 @@ class GpsInterface implements Runnable {
 		Pref			= _Pref;
 		
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+		
+		// 現在の年取得
+		GpsTime = Calendar.getInstance( TimeZone.getTimeZone( "GMT+0" ));
+		iCurrentYear = GpsTime.get( Calendar.YEAR );
 	}
 
 	public void Open() throws IOException, UnrecoverableException {
@@ -63,7 +77,7 @@ class GpsInterface implements Runnable {
 		if( bDebug ) Log.d( "VSDroid", "GpsInterface:GpsInterface::Open" );
 		// If the adapter is null, then Bluetooth is not supported
 		if( mBluetoothAdapter == null ){
-			MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_na );
+			//MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_na );
 			throw new UnrecoverableException( "Bluetooth error" );
 		}
 
@@ -76,13 +90,13 @@ class GpsInterface implements Runnable {
 		// BT の MAC アドレスを求める
 		String s = Pref.getString( "key_bt_devices_gps", null );
 		if( s == null ){
-			MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_dev_not_selected );
+			//MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_dev_not_selected );
 			throw new UnrecoverableException( "Bluetooth error" );
 		}
 		device = mBluetoothAdapter.getRemoteDevice( s.substring( s.length() - 17 ));
 
 		try{
-			MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_connecting );
+			//MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_connecting );
 			// Get a BluetoothSocket for a connection with the
 			// given BluetoothDevice
 			if( bDebug ) Log.d( "VSDroid", "GpsInterface:GpsInterface::createRfcommSocket" );
@@ -96,7 +110,7 @@ class GpsInterface implements Runnable {
 			OutStream	= BTSock.getOutputStream();
 			
 			if( bDebug ) Log.d( "VSDroid", "GpsInterface:GpsInterface::Open:connected" );
-			MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_connected );
+			MsgHandler.sendEmptyMessage( R.string.statmsg_gps_connected );
 		}catch( SocketTimeoutException e ){
 			if( bDebug ) Log.d( "VSDroid", "GpsInterface:GpsInterface::Open:timeout" );
 			Close();
@@ -135,6 +149,98 @@ class GpsInterface implements Runnable {
 		return 0;
 	}
 
+	//*** 1行処理 ********************************************************
+	
+	private int ParseInt( String str, int iDefault ){
+		try{
+			return Integer.parseInt( str );
+		}catch( Exception e ){}
+		return iDefault;
+	}
+	
+	private double ParseDouble( String str ){
+		try{
+			return Double.parseDouble( str );
+		}catch( Exception e ){}
+		return Double.NaN;
+	}
+	
+	void Read() throws IOException {
+		String[] str = brInput.readLine().split( "," );
+		
+		if( str[ 0 ].equals( "$GPRMC" )){
+			//        時間         lat           long           knot  方位   日付
+			// 0      1          2 3           4 5            6 7     8      9
+			// $GPRMC,043431.200,A,3439.997825,N,13523.377978,E,0.602,178.29,240612,,,A*59
+			
+			int iTime = ( int )( ParseDouble( str[ 1 ]) * 1000 );
+			
+			if( iTime != iNmeaTime ){
+				iNmeaTime	= iTime;
+				iNmeaFlag	= 1;
+			}else{
+				iNmeaFlag	|= 1;
+			}
+			
+			// Lat
+			dLati = ParseDouble( str[ 3 ]);
+			dLati = Math.floor( dLati / 100 ) + ( dLati % 100.0 ) / 60.0;
+			if( str[ 4 ].equals( "S" )) dLati = -dLati;
+			
+			// Long
+			dLong = ParseDouble( str[ 5 ]);
+			dLong = Math.floor( dLong / 100 ) + ( dLong % 100.0 ) / 60.0;
+			if( str[ 6 ].equals( "W" )) dLong = -dLong;
+			
+			// Speed
+			dSpeed = ParseDouble( str[ 7 ]) * 1.85200;
+			
+			// 日付
+			int iYear	= ParseInt( str[ 9 ].substring( 4, 6 ), 0) +
+				( iCurrentYear / 100 * 100 );
+			
+			if(( iCurrentYear % 100 ) >= 50 && iYear < 50 ) iYear += 100;
+			
+			GpsTime.set(
+				iYear,
+				ParseInt( str[ 9 ].substring( 2, 4 ), 1 ) - 1,
+				ParseInt( str[ 9 ].substring( 0, 2 ), 1 ),
+				iTime / ( 10000 * 1000 ),
+				iTime / (   100 * 1000 ) % ( 100 * 1000 ),
+				iTime / (         1000 ) % (       1000 )
+			);
+			GpsTime.set( Calendar.MILLISECOND, iTime % 1000 );
+			if( bDebug ) Log.d( "VSDroid", String.format( "XMILLI>%d %s", iTime % 1000, str[ 1 ] ));
+			if( bDebug ) Log.d( "VSDroid", String.format( "ZMILLI<%d", GpsTime.get( Calendar.MILLISECOND )));
+		}
+		
+		else if( str[ 0 ].equals( "$GPGGA" )){
+			//        時間       lat           long               高度
+			// 0      1          2           3 4            5 6 789
+			// $GPGGA,233132.000,3439.997825,N,13523.377978,E,1,,,293.425,M,,,,*21
+			
+			int iTime = ( int )( ParseDouble( str[ 1 ]) * 1000 );
+			
+			if( iTime != iNmeaTime ){
+				iNmeaTime	= iTime;
+				iNmeaFlag	= 2;
+			}else{
+				iNmeaFlag	|= 2;
+			}
+			
+			dAlt = ParseDouble( str[ 9 ]);
+		}
+		
+		if( iNmeaFlag == 3 ){
+			// NMEA データが 1組分揃った
+			
+			iNmeaFlag	= 0;
+			iNmeaTime	= -1;
+			
+			MsgHandler.sendEmptyMessage( R.string.statmsg_gps_updated );
+		}
+	}
+	
 	//*** データ処理スレッド *********************************************
 
 	public void Start(){
@@ -143,7 +249,6 @@ class GpsInterface implements Runnable {
 		GpsThread.start();
 	}
 
-	volatile int uReadWdt;
 	public void run(){
 		bKillThread = false;
 		
@@ -175,13 +280,12 @@ class GpsInterface implements Runnable {
 			// 1行読む
 			while( !bKillThread ){
 				try{
-					String str = brInput.readLine();
-					if( bDebug ) Log.d( "VSDroid", str );
+					Read();
 				}catch( IOException e ){ break; }
 			}
 			
 			// ここに来たということは，何らかの理由で GPS 切断
-			MsgHandler.sendEmptyMessage( R.string.statmsg_disconnected );
+			MsgHandler.sendEmptyMessage( R.string.statmsg_gps_disconnected );
 		}
 		
 		if( bDebug ) Log.d( "VSDroid", "GpsInterface:run() loop extting." );
