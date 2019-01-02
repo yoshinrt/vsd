@@ -36,7 +36,6 @@ import java.net.SocketTimeoutException;
 import java.util.UUID;
 import java.io.*;
 import java.util.*;
-import jp.dds.vsdroid.VsdInterface;
 
 @SuppressLint("DefaultLocale")
 public class Vsdroid extends Activity {
@@ -121,9 +120,9 @@ public class Vsdroid extends Activity {
 		}
 
 		@Override
-		public void Open() throws IOException, UnrecoverableException {
+		public void OpenVsdIf() throws IOException, UnrecoverableException {
 
-			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open" );
+			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::OpenVsdIf" );
 			// If the adapter is null, then Bluetooth is not supported
 			if( mBluetoothAdapter == null ){
 				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_na );
@@ -154,27 +153,27 @@ public class Vsdroid extends Activity {
 				BTSock = device.createInsecureRfcommSocketToServiceRecord( BT_UUID );
 				
 				// ソケットの作成 12秒でタイムアウトらしい
-				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connecting..." );
+				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::OpenVsdIf:connecting..." );
 				BTSock.connect();
 				InStream	= BTSock.getInputStream();
 				OutStream	= BTSock.getOutputStream();
 				
-				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:connected" );
+				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::OpenVsdIf:connected" );
 				MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_connected );
 			}catch( SocketTimeoutException e ){
-				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:timeout" );
-				Close();
+				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::OpenVsdIf:timeout" );
+				CloseVsdIf();
 				throw new IOException( "Bluetooth error" );
 			}catch( IOException e ){
-				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Open:IOException" );
-				Close();
+				if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::OpenVsdIf:IOException" );
+				CloseVsdIf();
 				throw e;
 			}
 		}
 
 		@Override
-		public int Close(){
-			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::Close" );
+		public int CloseVsdIf(){
+			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceBluetooth::CloseVsdIf" );
 			
 			// BT 切断すると AT コマンドモードになるので，シリアル出力を止める
 			try{
@@ -227,13 +226,13 @@ public class Vsdroid extends Activity {
 		}
 
 		@Override
-		public void Open() throws UnrecoverableException {
+		public void OpenVsdIf() throws UnrecoverableException {
 			dTimePrev = -1;
 			
 			String strBuf;
 			String strToken;
 
-			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::Open" );
+			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::OpenVsdIf" );
 
 			try{
 				brEmuLog = new BufferedReader( new FileReader( Pref.getString( "key_replay_log", null )));
@@ -352,8 +351,8 @@ public class Vsdroid extends Activity {
 		}
 
 		@Override
-		public int Close(){
-			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::Close" );
+		public int CloseVsdIf(){
+			if( bDebug ) Log.d( "VSDroid", "VsdInterfaceEmu::CloseVsdIf" );
 
 			if( brEmuLog != null ){
 				try{

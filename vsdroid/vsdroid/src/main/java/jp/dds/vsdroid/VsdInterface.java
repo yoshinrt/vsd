@@ -95,6 +95,8 @@ class VsdInterface implements Runnable {
 	volatile boolean bKillThread = false;
 
 	Handler	MsgHandler	= null;
+	
+	GpsInterface	Gps	= null;
 
 	private static final int iStartGThrethold		= 1024;	// 0.25G
 	private static final int iGCaribCntMax			= 30;
@@ -255,8 +257,8 @@ class VsdInterface implements Runnable {
 		return 0;
 	}
 
-	public void Open() throws IOException, UnrecoverableException {
-		if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open" );
+	public void OpenVsdIf() throws IOException, UnrecoverableException {
+		if( bDebug ) Log.d( "VSDroid", "VsdInterface::OpenVsdIf" );
 
 		MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_connecting );
 		try{
@@ -264,18 +266,18 @@ class VsdInterface implements Runnable {
 			Sock = new Socket();
 			SocketAddress adr = new InetSocketAddress( Pref.getString( "key_ip_addr", null ), 12345 );
 			Sock.connect( adr, 1000 );
-			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:connected" );
+			if( bDebug ) Log.d( "VSDroid", "VsdInterface::OpenVsdIf:connected" );
 			InStream	= Sock.getInputStream();
 			OutStream	= Sock.getOutputStream();
 			
 			MsgHandler.sendEmptyMessage( R.string.statmsg_tcpip_connected );
 		}catch( SocketTimeoutException e ){
-			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:timeout" );
-			Close();
+			if( bDebug ) Log.d( "VSDroid", "VsdInterface::OpenVsdIf:timeout" );
+			CloseVsdIf();
 			throw new IOException( "socket timeout" );
 		}catch( IOException e ){
-			if( bDebug ) Log.d( "VSDroid", "VsdInterface::Open:IOException" );
-			Close();
+			if( bDebug ) Log.d( "VSDroid", "VsdInterface::OpenVsdIf:IOException" );
+			CloseVsdIf();
 			throw e;
 		}
 	}
@@ -495,8 +497,8 @@ class VsdInterface implements Runnable {
 		return 0;
 	}
 
-	public int Close(){
-		if( bDebug ) Log.d( "VSDroid", "VsdInterface::Close" );
+	public int CloseVsdIf(){
+		if( bDebug ) Log.d( "VSDroid", "VsdInterface::CloseVsdIf" );
 		
 		// BT 切断すると AT コマンドモードになるので，シリアル出力を止める
 		try{
@@ -512,6 +514,23 @@ class VsdInterface implements Runnable {
 		return 0;
 	}
 
+	//*** VSD + GPS open / close *****************************************
+	
+	public void Open() throws UnrecoverableException, IOException {
+		OpenVsdIf();
+		Gps = new GpsInterface( MsgHandler, Pref );
+		Gps.Start();
+	}
+	
+	public void Close(){
+		if( Gps != null ){
+			Gps.KillThread();
+			Gps.Close();
+		}
+		
+		CloseVsdIf();
+	}
+	
 	//*** sio コマンド関係 ***********************************************
 
 	public void SendCmd( String s ) throws IOException {
