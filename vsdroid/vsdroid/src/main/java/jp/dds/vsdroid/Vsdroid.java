@@ -661,6 +661,13 @@ public class Vsdroid extends Activity {
 				paint.setColor( Color.GRAY );
 				canvas.drawText( VsdInterface.FormatTime( Vsd.iTimeBestRaw ), 340, 470, paint );
 				
+				// GPS ステータス
+				if( Vsd.Gps != null && !Double.isNaN( Vsd.Gps.dLong )){
+					paint.setColor( Color.WHITE );
+					paint.setTextSize( 32 );
+					canvas.drawText( "🛰", 0, 468, paint );
+				}
+				
 				if( bDebugInfo ){
 					// デバッグ用
 					int	y = 0;
@@ -670,9 +677,11 @@ public class Vsdroid extends Activity {
 						Vsd.iThrottleRaw + Vsd.iThrottle0, Vsd.iThrottle0, Vsd.iThrottleMax + Vsd.iThrottle0 ),
 						0, y += 30, paint );
 					canvas.drawText( String.format( "Throttle(%%): %.1f", Vsd.iThrottle / 10.0 ), 0, y += 30, paint );
-					canvas.drawText( String.format( "Gx: %+.2f", Vsd.iGx / 4096.0 ), 0, y += 30, paint );
-					canvas.drawText( String.format( "Gy: %+.2f", Vsd.iGy / 4096.0 ), 0, y += 30, paint );
+					canvas.drawText( String.format( "Gx: %+.2f Gy: %+.2f", Vsd.iGx / 4096.0, Vsd.iGy / 4096.0 ), 0, y += 30, paint );
 					canvas.drawText( String.format( "Batt: %d", iBattery ), 0, y += 30, paint );
+					if( Vsd.Gps != null ){
+						canvas.drawText( String.format( "GPS: %.8f, %8f", Vsd.Gps.dLong, Vsd.Gps.dLati ), 0, y += 30, paint );
+					}
 				}
 			}
 			

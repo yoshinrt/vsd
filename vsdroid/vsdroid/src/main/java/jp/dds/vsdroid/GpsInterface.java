@@ -42,7 +42,7 @@ class GpsInterface implements Runnable {
 	int			iNmeaFlag	= 0;
 	int			iNmeaTime	= -1;
 	Calendar	GpsTime;
-	double		dLong;
+	double		dLong	= Double.NaN;
 	double		dLati;
 	double		dAlt;
 	double		dSpeed;
@@ -110,7 +110,7 @@ class GpsInterface implements Runnable {
 			OutStream	= BTSock.getOutputStream();
 			
 			if( bDebug ) Log.d( "VSDroid", "GpsInterface:GpsInterface::Open:connected" );
-			MsgHandler.sendEmptyMessage( R.string.statmsg_gps_connected );
+			//MsgHandler.sendEmptyMessage( R.string.statmsg_gps_connected );
 		}catch( SocketTimeoutException e ){
 			if( bDebug ) Log.d( "VSDroid", "GpsInterface:GpsInterface::Open:timeout" );
 			Close();
@@ -145,6 +145,8 @@ class GpsInterface implements Runnable {
 				BTSock = null;
 			}
 		}catch( IOException e ){}
+		
+		dLong = Double.NaN;
 		
 		return 0;
 	}
@@ -210,8 +212,6 @@ class GpsInterface implements Runnable {
 				iTime / (         1000 ) % (       1000 )
 			);
 			GpsTime.set( Calendar.MILLISECOND, iTime % 1000 );
-			if( bDebug ) Log.d( "VSDroid", String.format( "XMILLI>%d %s", iTime % 1000, str[ 1 ] ));
-			if( bDebug ) Log.d( "VSDroid", String.format( "ZMILLI<%d", GpsTime.get( Calendar.MILLISECOND )));
 		}
 		
 		else if( str[ 0 ].equals( "$GPGGA" )){
@@ -237,7 +237,9 @@ class GpsInterface implements Runnable {
 			iNmeaFlag	= 0;
 			iNmeaTime	= -1;
 			
-			MsgHandler.sendEmptyMessage( R.string.statmsg_gps_updated );
+			if( !Double.isNaN( dLong )){
+				MsgHandler.sendEmptyMessage( R.string.statmsg_gps_updated );
+			}
 		}
 	}
 	
@@ -285,7 +287,7 @@ class GpsInterface implements Runnable {
 			}
 			
 			// ここに来たということは，何らかの理由で GPS 切断
-			MsgHandler.sendEmptyMessage( R.string.statmsg_gps_disconnected );
+			//MsgHandler.sendEmptyMessage( R.string.statmsg_gps_disconnected );
 		}
 		
 		if( bDebug ) Log.d( "VSDroid", "GpsInterface:run() loop extting." );
@@ -309,5 +311,7 @@ class GpsInterface implements Runnable {
 
 		GpsThread = null;
 		if( bDebug ) Log.d( "VSDroid", "GpsInterface:KillThread: done" );
+		
+		dLong = Double.NaN;
 	}
 }

@@ -30,8 +30,6 @@
 	<string name="conn_mode_bluetooth">Bluetooth</string>
 	<string name="conn_mode_logreplay">ログ再生</string>
     <string name="statmsg_update">画面更新</string>
-    <string name="statmsg_gps_connected">GPS接続</string>
-    <string name="statmsg_gps_disconnected">GPS切断</string>
     <string name="statmsg_gps_updated">GPS更新</string>
 	<string name="statmsg_tcpip_connecting">TCP/IP: 接続中</string>
 	<string name="statmsg_tcpip_connected">TCP/IP: 接続完了</string>
