@@ -42,10 +42,14 @@ class GpsInterface implements Runnable {
 	int			iNmeaFlag	= 0;
 	int			iNmeaTime	= -1;
 	Calendar	GpsTime;
-	double		dLong	= Double.NaN;
+	double		dLong		= Double.NaN;
 	double		dLati;
 	double		dAlt;
 	double		dSpeed;
+	
+	int			iPrevNmeaTime	= -1;
+	double		dPrevLong		= Double.NaN;
+	double		dPrevLati;
 	
 	//*** リトライしないerror ************************************************
 	
@@ -146,7 +150,7 @@ class GpsInterface implements Runnable {
 			}
 		}catch( IOException e ){}
 		
-		dLong = Double.NaN;
+		dLong = dPrevLong = Double.NaN;
 		
 		return 0;
 	}
@@ -167,17 +171,28 @@ class GpsInterface implements Runnable {
 		return Double.NaN;
 	}
 	
+	private int ParseTime( String str ){
+		return
+			ParseInt( str.substring( 0, 2 ), 0 ) * 3600 * 1000 +
+			ParseInt( str.substring( 2, 4 ), 0 ) *   60 * 1000 +
+			( int )( ParseDouble( str.substring( 4 ))   * 1000 );
+	}
+	
 	void Read() throws IOException {
 		String[] str = brInput.readLine().split( "," );
 		
 		if( str[ 0 ].equals( "$GPRMC" )){
+			dPrevLong		= dLong;
+			dPrevLati		= dLati;
+			iPrevNmeaTime	= iNmeaTime;
+			
 			//        時間         lat           long           knot  方位   日付
 			// 0      1          2 3           4 5            6 7     8      9
 			// $GPRMC,043431.200,A,3439.997825,N,13523.377978,E,0.602,178.29,240612,,,A*59
 			
-			int iTime = ( int )( ParseDouble( str[ 1 ]) * 1000 );
+			int iTime = ParseTime( str[ 1 ]);
 			
-			if( iTime != iNmeaTime ){
+			if( iNmeaFlag == 0 ){
 				iNmeaTime	= iTime;
 				iNmeaFlag	= 1;
 			}else{
@@ -207,9 +222,9 @@ class GpsInterface implements Runnable {
 				iYear,
 				ParseInt( str[ 9 ].substring( 2, 4 ), 1 ) - 1,
 				ParseInt( str[ 9 ].substring( 0, 2 ), 1 ),
-				iTime / ( 10000 * 1000 ),
-				iTime / (   100 * 1000 ) % ( 100 * 1000 ),
-				iTime / (         1000 ) % (       1000 )
+				iTime / ( 3600 * 1000 ),
+				iTime / (   60 * 1000 ) % 60,
+				iTime / (        1000 ) % 60
 			);
 			GpsTime.set( Calendar.MILLISECOND, iTime % 1000 );
 		}
@@ -219,9 +234,9 @@ class GpsInterface implements Runnable {
 			// 0      1          2           3 4            5 6 789
 			// $GPGGA,233132.000,3439.997825,N,13523.377978,E,1,,,293.425,M,,,,*21
 			
-			int iTime = ( int )( ParseDouble( str[ 1 ]) * 1000 );
+			int iTime = ParseTime( str[ 1 ]);
 			
-			if( iTime != iNmeaTime ){
+			if( iNmeaFlag == 0 ){
 				iNmeaTime	= iTime;
 				iNmeaFlag	= 2;
 			}else{
@@ -235,7 +250,6 @@ class GpsInterface implements Runnable {
 			// NMEA データが 1組分揃った
 			
 			iNmeaFlag	= 0;
-			iNmeaTime	= -1;
 			
 			if( !Double.isNaN( dLong )){
 				MsgHandler.sendEmptyMessage( R.string.statmsg_gps_updated );
@@ -312,6 +326,6 @@ class GpsInterface implements Runnable {
 		GpsThread = null;
 		if( bDebug ) Log.d( "VSDroid", "GpsInterface:KillThread: done" );
 		
-		dLong = Double.NaN;
+		dLong = dPrevLong = Double.NaN;
 	}
 }

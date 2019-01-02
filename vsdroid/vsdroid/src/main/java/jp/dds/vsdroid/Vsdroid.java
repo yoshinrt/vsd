@@ -325,10 +325,10 @@ public class Vsdroid extends Activity {
 					);
 
 					// LAP モード以外の 0:00.000 をスキップ
-					if( !( j == 0 && iRtcPrevRaw != 0 )){
+					if( !( j == 0 && iRtcPrevRaw != -1 )){
 
 						// 0:00.000 が来た時，Lap Ready を解除する
-						if( j == 0 && iRtcPrevRaw == 0 ) j = 1;
+						if( j == 0 && iRtcPrevRaw == -1 ) j = 1;
 						j += iRtcPrevRaw;
 						iIdx = Pack( iIdx, j );
 						iIdx = Pack( iIdx, j >> 16 );
@@ -641,7 +641,7 @@ public class Vsdroid extends Activity {
 					case VsdInterface.MODE_ZERO_ONE:	s = "0-100km/h";
 				}
 				
-				if( Vsd.iRtcPrevRaw == 0 ){
+				if( Vsd.iRtcPrevRaw == -1 ){
 					// まだスタートしてない
 					s += " ready";
 				}

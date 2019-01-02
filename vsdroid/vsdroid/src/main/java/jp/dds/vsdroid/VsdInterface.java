@@ -27,7 +27,7 @@ class VsdInterface implements Runnable {
 	static final int MODE_ZERO_ONE	= 3;
 	static final int MODE_NUM		= 4;
 
-	static final int TIMER_HZ	= 200000;
+	static final int TIMER_HZ	= 200000;	// 1000 で割り切れないときは★を要修正
 	static final int TSC_SHIFT	= 5;
 
 	// スピード * 100/Taco 比
@@ -52,7 +52,7 @@ class VsdInterface implements Runnable {
 	int		iTacho			= 0;
 	int		iSpeedRaw		= 0;
 	int		iRtcRaw			= 0;
-	int		iRtcPrevRaw		= 0;
+	int		iRtcPrevRaw		= -1;
 	int		iMileageRaw		= 0;
 	int		iTSCRaw			= 0;
 	int 	iSectorCnt		= 0;
@@ -116,6 +116,11 @@ class VsdInterface implements Runnable {
 	static final int ERROR			= -1;
 	static final int FATAL_ERROR	= -2;
 	
+	// コントロールライン
+	double	dCtrlLineX0, dCtrlLineY0;
+	double	dCtrlLineX1, dCtrlLineY1;
+	double	dCtrlLineAngle;
+	
 	//*** リトライしないerror ************************************************
 	
 	public class UnrecoverableException extends Exception {
@@ -146,7 +151,15 @@ class VsdInterface implements Runnable {
 			1000 * ( iTime % TIMER_HZ ) / TIMER_HZ
 		);
 	}
-
+	
+	// 緯度・経度から線分の角度を算出
+	double ComputeAngle( double x0, double y0, double x1, double y1 ){
+		return Math.atan2(
+			y1 - y0,
+			( x1 - x0 ) * Math.cos( y0 * ( Math.PI / 180 ))
+		);
+	}
+	
 	//************************************************************************
 
 	// コンストラクタ - 変数の初期化だけやってる
@@ -156,7 +169,7 @@ class VsdInterface implements Runnable {
 		iTacho			= 0;
 		iSpeedRaw		= 0;
 		iRtcRaw			= 0;
-		iRtcPrevRaw		= 0;
+		iRtcPrevRaw		= -1;
 		iMileageRaw		= 0;
 		iTSCRaw			= 0;
 		iThrottle0		= -48650;	// スロットルの 0地点    (実測値 49650-39277)
@@ -190,6 +203,18 @@ class VsdInterface implements Runnable {
 
 		InStream		= null;
 		OutStream		= null;
+		
+		// ★仮 鈴鹿ツインサーキット
+		dCtrlLineX0	= 136.4978042;
+		dCtrlLineY0	= 34.805004;
+		dCtrlLineX1	= 136.4962338;
+		dCtrlLineY1	= 34.806385;
+		
+		dCtrlLineAngle	= ComputeAngle(
+			dCtrlLineX0, dCtrlLineY0,
+			dCtrlLineX1, dCtrlLineY1
+		) + Math.PI / 2;
+		if( dCtrlLineAngle > Math.PI ) dCtrlLineAngle -= 2 * Math.PI;
 	}
 
 	// 2byte を 16bit int にアンパックする
@@ -377,7 +402,7 @@ class VsdInterface implements Runnable {
 
 				if( ++iSectorCnt >= iSectorCntMax ){
 					// 規定のセクタを通過したので，NewLap
-					if( iRtcPrevRaw != 0 ){
+					if( iRtcPrevRaw != -1 ){
 						// 1周回った
 						LapState = LAP_STATE.UPDATE;
 
@@ -387,7 +412,7 @@ class VsdInterface implements Runnable {
 
 						if( iMainMode != MODE_LAPTIME ){
 							// Laptime モード以外でゴールしたら，Ready 状態に戻す
-							iRtcPrevRaw = 0;
+							iRtcPrevRaw = -1;
 						}
 					}else{
 						// ラップスタート
@@ -395,7 +420,7 @@ class VsdInterface implements Runnable {
 					}
 					iRtcPrevRaw	= iRtcRaw;
 					iSectorCnt	= 0;
-				}else if( iRtcPrevRaw != 0 ){
+				}else if( iRtcPrevRaw != -1 ){
 					// 中間セクタ通過
 					LapState = LAP_STATE.SECTOR;
 				}
@@ -531,6 +556,7 @@ class VsdInterface implements Runnable {
 		// まだ動いていないので，Log 保留
 		if( fsLog == null ) return;
 		
+		// ログ出力
 		try{
 			fsLog.write(
 				String.format(
@@ -542,6 +568,63 @@ class VsdInterface implements Runnable {
 				).getBytes()
 			);
 		}catch( IOException e ){}
+		
+		if( Double.isNaN( Gps.dPrevLong )) return;
+		
+		// コントロールライン通過から 10秒経過するまでスキップ
+		int iDiffTime = Gps.iNmeaTime - iRtcPrevRaw;
+		if( iDiffTime < 0 ) iDiffTime += 3600 * 24 * 1000;
+		if( iDiffTime < 10 * 1000 ) return;
+		
+		// コントロールライン通過判定
+		double x1 = dCtrlLineX0;
+		double y1 = dCtrlLineY0;
+		double x2 = dCtrlLineX1;
+		double y2 = dCtrlLineY1;
+		double x3 = Gps.dPrevLong;
+		double y3 = Gps.dPrevLati;
+		double x4 = Gps.dLong;
+		double y4 = Gps.dLati;
+		
+		double s1, s2, s3, s4;
+		
+		// 交点が iLogNum ～ +1 線分上かの判定
+		s1 = ( x1 - x2 ) * ( y3 - y1 ) + ( y1 - y2 ) * ( x1 - x3 );
+		s2 = ( x1 - x2 ) * ( y4 - y1 ) + ( y1 - y2 ) * ( x1 - x4 );
+		if( s1 * s2 > 0 ) return;
+		
+		// 交点がスタートライン線分上かの判定
+		s3 = ( x3 - x4 ) * ( y1 - y3 ) + ( y3 - y4 ) * ( x3 - x1 );
+		s4 = ( x3 - x4 ) * ( y2 - y3 ) + ( y3 - y4 ) * ( x3 - x2 );
+		if( s3 * s4 > 0 ) return;
+		
+		// 進行方向の判定，dAngle ±45度
+		double dAngle = ComputeAngle( x3, y3, x4, y4 ) - dCtrlLineAngle;
+		if     ( dAngle < -Math.PI ) dAngle += Math.PI * 2;
+		else if( dAngle >  Math.PI ) dAngle -= Math.PI * 2;
+		if( dAngle < -Math.PI / 2 || dAngle > Math.PI / 2 ) return;
+		
+		/*** ここまで来たらコントロールライン通過 ***/
+		
+		// 直前座標の時間との差分, 5Hz なら 200[ms]
+		int iTime = Gps.iNmeaTime - Gps.iPrevNmeaTime;
+		if( iTime < 0 ) iTime += 3600 * 24 * 1000;
+		
+		// 200ms 以内の通過時間を等比分割で求める
+		if( s1 == s2 ) iTime = 0;
+		else iTime = ( int )( iTime * s1 / ( s1 - s2 ));
+		
+		iTime += Gps.iPrevNmeaTime;	// 通過時間確定
+		
+		if( iRtcPrevRaw != -1 ){
+			// 1周回った
+			++iLapNum;
+			iTimeLastRaw = iTime - iRtcPrevRaw;
+			if( iTimeLastRaw < 0 ) iTimeLastRaw += 24 * 3600 * 1000;
+			iTimeLastRaw = iTimeLastRaw * ( TIMER_HZ / 1000 );	// TIMER_HZ が 1000 で割り切れないときは★要修正
+			if( iTimeBestRaw == 0 || iTimeLastRaw < iTimeBestRaw ) iTimeBestRaw = iTimeLastRaw;
+		}
+		iRtcPrevRaw	= iTime;
 	}
 	
 	//*** VSD + GPS open / close *****************************************
@@ -715,7 +798,7 @@ class VsdInterface implements Runnable {
 			iLogHz
 		));
 		
-		iRtcPrevRaw		= 0;
+		iRtcPrevRaw		= -1;
 		iSectorCnt		= 0;
 		bLogStart		= false;	// TSC と実時間の同期を取り直す
 	}
