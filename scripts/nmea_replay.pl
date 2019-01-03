@@ -2,8 +2,8 @@
 
 use Time::HiRes qw(sleep);
 
-$Scale	= 10;	# 倍速設定
-$Dist	= 10;	# 最低移動距離 [m]
+$Scale	= 1;	# 倍速設定
+$Dist	= 1;	# 最低移動距離 [m]
 
 # BT COM の着信を有効，COMn の n - 1 をttySm に設定
 open( fpCom, "> /dev/ttyS4" ) || die( "Can't open COM\n" );
@@ -75,9 +75,9 @@ while( <fpIn> ){
 		$Sleep = 5 if( $Sleep > 5 );
 		
 		# NMEA の時刻を現在時に修正
-		( $sec, $min, $hour, $mday, $mon, $year ) = gmtime( time );
-		$_[ 1 ] = sprintf( '%02d%02d%02d', $hour, $min, $sec );
-		$_[ 9 ] = sprintf( '%02d%02d%02d', $mday, $mon + 1, $year % 100 );
+#		( $sec, $min, $hour, $mday, $mon, $year ) = gmtime( time );
+#		$_[ 1 ] = sprintf( '%02d%02d%02d', $hour, $min, $sec );
+#		$_[ 9 ] = sprintf( '%02d%02d%02d', $mday, $mon + 1, $year % 100 );
 		
 		$_ = '';
 		

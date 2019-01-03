@@ -146,7 +146,7 @@ while( <fpIn> ){
 	);
 	
 	# ラップタイム
-	if( defined( $_[ $IdxLapTime ] ) && $_[ $IdxLapTime ] =~ /(.+):(.+)/){
+	if( 0 && defined( $_[ $IdxLapTime ] ) && $_[ $IdxLapTime ] =~ /(.+):(.+)/){
 		# ラップタイム記録発見
 		$PrevLapTime += int(( $1 * 60 + $2 ) * $TIMER_HZ );
 		$_ .= pack( 'I', $PrevLapTime );
