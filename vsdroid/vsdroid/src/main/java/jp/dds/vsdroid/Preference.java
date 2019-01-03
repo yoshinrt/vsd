@@ -187,7 +187,10 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		}
 		SetupSummery( sharedPreferences, key );
 
-		if( key.equals( "key_connection_mode" ) || key.equals( "key_roms" )){
+		if(
+			key.equals( "key_connection_mode" ) || key.equals( "key_roms" ) ||
+			key.equals( "key_circuit" ) || key.equals( "key_bt_devices_gps" )
+		){
 			setResult( RESULT_RENEW );
 		}
 	}

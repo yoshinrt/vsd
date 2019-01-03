@@ -117,8 +117,8 @@ class VsdInterface implements Runnable {
 	static final int FATAL_ERROR	= -2;
 	
 	// コントロールライン
-	double	dCtrlLineX0, dCtrlLineY0;
-	double	dCtrlLineX1, dCtrlLineY1;
+	double	dCtrlLineX0 = Double.NaN, dCtrlLineY0 = Double.NaN;
+	double	dCtrlLineX1 = Double.NaN, dCtrlLineY1 = Double.NaN;
 	double	dCtrlLineAngle;
 	
 	//*** リトライしないerror ************************************************
@@ -203,18 +203,6 @@ class VsdInterface implements Runnable {
 
 		InStream		= null;
 		OutStream		= null;
-		
-		// ★仮 鈴鹿ツインサーキット
-		dCtrlLineX0	= 136.4978042;
-		dCtrlLineY0	= 34.805004;
-		dCtrlLineX1	= 136.4962338;
-		dCtrlLineY1	= 34.806385;
-		
-		dCtrlLineAngle	= ComputeAngle(
-			dCtrlLineX0, dCtrlLineY0,
-			dCtrlLineX1, dCtrlLineY1
-		) + Math.PI / 2;
-		if( dCtrlLineAngle > Math.PI ) dCtrlLineAngle -= 2 * Math.PI;
 	}
 
 	// 2byte を 16bit int にアンパックする
@@ -470,24 +458,22 @@ class VsdInterface implements Runnable {
 		CalDev.setTimeInMillis( System.currentTimeMillis());
 
 		// 基本データ
-		StringBuilder s = new StringBuilder(
-			String.format(
-				"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
-				"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
-				"%d\t%.2f\t%.2f\t" +
-				"%.3f\t%.3f\t" +
-				"%.1f\t%d\t%d",
-				Cal.get( Calendar.YEAR ), Cal.get( Calendar.MONTH ) + 1, Cal.get( Calendar.DATE ),
-				Cal.get( Calendar.HOUR_OF_DAY ), Cal.get( Calendar.MINUTE ), Cal.get( Calendar.SECOND ), Cal.get( Calendar.MILLISECOND ),
-				CalDev.get( Calendar.YEAR ), CalDev.get( Calendar.MONTH ) + 1, CalDev.get( Calendar.DATE ),
-				CalDev.get( Calendar.HOUR_OF_DAY ), CalDev.get( Calendar.MINUTE ), CalDev.get( Calendar.SECOND ), CalDev.get( Calendar.MILLISECOND ),
-				iTacho, iSpeedRaw / 100.0,
-				iMileageRaw * ( 1000 / dPulsePer1Km ),
-				iGy / 4096.0, iGx / 4096.0,
-				iThrottle / 10.0, iThrottleRaw,
-				iTSCRaw
-			)
-		);
+		StringBuilder s = new StringBuilder( String.format(
+			"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
+			"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
+			"%d\t%.2f\t%.2f\t" +
+			"%.3f\t%.3f\t" +
+			"%.1f\t%d\t%d",
+			Cal.get( Calendar.YEAR ), Cal.get( Calendar.MONTH ) + 1, Cal.get( Calendar.DATE ),
+			Cal.get( Calendar.HOUR_OF_DAY ), Cal.get( Calendar.MINUTE ), Cal.get( Calendar.SECOND ), Cal.get( Calendar.MILLISECOND ),
+			CalDev.get( Calendar.YEAR ), CalDev.get( Calendar.MONTH ) + 1, CalDev.get( Calendar.DATE ),
+			CalDev.get( Calendar.HOUR_OF_DAY ), CalDev.get( Calendar.MINUTE ), CalDev.get( Calendar.SECOND ), CalDev.get( Calendar.MILLISECOND ),
+			iTacho, iSpeedRaw / 100.0,
+			iMileageRaw * ( 1000 / dPulsePer1Km ),
+			iGy / 4096.0, iGx / 4096.0,
+			iThrottle / 10.0, iThrottleRaw,
+			iTSCRaw
+		));
 
 		// ラップタイム
 		switch( LapState ){
@@ -569,7 +555,7 @@ class VsdInterface implements Runnable {
 			);
 		}catch( IOException e ){}
 		
-		if( Double.isNaN( Gps.dPrevLong )) return;
+		if( Double.isNaN( Gps.dPrevLong ) || Double.isNaN( dCtrlLineX0 )) return;
 		
 		// コントロールライン通過から 10秒経過するまでスキップ
 		int iDiffTime = Gps.iNmeaTime - iRtcPrevRaw;
@@ -627,7 +613,36 @@ class VsdInterface implements Runnable {
 		iRtcPrevRaw	= iTime;
 	}
 	
-	//*** VSD + GPS open / close *****************************************
+	//*** コントロールライン設定 *********************************************
+	
+	private void LoadCtrlLine(){
+		KmlManager Kml = new KmlManager();
+		
+		if(
+			Kml.Load( Pref.getString( "key_circuit", null )) == KmlManager.OK &&
+			Kml.m_Coordinates.size() >= 4
+		){
+			dCtrlLineX0	= Kml.m_Coordinates.get( 0 );
+			dCtrlLineY0	= Kml.m_Coordinates.get( 1 );
+			dCtrlLineX1	= Kml.m_Coordinates.get( 2 );
+			dCtrlLineY1	= Kml.m_Coordinates.get( 3 );
+			
+			dCtrlLineAngle	= ComputeAngle(
+				dCtrlLineX0, dCtrlLineY0,
+				dCtrlLineX1, dCtrlLineY1
+			) + Math.PI / 2;
+			if( dCtrlLineAngle > Math.PI ) dCtrlLineAngle -= 2 * Math.PI;
+			
+			if( bDebug ) Log.d( "VSDroid", String.format(
+				"(%f,%f)-(%f,%f),%d",
+				dCtrlLineX0, dCtrlLineY0,
+				dCtrlLineX1, dCtrlLineY1,
+				( int )( dCtrlLineAngle * ( 180 / Math.PI ))
+			));
+		}
+	}
+	
+	//*** VSD + GPS open / close *********************************************
 	
 	public void Open() throws UnrecoverableException, IOException {
 		OpenVsdIf();
@@ -644,7 +659,7 @@ class VsdInterface implements Runnable {
 		CloseVsdIf();
 	}
 	
-	//*** sio コマンド関係 ***********************************************
+	//*** sio コマンド関係 ***************************************************
 
 	public void SendCmd( String s ) throws IOException {
 		if( OutStream == null ) return;
@@ -809,6 +824,8 @@ class VsdInterface implements Runnable {
 		// VSD スレッド起動
 		VsdThread = new Thread( this );
 		VsdThread.start();
+		
+		LoadCtrlLine();
 	}
 
 	volatile int uReadWdt;

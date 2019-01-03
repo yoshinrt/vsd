@@ -155,7 +155,7 @@ class GpsInterface implements Runnable {
 		return 0;
 	}
 
-	//*** 1行処理 ********************************************************
+	//*** 1行処理 ************************************************************
 	
 	private int ParseInt( String str, int iDefault ){
 		try{

@@ -752,7 +752,7 @@ public class Vsdroid extends Activity {
 		){
 			// BT イネーブルダイアログから帰ってきたか，
 			// 接続モードが変更されたか，
-			// Pref がからの状態での preferenceScreen から帰ってきたので，
+			// Pref が空の状態での preferenceScreen から帰ってきたので，
 			// VsdThread を停止後，VsdInterface を再構築する
 			if( Vsd != null ) Vsd.KillThread();
 			CreateVsdInterface();
