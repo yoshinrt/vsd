@@ -302,19 +302,17 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	for( int i = 1; i < m_GPSLog->GetCnt() - 1; ++i ){
 		
 		/*** 交差判定，交点判定 ***/
-		double s1, s2, a;
-		
-		// 交点がスタートライン線分上かの判定
-		s1 = ( x4 - x3 ) * ( y1 - y3 ) - ( x1 - x3 ) * ( y4 - y3 );
-		s2 = ( x4 - x3 ) * ( y3 - y2 ) - ( x3 - x2 ) * ( y4 - y3 );
-		a = ( s1 + s2 == 0 ) ? -1 : s1 / ( s1 + s2 );
-		if( !( 0 <= a && a <= 1 )) continue;
+		double s1, s2, s3, s4;
 		
 		// 交点が iLogNum ～ +1 線分上かの判定
-		s1 = ( x2 - x1 ) * ( y3 - y1 ) - ( y2 - y1 ) * ( x3 - x1 );
-		s2 = ( x2 - x1 ) * ( y1 - y4 ) - ( y2 - y1 ) * ( x1 - x4 );
-		a = ( s1 + s2 == 0 ) ? -1 : s1 / ( s1 + s2 );
-		if( !( 0 <= a && a < 1 )) continue;
+		s1 = ( x1 - x2 ) * ( y3 - y1 ) + ( y1 - y2 ) * ( x1 - x3 );
+		s2 = ( x1 - x2 ) * ( y4 - y1 ) + ( y1 - y2 ) * ( x1 - x4 );
+		if( s2 == 0 || s1 * s2 > 0 ) continue;
+		
+		// 交点がスタートライン線分上かの判定
+		s3 = ( x3 - x4 ) * ( y1 - y3 ) + ( y3 - y4 ) * ( x3 - x1 );
+		s4 = ( x3 - x4 ) * ( y2 - y3 ) + ( y3 - y4 ) * ( x3 - x2 );
+		if( s3 * s4 > 0 ) continue;
 		
 		// 進行方向の判定，dAngle ±45度
 		double dAngle2 = dAngle - atan2(
@@ -335,7 +333,7 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 		#undef y4
 		
 		// 半端な LogNum
-		dLogNum = i + a;
+		dLogNum = i + s1 / ( s1 - s2 );
 		iTime = m_GPSLog->GetTime( dLogNum );
 		
 		if( m_piParamS[ SHADOW_LAP_START ] - 1 <= iLapNum && iLapNum <= m_piParamS[ SHADOW_LAP_END ] ){
