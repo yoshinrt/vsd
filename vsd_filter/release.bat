@@ -1,5 +1,5 @@
 @echo off
-: .tab=4
+: -*- tab-width: 4 -*-
 
 set path=%path%;c:\cygwin\bin
 

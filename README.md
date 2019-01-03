@@ -20,7 +20,7 @@ VSD プロジェクトは，自動車のサーキット走行などにおける�
 ビルド方法 (vsd_filter のみ)
 ------
 ### 必要な環境 ###
-* Microsoft Visual Studio Community 2015
+* Microsoft Visual Studio Community 2017
 * cygwin (make, bash, perl, git, zip, tar, bzip2, etc...)
 
 ### ビルド手順 ###
