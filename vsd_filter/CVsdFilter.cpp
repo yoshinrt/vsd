@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -33,7 +33,7 @@ CVsdFilter	*g_Vsd;
 
 CScriptRoot	CVsdFilter::m_ScriptRoot;
 
-/*** ƒRƒ“ƒXƒgƒ‰ƒNƒ^ *********************************************************/
+/*** ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ *********************************************************/
 
 void CVsdFilter::Constructor( void ){
 	
@@ -43,7 +43,7 @@ void CVsdFilter::Constructor( void ){
 	
 	m_bCalcLapTimeReq	= TRUE;
 	
-	m_Polygon			= NULL;	// DrawPolygon —pƒoƒbƒtƒ@
+	m_Polygon			= NULL;	// DrawPolygon ç”¨ãƒãƒƒãƒ•ã‚¡
 	m_pFont				= NULL;
 	
 	m_szLogFile			= NULL;
@@ -58,14 +58,14 @@ void CVsdFilter::Constructor( void ){
 	m_szPluginDirW		= NULL;
 	m_bConsoleOn		= FALSE;
 	
-	// str param ‚É‰Šú’lİ’è
+	// str param ã«åˆæœŸå€¤è¨­å®š
 	#define DEF_STR_PARAM( id, var, init, conf_name ) StringNew( var, init );
 	#include "def_str_param.h"
 	
-	// plugin dll path æ“¾
+	// plugin dll path å–å¾—
 	SetPluginDir();
 	
-	// SkinDir ƒZƒbƒg
+	// SkinDir ã‚»ãƒƒãƒˆ
 	SetSkinFile( m_szSkinFile );
 	
 	m_Script	= NULL;
@@ -74,17 +74,17 @@ void CVsdFilter::Constructor( void ){
 	m_iHeight	= 0;
 	m_bSaving	= FALSE;
 	
-	//---- GDI+‚Ì‰Šúİ’è
+	//---- GDI+ã®åˆæœŸè¨­å®š
 	COle::Initialize();
 	Gdiplus::GdiplusStartup( &m_gdiplusToken, &m_gdiplusStartupInput, NULL );
 	
-	// WinInet “¯Ú‘±”
+	// WinInet åŒæ™‚æ¥ç¶šæ•°
 	DWORD		uMaxConnect = 30;
 	InternetSetOption( NULL, INTERNET_OPTION_MAX_CONNS_PER_SERVER, &uMaxConnect, sizeof( DWORD ));
 	InternetSetOption( NULL, INTERNET_OPTION_MAX_CONNS_PER_1_0_SERVER, &uMaxConnect, sizeof( DWORD ));
 }
 
-/*** ƒfƒXƒgƒ‰ƒNƒ^ ***********************************************************/
+/*** ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ ***********************************************************/
 
 void CVsdFilter::Destructor( void ){
 	delete m_Script;
@@ -104,12 +104,12 @@ void CVsdFilter::Destructor( void ){
 	delete [] m_Polygon;
 	delete m_pFont;
 	
-	//---- GDI+‚Ì‰ğ•ú
+	//---- GDI+ã®è§£æ”¾
 	Gdiplus::GdiplusShutdown( m_gdiplusToken );
 	COle::Uninitialize();
 }
 
-/*** ƒƒOƒŠ[ƒh ************************************************************/
+/*** ãƒ­ã‚°ãƒªãƒ¼ãƒ‰ ************************************************************/
 
 int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc ){
 	if( pLog ) delete pLog;
@@ -130,7 +130,7 @@ int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szR
 		pLapLog->m_iLapSrc = pLog == m_VsdLog ? LAPSRC_VSD : LAPSRC_GPS;
 		
 		if( m_LapLog ){
-			// d•¡‚µ‚Ä‚¢‚é‚Ì‚ÅC—Dæ“x‚Ì‚‚¢ƒ‚[ƒh‚ğc‚·‚©CVSD ‚Ì•û‚ğ—Dæ
+			// é‡è¤‡ã—ã¦ã„ã‚‹ã®ã§ï¼Œå„ªå…ˆåº¦ã®é«˜ã„ãƒ¢ãƒ¼ãƒ‰ã‚’æ®‹ã™ã‹ï¼ŒVSD ã®æ–¹ã‚’å„ªå…ˆ
 			if(
 				m_LapLog->m_iLapMode <  LAPMODE_MAGNET ||
 				m_LapLog->m_iLapMode == LAPMODE_MAGNET && pLog == m_VsdLog
@@ -153,11 +153,11 @@ int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szR
 BOOL CVsdFilter::ParseMarkStr( const char *szMark ){
 	
 	do{
-		while( *szMark && !isdigit( *szMark )) ++szMark;	// ”š‚Ü‚ÅƒXƒLƒbƒv
+		while( *szMark && !isdigit( *szMark )) ++szMark;	// æ•°å­—ã¾ã§ã‚¹ã‚­ãƒƒãƒ—
 		if( !*szMark ) break;
 		
 		SetFrameMark( atoi( szMark ));
-		if( szMark = strchr( szMark, ',' )) ++szMark;	// Ÿ‚Ìƒpƒ‰ƒ[ƒ^
+		if( szMark = strchr( szMark, ',' )) ++szMark;	// æ¬¡ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 	}while( szMark );
 	
 	m_bCalcLapTimeReq = TRUE;
@@ -165,41 +165,41 @@ BOOL CVsdFilter::ParseMarkStr( const char *szMark ){
 }
 
 
-/*** ƒ‰ƒbƒv”Ô† ¨ ƒƒO”Ô† •ÏŠ· ********************************************/
+/*** ãƒ©ãƒƒãƒ—ç•ªå· â†’ ãƒ­ã‚°ç•ªå· å¤‰æ› ********************************************/
 
 double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
 	
-	// iLapNum ‚ª‚¨‚©‚µ‚¢‚Æ‚«‚Í 0 ‚ğ•Ô‚µ‚Æ‚­
-	if( iLapNum < 0 ) return 2;	// ”ÔŒ¢‚ğœ‚¢‚½ Time=0 ‚ÌƒƒO
+	// iLapNum ãŒãŠã‹ã—ã„ã¨ãã¯ 0 ã‚’è¿”ã—ã¨ã
+	if( iLapNum < 0 ) return 2;	// ç•ªçŠ¬ã‚’é™¤ã„ãŸ Time=0 ã®ãƒ­ã‚°
 	
 	if( m_LapLog->m_iLapSrc == LAPSRC_VSD ){
-		// fLogNum ‚Í VSD ƒƒO”Ô†
+		// fLogNum ã¯ VSD ãƒ­ã‚°ç•ªå·
 		if( Log == m_VsdLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
 		
-		// ƒ‰ƒbƒv”Ô†(VSD)¨GPS ƒƒO”Ô†‚É•ÏŠ·
+		// ãƒ©ãƒƒãƒ—ç•ªå·(VSD)â†’GPS ãƒ­ã‚°ç•ªå·ã«å¤‰æ›
 		return Log->GetIndex(
 			m_VsdLog->GetTime( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME,
 			&VsdSt, &GPSSt
 		);
 	}else if( m_LapLog->m_iLapSrc == LAPSRC_GPS ){
-		// fLogNum ‚Í GPS ƒƒO”Ô†
+		// fLogNum ã¯ GPS ãƒ­ã‚°ç•ªå·
 		if( Log == m_GPSLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
 		
-		// ƒ‰ƒbƒv”Ô†(GPS)¨VSD ƒƒO”Ô†‚É•ÏŠ·
+		// ãƒ©ãƒƒãƒ—ç•ªå·(GPS)â†’VSD ãƒ­ã‚°ç•ªå·ã«å¤‰æ›
 		return Log->GetIndex(
 			Log->GetTime( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME,
 			&GPSSt, &VsdSt
 		);
 	}
 	
-	// fLogNum ‚ÍƒrƒfƒIƒtƒŒ[ƒ€”Ô†
+	// fLogNum ã¯ãƒ“ãƒ‡ã‚ªãƒ•ãƒ¬ãƒ¼ãƒ ç•ªå·
 	return Log->GetIndex(
 		m_LapLog->m_Lap[ iLapNum ].fLogNum,
 		&VideoSt, Log == m_VsdLog ? &VsdSt : &GPSSt
 	);
 }
 
-/*** ƒ‰ƒbƒvƒ^ƒCƒ€Ä¶¬ (è“®) **********************************************/
+/*** ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ å†ç”Ÿæˆ (æ‰‹å‹•) **********************************************/
 
 CLapLog *CVsdFilter::CreateLapTimeHand( int iLapSrc ){
 	
@@ -225,7 +225,7 @@ CLapLog *CVsdFilter::CreateLapTimeHand( int iLapSrc ){
 		}
 		
 		if( m_piParamT[ TRACK_SLineWidth ] < 0 ){
-			// ƒWƒ€ƒJ[ƒiƒ‚[ƒh
+			// ã‚¸ãƒ ã‚«ãƒ¼ãƒŠãƒ¢ãƒ¼ãƒ‰
 			LapTime.uLap	= ( pLapLog->m_iLapNum / 2 ) + 1;
 			LapTime.iTime	= ( pLapLog->m_iLapNum & 1 ) ? iTime - iPrevTime : 0;
 		}else{
@@ -243,14 +243,14 @@ CLapLog *CVsdFilter::CreateLapTimeHand( int iLapSrc ){
 		delete pLapLog;
 		return NULL;
 	}
-	LapTime.fLogNum	= FLT_MAX;	// ”ÔŒ¢
-	LapTime.iTime	= 0;		// ”ÔŒ¢
+	LapTime.fLogNum	= FLT_MAX;	// ç•ªçŠ¬
+	LapTime.iTime	= 0;		// ç•ªçŠ¬
 	pLapLog->m_Lap.push_back( LapTime );
 	
 	return pLapLog;
 }
 
-/*** ƒ‰ƒbƒvƒ^ƒCƒ€Ä¶¬ (GPS auto) ******************************************/
+/*** ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ å†ç”Ÿæˆ (GPS auto) ******************************************/
 
 CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	
@@ -259,13 +259,13 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	
 	if(( iFrame = GetFrameMark( 0 )) < 0 ) return NULL;
 	
-	/*** ƒXƒ^[ƒgƒ‰ƒCƒ“‚ÌˆÊ’u‚ğæ“¾ ***/
-	// iFrame ‚É‘Î‰‚·‚é GPS ƒƒO”Ô†æ“¾
+	/*** ã‚¹ã‚¿ãƒ¼ãƒˆãƒ©ã‚¤ãƒ³ã®ä½ç½®ã‚’å–å¾— ***/
+	// iFrame ã«å¯¾å¿œã™ã‚‹ GPS ãƒ­ã‚°ç•ªå·å–å¾—
 	double dLogNum = GetLogIndex( iFrame, GPS, -1 );
 	
 	int iLogNum = ( int )dLogNum;
 	
-	// iLogNum ` iLogNum + 1 ‚Ì•ûˆÊ‚ğZo
+	// iLogNum ï½ iLogNum + 1 ã®æ–¹ä½ã‚’ç®—å‡º
 	
 	double dAngle = atan2(
 		( m_GPSLog->Y0( iLogNum + 1 ) - m_GPSLog->Y0( iLogNum )),
@@ -281,8 +281,8 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	#define x4 m_GPSLog->X0( i + 1 )
 	#define y4 m_GPSLog->Y0( i + 1 )
 	
-	// ‰¼‘zŒõ“dŠÇ‚ÌˆÊ’u‚ğ‹‚ß‚é
-	x2 = m_GPSLog->X0( dLogNum );	// ƒXƒ^[ƒg’n“_
+	// ä»®æƒ³å…‰é›»ç®¡ã®ä½ç½®ã‚’æ±‚ã‚ã‚‹
+	x2 = m_GPSLog->X0( dLogNum );	// ã‚¹ã‚¿ãƒ¼ãƒˆåœ°ç‚¹
 	y2 = m_GPSLog->Y0( dLogNum );
 	
 	x1 = x2 + cos( dAngle + 90 * ToRAD ) * SLineWidth / 2;
@@ -301,22 +301,22 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	
 	for( int i = 1; i < m_GPSLog->GetCnt() - 1; ++i ){
 		
-		/*** Œğ·”»’èCŒğ“_”»’è ***/
+		/*** äº¤å·®åˆ¤å®šï¼Œäº¤ç‚¹åˆ¤å®š ***/
 		double s1, s2, a;
 		
-		// Œğ“_‚ªƒXƒ^[ƒgƒ‰ƒCƒ“ü•ªã‚©‚Ì”»’è
+		// äº¤ç‚¹ãŒã‚¹ã‚¿ãƒ¼ãƒˆãƒ©ã‚¤ãƒ³ç·šåˆ†ä¸Šã‹ã®åˆ¤å®š
 		s1 = ( x4 - x3 ) * ( y1 - y3 ) - ( x1 - x3 ) * ( y4 - y3 );
 		s2 = ( x4 - x3 ) * ( y3 - y2 ) - ( x3 - x2 ) * ( y4 - y3 );
 		a = ( s1 + s2 == 0 ) ? -1 : s1 / ( s1 + s2 );
 		if( !( 0 <= a && a <= 1 )) continue;
 		
-		// Œğ“_‚ª iLogNum ` +1 ü•ªã‚©‚Ì”»’è
+		// äº¤ç‚¹ãŒ iLogNum ï½ +1 ç·šåˆ†ä¸Šã‹ã®åˆ¤å®š
 		s1 = ( x2 - x1 ) * ( y3 - y1 ) - ( y2 - y1 ) * ( x3 - x1 );
 		s2 = ( x2 - x1 ) * ( y1 - y4 ) - ( y2 - y1 ) * ( x1 - x4 );
 		a = ( s1 + s2 == 0 ) ? -1 : s1 / ( s1 + s2 );
 		if( !( 0 <= a && a < 1 )) continue;
 		
-		// is•ûŒü‚Ì”»’èCdAngle }45“x
+		// é€²è¡Œæ–¹å‘ã®åˆ¤å®šï¼ŒdAngle Â±45åº¦
 		double dAngle2 = dAngle - atan2(
 			( m_GPSLog->Y0( i + 1 ) - m_GPSLog->Y0( i )),
 			( m_GPSLog->X0( i + 1 ) - m_GPSLog->X0( i ))
@@ -334,7 +334,7 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 		#undef x4
 		#undef y4
 		
-		// ”¼’[‚È LogNum
+		// åŠç«¯ãª LogNum
 		dLogNum = i + a;
 		iTime = m_GPSLog->GetTime( dLogNum );
 		
@@ -355,20 +355,20 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 		return NULL;
 	}
 	
-	LapTime.fLogNum	= FLT_MAX;	// ”ÔŒ¢
-	LapTime.iTime	= 0;		// ”ÔŒ¢
+	LapTime.fLogNum	= FLT_MAX;	// ç•ªçŠ¬
+	LapTime.iTime	= 0;		// ç•ªçŠ¬
 	pLapLog->m_Lap.push_back( LapTime );
 	
 	return pLapLog;
 }
 
-/*** ƒ`ƒƒ[ƒgƒŠ[ƒh *********************************************************/
+/*** ãƒãƒ£ãƒ¼ãƒˆãƒªãƒ¼ãƒ‰ *********************************************************/
 
 #define NAME_BUF_SIZE	64
 
 int CVsdFilter::LapChartRead( const char *szFileName ){
 	
-	// Šù‚É—Dæ“x‚Ì‚‚¢ Log ‚ª‚ ‚ê‚ÎƒŠƒ^[ƒ“ (¡‚Í‚È‚¢)
+	// æ—¢ã«å„ªå…ˆåº¦ã®é«˜ã„ Log ãŒã‚ã‚Œã°ãƒªã‚¿ãƒ¼ãƒ³ (ä»Šã¯ãªã„)
 	if( m_LapLog && m_LapLog->m_iLapMode > LAPMODE_CHART ){
 		return 0;
 	}
@@ -380,13 +380,13 @@ int CVsdFilter::LapChartRead( const char *szFileName ){
 		return 0;
 	}
 	
-	// ‚±‚±‚Å‚â‚Á‚Æ m_LapLog ‚ğã‘‚«
+	// ã“ã“ã§ã‚„ã£ã¨ m_LapLog ã‚’ä¸Šæ›¸ã
 	if( m_LapLog ) delete m_LapLog;
 	m_LapLog = pLapLog;
 	return iRet;
 }
 
-/*** Log.Speed “™‚ÌƒAƒNƒZƒT’Ç‰Á *********************************************/
+/*** Log.Speed ç­‰ã®ã‚¢ã‚¯ã‚»ã‚µè¿½åŠ  *********************************************/
 
 void CVsdFilter::AddLogAccessorSub(
 	CVsdLog *pLog,
@@ -404,13 +404,13 @@ void CVsdFilter::AddLogAccessorSub(
 		if( m_VsdLog == NULL || pLog == m_VsdLog || m_VsdLog->GetElement( szName ) == NULL ){
 			Local<String> v8strName = String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)szName );
 			
-			// Max “o˜^
+			// Max ç™»éŒ²
 			objMax->Set( v8strName, Number::New( Isolate::GetCurrent(), pLog->GetMax( szName )));
 			
-			// Min “o˜^
+			// Min ç™»éŒ²
 			objMin->Set( v8strName, Number::New( Isolate::GetCurrent(), pLog->GetMin( szName )));
 			
-			// Œ»İ’l“o˜^
+			// ç¾åœ¨å€¤ç™»éŒ²
 			if( 0 );
 			#define DEF_LOG( name ) \
 			else if( strcmp( szName, #name ) == 0 ){ \
@@ -426,7 +426,7 @@ void CVsdFilter::AddLogAccessorSub(
 
 void CVsdFilter::AddLogAccessor( Local<Object> thisObj ){
 	
-	// Vsd.Log, Min, Max, Get ‚ğì‚é
+	// Vsd.Log, Min, Max, Get ã‚’ä½œã‚‹
 	#define AddLogObj( name ) \
 		Local<Array> obj##name = Array::New( Isolate::GetCurrent(), 0 ); \
 		thisObj->Set( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)#name ), obj##name );
@@ -438,7 +438,7 @@ void CVsdFilter::AddLogAccessor( Local<Object> thisObj ){
 	AddLogAccessorSub( m_GPSLog, thisObj, objMin, objMax );
 }
 
-/*** ˆÊ’uw’èƒƒOƒAƒNƒZƒX ***************************************************/
+/*** ä½ç½®æŒ‡å®šãƒ­ã‚°ã‚¢ã‚¯ã‚»ã‚¹ ***************************************************/
 
 void CVsdFilter::AccessLog( ReturnValue<Value> Ret, const char *szKey, double dFrameCnt ){
 	double dRet;
@@ -456,9 +456,9 @@ void CVsdFilter::AccessLog( ReturnValue<Value> Ret, const char *szKey, double dF
 	}
 }
 
-/*** ƒtƒ@ƒCƒ‹ƒŠƒXƒgæ“¾ *****************************************************/
+/*** ãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆå–å¾— *****************************************************/
 
-// szPath ‚Í [ MAX_PATH + 1 ] ‚Ì”z—ñ‚ÅCwork ‚Ég—p‚³‚ê‚é
+// szPath ã¯ [ MAX_PATH + 1 ] ã®é…åˆ—ã§ï¼Œwork ã«ä½¿ç”¨ã•ã‚Œã‚‹
 BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, LPCTSTR, void * ), void *pParam ){
 	
 	HANDLE				hFindFile;		/* find handle						*/
@@ -466,7 +466,7 @@ BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, L
 	
 	BOOL	bSuccess = TRUE;			/* success flag						*/
 	
-	// szPath ‚ª \ ‚ÅI‚í‚Á‚Ä‚È‚¢‚Ì‘Îˆ
+	// szPath ãŒ \ ã§çµ‚ã‚ã£ã¦ãªã„æ™‚ã®å¯¾å‡¦
 	int iFileIdx = _tcslen( szPath );	// \0
 	
 	if( iFileIdx != 0 && szPath[ iFileIdx - 1 ] != '\\' ){
@@ -500,7 +500,7 @@ BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, L
 	return( bSuccess );
 }
 
-/*** ƒRƒ“ƒ\[ƒ‹ƒEƒBƒ“ƒhƒE‚É•\¦ *********************************************/
+/*** ã‚³ãƒ³ã‚½ãƒ¼ãƒ«ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã«è¡¨ç¤º *********************************************/
 
 BOOL WINAPI HandlerRoutine( DWORD dwCtrlType ){
 	if( dwCtrlType == CTRL_C_EVENT ){
@@ -517,14 +517,14 @@ void CVsdFilter::OpenConsole( void ){
 		freopen ( "CONIN$", "r", stdin );
 		
 		SetConsoleCtrlHandler( HandlerRoutine, TRUE );
-		// ƒEƒBƒ“ƒhƒEƒ^ƒCƒgƒ‹•ÏX
-		SetConsoleTitle( "VSD for GPS ƒRƒ“ƒ\[ƒ‹" );
+		// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¿ã‚¤ãƒˆãƒ«å¤‰æ›´
+		SetConsoleTitle( "VSD for GPS ã‚³ãƒ³ã‚½ãƒ¼ãƒ«" );
 		
-		// •Â‚¶‚éƒ{ƒ^ƒ“–³Œø‰»
+		// é–‰ã˜ã‚‹ãƒœã‚¿ãƒ³ç„¡åŠ¹åŒ–
 		HMENU hmenu = GetSystemMenu( GetConsoleWindow(), FALSE );
 		RemoveMenu( hmenu, SC_CLOSE, MF_BYCOMMAND );
 		
-		Print( "‚±‚ÌƒEƒBƒ“ƒhƒE‚ğ•Â‚¶‚é‚É‚Í Ctrl+C ‚ğ‰Ÿ‚µ‚Ä‚­‚¾‚³‚¢\n" );
+		Print( "ã“ã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’é–‰ã˜ã‚‹ã«ã¯ Ctrl+C ã‚’æŠ¼ã—ã¦ãã ã•ã„\n" );
 	}
 }
 

@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -11,14 +11,14 @@
 #include "CScript.h"
 #include "ScriptIF.h"
 
-/*** static ƒƒ“ƒoiGL„t¼j***********************************************/
+/*** static ãƒ¡ãƒ³ãƒï¼ˆï¼›Â´Ğ´âŠ‚ï¼‰***********************************************/
 
 LPCWSTR CScript::m_szErrorMsgID[] = {
 	#define DEF_ERROR( id, msg )	L##msg,
 	#include "def_error.h"
 };
 
-/*** ƒRƒ“ƒXƒgƒ‰ƒNƒ^ *********************************************************/
+/*** ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ *********************************************************/
 
 CScript::CScript( CVsdFilter *pVsd ){
 	DebugMsgD( ":CScript::CScript():%X\n", GetCurrentThreadId());
@@ -36,7 +36,7 @@ CScript::CScript( CVsdFilter *pVsd ){
 	m_uError		= ERR_OK;
 }
 
-/*** ƒfƒXƒgƒ‰ƒNƒ^ ***********************************************************/
+/*** ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ ***********************************************************/
 
 CScript::~CScript(){
 	DebugMsgD( ":CScript::~CScript():%X\n", GetCurrentThreadId());
@@ -50,13 +50,13 @@ CScript::~CScript(){
 		m_Context.Reset();
 		m_pIsolate->IdleNotificationDeadline( 1.0 );
 	}
-	// ƒeƒXƒg—p
+	// ãƒ†ã‚¹ãƒˆç”¨
 	m_pIsolate->RequestGarbageCollectionForTesting( Isolate::kFullGarbageCollection );
 	
 	delete [] m_szErrorMsg;
 }
 
-/*** Exception ƒƒbƒZ[ƒW•\¦ ***********************************************/
+/*** Exception ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸è¡¨ç¤º ***********************************************/
 
 #define MSGBUF_SIZE	( 4 * 1024 )
 
@@ -85,7 +85,7 @@ LPWSTR CScript::ReportException( LPWSTR pMsg, TryCatch& try_catch ){
 		String::Value sourceline( message->GetSourceLine());
 		swprintf( pMsg + u, MSGBUF_SIZE - u, L"%s\n", ( wchar_t *)*sourceline );
 		
-		// TAB->SP •ÏŠ·‚ÆCp ‚Í '\0' ‚ğw‚·‚æ‚¤‚É‚·‚é
+		// TAB->SP å¤‰æ›ã¨ï¼Œp ã¯ '\0' ã‚’æŒ‡ã™ã‚ˆã†ã«ã™ã‚‹
 		for( ; u < MSGBUF_SIZE && pMsg[ u ]; ++u ) if( pMsg[ u ] == '\t' ) pMsg[ u ] = ' ';
 		
 		// Print wavy underline ( GetUnderline is deprecated ).
@@ -107,7 +107,7 @@ LPWSTR CScript::ReportException( LPWSTR pMsg, TryCatch& try_catch ){
 	return pMsg;
 }
 
-/*** JavaScript ƒIƒuƒWƒFƒNƒgƒfƒBƒXƒ|[ƒU ************************************/
+/*** JavaScript ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆãƒ‡ã‚£ã‚¹ãƒãƒ¼ã‚¶ ************************************/
 
 void CScript::Dispose( void ){
 	Locker locker( m_pIsolate );
@@ -115,10 +115,10 @@ void CScript::Dispose( void ){
 	HandleScope handle_scope( m_pIsolate );
 	Context::Scope context_scope( GetContext());
 	
-	// global obj æ“¾
+	// global obj å–å¾—
 	Local<Object> hGlobal = GetContext()->Global();
 	
-	// Log ‚Ì key æ“¾
+	// Log ã® key å–å¾—
 	Local<Array> Keys = hGlobal->GetPropertyNames();
 	
 	for( UINT u = 0; u < Keys->Length(); ++u ){
@@ -142,66 +142,66 @@ LPWSTR CScript::SprintfSub( const FunctionCallbackInfo<Value>& args ){
 		return NULL;
 	}
 	
-	// arg —p buf
+	// arg ç”¨ buf
 	UINT *puArgBuf	= new UINT[ args.Length() * 2 ];
 	UINT uArgBufPtr	= 0;
 	int iArgNum	= 1;
 	LPWSTR wszBuf	= NULL;
 	std::vector<String::Value *> vecStrValue;
 	
-	// Fmt •¶š—ñæ“¾
+	// Fmt æ–‡å­—åˆ—å–å¾—
 	String::Value str( args[ 0 ] );
 	LPCWSTR wszFmt = ( LPCWSTR )*str;
 	LPCWSTR p = wszFmt;
 	
-	// % ˆø”‰ğÍ
+	// % å¼•æ•°è§£æ
 	for( ;; ++iArgNum, ++p ){
-		// % ƒT[ƒ`
+		// % ã‚µãƒ¼ãƒ
 		if(( p = wcschr( p, L'%' )) == NULL ) break;
 		
-		// Œ^ƒtƒB[ƒ‹ƒhƒT[ƒ`
+		// å‹ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã‚µãƒ¼ãƒ
 		for( ++p; *p && strchr( "+-0123456789.# ", *p ); ++p );
 		
-		// %% ‚¾‚Á‚½‚çŸ‚¢‚Á‚Ä‚İ‚æ[
+		// %% ã ã£ãŸã‚‰æ¬¡ã„ã£ã¦ã¿ã‚ˆãƒ¼
 		if( *p == L'%' ){
 			--iArgNum;
 			continue;
 		}
 		
-		// arg ”ƒ`ƒFƒbƒN
+		// arg æ•°ãƒã‚§ãƒƒã‚¯
 		if( args.Length() <= iArgNum ){
-			//  ˆø”‚ª‘«‚è‚È‚¢ƒGƒ‰[
+			//  å¼•æ•°ãŒè¶³ã‚Šãªã„ã‚¨ãƒ©ãƒ¼
 			V8ErrorNumOfArg();
 			goto ErrorExit;
 		}
 		
 		if( *p == L's' ){
-			// strint Œ^
+			// strint å‹
 			String::Value *pvalue = new String::Value( args[ iArgNum ]);
 			
 			vecStrValue.push_back( pvalue );
 			*( LPCWSTR *)&puArgBuf[ uArgBufPtr++ ] = ( LPCWSTR )**pvalue;
 		}else if( strchr( "cCdiouxX", *p )){
-			// int Œ^
+			// int å‹
 			puArgBuf[ uArgBufPtr++ ] = args[ iArgNum ]->Int32Value();
 		}else if( strchr( "eEfgGaA", *p )){
-			// double Œ^
+			// double å‹
 			*( double *)&puArgBuf[ uArgBufPtr ] = args[ iArgNum ]->NumberValue();
 			uArgBufPtr += 2;
 		}else{
-			// ”ñ‘Î‰‚ÌŒ^
+			// éå¯¾å¿œã®å‹
 			V8SyntaxError( "unknown printf type field" );
 			goto ErrorExit;
 		}
 	}
 	
-	// ˆø”‚ ‚Ü‚èƒ`ƒFƒbƒN
+	// å¼•æ•°ã‚ã¾ã‚Šãƒã‚§ãƒƒã‚¯
 	if( args.Length() != iArgNum ){
 		V8ErrorNumOfArg();
 		goto ErrorExit;
 	}
 	
-	// vsprintf ‹N“®
+	// vsprintf èµ·å‹•
 	va_list vargs;
 	va_start( vargs, puArgBuf[ -1 ] );
 	
@@ -210,7 +210,7 @@ LPWSTR CScript::SprintfSub( const FunctionCallbackInfo<Value>& args ){
 	
 	va_end( vargs );
 	
-	// Œãˆ—
+	// å¾Œå‡¦ç†
   ErrorExit:
 	delete [] puArgBuf;
 	
@@ -277,19 +277,19 @@ void CScript::Include( LPCWSTR wszFileName ){
 	}
 }
 
-/*** JavaScript interface ‚ÌƒZƒbƒgƒAƒbƒv ************************************/
+/*** JavaScript interface ã®ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ— ************************************/
 
 UINT CScript::Initialize( LPCWSTR wszFileName ){
 	Locker locker( m_pIsolate );
 	Isolate::Scope IsolateScope( m_pIsolate );
 	
-	// €”õ
+	// æº–å‚™
 	HandleScope handle_scope( m_pIsolate );
 	
-	// ƒOƒ[ƒoƒ‹ƒIƒuƒWƒFƒNƒg‚Ì¶¬
+	// ã‚°ãƒ­ãƒ¼ãƒãƒ«ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ç”Ÿæˆ
 	Local<ObjectTemplate> global = ObjectTemplate::New( m_pIsolate );
 	
-	// Image ƒNƒ‰ƒX“o˜^
+	// Image ã‚¯ãƒ©ã‚¹ç™»éŒ²
 	CVsdImageIF::InitializeClass( m_pIsolate, global );
 	CVsdFontIF::InitializeClass( m_pIsolate, global );
 	CVsdFilterIF::InitializeClass( m_pIsolate, global, m_pVsd );
@@ -301,7 +301,7 @@ UINT CScript::Initialize( LPCWSTR wszFileName ){
 	global->Set( String::NewFromOneByte( m_pIsolate, ( uint8_t *)"__CVsdFilter" ), External::New( m_pIsolate, m_pVsd ));
 	global->Set( String::NewFromOneByte( m_pIsolate, ( uint8_t *)"__CScript" ), External::New( m_pIsolate, this ));
 	
-	// ƒOƒ[ƒoƒ‹ƒIƒuƒWƒFƒNƒg‚©‚çŠÂ‹«‚ğ¶¬
+	// ã‚°ãƒ­ãƒ¼ãƒãƒ«ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‹ã‚‰ç’°å¢ƒã‚’ç”Ÿæˆ
 	m_Context = *(new Persistent<Context>( m_pIsolate,
 		Context::New( m_pIsolate, NULL, global )
 	));
@@ -311,7 +311,7 @@ UINT CScript::Initialize( LPCWSTR wszFileName ){
 	return ERR_OK;
 }
 
-/*** ƒXƒNƒŠƒvƒgƒtƒ@ƒCƒ‹‚ÌÀs ***********************************************/
+/*** ã‚¹ã‚¯ãƒªãƒ—ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã®å®Ÿè¡Œ ***********************************************/
 
 UINT CScript::RunFile( LPCWSTR szFileName ){
 	Locker locker( m_pIsolate );
@@ -319,7 +319,7 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 	
 	HandleScope handle_scope( m_pIsolate );
 	
-	// ŠÂ‹«‚©‚çƒXƒR[ƒv‚ğ¶¬
+	// ç’°å¢ƒã‹ã‚‰ã‚¹ã‚³ãƒ¼ãƒ—ã‚’ç”Ÿæˆ
 	Context::Scope context_scope( GetContext());
 	
 	TryCatch try_catch;
@@ -338,13 +338,13 @@ UINT CScript::RunFile( LPCWSTR szFileName ){
 UINT CScript::RunFileCore( LPCWSTR szFileName ){
 	
 	FILE *fp;
-	// ƒXƒNƒŠƒvƒg ƒ[ƒh
+	// ã‚¹ã‚¯ãƒªãƒ—ãƒˆ ãƒ­ãƒ¼ãƒ‰
 	CPushDir push_dir( m_pVsd->m_szPluginDirA );
 	fp = _wfopen( szFileName, L"r" );
 	
 	if( fp == NULL ) return m_uError = ERR_CANT_OPEN_FILE;
 	
-	// ƒtƒ@ƒCƒ‹ƒTƒCƒYæ“¾
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚µã‚¤ã‚ºå–å¾—
 	fseek( fp, 0, SEEK_END );
 	fpos_t Size;
 	fgetpos( fp, &Size );
@@ -368,13 +368,13 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 		return m_uError = ERR_SCRIPT;
 	}
 	
-	// ‚Æ‚è‚ ‚¦‚¸‰Šú‰»ˆ—
+	// ã¨ã‚Šã‚ãˆãšåˆæœŸåŒ–å‡¦ç†
 	Local<Value> result = script->Run();
 	
 	return m_uError = ERR_OK;
 }
 
-/*** function –¼w’èÀsCˆø”‚È‚µ ******************************************/
+/*** function åæŒ‡å®šå®Ÿè¡Œï¼Œå¼•æ•°ãªã— ******************************************/
 
 UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
 	
@@ -435,14 +435,14 @@ UINT CScript::RunArg( LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bN
 		return m_uError = ERR_SCRIPT;
 	}
 	
-	// ƒK[ƒxƒbƒWƒRƒŒƒNƒVƒ‡ƒ“?
+	// ã‚¬ãƒ¼ãƒ™ãƒƒã‚¸ã‚³ãƒ¬ã‚¯ã‚·ãƒ§ãƒ³?
 	//while( !V8::IdleNotification());
 	//V8::IdleNotification();
 	
 	return m_uError = ERR_OK;
 }
 
-/*** ƒƒOƒŠ[ƒh by JavaScript **********************************************/
+/*** ãƒ­ã‚°ãƒªãƒ¼ãƒ‰ by JavaScript **********************************************/
 
 BOOL LogReaderCallback( const char *szPath, const char *szFile, void *pParam ){
 	if( !IsExt( szFile, "js" )) return TRUE;
@@ -457,7 +457,7 @@ BOOL LogReaderCallback( const char *szPath, const char *szFile, void *pParam ){
 	delete pFile;
 	
 	if( Script.m_uError ){
-		// ƒGƒ‰[
+		// ã‚¨ãƒ©ãƒ¼
 		Script.m_pVsd->DispErrorMessage( Script.GetErrorMessage());
 		return FALSE;
 	}
@@ -468,12 +468,12 @@ BOOL LogReaderCallback( const char *szPath, const char *szFile, void *pParam ){
 UINT CScript::InitLogReader( void ){
 	Initialize( L"_system/InitLogReader.js" );
 	if( m_uError ){
-		// ƒGƒ‰[
+		// ã‚¨ãƒ©ãƒ¼
 		m_pVsd->DispErrorMessage( GetErrorMessage());
 		return m_uError;
 	}
 	
-	// ƒXƒNƒŠƒvƒgƒ[ƒh
+	// ã‚¹ã‚¯ãƒªãƒ—ãƒˆãƒ­ãƒ¼ãƒ‰
 	char szBuf[ MAX_PATH + 1 ];
 	strcpy( szBuf, m_pVsd->m_szPluginDirA );
 	strcat( szBuf, LOG_READER_DIR "\\" );
@@ -483,7 +483,7 @@ UINT CScript::InitLogReader( void ){
 	
 	Run( L"SortLogReaderInfo", TRUE );
 	if( m_uError ){
-		// ƒGƒ‰[
+		// ã‚¨ãƒ©ãƒ¼
 		m_pVsd->DispErrorMessage( GetErrorMessage());
 		return m_uError;
 	}

@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -15,7 +15,7 @@
 #define CALIB_MARK_SPEED	600
 #define MAX_TURN_R			200
 
-/*** ƒRƒ“ƒXƒgƒ‰ƒNƒ^ *********************************************************/
+/*** ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ *********************************************************/
 
 CVsdLog::CVsdLog( CVsdFilter *pVsd ){
 	m_dFreq	= LOG_FREQ;
@@ -34,10 +34,10 @@ CVsdLog::CVsdLog( CVsdFilter *pVsd ){
 	#include "def_log.h"
 }
 
-/*** frame# ‚É‘Î‰‚·‚éƒƒO index ‚ğ“¾‚é *************************************/
+/*** frame# ã«å¯¾å¿œã™ã‚‹ãƒ­ã‚° index ã‚’å¾—ã‚‹ *************************************/
 
 double CVsdLog::GetIndex( double dFromVal, int *piFrom, int *piLog, int iPrevIdx ){
-	if( piFrom[ 0 ] == piFrom[ 1 ] ) return 2;	// ”ÔŒ¢‚ğœ‚¢‚½ Time=0 ‚ÌƒƒO
+	if( piFrom[ 0 ] == piFrom[ 1 ] ) return 2;	// ç•ªçŠ¬ã‚’é™¤ã„ãŸ Time=0 ã®ãƒ­ã‚°
 	return GetIndex(
 		( int )((
 			piLog[ 0 ] +
@@ -52,12 +52,12 @@ double CVsdLog::GetIndex( int iTime, int iPrevIdx ){
 	int idx;
 	
 	// Time( idx ) <= iTime < Time( idx + 1 )
-	// ‚Æ‚È‚é idx ‚ğŒ©‚Â‚¯‚é
+	// ã¨ãªã‚‹ idx ã‚’è¦‹ã¤ã‘ã‚‹
 	if(
 		iPrevIdx < 0 || iPrevIdx >= GetCnt() ||
 		GetTime( iPrevIdx ) > iTime
 	){
-		// iPrevIdx ‚ª‚¨‚©‚µ‚¢‚Ì‚ÅCbinary serch ‚·‚é
+		// iPrevIdx ãŒãŠã‹ã—ã„ã®ã§ï¼Œbinary serch ã™ã‚‹
 		int iSt = 0;
 		int iEd = GetCnt() - 1;
 		while( 1 ){
@@ -69,23 +69,23 @@ double CVsdLog::GetIndex( int iTime, int iPrevIdx ){
 			}else if( GetTime( idx + 1 ) <= iTime ){
 				iSt = idx + 1;
 			}else{
-				// ƒqƒbƒg
+				// ãƒ’ãƒƒãƒˆ
 				break;
 			}
 		}
 	}else{
-		// iPrevIdx ‚Í³í‚È‚Ì‚ÅC‚±‚ê‚ğ‹N“_‚É’PƒƒT[ƒ`‚·‚é
+		// iPrevIdx ã¯æ­£å¸¸ãªã®ã§ï¼Œã“ã‚Œã‚’èµ·ç‚¹ã«å˜ç´”ã‚µãƒ¼ãƒã™ã‚‹
 		idx = iPrevIdx;
 		while( GetTime( idx + 1 ) <= iTime ) ++idx;
 	}
 	
-	// index ‚Ì’[”‚ğ‹‚ß‚é
+	// index ã®ç«¯æ•°ã‚’æ±‚ã‚ã‚‹
 	return idx +
 		( double )( iTime    - GetTime( idx )) /
 		( GetTime( idx + 1 ) - GetTime( idx ));
 }
 
-/*** GPS ƒƒO‚Ìƒ_ƒ“ƒv *******************************************************/
+/*** GPS ãƒ­ã‚°ã®ãƒ€ãƒ³ãƒ— *******************************************************/
 
 #ifdef DEBUG
 void CVsdLog::Dump( char *szFileName ){
@@ -94,7 +94,7 @@ void CVsdLog::Dump( char *szFileName ){
 	BOOL bFirst = TRUE;
 	std::map<std::string, CLog *>::iterator it;
 	
-	// ƒwƒbƒ_o—Í
+	// ãƒ˜ãƒƒãƒ€å‡ºåŠ›
 	for( it = m_Logs.begin(); it != m_Logs.end(); ++it ){
 		if( !bFirst ) fputs( "\t", fp ); bFirst = FALSE;
 		fputs( it->first.c_str(), fp );
@@ -113,7 +113,7 @@ void CVsdLog::Dump( char *szFileName ){
 }
 #endif
 
-/*** key ‚Ì‘¶İŠm”F *********************************************************/
+/*** key ã®å­˜åœ¨ç¢ºèª *********************************************************/
 
 CLog *CVsdLog::GetElement( const char *szKey, BOOL bCreate ){
 	std::string strKey( szKey );
@@ -125,7 +125,7 @@ CLog *CVsdLog::GetElement( const char *szKey, BOOL bCreate ){
 	if( bCreate ){
 		CLog *p;
 		
-		// Speed ‚Æ‚©Šî–{ƒf[ƒ^‚ÌQÆ—pƒ|ƒCƒ“ƒ^‚É‘ã“ü
+		// Speed ã¨ã‹åŸºæœ¬ãƒ‡ãƒ¼ã‚¿ã®å‚ç…§ç”¨ãƒã‚¤ãƒ³ã‚¿ã«ä»£å…¥
 		if( 0 );
 		#define DEF_LOG( name )	DEF_LOG_T( name, CLogFloat )
 		#define DEF_LOG_T( name, type )	\
@@ -141,14 +141,14 @@ CLog *CVsdLog::GetElement( const char *szKey, BOOL bCreate ){
 	return NULL;
 }
 
-/*** ƒƒO‚Ì Set *************************************************************/
+/*** ãƒ­ã‚°ã® Set *************************************************************/
 
 void CVsdLog::Set( const char *szKey, int iIndex, double dVal ){
 	GetElement( szKey, TRUE )->Set( iIndex, dVal );
 	if( m_iCnt <= iIndex ) m_iCnt = iIndex + 1;
 }
 
-/*** 1ƒŒƒR[ƒhƒRƒs[ ********************************************************/
+/*** 1ãƒ¬ã‚³ãƒ¼ãƒ‰ã‚³ãƒ”ãƒ¼ ********************************************************/
 
 void CVsdLog::CopyRecord( int iTo, int iFrom ){
 	std::map<std::string, CLog *>::iterator it;
@@ -160,7 +160,7 @@ void CVsdLog::CopyRecord( int iTo, int iFrom ){
 	if( m_iCnt <= iTo ) m_iCnt = iTo + 1;
 }
 
-/*** ”ÔŒ¢’Ç‰Á ***************************************************************/
+/*** ç•ªçŠ¬è¿½åŠ  ***************************************************************/
 
 void CVsdLog::AddWatchDog( void ){
 	int iCnt = GetCnt() - 1;
@@ -170,11 +170,11 @@ void CVsdLog::AddWatchDog( void ){
 	CopyRecord( iCnt + 2, iCnt ); AddStopRecord( iCnt + 2, WATCHDOG_TIME );
 }
 
-/*** GPS ƒƒO‚Ì up-convert **************************************************/
+/*** GPS ãƒ­ã‚°ã® up-convert **************************************************/
 
 UINT CVsdLog::GPSLogRescan( void ){
 	
-	/*** CLog ‚Ì•û‚ğ‘–¸‚µ‚ÄC‚¢‚ë‚¢‚ë•â³ *****************************/
+	/*** CLog ã®æ–¹ã‚’èµ°æŸ»ã—ã¦ï¼Œã„ã‚ã„ã‚è£œæ­£ *****************************/
 	
 	BOOL	bCreateSpeed	= FALSE;
 	BOOL	bCreateG		= FALSE;
@@ -214,7 +214,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 		
 		dMaxSpeed = -FLT_MAX;
 		
-		// ƒXƒs[ƒh¶¬
+		// ã‚¹ãƒ”ãƒ¼ãƒ‰ç”Ÿæˆ
 		if( bCreateSpeed ){
 			#pragma omp for
 			for( int i = 1; i < GetCnt(); ++i ){
@@ -224,7 +224,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 					m_pLogDistance &&
 					( Distance( i ) - Distance( i - 1 )) * 3600 / iDiffTime < KPH_STOP
 				){
-					// ŠÔ‚ªŠJ‚¢‚Ä‚¢‚Ä‚È‚¨‚©‚ÂˆÚ“®‚µ‚Ä‚¢‚È‚¢
+					// æ™‚é–“ãŒé–‹ã„ã¦ã„ã¦ãªãŠã‹ã¤ç§»å‹•ã—ã¦ã„ãªã„
 					SetRawSpeed( i, 0 );
 					SetRawSpeed( i - 1, 0 );
 					if( dMaxSpeed < 0 ) dMaxSpeed = 0;
@@ -235,11 +235,11 @@ UINT CVsdLog::GPSLogRescan( void ){
 						* ( 3600.0 / 1000 * 1000 ) /
 						( GetTime( i ) - GetTime( i - 1 ))
 					);
-					// 100km/h ˆÈã‚ÍC+20% ˆÈã‚Ì’l‚Í–³‹‚·‚é
+					// 100km/h ä»¥ä¸Šã¯ï¼Œ+20% ä»¥ä¸Šã®å€¤ã¯ç„¡è¦–ã™ã‚‹
 					if( dMaxSpeed < d && ( d < 100 || dMaxSpeed * 1.2 > d )) dMaxSpeed = d;
 				}
 			}
-			// ”ÔŒ¢‚Í‚·‚Å‚É 0 ¨ SetRawSpeed( GetCnt() - 1, 0 );
+			// ç•ªçŠ¬ã¯ã™ã§ã« 0 â†’ SetRawSpeed( GetCnt() - 1, 0 );
 			
 			#pragma omp critical
 			{
@@ -248,19 +248,19 @@ UINT CVsdLog::GPSLogRescan( void ){
 			}
 		}
 		
-		// G ŒvZ
+		// G è¨ˆç®—
 		if( bCreateG ){
 			#pragma omp for
 			for( int i = 2; i < GetCnt() - 1; ++i ){
-				// ‰¡ G ŒvZ
-				// Gx / Gy ‚ğì‚é
+				// æ¨ª G è¨ˆç®—
+				// Gx / Gy ã‚’ä½œã‚‹
 				SetRawGy( i,
 					( Speed( i ) - Speed( i - 1 ))
 					* ( 1000 / 3.600 / GRAVITY )
 					/ ( GetTime( i ) - GetTime( i - 1 ))
 				);
 				
-				// ‰¡G = vƒÖ
+				// æ¨ªG = vÏ‰
 				double dBearingDelta = ( Direction( i ) - Direction( i - 1 )) * ToRAD;
 				if     ( dBearingDelta >  M_PI ) dBearingDelta -= M_PI * 2;
 				else if( dBearingDelta < -M_PI ) dBearingDelta += M_PI * 2;
@@ -271,20 +271,20 @@ UINT CVsdLog::GPSLogRescan( void ){
 					* ( Speed( i ) / 3.600 )
 				);
 				
-				// }5G ˆÈã‚ÍCíœ
+				// Â±5G ä»¥ä¸Šã¯ï¼Œå‰Šé™¤
 				if( Gx( i ) < -3 || Gx( i ) > 3 ){
 					SetRawGx( i, Gx( i - 1 ));
 				}
 			}
 			
-			// ƒXƒ€[ƒWƒ“ƒO
-			#define G_SMOOTH_NUM	3	// •½‹Ï‰»‚·‚é—v‘f”
-			#define G_SMOOTH_CNT	( m_dFreq > 5 ? 2 : 1 )	// ƒXƒ€[ƒWƒ“ƒO‰ñ”
-			#define G_SMOOTH_RATIO	0.3	// min/max ŒvZ—pŒW”
+			// ã‚¹ãƒ ãƒ¼ã‚¸ãƒ³ã‚°
+			#define G_SMOOTH_NUM	3	// å¹³å‡åŒ–ã™ã‚‹è¦ç´ æ•°
+			#define G_SMOOTH_CNT	( m_dFreq > 5 ? 2 : 1 )	// ã‚¹ãƒ ãƒ¼ã‚¸ãƒ³ã‚°å›æ•°
+			#define G_SMOOTH_RATIO	0.3	// min/max è¨ˆç®—ç”¨ä¿‚æ•°
 			
 			#pragma omp single
 			{
-				// ”ÔŒ¢‚ÆCÅ‰ / ÅŒã‚Ì G ‰Šú‰»
+				// ç•ªçŠ¬ã¨ï¼Œæœ€åˆ / æœ€å¾Œã® G åˆæœŸåŒ–
 				SetRawGx( 0, 0 ); SetRawGy( 0, 0 );
 				SetRawGx( 1, 0 ); SetRawGy( 1, 0 );
 				SetRawGx( 2, 0 ); SetRawGy( 2, 0 );
@@ -314,14 +314,14 @@ UINT CVsdLog::GPSLogRescan( void ){
 						dSumGx = 0;
 						dSumGy = 0;
 						
-						// ƒoƒbƒtƒ@‰Šú‰»
+						// ãƒãƒƒãƒ•ã‚¡åˆæœŸåŒ–
 						for( int j = i - ( G_SMOOTH_NUM - 1 ) / 2; j < i + G_SMOOTH_NUM / 2; ++j ){
 							fBufGx[ j % G_SMOOTH_NUM ] = ( float )Gx( j ); dSumGx += Gx( j );
 							fBufGy[ j % G_SMOOTH_NUM ] = ( float )Gy( j ); dSumGy += Gy( j );
 						}
 					}
 					
-					// ƒXƒ€[ƒWƒ“ƒO‘ÎÛƒf[ƒ^‚ÌÅŒã”ö‚ğƒ[ƒh
+					// ã‚¹ãƒ ãƒ¼ã‚¸ãƒ³ã‚°å¯¾è±¡ãƒ‡ãƒ¼ã‚¿ã®æœ€å¾Œå°¾ã‚’ãƒ­ãƒ¼ãƒ‰
 					int k = i + G_SMOOTH_NUM / 2;
 					fBufGx[ k % G_SMOOTH_NUM ] = ( float )Gx( k ); dSumGx += Gx( k );
 					fBufGy[ k % G_SMOOTH_NUM ] = ( float )Gy( k ); dSumGy += Gy( k );
@@ -340,7 +340,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 						else if( dMinGy > dy ) dMinGy = dy;
 					}
 					
-					// ƒXƒ€[ƒWƒ“ƒO‘ÎÛƒf[ƒ^‚Ìæ“ª‚ğƒAƒ“ƒ[ƒh
+					// ã‚¹ãƒ ãƒ¼ã‚¸ãƒ³ã‚°å¯¾è±¡ãƒ‡ãƒ¼ã‚¿ã®å…ˆé ­ã‚’ã‚¢ãƒ³ãƒ­ãƒ¼ãƒ‰
 					k = i - ( G_SMOOTH_NUM - 1 ) / 2;
 					dSumGx -= fBufGx[ k % G_SMOOTH_NUM ];
 					dSumGy -= fBufGy[ k % G_SMOOTH_NUM ];
@@ -369,7 +369,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 			#endif
 		}
 		
-		// Direction •â³
+		// Direction è£œæ­£
 		if( m_pLogDirection ){
 			#pragma omp for
 			for( int i = 1; i < GetCnt(); ++i ){
@@ -381,13 +381,13 @@ UINT CVsdLog::GPSLogRescan( void ){
 	return GetCnt();
 }
 
-/*** ‹——£Zo **************************************************************/
+/*** è·é›¢ç®—å‡º **************************************************************/
 
 double CVsdLog::GPSLogGetLength(
 	double dLong0, double dLati0,
 	double dLong1, double dLati1
 ){
-	// ƒqƒ…ƒxƒj‚ÌŒö® http://yamadarake.jp/trdi/report000001.html
+	// ãƒ’ãƒ¥ãƒ™ãƒ‹ã®å…¬å¼ http://yamadarake.jp/trdi/report000001.html
 	const double a	= 6378137.000;
 	const double b	= 6356752.314245;
 	const double e2	= ( a * a - b * b ) / ( a * a );
@@ -402,17 +402,17 @@ double CVsdLog::GPSLogGetLength(
 	return	sqrt( dy * dy * M * M + pow( dx * N * cos( uy ), 2 ));
 }
 
-/*** ƒƒOƒŠ[ƒh *************************************************************/
+/*** ãƒ­ã‚°ãƒªãƒ¼ãƒ‰ *************************************************************/
 
 int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog *&pLapLog ){
 	{
-		// JavaScript ƒIƒuƒWƒFƒNƒg‰Šú‰»
+		// JavaScript ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåˆæœŸåŒ–
 		CScript Script( m_pVsd );
 		if( Script.InitLogReader() != ERR_OK ){
 			return 0;
 		}
 		
-		// ƒXƒNƒŠƒvƒgÀs
+		// ã‚¹ã‚¯ãƒªãƒ—ãƒˆå®Ÿè¡Œ
 		LPWSTR pStr = NULL;
 		LPWSTR pReader = NULL;
 		Script.Run_ss( L"ReadLog",
@@ -427,7 +427,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			return 0;
 		}
 		
-		/*** JS ‚Ì Log ‚ÉƒAƒNƒZƒX *******************************************/
+		/*** JS ã® Log ã«ã‚¢ã‚¯ã‚»ã‚¹ *******************************************/
 		
 		{
 			Locker locker( Script.m_pIsolate );
@@ -435,19 +435,19 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			HandleScope handle_scope( Script.m_pIsolate );
 			Context::Scope context_scope( Script.GetContext());
 			
-			// "Log" æ“¾
+			// "Log" å–å¾—
 			Local<Array> hLog = Local<Array>::Cast(
 				Script.GetContext()->Global()->Get( String::NewFromTwoByte( Script.m_pIsolate , ( uint16_t *)L"Log" ))
 			);
 			if( !hLog->IsArray()) return 0;
 			
-			// Log ‚Ì key æ“¾
+			// Log ã® key å–å¾—
 			Local<Array> Keys = hLog->GetPropertyNames();
 			
-			// JavaScript Array ‚Ì vector
+			// JavaScript Array ã® vector
 			std::vector<Local<Array> >	JSArrays;
 			
-			// CLog * ‚Ì vector
+			// CLog * ã® vector
 			std::vector<CLog *>	CArrays;
 			
 			UINT	uIdxTime		= ~0;
@@ -476,21 +476,21 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					else if( !strcmp( *strKey, "LapTime"   )){
 						uIdxLapTime	= uIdx;
 						CArrays.push_back( NULL );
-						goto Skip;	// LapTime ‚Í CVsdLog ‚É‚ÍÏ‚Ü‚È‚¢
+						goto Skip;	// LapTime ã¯ CVsdLog ã«ã¯ç©ã¾ãªã„
 					}
 					
-					// strKey ‚Å vector ì¬
+					// strKey ã§ vector ä½œæˆ
 					CArrays.push_back( GetElement( pKey, TRUE ));
 					
 				  Skip:
-					// JS ‚Ì property –¼‰ğŒˆŒã‚Ì Array ‚Ì vector ‚ğì‚é
+					// JS ã® property åè§£æ±ºå¾Œã® Array ã® vector ã‚’ä½œã‚‹
 					JSArrays.push_back( ArrayTmp );
 					
 					++uIdx;
 				}
 			}
 			
-			// Time ‘¶İŠm”F
+			// Time å­˜åœ¨ç¢ºèª
 			if( uIdxTime == ~0 ) return 0;
 			m_iLogStartTime = ( time_t )JSArrays[ uIdxTime ]->Get( 0 )->NumberValue();
 			
@@ -498,14 +498,14 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			BOOL bCreateDirection = FALSE;
 			
 			if( uIdxLong != ~0 && uIdxLati != ~0 ){
-				// Distance ‚ª–³‚¢‚Æ‚«‚ÍCì‚é
+				// Distance ãŒç„¡ã„ã¨ãã¯ï¼Œä½œã‚‹
 				if( uIdxDistance == ~0 ){
 					uIdxDistance = uIdx++;
 					CArrays.push_back( GetElement( "Distance", TRUE ));
 					bCreateDistance = TRUE;
 				}
 				
-				// ˆÜ“xŒo“x¨ƒ[ƒgƒ‹ •ÏŠ·’è”
+				// ç·¯åº¦çµŒåº¦â†’ãƒ¡ãƒ¼ãƒˆãƒ« å¤‰æ›å®šæ•°
 				double	dLong0;
 				double	dLati0;
 				
@@ -517,7 +517,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				m_dLong2Meter =  GPSLogGetLength( dLong0, dLati0, dLong0 + 1.0 / 3600, dLati0 ) * 3600;
 				m_dLati2Meter = -GPSLogGetLength( dLong0, dLati0, dLong0, dLati0 + 1.0 / 3600 ) * 3600;
 				
-				// Direction ‚ª–³‚¢‚Æ‚«‚ÍCì‚é
+				// Direction ãŒç„¡ã„ã¨ãã¯ï¼Œä½œã‚‹
 				if( uIdxDirection == ~0 ){
 					uIdxDirection = uIdx++;
 					CArrays.push_back( GetElement( "Direction", TRUE ));
@@ -525,7 +525,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				}
 			}
 			
-			// vector ‚ÉÏ‚Ş
+			// vector ã«ç©ã‚€
 			double	dDistance = 0;
 			int		iSameCnt = 0;
 			
@@ -549,7 +549,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						if( t < m_iLogStartTime ) t += 24 * 3600 * 1000;
 						SetTime( iCnt, ( double )( t - m_iLogStartTime ));
 					}else if( uKey == uIdxSpeed && uIdxTacho != ~0 ){
-						// ƒLƒƒƒŠƒuƒŒ[ƒVƒ‡ƒ“’†‚ÍCˆê’U 0km/h ‚É‚·‚é
+						// ã‚­ãƒ£ãƒªãƒ–ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ä¸­ã¯ï¼Œä¸€æ—¦ 0km/h ã«ã™ã‚‹
 						if( dVal >= CALIB_MARK_SPEED ){
 							++uCalibrating;
 							dVal = 0;
@@ -565,7 +565,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				}
 				
 				if( iCnt == 0 ){
-					// ”ÔŒ¢ì¬
+					// ç•ªçŠ¬ä½œæˆ
 					if( uIdxDistance  != ~0 ) SetDistance( 0, 0 );
 					if( uIdxDirection != ~0 ) SetDirection( 0, 0 );
 					CopyRecord( 1, 0 );
@@ -573,12 +573,12 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					AddStopRecord( 0, -WATCHDOG_TIME );
 					AddStopRecord( 1, -TIME_STOP_MARGIN );
 				}else{
-					// “¯‚¶ŠÔ‚ª˜A‘±‚·‚éê‡‚Ì’²®
+					// åŒã˜æ™‚é–“ãŒé€£ç¶šã™ã‚‹å ´åˆã®æ™‚åˆ»èª¿æ•´
 					if( GetTime( iCnt - 1 ) == GetTime( iCnt )){
-						// ‚ª“¯‚¶ƒƒO‚ª‘±‚­‚Æ‚«‚»‚ÌƒJƒEƒ“ƒg‚ğ‚·‚é
+						// æ™‚åˆ»ãŒåŒã˜ãƒ­ã‚°ãŒç¶šãã¨ããã®ã‚«ã‚¦ãƒ³ãƒˆã‚’ã™ã‚‹
 						++iSameCnt;
 					}else if( iSameCnt ){
-						// ‚ª“¯‚¶ƒƒO‚ª“rØ‚ê‚½‚Ì‚ÅCŠÔ‚ğ•â³‚·‚é
+						// æ™‚åˆ»ãŒåŒã˜ãƒ­ã‚°ãŒé€”åˆ‡ã‚ŒãŸã®ã§ï¼Œæ™‚é–“ã‚’è£œæ­£ã™ã‚‹
 						++iSameCnt;
 						
 						// -4 -3 -2 -1 +0
@@ -595,7 +595,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						iSameCnt = 0;
 					}
 					
-					// ‘–s‹——£‚ğì‚é
+					// èµ°è¡Œè·é›¢ã‚’ä½œã‚‹
 					if( bCreateDistance ){
 						double x = X0( iCnt - 1 ) - X0( iCnt ); x *= x;
 						double y = Y0( iCnt - 1 ) - Y0( iCnt ); y *= y;
@@ -604,9 +604,9 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						SetDistance( iCnt, dDistance );
 					}
 					
-					// •ûˆÊ‚ğì‚é
+					// æ–¹ä½ã‚’ä½œã‚‹
 					if( bCreateDirection ){
-						// ’â~‚È‚çC’¼‘O‚Ì•ûˆÊ‚ğˆø‚«Œp‚®
+						// åœæ­¢ãªã‚‰ï¼Œç›´å‰ã®æ–¹ä½ã‚’å¼•ãç¶™ã
 						if( Distance( iCnt ) == Distance( iCnt - 1 )){
 							SetDirection( iCnt, Direction( iCnt - 1 ));
 						}else{
@@ -616,7 +616,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						}
 					}
 					
-					// ‘O‚ÌƒƒO‚©‚ç TIME_STOP —£‚ê‚Ä‚¢‚Ä‚©‚Â w’èkm/h ˆÈ‰º‚È‚çC’â~‚Æ‚İ‚È‚·
+					// å‰ã®ãƒ­ã‚°ã‹ã‚‰ TIME_STOP é›¢ã‚Œã¦ã„ã¦ã‹ã¤ æŒ‡å®škm/h ä»¥ä¸‹ãªã‚‰ï¼Œåœæ­¢ã¨ã¿ãªã™
 					int iDiffTime = GetTime( iCnt ) - GetTime( iCnt - 1 );
 					if(
 						uIdxDistance != ~0 &&
@@ -625,7 +625,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					){
 						// -1 -0
 						// A  B
-						//     «
+						//     â†“
 						// -1 -0 +1 +2
 						// A  A' B' B
 						CopyRecord( iCnt + 1, iCnt     ); // B'
@@ -639,13 +639,13 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 							SetDirection( iCnt + 2, Direction( iCnt - 1 ));
 						}
 					}else{
-						// ’â~ŠúŠÔ‚Å‚È‚¯‚ê‚ÎCƒƒO Hz ‚ğŒvZ‚·‚é
+						// åœæ­¢æœŸé–“ã§ãªã‘ã‚Œã°ï¼Œãƒ­ã‚° Hz ã‚’è¨ˆç®—ã™ã‚‹
 						iLogHzTime += iDiffTime;
 						++iLogHzCnt;
 					}
 				}
 				
-				// ƒ‰ƒbƒvƒ^ƒCƒ€‚ğÏ‚Ş
+				// ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ ã‚’ç©ã‚€
 				if( iLapTime >= 0 ){
 					if( pLapLog == NULL ){
 						pLapLog = new CLapLog();
@@ -661,7 +661,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					if( iLapTime ) ++uLapCnt;
 				}
 				
-				// ƒLƒƒƒŠƒuƒŒ[ƒVƒ‡ƒ“‚ÌŠÔ‚ğ‹L˜^
+				// ã‚­ãƒ£ãƒªãƒ–ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³æ™‚ã®æ™‚é–“ã‚’è¨˜éŒ²
 				if( uCalibrating ){
 					if( uCalibrating == 1 ){
 						m_iCalibStart = m_iCalibStop;
@@ -669,14 +669,14 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 						
 						if( m_iCalibStart < 0 ) m_iCalibStart = m_iCalibStop;
 					}
-					// 300km/h ‚É–ß‚·
+					// 300km/h ã«æˆ»ã™
 					SetRawSpeed( GetCnt() - 1, CALIB_MARK_SPEED );
 				}
 			}
-			// ƒƒO Hz ÅIWŒv
+			// ãƒ­ã‚° Hz æœ€çµ‚é›†è¨ˆ
 			m_dFreq = 1000.0 * iLogHzCnt / iLogHzTime;
 			
-			// ”ÔŒ¢‚Ì Direction C³
+			// ç•ªçŠ¬ã® Direction ä¿®æ­£
 			if( uIdxDirection != ~0 ){
 				for( int i = 0; i < GetCnt(); ++i ){
 					if( Direction( i ) != 0 ){
@@ -695,7 +695,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 	if( GetCnt()){
 		int iCnt = GetCnt();
 		
-		// I’[‘¤‚Ì”ÔŒ¢
+		// çµ‚ç«¯å´ã®ç•ªçŠ¬
 		CopyRecord( iCnt,     iCnt - 1 );
 		CopyRecord( iCnt + 1, iCnt - 1 );
 		AddStopRecord( iCnt,     GetTime( iCnt - 1 ) + TIME_STOP_MARGIN );
@@ -706,30 +706,30 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_raw.txt" );
 		#endif
 		
-		// ƒƒOÄƒXƒLƒƒƒ“
+		// ãƒ­ã‚°å†ã‚¹ã‚­ãƒ£ãƒ³
 		GPSLogRescan();
 		
 		#if defined DEBUG && defined DUMP_LOG
 			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_upcon.txt" );
 		#endif
 		
-		// Time ‚Ì Max Min İ’è
+		// Time ã® Max Min è¨­å®š
 		m_pLogTime->InitMinMax();
 		m_pLogTime->SetMaxMin( GetTime( GetCnt() - 2 ), 0 );
 	}
 	
-	// Lap log ‚Ì”ÔŒ¢
+	// Lap log ã®ç•ªçŠ¬
 	if( pLapLog ){
 		LAP_t	LapTime;
-		LapTime.fLogNum	= FLT_MAX;	// ”ÔŒ¢
-		LapTime.iTime	= 0;		// ”ÔŒ¢
+		LapTime.fLogNum	= FLT_MAX;	// ç•ªçŠ¬
+		LapTime.iTime	= 0;		// ç•ªçŠ¬
 		pLapLog->m_Lap.push_back( LapTime );
 	}
 	
 	return GetCnt();
 }
 
-/*** MAP ‰ñ“]ˆ— ***********************************************************/
+/*** MAP å›è»¢å‡¦ç† ***********************************************************/
 
 void CVsdLog::RotateMap( double dAngle ){
 	
@@ -747,18 +747,18 @@ void CVsdLog::RotateMap( double dAngle ){
 	}
 }
 
-/*** ƒ`ƒƒ[ƒgƒŠ[ƒh *********************************************************/
+/*** ãƒãƒ£ãƒ¼ãƒˆãƒªãƒ¼ãƒ‰ *********************************************************/
 
 int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 	m_iLapMode = LAPMODE_CHART;
 	m_iLapSrc  = LAPSRC_VIDEO;
 	
 	{
-		// JavaScript ƒIƒuƒWƒFƒNƒg‰Šú‰»
+		// JavaScript ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåˆæœŸåŒ–
 		CScript Script( pVsd );
 		
 		if( Script.Initialize( L"_system/InitLapChartReader.js" ) == ERR_OK ){
-			// ƒXƒNƒŠƒvƒgÀs
+			// ã‚¹ã‚¯ãƒªãƒ—ãƒˆå®Ÿè¡Œ
 			LPWSTR pStr = NULL;
 			LPWSTR pReader = NULL;
 			Script.Run_s( L"ReadLapChart", StringNew( pStr, szFileName ));
@@ -771,7 +771,7 @@ int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 			return 0;
 		}
 		
-		/*** JS ‚Ì Log ‚ÉƒAƒNƒZƒX *******************************************/
+		/*** JS ã® Log ã«ã‚¢ã‚¯ã‚»ã‚¹ *******************************************/
 		
 		{
 			Locker locker( Script.m_pIsolate );
@@ -779,23 +779,23 @@ int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 			HandleScope handle_scope( Script.m_pIsolate );
 			Context::Scope context_scope( Script.GetContext());
 			
-			// "LapTime" æ“¾
+			// "LapTime" å–å¾—
 			Local<Array> hLapTime = Local<Array>::Cast(
 				Script.GetContext()->Global()->Get( String::NewFromTwoByte( Script.m_pIsolate , ( uint16_t *)L"LapTime" ))
 			);
 			if( !hLapTime->IsArray()) return 0;
 			
-			// ƒJƒƒ‰ƒJ[ No æ“¾
+			// ã‚«ãƒ¡ãƒ©ã‚«ãƒ¼ No å–å¾—
 			m_iCamCarIdx = Script.GetContext()->Global()->Get( String::NewFromTwoByte( Script.m_pIsolate , ( uint16_t *)L"CameraCarID" ))->Int32Value();
 			
-			// LapTime ‚Ì key æ“¾
+			// LapTime ã® key å–å¾—
 			Local<Array> Keys = hLapTime->GetPropertyNames();
 			
 			for( UINT u = 0; u < Keys->Length(); ++u ){
 				String::Value strKey( Keys->Get( u ));
 				m_strName.push_back( reinterpret_cast<LPWSTR>( *strKey ));
 				
-				std::vector<int>	int_vec;	// ƒ_ƒ~[
+				std::vector<int>	int_vec;	// ãƒ€ãƒŸãƒ¼
 				m_LapTable.push_back( int_vec );
 				
 				Local<Array> ArrayTmp = Local<Array>::Cast( hLapTime->Get( Keys->Get( u )));
@@ -810,14 +810,14 @@ int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 		return 0;
 	}
 	
-	// ƒ‰ƒbƒvƒ^ƒCƒ€•\‚ğ•\‚É•ÏŠ·
+	// ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ è¡¨ã‚’æ™‚åˆ»è¡¨ã«å¤‰æ›
 	for( int j = 0; j < ( int )m_LapTable.size(); ++j ){
 		for( int i = m_LapTable[ j ].size() - 2; i >= 0; --i ){
 			m_LapTable[ j ][ i ] = m_LapTable[ j ][ i + 1 ] - m_LapTable[ j ][ i ];
 		}
 	}
 	
-	// vector ”z—ñ‚ğì‚é
+	// vector é…åˆ—ã‚’ä½œã‚‹
 	m_iAllLapIdx.resize( m_strName.size(), -1 );
 	m_iAllGapInfo.resize( m_strName.size(), 0 );
 	m_iPositionInfo.resize( m_strName.size(), -1 );
@@ -825,7 +825,7 @@ int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 	return CamCarLap().size();
 }
 
-/*** ©Ôƒ‰ƒbƒvƒf[ƒ^\’z ***************************************************/
+/*** è‡ªè»Šãƒ©ãƒƒãƒ—ãƒ‡ãƒ¼ã‚¿æ§‹ç¯‰ ***************************************************/
 
 void CLapLogAll::MakeCamLapData( int iStartFrame, int iEndFrame ){
 	
@@ -843,9 +843,9 @@ void CLapLogAll::MakeCamLapData( int iStartFrame, int iEndFrame ){
 	
 	int iTimeSum = CamCarLap()[ CamCarLap().size() - 1 ] - CamCarLap()[ 0 ];
 	
-	// ƒ‰ƒbƒvƒf[ƒ^‚ğ\’z
+	// ãƒ©ãƒƒãƒ—ãƒ‡ãƒ¼ã‚¿ã‚’æ§‹ç¯‰
 	Lap.fLogNum = ( float )m_iStartFrame;
-	PushLap( Lap );	// Œv‘ªƒXƒ^[ƒg ( iTime = 0 )
+	PushLap( Lap );	// è¨ˆæ¸¬ã‚¹ã‚¿ãƒ¼ãƒˆ ( iTime = 0 )
 	int iTime = 0;
 	
 	for( int i = 1; i < ( int )CamCarLap().size(); ++i ){
@@ -859,22 +859,22 @@ void CLapLogAll::MakeCamLapData( int iStartFrame, int iEndFrame ){
 		PushLap( Lap );
 	}
 	
-	Lap.fLogNum	= FLT_MAX;	// ”ÔŒ¢
-	Lap.iTime	= 0;		// ”ÔŒ¢
+	Lap.fLogNum	= FLT_MAX;	// ç•ªçŠ¬
+	Lap.iTime	= 0;		// ç•ªçŠ¬
 	m_Lap.push_back( Lap );
 	
-	// CalcLapInfo() ‚ğƒŠƒZƒbƒg
+	// CalcLapInfo() ã‚’ãƒªã‚»ãƒƒãƒˆ
 	m_iPrevFrame	= INT_MAX;
 }
 
-/*** Še©‚Ìƒ‰ƒbƒvî•ñÄŒvZ *************************************************/
+/*** å„è‡ªã®ãƒ©ãƒƒãƒ—æƒ…å ±å†è¨ˆç®— *************************************************/
 
 void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 	
 	int iFrameCntRaw = iFrameCnt;
 	int i;
 	
-	// ƒXƒ^[ƒg‘OEƒS[ƒ‹Œã‚Ì iFrameCnt ‚ğ•â³
+	// ã‚¹ã‚¿ãƒ¼ãƒˆå‰ãƒ»ã‚´ãƒ¼ãƒ«å¾Œã® iFrameCnt ã‚’è£œæ­£
 	if( m_iLapIdx < 0 ){
 		iFrameCnt = GetLapFrame( 0 );
 	}else if( m_iLapIdx >= ( int )CamCarLap().size() - 1 ){
@@ -883,7 +883,7 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 		//iFrameCnt = GetFrameCnt();
 	}
 	
-	// Šª‚«–ß‚µ‚³‚ê‚½‚Æ‚«‚ÍCæ“ª‚©‚çƒT[ƒ`‚µ’¼‚·
+	// å·»ãæˆ»ã—ã•ã‚ŒãŸã¨ãã¯ï¼Œå…ˆé ­ã‹ã‚‰ã‚µãƒ¼ãƒã—ç›´ã™
 	if( iFrameCntRaw < m_iPrevFrame ){
 		for( i = 0; i < ( int )m_iPositionInfo.size(); ++i ){
 			m_iAllLapIdx[ i ] = m_iPositionInfo[ i ] = -1;
@@ -891,11 +891,11 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 		}
 	}
 	
-	// ‘O‰ñ‚Ì‰‰ZˆÊ’u‚©‚ç Frame# ‚Ü‚Åi‚ß‚Ä‚¢‚Á‚ÄC‡ˆÊ‚ğŒvZ‚·‚é
+	// å‰å›ã®æ¼”ç®—ä½ç½®ã‹ã‚‰ Frame# ã¾ã§é€²ã‚ã¦ã„ã£ã¦ï¼Œé †ä½ã‚’è¨ˆç®—ã™ã‚‹
 	for( i = m_iPrevFrame + 1; i <= iFrameCntRaw; ++i ){
 		for( UINT u = 0; u < m_iPositionInfo.size(); ++u ){
 			
-			// Œ»İƒ‰ƒbƒv”‚ğ‹‚ß‚é
+			// ç¾åœ¨ãƒ©ãƒƒãƒ—æ•°ã‚’æ±‚ã‚ã‚‹
 			int iLapIdx = m_iAllLapIdx[ u ];
 			for(;
 				iLapIdx <= ( int )m_LapTable[ u ].size() - 2 &&
@@ -903,12 +903,12 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 				++iLapIdx
 			);
 			
-			// ƒ‰ƒbƒv”‚ªXV‚³‚ê‚½
+			// ãƒ©ãƒƒãƒ—æ•°ãŒæ›´æ–°ã•ã‚ŒãŸ
 			if( iLapIdx != m_iAllLapIdx[ u ] ){
 				
 				m_iAllLapIdx[ u ] = iLapIdx;
 				
-				// ˆê’U©Ô‚Ì—v‘f‚ğÁ‚·
+				// ä¸€æ—¦è‡ªè»Šã®è¦ç´ ã‚’æ¶ˆã™
 				m_iPositionInfo.erase(
 					std::remove(
 						m_iPositionInfo.begin(),
@@ -922,7 +922,7 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 					m_iPositionInfo.pop_back();
 				}
 				
-				// ‘}“üƒ|ƒCƒ“ƒg‚ğ’T‚µ‚Ä‘}“ü
+				// æŒ¿å…¥ãƒã‚¤ãƒ³ãƒˆã‚’æ¢ã—ã¦æŒ¿å…¥
 				std::vector<int>::iterator v;
 				for( v = m_iPositionInfo.begin(); v != m_iPositionInfo.end(); ++v ){
 					if(
@@ -931,7 +931,7 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 					) break;
 				}
 				
-				// ƒ‰ƒbƒvƒŠ[ƒ_[‚ğŠi”[
+				// ãƒ©ãƒƒãƒ—ãƒªãƒ¼ãƒ€ãƒ¼ã‚’æ ¼ç´
 				if( v == m_iPositionInfo.begin()){
 					if(( int )m_iLapLeader.size() <= iLapIdx ){
 						m_iLapLeader.push_back( u );
@@ -946,14 +946,14 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 	}
 	m_iPrevFrame = iFrameCntRaw;
 	
-	// ŠeÔ‚Ìü‰ñ index ‚ğ‹‚ß‚é
+	// å„è»Šã®å‘¨å› index ã‚’æ±‚ã‚ã‚‹
 	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
 	#endif
 	for( UINT u = 0; u < m_strName.size(); ++u ){
 		int iLapIdx = m_iAllLapIdx[ u ];
 		
-		// ƒ‰ƒbƒv”‚Æ‰½ % ‚ği‚ñ‚¾‚©‚ğ‹‚ß‚é
+		// ãƒ©ãƒƒãƒ—æ•°ã¨ä½• % ã‚’é€²ã‚“ã ã‹ã‚’æ±‚ã‚ã‚‹
 		double dProceeding;
 		if( iLapIdx < 0 ){
 			iLapIdx = 0;
@@ -964,9 +964,9 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 			( double )( iFrameCnt           - GetLapFrame( u, iLapIdx )) /
 			( GetLapFrame( u, iLapIdx + 1 ) - GetLapFrame( u, iLapIdx ));
 		
-		// ã‚Å‹‚ß‚½ˆÊ’u‚ÌCƒJƒƒ‰Ô‚É‚¨‚¯‚éƒtƒŒ[ƒ€”Ô†‚ğ‹‚ß
-		// ‚»‚±‚©‚çƒJƒƒ‰Ô‚Æ‚ÌŠÔ·‚ğ‹‚ß‚Ä push
-		// ‰ºˆÊ 8bit ‚ª id, ãˆÊc‚è‚ªƒ^ƒCƒ€·
+		// ä¸Šã§æ±‚ã‚ãŸä½ç½®ã®ï¼Œã‚«ãƒ¡ãƒ©è»Šã«ãŠã‘ã‚‹ãƒ•ãƒ¬ãƒ¼ãƒ ç•ªå·ã‚’æ±‚ã‚
+		// ãã“ã‹ã‚‰ã‚«ãƒ¡ãƒ©è»Šã¨ã®æ™‚é–“å·®ã‚’æ±‚ã‚ã¦ push
+		// ä¸‹ä½ 8bit ãŒ id, ä¸Šä½æ®‹ã‚ŠãŒã‚¿ã‚¤ãƒ å·®
 		m_iAllGapInfo[ u ] = (
 			( int )(
 				(
@@ -977,5 +977,5 @@ void CLapLogAll::CalcLapInfo( int iFrameCnt, double dFPS ){
 		) | u;
 	}
 	
-	std::sort( m_iAllGapInfo.begin(), m_iAllGapInfo.end());	// ƒ\[ƒg
+	std::sort( m_iAllGapInfo.begin(), m_iAllGapInfo.end());	// ã‚½ãƒ¼ãƒˆ
 }

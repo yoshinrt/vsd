@@ -1,13 +1,13 @@
-//			enum name
-//				|							ïœêîñº
-//				|							|						èâä˙íl
-//				|							|						|				config ñº
+Ôªø//			enum name
+//				|							Â§âÊï∞Âêç
+//				|							|						ÂàùÊúüÂÄ§
+//				|							|						|				config Âêç
 //				|							|						|				|
-DEF_STR_PARAM(	STRPARAM_LOGFILE,			m_szLogFile,			NULL,			"log_file"	)			// VSD ÉçÉO
-DEF_STR_PARAM(	STRPARAM_LOGFILE_READER,	m_szLogFileReader,		NULL,			"log_file_reader"	)	// VSD ÉçÉO
-DEF_STR_PARAM(	STRPARAM_GPSFILE,			m_szGPSLogFile,			NULL,			"gps_file"	)			// GPS ÉçÉO
-DEF_STR_PARAM(	STRPARAM_GPSFILE_READER,	m_szGPSLogFileReader,	NULL,			"gps_file_reader"	)	// GPS ÉçÉO
-DEF_STR_PARAM(	STRPARAM_LAPCHART,			m_szLapChart,			NULL,			"lap_chart"	)			// LAP É`ÉÉÅ[Ég
-DEF_STR_PARAM(	STRPARAM_SKINFILE,			m_szSkinFile,			DEFAULT_SKIN,	"skin_file"	)			// ÉXÉLÉìñº
+DEF_STR_PARAM(	STRPARAM_LOGFILE,			m_szLogFile,			NULL,			"log_file"	)			// VSD „É≠„Ç∞
+DEF_STR_PARAM(	STRPARAM_LOGFILE_READER,	m_szLogFileReader,		NULL,			"log_file_reader"	)	// VSD „É≠„Ç∞
+DEF_STR_PARAM(	STRPARAM_GPSFILE,			m_szGPSLogFile,			NULL,			"gps_file"	)			// GPS „É≠„Ç∞
+DEF_STR_PARAM(	STRPARAM_GPSFILE_READER,	m_szGPSLogFileReader,	NULL,			"gps_file_reader"	)	// GPS „É≠„Ç∞
+DEF_STR_PARAM(	STRPARAM_LAPCHART,			m_szLapChart,			NULL,			"lap_chart"	)			// LAP „ÉÅ„É£„Éº„Éà
+DEF_STR_PARAM(	STRPARAM_SKINFILE,			m_szSkinFile,			DEFAULT_SKIN,	"skin_file"	)			// „Çπ„Ç≠„É≥Âêç
 
 #undef DEF_STR_PARAM

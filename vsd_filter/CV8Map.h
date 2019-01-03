@@ -1,7 +1,7 @@
-class CV8Map : public Handle<Value> {
+ï»¿class CV8Map : public Handle<Value> {
   public:
 	
-	// [] ƒIƒyƒŒ[ƒ^
+	// [] ã‚ªãƒšãƒ¬ãƒ¼ã‚¿
 	CV8Map operator []( LPCWSTR wszPropName ){
 		return Cast( ToArray()->Get( String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)wszPropName )));
 	}
@@ -14,7 +14,7 @@ class CV8Map : public Handle<Value> {
 		return Cast( ToArray()->Get( iIndex ));
 	}
 	
-	// •ÏŠ·
+	// å¤‰æ›
 	static CV8Map Cast( Handle<Value> handle ){
 		return *( static_cast<CV8Map *>( &handle ));
 	}
@@ -27,7 +27,7 @@ class CV8Map : public Handle<Value> {
 		return static_cast<Handle<Value>>( *this );
 	}
 	
-	// ’læ“¾
+	// å€¤å–å¾—
 	int GetInt32( void ){ return ToValue()->Int32Value(); }
 	int GetInt32( int iDefault ){
 		return ToValue()->IsUndefined() ? iDefault : ToValue()->Int32Value();

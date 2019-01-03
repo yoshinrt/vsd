@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -13,7 +13,7 @@
 #include "CV8If.h"
 #include "error_code.h"
 
-/*** ƒGƒ‰[ *****************************************************************/
+/*** ã‚¨ãƒ©ãƒ¼ *****************************************************************/
 
 #define V8AnyError( type, msg ) Isolate::GetCurrent()->ThrowException( Exception::type( CScript::ErrMsgOrID( msg )))
 #define V8RangeError( msg )		V8AnyError( RangeError, msg )
@@ -97,7 +97,7 @@ class CScript : public CV8If {
 	
 	UINT InitLogReader( void );
 	
-	// Global ƒIƒuƒWƒFƒNƒg
+	// Global ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 	void Include( LPCWSTR wszFileName );	// !js_func
 	static void DebugPrint( const FunctionCallbackInfo<Value>& args );	// !js_func
 	static int MessageBox(	// !js_func
@@ -111,7 +111,7 @@ class CScript : public CV8If {
 	static void Sprintf( const FunctionCallbackInfo<Value>& args );	// !js_func
 	static LPWSTR SprintfSub( const FunctionCallbackInfo<Value>& args );
 	
-	// ‹——£æ“¾
+	// è·é›¢å–å¾—
 	static double GetDistanceByLngLat(	// !js_func
 		double dLong0, double dLati0,
 		double dLong1, double dLati1
@@ -125,7 +125,7 @@ class CScript : public CV8If {
 		return CV8Map::Cast( handle )[ "__CScript" ].GetObj<CScript>();
 	}
 	
-	// msg ‚Å‚ ‚ê‚ÎƒXƒ‹[ƒpƒXCERR_ID ‚Å‚ ‚ê‚ÎƒƒbƒZ[ƒW‚ğ•Ô‚·
+	// msg ã§ã‚ã‚Œã°ã‚¹ãƒ«ãƒ¼ãƒ‘ã‚¹ï¼ŒERR_ID ã§ã‚ã‚Œã°ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’è¿”ã™
 	static Handle<String> ErrMsgOrID( char *szMsg ){
 		return String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)szMsg );
 	}
@@ -134,7 +134,7 @@ class CScript : public CV8If {
 		return String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)m_szErrorMsgID[ uID ]);
 	}
 	
-	CVsdFilter	*m_pVsd;	// ƒGc
+	CVsdFilter	*m_pVsd;	// ã‚¨â€¦
 	Persistent<Context,CopyablePersistentTraits<Context>> m_Context;
 	Isolate *m_pIsolate;
 	LPWSTR m_szErrorMsg;

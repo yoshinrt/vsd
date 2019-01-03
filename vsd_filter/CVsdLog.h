@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -14,23 +14,23 @@
 #define TIME_NONE		(( int )INT_MIN )
 #define WATCHDOG_TIME	( 0x70000000 )
 
-#define WATCHDOG_REC_NUM	2		// ƒƒOæ“ª‚Ì”ÔŒ¢•ª‚ÌƒŒƒR[ƒh”
-#define TIME_STOP			3000	// ’âÔ‚Æ‚İ‚È‚· Log ŠÔŠÔŠu
-#define TIME_STOP_MARGIN	300		// ’âÔ‚Æ‚İ‚È‚· Log ‚É•t‰Á‚·‚é Log ‚ÌŠÔ·•ª
-#define KPH_STOP			4		// TIME_STOP ‚ğ–‚½‚µ‚½C’âÔ‚Æ‚İ‚È‚·‘¬“x
+#define WATCHDOG_REC_NUM	2		// ãƒ­ã‚°å…ˆé ­ã®ç•ªçŠ¬åˆ†ã®ãƒ¬ã‚³ãƒ¼ãƒ‰æ•°
+#define TIME_STOP			3000	// åœè»Šã¨ã¿ãªã™ Log æ™‚é–“é–“éš”
+#define TIME_STOP_MARGIN	300		// åœè»Šã¨ã¿ãªã™ Log ã«ä»˜åŠ ã™ã‚‹ Log ã®æ™‚é–“å·®åˆ†
+#define KPH_STOP			4		// TIME_STOP ã‚’æº€ãŸã—ãŸæ™‚ï¼Œåœè»Šã¨ã¿ãªã™é€Ÿåº¦
 
 /*** Lap Time ***************************************************************/
 
 enum {
-	LAPMODE_HAND,		// è“®Œv‘ªƒ‚[ƒh
-	LAPMODE_GPS,		// GPS ©“®Œv‘ªƒ‚[ƒh
-	LAPMODE_MAGNET,		// ¥‹CƒZƒ“ƒT[©“®Œv‘ªƒ‚[ƒh
-	LAPMODE_CHART,		// ƒ‰ƒbƒvƒ`ƒƒ[ƒg
+	LAPMODE_HAND,		// æ‰‹å‹•è¨ˆæ¸¬ãƒ¢ãƒ¼ãƒ‰
+	LAPMODE_GPS,		// GPS è‡ªå‹•è¨ˆæ¸¬ãƒ¢ãƒ¼ãƒ‰
+	LAPMODE_MAGNET,		// ç£æ°—ã‚»ãƒ³ã‚µãƒ¼è‡ªå‹•è¨ˆæ¸¬ãƒ¢ãƒ¼ãƒ‰
+	LAPMODE_CHART,		// ãƒ©ãƒƒãƒ—ãƒãƒ£ãƒ¼ãƒˆ
 };
 enum {
-	LAPSRC_VIDEO,		// Œv‚Í Video ƒtƒŒ[ƒ€
-	LAPSRC_VSD,			// Œv‚Í VSD ƒƒOŒv
-	LAPSRC_GPS,			// Œv‚Í GPS ƒƒOŒv
+	LAPSRC_VIDEO,		// æ™‚è¨ˆã¯ Video ãƒ•ãƒ¬ãƒ¼ãƒ 
+	LAPSRC_VSD,			// æ™‚è¨ˆã¯ VSD ãƒ­ã‚°æ™‚è¨ˆ
+	LAPSRC_GPS,			// æ™‚è¨ˆã¯ GPS ãƒ­ã‚°æ™‚è¨ˆ
 };
 
 typedef struct {
@@ -44,7 +44,7 @@ class CVsdFilter;
 class CLapLog {
   public:
 	CLapLog(){
-		// ‰Šú‰»
+		// åˆæœŸåŒ–
 		m_iLapNum		= 0;
 		m_iBestTime		= TIME_NONE;
 		m_iBestLap		= 0;
@@ -76,7 +76,7 @@ class CLapLog {
 	int	m_iBestTime;
 	int	m_iBestLap;
 	int	m_iLapIdx;
-	int	m_iCurTime;		// Œ»İƒ‰ƒbƒvŒo‰ßŠÔ
+	int	m_iCurTime;		// ç¾åœ¨ãƒ©ãƒƒãƒ—çµŒéæ™‚é–“
 	int	m_iDiffTime;
 	int m_iBestLogNumRunning;
 };
@@ -135,12 +135,12 @@ class CLapLogAll : public CLapLog {
 	int m_iSearchStartIdx;
 };
 
-/*** ƒƒO 1€–Ú *************************************************************/
+/*** ãƒ­ã‚° 1é …ç›® *************************************************************/
 
 class CLog {
 	
   public:
-	// ’læ“¾
+	// å€¤å–å¾—
 	virtual double GetRaw( int    iIndex ) = 0;
 	virtual double Get( double dIndex ) = 0;
 	
@@ -148,7 +148,7 @@ class CLog {
 	virtual double GetMax() = 0;
 	virtual void SetMaxMin( double dMaxVal, double dMinVal ) = 0;
 	
-	// ’lİ’è
+	// å€¤è¨­å®š
 	virtual void Set( int iIndex, double dVal ) = 0;
 	virtual void SetRaw( int iIndex, double dVal ) = 0;
 	virtual void InitMinMax( void ) = 0;
@@ -165,7 +165,7 @@ class CLogVariant : public CLog {
 		SetMin( m_Max );
 	}
 	
-	// ’læ“¾
+	// å€¤å–å¾—
 	double GetRaw( int    iIndex ){ return UnScaled( m_Log[ iIndex ] ); }
 	double Get( double dIndex ){
 		double alfa = dIndex - ( UINT )dIndex;
@@ -184,14 +184,14 @@ class CLogVariant : public CLog {
 		if( GetMax() < dMaxVal ) SetMaxRaw( dMaxVal );
 	}
 	
-	// ’lİ’è
+	// å€¤è¨­å®š
 	void Set( int iIndex, double dVal ){
 		SetMaxMin( dVal, dVal );
 		SetRaw( iIndex, dVal );
 	}
 	
 	void SetRaw( int iIndex, double dVal ){
-		// š–³‚¢’l‚ğüŒ`•âŠÔ‚·‚é•K—v‚ ‚è
+		// â˜…ç„¡ã„å€¤ã‚’ç·šå½¢è£œé–“ã™ã‚‹å¿…è¦ã‚ã‚Š
 		if( GetCnt() > iIndex ) m_Log[ iIndex ] = Scaled( dVal );
 		else while( GetCnt() <= iIndex ) m_Log.push_back( Scaled( dVal ));
 	}
@@ -212,7 +212,7 @@ class CLogVariant : public CLog {
 	T	m_Min;
 	T	m_Max;
 	
-	// Å‘åEÅ¬İ’èƒwƒ‹ƒp
+	// æœ€å¤§ãƒ»æœ€å°è¨­å®šãƒ˜ãƒ«ãƒ‘
 	void SetMax( UCHAR	&v ){ v = UCHAR_MAX; }	void SetMin( UCHAR	&v ){ v = 0; }
 	void SetMax( USHORT	&v ){ v = USHRT_MAX; }	void SetMin( USHORT	&v ){ v = 0; }
 	void SetMax( short	&v ){ v = SHRT_MAX; }	void SetMin( short	&v ){ v = SHRT_MIN; }
@@ -220,7 +220,7 @@ class CLogVariant : public CLog {
 	void SetMax( int	&v ){ v = INT_MAX; }	void SetMin( int	&v ){ v = INT_MIN; }
 	void SetMax( float	&v ){ v = FLT_MAX; }	void SetMin( float	&v ){ v = -FLT_MAX; }
 	
-	// “à•”Œ`®•ÏŠ·
+	// å†…éƒ¨å½¢å¼å¤‰æ›
 	T Scaled( double d ){ return ( T )( d * Scale ); }
 	double UnScaled( T v ){ return ( double )v / Scale; }
 };
@@ -249,7 +249,7 @@ class CLogFloatOffset : public CLogFloat {
 		m_dBaseVal	= 0;
 	}
 	
-	// ’læ“¾
+	// å€¤å–å¾—
 	double GetRaw( int    iIndex ){ return CLogFloat::GetRaw( iIndex ) + m_dBaseVal; }
 	
 	double GetDiff( int    iIndex ){ return CLogFloat::GetRaw( iIndex ); }
@@ -292,7 +292,7 @@ class CLogDirection : public CLogUShort128 {
 	}
 };
 
-/*** 1ŒÂ‚ÌƒƒOƒZƒbƒg ********************************************************/
+/*** 1å€‹ã®ãƒ­ã‚°ã‚»ãƒƒãƒˆ ********************************************************/
 
 class CVsdFilter;
 class CVsdLog : public CV8If {
@@ -306,16 +306,16 @@ class CVsdLog : public CV8If {
 	double	m_dLogNum;
 	
 	double	m_dFreq;
-	INT64	m_iLogStartTime;	// ƒƒOŠJnŠÔ
+	INT64	m_iLogStartTime;	// ãƒ­ã‚°é–‹å§‹æ™‚é–“
 	
-	// VSD ƒƒOˆÊ’u©“®”F¯—p
+	// VSD ãƒ­ã‚°ä½ç½®è‡ªå‹•èªè­˜ç”¨
 	int		m_iCalibStart;
 	int		m_iCalibStop;
 	
-	// ƒƒO‚Ì map
+	// ãƒ­ã‚°ã® map
 	std::map<std::string, CLog *> m_Logs;
 	
-	// ƒRƒ“ƒXƒgƒ‰ƒNƒ^EƒfƒXƒgƒ‰ƒNƒ^
+	// ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ãƒ»ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 	CVsdLog( CVsdFilter *pVsd );
 	
 	UINT GPSLogRescan();
@@ -338,7 +338,7 @@ class CVsdLog : public CV8If {
 		double dLong1, double dLati1
 	);
 	
-	// ”ÔŒ¢’Ç‰Á
+	// ç•ªçŠ¬è¿½åŠ 
 	void AddWatchDog( void );
 	void AddStopRecord( int iIndex, int iTime ){
 		if( m_pLogSpeed ) SetSpeed( iIndex, 0 );
@@ -347,14 +347,14 @@ class CVsdLog : public CV8If {
 		SetTime( iIndex, iTime );
 	}
 	
-	// key ‚Ì‘¶İŠm”F
+	// key ã®å­˜åœ¨ç¢ºèª
 	
 	CLog *GetElement( const char *szKey, BOOL bCreate = FALSE );
 	
-	// ƒŒƒR[ƒhƒRƒs[
+	// ãƒ¬ã‚³ãƒ¼ãƒ‰ã‚³ãƒ”ãƒ¼
 	void CopyRecord( int iTo, int iFrom );
 	
-	// CLog æ“¾
+	// CLog å–å¾—
 	CLog *GetLog( const char *szKey ){
 		std::string strKey( szKey );
 		if( m_Logs.find( strKey ) == m_Logs.end()){
@@ -363,11 +363,11 @@ class CVsdLog : public CV8If {
 		return m_Logs[ strKey ];
 	}
 	
-	// set / get ŠÖ”
+	// set / get é–¢æ•°
 	double Get( const char *szKey, double dIndex ){
 		std::string strKey( szKey );
 		if( m_Logs.find( strKey ) == m_Logs.end()){
-			return NaN;	// —v‘f‚È‚µ
+			return NaN;	// è¦ç´ ãªã—
 		}
 		return m_Logs[ strKey ]->Get( dIndex );
 	}

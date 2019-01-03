@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -73,48 +73,48 @@ enum {
 #define POS_FILE_HEIGHT			21
 #define POS_FILE_HEIGHT_MARGIN	2
 
-#define OFFSET_ADJUST_WIDTH	( 60 * 10 * 1000 )	// 10•ª
+#define OFFSET_ADJUST_WIDTH	( 60 * 10 * 1000 )	// 10åˆ†
 
 
 /****************************************************************************/
 //---------------------------------------------------------------------
-//		ƒtƒBƒ‹ƒ^\‘¢‘Ì’è‹`
+//		ãƒ•ã‚£ãƒ«ã‚¿æ§‹é€ ä½“å®šç¾©
 //---------------------------------------------------------------------
 
-// ƒgƒ‰ƒbƒNƒo[‚Ì–¼‘O
+// ãƒˆãƒ©ãƒƒã‚¯ãƒãƒ¼ã®åå‰
 TCHAR	*track_name[] = {
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	name,
 	#include "def_trackbar.h"
 };
-// ƒgƒ‰ƒbƒNƒo[‚Ì‰Šú’l
+// ãƒˆãƒ©ãƒƒã‚¯ãƒãƒ¼ã®åˆæœŸå€¤
 int		track_default[] = {
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	init,
 	#include "def_trackbar.h"
 };
-// ƒgƒ‰ƒbƒNƒo[‚Ì‰ºŒÀ’l
+// ãƒˆãƒ©ãƒƒã‚¯ãƒãƒ¼ã®ä¸‹é™å€¤
 int		track_s[] = {
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	min,
 	#include "def_trackbar.h"
 };
-// ƒgƒ‰ƒbƒNƒo[‚ÌãŒÀ’l
+// ãƒˆãƒ©ãƒƒã‚¯ãƒãƒ¼ã®ä¸Šé™å€¤
 int		track_e[] = {
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	max,
 	#include "def_trackbar.h"
 };
 
-// ƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Ì–¼‘O
+// ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã®åå‰
 TCHAR	*check_name[] = {
 	#define DEF_CHECKBOX( id, init, name, conf_name )	name,
 	#include "def_checkbox.h"
 };
 
-// ƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Ì‰Šú’l (’l‚Í0‚©1)
+// ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã®åˆæœŸå€¤ (å€¤ã¯0ã‹1)
 int		check_default[] = {
 	#define DEF_CHECKBOX( id, init, name, conf_name )	init,
 	#include "def_checkbox.h"
 };
 
-// ƒVƒƒƒhƒD‚Ì‰Šú’l
+// ã‚·ãƒ£ãƒ‰ã‚¥ã®åˆæœŸå€¤
 int		shadow_default[] = {
 	#define DEF_SHADOW( id, init, conf_name )	init,
 	#include "def_shadow.h"
@@ -129,31 +129,31 @@ char g_szDescription[] = PROG_NAME_J " " PROG_REVISION_STR;
 
 FILTER_DLL filter = {
 	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_MAIN_MESSAGE | FILTER_FLAG_EX_INFORMATION,
-	0,0,						//	İ’èƒEƒCƒ“ƒhƒE‚ÌƒTƒCƒY (FILTER_FLAG_WINDOW_SIZE‚ª—§‚Á‚Ä‚¢‚é‚É—LŒø)
-	PROG_NAME_J,				//	ƒtƒBƒ‹ƒ^‚Ì–¼‘O
-	TRACK_N,					//	ƒgƒ‰ƒbƒNƒo[‚Ì” (0‚È‚ç–¼‘O‰Šú’l“™‚àNULL‚Å‚æ‚¢)
-	track_name,					//	ƒgƒ‰ƒbƒNƒo[‚Ì–¼‘OŒS‚Ö‚Ìƒ|ƒCƒ“ƒ^
-	track_default,				//	ƒgƒ‰ƒbƒNƒo[‚Ì‰Šú’lŒS‚Ö‚Ìƒ|ƒCƒ“ƒ^
-	track_s, track_e,			//	ƒgƒ‰ƒbƒNƒo[‚Ì”’l‚Ì‰ºŒÀãŒÀ (NULL‚È‚ç‘S‚Ä0`256)
-	CHECK_N,					//	ƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Ì” (0‚È‚ç–¼‘O‰Šú’l“™‚àNULL‚Å‚æ‚¢)
-	check_name,					//	ƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Ì–¼‘OŒS‚Ö‚Ìƒ|ƒCƒ“ƒ^
-	check_default,				//	ƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Ì‰Šú’lŒS‚Ö‚Ìƒ|ƒCƒ“ƒ^
-	func_proc,					//	ƒtƒBƒ‹ƒ^ˆ—ŠÖ”‚Ö‚Ìƒ|ƒCƒ“ƒ^ (NULL‚È‚çŒÄ‚Î‚ê‚Ü‚¹‚ñ)
-	NULL, //func_init,			//	ŠJn‚ÉŒÄ‚Î‚ê‚éŠÖ”‚Ö‚Ìƒ|ƒCƒ“ƒ^ (NULL‚È‚çŒÄ‚Î‚ê‚Ü‚¹‚ñ)
-	NULL, //func_exit,			//	I—¹‚ÉŒÄ‚Î‚ê‚éŠÖ”‚Ö‚Ìƒ|ƒCƒ“ƒ^ (NULL‚È‚çŒÄ‚Î‚ê‚Ü‚¹‚ñ)
-	func_update,				//	İ’è‚ª•ÏX‚³‚ê‚½‚Æ‚«‚ÉŒÄ‚Î‚ê‚éŠÖ”‚Ö‚Ìƒ|ƒCƒ“ƒ^ (NULL‚È‚çŒÄ‚Î‚ê‚Ü‚¹‚ñ)
-	func_WndProc,				//	İ’èƒEƒBƒ“ƒhƒE‚ÉƒEƒBƒ“ƒhƒEƒƒbƒZ[ƒW‚ª—ˆ‚½‚ÉŒÄ‚Î‚ê‚éŠÖ”‚Ö‚Ìƒ|ƒCƒ“ƒ^ (NULL‚È‚çŒÄ‚Î‚ê‚Ü‚¹‚ñ)
-	NULL,NULL,					//	ƒVƒXƒeƒ€‚Åg‚¢‚Ü‚·‚Ì‚Åg—p‚µ‚È‚¢‚Å‚­‚¾‚³‚¢
-	NULL,						//  Šg’£ƒf[ƒ^—Ìˆæ‚Ö‚Ìƒ|ƒCƒ“ƒ^ (FILTER_FLAG_EX_DATA‚ª—§‚Á‚Ä‚¢‚é‚É—LŒø)
-	NULL,						//  Šg’£ƒf[ƒ^ƒTƒCƒY (FILTER_FLAG_EX_DATA‚ª—§‚Á‚Ä‚¢‚é‚É—LŒø)
-	g_szDescription,			//  ƒtƒBƒ‹ƒ^î•ñ‚Ö‚Ìƒ|ƒCƒ“ƒ^ (FILTER_FLAG_EX_INFORMATION‚ª—§‚Á‚Ä‚¢‚é‚É—LŒø)
-	NULL,						//	ƒZ[ƒu‚ªŠJn‚³‚ê‚é’¼‘O‚ÉŒÄ‚Î‚ê‚éŠÖ”‚Ö‚Ìƒ|ƒCƒ“ƒ^ (NULL‚È‚çŒÄ‚Î‚ê‚Ü‚¹‚ñ)
-	NULL,						//	ƒZ[ƒu‚ªI—¹‚µ‚½’¼‘O‚ÉŒÄ‚Î‚ê‚éŠÖ”‚Ö‚Ìƒ|ƒCƒ“ƒ^ (NULL‚È‚çŒÄ‚Î‚ê‚Ü‚¹‚ñ)
+	0,0,						//	è¨­å®šã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ã®ã‚µã‚¤ã‚º (FILTER_FLAG_WINDOW_SIZEãŒç«‹ã£ã¦ã„ã‚‹æ™‚ã«æœ‰åŠ¹)
+	PROG_NAME_J,				//	ãƒ•ã‚£ãƒ«ã‚¿ã®åå‰
+	TRACK_N,					//	ãƒˆãƒ©ãƒƒã‚¯ãƒãƒ¼ã®æ•° (0ãªã‚‰åå‰åˆæœŸå€¤ç­‰ã‚‚NULLã§ã‚ˆã„)
+	track_name,					//	ãƒˆãƒ©ãƒƒã‚¯ãƒãƒ¼ã®åå‰éƒ¡ã¸ã®ãƒã‚¤ãƒ³ã‚¿
+	track_default,				//	ãƒˆãƒ©ãƒƒã‚¯ãƒãƒ¼ã®åˆæœŸå€¤éƒ¡ã¸ã®ãƒã‚¤ãƒ³ã‚¿
+	track_s, track_e,			//	ãƒˆãƒ©ãƒƒã‚¯ãƒãƒ¼ã®æ•°å€¤ã®ä¸‹é™ä¸Šé™ (NULLãªã‚‰å…¨ã¦0ï½256)
+	CHECK_N,					//	ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã®æ•° (0ãªã‚‰åå‰åˆæœŸå€¤ç­‰ã‚‚NULLã§ã‚ˆã„)
+	check_name,					//	ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã®åå‰éƒ¡ã¸ã®ãƒã‚¤ãƒ³ã‚¿
+	check_default,				//	ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã®åˆæœŸå€¤éƒ¡ã¸ã®ãƒã‚¤ãƒ³ã‚¿
+	func_proc,					//	ãƒ•ã‚£ãƒ«ã‚¿å‡¦ç†é–¢æ•°ã¸ã®ãƒã‚¤ãƒ³ã‚¿ (NULLãªã‚‰å‘¼ã°ã‚Œã¾ã›ã‚“)
+	NULL, //func_init,			//	é–‹å§‹æ™‚ã«å‘¼ã°ã‚Œã‚‹é–¢æ•°ã¸ã®ãƒã‚¤ãƒ³ã‚¿ (NULLãªã‚‰å‘¼ã°ã‚Œã¾ã›ã‚“)
+	NULL, //func_exit,			//	çµ‚äº†æ™‚ã«å‘¼ã°ã‚Œã‚‹é–¢æ•°ã¸ã®ãƒã‚¤ãƒ³ã‚¿ (NULLãªã‚‰å‘¼ã°ã‚Œã¾ã›ã‚“)
+	func_update,				//	è¨­å®šãŒå¤‰æ›´ã•ã‚ŒãŸã¨ãã«å‘¼ã°ã‚Œã‚‹é–¢æ•°ã¸ã®ãƒã‚¤ãƒ³ã‚¿ (NULLãªã‚‰å‘¼ã°ã‚Œã¾ã›ã‚“)
+	func_WndProc,				//	è¨­å®šã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã«ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãŒæ¥ãŸæ™‚ã«å‘¼ã°ã‚Œã‚‹é–¢æ•°ã¸ã®ãƒã‚¤ãƒ³ã‚¿ (NULLãªã‚‰å‘¼ã°ã‚Œã¾ã›ã‚“)
+	NULL,NULL,					//	ã‚·ã‚¹ãƒ†ãƒ ã§ä½¿ã„ã¾ã™ã®ã§ä½¿ç”¨ã—ãªã„ã§ãã ã•ã„
+	NULL,						//  æ‹¡å¼µãƒ‡ãƒ¼ã‚¿é ˜åŸŸã¸ã®ãƒã‚¤ãƒ³ã‚¿ (FILTER_FLAG_EX_DATAãŒç«‹ã£ã¦ã„ã‚‹æ™‚ã«æœ‰åŠ¹)
+	NULL,						//  æ‹¡å¼µãƒ‡ãƒ¼ã‚¿ã‚µã‚¤ã‚º (FILTER_FLAG_EX_DATAãŒç«‹ã£ã¦ã„ã‚‹æ™‚ã«æœ‰åŠ¹)
+	g_szDescription,			//  ãƒ•ã‚£ãƒ«ã‚¿æƒ…å ±ã¸ã®ãƒã‚¤ãƒ³ã‚¿ (FILTER_FLAG_EX_INFORMATIONãŒç«‹ã£ã¦ã„ã‚‹æ™‚ã«æœ‰åŠ¹)
+	NULL,						//	ã‚»ãƒ¼ãƒ–ãŒé–‹å§‹ã•ã‚Œã‚‹ç›´å‰ã«å‘¼ã°ã‚Œã‚‹é–¢æ•°ã¸ã®ãƒã‚¤ãƒ³ã‚¿ (NULLãªã‚‰å‘¼ã°ã‚Œã¾ã›ã‚“)
+	NULL,						//	ã‚»ãƒ¼ãƒ–ãŒçµ‚äº†ã—ãŸç›´å‰ã«å‘¼ã°ã‚Œã‚‹é–¢æ•°ã¸ã®ãƒã‚¤ãƒ³ã‚¿ (NULLãªã‚‰å‘¼ã°ã‚Œã¾ã›ã‚“)
 };
 
 
 //---------------------------------------------------------------------
-//		ƒtƒBƒ‹ƒ^\‘¢‘Ì‚Ìƒ|ƒCƒ“ƒ^‚ğ“n‚·ŠÖ”
+//		ãƒ•ã‚£ãƒ«ã‚¿æ§‹é€ ä½“ã®ãƒã‚¤ãƒ³ã‚¿ã‚’æ¸¡ã™é–¢æ•°
 //---------------------------------------------------------------------
 
 EXTERN_C FILTER_DLL __declspec(dllexport) * __stdcall GetFilterTable( void ){
@@ -161,7 +161,7 @@ EXTERN_C FILTER_DLL __declspec(dllexport) * __stdcall GetFilterTable( void ){
 }
 
 //---------------------------------------------------------------------
-//		‰Šú‰»
+//		åˆæœŸåŒ–
 //---------------------------------------------------------------------
 
 /*
@@ -171,7 +171,7 @@ BOOL func_init( FILTER *fp ){
 */
 
 //---------------------------------------------------------------------
-//		I—¹
+//		çµ‚äº†
 //---------------------------------------------------------------------
 
 /*
@@ -181,14 +181,14 @@ BOOL func_exit( FILTER *fp ){
 */
 
 //---------------------------------------------------------------------
-//		ƒtƒBƒ‹ƒ^ˆ—ŠÖ”
+//		ãƒ•ã‚£ãƒ«ã‚¿å‡¦ç†é–¢æ•°
 //---------------------------------------------------------------------
 
-/*** CVsdFilter ƒNƒ‰ƒX ***************************************************/
+/*** CVsdFilter ã‚¯ãƒ©ã‚¹ ***************************************************/
 
 extern CVsdFilter	*g_Vsd;
 
-/*** tarckbar / checkbox conf_name –¼ ***/
+/*** tarckbar / checkbox conf_name å ***/
 
 const char *CVsdFilter::m_szTrackbarName[] = {
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name ) conf_name,
@@ -205,12 +205,12 @@ const char *CVsdFilter::m_szShadowParamName[] = {
 	#include "def_shadow.h"
 };
 
-/*** ƒRƒ“ƒXƒgƒ‰ƒNƒ^^ƒfƒXƒgƒ‰ƒNƒ^ *******************************************/
+/*** ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ï¼ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ *******************************************/
 
 CVsdFilter::CVsdFilter( FILTER *filter, void *editp ) :
 	filter( filter ), editp( editp )
 {
-	Constructor();	// Šî–{ƒNƒ‰ƒX‚ÌƒRƒ“ƒXƒgƒ‰ƒNƒ^
+	Constructor();	// åŸºæœ¬ã‚¯ãƒ©ã‚¹ã®ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 	
 	fileinfo = new FILE_INFO;
 	filter->exfunc->get_file_info( editp, fileinfo );
@@ -235,7 +235,7 @@ CVsdFilter::CVsdFilter( FILTER *filter, void *editp ) :
 }
 
 CVsdFilter::~CVsdFilter(){
-	Destructor();	// Šî–{ƒNƒ‰ƒX‚ÌƒfƒXƒgƒ‰ƒNƒ^
+	Destructor();	// åŸºæœ¬ã‚¯ãƒ©ã‚¹ã®ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 	
 	delete fileinfo;
 	delete [] m_szLogFilter;
@@ -243,7 +243,7 @@ CVsdFilter::~CVsdFilter(){
 
 /*** PutPixel ***************************************************************/
 
-/* •ÏŠ·®
+/* å¤‰æ›å¼
 Y  =  0.299R+0.587G+0.114B
 Cr =  0.500R-0.419G-0.081B
 Cb = -0.169R-0.332G+0.500B
@@ -323,7 +323,7 @@ void CVsdFilter::PutImage0C(
 	}
 }
 
-/*** “¯Šúî•ñ•`‰æ ***********************************************************/
+/*** åŒæœŸæƒ…å ±æç”» ***********************************************************/
 
 WCHAR *CVsdFilter::DrawSyncInfoFormatTime(
 	WCHAR	*pBuf, UINT uBufSize, INT64 &iBaseTime, int iTime
@@ -353,10 +353,10 @@ void CVsdFilter::DrawSyncInfoSub(
 ){
 	WCHAR	szBuf[ 32 ];
 	
-	// ƒLƒƒƒvƒVƒ‡ƒ“
+	// ã‚­ãƒ£ãƒ—ã‚·ãƒ§ãƒ³
 	DrawText( x, y, szCaption, Font, color_white );
 	
-	// “ú•t
+	// æ—¥ä»˜
 	struct tm	tmLocal;
 	time_t time	= ( time_t )( iBaseTime + iCurTime ) / 1000;
 	
@@ -364,7 +364,7 @@ void CVsdFilter::DrawSyncInfoSub(
 	wcsftime( szBuf, sizeof( szBuf ), L"%Y/%m/%d", &tmLocal );
 	DrawText( POS_DEFAULT, POS_DEFAULT, szBuf, Font, color_white );
 	
-	// ŠÔ x 3
+	// æ™‚é–“ x 3
 	DrawText(
 		POS_DEFAULT, POS_DEFAULT,
 		DrawSyncInfoFormatTime( szBuf, sizeof( szBuf ), iBaseTime, iCurTime ),
@@ -382,7 +382,7 @@ void CVsdFilter::DrawSyncInfoSub(
 			Font, color_white
 		);
 		
-		// ƒ[ƒJƒ‹ƒ^ƒCƒ€‚Ì 0:00:00 ‚Ì time_t ‚ğ“¾‚é
+		// ãƒ­ãƒ¼ã‚«ãƒ«ã‚¿ã‚¤ãƒ ã® 0:00:00 ã® time_t ã‚’å¾—ã‚‹
 		tmLocal.tm_sec =
 		tmLocal.tm_min =
 		tmLocal.tm_hour = 0;
@@ -399,7 +399,7 @@ void CVsdFilter::DrawSyncInfoSub(
 
 void CVsdFilter::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 	
-	// ƒtƒŒ[ƒ€•\¦
+	// ãƒ•ãƒ¬ãƒ¼ãƒ è¡¨ç¤º
 	
 	#ifdef PUBLIC_MODE
 		#define SYNC_INFO_LINES	3
@@ -423,19 +423,19 @@ void CVsdFilter::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 	m_iTextPosY = y;
 	
 	m_iTextPosY += Font.GetHeight();
-	DrawText( POS_DEFAULT, POS_DEFAULT, L"", Font, color_white );
+	DrawText( POS_DEFAULT, POS_DEFAULT, L"æ™‚åˆ»", Font, color_white );
 	#ifndef PUBLIC_MODE
 	m_iTextPosY += Font.GetHeight();
-		DrawText( POS_DEFAULT, POS_DEFAULT, L"ŠJn", Font, color_white );
-		DrawText( POS_DEFAULT, POS_DEFAULT, L"I—¹", Font, color_white );
-		DrawText( POS_DEFAULT, POS_DEFAULT, L"”ÍˆÍ", Font, color_white );
+		DrawText( POS_DEFAULT, POS_DEFAULT, L"é–‹å§‹", Font, color_white );
+		DrawText( POS_DEFAULT, POS_DEFAULT, L"çµ‚äº†", Font, color_white );
+		DrawText( POS_DEFAULT, POS_DEFAULT, L"ç¯„å›²", Font, color_white );
 	#endif
 	
 	x += Font.GetWidth() * 5;
 	
 	if( m_iVideoStartTime != -1 ){
 		DrawSyncInfoSub(
-			x, y, Font, L"ƒrƒfƒI",
+			x, y, Font, L"ãƒ“ãƒ‡ã‚ª",
 			m_iVideoStartTime,
 			( int )( GetFrameCnt() * 1000 / GetFPS()),
 			( int )( VideoSt * 1000 / GetFPS()),
@@ -446,7 +446,7 @@ void CVsdFilter::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 	
 	if( m_VsdLog ){
 		DrawSyncInfoSub(
-			x, y, Font, L"Ô—¼ƒƒO",
+			x, y, Font, L"è»Šä¸¡ãƒ­ã‚°",
 			m_VsdLog->m_iLogStartTime,
 			m_VsdLog->GetTime(),
 			( int )( VsdSt / SLIDER_TIME ),
@@ -457,7 +457,7 @@ void CVsdFilter::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 	
 	if( m_GPSLog ){
 		DrawSyncInfoSub(
-			x, y, Font, L"GPSƒƒO",
+			x, y, Font, L"GPSãƒ­ã‚°",
 			m_GPSLog->m_iLogStartTime,
 			m_GPSLog->GetTime(),
 			( int )( GPSSt / SLIDER_TIME ),
@@ -467,13 +467,13 @@ void CVsdFilter::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){
 	}
 }
 
-/*** ƒGƒ‰[ƒƒbƒZ[ƒW *******************************************************/
+/*** ã‚¨ãƒ©ãƒ¼ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ *******************************************************/
 
 void CVsdFilter::DispErrorMessage( LPCWSTR szMsg ){
 	Print( szMsg );
 }
 
-/*** ƒtƒŒ[ƒ€‚ğƒ}[ƒN *******************************************************/
+/*** ãƒ•ãƒ¬ãƒ¼ãƒ ã‚’ãƒãƒ¼ã‚¯ *******************************************************/
 
 void CVsdFilter::SetFrameMark( int iFrame ){
 	FRAME_STATUS	fsp;
@@ -497,24 +497,24 @@ int CVsdFilter::GetFrameMark( int iFrame ){
 	return -1;
 }
 
-/*** ƒtƒ@ƒCƒ‹ì¬“úæ“¾ ***************************************************/
+/*** ãƒ•ã‚¡ã‚¤ãƒ«ä½œæˆæ—¥æ™‚å–å¾— ***************************************************/
 
 void CVsdFilter::GetFileCreationTime( void ){
 	FILETIME	ft;
 	
 	HANDLE hFile = CreateFile(
-		fileinfo->name,			// ƒtƒ@ƒCƒ‹–¼
-		GENERIC_READ,			// ƒAƒNƒZƒXƒ‚[ƒh
-		FILE_SHARE_READ,		// ‹¤—Lƒ‚[ƒh
-		NULL,					// ƒZƒLƒ…ƒŠƒeƒB‹Lqq
-		OPEN_EXISTING,			// ì¬•û–@
-		FILE_ATTRIBUTE_NORMAL,	// ƒtƒ@ƒCƒ‹‘®«
-		NULL					// ƒeƒ“ƒvƒŒ[ƒgƒtƒ@ƒCƒ‹‚Ìƒnƒ“ƒhƒ‹
+		fileinfo->name,			// ãƒ•ã‚¡ã‚¤ãƒ«å
+		GENERIC_READ,			// ã‚¢ã‚¯ã‚»ã‚¹ãƒ¢ãƒ¼ãƒ‰
+		FILE_SHARE_READ,		// å…±æœ‰ãƒ¢ãƒ¼ãƒ‰
+		NULL,					// ã‚»ã‚­ãƒ¥ãƒªãƒ†ã‚£è¨˜è¿°å­
+		OPEN_EXISTING,			// ä½œæˆæ–¹æ³•
+		FILE_ATTRIBUTE_NORMAL,	// ãƒ•ã‚¡ã‚¤ãƒ«å±æ€§
+		NULL					// ãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒãƒ³ãƒ‰ãƒ«
 	);
 	
 	if( hFile == NULL ) return;
 	
-	//if( GetFileTime( hFile, NULL, NULL, &ft )){		// ƒfƒoƒbƒO—p ƒ‰ƒCƒgƒ^ƒCƒ€
+	//if( GetFileTime( hFile, NULL, NULL, &ft )){		// ãƒ‡ãƒãƒƒã‚°ç”¨ ãƒ©ã‚¤ãƒˆã‚¿ã‚¤ãƒ 
 	if( GetFileTime( hFile, &ft, NULL, NULL )){
 		m_iVideoStartTime =
 			(
@@ -526,7 +526,7 @@ void CVsdFilter::GetFileCreationTime( void ){
 	CloseHandle( hFile );
 }
 
-/*** ƒrƒfƒI‚ÆƒƒO‚Ì‰Šú“¯Šú *****************************************/
+/*** ãƒ“ãƒ‡ã‚ªæ™‚åˆ»ã¨ãƒ­ã‚°æ™‚åˆ»ã®åˆæœŸåŒæœŸ *****************************************/
 
 #ifdef PUBLIC_MODE
 #define InRange( a, b, v ) ( \
@@ -535,20 +535,20 @@ void CVsdFilter::GetFileCreationTime( void ){
 )
 
 void CVsdFilter::AutoSync( CVsdLog *pLog, int *piParam ){
-	// filetime ‚ªæ“¾‚Å‚«‚Ä‚¢‚È‚¢
+	// filetime ãŒå–å¾—ã§ãã¦ã„ãªã„
 	if(
 		pLog == NULL ||
 		m_piParamC[ CHECK_LOGPOS ] == 0 ||
 		m_iVideoStartTime == -1
 	) return;
 	
-	// ƒrƒfƒII—¹ (24H ˆÈ“à)
+	// ãƒ“ãƒ‡ã‚ªçµ‚äº†æ™‚åˆ» (24H ä»¥å†…)
 	int iVideoStartTime = ( int )( m_iVideoStartTime % ( 24 * 3600 * 1000 ));
 	int iVideoEndTime =
 		( iVideoStartTime + ( int )( GetFrameMax() * 1000 / GetFPS()))
 		% ( 24 * 3600 * 1000 );
 	
-	// ƒƒOŠJnEI—¹ (24H ˆÈ“à)
+	// ãƒ­ã‚°é–‹å§‹ãƒ»çµ‚äº†æ™‚åˆ» (24H ä»¥å†…)
 	int iLogStartTime = ( int )( pLog->m_iLogStartTime % ( 24 * 3600 * 1000 ));
 	int iLogEndTime   = (( int )( pLog->MaxTime()) + iLogStartTime ) % ( 24 * 3600 * 1000 );
 	
@@ -558,7 +558,7 @@ void CVsdFilter::AutoSync( CVsdLog *pLog, int *piParam ){
 		InRange( iLogStartTime, iLogEndTime, iVideoStartTime ) ||
 		InRange( iLogStartTime, iLogEndTime, iVideoEndTime )
 	){
-		// ƒrƒfƒI‚Í 10•ª‚É‰Šú‰»‚·‚é
+		// ãƒ“ãƒ‡ã‚ªã¯ 10åˆ†ã«åˆæœŸåŒ–ã™ã‚‹
 		VideoSt = 0;
 		VideoEd = ( int )(( OFFSET_ADJUST_WIDTH / 1000.0 ) * GetFPS());
 		
@@ -571,7 +571,7 @@ void CVsdFilter::AutoSync( CVsdLog *pLog, int *piParam ){
 
 #endif // PUBLIC_MODE
 
-/*** ƒƒOƒŠ[ƒh *************************************************************/
+/*** ãƒ­ã‚°ãƒªãƒ¼ãƒ‰ *************************************************************/
 
 BOOL CVsdFilter::ReadVsdLog( HWND hwnd ){
 	
@@ -584,7 +584,7 @@ BOOL CVsdFilter::ReadVsdLog( HWND hwnd ){
 	
 	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_LOG ), m_szLogFile );
 	
-	// trackbar İ’è
+	// trackbar è¨­å®š
 	#ifdef PUBLIC_MODE
 		AutoSync( m_VsdLog, &VsdSt );
 	#else
@@ -596,7 +596,7 @@ BOOL CVsdFilter::ReadVsdLog( HWND hwnd ){
 	return TRUE;
 }
 
-/*** GPS ƒƒOƒŠ[ƒh ********************************************************/
+/*** GPS ãƒ­ã‚°ãƒªãƒ¼ãƒ‰ ********************************************************/
 
 BOOL CVsdFilter::ReadGPSLog( HWND hwnd ){
 	
@@ -609,7 +609,7 @@ BOOL CVsdFilter::ReadGPSLog( HWND hwnd ){
 	
 	SetWindowText( GetDlgItem( hwnd, ID_EDIT_LOAD_GPS ), m_szGPSLogFile );
 	
-	// trackbar İ’è
+	// trackbar è¨­å®š
 	#ifdef PUBLIC_MODE
 		AutoSync( m_GPSLog, &GPSSt );
 	#else
@@ -625,7 +625,7 @@ BOOL CVsdFilter::ReadGPSLog( HWND hwnd ){
 
 BOOL func_proc( FILTER *fp, FILTER_PROC_INFO *fpip ){
 	if( !g_Vsd ) return 0;
-	// ƒNƒ‰ƒX‚É•ÏŠ·
+	// ã‚¯ãƒ©ã‚¹ã«å¤‰æ›
 	g_Vsd->fpip	= fpip;
 	
 	BOOL bRet = g_Vsd->DrawVSD();
@@ -636,7 +636,7 @@ BOOL func_proc( FILTER *fp, FILTER_PROC_INFO *fpip ){
 	return bRet;
 }
 
-/*** *.js ƒtƒ@ƒCƒ‹ƒŠƒXƒgæ“¾ ************************************************/
+/*** *.js ãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆå–å¾— ************************************************/
 
 BOOL ListTreeCallback( const char *szPath, const char *szFile, void *pParam ){
 	if( !IsExt( szFile, "js" )) return TRUE;
@@ -658,11 +658,11 @@ void SetSkinFileList( HWND hwnd ){
 	
 	strcpy( szBuf, g_Vsd->m_szPluginDirA );
 	ListTree( szBuf, "*", ListTreeCallback, hwnd );
-	SendMessage( hwnd, CB_ADDSTRING, 0, ( LPARAM )"ƒtƒ@ƒCƒ‹–¼‚ğw’è‚µ‚ÄŠJ‚­..." );
+	SendMessage( hwnd, CB_ADDSTRING, 0, ( LPARAM )"ãƒ•ã‚¡ã‚¤ãƒ«åã‚’æŒ‡å®šã—ã¦é–‹ã..." );
 	SetWindowText( hwnd, g_Vsd->m_szSkinFile );
 }
 
-/*** ƒ_ƒCƒAƒƒOƒTƒCƒYŠg’£‚Æƒp[ƒc’Ç‰Á ***************************************/
+/*** ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚µã‚¤ã‚ºæ‹¡å¼µã¨ãƒ‘ãƒ¼ãƒ„è¿½åŠ  ***************************************/
 
 #define CreateButton( Caption, x, y, id )( \
 	hwndChild = CreateWindow( \
@@ -751,7 +751,7 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	HWND	hwndChild	= NULL;
 	HFONT	hfont		= NULL;
 	
-	// ƒNƒ‰ƒCƒAƒ“ƒg—Ìˆæ‚ÌƒTƒCƒY get Œã‚ÉƒŠƒTƒCƒY
+	// ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆé ˜åŸŸã®ã‚µã‚¤ã‚º get å¾Œã«ãƒªã‚µã‚¤ã‚º
 	GetWindowRect( hwnd, &rectClient );
 	MoveWindow( hwnd,
 		rectClient.left, rectClient.top,
@@ -763,18 +763,18 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	GetClientRect( hwnd, &rectClient );
 	
 	while( 1 ){
-		/*** qƒp[ƒc‚ÌƒTƒCƒY•ÏX ***/
+		/*** å­ãƒ‘ãƒ¼ãƒ„ã®ã‚µã‚¤ã‚ºå¤‰æ›´ ***/
 		hwndChild = FindWindowEx( hwnd, hwndChild, NULL, NULL );
 		if( !hwndChild ) break;
 		
-		// screen -> client À•W‚É•ÏŠ·
+		// screen -> client åº§æ¨™ã«å¤‰æ›
 		GetWindowRect( hwndChild, &rect.rect );
 		ScreenToClient( hwnd, &rect.points.topleft );
 		ScreenToClient( hwnd, &rect.points.bottomright );
 		
 		/*
 		if( rect.rect.right  >= POS_TH_EDIT ){
-			// ƒGƒfƒBƒbƒgƒ{ƒbƒNƒX‚ÌƒXƒ^ƒCƒ‹•ÏX
+			// ã‚¨ãƒ‡ã‚£ãƒƒãƒˆãƒœãƒƒã‚¯ã‚¹ã®ã‚¹ã‚¿ã‚¤ãƒ«å¤‰æ›´
 			//SendMessage( hwnd, EM_SETREADONLY, FALSE, 0 );
 			SetWindowLong(
 				hwndChild, GWL_EXSTYLE,
@@ -783,23 +783,23 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 		}
 		*/
 		
-		// ƒ_ƒCƒAƒƒO¶‘¤‚ğ‰„‚Î‚·CEDIT ƒ{ƒbƒNƒX‚ÌƒTƒCƒY‚ğL‚Î‚·
+		// ãƒ€ã‚¤ã‚¢ãƒ­ã‚°å·¦å´ã‚’å»¶ã°ã™ï¼ŒEDIT ãƒœãƒƒã‚¯ã‚¹ã®ã‚µã‚¤ã‚ºã‚’ä¼¸ã°ã™
 		#define ResizeControl( name ) { \
 			if( rect.rect.right >= POS_TH_ ## name ) rect.rect.right += POS_ADD_ ## name; \
 			if( rect.rect.left  >= POS_TH_ ## name ) rect.rect.left  += POS_ADD_ ## name; \
 		}
 		
-		// ‰E‚©‚ç‡”Ô‚É‘‚­‚±‚Æ
+		// å³ã‹ã‚‰é †ç•ªã«æ›¸ãã“ã¨
 		ResizeControl( EDIT );
 		ResizeControl( SLIDER );
-		// ƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Ìƒ‰ƒxƒ‹”»’è
+		// ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã®ãƒ©ãƒ™ãƒ«åˆ¤å®š
 		if( rect.rect.left < POS_CHK_LABEL_L && POS_CHK_LABEL_R < rect.rect.right ){
 			rect.rect.right = POS_FILE_CAPTION_POS;
 		}else{
 			ResizeControl( LABEL );
 		}
 		
-		// ÀÛ‚ÉƒŠƒTƒCƒY
+		// å®Ÿéš›ã«ãƒªã‚µã‚¤ã‚º
 		MoveWindow( hwndChild,
 			rect.rect.left,
 			rect.rect.top,
@@ -811,7 +811,7 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 		if( !hfont ) hfont = ( HFONT )SendMessage( hwndChild, WM_GETFONT, 0, 0 );
 	}
 	
-	// ˆÊ’uæ“¾ƒ{ƒ^ƒ“
+	// ä½ç½®å–å¾—ãƒœã‚¿ãƒ³
 	int i;
 	#ifndef PUBLIC_MODE
 		for( i = 0; i <= ( ID_BUTT_SET_GEd - ID_BUTT_SET_VSt ); ++i ){
@@ -825,21 +825,21 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 		}
 	#endif
 	
-	// ƒƒO–¼EƒtƒHƒ“ƒg–¼
+	// ãƒ­ã‚°åãƒ»ãƒ•ã‚©ãƒ³ãƒˆå
 	i = ID_BUTT_SET_GEd + 1;
 	int y = rectClient.bottom - ( POS_FILE_HEIGHT + POS_FILE_HEIGHT_MARGIN ) * POS_FILE_NUM + POS_FILE_HEIGHT_MARGIN;
 	
-	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "Ô—¼ƒƒO",	"",		"ŠJ‚­" );
-	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "GPSƒƒO",	"",		"ŠJ‚­" );
+	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "è»Šä¸¡ãƒ­ã‚°",	"",		"é–‹ã" );
+	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "GPSãƒ­ã‚°",	"",		"é–‹ã" );
 	
-	CreateButton( "n", rectClient.right - ( POS_FILE_BUTT_SIZE * 2 ), y, ( HMENU )( i++ ));
-	CreateButton( "I", rectClient.right - POS_FILE_BUTT_SIZE,         y, ( HMENU )( i++ ));
+	CreateButton( "å§‹", rectClient.right - ( POS_FILE_BUTT_SIZE * 2 ), y, ( HMENU )( i++ ));
+	CreateButton( "çµ‚", rectClient.right - POS_FILE_BUTT_SIZE,         y, ( HMENU )( i++ ));
 	
 	rectClient.right -= POS_FILE_BUTT_SIZE * 2;
-	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "LAP•\",	"",		"ŠJ‚­" );
+	CreateControlFileName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "LAPè¡¨",	"",		"é–‹ã" );
 	rectClient.right += POS_FILE_BUTT_SIZE * 2;
 	
-	CreateControlSkinName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "ƒXƒLƒ“",	"" );
+	CreateControlSkinName( hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "ã‚¹ã‚­ãƒ³",	"" );
 	
 	// rev
 	hwndChild = CreateWindow(
@@ -850,33 +850,33 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
-	// cfg load/save ƒ{ƒ^ƒ“
+	// cfg load/save ãƒœã‚¿ãƒ³
 	hwndChild = CreateWindow(
-		"STATIC", "cfgƒtƒ@ƒCƒ‹", WS_CHILD | WS_VISIBLE,
+		"STATIC", "cfgãƒ•ã‚¡ã‚¤ãƒ«", WS_CHILD | WS_VISIBLE,
 		rectClient.right - ( POS_FILE_BUTT_SIZE * 2 + POS_FILE_CAPTION_SIZE ), y,
 		POS_FILE_CAPTION_SIZE, POS_FILE_HEIGHT,
 		hwnd, 0, hInst, NULL
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
-	CreateButton( "ŠJ‚­", rectClient.right - ( POS_FILE_BUTT_SIZE * 2 ), y, ( HMENU )( i++ ));
-	CreateButton( "•Û‘¶", rectClient.right - POS_FILE_BUTT_SIZE,         y, ( HMENU )( i++ ));
+	CreateButton( "é–‹ã", rectClient.right - ( POS_FILE_BUTT_SIZE * 2 ), y, ( HMENU )( i++ ));
+	CreateButton( "ä¿å­˜", rectClient.right - POS_FILE_BUTT_SIZE,         y, ( HMENU )( i++ ));
 }
 
-/*** OpenDialog —pƒtƒBƒ‹ƒ^ì¬ **********************************************/
+/*** OpenDialog ç”¨ãƒ•ã‚£ãƒ«ã‚¿ä½œæˆ **********************************************/
 
 BOOL CVsdFilter::CreateFilter( void ){
 	char	szBuf[ BUF_SIZE ];
 	char	*pBuf;
 	
 	{
-		// JavaScript ƒIƒuƒWƒFƒNƒg‰Šú‰»
+		// JavaScript ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåˆæœŸåŒ–
 		CScript Script( this );
 		if( Script.InitLogReader() != ERR_OK ){
 			return FALSE;
 		}
 		
-		/*** JS ‚Ì Log ‚ÉƒAƒNƒZƒX *******************************************/
+		/*** JS ã® Log ã«ã‚¢ã‚¯ã‚»ã‚¹ *******************************************/
 		
 		{
 			Locker locker( m_ScriptRoot.m_pIsolate );
@@ -884,7 +884,7 @@ BOOL CVsdFilter::CreateFilter( void ){
 			HandleScope handle_scope( m_ScriptRoot.m_pIsolate );
 			Context::Scope context_scope( Script.GetContext());
 			
-			// "LogReaderInfo" æ“¾
+			// "LogReaderInfo" å–å¾—
 			Local<Array> hFilter = Local<Array>::Cast(
 				Script.GetContext()->Global()->Get( String::NewFromOneByte( m_ScriptRoot.m_pIsolate, ( uint8_t *)"LogReaderInfo" ))
 			);
@@ -893,8 +893,8 @@ BOOL CVsdFilter::CreateFilter( void ){
 			m_vecReaderFunc.clear();
 			
 			pBuf = szBuf;
-			// •\¦–¼‚Æ filter •¶š—ñ‚ğ \0 ‚Å cat
-			strcpy( pBuf, "©“®”»•Ê (*.*)" );
+			// è¡¨ç¤ºåã¨ filter æ–‡å­—åˆ—ã‚’ \0 ã§ cat
+			strcpy( pBuf, "è‡ªå‹•åˆ¤åˆ¥ (*.*)" );
 			pBuf = strchr( pBuf, '\0' ) + 1;
 			strcpy( pBuf, "*" );
 			pBuf = strchr( pBuf, '\0' ) + 1;
@@ -905,12 +905,12 @@ BOOL CVsdFilter::CreateFilter( void ){
 				String::Utf8Value strFunc( Local<Array>::Cast( hFilter->Get( u ))->Get( String::NewFromOneByte( m_ScriptRoot.m_pIsolate, ( uint8_t *)"ReaderFunc" )));
 				
 				WideCharToMultiByte(
-					CP_ACP,					// ƒR[ƒhƒy[ƒW
-					0,						// •¶š‚Ìí—Ş‚ğw’è‚·‚éƒtƒ‰ƒO
-					( LPCWSTR )*strName,	// ƒ}ƒbƒvŒ³•¶š—ñ‚ÌƒAƒhƒŒƒX
-					-1,						// ƒ}ƒbƒvŒ³•¶š—ñ‚ÌƒoƒCƒg”
-					pBuf,					// ƒ}ƒbƒvæƒƒCƒh•¶š—ñ‚ğ“ü‚ê‚éƒoƒbƒtƒ@‚ÌƒAƒhƒŒƒX
-					BUF_SIZE - ( pBuf - szBuf ),	// ƒoƒbƒtƒ@‚ÌƒTƒCƒY
+					CP_ACP,					// ã‚³ãƒ¼ãƒ‰ãƒšãƒ¼ã‚¸
+					0,						// æ–‡å­—ã®ç¨®é¡ã‚’æŒ‡å®šã™ã‚‹ãƒ•ãƒ©ã‚°
+					( LPCWSTR )*strName,	// ãƒãƒƒãƒ—å…ƒæ–‡å­—åˆ—ã®ã‚¢ãƒ‰ãƒ¬ã‚¹
+					-1,						// ãƒãƒƒãƒ—å…ƒæ–‡å­—åˆ—ã®ãƒã‚¤ãƒˆæ•°
+					pBuf,					// ãƒãƒƒãƒ—å…ˆãƒ¯ã‚¤ãƒ‰æ–‡å­—åˆ—ã‚’å…¥ã‚Œã‚‹ãƒãƒƒãƒ•ã‚¡ã®ã‚¢ãƒ‰ãƒ¬ã‚¹
+					BUF_SIZE - ( pBuf - szBuf ),	// ãƒãƒƒãƒ•ã‚¡ã®ã‚µã‚¤ã‚º
 					NULL, NULL
 				);
 				
@@ -932,7 +932,7 @@ BOOL CVsdFilter::CreateFilter( void ){
 	return TRUE;
 }
 
-/*** ƒƒOƒŠ[ƒh•¡”ƒtƒ@ƒCƒ‹‘Î‰”Å *******************************************/
+/*** ãƒ­ã‚°ãƒªãƒ¼ãƒ‰è¤‡æ•°ãƒ•ã‚¡ã‚¤ãƒ«å¯¾å¿œç‰ˆ *******************************************/
 
 #define FILTERBUF_SIZE	128
 
@@ -940,7 +940,7 @@ BOOL CVsdFilter::FileOpenDialog( char *&szOut, char *&szReaderFunc ){
 	
 	char szBuf[ BUF_SIZE ];
 	
-	// ƒƒOƒŠ[ƒ_—pƒtƒBƒ‹ƒ^ì¬
+	// ãƒ­ã‚°ãƒªãƒ¼ãƒ€ç”¨ãƒ•ã‚£ãƒ«ã‚¿ä½œæˆ
 	if( m_szLogFilter == NULL && CreateFilter() != TRUE ){
 		return FALSE;
 	}
@@ -957,7 +957,7 @@ BOOL CVsdFilter::FileOpenDialog( char *&szOut, char *&szReaderFunc ){
 	
 	if( !GetOpenFileName( &ofn )) return FALSE;
 	
-	// ƒtƒ@ƒCƒ‹–¼‚ğ '/' ‚Å˜AŒ‹
+	// ãƒ•ã‚¡ã‚¤ãƒ«åã‚’ '/' ã§é€£çµ
 	char *p = szBuf;
 	
 	while( 1 ){
@@ -976,7 +976,7 @@ BOOL CVsdFilter::FileOpenDialog( char *&szOut, char *&szReaderFunc ){
 	return TRUE;
 }
 
-/*** İ’èƒ[ƒh *************************************************************/
+/*** è¨­å®šãƒ­ãƒ¼ãƒ‰ *************************************************************/
 
 char *CVsdFilter::IsConfigParam( const char *szParamName, char *szBuf, int &iVal ){
 	
@@ -1006,16 +1006,16 @@ char *CVsdFilter::IsConfigParamStr( const char *szParamName, char *szBuf, char *
 		strncmp( szBuf, szParamName, iLen = strlen( szParamName )) == 0 &&
 		szBuf[ iLen ] == '='
 	){
-		szBuf += iLen + 1;	// " ‚ğw‚µ‚Ä‚¢‚é‚Í‚¸
+		szBuf += iLen + 1;	// " ã‚’æŒ‡ã—ã¦ã„ã‚‹ã¯ãš
 		
-		// •¶š—ñæ“ª
+		// æ–‡å­—åˆ—å…ˆé ­
 		if( p = strchr( szBuf, '"' )){
 			szBuf = p + 1;
 		}
 		
 		StringNew( szDst, szBuf );
 		
-		// •¶š—ñI’[
+		// æ–‡å­—åˆ—çµ‚ç«¯
 		if(( p = strchr( szDst, '"' )) || ( p = strchr( szDst, ',' ))){
 			*p = '\0';
 		}
@@ -1037,16 +1037,16 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 		
 		while( fgets( szBuf, BUF_SIZE, fp )){
 			if( char *p = IsConfigParam( "mark", szBuf, iVal )){
-				// ƒ‰ƒbƒvƒ^ƒCƒ€ƒ}[ƒN
+				// ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ ãƒãƒ¼ã‚¯
 				ParseMarkStr( p + 1 );
 			}
 			
-			// str param ‚ÌƒŠ[ƒh
+			// str param ã®ãƒªãƒ¼ãƒ‰
 			#define DEF_STR_PARAM( id, var, init, conf_name ) else if( IsConfigParamStr( conf_name, szBuf, var ));
 			#include "def_str_param.h"
 			
 			else{
-				// Mark ˆÈŠO‚Ìƒpƒ‰ƒ[ƒ^
+				// Mark ä»¥å¤–ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 				for( i = 0; i < TRACK_N; ++i ){
 					if(
 						m_szTrackbarName[ i ] &&
@@ -1085,11 +1085,11 @@ void CVsdFilter::SetSkinName( char *szSkinFile, HWND hwnd ){
 	DeleteScript();
 	SetSkinFile( szSkinFile );
 	
-	// skin –¼‚ğƒ_ƒCƒAƒƒO‚Éİ’è
+	// skin åã‚’ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã«è¨­å®š
 	SetWindowText( GetDlgItem( hwnd, ID_COMBO_SEL_SKIN ), m_szSkinFile );
 }
 
-/*** config ƒZ[ƒu **********************************************************/
+/*** config ã‚»ãƒ¼ãƒ– **********************************************************/
 
 enum {
 	#define DEF_STR_PARAM( id, var, init, conf_name ) id,
@@ -1112,7 +1112,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	
 	char cSep = '(';
 	
-	// str param ‚É‰Šú’lİ’è
+	// str param ã«åˆæœŸå€¤è¨­å®š
 	#define DEF_STR_PARAM( id, var, init, conf_name ) \
 		if( var && ( init == NULL || strcmp( var, init ) != 0 )){ \
 			fprintf( fp, "%c \\\n\t" conf_name "=\"%s\"", cSep, var ); \
@@ -1157,12 +1157,12 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 		);
 	}
 	
-	// è“®ƒ‰ƒbƒvŒv‘ªƒ}[ƒNo—Í
+	// æ‰‹å‹•ãƒ©ãƒƒãƒ—è¨ˆæ¸¬ãƒãƒ¼ã‚¯å‡ºåŠ›
 	if( m_LapLog && m_LapLog->m_iLapMode < LAPMODE_MAGNET && m_LapLog->m_iLapNum ){
 		FRAME_STATUS	fsp;
 		BOOL			bFirst = TRUE;
 		
-		// ƒ}[ƒN‚³‚ê‚Ä‚¢‚éƒtƒŒ[ƒ€# ‚ğ‹‚ß‚é
+		// ãƒãƒ¼ã‚¯ã•ã‚Œã¦ã„ã‚‹ãƒ•ãƒ¬ãƒ¼ãƒ # ã‚’æ±‚ã‚ã‚‹
 		for( i = 0; i < GetFrameMax(); ++i ){
 			filter->exfunc->get_frame_status( editp, i, &fsp );
 			if( fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME ){
@@ -1197,11 +1197,11 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	TCHAR	szBuf2[ MAX_PATH + 1 ];
 	int		iFrame;
 	
-	//	TRUE‚ğ•Ô‚·‚Æ‘S‘Ì‚ªÄ•`‰æ‚³‚ê‚é
+	//	TRUEã‚’è¿”ã™ã¨å…¨ä½“ãŒå†æç”»ã•ã‚Œã‚‹
 	
 	if( message == WM_FILTER_INIT ) ExtendDialog( hwnd, 0 );
 	
-	//	•ÒW’†‚Å‚È‚¯‚ê‚Î‰½‚à‚µ‚È‚¢
+	//	ç·¨é›†ä¸­ã§ãªã‘ã‚Œã°ä½•ã‚‚ã—ãªã„
 	if( filter->exfunc->is_editing( editp ) != TRUE ) return FALSE;
 	
 	switch( message ) {
@@ -1209,7 +1209,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 		g_Vsd = new CVsdFilter( filter, editp );
 		
-		// trackbar İ’è
+		// trackbar è¨­å®š
 		#ifdef PUBLIC_MODE
 			g_Vsd->VideoSt = 0;
 			g_Vsd->VideoEd = ( int )( g_Vsd->GetFPS() * ( OFFSET_ADJUST_WIDTH / 1000.0 ));
@@ -1221,13 +1221,13 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		g_Vsd->m_piParamS[ SHADOW_LAP_CHART_St ] = 0;
 		g_Vsd->m_piParamS[ SHADOW_LAP_CHART_Ed ] = filter->exfunc->get_frame_n( editp );
 		
-		// ƒŠƒXƒgƒ{ƒbƒNƒXƒAƒCƒeƒ€’Ç‰Á
+		// ãƒªã‚¹ãƒˆãƒœãƒƒã‚¯ã‚¹ã‚¢ã‚¤ãƒ†ãƒ è¿½åŠ 
 		SetSkinFileList( GetDlgItem( hwnd, ID_COMBO_SEL_SKIN ));
 		
-		// ƒtƒ@ƒCƒ‹ƒ^ƒCƒ€æ“¾
+		// ãƒ•ã‚¡ã‚¤ãƒ«ã‚¿ã‚¤ãƒ å–å¾—
 		g_Vsd->GetFileCreationTime();
 		
-		// İ’èÄ•`‰æ
+		// è¨­å®šå†æç”»
 		filter->exfunc->filter_window_update( filter );
 		
 	  Case WM_FILTER_FILE_CLOSE:
@@ -1238,13 +1238,13 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		switch( wparam ){
 			
 		  case 'M':
-			// ƒ}[ƒN
+			// ãƒãƒ¼ã‚¯
 			FRAME_STATUS	fsp;
 			iFrame = filter->exfunc->get_frame( editp );
 			
 			filter->exfunc->get_frame_status( editp, iFrame, &fsp );
 			
-			// ©“®ƒ‰ƒbƒvŒv‘ªƒ‚[ƒh‚Ì‚Æ‚«C‘¼‚Ìƒ}[ƒN‚ğ‚·‚×‚Ä‰ğœ‚·‚é
+			// è‡ªå‹•ãƒ©ãƒƒãƒ—è¨ˆæ¸¬ãƒ¢ãƒ¼ãƒ‰ã®ã¨ãï¼Œä»–ã®ãƒãƒ¼ã‚¯ã‚’ã™ã¹ã¦è§£é™¤ã™ã‚‹
 			if(
 				g_Vsd->m_piParamC[ CHECK_LAP ] &&
 				g_Vsd->m_piParamT[ TRACK_SLineWidth ] > 0 &&
@@ -1282,7 +1282,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	  Case WM_COMMAND:
 		#ifndef PUBLIC_MODE
 		if( ID_BUTT_SET_VSt <= wparam && wparam <= ID_BUTT_SET_GEd ){
-			// ƒtƒŒ[ƒ€”ƒZƒbƒg
+			// ãƒ•ãƒ¬ãƒ¼ãƒ æ•°ã‚»ãƒƒãƒˆ
 			switch( wparam ){
 				case ID_BUTT_SET_VSt:	filter->track[ PARAM_VSt ] = filter->exfunc->get_frame( editp );
 				Case ID_BUTT_SET_VEd:	filter->track[ PARAM_VEd ] = filter->exfunc->get_frame( editp );
@@ -1291,13 +1291,13 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				Case ID_BUTT_SET_GSt:	if( g_Vsd->m_GPSLog ) filter->track[ PARAM_GSt ] = g_Vsd->m_GPSLog->m_iLogNum;
 				Case ID_BUTT_SET_GEd:	if( g_Vsd->m_GPSLog ) filter->track[ PARAM_GEd ] = g_Vsd->m_GPSLog->m_iLogNum;
 			}
-			// İ’èÄ•`‰æ
+			// è¨­å®šå†æç”»
 			filter->exfunc->filter_window_update( filter );
 		}else
 		#endif
 		
 		switch( wparam ){
-		  case ID_BUTT_LOAD_CFG:	// .avs ƒ[ƒh
+		  case ID_BUTT_LOAD_CFG:	// .avs ãƒ­ãƒ¼ãƒ‰
 			if(
 				filter->exfunc->dlg_get_load_name( szBuf, FILE_CFG_EXT, NULL ) &&
 				g_Vsd->ConfigLoad( szBuf )
@@ -1314,7 +1314,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 					g_Vsd->DeleteScript();
 				}
 				
-				// ƒƒOƒŠ[ƒh
+				// ãƒ­ã‚°ãƒªãƒ¼ãƒ‰
 				if( g_Vsd->m_szLogFile ){
 					DebugCmd(
 						UINT	uTimer = GetTickCount();
@@ -1331,7 +1331,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 						UINT	uTimer = GetTickCount();
 						DebugMsgD( "GPS Log read start\n" );
 					);
-					// ’P”­ƒtƒ@ƒCƒ‹
+					// å˜ç™ºãƒ•ã‚¡ã‚¤ãƒ«
 					g_Vsd->ReadGPSLog( hwnd );
 					
 					DebugCmd( DebugMsgD( "GPS Log read time = %d\n", GetTickCount() - uTimer ); )
@@ -1341,11 +1341,11 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 					g_Vsd->SetSkinName( g_Vsd->m_szSkinFile, hwnd );
 				}
 				
-				// İ’èÄ•`‰æ
+				// è¨­å®šå†æç”»
 				filter->exfunc->filter_window_update( filter );
 				
 				#ifndef PUBLIC_MODE
-					// log pos ©“®”F¯‚ÌXV
+					// log pos è‡ªå‹•èªè­˜ã®æ›´æ–°
 					func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
 				#endif
 			}
@@ -1354,30 +1354,30 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			if( filter->exfunc->dlg_get_save_name( szBuf, FILE_CFG_EXT, NULL ))
 				return g_Vsd->ConfigSave( szBuf );
 			
-		  Case ID_BUTT_LOAD_LOG:	// .log ƒ[ƒh
+		  Case ID_BUTT_LOAD_LOG:	// .log ãƒ­ãƒ¼ãƒ‰
 			if( g_Vsd->FileOpenDialog( g_Vsd->m_szLogFile, g_Vsd->m_szLogFileReader )){
 				if( g_Vsd->ReadVsdLog( hwnd )){
-					// İ’èÄ•`‰æ
+					// è¨­å®šå†æç”»
 					filter->exfunc->filter_window_update( filter );
 					
 					#ifndef PUBLIC_MODE
-						// log pos ©“®”F¯‚ÌXV
+						// log pos è‡ªå‹•èªè­˜ã®æ›´æ–°
 						func_update( filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS );
 					#endif
 				}
 				g_Vsd->DeleteScript();
 			}
 			
-		  Case ID_BUTT_LOAD_GPS:	// GPS ƒƒOƒ[ƒh
+		  Case ID_BUTT_LOAD_GPS:	// GPS ãƒ­ã‚°ãƒ­ãƒ¼ãƒ‰
 			if( g_Vsd->FileOpenDialog( g_Vsd->m_szGPSLogFile, g_Vsd->m_szGPSLogFileReader )){
 				if( g_Vsd->ReadGPSLog( hwnd )){
-					// İ’èÄ•`‰æ
+					// è¨­å®šå†æç”»
 					filter->exfunc->filter_window_update( filter );
 				}
 				g_Vsd->DeleteScript();
 			}
 			
-		  Case ID_BUTT_LOAD_LAPCHART:	// ƒ‰ƒbƒvƒ`ƒƒ[ƒg ƒ[ƒh
+		  Case ID_BUTT_LOAD_LAPCHART:	// ãƒ©ãƒƒãƒ—ãƒãƒ£ãƒ¼ãƒˆ ãƒ­ãƒ¼ãƒ‰
 			if(
 				filter->exfunc->dlg_get_load_name( szBuf, FILE_LAPCHART_EXT, NULL ) &&
 				g_Vsd->LapChartRead( szBuf )
@@ -1399,32 +1399,32 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			g_Vsd->m_bCalcLapTimeReq = TRUE;
 			return TRUE;
 			
-		  Case ( CBN_SELCHANGE << 16 ) | ID_COMBO_SEL_SKIN:	// ƒXƒLƒ“‘I‘ğ
+		  Case ( CBN_SELCHANGE << 16 ) | ID_COMBO_SEL_SKIN:	// ã‚¹ã‚­ãƒ³é¸æŠ
 			{
 				HWND hWndCombo = GetDlgItem( hwnd, ID_COMBO_SEL_SKIN );
 				int i = SendMessage( hWndCombo, CB_GETCURSEL, 0, 0 );
 				
-				// ƒtƒ@ƒCƒ‹‚ğŠJ‚­‚ª‘I‘ğ‚³‚ê‚½?
+				// ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ããŒé¸æŠã•ã‚ŒãŸ?
 				if( SendMessage( hWndCombo, CB_GETCOUNT, 0, 0 ) - 1 == i ){
 					
-					// ƒ_ƒCƒAƒƒO‚ªƒLƒƒƒ“ƒZƒ‹‚³‚ê‚½
+					// ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ãŒã‚­ãƒ£ãƒ³ã‚»ãƒ«ã•ã‚ŒãŸ
 					if( !filter->exfunc->dlg_get_load_name( szBuf, FILE_SKIN_EXT, NULL )){
-						// ‚Æ‚è‚ ‚¦‚¸C’¼‘O‚Ì skin –¼‚ğ‚»‚Ì‚Ü‚ÜƒRƒs[‚µ‚Æ‚­
+						// ã¨ã‚Šã‚ãˆãšï¼Œç›´å‰ã® skin åã‚’ãã®ã¾ã¾ã‚³ãƒ”ãƒ¼ã—ã¨ã
 						//strcpy( szBuf, g_Vsd->m_szSkinFile );
 						//SetWindowText( hWndCombo, g_Vsd->m_szSkinFile );
-						// ‰½‚µ‚Ä‚à–³‘Ê‚¾‚Á‚½...
+						// ä½•ã—ã¦ã‚‚ç„¡é§„ã ã£ãŸ...
 						return TRUE;
 					}
 					
 					SendMessage( hWndCombo, CB_INSERTSTRING, 0, ( LPARAM )szBuf );
 					SendMessage( hWndCombo, CB_SETCURSEL, 0, 0 );
 				}else{
-					// ƒXƒLƒ“‚ªƒhƒƒbƒvƒ_ƒEƒ“ƒŠƒXƒg‚©‚ç‘I‘ğ‚³‚ê‚½
+					// ã‚¹ã‚­ãƒ³ãŒãƒ‰ãƒ­ãƒƒãƒ—ãƒ€ã‚¦ãƒ³ãƒªã‚¹ãƒˆã‹ã‚‰é¸æŠã•ã‚ŒãŸ
 					SendMessage( hWndCombo, CB_GETLBTEXT, i, ( LPARAM )szBuf );
 				}
 				
 				g_Vsd->SetSkinName( szBuf, hwnd );
-				filter->exfunc->filter_window_update( filter );	// İ’èÄ•`‰æ
+				filter->exfunc->filter_window_update( filter );	// è¨­å®šå†æç”»
 			}
 		  Default:
 			return FALSE;
@@ -1435,14 +1435,14 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 	return FALSE;
 }
 
-/*** 1ƒXƒ‰ƒCƒ_ƒo[’²® ******************************************************/
+/*** 1ã‚¹ãƒ©ã‚¤ãƒ€ãƒãƒ¼èª¿æ•´ ******************************************************/
 
 void SetupLogOffset( FILTER *filter ){
 	
 	int	iFrame = filter->exfunc->get_frame( g_Vsd->editp );
 	int	iPoint;
 	
-	// ’²®ƒ|ƒCƒ“ƒg‚ğ”»’f‚·‚é
+	// èª¿æ•´ãƒã‚¤ãƒ³ãƒˆã‚’åˆ¤æ–­ã™ã‚‹
 	switch( g_Vsd->m_iAdjustPointNum ){
 	  case 0:
 		iPoint = 0;
@@ -1450,7 +1450,7 @@ void SetupLogOffset( FILTER *filter ){
 		
 	  Case 1:
 		if( abs( g_Vsd->m_iAdjustPointVid[ 0 ] - iFrame ) <= ( int )( g_Vsd->GetFPS() * 60 )){
-			// ƒtƒŒ[ƒ€ˆÊ’u‚ª‘O‰ñ‚Æ 1•ªˆÈ“à‚È‚çC‘O‰ñ‚Æ“¯‚¶êŠ‚ğg—p‚·‚é
+			// ãƒ•ãƒ¬ãƒ¼ãƒ ä½ç½®ãŒå‰å›ã¨ 1åˆ†ä»¥å†…ãªã‚‰ï¼Œå‰å›ã¨åŒã˜å ´æ‰€ã‚’ä½¿ç”¨ã™ã‚‹
 			iPoint = 0;
 		}else{
 			iPoint = 1;
@@ -1458,15 +1458,15 @@ void SetupLogOffset( FILTER *filter ){
 		}
 		
 	  Default: //Case 2:
-		// 2ƒ|ƒCƒ“ƒg‚Ì‚¤‚¿C‹ß‚¢‚Ù‚¤‚ğÌ—p‚·‚é
+		// 2ãƒã‚¤ãƒ³ãƒˆã®ã†ã¡ï¼Œè¿‘ã„ã»ã†ã‚’æ¡ç”¨ã™ã‚‹
 		iPoint = (
 			abs( g_Vsd->m_iAdjustPointVid[ 0 ] - iFrame ) >
 			abs( g_Vsd->m_iAdjustPointVid[ 1 ] - iFrame )
 		) ? 1 : 0;
 	}
 	
-	// ƒtƒŒ[ƒ€ˆÊ’u‚ª‘O‰ñ‚Æˆá‚Á‚Ä‚¢‚ê‚ÎCGPS ƒƒOˆÊ’uÄæ“¾
-	// m_iAdjustPointNum = 0 ‚É‚Í‚±‚±‚ğ’Ê‚é‚±‚Æ‚Í‚È‚¢
+	// ãƒ•ãƒ¬ãƒ¼ãƒ ä½ç½®ãŒå‰å›ã¨é•ã£ã¦ã„ã‚Œã°ï¼ŒGPS ãƒ­ã‚°ä½ç½®å†å–å¾—
+	// m_iAdjustPointNum = 0 æ™‚ã«ã¯ã“ã“ã‚’é€šã‚‹ã“ã¨ã¯ãªã„
 	if( g_Vsd->m_iAdjustPointVid[ iPoint ] != iFrame ){
 		g_Vsd->m_iAdjustPointVsd[ iPoint ] =
 			g_Vsd->VideoEd == g_Vsd->VideoSt ? 0
@@ -1492,21 +1492,21 @@ void SetupLogOffset( FILTER *filter ){
 		( iPoint ? g_Vsd->VideoEd : g_Vsd->VideoSt ) = iFrame;
 	}
 	
-	// ‘ÎÛ’²®ƒ|ƒCƒ“ƒg‚Ìİ’è
+	// å¯¾è±¡èª¿æ•´ãƒã‚¤ãƒ³ãƒˆã®è¨­å®š
 	( iPoint ? g_Vsd->VsdEd : g_Vsd->VsdSt ) =
 		g_Vsd->m_iAdjustPointVsd[ iPoint ] - g_Vsd->m_piParamT[ TRACK_VsdLogOffset ];
 	( iPoint ? g_Vsd->GPSEd : g_Vsd->GPSSt ) =
 		g_Vsd->m_iAdjustPointGPS[ iPoint ] - g_Vsd->m_piParamT[ TRACK_GPSLogOffset ];
 	
-	// iPoint == 1 ‚ÍCŒã‚ë‚Ì’²®“_‚ğ FPS ‚É‰‚¶‚Ä©“®’²®
+	// iPoint == 1 æ™‚ã¯ï¼Œå¾Œã‚ã®èª¿æ•´ç‚¹ã‚’ FPS ã«å¿œã˜ã¦è‡ªå‹•èª¿æ•´
 	if( g_Vsd->m_iAdjustPointNum == 1 ){
 		g_Vsd->VideoEd = g_Vsd->VideoSt + ( int )( g_Vsd->GetFPS() * ( OFFSET_ADJUST_WIDTH / 1000.0 ));
 		g_Vsd->VsdEd   = g_Vsd->VsdSt + ( int )( SLIDER_TIME * OFFSET_ADJUST_WIDTH );
 		g_Vsd->GPSEd   = g_Vsd->GPSSt + ( int )( SLIDER_TIME * OFFSET_ADJUST_WIDTH );
 		
 		#ifndef PUBLIC_MODE
-			// ƒXƒ‰ƒCƒ_İ’è’l‚ªƒXƒ‰ƒCƒ_ƒo[‚Ìİ’è”ÍˆÍ‚ğ’´‚¦‚Ä‚¢‚éê‡C
-			// ƒXƒ‰ƒCƒ_ƒo[İ’è”ÍˆÍ‚ğÄİ’è‚·‚é
+			// ã‚¹ãƒ©ã‚¤ãƒ€è¨­å®šå€¤ãŒã‚¹ãƒ©ã‚¤ãƒ€ãƒãƒ¼ã®è¨­å®šç¯„å›²ã‚’è¶…ãˆã¦ã„ã‚‹å ´åˆï¼Œ
+			// ã‚¹ãƒ©ã‚¤ãƒ€ãƒãƒ¼è¨­å®šç¯„å›²ã‚’å†è¨­å®šã™ã‚‹
 			if( g_Vsd->VideoEd > filter->track_e[ PARAM_VSt ] ){
 				filter->track_e[ PARAM_VSt ] =
 				filter->track_e[ PARAM_VEd ] = g_Vsd->VideoEd;
@@ -1525,7 +1525,7 @@ void SetupLogOffset( FILTER *filter ){
 	filter->exfunc->filter_window_update( filter );
 }
 
-/*** ƒXƒ‰ƒCƒ_ƒo[˜A“® *******************************************************/
+/*** ã‚¹ãƒ©ã‚¤ãƒ€ãƒãƒ¼é€£å‹• *******************************************************/
 
 BOOL func_update( FILTER *filter, int status ){
 	static	BOOL	bReEnter = FALSE;
@@ -1544,7 +1544,7 @@ BOOL func_update( FILTER *filter, int status ){
 		status == FILTER_UPDATE_STATUS_TRACK + TRACK_SLineWidth
 	) g_Vsd->m_bCalcLapTimeReq = TRUE;
 	
-	// ƒƒOˆÊ’u©“®”F¯ƒ‚[ƒh‚Ìİ’è•ÏX
+	// ãƒ­ã‚°ä½ç½®è‡ªå‹•èªè­˜ãƒ¢ãƒ¼ãƒ‰ã®è¨­å®šå¤‰æ›´
 	if( status == ( FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS )){
 		
 		#ifdef PUBLIC_MODE
@@ -1557,13 +1557,13 @@ BOOL func_update( FILTER *filter, int status ){
 				filter->track[ PARAM_LSt ] = ( int )( g_Vsd->m_VsdLog->m_iCalibStart * SLIDER_TIME );
 				filter->track[ PARAM_LEd ] = ( int )( g_Vsd->m_VsdLog->m_iCalibStop  * SLIDER_TIME );
 				
-				// İ’èÄ•`‰æ
+				// è¨­å®šå†æç”»
 				filter->exfunc->filter_window_update( filter );
 			}
 		#endif
 	}
 	
-	// ƒ}ƒbƒv‰ñ“]
+	// ãƒãƒƒãƒ—å›è»¢
 	else if( status == ( FILTER_UPDATE_STATUS_TRACK + TRACK_MapAngle )){
 		if( g_Vsd->m_VsdLog )
 			g_Vsd->m_VsdLog->RotateMap( filter->track[ TRACK_MapAngle ] * ( -ToRAD / 10 ));

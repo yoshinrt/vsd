@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -11,7 +11,7 @@
 #include "CVsdImage.h"
 #include "error_code.h"
 
-/*** ƒ}ƒNƒ *****************************************************************/
+/*** ãƒã‚¯ãƒ­ *****************************************************************/
 
 #define UpdateMinMax( ycbcr ){ \
 	if( ycbcr != RABY_TRANSPARENT ){ \
@@ -22,14 +22,14 @@
 	} \
 }
 
-/*** ƒRƒ“ƒXƒgƒ‰ƒNƒ^EƒfƒXƒgƒ‰ƒNƒ^ *******************************************/
+/*** ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ãƒ»ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ *******************************************/
 
 CVsdImage::CVsdImage(){
 	DebugMsgD( "new CVsdImage %X\n", this );
 	m_pBuf	= NULL;
 	
-	m_iWidth  = 0;	// ‰æ‘œ‚Ì•
-	m_iHeight = 0;	//  V  ‚‚³
+	m_iWidth  = 0;	// ç”»åƒã®å¹…
+	m_iHeight = 0;	//  ã€ƒ  é«˜ã•
 	m_iOffsX = m_iOffsY = 0;
 	
 	m_iStatus	= IMG_STATUS_LOAD_INCOMPLETE;
@@ -49,7 +49,7 @@ CVsdImage::~CVsdImage(){
 	DebugMsgD( "delete CVsdImage %X\n", this );
 	m_iStatus	= IMG_STATUS_DESTROYED;
 	
-	// ASync ƒ[ƒhŠ®—¹‚Ü‚Å‘Ò‚Â
+	// ASync ãƒ­ãƒ¼ãƒ‰å®Œäº†ã¾ã§å¾…ã¤
 	if( m_pSemaphore ){
 		m_pSemaphore->Lock();
 		m_pSemaphore->Release();
@@ -64,7 +64,7 @@ void CVsdImage::DeleteAsync( void ){
 	m_iStatus	= IMG_STATUS_DESTROYED;
 	/*
 	if( m_pSemaphore == NULL ){
-		// ƒZƒ}ƒtƒH‚ª‚È‚¢
+		// ã‚»ãƒãƒ•ã‚©ãŒãªã„
 		delete this;
 	}else if( m_pSemaphore->LockTest() == WAIT_OBJECT_0 ){
 		m_pSemaphore->Release();
@@ -79,16 +79,16 @@ void CVsdImage::DeleteAsync( void ){
 	delete this;
 }
 
-/*** ƒCƒ[ƒW‚Ìƒ[ƒh *******************************************************/
+/*** ã‚¤ãƒ¡ãƒ¼ã‚¸ã®ãƒ­ãƒ¼ãƒ‰ *******************************************************/
 
 UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 	
 	//-------------------------------------------------------------
-	// ‰æ‘œ‚Ì“Ç‚İ‚İ
+	// ç”»åƒã®èª­ã¿è¾¼ã¿
 	//-------------------------------------------------------------
 	UINT	result = ERR_OK;
-	m_iWidth =	// ‰æ‘œ‚Ì•
-	m_iHeight =	//  V  ‚‚³
+	m_iWidth =	// ç”»åƒã®å¹…
+	m_iHeight =	//  ã€ƒ  é«˜ã•
 	m_iRawWidth =
 	m_iRawHeight = 0;
 	
@@ -108,7 +108,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 		wcsncmp( szFileName, L"https://", 8 ) == 0
 	){
 		if( uFlag & IMG_INET_ASYNC ){
-			// ”ñ“¯Šú“Ç‚İ‚İ‚È‚Ì‚ÅƒXƒŒƒbƒh‹N“®
+			// éåŒæœŸèª­ã¿è¾¼ã¿ãªã®ã§ã‚¹ãƒ¬ãƒƒãƒ‰èµ·å‹•
 			UINT uSize = wcslen( szFileName ) + 1;
 			m_pFileName = new WCHAR[ uSize ];
 			wcscpy_s( m_pFileName, uSize, szFileName );
@@ -127,7 +127,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 			return result;
 		}
 		
-		// URL ‚ÅŠJ‚­
+		// URL ã§é–‹ã
 		HINTERNET	hInternet	= NULL;
 		HINTERNET	hFile		= NULL;
 		
@@ -142,7 +142,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 			if(
 				!(
 					(
-						/* WININET‰Šú‰» */
+						/* WININETåˆæœŸåŒ– */
 						hInternet = InternetOpen(
 							//"WININET Sample Program",
 							"Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)",
@@ -150,7 +150,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 							NULL, NULL, 0
 						)
 					) && (
-						/* URL‚ÌƒI[ƒvƒ“ */
+						/* URLã®ã‚ªãƒ¼ãƒ—ãƒ³ */
 						hFile = InternetOpenUrlW( hInternet, szFileName, NULL, 0, 0, 0 )
 					)
 				)
@@ -170,7 +170,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 				break;
 			}
 			
-			// ƒOƒ[ƒoƒ‹ƒƒ‚ƒŠŠm•Û
+			// ã‚°ãƒ­ãƒ¼ãƒãƒ«ãƒ¡ãƒ¢ãƒªç¢ºä¿
 			#define IMG_BUF_SIZE ( 512 * 1024 )
 			
 			if(
@@ -184,14 +184,14 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 				break;
 			}
 			
-			/* ƒI[ƒvƒ“‚µ‚½URL‚©‚çƒf[ƒ^‚ğ(BUF_SIZEƒoƒCƒg‚¸‚Â)“Ç‚İ‚Ş */
+			/* ã‚ªãƒ¼ãƒ—ãƒ³ã—ãŸURLã‹ã‚‰ãƒ‡ãƒ¼ã‚¿ã‚’(BUF_SIZEãƒã‚¤ãƒˆãšã¤)èª­ã¿è¾¼ã‚€ */
 			UINT	uTotalSize = 0;
 			
 			do{
 				bResult = InternetReadFile( hFile, ( char *)pBuffer + uTotalSize, IMG_BUF_SIZE - uTotalSize, &dwReadSize );
 				uTotalSize += dwReadSize;
 				
-				/* ‘S‚Ä“Ç‚İ‚ñ‚¾‚çƒ‹[ƒv‚ğ”²‚¯‚é */
+				/* å…¨ã¦èª­ã¿è¾¼ã‚“ã ã‚‰ãƒ«ãƒ¼ãƒ—ã‚’æŠœã‘ã‚‹ */
 			}while(
 				!( bResult && ( dwReadSize == 0 )) &&
 				m_iStatus != IMG_STATUS_DESTROYED
@@ -205,7 +205,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 			
 		}while( 0 );
 		
-		/* Œãˆ— */
+		/* å¾Œå‡¦ç† */
 		if( hFile )		InternetCloseHandle( hFile );
 		if( hInternet )	InternetCloseHandle( hInternet );
 		
@@ -213,24 +213,24 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 			DebugMsgD( "Async image: get in %dms\n", GetTickCount() - uStartTime );
 		#endif
 	}else{
-		//--- ‰æ‘œƒtƒ@ƒCƒ‹‚ğŠJ‚­
-		//  y‘Î‰‰æ‘œŒ`®z  BMP, JPEG, PNG, GIF, TIFF, WMF, EMF
+		//--- ç”»åƒãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ã
+		//  ã€å¯¾å¿œç”»åƒå½¢å¼ã€‘  BMP, JPEG, PNG, GIF, TIFF, WMF, EMF
 		pBitmap = Gdiplus::Bitmap::FromFile( szFileName );
 	}
 	
 	if( pBitmap && pBitmap->GetLastStatus() == Gdiplus::Ok ){
-		//---- ‰æ‘œƒTƒCƒY•ª‚Ì—ÌˆæŠm•Û
+		//---- ç”»åƒã‚µã‚¤ã‚ºåˆ†ã®é ˜åŸŸç¢ºä¿
 		m_iWidth  = pBitmap->GetWidth();
 		m_iHeight = pBitmap->GetHeight();
 		
-		// ¡ƒ[ƒh‚·‚é‰æ‘œ‚Ìƒƒ‚ƒŠ‚Ì‰ğ‘œ“x‚ğ•ÏX/İ’èi‚±‚ÌˆÊ’u‚É”CˆÓ‚É‹Lq‚µ‚Ä‰º‚³‚¢j
+		// â– ãƒ­ãƒ¼ãƒ‰ã™ã‚‹ç”»åƒã®ãƒ¡ãƒ¢ãƒªã®è§£åƒåº¦ã‚’å¤‰æ›´/è¨­å®šï¼ˆã“ã®ä½ç½®ã«ä»»æ„ã«è¨˜è¿°ã—ã¦ä¸‹ã•ã„ï¼‰
 		m_pBuf = new CPixelImg[ m_iWidth * m_iHeight ];
 		
 		if( !m_pBuf ){
 			result		= ERR_NOT_ENOUGH_MEMORY;
 			m_iStatus	= IMG_STATUS_LOAD_FAILED;
 		}else{
-			//---- ‰æ‘œƒCƒ[ƒW‚Ì“Ç‚İ‚İ
+			//---- ç”»åƒã‚¤ãƒ¡ãƒ¼ã‚¸ã®èª­ã¿è¾¼ã¿
 			for( int y = 0; y < m_iHeight; ++y ){
 				for( int x = 0; x < m_iWidth; ++x ){
 					Gdiplus::Color srcColor;
@@ -263,7 +263,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 	return result;
 }
 
-/*** ƒŠƒTƒ“ƒvƒŠƒ“ƒO *********************************************************/
+/*** ãƒªã‚µãƒ³ãƒ—ãƒªãƒ³ã‚° *********************************************************/
 
 template<typename Tx, typename Ty>
 UINT CVsdImage::Resampling( Tx x, Ty y ){
@@ -273,12 +273,12 @@ UINT CVsdImage::Resampling( Tx x, Ty y ){
 	UINT uColorC;
 	UINT uColorD;
 	
-	// ”ÍˆÍŠO‚È‚ç“§–¾‚ğ•Ô‚·
+	// ç¯„å›²å¤–ãªã‚‰é€æ˜ã‚’è¿”ã™
 	if( x <= -1 || m_iWidth <= x || y <= -1 || m_iHeight <= y ){
 		return RABY_TRANSPARENT;
 	}
 	
-	// ( int )-0.5 ‚ª 0 ‚É‚È‚Á‚Ä‚µ‚Ü‚¤‚Ì‚Å
+	// ( int )-0.5 ãŒ 0 ã«ãªã£ã¦ã—ã¾ã†ã®ã§
 	int x0 = ( int )( x + 1 ) - 1; int x1 = x0 + 1;
 	int y0 = ( int )( y + 1 ) - 1; int y1 = y0 + 1;
 	
@@ -321,11 +321,11 @@ UINT CVsdImage::Resampling( Tx x, Ty y ){
 		) <<  0 );
 }
 
-/*** k¬ƒŠƒTƒCƒY ***********************************************************/
+/*** ç¸®å°ãƒªã‚µã‚¤ã‚º ***********************************************************/
 
-// x •ûŒük¬
+// x æ–¹å‘ç¸®å°
 UINT CVsdImage::Resampling( double x0, double x1, int y ){
-	// 1pix ‚Ü‚é‚Ü‚é•”•ª‚ÌŒvZ
+	// 1pix ã¾ã‚‹ã¾ã‚‹éƒ¨åˆ†ã®è¨ˆç®—
 	int ir, ia, ib, iy;
 	ir = ia = ib = iy = 0;
 	
@@ -344,7 +344,7 @@ UINT CVsdImage::Resampling( double x0, double x1, int y ){
 	double b = iy;
 	double sum = ceil( x1 ) - ceil( x0 );
 	
-	// æ“ª‚Ì”¼’[•”•ª
+	// å…ˆé ­ã®åŠç«¯éƒ¨åˆ†
 	alfa = ceil( x0 ) - x0;
 	if( alfa > 0 ){
 		UINT u = GetPixel(( int )x0, y );
@@ -356,7 +356,7 @@ UINT CVsdImage::Resampling( double x0, double x1, int y ){
 		sum += alfa;
 	}
 	
-	// ÅŒã‚Ì”¼’[•”•ª
+	// æœ€å¾Œã®åŠç«¯éƒ¨åˆ†
 	alfa = x1 - floor( x1 );
 	if( alfa > 0 ){
 		UINT u = GetPixel(( int )x1, y );
@@ -375,9 +375,9 @@ UINT CVsdImage::Resampling( double x0, double x1, int y ){
 		(( int )( b / sum ) <<  0 );
 }
 
-// y •ûŒük¬
+// y æ–¹å‘ç¸®å°
 UINT CVsdImage::Resampling( int x, double y0, double y1 ){
-	// 1pix ‚Ü‚é‚Ü‚é•”•ª‚ÌŒvZ
+	// 1pix ã¾ã‚‹ã¾ã‚‹éƒ¨åˆ†ã®è¨ˆç®—
 	int ir, ia, ib, iy;
 	ir = ia = ib = iy = 0;
 	
@@ -396,7 +396,7 @@ UINT CVsdImage::Resampling( int x, double y0, double y1 ){
 	double y = iy;
 	double sum = ceil( y1 ) - ceil( y0 );
 	
-	// æ“ª‚Ì”¼’[•”•ª
+	// å…ˆé ­ã®åŠç«¯éƒ¨åˆ†
 	alfa = ceil( y0 ) - y0;
 	if( alfa > 0 ){
 		UINT u = GetPixel( x, ( int )y0 );
@@ -408,7 +408,7 @@ UINT CVsdImage::Resampling( int x, double y0, double y1 ){
 		sum += alfa;
 	}
 	
-	// ÅŒã‚Ì”¼’[•”•ª
+	// æœ€å¾Œã®åŠç«¯éƒ¨åˆ†
 	alfa = y1 - floor( y1 );
 	if( alfa > 0 ){
 		UINT u = GetPixel( x, ( int )y1 );
@@ -427,7 +427,7 @@ UINT CVsdImage::Resampling( int x, double y0, double y1 ){
 		(( int )( y / sum ) <<  0 );
 }
 
-/*** ƒŠƒTƒCƒY ***************************************************************/
+/*** ãƒªã‚µã‚¤ã‚º ***************************************************************/
 
 UINT CVsdImage::Resize( int iWidth, int iHeight ){
 	
@@ -440,7 +440,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 	
 	UINT	ycbcr;
 	
-	// x, y —¼•ûŠg‘å‚Ìê‡‚Ì‚İCˆê‹C‚ÉŠg‘å
+	// x, y ä¸¡æ–¹æ‹¡å¤§ã®å ´åˆã®ã¿ï¼Œä¸€æ°—ã«æ‹¡å¤§
 	if( iWidth > m_iWidth && iHeight > m_iHeight ){
 		
 		pNewBuf = new CPixelImg[ iWidth * iHeight ];
@@ -465,14 +465,14 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 		m_iWidth  = iWidth;
 		m_iHeight = iHeight;
 	}else{
-		/*** x •ûŒü‚Ìˆ— ***/
+		/*** x æ–¹å‘ã®å‡¦ç† ***/
 		
 		if( iWidth != m_iWidth ){
 			pNewBuf = new CPixelImg[ iWidth * m_iHeight ];
 			if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 			
 			if( iWidth > m_iWidth ){
-				// x Šg‘å
+				// x æ‹¡å¤§
 				#ifdef _OPENMP_AVS
 					#pragma omp parallel for
 				#endif
@@ -483,7 +483,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 					UpdateMinMax( ycbcr );
 				}
 			}else{
-				// x k¬
+				// x ç¸®å°
 				#ifdef _OPENMP_AVS
 					#pragma omp parallel for
 				#endif
@@ -506,7 +506,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 			m_iOffsX = m_iOffsY = 0;
 		}
 		
-		/*** y •ûŒü‚Ìˆ— ***/
+		/*** y æ–¹å‘ã®å‡¦ç† ***/
 		
 		if( iHeight != m_iHeight ){
 			iMinX = MAXINT;
@@ -518,7 +518,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 			if( !pNewBuf ) return ERR_NOT_ENOUGH_MEMORY;
 			
 			if( iHeight > m_iHeight ){
-				// y Šg‘å
+				// y æ‹¡å¤§
 				#ifdef _OPENMP_AVS
 					#pragma omp parallel for
 				#endif
@@ -529,7 +529,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 					UpdateMinMax( ycbcr );
 				}
 			}else{
-				// y k¬
+				// y ç¸®å°
 				#ifdef _OPENMP_AVS
 					#pragma omp parallel for
 				#endif
@@ -559,7 +559,7 @@ UINT CVsdImage::Resize( int iWidth, int iHeight ){
 	return ERR_OK;
 }
 
-/*** ‰ñ“] *******************************************************************/
+/*** å›è»¢ *******************************************************************/
 
 UINT CVsdImage::Rotate( int cx, int cy, double dAngle ){
 	
@@ -596,7 +596,7 @@ UINT CVsdImage::Rotate( int cx, int cy, double dAngle ){
 	return ERR_OK;
 }
 
-/*** —LŒø•”•ª‚¾‚¯ƒNƒŠƒbƒv ***************************************************/
+/*** æœ‰åŠ¹éƒ¨åˆ†ã ã‘ã‚¯ãƒªãƒƒãƒ— ***************************************************/
 
 UINT CVsdImage::Clip( int x1, int y1, int x2, int y2 ){
 	
@@ -628,7 +628,7 @@ UINT CVsdImage::Clip( int x1, int y1, int x2, int y2 ){
 	return ERR_OK;
 }
 
-/*** async ƒ[ƒhŠ®—¹‘Ò‚¿ ***************************************************/
+/*** async ãƒ­ãƒ¼ãƒ‰å®Œäº†å¾…ã¡ ***************************************************/
 
 UINT CVsdImage::WaitAsyncLoadComplete( int iMsec ){
 	if( m_pSemaphore ){

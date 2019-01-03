@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -93,7 +93,7 @@ class COle : public CV8If {
 		IDispatch *pDispatch
 	);
 	
-	// Ruby win32ole ˆÚA•¨
+	// Ruby win32ole ç§»æ¤ç‰©
 	static void V8Array2SafeArray(
 		Local<Array> val,
 		SAFEARRAY *psa,
@@ -146,7 +146,7 @@ class COle : public CV8If {
 	
 	static void ThrowHResultError( HRESULT hr );
 	
-	// ‰Šú‰»EI—¹
+	// åˆæœŸåŒ–ãƒ»çµ‚äº†
 	static void Initialize( void ){		CoInitialize( NULL ); }
 	static void Uninitialize( void ){	CoUninitialize(); }
 	

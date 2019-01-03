@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #define _CRT_NO_VA_START_VALIDATION
 
@@ -90,24 +90,24 @@ static LPWSTR StringNew( LPWSTR& szDst, const char *szSrc ){
 	if( szSrc == NULL || *szSrc == '\0' ){
 		return szDst = NULL;
 	}
-	// SJIS->WCHAR �ϊ�
+	// SJIS->WCHAR 変換
 	int iLen = MultiByteToWideChar(
-		CP_ACP,				// �R�[�h�y�[�W
-		0,					// �����̎�ނ��w�肷��t���O
-		szSrc,				// �}�b�v��������̃A�h���X
-		-1,					// �}�b�v��������̃o�C�g��
-		NULL,				// �}�b�v�惏�C�h�����������o�b�t�@�̃A�h���X
-		0					// �o�b�t�@�̃T�C�Y
+		CP_ACP,				// コードページ
+		0,					// 文字の種類を指定するフラグ
+		szSrc,				// マップ元文字列のアドレス
+		-1,					// マップ元文字列のバイト数
+		NULL,				// マップ先ワイド文字列を入れるバッファのアドレス
+		0					// バッファのサイズ
 	);
 	szDst = new WCHAR[ iLen ];
 	
 	MultiByteToWideChar(
-		CP_ACP,				// �R�[�h�y�[�W
-		0,					// �����̎�ނ��w�肷��t���O
-		szSrc,				// �}�b�v��������̃A�h���X
-		-1,					// �}�b�v��������̃o�C�g��
-		szDst,				// �}�b�v�惏�C�h�����������o�b�t�@�̃A�h���X
-		iLen				// �o�b�t�@�̃T�C�Y
+		CP_ACP,				// コードページ
+		0,					// 文字の種類を指定するフラグ
+		szSrc,				// マップ元文字列のアドレス
+		-1,					// マップ元文字列のバイト数
+		szDst,				// マップ先ワイド文字列を入れるバッファのアドレス
+		iLen				// バッファのサイズ
 	);
 	
 	return szDst;
@@ -119,25 +119,25 @@ static char *StringNew( char *&szDst, LPCWSTR &szSrc ){
 	if( szSrc == NULL || *szSrc == '\0' ){
 		return szDst = NULL;
 	}
-	// SJIS->WCHAR �ϊ�
+	// SJIS->WCHAR 変換
 	int iLen = WideCharToMultiByte(
-		CP_ACP,				// �R�[�h�y�[�W
-		0,					// �����̎�ނ��w�肷��t���O
-		szSrc,				// �}�b�v��������̃A�h���X
-		-1,					// �}�b�v��������̃o�C�g��
-		NULL,				// �}�b�v�惏�C�h�����������o�b�t�@�̃A�h���X
-		0,					// �o�b�t�@�̃T�C�Y
+		CP_ACP,				// コードページ
+		0,					// 文字の種類を指定するフラグ
+		szSrc,				// マップ元文字列のアドレス
+		-1,					// マップ元文字列のバイト数
+		NULL,				// マップ先ワイド文字列を入れるバッファのアドレス
+		0,					// バッファのサイズ
 		NULL, NULL
 	);
 	szDst = new char[ iLen ];
 	
 	WideCharToMultiByte(
-		CP_ACP,				// �R�[�h�y�[�W
-		0,					// �����̎�ނ��w�肷��t���O
-		szSrc,				// �}�b�v��������̃A�h���X
-		-1,					// �}�b�v��������̃o�C�g��
-		szDst,				// �}�b�v�惏�C�h�����������o�b�t�@�̃A�h���X
-		iLen,				// �o�b�t�@�̃T�C�Y
+		CP_ACP,				// コードページ
+		0,					// 文字の種類を指定するフラグ
+		szSrc,				// マップ元文字列のアドレス
+		-1,					// マップ元文字列のバイト数
+		szDst,				// マップ先ワイド文字列を入れるバッファのアドレス
+		iLen,				// バッファのサイズ
 		NULL, NULL
 	);
 	

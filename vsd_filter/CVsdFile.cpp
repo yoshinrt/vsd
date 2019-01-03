@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -14,7 +14,7 @@
 #define V8ErrorZipNotSupported()	V8Error( "operation not supported on zip-mode" )
 #define V8ErrorZipNotOpened()		V8Error( "file in zip not opened, execute ZipNextFile() first." )
 
-/*** ƒtƒ@ƒCƒ‹ƒI[ƒvƒ“ *******************************************************/
+/*** ãƒ•ã‚¡ã‚¤ãƒ«ã‚ªãƒ¼ãƒ—ãƒ³ *******************************************************/
 
 int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 	
@@ -47,7 +47,7 @@ int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 		if( m_unzfp ) m_uMode = MODE_ZIP;
 	}
 	
-	// •’Ê fopen
+	// æ™®é€š fopen
 	else{
 		m_fp = _wfopen( szFile, szMode );
 	}
@@ -56,7 +56,7 @@ int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 	return 0;
 }
 
-/*** ƒtƒ@ƒCƒ‹ƒNƒ[ƒY *******************************************************/
+/*** ãƒ•ã‚¡ã‚¤ãƒ«ã‚¯ãƒ­ãƒ¼ã‚º *******************************************************/
 
 void CVsdFile::Close( void ){
 	if( m_fp ) switch( m_uMode ){
@@ -69,7 +69,7 @@ void CVsdFile::Close( void ){
 	m_fp = NULL;
 }
 
-/*** ƒ‰ƒCƒ“ƒŠ[ƒh ***********************************************************/
+/*** ãƒ©ã‚¤ãƒ³ãƒªãƒ¼ãƒ‰ ***********************************************************/
 
 void CVsdFile::ReadLine( ReturnValue<Value> Ret ){
 	*m_cBuf = '\0';
@@ -90,19 +90,19 @@ void CVsdFile::ReadLine( ReturnValue<Value> Ret ){
 		
 		Case MODE_ZIP_OPENED: {
 			
-			// \n ƒT[ƒ`
+			// \n ã‚µãƒ¼ãƒ
 			char *p = ( char *)memchr( m_cBuf + m_uBufPtr, '\n', m_uBufSize - m_uBufPtr );
 			
-			// Œ©‚Â‚©‚ç‚È‚¢‚Ì‚ÅCbuf read ‚·‚é
+			// è¦‹ã¤ã‹ã‚‰ãªã„ã®ã§ï¼Œbuf read ã™ã‚‹
 			if( !p ){
 				ReadZip();
 				p = ( char *)memchr( m_cBuf + m_uBufPtr, '\n', m_uBufSize - m_uBufPtr );
 				
-				// Ä‚ÑŒ©‚Â‚©‚ç‚È‚©‚Á‚½‚Ì‚ÅCp ‚Í buf I’[‚ğw‚·
+				// å†ã³è¦‹ã¤ã‹ã‚‰ãªã‹ã£ãŸã®ã§ï¼Œp ã¯ buf çµ‚ç«¯ã‚’æŒ‡ã™
 				if( !p ) p = m_cBuf + m_uBufSize - 1;
 			}
 			
-			// •¶š—ñ’·•t‚«‚Å String •ÏŠ·
+			// æ–‡å­—åˆ—é•·ä»˜ãã§ String å¤‰æ›
 			int iStr = m_uBufPtr;
 			m_uBufPtr = ( p - m_cBuf + 1 );
 			Ret.Set(
@@ -117,7 +117,7 @@ void CVsdFile::ReadLine( ReturnValue<Value> Ret ){
 	Ret.Set( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)m_cBuf ));
 }
 
-/*** ƒ‰ƒCƒ“ƒ‰ƒCƒg ***********************************************************/
+/*** ãƒ©ã‚¤ãƒ³ãƒ©ã‚¤ãƒˆ ***********************************************************/
 
 int CVsdFile::WriteLine( char *str ){
 	
@@ -149,7 +149,7 @@ int CVsdFile::Seek( int iOffs, int iOrg ){
 	return 0;
 }
 
-/*** ƒoƒCƒiƒŠƒŠ[ƒh *********************************************************/
+/*** ãƒã‚¤ãƒŠãƒªãƒªãƒ¼ãƒ‰ *********************************************************/
 
 UCHAR *CVsdFile::ReadBin( int iSize ){
 	static UCHAR cBuf[ 8 ];
@@ -161,11 +161,11 @@ UCHAR *CVsdFile::ReadBin( int iSize ){
 		Case MODE_GZIP:			gzread( m_gzfp, cBuf, iSize );
 		Case MODE_ZIP:			V8ErrorZipNotOpened();
 		Case MODE_ZIP_OPENED: {
-			// buf c—Ê‚ª‘«‚è‚È‚©‚Á‚½‚çC“Ç‚Ş
+			// buf æ®‹é‡ãŒè¶³ã‚Šãªã‹ã£ãŸã‚‰ï¼Œèª­ã‚€
 			if( iSize > ( int )( m_uBufSize - m_uBufPtr )) ReadZip();
 			if( iSize > ( int )( m_uBufSize - m_uBufPtr )) iSize = m_uBufSize - m_uBufPtr;
 			
-			// ƒŠ[ƒhƒoƒbƒtƒ@‚ÉƒRƒs[
+			// ãƒªãƒ¼ãƒ‰ãƒãƒƒãƒ•ã‚¡ã«ã‚³ãƒ”ãƒ¼
 			memcpy( cBuf, m_cBuf + m_uBufPtr, iSize );
 			m_uBufPtr += iSize;
 		}
@@ -173,7 +173,7 @@ UCHAR *CVsdFile::ReadBin( int iSize ){
 	return cBuf;
 }
 
-/*** ƒoƒCƒiƒŠƒ‰ƒCƒg *********************************************************/
+/*** ãƒã‚¤ãƒŠãƒªãƒ©ã‚¤ãƒˆ *********************************************************/
 
 int CVsdFile::WriteBin( void *pBuf, int iSize ){
 	if( m_fp ) switch( m_uMode ){
@@ -187,7 +187,7 @@ int CVsdFile::WriteBin( void *pBuf, int iSize ){
 	return 0;
 }
 
-/*** eof ƒ`ƒFƒbƒN ***********************************************************/
+/*** eof ãƒã‚§ãƒƒã‚¯ ***********************************************************/
 
 int CVsdFile::IsEOF( void ){
 	if( m_fp ) switch( m_uMode ){
@@ -204,22 +204,22 @@ int CVsdFile::IsEOF( void ){
 	return 0;
 }
 
-/*** zip Ÿ‚Ìƒtƒ@ƒCƒ‹ *******************************************************/
+/*** zip æ¬¡ã®ãƒ•ã‚¡ã‚¤ãƒ« *******************************************************/
 
 void CVsdFile::ZipNextFile( ReturnValue<Value> Ret ){
 	unz_file_info fileInfo;
 	
 	LPWSTR	wszFileName = NULL;
 	
-	// zip ‚¶‚á‚È‚¯‚ê‚Î ret
+	// zip ã˜ã‚ƒãªã‘ã‚Œã° ret
 	if( !( MODE_ZIP <= m_uMode && m_uMode <= MODE_ZIP_OPENED )){
 		V8Error( "not opened by zip-mode" );
 		return;
 	}
 	
-	m_uFlag &= ~FLAG_EOF;	// eof ƒNƒŠƒA
+	m_uFlag &= ~FLAG_EOF;	// eof ã‚¯ãƒªã‚¢
 	
-	// ƒtƒ@ƒCƒ‹‚ğŠJ‚¢‚Ä‚¢‚½‚çC•Â‚¶‚é
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ã„ã¦ã„ãŸã‚‰ï¼Œé–‰ã˜ã‚‹
 	if( m_uMode == MODE_ZIP_OPENED ){
 		unzCloseCurrentFile( m_unzfp );
 	}
@@ -227,14 +227,14 @@ void CVsdFile::ZipNextFile( ReturnValue<Value> Ret ){
 	
 	while( 1 ){
 		if( m_uFlag & FLAG_2ND_FILE ){
-			// ƒtƒ@ƒCƒ‹‘S•”ˆ—‚µ‚½
+			// ãƒ•ã‚¡ã‚¤ãƒ«å…¨éƒ¨å‡¦ç†ã—ãŸ
 			if( unzGoToNextFile( m_unzfp ) == UNZ_END_OF_LIST_OF_FILE ){
 				return;
 			}
 		}
 		m_uFlag |= FLAG_2ND_FILE;
 		
-		// ‘ŒÉ“àƒtƒ@ƒCƒ‹–¼æ“¾
+		// æ›¸åº«å†…ãƒ•ã‚¡ã‚¤ãƒ«åå–å¾—
 		if(
 			unzGetCurrentFileInfo(
 				m_unzfp, &fileInfo,
@@ -246,15 +246,15 @@ void CVsdFile::ZipNextFile( ReturnValue<Value> Ret ){
 			return;
 		}
 		
-		// unicode •ÏŠ·
+		// unicode å¤‰æ›
 		StringNew( wszFileName, m_cBuf );
 		
-		// '/' ‚ÅI‚í‚Á‚Ä‚¢‚½‚ç dir ‚È‚Ì‚ÅƒXƒLƒbƒv
+		// '/' ã§çµ‚ã‚ã£ã¦ã„ãŸã‚‰ dir ãªã®ã§ã‚¹ã‚­ãƒƒãƒ—
 		int iLen = wcslen( wszFileName ) - 1;
 		if( iLen >= 0 && wszFileName[ iLen ] != '/' ) break;
 	}
 	
-	// ‘ŒÉ“àƒtƒ@ƒCƒ‹ƒI[ƒvƒ“
+	// æ›¸åº«å†…ãƒ•ã‚¡ã‚¤ãƒ«ã‚ªãƒ¼ãƒ—ãƒ³
 	if( unzOpenCurrentFile( m_unzfp ) == UNZ_OK ){
 		m_uMode = MODE_ZIP_OPENED;
 		
@@ -266,18 +266,18 @@ void CVsdFile::ZipNextFile( ReturnValue<Value> Ret ){
 	V8Error( "zlib: can't open file in zip (maybe wrong zip format?)" );
 }
 
-/*** zip ƒtƒ@ƒCƒ‹‚Ì body ƒŠ[ƒh *********************************************/
+/*** zip ãƒ•ã‚¡ã‚¤ãƒ«ã® body ãƒªãƒ¼ãƒ‰ *********************************************/
 
 int CVsdFile::ReadZip( void ){
 	
-	// c‚Á‚Ä‚¢‚éƒf[ƒ^‚ğ”z—ñæ“ª‚É move
+	// æ®‹ã£ã¦ã„ã‚‹ãƒ‡ãƒ¼ã‚¿ã‚’é…åˆ—å…ˆé ­ã« move
 	if( m_uBufPtr != 0 && m_uBufPtr != m_uBufSize ){
 		memmove( m_cBuf, m_cBuf + m_uBufPtr, m_uBufSize - m_uBufPtr );
 	}
 	m_uBufSize -= m_uBufPtr;
 	m_uBufPtr = 0;
 	
-	// ƒŠ[ƒh
+	// ãƒªãƒ¼ãƒ‰
 	int iBufRemained = FILEBUF_LEN - m_uBufSize;
 	int iReadSize = unzReadCurrentFile( m_unzfp, m_cBuf + m_uBufSize, iBufRemained );
 	m_uBufSize += iReadSize;

@@ -1,6 +1,6 @@
-//			enum name
-//				|				‰Šú’l
-//				|				|		config –¼
+ï»¿//			enum name
+//				|				åˆæœŸå€¤
+//				|				|		config å
 //				|				|		|
 
 #ifdef PUBLIC_MODE
@@ -15,9 +15,9 @@ DEF_SHADOW(	PARAM_GEd,			0,		"gps_end"		)
 DEF_SHADOW(	SHADOW_LAP_CHART_St,	0,	"lap_chart_start"	)
 DEF_SHADOW(	SHADOW_LAP_CHART_Ed,	0,	"lap_chart_end"	)
 
-DEF_SHADOW(	METER_ADJUST,		1000,	"meter_adjust"	)	// ƒ[ƒ^[•â³ŒW”
-DEF_SHADOW(	SHADOW_LAP_START,	0,		"lap_start"		)	// ƒ‰ƒbƒvŠJn
-DEF_SHADOW(	SHADOW_LAP_END,		INT_MAX,"lap_end"		)	// ƒ‰ƒbƒvI—¹
-DEF_SHADOW(	SHADOW_SAVING,		0,		"saving"		)	// avs —p IsSaving ’l
+DEF_SHADOW(	METER_ADJUST,		1000,	"meter_adjust"	)	// ãƒ¡ãƒ¼ã‚¿ãƒ¼è£œæ­£ä¿‚æ•°
+DEF_SHADOW(	SHADOW_LAP_START,	0,		"lap_start"		)	// ãƒ©ãƒƒãƒ—é–‹å§‹
+DEF_SHADOW(	SHADOW_LAP_END,		INT_MAX,"lap_end"		)	// ãƒ©ãƒƒãƒ—çµ‚äº†
+DEF_SHADOW(	SHADOW_SAVING,		0,		"saving"		)	// avs ç”¨ IsSaving å€¤
 
 #undef DEF_SHADOW

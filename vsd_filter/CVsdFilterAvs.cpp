@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -31,22 +31,22 @@ enum {
 
 extern CVsdFilter	*g_Vsd;
 
-/*** ƒRƒ“ƒXƒgƒ‰ƒNƒ^EƒfƒXƒgƒ‰ƒNƒ^ *******************************************/
+/*** ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ãƒ»ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ *******************************************/
 
-// param Žw’è
+// param æŒ‡å®š
 CVsdFilter::CVsdFilter(
 	PClip _child,
 	AVSValue args,
 	IScriptEnvironment* env
 ) : GenericVideoFilter( _child ){
 	
-	Constructor();	// Šî–{ƒNƒ‰ƒX‚ÌƒRƒ“ƒXƒgƒ‰ƒNƒ^
+	Constructor();	// åŸºæœ¬ã‚¯ãƒ©ã‚¹ã®ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 	
 	const char *p;
 	
 	if( !vi.IsYUY2()) env->ThrowError( PROG_NAME ": requires YUY2 input.");
 	
-	// ƒpƒ‰ƒ[ƒ^‰Šú‰»
+	// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿åˆæœŸåŒ–
 	m_piParamT	= new int[ TRACK_N ];
 	m_piParamC	= new int[ CHECK_N ];
 	m_piParamS	= new int[ SHADOW_N ];
@@ -54,7 +54,7 @@ CVsdFilter::CVsdFilter(
 	
 	m_env = NULL;
 	
-	// ƒpƒ‰ƒ[ƒ^‰Šú’l
+	// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿åˆæœŸå€¤
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	m_piParamT[ id ] = init;
 	#include "def_trackbar.h"
 	
@@ -64,7 +64,7 @@ CVsdFilter::CVsdFilter(
 	#define DEF_SHADOW( id, init, conf_name )	m_piParamS[ id ] = init;
 	#include "def_shadow.h"
 	
-	// ˆø”Žw’è‚É‚æ‚è‰Šú‰»
+	// å¼•æ•°æŒ‡å®šã«ã‚ˆã‚ŠåˆæœŸåŒ–
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name ) \
 		if( args[ ARGID_ ## id ].Defined()) m_piParamT[ id ] = args[ ARGID_ ## id ].AsInt();
 	#define DEF_TRACKBAR_N( id, init, min, max, name, conf_name )
@@ -79,27 +79,27 @@ CVsdFilter::CVsdFilter(
 		if( args[ ARGID_ ## id ].Defined()) m_piParamS[ id ] = args[ ARGID_ ## id ].AsInt();
 	#include "def_shadow.h"
 	
-	// mark= ˆø”ˆ—
+	// mark= å¼•æ•°å‡¦ç†
 	if( p = args[ ARGID_MARK ].AsString( NULL )) ParseMarkStr( p );
 	
-	// ƒ‰ƒbƒvƒ`ƒƒ[ƒg
+	// ãƒ©ãƒƒãƒ—ãƒãƒ£ãƒ¼ãƒˆ
 	if( p = args[ ARGID_STRPARAM_LAPCHART ].AsString( NULL )){
 		if( !LapChartRead( p )) env->ThrowError( PROG_NAME ": read lap chart \"%s\" failed.", p );
 	}
 	
-	// ƒƒOƒŠ[ƒh
+	// ãƒ­ã‚°ãƒªãƒ¼ãƒ‰
 	if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )){
 		const char *szReader = args[ ARGID_STRPARAM_LOGFILE_READER ].AsString( NULL );
 		if( !ReadLog( m_VsdLog, p, szReader )) env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
 	}
 	
-	// GPS ƒƒOƒŠ[ƒh
+	// GPS ãƒ­ã‚°ãƒªãƒ¼ãƒ‰
 	if( p = args[ ARGID_STRPARAM_GPSFILE ].AsString( NULL )){
 			const char *szReader = args[ ARGID_STRPARAM_GPSFILE_READER ].AsString( NULL );
 		if( !ReadLog( m_GPSLog, p, szReader )) env->ThrowError( PROG_NAME ": read GPS log \"%s\" failed.", p );
 	}
 	
-	// ƒXƒLƒ“ƒ[ƒh
+	// ã‚¹ã‚­ãƒ³ãƒ­ãƒ¼ãƒ‰
 	if( p = args[ ARGID_STRPARAM_SKINFILE ].AsString( NULL )){
 		SetSkinFile( p );
 	}else{
@@ -108,7 +108,7 @@ CVsdFilter::CVsdFilter(
 }
 
 CVsdFilter::~CVsdFilter(){
-	Destructor();	// Šî–{ƒNƒ‰ƒX‚ÌƒfƒXƒgƒ‰ƒNƒ^
+	Destructor();	// åŸºæœ¬ã‚¯ãƒ©ã‚¹ã®ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 	
 	delete [] m_piParamT;
 	delete [] m_piParamC;
@@ -117,7 +117,7 @@ CVsdFilter::~CVsdFilter(){
 
 /*** PutPixel ***************************************************************/
 
-/* •ÏŠ·Ž®
+/* å¤‰æ›å¼
 Y  =  0.299R+0.587G+0.114B
 Cr =  0.500R-0.419G-0.081B
 Cb = -0.169R-0.332G+0.500B
@@ -167,7 +167,7 @@ void CVsdFilter::FillLineC( int x1, int y1, int x2, const CPixelArg yc ){
 			PutPixelC( iIndex, yc, iAlfa );
 		}
 	}else{
-		// x1, x2 ‚ª”¼’[‚È pixel ‚È‚çC‚»‚ê‚¾‚¯æ‚Éˆ—
+		// x1, x2 ãŒåŠç«¯ãª pixel ãªã‚‰ï¼Œãã‚Œã ã‘å…ˆã«å‡¦ç†
 		if( x1 & 1 ){
 			*( USHORT *)( m_pPlane + iIndex ) = yca.ycr;
 			++x1;
@@ -198,7 +198,7 @@ void CVsdFilter::PutImage0C(
 		int ix = ix_st;
 		int sx = x;
 		
-		// æ“ª‚Ì”¼’[‚È 1pixel ˆ—
+		// å…ˆé ­ã®åŠç«¯ãª 1pixel å‡¦ç†
 		if( iIndex & 2 ){
 			CPixel yc( img.GetPixelRaw( ix, iy ));
 			PutPixel( x, y, yc );
@@ -211,19 +211,19 @@ void CVsdFilter::PutImage0C(
 			CPixel yc1( img.GetPixelRaw( ix + 1, iy ));
 			
 			if( yc0.alfa == 0 && yc1.alfa == 0 ){
-				// 2ƒsƒNƒZƒ‹‚ª‹¤‚É 100% •s“§–¾
+				// 2ãƒ”ã‚¯ã‚»ãƒ«ãŒå…±ã« 100% ä¸é€æ˜Ž
 				yc0.cr	= ( yc0.cr + yc1.cr ) >> 1;
 				yc0.cb	= ( yc0.cb + yc1.cb ) >> 1;
 				yc0.alfa= yc1.y;
 				
 				*( UINT *)( m_pPlane + iIndex ) = yc0.ycbcr;
 			}else{
-				// ‚»‚¤‚Å‚Í‚È‚©‚Á‚½
+				// ãã†ã§ã¯ãªã‹ã£ãŸ
 				PutPixel( sx,     y, yc0 );
 				PutPixel( sx + 1, y, yc1 );
 			}
 		}
-		// Œã’[‚Ì”¼’[‚È 1pixel ˆ—
+		// å¾Œç«¯ã®åŠç«¯ãª 1pixel å‡¦ç†
 		if( ix < ix_ed ){
 			CPixel yc( img.GetPixelRaw( ix, iy ));
 			PutPixel( sx, y, yc );
@@ -231,13 +231,13 @@ void CVsdFilter::PutImage0C(
 	}
 }
 
-/*** ƒGƒ‰[ƒƒbƒZ[ƒW *******************************************************/
+/*** ã‚¨ãƒ©ãƒ¼ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ *******************************************************/
 
 void CVsdFilter::DispErrorMessage( LPCWSTR szMsg ){
 	Print( szMsg );
 }
 
-/*** ƒtƒŒ[ƒ€‚ðƒ}[ƒN *******************************************************/
+/*** ãƒ•ãƒ¬ãƒ¼ãƒ ã‚’ãƒžãƒ¼ã‚¯ *******************************************************/
 
 void CVsdFilter::SetFrameMark( int iFrame ){
 	m_iMark.push_back( iFrame );
@@ -251,7 +251,7 @@ int CVsdFilter::GetFrameMark( int iFrame ){
 	return -1;
 }
 
-/*** DrawSyncInfo ƒ_ƒ~[ ****************************************************/
+/*** DrawSyncInfo ãƒ€ãƒŸãƒ¼ ****************************************************/
 
 void CVsdFilter::DrawSyncInfo( int x, int y, CVsdFont &Font, UINT uAlign ){}
 

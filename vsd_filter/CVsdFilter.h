@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -24,8 +24,8 @@
 /****************************************************************************/
 
 #define PROG_NAME		"VSDFilter"
-#define PROG_NAME_J		"VSDƒ[ƒ^[‡¬"
-#define PROG_NAME_J_W	L"VSDƒ[ƒ^[‡¬"
+#define PROG_NAME_J		"VSDãƒ¡ãƒ¼ã‚¿ãƒ¼åˆæˆ"
+#define PROG_NAME_J_W	L"VSDãƒ¡ãƒ¼ã‚¿ãƒ¼åˆæˆ"
 #define PROG_NAME_LONG	"`VSDFilter' vehicle data logger overlay plugin"
 
 #define G_CX_CNT		30
@@ -38,7 +38,7 @@
 	#define VsdEd			m_piParamS[ PARAM_LEd ]
 	#define GPSSt			m_piParamS[ PARAM_GSt ]
 	#define GPSEd			m_piParamS[ PARAM_GEd ]
-	#define DEFAULT_SKIN	"“¯Šúƒ‚[ƒh.js"
+	#define DEFAULT_SKIN	"åŒæœŸãƒ¢ãƒ¼ãƒ‰.js"
 #else
 	#define VideoSt			m_piParamT[ PARAM_VSt ]
 	#define VideoEd			m_piParamT[ PARAM_VEd ]
@@ -52,17 +52,17 @@
 #define PLUGIN_DIR		"vsd_plugins"
 #define LOG_READER_DIR	"_log_reader"
 
-// ƒpƒ‰ƒ[ƒ^‚ğ•ÏŠ·
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’å¤‰æ›
 #define GetLogIndex( frame, to, prev ) \
 	m_##to##Log->GetIndex( frame, &VideoSt, &to##St, prev )
 
-// VSD log ‚ğ—DæC‚½‚¾‚µƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚ÅƒI[ƒo[ƒ‰ƒCƒh‚Å‚«‚é
+// VSD log ã‚’å„ªå…ˆï¼ŒãŸã ã—ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã§ã‚ªãƒ¼ãƒãƒ¼ãƒ©ã‚¤ãƒ‰ã§ãã‚‹
 #define SelectLogVsd ( m_CurLog = ( GPSPriority && m_GPSLog || !m_VsdLog ) ? m_GPSLog : m_VsdLog )
 
-// GPS log ‚ğ—Dæ
+// GPS log ã‚’å„ªå…ˆ
 #define SelectLogGPS ( m_CurLog = m_GPSLog ? m_GPSLog : m_VsdLog )
 
-// Laptime ŒvZ—p
+// Laptime è¨ˆç®—ç”¨
 #define SelectLogForLapTime	( m_CurLog = \
 	m_LapLog && m_LapLog->m_iLapSrc == LAPSRC_VSD \
 	? m_VsdLog : m_GPSLog )
@@ -93,10 +93,10 @@ typedef struct {
 	int	iLeft, iRight;
 } PolygonData_t;
 
-/* •Ó‚Ì’è‹` */
+/* è¾ºã®å®šç¾© */
 struct Edge {
-	double	dx, dy;	// À•W
-	int		x, y;	// n“_À•W
+	double	dx, dy;	// åº§æ¨™
+	int		x, y;	// å§‹ç‚¹åº§æ¨™
 	USHORT	Flag;
 };
 
@@ -110,8 +110,8 @@ class CVsdFilter
 	void Constructor( void );
 	void Destructor( void );
 	
-	/*** ‰æ‘œƒIƒyƒŒ[ƒVƒ‡ƒ“ *************************************************/
-	// *C ‚Èƒƒ\ƒbƒh‚ÍCƒNƒŠƒbƒsƒ“ƒO‚ªŠ®—¹‚µ‚Ä‚¢‚é‘z’è
+	/*** ç”»åƒã‚ªãƒšãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ *************************************************/
+	// *C ãªãƒ¡ã‚½ãƒƒãƒ‰ã¯ï¼Œã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°ãŒå®Œäº†ã—ã¦ã„ã‚‹æƒ³å®š
 	
 	void PutPixel(	// !js_func
 		int x, int y, CPixelArg yc,
@@ -133,7 +133,7 @@ class CVsdFilter
 		int iImgW = INT_MIN,	// !default:INT_MIN
 		int iImgH = INT_MIN		// !default:INT_MIN
 	);
-	// À•WCwidth “™•â³Œã
+	// åº§æ¨™ï¼Œwidth ç­‰è£œæ­£å¾Œ
 	void PutImage0C(
 		int x, int y, CVsdImage &img,
 	int ix_st, int iy_st, int ix_ed, int iy_ed
@@ -218,7 +218,7 @@ class CVsdFilter
 		UINT uAlign = 0	// !default:0
 	);
 	
-	// ƒ|ƒŠƒSƒ“•`Ê
+	// ãƒãƒªã‚´ãƒ³æå†™
 	void InitPolygon( void );
 	void FillPolygon( CPixelArg yc );
 	void DrawPolygon( // !js_func
@@ -312,7 +312,7 @@ class CVsdFilter
 		int iWidth // !default:1
 	);
 	
-	// ƒ‰ƒbƒvƒ^ƒCƒ€î•ñ
+	// ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ æƒ…å ±
 	LPCWSTR FormatTime( int iTime ); // !js_func
 	
 	static inline void UndefIfTimeNone( ReturnValue<Value> Ret, int i ){
@@ -360,9 +360,9 @@ class CVsdFilter
 		ALIGN_RIGHT		= 1 << 1,
 		ALIGN_VCENTER	= 1 << 2,
 		ALIGN_BOTTOM	= 1 << 3,
-		DRAW_MAP_START	= 1 << 4,	// DrawMap ê—pƒtƒ‰ƒOCƒXƒ^[ƒgƒ‰ƒCƒ“•`‰æ
-		IMG_LOADMAP		= 1 << 5,	// ’n}—p‹OÕ•`‰æ
-		LMS_VERTICAL	= 1 << 4,	// DrawLinearMeterScale ê—pƒtƒ‰ƒO
+		DRAW_MAP_START	= 1 << 4,	// DrawMap å°‚ç”¨ãƒ•ãƒ©ã‚°ï¼Œã‚¹ã‚¿ãƒ¼ãƒˆãƒ©ã‚¤ãƒ³æç”»
+		IMG_LOADMAP		= 1 << 5,	// åœ°å›³ç”¨è»Œè·¡æç”»
+		LMS_VERTICAL	= 1 << 4,	// DrawLinearMeterScale å°‚ç”¨ãƒ•ãƒ©ã‚°
 	};
 	
 	// clip
@@ -422,7 +422,7 @@ class CVsdFilter
 		);
 	}
 	
-	// ƒ_ƒCƒAƒƒOİ’èƒŠ[ƒh
+	// ãƒ€ã‚¤ã‚¢ãƒ­ã‚°è¨­å®šãƒªãƒ¼ãƒ‰
 	
 	int LineTrace( void ){ return m_piParamT[ TRACK_LineTrace ]; }	// !js_var:Config_map_length
 	int DispLap( void ){ return m_piParamC[ CHECK_LAP ]; }			// !js_var:Config_lap_time
@@ -441,21 +441,21 @@ class CVsdFilter
 	char	*m_szPluginDirA;
 	LPWSTR	m_szPluginDirW;	// !js_const:VsdRootDir
 	
-	// ƒŠƒrƒWƒ‡ƒ“”Ô†
+	// ãƒªãƒ“ã‚¸ãƒ§ãƒ³ç•ªå·
 	static const int	m_iRevision;	// !js_const:Revision
 	static const int	m_iPrivateBuild;	// !js_const:PrivateBuild
 	
-	// ƒƒOƒŠ[ƒhƒwƒ‹ƒp
+	// ãƒ­ã‚°ãƒªãƒ¼ãƒ‰ãƒ˜ãƒ«ãƒ‘
 	int ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc );
 	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
 	CLapLog *CreateLapTimeHand( int iLapSrc );
 	CLapLog *CreateLapTimeAuto( void );
 	void CalcLapTime( void );
 	
-	// ƒ‰ƒbƒvƒ`ƒƒ[ƒgƒŠ[ƒ_
+	// ãƒ©ãƒƒãƒ—ãƒãƒ£ãƒ¼ãƒˆãƒªãƒ¼ãƒ€
 	int LapChartRead( const char *szFileName );
 	
-	// ƒXƒLƒ“ dir æ“¾
+	// ã‚¹ã‚­ãƒ³ dir å–å¾—
 	char *SetSkinFile( const char *szSkinFile ){
 		char szBuf[ MAX_PATH + 1 ];
 		
@@ -466,16 +466,16 @@ class CVsdFilter
 		
 		StringNew( m_szSkinFile, szSkinFile );
 		
-		// ƒXƒLƒ“ƒtƒ@ƒCƒ‹–¼‚ğ CWD=m_szPluginDirA ‚Æ‚İ‚È‚µƒtƒ‹ƒpƒX‚É•ÏŠ·
+		// ã‚¹ã‚­ãƒ³ãƒ•ã‚¡ã‚¤ãƒ«åã‚’ CWD=m_szPluginDirA ã¨ã¿ãªã—ãƒ•ãƒ«ãƒ‘ã‚¹ã«å¤‰æ›
 		GetFullPathWithCDir( szBuf, szSkinFile, m_szPluginDirA );
 		
-		// ª‚ÌƒfƒBƒŒƒNƒgƒŠ–¼‚ğ“¾‚é
+		// â†‘ã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªåã‚’å¾—ã‚‹
 		StringNew( m_szSkinDirA, StrTokFile( szBuf, szBuf, STF_FULL | STF_PATH2 ));
 		StringNew( m_szSkinDirW, m_szSkinDirA );
 		return m_szSkinDirA;
 	}
 	
-	// ƒvƒ‰ƒOƒCƒ“ dll dir æ“¾
+	// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ dll dir å–å¾—
 	char *SetPluginDir( void ){
 		char szBuf[ MAX_PATH + 1 ];
 		GetModuleFileName(( HMODULE )m_hInst, szBuf, MAX_PATH );
@@ -486,7 +486,7 @@ class CVsdFilter
 		return m_szPluginDirA;
 	}
 	
-	// ƒƒOƒAƒNƒZƒX
+	// ãƒ­ã‚°ã‚¢ã‚¯ã‚»ã‚¹
 	void AccessLog(
 		ReturnValue<Value> Ret,
 		const char *szKey,
@@ -497,7 +497,7 @@ class CVsdFilter
 	int		*m_piParamC;
 	int		*m_piParamS;
 	
-	// ƒtƒHƒ“ƒg
+	// ãƒ•ã‚©ãƒ³ãƒˆ
 	CVsdFont	*m_pFont;
 	
 	CVsdLog	*m_VsdLog;
@@ -509,7 +509,7 @@ class CVsdFilter
 	
 	BOOL		m_bCalcLapTimeReq;
 	
-	// JavaScript —pƒpƒ‰ƒ[ƒ^
+	// JavaScript ç”¨ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 	
 	#define DEF_LOG( name ) double Get##name( void ){ \
 		if( m_VsdLog && m_VsdLog->m_pLog##name ) return m_VsdLog->name(); \
@@ -560,11 +560,11 @@ class CVsdFilter
 	int m_iTextPosX, m_iTextPosY;
 	
   private:
-	// GDI+ƒIƒuƒWƒFƒNƒgi‰æ‘œ“WŠJ‚É•K—vj
+	// GDI+ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆï¼ˆç”»åƒå±•é–‹ã«å¿…è¦ï¼‰
 	Gdiplus::GdiplusStartupInput	m_gdiplusStartupInput;
 	ULONG_PTR						m_gdiplusToken;
 	
-	// ƒXƒ^[ƒgƒ‰ƒCƒ“@GPS Œv‘ªƒ‚[ƒh
+	// ã‚¹ã‚¿ãƒ¼ãƒˆãƒ©ã‚¤ãƒ³@GPS è¨ˆæ¸¬ãƒ¢ãƒ¼ãƒ‰
 	double	m_dStartLineX1;
 	double	m_dStartLineY1;
 	double	m_dStartLineX2;
@@ -577,7 +577,7 @@ class CVsdFilter
 	int m_iPolygonMinY;
 	int m_iPolygonMaxY;
 	
-	// ‰ğ‘œ“x•ÏXŒŸo—p
+	// è§£åƒåº¦å¤‰æ›´æ¤œå‡ºç”¨
 	int		m_iWidth;
 	int		m_iHeight;
 	BOOL	m_bSaving;
@@ -597,7 +597,7 @@ class CVsdFilter
 	
 	int GetIndex( int x, int y ){ return m_iBytesPerLine * y + x * 2; }
 	
-	// ‰¼‘zŠÖ”
+	// ä»®æƒ³é–¢æ•°
 	void PutPixelC( int iIndex, CPixelArg yc, int iAlfa );
 	
 	int	GetWidth( void )	{ return m_SrcFrame->GetRowSize()>>1; }	// !js_var:Width
@@ -607,7 +607,7 @@ class CVsdFilter
 	double GetFPS( void )	{ return ( double )vi.fps_numerator / vi.fps_denominator; } // !js_var:FramePerSecond
 	int IsSaving( void )	{ return m_piParamS[ SHADOW_SAVING ]; }	// !js_var:IsSaving
 	
-	// ƒpƒ‰ƒ[ƒ^
+	// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 	int	m_iFrameCnt, m_iFrameMax;
 	int m_iBytesPerLine;
 	std::vector<int> m_iMark;
@@ -639,13 +639,13 @@ class CVsdFilter
 	BOOL ConfigLoad( const char *szFileName );
 	void SetSkinName( char *szSkinFile, HWND hwnd );
 	
-	// ƒƒOƒŠ[ƒ_—p
+	// ãƒ­ã‚°ãƒªãƒ¼ãƒ€ç”¨
 	BOOL CreateFilter( void );
 	BOOL FileOpenDialog( char *&szOut, char *&szReaderFunc );
 	char *m_szLogFilter;
 	std::vector<std::string> m_vecReaderFunc;
 	
-	// ‰¼‘zŠÖ”
+	// ä»®æƒ³é–¢æ•°
 	int	GetWidth( void )	{ return fpip->w; }
 	int	GetHeight( void )	{ return fpip->h; }
 	int	GetFrameMax( void )	{ return filter->exfunc->get_frame_n( editp ); }
@@ -653,7 +653,7 @@ class CVsdFilter
 	double	GetFPS( void )	{ return ( double )fileinfo->video_rate / fileinfo->video_scale; }
 	int IsSaving( void )	{ return filter->exfunc->is_saving( editp ); }
 	
-	// “¯Šúî•ñ•\¦
+	// åŒæœŸæƒ…å ±è¡¨ç¤º
 	WCHAR *DrawSyncInfoFormatTime(
 		WCHAR	*pBuf, UINT uBufSize, INT64 &iBaseTime, int iTime
 	);
@@ -666,7 +666,7 @@ class CVsdFilter
 		int		iEndTime
 	);
 	
-	// 1ƒXƒ‰ƒCƒ_’²®—pƒpƒ‰ƒ[ƒ^
+	// 1ã‚¹ãƒ©ã‚¤ãƒ€èª¿æ•´ç”¨ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 	int	m_iAdjustPointNum;
 	int	m_iAdjustPointVid[ 2 ];
 	int	m_iAdjustPointVsd[ 2 ];

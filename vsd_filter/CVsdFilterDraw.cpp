@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -23,20 +23,20 @@
 	#define G_MULT			1
 #endif
 
-#define DEFAULT_FONT	"‚l‚r ƒSƒVƒbƒN"
+#define DEFAULT_FONT	"ï¼­ï¼³ ã‚´ã‚·ãƒƒã‚¯"
 
 #define ClipX( x1, x2 )	( x1 = x1 < m_iClipX1 ? m_iClipX1 : x1, x2 = x2 > m_iClipX2 ? m_iClipX2 : x2 )
 #define ClipY( y1, y2 )	( y1 = y1 < m_iClipY1 ? m_iClipY1 : y1, y2 = y2 > m_iClipY2 ? m_iClipY2 : y2 )
 #define Clip( x1, y1, x2, y2 ) ( ClipX( x1, x2 ), ClipY( y1, y2 ))
 
-/*** put pixel Œn ***********************************************************/
+/*** put pixel ç³» ***********************************************************/
 
 inline void CVsdFilter::PutPixel( int x, int y, CPixelArg yc, UINT uFlag ){
 	
 	if( !( m_iClipY1 <= y && y <= m_iClipY2 )) return;
 	
 	if( uFlag & IMG_FILL ){
-		// ƒ|ƒŠƒSƒ“•`‰æ
+		// ãƒãƒªã‚´ãƒ³æç”»
 		if( x > m_Polygon[ y ].iRight ){
 			m_Polygon[ y ].iRight = x;
 		}
@@ -76,8 +76,8 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, CPixelArg yc, UINT uP
 	int iXsign = ( x2 > x1 ) ? 1 : -1;
 	int iYsign = ( y2 > y1 ) ? 1 : -1;
 	
-	// š‘ŠúI—¹ğŒ‚ğ’Ç‰Á‚·‚é
-	/* ŒX‚«‚ª1‚æ‚è¬‚³‚¢ê‡ */
+	// â˜…æ—©æœŸçµ‚äº†æ¡ä»¶ã‚’è¿½åŠ ã™ã‚‹
+	/* å‚¾ããŒ1ã‚ˆã‚Šå°ã•ã„å ´åˆ */
 	if( iXdiff > iYdiff ){
 		int E = iYdiff - 2 * iXdiff;
 		for( i = 0; i < iXdiff; i++ ){
@@ -93,7 +93,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, CPixelArg yc, UINT uP
 				E -= 2 * iXdiff;
 			}
 		}
-	/* ŒX‚«‚ª1ˆÈã‚Ìê‡ */
+	/* å‚¾ããŒ1ä»¥ä¸Šã®å ´åˆ */
 	}else{
 		int E = iXdiff - 2 * iYdiff;
 		for( i = 0; i < iYdiff; i++ ){
@@ -164,7 +164,7 @@ void CVsdFilter::DrawLine( int x1, int y1, int x2, int y2, int width, CPixelArg 
 		EdgeList[ 2 ].dx = x2 - dy * scale; EdgeList[ 2 ].dy = y2 + dx * scale;
 		EdgeList[ 3 ].dx = x2 + dy * scale; EdgeList[ 3 ].dy = y2 - dx * scale;
 		
-		// ’¸“_ƒŠƒXƒg‚ğŠi”[
+		// é ‚ç‚¹ãƒªã‚¹ãƒˆã‚’æ ¼ç´
 		for( UINT u = 0; u < 4; ++u ){
 			EdgeList[ u ].x = ToInt( EdgeList[ u ].dx );
 			EdgeList[ u ].y = ToInt( EdgeList[ u ].dy );
@@ -216,7 +216,7 @@ void CVsdFilter::DrawCircle(
 	int j = 0;
 	int f = -2 * r + 3;
 	
-	// ‰~‚ğ‘‚­
+	// å††ã‚’æ›¸ã
 	while( i >= j ){
 		PutPixel( x + i, y + j, yc, uFlag ); PutPixel( x + i, y - j, yc, uFlag );
 		PutPixel( x - i, y + j, yc, uFlag ); PutPixel( x - i, y - j, yc, uFlag );
@@ -231,12 +231,12 @@ void CVsdFilter::DrawCircle(
 		f += 4 * j + 2;
 	}
 	
-	// Polygon ‡¬
+	// Polygon åˆæˆ
 	if( uFlag & IMG_FILL ) FillPolygon( yc );
 }
 
 // http://fussy.web.fc2.com/algo/algo2-2.htm
-// ‚ÌCa = r / A, b = r / B ‚Æ’u‚¢‚Ä—¼•Ó‚É ( A * B / r )^2 ‚ğ‚©‚¯‚é
+// ã®ï¼Œa = r / A, b = r / B ã¨ç½®ã„ã¦ä¸¡è¾ºã« ( A * B / r )^2 ã‚’ã‹ã‘ã‚‹
 void CVsdFilter::DrawCircle( int x, int y, int a, int b, CPixelArg yc, UINT uFlag ){
 	
 	if( a == b ){
@@ -270,7 +270,7 @@ void CVsdFilter::DrawCircle( int x, int y, int a, int b, CPixelArg yc, UINT uFla
 		}
 	}
 	
-	// Polygon ‡¬
+	// Polygon åˆæˆ
 	if( uFlag & IMG_FILL ) FillPolygon( yc );
 }
 
@@ -305,7 +305,7 @@ void CVsdFilter::DrawArc(
 	int	iAreaCmpS, iAreaCmpE;
 	
 	while( i >= 0 ){
-		// (i,j) ‚ª iStar / iEnd ‚ÌŠp“x‚æ‚è‚à‘å‚«‚¢ / ¬‚³‚¢ ‚ğŒvZ‚µ‚Ä‚¨‚­
+		// (i,j) ãŒ iStar / iEnd ã®è§’åº¦ã‚ˆã‚Šã‚‚å¤§ãã„ / å°ã•ã„ ã‚’è¨ˆç®—ã—ã¦ãŠã
 		iAreaCmpS = iStX * j - iStY * i;
 		iAreaCmpS = iAreaCmpS == 0 ? 0 :
 					iAreaCmpS >= 0 ? 1 : -1;
@@ -342,7 +342,7 @@ void CVsdFilter::DrawArc(
 		}
 	}
 	
-	// Polygon ‡¬
+	// Polygon åˆæˆ
 	if( uFlag & IMG_FILL ) FillPolygon( yc );
 }
 
@@ -380,7 +380,7 @@ void CVsdFilter::DrawArc(
 		
 		for( int i = iScanS; i <= iScanE; ++i ){
 			
-			// (i,j) ‚ª iStar / iEnd ‚ÌŠp“x‚æ‚è‚à‘å‚«‚¢ / ¬‚³‚¢ ‚ğŒvZ‚µ‚Ä‚¨‚­
+			// (i,j) ãŒ iStar / iEnd ã®è§’åº¦ã‚ˆã‚Šã‚‚å¤§ãã„ / å°ã•ã„ ã‚’è¨ˆç®—ã—ã¦ãŠã
 			iAreaCmpS = iStX * j - iStY * i;
 			iAreaCmpS = iAreaCmpS == 0 ? 0 :
 						iAreaCmpS >= 0 ? 1 : -1;
@@ -409,12 +409,12 @@ void CVsdFilter::DrawArc(
 }
 
 /*** DrawFont ***************************************************************/
-// DrawFont* ‚Ì Y Clip, x1 > ClipX2 ‚Í DrawText* ‚Å‚â‚Á‚Ä‚¢‚é‚Ì‚ÅÈ‚­
-// x2 < ClipX1 ‚¾‚¯ƒ`ƒFƒbƒN‚·‚ê‚Î—Ç‚¢
+// DrawFont* ã® Y Clip, x1 > ClipX2 ã¯ DrawText* ã§ã‚„ã£ã¦ã„ã‚‹ã®ã§çœã
+// x2 < ClipX1 ã ã‘ãƒã‚§ãƒƒã‚¯ã™ã‚Œã°è‰¯ã„
 
 int CVsdFilter::DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc ){
 	
-	// •¶š•‚ğ“¾‚é
+	// æ–‡å­—å¹…ã‚’å¾—ã‚‹
 	CFontGlyph &FontGlyph = Font.FontGlyph( c );
 	
 	int iCellIncX = Font.IsFixed() ? Font.GetWidth() : FontGlyph.iCellIncX;
@@ -429,7 +429,7 @@ int CVsdFilter::DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc )
 			#pragma omp parallel for
 		#endif
 		for( int j = 0; j < FontGlyph.iH; ++j ) for( int i = 0; i < FontGlyph.iW; ++i ){
-			int iDensity = FontGlyph.pBuf[ iBmpW * j + i ];	// 0`64
+			int iDensity = FontGlyph.pBuf[ iBmpW * j + i ];	// 0ï½64
 			
 			if( iDensity ){
 				if( iDensity == 64 ){
@@ -470,7 +470,7 @@ int CVsdFilter::DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc )
 
 int CVsdFilter::DrawFont( int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc, CPixelArg ycOutline ){
 	
-	// ƒtƒHƒ“ƒg‚ª‘¶İ‚µ‚È‚¢•¶š‚È‚çCspace ‚Ì•¶š•‚ğ•Ô‚·
+	// ãƒ•ã‚©ãƒ³ãƒˆãŒå­˜åœ¨ã—ãªã„æ–‡å­—ãªã‚‰ï¼Œspace ã®æ–‡å­—å¹…ã‚’è¿”ã™
 	if( !CVsdFont::ExistFont( c ))
 		return ( Font.IsFixed()) ? Font.GetWidth() : Font.GetW_Space();
 	
@@ -533,7 +533,7 @@ void CVsdFilter::DrawTextAlign( int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFo
 	m_iTextPosY += Font.GetHeight();
 }
 
-/*** ƒ|ƒŠƒSƒ“•`‰æ (¡‚Í DrawCircle ‚Ì fill ‚É‚µ‚©g‚Á‚Ä‚È‚¢‚Í‚¸ *************/
+/*** ãƒãƒªã‚´ãƒ³æç”» (ä»Šã¯ DrawCircle ã® fill ã«ã—ã‹ä½¿ã£ã¦ãªã„ã¯ãš *************/
 
 inline void CVsdFilter::InitPolygon( void ){
 	#ifdef _OPENMP_AVS
@@ -569,23 +569,23 @@ inline void CVsdFilter::FillPolygon( CPixelArg yc ){
 	m_iPolygonMaxY = 0;
 }
 
-/*** ‚Ü‚Æ‚à‚Èƒ|ƒŠƒSƒ“•`‰æ ***************************************************/
+/*** ã¾ã¨ã‚‚ãªãƒãƒªã‚´ãƒ³æç”» ***************************************************/
 
 enum {
-	EDGE_DEL_END	= 1,	// ƒ‰ƒCƒ“I’[“_‚ğíœ
-	EDGE_H			= 2,	// …•½ƒ‰ƒCƒ“
-	EDGE_H_DEL_END	= 3,	// …•½ƒ‰ƒCƒ“ & ƒ‰ƒCƒ“I“_‚ğíœ
+	EDGE_DEL_END	= 1,	// ãƒ©ã‚¤ãƒ³çµ‚ç«¯ç‚¹ã‚’å‰Šé™¤
+	EDGE_H			= 2,	// æ°´å¹³ãƒ©ã‚¤ãƒ³
+	EDGE_H_DEL_END	= 3,	// æ°´å¹³ãƒ©ã‚¤ãƒ³ & ãƒ©ã‚¤ãƒ³çµ‚ç‚¹ã‚’å‰Šé™¤
 };
 
 #define GetCoordinateI( n ) ToInt(( pixs->Get( n )->NumberValue() + 0.5 ))
 #define GetCoordinateD( n ) ( pixs->Get( n )->NumberValue())
 
 /*
-	PolyFill : ‘½ŠpŒ`•`‰æ(ƒAƒNƒeƒBƒuE”ñƒAƒNƒeƒBƒu‚Ì”»’f‚ğƒtƒ‰ƒO‚Ås‚¤)
+	PolyFill : å¤šè§’å½¢æç”»(ã‚¢ã‚¯ãƒ†ã‚£ãƒ–ãƒ»éã‚¢ã‚¯ãƒ†ã‚£ãƒ–ã®åˆ¤æ–­ã‚’ãƒ•ãƒ©ã‚°ã§è¡Œã†)
 	
-	DrawingArea_IF& draw : •`‰æ—Ìˆæ
-	GPixelOp& pset : “_•`‰æ‚Ég‚¤ŠÖ”ƒIƒuƒWƒFƒNƒg
-	VecEdge& EdgeList : ¶¬‚µ‚½•ÓƒŠƒXƒg
+	DrawingArea_IF& draw : æç”»é ˜åŸŸ
+	GPixelOp& pset : ç‚¹æç”»ã«ä½¿ã†é–¢æ•°ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
+	VecEdge& EdgeList : ç”Ÿæˆã—ãŸè¾ºãƒªã‚¹ãƒˆ
 */
 void CVsdFilter::DrawPolygon( v8Array pixs, CPixelArg yc, UINT uFlag ){
 	
@@ -607,19 +607,19 @@ void CVsdFilter::DrawPolygon( v8Array pixs, CPixelArg yc, UINT uFlag ){
 		return;
 	}
 	
-	/*  •ÓƒŠƒXƒg‚Ì¶¬
-		const VecCoord& clippedVertex : ƒNƒŠƒbƒsƒ“ƒOŒã‚Ì’¸“_À•W
-		VecEdge& EdgeList : ¶¬‚·‚é•ÓƒŠƒXƒg
+	/*  è¾ºãƒªã‚¹ãƒˆã®ç”Ÿæˆ
+		const VecCoord& clippedVertex : ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°å¾Œã®é ‚ç‚¹åº§æ¨™
+		VecEdge& EdgeList : ç”Ÿæˆã™ã‚‹è¾ºãƒªã‚¹ãƒˆ
 	*/
 	
-	UINT uEdgeCnt = pixs->Length() / 2; // ’¸“_‚ÌŒÂ”
+	UINT uEdgeCnt = pixs->Length() / 2; // é ‚ç‚¹ã®å€‹æ•°
 	if( uEdgeCnt < 3 ) return;
 	
 	Edge *EdgeList = new Edge[ uEdgeCnt ];
 	int	iMinY = INT_MAX;
 	int	iMaxY = INT_MIN;
 	
-	// ’¸“_ƒŠƒXƒg‚ğŠi”[
+	// é ‚ç‚¹ãƒªã‚¹ãƒˆã‚’æ ¼ç´
 	for( UINT u = 0; u < uEdgeCnt; ++u ){
 		EdgeList[ u ].dx = GetCoordinateD( u * 2 );
 		EdgeList[ u ].dy = GetCoordinateD( u * 2 + 1 );
@@ -635,7 +635,7 @@ void CVsdFilter::DrawPolygon( v8Array pixs, CPixelArg yc, UINT uFlag ){
 	delete [] EdgeList;
 }
 
-// ‚‘¬ƒ‚[ƒhC“Ê}Œ`‚Ì‚İ
+// é«˜é€Ÿãƒ¢ãƒ¼ãƒ‰ï¼Œå‡¸å›³å½¢ã®ã¿
 void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, CPixelArg yc ){
 	
 	for( UINT u = 0; u < uEdgeCnt; ++u ){
@@ -670,10 +670,10 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, CPixelArg yc ){
 	FillPolygon( yc );
 }
 
-// ‰š‚ñ‚Å‚¢‚Ä‚à“h‚ê‚éƒ‚[ƒh
+// å‡¹ã‚“ã§ã„ã¦ã‚‚å¡—ã‚Œã‚‹ãƒ¢ãƒ¼ãƒ‰
 void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMaxY, CPixelArg yc ){
 	
-	// ŒX‚«ŒvZ
+	// å‚¾ãè¨ˆç®—
 	int	a = EdgeList[ 0 ].y - EdgeList[ uEdgeCnt - 1 ].y;
 	
 	for( UINT u = 0; u < uEdgeCnt; ++u ){
@@ -681,24 +681,24 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMax
 		UINT w = ( u + 2 ) % uEdgeCnt;
 		
 		if( EdgeList[ u ].y == EdgeList[ v ].y ){
-			// …•½üC’¼‘O‚ÌŒX‚«‚ğŒp³
-			// ‚»‚ê‚ªŸ‚Ì•Ó‚Æ“¯‚¶ŒX‚«‚È‚çCŸ•Ó‚Ìn“_‚ª—]Œv‚È‚Ì‚ÅC
-			//   ‚»‚ê‚ğ‘Å‚¿Á‚·‚½‚ß‚ÉI“_íœ‚µ‚È‚¢
-			// ˆá‚¤ŒX‚«‚È‚çCI“_íœ
+			// æ°´å¹³ç·šï¼Œç›´å‰ã®å‚¾ãã‚’ç¶™æ‰¿
+			// ãã‚ŒãŒæ¬¡ã®è¾ºã¨åŒã˜å‚¾ããªã‚‰ï¼Œæ¬¡è¾ºã®å§‹ç‚¹ãŒä½™è¨ˆãªã®ã§ï¼Œ
+			//   ãã‚Œã‚’æ‰“ã¡æ¶ˆã™ãŸã‚ã«çµ‚ç‚¹å‰Šé™¤ã—ãªã„
+			// é•ã†å‚¾ããªã‚‰ï¼Œçµ‚ç‚¹å‰Šé™¤
 			EdgeList[ u ].Flag = 
 				( EdgeList[ w ].y - EdgeList[ v ].y ) * a >= 0 ? EDGE_H : EDGE_H_DEL_END;
 		}else{
-			// Î‚ßü
+			// æ–œã‚ç·š
 			a = EdgeList[ v ].y - EdgeList[ u ].y;
 			
-			//   Ÿ‚Ì•Ó‚ª“¯‚¶ŒX‚« or …•½ü‚È‚çCI“_íœ
+			//   æ¬¡ã®è¾ºãŒåŒã˜å‚¾ã or æ°´å¹³ç·šãªã‚‰ï¼Œçµ‚ç‚¹å‰Šé™¤
 			EdgeList[ u ].Flag =
 				( EdgeList[ w ].y - EdgeList[ v ].y ) * a >= 0 ? EDGE_DEL_END : 0;
 		}
 	}
 	
-	// •`‰æŠJn
-	std::vector<int> vec_x( uEdgeCnt * 2 ); // X À•W‚ÌƒŠƒXƒg
+	// æç”»é–‹å§‹
+	std::vector<int> vec_x( uEdgeCnt * 2 ); // X åº§æ¨™ã®ãƒªã‚¹ãƒˆ
 	
 	ClipY( iMinY, iMaxY );
 	
@@ -706,7 +706,7 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMax
 		#pragma omp parallel for
 	#endif
 	for( int y = iMinY ; y <= iMaxY ; ++y ){
-		// ’Šo‚µ‚½ X À•W‚Ì––”ö(ŠJnˆÊ’u‚Å‰Šú‰»)
+		// æŠ½å‡ºã—ãŸ X åº§æ¨™ã®æœ«å°¾(é–‹å§‹ä½ç½®ã§åˆæœŸåŒ–)
 		std::vector<int>::iterator ep = vec_x.begin();
 		
 		for( UINT u = 0 ; u < uEdgeCnt ; ++u ){
@@ -724,7 +724,7 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMax
 			}
 			
 			if( EdgeList[ v ].y == y ){
-				// I“_Cíœ‘ÎÛ‚Å‚È‚¯‚ê‚ÎÏ‚Ş
+				// çµ‚ç‚¹ï¼Œå‰Šé™¤å¯¾è±¡ã§ãªã‘ã‚Œã°ç©ã‚€
 				if( !( EdgeList[ u ].Flag & EDGE_DEL_END )) *ep++ = EdgeList[ v ].x;
 			}else if( EdgeList[ u ].y == y ){
 				*ep++ = EdgeList[ u ].x;
@@ -732,7 +732,7 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMax
 				( EdgeList[ u ].y <= y && y <= EdgeList[ v ].y ) ||
 				( EdgeList[ v ].y <= y && y <= EdgeList[ u ].y )
 			){
-				// ‚±‚±‚ÍÎ‚ßü‚©‚ÂI“_ˆÈŠO‚µ‚©’Ê‚ç‚È‚¢‚Í‚¸
+				// ã“ã“ã¯æ–œã‚ç·šã‹ã¤çµ‚ç‚¹ä»¥å¤–ã—ã‹é€šã‚‰ãªã„ã¯ãš
 				*ep++ = ToInt(
 					( EdgeList[ v ].dx - EdgeList[ u ].dx ) *
 					( y                - EdgeList[ u ].dy ) /
@@ -742,34 +742,34 @@ void CVsdFilter::DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMax
 			}
 		}
 		
-		// Œğ“_‚Ìƒ\[ƒg
+		// äº¤ç‚¹ã®ã‚½ãƒ¼ãƒˆ
 		std::sort( vec_x.begin(), ep );
 		
 		#ifdef DEBUG
-			// x À•WƒŠƒXƒg‚Í‹ô”‚Å‚È‚¯‚ê‚Î‚¨‚©‚µ‚¢
+			// x åº§æ¨™ãƒªã‚¹ãƒˆã¯å¶æ•°ã§ãªã‘ã‚Œã°ãŠã‹ã—ã„
 			if(( ep - vec_x.begin()) & 1 ){
 				int a = 0;
 			}
 		#endif
 		
-		// ƒNƒŠƒbƒsƒ“ƒOEƒGƒŠƒAŠO‚ÌŒğ“_‚ğƒ`ƒFƒbƒN‚µ‚È‚ª‚çƒ‰ƒCƒ“•`‰æ
+		// ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°ãƒ»ã‚¨ãƒªã‚¢å¤–ã®äº¤ç‚¹ã‚’ãƒã‚§ãƒƒã‚¯ã—ãªãŒã‚‰ãƒ©ã‚¤ãƒ³æç”»
 		for( std::vector<int>::iterator sp = vec_x.begin() + 1;
 			sp < ep; sp += 2
 		){
-			int x0 = *( sp - 1 );	// ¶’[‚Ì“_‚ÌXÀ•W
-			int x1 = *sp;			// ‰E’[‚Ì“_‚ÌXÀ•W
+			int x0 = *( sp - 1 );	// å·¦ç«¯ã®ç‚¹ã®Xåº§æ¨™
+			int x1 = *sp;			// å³ç«¯ã®ç‚¹ã®Xåº§æ¨™
 			
-			// XÀ•W‚ÌƒNƒŠƒbƒsƒ“ƒO
+			// Xåº§æ¨™ã®ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°
 			if( x1 < m_iClipX1 || x0 > m_iClipX2 ) continue;
 			ClipX( x0, x1 );
 			
-			// ’¼ü‚Ì•`‰æ
+			// ç›´ç·šã®æç”»
 			FillLineC( x0, y, x1, yc );
 		}
 	}
 }
 
-/*** PutImage ‚ÌÀ•WCwidth “™•â³ŠÖ” **************************************/
+/*** PutImage ã®åº§æ¨™ï¼Œwidth ç­‰è£œæ­£é–¢æ•° **************************************/
 
 void CVsdFilter::PutImage(
 	int x, int y, CVsdImage &img, UINT uAlign,
@@ -778,7 +778,7 @@ void CVsdFilter::PutImage(
 	if( iImgW < 0 ) iImgW = img.m_iWidth;
 	if( iImgH < 0 ) iImgH = img.m_iHeight;
 	
-	/// ƒAƒ‰ƒCƒ“‚ÌŒvZ ///////////////////////////////////////////////////////
+	/// ã‚¢ãƒ©ã‚¤ãƒ³ã®è¨ˆç®— ///////////////////////////////////////////////////////
 	
 	if( uAlign & ALIGN_HCENTER ){
 		x -= iImgW / 2;
@@ -792,68 +792,68 @@ void CVsdFilter::PutImage(
 		y -= iImgH;
 	}
 	
-	/// À•W•â³ /////////////////////////////////////////////////////////////
+	/// åº§æ¨™è£œæ­£ /////////////////////////////////////////////////////////////
 	
-	// Raw ƒCƒ[ƒWÀ•W
+	// Raw ã‚¤ãƒ¡ãƒ¼ã‚¸åº§æ¨™
 	int ix_st, ix_ed, iy_st, iy_ed;
 	
-	// RawImgX ‚Ì•â³
+	// RawImgX ã®è£œæ­£
 	if( img.m_iOffsX < iImgX ){
-		// RawImg ‚Ì“r’†‚©‚çn‚ß‚é‚±‚Æ‚É‚È‚é
+		// RawImg ã®é€”ä¸­ã‹ã‚‰å§‹ã‚ã‚‹ã“ã¨ã«ãªã‚‹
 		ix_st = iImgX - img.m_iOffsX;
 	}else{
-		// RawImg ‚Ìæ“ª‚©‚çn‚Ü‚éC‚½‚¾‚µ•\¦‚Í‰E‚É‚¸‚ê‚é‚±‚Æ‚É‚È‚é
+		// RawImg ã®å…ˆé ­ã‹ã‚‰å§‹ã¾ã‚‹ï¼ŒãŸã ã—è¡¨ç¤ºã¯å³ã«ãšã‚Œã‚‹ã“ã¨ã«ãªã‚‹
 		ix_st = 0;
 		x     += img.m_iOffsX - iImgX;
 		iImgW -= img.m_iOffsX - iImgX;
 	}
 	
-	// ƒXƒNƒŠ[ƒ“À•W‚ª¶‚É‚Í‚İo‚µ‚Ä‚¢‚½‚çC•â³
+	// ã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™ãŒå·¦ã«ã¯ã¿å‡ºã—ã¦ã„ãŸã‚‰ï¼Œè£œæ­£
 	if( x < 0 ){
 		ix_st -= x;
 		iImgW += x;
 		x = 0;
 	}
 	
-	// RawImgW ‚ğ‚Í‚İo‚µ‚Ä‚¢‚½‚çCiImgW ‚ğ•â³
+	// RawImgW ã‚’ã¯ã¿å‡ºã—ã¦ã„ãŸã‚‰ï¼ŒiImgW ã‚’è£œæ­£
 	if( img.m_iRawWidth < ix_st + iImgW ) iImgW = img.m_iRawWidth - ix_st;
 	
-	// ƒXƒNƒŠ[ƒ“‰E‚ğ‚Í‚İo‚µ‚Ä‚¢‚½‚çCiImgW ‚ğ•â³
+	// ã‚¹ã‚¯ãƒªãƒ¼ãƒ³å³ã‚’ã¯ã¿å‡ºã—ã¦ã„ãŸã‚‰ï¼ŒiImgW ã‚’è£œæ­£
 	if( GetWidth() < x + iImgW ) iImgW = GetWidth() - x;
 	ix_ed = ix_st + iImgW;
 	
-	// RawImgY ‚Ì•â³
+	// RawImgY ã®è£œæ­£
 	if( img.m_iOffsY < iImgY ){
-		// RawImg ‚Ì“r’†‚©‚çn‚ß‚é‚±‚Æ‚É‚È‚é
+		// RawImg ã®é€”ä¸­ã‹ã‚‰å§‹ã‚ã‚‹ã“ã¨ã«ãªã‚‹
 		iy_st = iImgY - img.m_iOffsY;
 	}else{
-		// RawImg ‚Ìæ“ª‚©‚çn‚Ü‚éC‚½‚¾‚µ•\¦‚Í‰º‚É‚¸‚ê‚é‚±‚Æ‚É‚È‚é
+		// RawImg ã®å…ˆé ­ã‹ã‚‰å§‹ã¾ã‚‹ï¼ŒãŸã ã—è¡¨ç¤ºã¯ä¸‹ã«ãšã‚Œã‚‹ã“ã¨ã«ãªã‚‹
 		iy_st = 0;
 		y     += img.m_iOffsY - iImgY;
 		iImgH -= img.m_iOffsY - iImgY;
 	}
 	
-	// ƒXƒNƒŠ[ƒ“À•W‚ªã‚É‚Í‚İo‚µ‚Ä‚¢‚½‚çC•â³
+	// ã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™ãŒä¸Šã«ã¯ã¿å‡ºã—ã¦ã„ãŸã‚‰ï¼Œè£œæ­£
 	if( y < 0 ){
 		iy_st -= y;
 		iImgH += y;
 		y = 0;
 	}
 	
-	// RawImgH ‚ğ‚Í‚İo‚µ‚Ä‚¢‚½‚çCiImgH ‚ğ•â³
+	// RawImgH ã‚’ã¯ã¿å‡ºã—ã¦ã„ãŸã‚‰ï¼ŒiImgH ã‚’è£œæ­£
 	if( img.m_iRawHeight < iy_st + iImgH ) iImgH = img.m_iRawHeight - iy_st;
 	
-	// ƒXƒNƒŠ[ƒ“‰º‚ğ‚Í‚İo‚µ‚Ä‚¢‚½‚çCiImgH ‚ğ•â³
+	// ã‚¹ã‚¯ãƒªãƒ¼ãƒ³ä¸‹ã‚’ã¯ã¿å‡ºã—ã¦ã„ãŸã‚‰ï¼ŒiImgH ã‚’è£œæ­£
 	if( GetHeight() < y + iImgH ) iImgH = GetHeight() - y;
 	iy_ed = iy_st + iImgH;
 	
 	PutImage0C( x, y, img, ix_st, iy_st, ix_ed, iy_ed );
 }
 
-/*** ƒpƒ‰ƒ[ƒ^’²®—pƒXƒs[ƒhƒOƒ‰ƒt *****************************************/
+/*** ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿èª¿æ•´ç”¨ã‚¹ãƒ”ãƒ¼ãƒ‰ã‚°ãƒ©ãƒ• *****************************************/
 
-#define GRAPH_SCALE	( 1.0 / SLIDER_TIME * 2 )	// 1dot ‚ ‚½‚è‚Ì log ŠÔ
-#define GRAPH_STEP	1						// x ‚ğ‚±‚ê dot ‚¸‚Â‚ÌƒXƒeƒbƒv‚Å•`‚­
+#define GRAPH_SCALE	( 1.0 / SLIDER_TIME * 2 )	// 1dot ã‚ãŸã‚Šã® log æ™‚é–“
+#define GRAPH_STEP	1						// x ã‚’ã“ã‚Œ dot ãšã¤ã®ã‚¹ãƒ†ãƒƒãƒ—ã§æã
 
 void CVsdFilter::DrawGraphSingle(
 	int x1, int y1, int x2, int y2,
@@ -865,13 +865,13 @@ void CVsdFilter::DrawGraphSingle(
 	CVsdLog 	*pLog;
 	CLog	*pData;
 	
-	// key ‚©‚ç log ‚ğ’T‚·
+	// key ã‹ã‚‰ log ã‚’æ¢ã™
 	if( m_VsdLog && ( pData = m_VsdLog->GetLog( szKey ))){
 		pLog = m_VsdLog;
 	}else if( m_GPSLog && ( pData = m_GPSLog->GetLog( szKey ))){
 		pLog = m_GPSLog;
 	}else{
-		// —LŒø‚È Log ‚ª‚È‚¢‚Ì‚Å‹A‚é
+		// æœ‰åŠ¹ãª Log ãŒãªã„ã®ã§å¸°ã‚‹
 		return;
 	}
 	
@@ -900,7 +900,7 @@ void CVsdFilter::DrawGraphSub(
 	int		iIndex = -1;
 	double	dIndex;
 	
-	// 0 ƒ‰ƒCƒ“‚ğ•`‚­
+	// 0 ãƒ©ã‚¤ãƒ³ã‚’æã
 	if( Data.GetMax() >= 0 && Data.GetMin() <= 0 ){
 		int iPosY = y2 - ( int )( -Data.GetMin() * iHeight / ( Data.GetMax() - Data.GetMin()));
 		DrawLine(
@@ -939,7 +939,7 @@ void CVsdFilter::DrawGraphSub(
 	}
 }
 
-// ƒXƒs[ƒhEƒ^ƒRƒOƒ‰ƒt
+// ã‚¹ãƒ”ãƒ¼ãƒ‰ãƒ»ã‚¿ã‚³ã‚°ãƒ©ãƒ•
 void CVsdFilter::DrawSyncGraph( int x1, int y1, int x2, int y2, CVsdFont &Font ){
 	CLog	*pLog;
 	
@@ -962,7 +962,7 @@ void CVsdFilter::DrawSyncGraph( int x1, int y1, int x2, int y2, CVsdFont &Font )
 	}
 }
 
-/*** G ƒXƒl[ƒN•`‰æ *********************************************************/
+/*** G ã‚¹ãƒãƒ¼ã‚¯æç”» *********************************************************/
 
 void CVsdFilter::DrawGSnake(
 	int iCx, int iCy, int iR, int iIndicatorR, int iWidth,
@@ -984,7 +984,7 @@ void CVsdFilter::DrawGSnake(
 			for( i = -( int )( dLength * m_CurLog->m_dFreq ) ; i <= 1 ; ++i ){
 				
 				if( m_CurLog->m_iLogNum + i >= 0 ){
-					// i == 1 ‚ÍÅŒã‚Ì’†“r”¼’[‚È LogNum
+					// i == 1 æ™‚ã¯æœ€å¾Œã®ä¸­é€”åŠç«¯ãª LogNum
 					iGx = ( int )((( i != 1 ) ? m_CurLog->Gx( m_CurLog->m_iLogNum + i ) : m_CurLog->Gx()) * iR );
 					iGy = ( int )((( i != 1 ) ? m_CurLog->Gy( m_CurLog->m_iLogNum + i ) : m_CurLog->Gy()) * iR );
 					
@@ -1007,14 +1007,14 @@ void CVsdFilter::DrawGSnake(
 		iGx = iGy = 0;
 	}
 	
-	// G ƒCƒ“ƒWƒP[ƒ^
+	// G ã‚¤ãƒ³ã‚¸ã‚±ãƒ¼ã‚¿
 	DrawCircle(
 		iCx + iGx, iCy - iGy, iIndicatorR,
 		ycBall, CVsdFilter::IMG_FILL
 	);
 }
 
-/*** ‘–s‹OÕ•\¦ ***********************************************************/
+/*** èµ°è¡Œè»Œè·¡è¡¨ç¤º ***********************************************************/
 
 void CVsdFilter::DrawMap(
 	int x1, int y1, int x2, int y2,
@@ -1052,7 +1052,7 @@ void CVsdFilter::DrawMap(
 	double dScale;
 	
 	if( dScaleX < dScaleY ){
-		// •—¥‘¬‚È‚Ì‚Å y1 ‚ğÄŒvZ
+		// å¹…å¾‹é€Ÿãªã®ã§ y1 ã‚’å†è¨ˆç®—
 		dScale = dScaleX;
 		if( uFlag & ALIGN_HCENTER ){
 			y1 = y1 + ( iHeight - ( int )( dMapSizeY * dScale )) / 2;
@@ -1060,7 +1060,7 @@ void CVsdFilter::DrawMap(
 			y1 = y1 + ( iHeight - ( int )( dMapSizeY * dScale ));
 		}
 	}else{
-		// ‚‚³—¥‘¬‚È‚Ì‚Å x1 ‚ğÄŒvZ
+		// é«˜ã•å¾‹é€Ÿãªã®ã§ x1 ã‚’å†è¨ˆç®—
 		dScale = dScaleY;
 		if( uFlag & ALIGN_HCENTER ){
 			x1 = x1 + ( iWidth - ( int )( dMapSizeX * dScale )) / 2;
@@ -1084,9 +1084,9 @@ void CVsdFilter::DrawMap(
 	}
 	
 	if( dMapSizeX <= 10000 && dMapSizeY <= 10000 ){
-		// ˆê•Ó‚ª 10km ‚ğ’´‚¦‚½‚çCƒT[ƒLƒbƒg‚ÌƒƒO‚¶‚á‚È‚¢‚Æ‚İ‚È‚µ
-		// ‘SƒƒO‚Ì‹OÕ‚ğ•\¦
-		// ‚»‚¤‚Å‚È‚¯‚ê‚ÎC‘–s‹OÕ’·‚³‚É‚µ‚½‚ª‚Á‚Ä•`‰æ’·‚³‚ğŒˆ’è
+		// ä¸€è¾ºãŒ 10km ã‚’è¶…ãˆãŸã‚‰ï¼Œã‚µãƒ¼ã‚­ãƒƒãƒˆã®ãƒ­ã‚°ã˜ã‚ƒãªã„ã¨ã¿ãªã—
+		// å…¨ãƒ­ã‚°ã®è»Œè·¡ã‚’è¡¨ç¤º
+		// ãã†ã§ãªã‘ã‚Œã°ï¼Œèµ°è¡Œè»Œè·¡é•·ã•ã«ã—ãŸãŒã£ã¦æç”»é•·ã•ã‚’æ±ºå®š
 		
 		if( m_CurLog->m_iLogNum - iLineSt > ( int )( iLength * m_CurLog->m_dFreq ))
 			iLineSt = m_CurLog->m_iLogNum - ( int )( iLength * m_CurLog->m_dFreq );
@@ -1105,14 +1105,14 @@ void CVsdFilter::DrawMap(
 				( iGx - iGxPrev ) * ( iGx - iGxPrev ) +
 				( iGy - iGyPrev ) * ( iGy - iGyPrev ) >= ( 25 )
 			){
-				// Line ‚ÌF—p‚É G ‚ğ‹‚ß‚é
+				// Line ã®è‰²ç”¨ã« G ã‚’æ±‚ã‚ã‚‹
 				
 				double dG = m_CurLog->Gy( i );
 				int iAlfa = ( int )( dG / ( dG >= 0 ? m_CurLog->MaxGy() : m_CurLog->MinGy()) * 256 );
 				if( iAlfa < 0 ) iAlfa = 0;
 				else if( iAlfa > 256 ) iAlfa = 256;
 				
-				// Line ‚ğˆø‚­
+				// Line ã‚’å¼•ã
 				DrawLine(
 					iGx,     iGy,
 					iGxPrev, iGyPrev,
@@ -1128,7 +1128,7 @@ void CVsdFilter::DrawMap(
 		}
 	}
 	
-	// MAP ƒCƒ“ƒWƒP[ƒ^ (©Ô)
+	// MAP ã‚¤ãƒ³ã‚¸ã‚±ãƒ¼ã‚¿ (è‡ªè»Š)
 	dGx = x1 + GetMapPos( m_CurLog->X(), X );
 	dGy = y1 + GetMapPos( m_CurLog->Y(), Y );
 	
@@ -1137,7 +1137,7 @@ void CVsdFilter::DrawMap(
 		ycIndicator, CVsdFilter::IMG_FILL
 	);
 	
-	// ƒXƒ^[ƒgƒ‰ƒCƒ“•\¦
+	// ã‚¹ã‚¿ãƒ¼ãƒˆãƒ©ã‚¤ãƒ³è¡¨ç¤º
 	if(( uFlag & DRAW_MAP_START ) && m_LapLog && m_LapLog->m_iLapMode == LAPMODE_GPS ){
 		double dAngle = m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 );
 		
@@ -1151,7 +1151,7 @@ void CVsdFilter::DrawMap(
 	SelectLogVsd;
 }
 
-/*** ‘–s‹OÕ•\¦ ***********************************************************/
+/*** èµ°è¡Œè»Œè·¡è¡¨ç¤º ***********************************************************/
 
 static inline int Lng2Pix( double dLng, int iZoomLv ){
 	return ( int )(( dLng + 180 ) / 360.0 * ( 1 << ( iZoomLv + 8 )));
@@ -1175,7 +1175,7 @@ void CVsdFilter::DrawMap(
 	
 	SetClip( x1, y1, x2, y2 );
 	
-	// ƒZƒ“ƒ^[À•W
+	// ã‚»ãƒ³ã‚¿ãƒ¼åº§æ¨™
 	for( int iStep = -1; iStep <= 1; iStep += 2 ){
 		int iX, iY;
 		int iOffsX = ( x1 + x2 ) / 2 - Lng2Pix( m_CurLog->Longitude(), iZoomLv );
@@ -1193,14 +1193,14 @@ void CVsdFilter::DrawMap(
 			iX = Lng2Pix( m_CurLog->Longitude( iLogIdx ), iZoomLv ) + iOffsX;
 			iY = Lat2Pix( m_CurLog->Latitude(  iLogIdx ), iZoomLv ) + iOffsY;
 			
-			// 5px ˆÈã—£‚ê‚Ä‚½‚ç•`‰æ
+			// 5px ä»¥ä¸Šé›¢ã‚Œã¦ãŸã‚‰æç”»
 			if(( iX - iPrevX ) * ( iX - iPrevX ) + ( iY - iPrevY ) * ( iY - iPrevY ) >= 25 ){
 				DrawLine( iX, iY, iPrevX, iPrevY, iLineWidth, yc );
 				iPrevX = iX;
 				iPrevY = iY;
 				
-				// iIdxEnd ‚ÍCÅŒã‚ÉƒNƒŠƒbƒsƒ“ƒO“à‚É•`‰æ‚µ‚½ idx ‚©‚ç *5 ‚µ‚½‚à‚ÌC
-				// ‚»‚Ì”ÍˆÍ‚ğ’´‚¦‚½‚ç•`‰æˆ—I—¹
+				// iIdxEnd ã¯ï¼Œæœ€å¾Œã«ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°å†…ã«æç”»ã—ãŸ idx ã‹ã‚‰ *5 ã—ãŸã‚‚ã®ï¼Œ
+				// ãã®ç¯„å›²ã‚’è¶…ãˆãŸã‚‰æç”»å‡¦ç†çµ‚äº†
 				if(
 					x1 < iPrevX && iPrevX < x2 &&
 					y1 < iPrevY && iPrevY < y2
@@ -1216,7 +1216,7 @@ void CVsdFilter::DrawMap(
 	SelectLogVsd;
 }
 
-/*** ‘–sˆÊ’u•\¦ ***********************************************************/
+/*** èµ°è¡Œä½ç½®è¡¨ç¤º ***********************************************************/
 
 void CVsdFilter::DrawMapPosition(
 	int x1, int y1, int x2, int y2,	UINT uFlag,
@@ -1227,7 +1227,7 @@ void CVsdFilter::DrawMapPosition(
 	int i;
 	CLapLogAll *pLap = reinterpret_cast<CLapLogAll *>( m_LapLog );
 	
-	// ƒ‰ƒbƒvƒ`ƒƒ[ƒg‚ğ–¢ƒŠ[ƒh‚È‚çƒŠƒ^[ƒ“
+	// ãƒ©ãƒƒãƒ—ãƒãƒ£ãƒ¼ãƒˆã‚’æœªãƒªãƒ¼ãƒ‰ãªã‚‰ãƒªã‚¿ãƒ¼ãƒ³
 	if( !m_LapLog || m_LapLog->m_iLapMode != LAPMODE_CHART ) return;
 	
 	SelectLogGPS;
@@ -1251,7 +1251,7 @@ void CVsdFilter::DrawMapPosition(
 	double dScale;
 	
 	if( dScaleX < dScaleY ){
-		// •—¥‘¬‚È‚Ì‚Å y1 ‚ğÄŒvZ
+		// å¹…å¾‹é€Ÿãªã®ã§ y1 ã‚’å†è¨ˆç®—
 		dScale = dScaleX;
 		if( uFlag & ALIGN_HCENTER ){
 			y1 = y1 + ( iHeight - ( int )( dMapSizeY * dScale )) / 2;
@@ -1259,7 +1259,7 @@ void CVsdFilter::DrawMapPosition(
 			y1 = y1 + ( iHeight - ( int )( dMapSizeY * dScale ));
 		}
 	}else{
-		// ‚‚³—¥‘¬‚È‚Ì‚Å x1 ‚ğÄŒvZ
+		// é«˜ã•å¾‹é€Ÿãªã®ã§ x1 ã‚’å†è¨ˆç®—
 		dScale = dScaleY;
 		if( uFlag & ALIGN_HCENTER ){
 			x1 = x1 + ( iWidth - ( int )( dMapSizeX * dScale )) / 2;
@@ -1268,9 +1268,9 @@ void CVsdFilter::DrawMapPosition(
 		}
 	}
 	
-	int	iMyTime = m_CurLog->GetTime();		// ©•ª‚Ìƒ^ƒCƒ€
+	int	iMyTime = m_CurLog->GetTime();		// è‡ªåˆ†ã®ã‚¿ã‚¤ãƒ 
 	
-	// ’x‚¢‡‚É•\¦
+	// é…ã„é †ã«è¡¨ç¤º
 	int iSearchStartIdx = pLap->m_iSearchStartIdx;
 	
 	for( i = pLap->m_iAllGapInfo.size() - 1; i >= 0; --i ){
@@ -1278,7 +1278,7 @@ void CVsdFilter::DrawMapPosition(
 		iSearchStartIdx = ( int )dIndex;
 		if( i == 0 ) pLap->m_iSearchStartIdx = iSearchStartIdx;
 		
-		// À•Wæ“¾
+		// åº§æ¨™å–å¾—
 		x = x1 + ( int )GetMapPos( m_CurLog->X( dIndex ), X );
 		y = y1 + ( int )GetMapPos( m_CurLog->Y( dIndex ), Y );
 		
@@ -1291,7 +1291,7 @@ void CVsdFilter::DrawMapPosition(
 	SelectLogVsd;
 }
 
-/*** j•`‰æ *****************************************************************/
+/*** é‡æç”» *****************************************************************/
 
 void CVsdFilter::DrawNeedle(
 	int x, int y, int r1, int r2,
@@ -1312,7 +1312,7 @@ void CVsdFilter::DrawNeedle(
 	);
 }
 
-/*** ƒ‰ƒbƒvƒ^ƒCƒ€ format ****************************************************/
+/*** ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ  format ****************************************************/
 
 LPCWSTR CVsdFilter::FormatTime( int iTime ){
 	static WCHAR szBuf[ 32 ];
@@ -1328,18 +1328,18 @@ LPCWSTR CVsdFilter::FormatTime( int iTime ){
 	return szBuf;
 }
 
-/*** ƒ‰ƒbƒvƒ^ƒCƒ€î•ñŒvZ ***************************************************/
+/*** ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ æƒ…å ±è¨ˆç®— ***************************************************/
 
 void CVsdFilter::CalcLapTime( void ){
 	SelectLogForLapTime;
 	//if( !m_CurLog ) return;
 	
-	// ƒ‰ƒbƒvƒCƒ“ƒfƒbƒNƒX‚ğ‹‚ß‚é
-	// VSD/GPS —¼•û‚ÌƒƒO‚ª‚È‚¯‚ê‚ÎCè“®Œv‘ª‚Å‚Ì m_LapLog[].fLogNum ‚ÍƒtƒŒ[ƒ€# ‚È‚Ì‚Å
-	// m_LapLog[].fLogNum ‚Æ¸“x‚ğ‚ ‚í‚¹‚é‚½‚ßCm_dLogNum ‚Í‚¢‚Á‚½‚ñ float ‚É—‚Æ‚·
+	// ãƒ©ãƒƒãƒ—ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’æ±‚ã‚ã‚‹
+	// VSD/GPS ä¸¡æ–¹ã®ãƒ­ã‚°ãŒãªã‘ã‚Œã°ï¼Œæ‰‹å‹•è¨ˆæ¸¬ã§ã® m_LapLog[].fLogNum ã¯ãƒ•ãƒ¬ãƒ¼ãƒ # ãªã®ã§
+	// m_LapLog[].fLogNum ã¨ç²¾åº¦ã‚’ã‚ã‚ã›ã‚‹ãŸã‚ï¼Œm_dLogNum ã¯ã„ã£ãŸã‚“ float ã«è½ã¨ã™
 	float fLogNum = m_LapLog->m_iLapSrc == LAPSRC_VIDEO ? GetFrameCnt() : ( float )m_CurLog->m_dLogNum;
 	
-	// ƒJƒŒƒ“ƒgƒ|ƒCƒ“ƒ^‚ª‚¨‚©‚µ‚¢‚Æ‚«‚ÍC-1 ‚ÉƒŠƒZƒbƒg
+	// ã‚«ãƒ¬ãƒ³ãƒˆãƒã‚¤ãƒ³ã‚¿ãŒãŠã‹ã—ã„ã¨ãã¯ï¼Œ-1 ã«ãƒªã‚»ãƒƒãƒˆ
 	if(
 		m_LapLog->m_iLapIdx >= m_LapLog->m_iLapNum ||
 		m_LapLog->m_iLapIdx >= 0 && m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum > fLogNum
@@ -1347,20 +1347,20 @@ void CVsdFilter::CalcLapTime( void ){
 	
 	for( ; m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].fLogNum <= fLogNum; ++m_LapLog->m_iLapIdx );
 	
-	// ŠÔ•\¦
+	// æ™‚é–“è¡¨ç¤º
 	m_LapLog->m_iCurTime = TIME_NONE;
 	
 	if( m_LapLog->m_iLapIdx >= 0 && m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime != 0 ){
 		if( m_LapLog->m_iLapSrc == LAPSRC_VIDEO ){
-			// è“®Œv‘ªƒ‚[ƒh‚Ì‚Æ‚«‚ÍCƒtƒŒ[ƒ€”‚©‚çŒvZ
+			// æ‰‹å‹•è¨ˆæ¸¬ãƒ¢ãƒ¼ãƒ‰ã®ã¨ãã¯ï¼Œãƒ•ãƒ¬ãƒ¼ãƒ æ•°ã‹ã‚‰è¨ˆç®—
 			m_LapLog->m_iCurTime = ( int )(( GetFrameCnt() - m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum ) * 1000.0 / GetFPS());
 		}else{
-			// ©“®Œv‘ª‚ÍCƒ^ƒCƒ€ / ƒƒO” ‚©‚çŒvZ
+			// è‡ªå‹•è¨ˆæ¸¬æ™‚ã¯ï¼Œã‚¿ã‚¤ãƒ  / ãƒ­ã‚°æ•° ã‹ã‚‰è¨ˆç®—
 			m_LapLog->m_iCurTime = m_CurLog->GetTime() - m_CurLog->GetTime( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].fLogNum );
 		}
 	}
 	
-	/*** ƒxƒXƒg‚Æ‚ÌÔŠÔ‹——£•\¦ - ***/
+	/*** ãƒ™ã‚¹ãƒˆã¨ã®è»Šé–“è·é›¢è¡¨ç¤º - ***/
 	m_LapLog->m_iDiffTime = TIME_NONE;
 	
 	if( m_CurLog && m_LapLog->m_iCurTime != TIME_NONE ){
@@ -1368,26 +1368,26 @@ void CVsdFilter::CalcLapTime( void ){
 		if( m_LapLog->m_iBestLap == m_LapLog->m_iLapIdx ){
 			m_LapLog->m_iDiffTime = 0;
 		}else{
-			// ƒxƒXƒgƒ‰ƒbƒvŠJn‚Ì LogNum
+			// ãƒ™ã‚¹ãƒˆãƒ©ãƒƒãƒ—é–‹å§‹ã® LogNum
 			double dBestLapLogNumStart = LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap );
 			
-			// Œ»İƒ‰ƒbƒvŠJn‚Ì LogNum
+			// ç¾åœ¨ãƒ©ãƒƒãƒ—é–‹å§‹ã® LogNum
 			double dCurLapLogNumStart = LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx );
 			
-			// ‚±‚Ìü‚Ì‘–s‹——£‚ğ‹‚ß‚é
+			// ã“ã®å‘¨ã®èµ°è¡Œè·é›¢ã‚’æ±‚ã‚ã‚‹
 			double dDistanceCurLapStart = m_CurLog->Distance( dCurLapLogNumStart );
 			double dDistance = m_CurLog->Distance() - dDistanceCurLapStart;
 			
-			// ‚±‚Ìü‚Ì 1ü‚Ì‘–s‹——£‚©‚çCŒ»İ‚Ì‘–s‹——£‚ğ•â³‚·‚é
+			// ã“ã®å‘¨ã® 1å‘¨ã®èµ°è¡Œè·é›¢ã‹ã‚‰ï¼Œç¾åœ¨ã®èµ°è¡Œè·é›¢ã‚’è£œæ­£ã™ã‚‹
 			double dDistanceBestLapStart = m_CurLog->Distance( dBestLapLogNumStart );
 			dDistance =
 				dDistance
 				* ( m_CurLog->Distance( LapNum2LogNum( m_CurLog, m_LapLog->m_iBestLap + 1 )) - dDistanceBestLapStart )
 				/ ( m_CurLog->Distance( LapNum2LogNum( m_CurLog, m_LapLog->m_iLapIdx  + 1 )) - dDistanceCurLapStart );
 			
-			// Å‘¬ Lap ‚ÌC“¯ˆê‘–s‹——£‚É‚¨‚¯‚éƒ^ƒCƒ€ (=ƒƒO”Ô†,®”) ‚ğ‹‚ß‚é
-			// m_LapLog->m_iBestLogNumRunning <= ÅI“I‚É‹‚ß‚éŒ‹‰Ê < m_LapLog->m_iBestLogNumRunning + 1  ‚Æ‚È‚é
-			// m_LapLog->m_iBestLogNumRunning ‚ª‚¨‚©‚µ‚©‚Á‚½‚çCƒŠƒZƒbƒg
+			// æœ€é€Ÿ Lap ã®ï¼ŒåŒä¸€èµ°è¡Œè·é›¢ã«ãŠã‘ã‚‹ã‚¿ã‚¤ãƒ  (=ãƒ­ã‚°ç•ªå·,æ•´æ•°) ã‚’æ±‚ã‚ã‚‹
+			// m_LapLog->m_iBestLogNumRunning <= æœ€çµ‚çš„ã«æ±‚ã‚ã‚‹çµæœ < m_LapLog->m_iBestLogNumRunning + 1  ã¨ãªã‚‹
+			// m_LapLog->m_iBestLogNumRunning ãŒãŠã‹ã—ã‹ã£ãŸã‚‰ï¼Œãƒªã‚»ãƒƒãƒˆ
 			if(
 				m_LapLog->m_iBestLogNumRunning < dBestLapLogNumStart ||
 				m_LapLog->m_iBestLogNumRunning >= m_CurLog->GetCnt() ||
@@ -1401,12 +1401,12 @@ void CVsdFilter::CalcLapTime( void ){
 				++m_LapLog->m_iBestLogNumRunning
 			);
 			
-			// Å‘¬ Lap ‚ÌC1/15•bˆÈ‰º‚Ì’l‚ğ‹‚ß‚é = A / B
+			// æœ€é€Ÿ Lap ã®ï¼Œ1/15ç§’ä»¥ä¸‹ã®å€¤ã‚’æ±‚ã‚ã‚‹ = A / B
 			double dBestLapLogNumRunning =
 				( double )m_LapLog->m_iBestLogNumRunning +
-				// A: Å‘¬ƒ‰ƒbƒv‚ÍCŒã‚±‚ê‚¾‚¯‘–‚ç‚È‚¢‚Æ dDistance ‚Æ“¯‚¶‚Å‚Í‚È‚¢
+				// A: æœ€é€Ÿãƒ©ãƒƒãƒ—ã¯ï¼Œå¾Œã“ã‚Œã ã‘èµ°ã‚‰ãªã„ã¨ dDistance ã¨åŒã˜ã§ã¯ãªã„
 				( dDistance - ( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ) - dDistanceBestLapStart )) /
-				// B: Å‘¬ƒ‰ƒbƒv‚ÍC1/15•b‚ÌŠÔ‚É‚±‚Ì‹——£‚ğ‘–‚Á‚½
+				// B: æœ€é€Ÿãƒ©ãƒƒãƒ—ã¯ï¼Œ1/15ç§’ã®é–“ã«ã“ã®è·é›¢ã‚’èµ°ã£ãŸ
 				( m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning + 1 ) - m_CurLog->Distance( m_LapLog->m_iBestLogNumRunning ));
 			
 			m_LapLog->m_iDiffTime =
@@ -1416,7 +1416,7 @@ void CVsdFilter::CalcLapTime( void ){
 	}
 }
 
-/*** ƒ‰ƒbƒvƒ^ƒCƒ€•\¦ *******************************************************/
+/*** ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ è¡¨ç¤º *******************************************************/
 
 void CVsdFilter::DrawLapTime(
 	int x, int y, UINT uAlign, CVsdFont &Font,
@@ -1438,7 +1438,7 @@ void CVsdFilter::DrawLapTime(
 	m_iTextPosX = x;
 	uAlign &= ALIGN_LEFT | ALIGN_HCENTER | ALIGN_RIGHT;
 	
-	// ŠÔ•\¦
+	// æ™‚é–“è¡¨ç¤º
 	BOOL	bInLap = FALSE;
 	
 	if( m_LapLog->m_iCurTime != TIME_NONE ){
@@ -1451,7 +1451,7 @@ void CVsdFilter::DrawLapTime(
 		DrawTextAlign( POS_DEFAULT, POS_DEFAULT, uAlign, szBuf, Font, yc, ycOutline );
 		
 		if( m_LapLog->m_iDiffTime != TIME_NONE ){
-			/*** ƒxƒXƒg‚Æ‚ÌÔŠÔ‹——£•\¦ - ***/
+			/*** ãƒ™ã‚¹ãƒˆã¨ã®è»Šé–“è·é›¢è¡¨ç¤º - ***/
 			BOOL bSign = m_LapLog->m_iDiffTime <= 0;
 			if( m_LapLog->m_iDiffTime < 0 ) m_LapLog->m_iDiffTime = -m_LapLog->m_iDiffTime;
 			
@@ -1469,7 +1469,7 @@ void CVsdFilter::DrawLapTime(
 		
 		bInLap = TRUE;
 	}else{
-		// ‚Ü‚¾ŠJn‚µ‚Ä‚¢‚È‚¢
+		// ã¾ã é–‹å§‹ã—ã¦ã„ãªã„
 		DrawTextAlign( POS_DEFAULT, POS_DEFAULT, uAlign, L"Time -'--.---", Font, yc, ycOutline );
 		m_iTextPosY += Font.GetHeight();
 	}
@@ -1477,7 +1477,7 @@ void CVsdFilter::DrawLapTime(
 	if( m_LapLog->m_iBestTime >= 0 ){
 		m_iTextPosY += Font.GetHeight() / 4;
 		
-		// Best •\¦
+		// Best è¡¨ç¤º
 		swprintf(
 			szBuf, sizeof( szBuf ), L"Best%2d'%02d.%03d",
 			m_LapLog->m_iBestTime / 60000,
@@ -1486,7 +1486,7 @@ void CVsdFilter::DrawLapTime(
 		);
 		DrawTextAlign( POS_DEFAULT, POS_DEFAULT, uAlign, szBuf, Font, yc, ycOutline );
 		
-		// Lapƒ^ƒCƒ€•\¦
+		// Lapã‚¿ã‚¤ãƒ è¡¨ç¤º
 		DrawLapTimeLog(
 			m_iTextPosX, m_iTextPosY, uAlign,
 			3, Font, yc, ycBest, ycOutline
@@ -1495,7 +1495,7 @@ void CVsdFilter::DrawLapTime(
 	SelectLogVsd;
 }
 
-/*** ƒ‰ƒbƒvƒ^ƒCƒ€—š—ğ•\¦ ***************************************************/
+/*** ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ å±¥æ­´è¡¨ç¤º ***************************************************/
 
 void CVsdFilter::DrawLapTimeLog(
 	int x, int y, UINT uAlign, int iNum, CVsdFont &Font,
@@ -1518,16 +1518,16 @@ void CVsdFilter::DrawLapTimeLog(
 	m_iTextPosX = x;
 	uAlign &= ALIGN_LEFT | ALIGN_HCENTER | ALIGN_RIGHT;
 	
-	// Lapƒ^ƒCƒ€•\¦
-	// 3‚Âƒ^ƒCƒ€•\¦‚·‚é•ª‚ÌCÅŒã‚Ì LapIdx ‚ğ‹‚ß‚éD
-	// ’Êí‚Í m_iLapIdx + 1 ‚¾‚ªCm_LapLog[ iLapIdxEnd ].iTime == 0 ‚Ì‚Í
-	// ü‰ñƒ‚[ƒh‚Å‚ÍÅŒã‚Ìƒ‰ƒbƒv‚ğ‘–‚èI‚¦‚½
-	// ƒWƒ€ƒJƒ‚[ƒh‚Å‚Í 1ü‘–‚èI‚¦‚½‚±‚Æ‚ğ¦‚µ‚Ä‚¢‚é‚Ì‚Å
-	// LapIdx ‚ğ -1 ‚·‚é
+	// Lapã‚¿ã‚¤ãƒ è¡¨ç¤º
+	// 3ã¤ã‚¿ã‚¤ãƒ è¡¨ç¤ºã™ã‚‹åˆ†ã®ï¼Œæœ€å¾Œã® LapIdx ã‚’æ±‚ã‚ã‚‹ï¼
+	// é€šå¸¸ã¯ m_iLapIdx + 1 ã ãŒï¼Œm_LapLog[ iLapIdxEnd ].iTime == 0 ã®æ™‚ã¯
+	// å‘¨å›ãƒ¢ãƒ¼ãƒ‰ã§ã¯æœ€å¾Œã®ãƒ©ãƒƒãƒ—ã‚’èµ°ã‚Šçµ‚ãˆãŸ
+	// ã‚¸ãƒ ã‚«ãƒ¢ãƒ¼ãƒ‰ã§ã¯ 1å‘¨èµ°ã‚Šçµ‚ãˆãŸã“ã¨ã‚’ç¤ºã—ã¦ã„ã‚‹ã®ã§
+	// LapIdx ã‚’ -1 ã™ã‚‹
 	int iLapIdxEnd = m_LapLog->m_iLapIdx + 1;
 	if( m_LapLog->m_Lap[ iLapIdxEnd ].iTime == 0 ) --iLapIdxEnd;
 	
-	// iLapIdxEnd ‚©‚ç—LŒø‚Èƒ‰ƒbƒvƒ^ƒCƒ€‚ª 2ŒÂŒ©‚Â‚©‚é‚Ü‚Å‘k‚é
+	// iLapIdxEnd ã‹ã‚‰æœ‰åŠ¹ãªãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ ãŒ 2å€‹è¦‹ã¤ã‹ã‚‹ã¾ã§é¡ã‚‹
 	int iLapIdxStart = iLapIdxEnd - 1;
 	for( i = 1; iLapIdxStart > 0; --iLapIdxStart ){
 		if( m_LapLog->m_Lap[ iLapIdxStart ].iTime ){
@@ -1554,7 +1554,7 @@ void CVsdFilter::DrawLapTimeLog(
 	SelectLogVsd;
 }
 
-/*** ‘SÔƒ‰ƒbƒvƒ^ƒCƒ€•\¦ ***************************************************/
+/*** å…¨è»Šãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ è¡¨ç¤º ***************************************************/
 
 #define RACELAP_POS_W	2
 #define RACELAP_CAR_W	10
@@ -1573,7 +1573,7 @@ void CVsdFilter::DrawRaceLapTime(
 ){
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
-	// ƒ‰ƒbƒvƒ`ƒƒ[ƒg‚ğ–¢ƒŠ[ƒh‚È‚çƒŠƒ^[ƒ“
+	// ãƒ©ãƒƒãƒ—ãƒãƒ£ãƒ¼ãƒˆã‚’æœªãƒªãƒ¼ãƒ‰ãªã‚‰ãƒªã‚¿ãƒ¼ãƒ³
 	if( !m_LapLog || m_LapLog->m_iLapMode != LAPMODE_CHART ) return;
 	
 	CLapLogAll *pLap = reinterpret_cast<CLapLogAll *>( m_LapLog );
@@ -1584,7 +1584,7 @@ void CVsdFilter::DrawRaceLapTime(
 		iNum = ( int )pLap->m_strName.size() < -iNum ? pLap->m_strName.size() : -iNum;
 	}
 	
-	// x, y •â³
+	// x, y è£œæ­£
 	if( uAlign & ALIGN_HCENTER ){
 		x -= Font.GetWidth() * RACELAP_GAP_R / 2;
 	}else if( uAlign & ALIGN_RIGHT ){
@@ -1596,7 +1596,7 @@ void CVsdFilter::DrawRaceLapTime(
 		y -= Font.GetHeight() * ( iNum + 1 ) + 1;
 	}
 	
-	// ƒwƒbƒ_
+	// ãƒ˜ãƒƒãƒ€
 	DrawTextAlign(
 		x + RACELAP_POS_W * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
 		L"P", Font, yc, ycOutline
@@ -1673,7 +1673,7 @@ void CVsdFilter::DrawRaceLapTime(
 	}
 }
 
-/*** ŠÛŒ^ƒ[ƒ^[ƒpƒlƒ‹–Ú·‚è ***********************************************/
+/*** ä¸¸å‹ãƒ¡ãƒ¼ã‚¿ãƒ¼ãƒ‘ãƒãƒ«ç›®ç››ã‚Š ***********************************************/
 
 void CVsdFilter::DrawRoundMeterScaleSub(
 	int iCx, int iCy, int iR,
@@ -1690,18 +1690,18 @@ void CVsdFilter::DrawRoundMeterScaleSub(
 	int iDegRange	= ( iMaxDeg + 360 - iMinDeg ) % 360;
 	if( iDegRange == 0 ) iDegRange = 360;
 	
-	/*** ƒ[ƒ^[ƒpƒlƒ‹ ***/
+	/*** ãƒ¡ãƒ¼ã‚¿ãƒ¼ãƒ‘ãƒãƒ« ***/
 	
-	// iStep ‚ÍØ‚èã‚°
+	// iStep ã¯åˆ‡ã‚Šä¸Šã’
 	int	iStep = ( iValRange + iLine1Cnt - 1 ) / iLine1Cnt;
 	
 	if( iStep == 0 ){
 		iStep = 1;
 	}else if( iValRange >= 1000 ){
-		// 1000ˆÈã‚Å‚ÍC100’PˆÊ‚ÉØ‚èã‚°
+		// 1000ä»¥ä¸Šã§ã¯ï¼Œ100å˜ä½ã«åˆ‡ã‚Šä¸Šã’
 		iStep = ( iStep + 90 ) / 100 * 100;
 	}else if( iValRange >= 50 ){
-		// 50ˆÈã‚Å‚ÍC10’PˆÊ‚ÉØ‚èã‚°
+		// 50ä»¥ä¸Šã§ã¯ï¼Œ10å˜ä½ã«åˆ‡ã‚Šä¸Šã’
 		iStep = ( iStep + 9 ) / 10 * 10;
 	}
 	
@@ -1715,7 +1715,7 @@ void CVsdFilter::DrawRoundMeterScaleSub(
 	){
 		double dAngle = ( iDegRange * i * iStep / ( double )iLine2Cnt / iValRange + dZeroDeg ) * ToRAD;
 		
-		// ƒ[ƒ^[ƒpƒlƒ‹–Ú·‚è
+		// ãƒ¡ãƒ¼ã‚¿ãƒ¼ãƒ‘ãƒãƒ«ç›®ç››ã‚Š
 		if( i % iLine2Cnt == 0 ){
 			DrawLine(
 				( int )( cos( dAngle ) * iR ) + iCx,
@@ -1726,7 +1726,7 @@ void CVsdFilter::DrawRoundMeterScaleSub(
 				ycLine1
 			);
 			
-			// ƒ[ƒ^[ƒpƒlƒ‹–Ú·‚è”’l
+			// ãƒ¡ãƒ¼ã‚¿ãƒ¼ãƒ‘ãƒãƒ«ç›®ç››ã‚Šæ•°å€¤
 			if( iDegRange != 360 || i != iMaxVal * iLine2Cnt / iStep ){
 				swprintf( szBuf, sizeof( szBuf ), L"%d", iStep * i / iLine2Cnt );
 				DrawTextAlign(
@@ -1737,7 +1737,7 @@ void CVsdFilter::DrawRoundMeterScaleSub(
 				);
 			}
 		}else{
-			// ¬–Ú·‚è
+			// å°ç›®ç››ã‚Š
 			DrawLine(
 				( int )( cos( dAngle ) * iR ) + iCx,
 				( int )( sin( dAngle ) * iR ) + iCy,
@@ -1750,7 +1750,7 @@ void CVsdFilter::DrawRoundMeterScaleSub(
 	}
 }
 
-/*** ƒŠƒjƒAƒ[ƒ^[ƒpƒlƒ‹–Ú·‚è *********************************************/
+/*** ãƒªãƒ‹ã‚¢ãƒ¡ãƒ¼ã‚¿ãƒ¼ãƒ‘ãƒãƒ«ç›®ç››ã‚Š *********************************************/
 
 void CVsdFilter::DrawLinearMeterScaleSub(
 	UINT uFlag,
@@ -1763,21 +1763,21 @@ void CVsdFilter::DrawLinearMeterScaleSub(
 	int	i;
 	WCHAR	szBuf[ SPRINTF_BUF ];
 	
-	/*** ƒ[ƒ^[ƒpƒlƒ‹ ***/
+	/*** ãƒ¡ãƒ¼ã‚¿ãƒ¼ãƒ‘ãƒãƒ« ***/
 	
 	if( iMinVal == iMaxVal ) iMaxVal = iMinVal + 10;
 	int	iValRange = iMaxVal - iMinVal;
 	
-	// iStep ‚ÍØ‚èã‚°
+	// iStep ã¯åˆ‡ã‚Šä¸Šã’
 	int	iStep = ( iValRange + iLine1Cnt - 1 ) / iLine1Cnt;
 	
 	if( iStep == 0 ){
 		iStep = 1;
 	}else if( iValRange >= 1000 ){
-		// 1000ˆÈã‚Å‚ÍC100’PˆÊ‚ÉØ‚èã‚°
+		// 1000ä»¥ä¸Šã§ã¯ï¼Œ100å˜ä½ã«åˆ‡ã‚Šä¸Šã’
 		iStep = ( iStep + 90 ) / 100 * 100;
 	}else if( iValRange >= 50 ){
-		// 50ˆÈã‚Å‚ÍC10’PˆÊ‚ÉØ‚èã‚°
+		// 50ä»¥ä¸Šã§ã¯ï¼Œ10å˜ä½ã«åˆ‡ã‚Šä¸Šã’
 		iStep = ( iStep + 9 ) / 10 * 10;
 	}
 	
@@ -1791,14 +1791,14 @@ void CVsdFilter::DrawLinearMeterScaleSub(
 	){
 		int iPos = ( iWidth * i * iStep / iLine2Cnt / iValRange + iZeroPos );
 		
-		// ƒ[ƒ^[ƒpƒlƒ‹–Ú·‚è
+		// ãƒ¡ãƒ¼ã‚¿ãƒ¼ãƒ‘ãƒãƒ«ç›®ç››ã‚Š
 		if( i % iLine2Cnt == 0 ){
 			if( uFlag & LMS_VERTICAL ){
 				DrawLine( iX, iY + iPos, iX + iLineLen1, iY + iPos, iLineWidth1, ycLine1 );
 			}else{
 				DrawLine( iX + iPos, iY, iX + iPos, iY + iLineLen1, iLineWidth1, ycLine1 );
 			}
-			// ƒ[ƒ^[ƒpƒlƒ‹–Ú·‚è”’l
+			// ãƒ¡ãƒ¼ã‚¿ãƒ¼ãƒ‘ãƒãƒ«ç›®ç››ã‚Šæ•°å€¤
 			swprintf( szBuf, sizeof( szBuf ), L"%d", iStep * i / iLine2Cnt );
 			
 			if( uFlag & LMS_VERTICAL ){
@@ -1807,7 +1807,7 @@ void CVsdFilter::DrawLinearMeterScaleSub(
 				DrawTextAlign( iX + iPos, iY + iNumPos, uFlag, szBuf, Font, ycNum );
 			}
 		}else{
-			// ¬–Ú·‚è
+			// å°ç›®ç››ã‚Š
 			if( uFlag & LMS_VERTICAL ){
 				DrawLine( iX, iY + iPos, iX + iLineLen2, iY + iPos, iLineWidth2, ycLine2 );
 			}else{
@@ -1817,30 +1817,30 @@ void CVsdFilter::DrawLinearMeterScaleSub(
 	}
 }
 
-/*** ƒ[ƒ^[“™•`‰æ *********************************************************/
+/*** ãƒ¡ãƒ¼ã‚¿ãƒ¼ç­‰æç”» *********************************************************/
 
 BOOL CVsdFilter::DrawVSD( void ){
 	
-	// ‰ğ‘œ“x•ÏX
+	// è§£åƒåº¦å¤‰æ›´
 	if( m_iWidth != GetWidth() || m_iHeight != GetHeight() || m_bSaving != IsSaving()){
 		m_iWidth	= GetWidth();
 		m_iHeight	= GetHeight();
 		m_bSaving	= IsSaving();
 		
-		// ƒ|ƒŠƒSƒ“—pƒoƒbƒtƒ@ƒŠƒTƒCƒY
+		// ãƒãƒªã‚´ãƒ³ç”¨ãƒãƒƒãƒ•ã‚¡ãƒªã‚µã‚¤ã‚º
 		if( m_Polygon ) delete [] m_Polygon;
 		m_Polygon = new PolygonData_t[ m_iHeight ];
 		InitPolygon();
 		
-		// JavaScript Ä‹N“®—p‚Éíœ
+		// JavaScript å†èµ·å‹•ç”¨ã«å‰Šé™¤
 		if( m_Script ) DeleteScript();
 		
-		// ƒtƒHƒ“ƒgƒTƒCƒY‰Šú‰»
+		// ãƒ•ã‚©ãƒ³ãƒˆã‚µã‚¤ã‚ºåˆæœŸåŒ–
 		if( m_pFont ) delete m_pFont;
 		m_pFont = new CVsdFont( DEFAULT_FONT, 18, CVsdFont::ATTR_OUTLINE | CVsdFont::ATTR_NOANTIALIAS );
 	}
 	
-	// ƒƒOˆÊ’u‚ÌŒvZ
+	// ãƒ­ã‚°ä½ç½®ã®è¨ˆç®—
 	if( m_VsdLog ){
 		m_VsdLog->m_dLogNum = GetLogIndex( GetFrameCnt(), Vsd, m_VsdLog->m_iLogNum );
 		m_VsdLog->m_iLogNum = ( int )m_VsdLog->m_dLogNum;
@@ -1850,12 +1850,12 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_GPSLog->m_iLogNum = ( int )m_GPSLog->m_dLogNum;
 	}
 	
-	// ƒ‰ƒbƒvƒ^ƒCƒ€‚ÌÄ¶¬
+	// ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ ã®å†ç”Ÿæˆ
 	if( DispLap() && m_bCalcLapTimeReq ){
 		m_bCalcLapTimeReq	= FALSE;
 		
 		if( m_LapLog && m_LapLog->m_iLapMode == LAPMODE_CHART ){
-			// ƒ‰ƒbƒvƒ`ƒƒ[ƒg‚©‚çƒ‰ƒbƒvî•ñ\’z
+			// ãƒ©ãƒƒãƒ—ãƒãƒ£ãƒ¼ãƒˆã‹ã‚‰ãƒ©ãƒƒãƒ—æƒ…å ±æ§‹ç¯‰
 			reinterpret_cast<CLapLogAll *>( m_LapLog )->MakeCamLapData(
 				m_piParamS[ SHADOW_LAP_CHART_St ],
 				m_piParamS[ SHADOW_LAP_CHART_Ed ]
@@ -1866,12 +1866,12 @@ BOOL CVsdFilter::DrawVSD( void ){
 				m_LapLog = NULL;
 			}
 			
-			// GPS ‚©‚çƒ‰ƒbƒvƒ^ƒCƒ€ŒvZ‚µ‚Ä‚İ‚é
+			// GPS ã‹ã‚‰ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ è¨ˆç®—ã—ã¦ã¿ã‚‹
 			if( m_GPSLog && m_piParamT[ TRACK_SLineWidth ] > 0 ){
 				m_LapLog = CreateLapTimeAuto();
 			}
 			
-			// ‚Å‚«‚È‚©‚Á‚½‚Ì‚Åè“®‚Å
+			// ã§ããªã‹ã£ãŸã®ã§æ‰‹å‹•ã§
 			if( !m_LapLog ){
 				m_LapLog = CreateLapTimeHand(
 					m_GPSLog ? LAPSRC_GPS :
@@ -1881,7 +1881,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 	}
 	
-	// ƒ‰ƒbƒvƒ^ƒCƒ€“™ÄŒvZ
+	// ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ ç­‰å†è¨ˆç®—
 	if( m_LapLog ){
 		CalcLapTime();
 		if( m_LapLog->m_iLapMode == LAPMODE_CHART ){
@@ -1889,7 +1889,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		}
 	}
 	
-	// ƒXƒNƒŠƒvƒgÀs
+	// ã‚¹ã‚¯ãƒªãƒ—ãƒˆå®Ÿè¡Œ
 	DebugMsgD( ":DrawVSD():Running script... %X\n", GetCurrentThreadId());
 	if( !m_Script && m_szSkinFile ){
 		m_Script = new CScript( this );

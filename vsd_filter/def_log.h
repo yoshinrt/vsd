@@ -1,4 +1,4 @@
-#ifndef DEF_LOG_T
+﻿#ifndef DEF_LOG_T
 	#define DEF_LOG_T( name, type )	DEF_LOG( name )
 #endif
 

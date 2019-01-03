@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -11,11 +11,11 @@
 class CPixelBase {
   public:
 	#ifdef PIXEL_AVU
-		short	y;		//	‰æ‘f(‹P“x    )ƒf[ƒ^ (     0 ` 4096 )
-		short	cb;		//	‰æ‘f(F·(Â))ƒf[ƒ^ ( -2048 ` 2048 )
-		short	cr;		//	‰æ‘f(F·(Ô))ƒf[ƒ^ ( -2048 ` 2048 )
-						//	‰æ‘fƒf[ƒ^‚Í”ÍˆÍŠO‚Éo‚Ä‚¢‚é‚±‚Æ‚ª‚ ‚è‚Ü‚·
-						//	‚Ü‚½”ÍˆÍ“à‚Éû‚ß‚È‚­‚Ä‚à‚©‚Ü‚¢‚Ü‚¹‚ñ
+		short	y;		//	ç”»ç´ (è¼åº¦    )ãƒ‡ãƒ¼ã‚¿ (     0 ï½ 4096 )
+		short	cb;		//	ç”»ç´ (è‰²å·®(é’))ãƒ‡ãƒ¼ã‚¿ ( -2048 ï½ 2048 )
+		short	cr;		//	ç”»ç´ (è‰²å·®(èµ¤))ãƒ‡ãƒ¼ã‚¿ ( -2048 ï½ 2048 )
+						//	ç”»ç´ ãƒ‡ãƒ¼ã‚¿ã¯ç¯„å›²å¤–ã«å‡ºã¦ã„ã‚‹ã“ã¨ãŒã‚ã‚Šã¾ã™
+						//	ã¾ãŸç¯„å›²å†…ã«åã‚ãªãã¦ã‚‚ã‹ã¾ã„ã¾ã›ã‚“
 		USHORT	alfa;	// 0-256
 		
 		void Set( int a, int r, int g, int b ){
@@ -40,21 +40,21 @@ class CPixelBase {
 		}
 	#else
 		union {
-			// yuv ‘S•”w’è
+			// yuv å…¨éƒ¨æŒ‡å®š
 			UINT	ycbcr;
 			
-			// ycb / ycr ƒAƒNƒZƒX
+			// ycb / ycr ã‚¢ã‚¯ã‚»ã‚¹
 			struct {
 				USHORT	ycb;
 				USHORT	ycr;
 			};
 			
-			// yuv ŒÂ•Êw’è
+			// yuv å€‹åˆ¥æŒ‡å®š
 			struct {
 				UCHAR	y;
-				UCHAR	cb;		// -128`127 ‚Å‚Í‚È‚­‚Ä 0`255
+				UCHAR	cb;		// -128ï½127 ã§ã¯ãªãã¦ 0ï½255
 				UCHAR	alfa;
-				UCHAR	cr;		// -128`127 ‚Å‚Í‚È‚­‚Ä 0`255
+				UCHAR	cr;		// -128ï½127 ã§ã¯ãªãã¦ 0ï½255
 			};
 		};
 		
@@ -80,7 +80,7 @@ class CPixelBase {
 		return Set( a, r, g, b );
 	}
 	
-	// new & ƒuƒŒƒ“ƒh
+	// new & ãƒ–ãƒ¬ãƒ³ãƒ‰
 	CPixelBase( CPixelBase yc0, CPixelBase yc1, UINT uAlfa, UINT uAlfaMax ){
 		UINT uAlfaM = uAlfaMax - uAlfa;
 		
@@ -93,7 +93,7 @@ class CPixelBase {
 	// ITU-R BT.601 / ITU-R BT.709
   private:
 	#ifdef PIXEL_AVU
-		// ƒtƒ‹ƒŒƒ“ƒW
+		// ãƒ•ãƒ«ãƒ¬ãƒ³ã‚¸
 		static int GetY(  int r, int g, int b ){ return  306 * r + 601 * g + 117 * b; }
 		static int GetCb( int r, int g, int b ){ return -173 * r - 339 * g + 512 * b; }
 		static int GetCr( int r, int g, int b ){ return  512 * r - 429 * g -  83 * b; }

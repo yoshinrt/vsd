@@ -1,27 +1,27 @@
-#ifndef DEF_TRACKBAR_N
+﻿#ifndef DEF_TRACKBAR_N
 	#define DEF_TRACKBAR_N DEF_TRACKBAR
 #endif
 
 //			enum name
-//				|				�g���b�N�o�[�̏����l
-//				|					|	�g���b�N�o�[�̉����l
-//				|					|		|	�g���b�N�o�[�̏���l
-//				|					|		|		|	�g���b�N�o�[�̖��O
-//				|					|		|		|		|						config ��
+//				|				トラックバーの初期値
+//				|					|	トラックバーの下限値
+//				|					|		|	トラックバーの上限値
+//				|					|		|		|	トラックバーの名前
+//				|					|		|		|		|						config 名
 //				|					|		|		|		|						|
-DEF_TRACKBAR_N(	TRACK_VsdLogOffset,	0,		-9999,	9999,	"�ԗ����O�ʒu����",	NULL	)
-DEF_TRACKBAR_N(	TRACK_GPSLogOffset,	0,		-9999,	9999,	"GPS���O�ʒu����",	NULL	)
+DEF_TRACKBAR_N(	TRACK_VsdLogOffset,	0,		-9999,	9999,	"車両ログ位置調整",	NULL	)
+DEF_TRACKBAR_N(	TRACK_GPSLogOffset,	0,		-9999,	9999,	"GPSログ位置調整",	NULL	)
 #ifndef PUBLIC_MODE
-DEF_TRACKBAR(	PARAM_VSt,			0,		0,		9999,	"Video�擪",		"video_start"	)
-DEF_TRACKBAR(	PARAM_VEd,			0,		0,		9999,	"Video�Ō�",		"video_end"		)
-DEF_TRACKBAR(	PARAM_LSt,			0,		0,		9999,	"���O�擪",			"log_start"		)
-DEF_TRACKBAR(	PARAM_LEd,			0,		0,		9999,	"���O�Ō�",			"log_end"		)
-DEF_TRACKBAR(	PARAM_GSt,			0,		0,		9999,	"GPS�擪",			"gps_start"		)
-DEF_TRACKBAR(	PARAM_GEd,			0,		0,		9999,	"GPS�Ō�",			"gps_end"		)
+DEF_TRACKBAR(	PARAM_VSt,			0,		0,		9999,	"Video先頭",		"video_start"	)
+DEF_TRACKBAR(	PARAM_VEd,			0,		0,		9999,	"Video最後",		"video_end"		)
+DEF_TRACKBAR(	PARAM_LSt,			0,		0,		9999,	"ログ先頭",			"log_start"		)
+DEF_TRACKBAR(	PARAM_LEd,			0,		0,		9999,	"ログ最後",			"log_end"		)
+DEF_TRACKBAR(	PARAM_GSt,			0,		0,		9999,	"GPS先頭",			"gps_start"		)
+DEF_TRACKBAR(	PARAM_GEd,			0,		0,		9999,	"GPS最後",			"gps_end"		)
 #endif
-DEF_TRACKBAR(	TRACK_LineTrace,	240,	0,		1000,	"���s�O�Ւ���",		"map_length"	)
-DEF_TRACKBAR(	TRACK_MapAngle,		0,		0,		3600,	"���s�O�Չ�]",		"map_angle"		)
-DEF_TRACKBAR(	TRACK_SLineWidth,	200,	-1,		1000,	"�v���n�_��",		"start_width"	)
+DEF_TRACKBAR(	TRACK_LineTrace,	240,	0,		1000,	"走行軌跡長さ",		"map_length"	)
+DEF_TRACKBAR(	TRACK_MapAngle,		0,		0,		3600,	"走行軌跡回転",		"map_angle"		)
+DEF_TRACKBAR(	TRACK_SLineWidth,	200,	-1,		1000,	"計測地点幅",		"start_width"	)
 
 #undef DEF_TRACKBAR
 #undef DEF_TRACKBAR_N

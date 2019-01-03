@@ -1,4 +1,4 @@
-#pragma comment( lib, "wininet.lib" )
+ï»¿#pragma comment( lib, "wininet.lib" )
 
 #include <windows.h>
 #include <wininet.h>
@@ -126,20 +126,20 @@ void Error( char *szMsg ){
 	}
 	
 	puts( szMsg );
-	printf( "ƒGƒ‰[ 0x%X: %s\n", dwError, pMsg );
+	printf( "ã‚¨ãƒ©ãƒ¼ 0x%X: %s\n", dwError, pMsg );
 }
 
 UINT HttpGet( char *szUrl, char *szFile ){
 	
 	//-------------------------------------------------------------
-	// ‰æ‘œ‚Ì“Ç‚İ‚İ
+	// ç”»åƒã®èª­ã¿è¾¼ã¿
 	//-------------------------------------------------------------
 	UINT	result = 1;
 	
 	#define BUF_SIZE ( 1024 * 1024 )
 	g_pBuf	= new char[ BUF_SIZE ];
 	
-	// URL ‚ÅŠJ‚­
+	// URL ã§é–‹ã
 	HINTERNET	hInternet	= NULL;
 	HINTERNET	hFile		= NULL;
 	
@@ -154,7 +154,7 @@ UINT HttpGet( char *szUrl, char *szFile ){
 	
 	do{
 		if(
-			/* WININET‰Šú‰» */
+			/* WININETåˆæœŸåŒ– */
 			!( hInternet = InternetOpen(
 				//"WININET Sample Program",
 				"Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)",
@@ -162,18 +162,18 @@ UINT HttpGet( char *szUrl, char *szFile ){
 				NULL, NULL, 0
 			))
 		){
-			Error( "InternetOpen() ¸”s" );
+			Error( "InternetOpen() å¤±æ•—" );
 			break;
 		}
 		
 		if(
-			/* URL‚ÌƒI[ƒvƒ“ */
+			/* URLã®ã‚ªãƒ¼ãƒ—ãƒ³ */
 			!( hFile = InternetOpenUrl(
 				hInternet, szUrl, NULL, 0,
 				INTERNET_FLAG_IGNORE_CERT_CN_INVALID | INTERNET_FLAG_IGNORE_CERT_DATE_INVALID, 0
 			))
 		){
-			Error( "InternetOpenUrl ¸”s" );
+			Error( "InternetOpenUrl å¤±æ•—" );
 			
 			DWORD	dwBufferLength = BUF_SIZE;
 			DWORD	dwError;
@@ -184,7 +184,7 @@ UINT HttpGet( char *szUrl, char *szFile ){
 				&dwBufferLength
 			);
 			
-			printf( "HTTP ƒŒƒXƒ|ƒ“ƒX: 0x%X:%s\n", dwError, g_pBuf );
+			printf( "HTTP ãƒ¬ã‚¹ãƒãƒ³ã‚¹: 0x%X:%s\n", dwError, g_pBuf );
 			break;
 		}
 		
@@ -193,7 +193,7 @@ UINT HttpGet( char *szUrl, char *szFile ){
 		fp = fopen( g_pBuf, "wb" );
 		if( fp == NULL ) break;
 		
-		/* ƒI[ƒvƒ“‚µ‚½URL‚©‚çƒf[ƒ^‚ğ(BUF_SIZEƒoƒCƒg‚¸‚Â)“Ç‚İ‚Ş */
+		/* ã‚ªãƒ¼ãƒ—ãƒ³ã—ãŸURLã‹ã‚‰ãƒ‡ãƒ¼ã‚¿ã‚’(BUF_SIZEãƒã‚¤ãƒˆãšã¤)èª­ã¿è¾¼ã‚€ */
 		UINT	uTotalSize = 0;
 		
 		while( 1 ){
@@ -211,12 +211,12 @@ UINT HttpGet( char *szUrl, char *szFile ){
 		sprintf( g_pBuf, "%s.download", szFile );
 		rename( g_pBuf, szFile );
 		
-		printf( "\n%dbytes ƒ_ƒEƒ“ƒ[ƒhŠ®—¹\n", uTotalSize );
+		printf( "\n%dbytes ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰å®Œäº†\n", uTotalSize );
 		result = 0;
 		
 	}while( 0 );
 	
-	/* Œãˆ— */
+	/* å¾Œå‡¦ç† */
 	if( hFile )		InternetCloseHandle( hFile );
 	if( hInternet )	InternetCloseHandle( hInternet );
 	

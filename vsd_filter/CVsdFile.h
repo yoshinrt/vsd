@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -35,7 +35,7 @@ class CVsdFile : public CV8If {
 	void ZipNextFile( ReturnValue<Value> Ret ); // !js_func
 	int ReadZip( void );
 	
-	// ƒoƒCƒiƒŠƒAƒNƒZƒX
+	// ãƒã‚¤ãƒŠãƒªã‚¢ã‚¯ã‚»ã‚¹
 	UCHAR *ReadBin( int iSize );
 	int WriteBin( void *pBuf, int iSize );
 	
@@ -116,7 +116,7 @@ class CVsdFile : public CV8If {
 		unzFile	m_unzfp;
 	};
 	
-	// zip —p
+	// zip ç”¨
 	UINT	m_uBufSize;
 	UINT	m_uBufPtr;
 	
@@ -125,8 +125,8 @@ class CVsdFile : public CV8If {
 	enum {
 		MODE_NORMAL,
 		MODE_GZIP,
-		MODE_ZIP,			// “à•” file ‚ğ open ‚µ‚Ä‚¢‚È‚¢
-		MODE_ZIP_OPENED,	// “à•” file ‚ğ open ’†
+		MODE_ZIP,			// å†…éƒ¨ file ã‚’ open ã—ã¦ã„ãªã„
+		MODE_ZIP_OPENED,	// å†…éƒ¨ file ã‚’ open ä¸­
 	};
 	
 	USHORT	m_uFlag;

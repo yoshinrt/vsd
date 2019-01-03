@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright( C ) by DDS
 	
@@ -11,7 +11,7 @@
 #include "ScriptIF.h"
 #include "COle.h"
 
-/*** OLE ƒCƒ“ƒXƒ^ƒ“ƒXì¬ ***************************************************/
+/*** OLE ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ä½œæˆ ***************************************************/
 
 UINT COle::CreateInstance( LPCWSTR strServer ){
 	// Get CLSID for our server...
@@ -30,17 +30,17 @@ UINT COle::CreateInstance( LPCWSTR strServer ){
 	return ERR_OK;
 }
 
-/*** JavaScript IF ‰Šú‰»’Ç‰Áˆ— *******************************************/
+/*** JavaScript IF åˆæœŸåŒ–è¿½åŠ å‡¦ç† *******************************************/
 
 void COle::InitJS( Local<FunctionTemplate> tmpl ){
 	Local<ObjectTemplate> inst = tmpl->InstanceTemplate();
-	// Default function “o˜^
+	// Default function ç™»éŒ²
 	inst->SetCallAsFunctionHandler( COle::CallAsFunctionHandler, Int32::New( Isolate::GetCurrent(), 0 ));
 }
 
-/*** OLE function ’Ç‰Á ******************************************************/
+/*** OLE function è¿½åŠ  ******************************************************/
 
-// ‹¤’Êƒƒ\ƒbƒh caller
+// å…±é€šãƒ¡ã‚½ãƒƒãƒ‰ caller
 void COle::OleFuncCaller(
 	const FunctionCallbackInfo<Value>& args
 ){
@@ -54,7 +54,7 @@ void COle::OleFuncCaller(
 	);
 }
 
-// ‹¤’Êƒƒ\ƒbƒh caller
+// å…±é€šãƒ¡ã‚½ãƒƒãƒ‰ caller
 void COle::CallAsFunctionHandler(
 	const FunctionCallbackInfo<Value>& args
 ){
@@ -69,7 +69,7 @@ void COle::CallAsFunctionHandler(
 }
 
 /****************************************************************************/
-// ‹¤’ÊƒvƒƒpƒeƒBƒZƒbƒ^
+// å…±é€šãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã‚»ãƒƒã‚¿
 void COle::OleValueSetter(
 	Local<String> propertyName,
 	Local<Value> value,
@@ -86,7 +86,7 @@ void COle::OleValueSetter(
 	);
 }
 
-// ‹¤’ÊƒvƒƒpƒeƒBƒQƒbƒ^
+// å…±é€šãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã‚²ãƒƒã‚¿
 void COle::OleValueGetter(
 	Local<String> propertyName,
 	const PropertyCallbackInfo<Value>& info
@@ -135,14 +135,14 @@ HRESULT COle::AddOLEFunction( Local<Object> ThisObj, ITypeInfo *pTypeInfo ){
 		return hr;
 	}
 	
-	// •Ï”ˆê——‚ğæ“¾
+	// å¤‰æ•°ä¸€è¦§ã‚’å–å¾—
 	for( UINT u = 0; u < pTypeAttr->cVars; ++u ){
 		if( FAILED( hr = pTypeInfo->GetVarDesc( u, &pVarDesc ))) break;
 		
 		UINT v;
 		hr = pTypeInfo->GetNames( pVarDesc->memid, &Name, 1, &v );
 		
-		// var ’Ç‰Á
+		// var è¿½åŠ 
 		ThisObj->SetAccessor(
 			String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)Name ),
 			OleValueGetter,
@@ -155,7 +155,7 @@ HRESULT COle::AddOLEFunction( Local<Object> ThisObj, ITypeInfo *pTypeInfo ){
 		pTypeInfo->ReleaseVarDesc( pVarDesc );
 	}
 	
-	// function ˆê——‚ğæ“¾
+	// function ä¸€è¦§ã‚’å–å¾—
 	for( UINT u = 0; u < pTypeAttr->cFuncs; ++u ){
 		if( FAILED( hr = pTypeInfo->GetFuncDesc( u, &pFuncDesc ))) break;
 		
@@ -163,7 +163,7 @@ HRESULT COle::AddOLEFunction( Local<Object> ThisObj, ITypeInfo *pTypeInfo ){
 		hr = pTypeInfo->GetNames( pFuncDesc->memid, &Name, 1, &v );
 		
 		if( pFuncDesc->invkind & INVOKE_FUNC ){
-			// function ’Ç‰Á
+			// function è¿½åŠ 
 			ThisObj->Set(
 				String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)Name ),
 				FunctionTemplate::New( Isolate::GetCurrent(),
@@ -173,7 +173,7 @@ HRESULT COle::AddOLEFunction( Local<Object> ThisObj, ITypeInfo *pTypeInfo ){
 			);
 			DebugMsgD( L"Fuc:%08X:%s\n", pFuncDesc->memid, Name );
 		}else{
-			// var ’Ç‰Á
+			// var è¿½åŠ 
 			ThisObj->SetAccessor(
 				String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)Name ),
 				OleValueGetter,
@@ -186,7 +186,7 @@ HRESULT COle::AddOLEFunction( Local<Object> ThisObj, ITypeInfo *pTypeInfo ){
 		pTypeInfo->ReleaseFuncDesc( pFuncDesc );
 	}
 	
-    // Œp³ƒNƒ‰ƒX‚Ìî•ñ‚ğ“o˜^
+    // ç¶™æ‰¿ã‚¯ãƒ©ã‚¹ã®æƒ…å ±ã‚’ç™»éŒ²
     ITypeInfo	*pRefTypeInfo;
     HREFTYPE href;
 	
@@ -209,7 +209,7 @@ HRESULT COle::AddOLEFunction( Local<Object> ThisObj, ITypeInfo *pTypeInfo ){
 Local<Value> COle::CreateActiveXObject(
 	IDispatch *pDispatch
 ){
-	// ActiveXObject ‚ğ New ‚·‚é
+	// ActiveXObject ã‚’ New ã™ã‚‹
 	Local<Function> hFunction = Local<Function>::Cast(
 		Isolate::GetCurrent()->GetCurrentContext()->Global()->Get( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)"ActiveXObject" ))
 	);
@@ -250,12 +250,12 @@ void COle::V8Array2SafeArray(
 	
 	for( pID[ iDim ] = 0; pID[ iDim ] <= pUB[ iDim ]; ++pID[ iDim ]){
 		if( iDim == iMaxDim - 1 ){
-			// —v‘f‚ğ‘‚­
+			// è¦ç´ ã‚’æ›¸ã
 			HRESULT hr = SafeArrayPtrOfIndex( psa, pID, &V_BYREF( &variant ));
 			if( FAILED( hr )) break;
 			Val2Variant( val->Get( pID[ iDim ]), &variant );
 		}else{
-			// q array ‚ğ walk
+			// å­ array ã‚’ walk
 			V8Array2SafeArray( Local<Array>::Cast( val->Get( pID[ iDim ])), psa, pUB, pID, iMaxDim, iDim + 1 );
 		}
 	}
@@ -364,12 +364,12 @@ Local<Value> COle::SafeArray2V8Array(
 	
 	for( pID[ iDim ] = pLB[ iDim ]; pID[ iDim ] <= pUB[ iDim ]; ++pID[ iDim ]){
 		if( iDim == iMaxDim - 1 ){
-			// —v‘f‚ğpush
+			// è¦ç´ ã‚’push
 			HRESULT hr = SafeArrayPtrOfIndex( psa, pID, &V_BYREF( &variant ));
 			if( FAILED( hr )) break;
 			ret->Set( ret->Length(), Variant2Val( &variant ));
 		}else{
-			// q array ‚ğ push
+			// å­ array ã‚’ push
 			ret->Set( ret->Length(), SafeArray2V8Array( variant, psa, pLB, pUB, pID, iMaxDim, iDim + 1 ));
 		}
 	}
@@ -570,7 +570,7 @@ void COle::Invoke(
 		/* retry to call args by value */
 		if(op.dp.cArgs > 0) {
 			for(i = 0; i < op.dp.cArgs; i++) {
-				// šprop ƒZƒbƒg‚Ì‚Ê‚é‚Û
+				// â˜…prop ã‚»ãƒƒãƒˆã®æ™‚ã¬ã‚‹ã½
 				Val2Variant( args[ i ], &op.dp.rgvarg[ i ] );
 			}
 			memset(&excepinfo, 0, sizeof(EXCEPINFO));
@@ -615,7 +615,7 @@ void COle::Invoke(
 	if( &Ret ) Ret.Set( ret );
 }
 
-/*** HRESULT ‚ÌƒGƒ‰[ƒƒbƒZ[ƒW‚ğ“Š‚°‚é *************************************/
+/*** HRESULT ã®ã‚¨ãƒ©ãƒ¼ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’æŠ•ã’ã‚‹ *************************************/
 
 void COle::ThrowHResultError( HRESULT hr ){
 	LPWSTR pMsg;

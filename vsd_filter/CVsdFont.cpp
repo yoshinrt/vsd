@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -17,7 +17,7 @@
 int CVsdFont::m_iObjCnt = 0;
 #endif
 
-/*** ƒRƒ“ƒXƒgƒ‰ƒNƒ^ *********************************************************/
+/*** ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ *********************************************************/
 
 CVsdFont::CVsdFont( const char *szFontName, int iSize, UINT uAttr ){
 	//DebugMsgD( "new CFont %d:%X\n", ++m_iObjCnt, this );
@@ -29,38 +29,38 @@ CVsdFont::CVsdFont( LPCWSTR szFontName, int iSize, UINT uAttr ){
 	char szFont[ LF_FACESIZE ];
 	
 	WideCharToMultiByte(
-		CP_ACP,				// ƒR[ƒhƒy[ƒW
-		0,					// ˆ—‘¬“x‚Æƒ}ƒbƒsƒ“ƒO•û–@‚ğŒˆ’è‚·‚éƒtƒ‰ƒO
-		szFontName,			// ƒƒCƒh•¶š—ñ‚ÌƒAƒhƒŒƒX
-		-1,					// ƒƒCƒh•¶š—ñ‚Ì•¶š”
-		szFont,				// V‚µ‚¢•¶š—ñ‚ğó‚¯æ‚éƒoƒbƒtƒ@‚ÌƒAƒhƒŒƒX
-		sizeof( szFont ),	// V‚µ‚¢•¶š—ñ‚ğó‚¯æ‚éƒoƒbƒtƒ@‚ÌƒTƒCƒY
-		NULL,				// ƒ}ƒbƒv‚Å‚«‚È‚¢•¶š‚ÌŠù’è’l‚ÌƒAƒhƒŒƒX
-		NULL				// Šù’è‚Ì•¶š‚ğg‚Á‚½‚Æ‚«‚ÉƒZƒbƒg‚·‚éƒtƒ‰ƒO‚ÌƒAƒhƒŒƒX
+		CP_ACP,				// ã‚³ãƒ¼ãƒ‰ãƒšãƒ¼ã‚¸
+		0,					// å‡¦ç†é€Ÿåº¦ã¨ãƒãƒƒãƒ”ãƒ³ã‚°æ–¹æ³•ã‚’æ±ºå®šã™ã‚‹ãƒ•ãƒ©ã‚°
+		szFontName,			// ãƒ¯ã‚¤ãƒ‰æ–‡å­—åˆ—ã®ã‚¢ãƒ‰ãƒ¬ã‚¹
+		-1,					// ãƒ¯ã‚¤ãƒ‰æ–‡å­—åˆ—ã®æ–‡å­—æ•°
+		szFont,				// æ–°ã—ã„æ–‡å­—åˆ—ã‚’å—ã‘å–ã‚‹ãƒãƒƒãƒ•ã‚¡ã®ã‚¢ãƒ‰ãƒ¬ã‚¹
+		sizeof( szFont ),	// æ–°ã—ã„æ–‡å­—åˆ—ã‚’å—ã‘å–ã‚‹ãƒãƒƒãƒ•ã‚¡ã®ã‚µã‚¤ã‚º
+		NULL,				// ãƒãƒƒãƒ—ã§ããªã„æ–‡å­—ã®æ—¢å®šå€¤ã®ã‚¢ãƒ‰ãƒ¬ã‚¹
+		NULL				// æ—¢å®šã®æ–‡å­—ã‚’ä½¿ã£ãŸã¨ãã«ã‚»ãƒƒãƒˆã™ã‚‹ãƒ•ãƒ©ã‚°ã®ã‚¢ãƒ‰ãƒ¬ã‚¹
 	);
 	
 	CreateFont( szFont, iSize, uAttr );
 }
 
-/*** ƒtƒHƒ“ƒgì¬ ***********************************************************/
+/*** ãƒ•ã‚©ãƒ³ãƒˆä½œæˆ ***********************************************************/
 
 void CVsdFont::CreateFont( const char *szFontName, int iSize, UINT uAttr ){
 	m_uAttr = uAttr;
 	
-	m_LogFont.lfHeight			= iSize;						// •¶šƒZƒ‹‚Ü‚½‚Í•¶š‚Ì‚‚³
-	m_LogFont.lfWidth			= 0;							// •½‹Ï•¶š•
-	m_LogFont.lfEscapement		= 0;							// •¶š‘—‚è‚Ì•ûŒü‚ÆX²‚Æ‚ÌŠp“x
-	m_LogFont.lfOrientation		= 0;							// ƒx[ƒXƒ‰ƒCƒ“‚ÆX²‚Æ‚ÌŠp“x
-	m_LogFont.lfWeight			= uAttr & ATTR_BOLD ? FW_BOLD : FW_REGULAR;	// ƒtƒHƒ“ƒg‚Ì‘¾‚³
-	m_LogFont.lfItalic			= uAttr & ATTR_ITALIC ? TRUE : FALSE;		// ƒCƒ^ƒŠƒbƒN‘Ìw’è
-	m_LogFont.lfUnderline		= FALSE;						// ‰ºü•t‚«w’è
-	m_LogFont.lfStrikeOut		= FALSE;						// ‘Å‚¿Á‚µü•t‚«w’è
-	m_LogFont.lfCharSet			= DEFAULT_CHARSET;				// ƒLƒƒƒ‰ƒNƒ^ƒZƒbƒg
-	m_LogFont.lfOutPrecision	= OUT_DEFAULT_PRECIS;			// o—Í¸“x
-	m_LogFont.lfClipPrecision	= CLIP_DEFAULT_PRECIS;			// ƒNƒŠƒbƒsƒ“ƒO‚Ì¸“x
-	m_LogFont.lfQuality			= PROOF_QUALITY;				// o—Í•i¿
-	m_LogFont.lfPitchAndFamily	= FIXED_PITCH | FF_DONTCARE;	// ƒsƒbƒ`‚Æƒtƒ@ƒ~ƒŠ
-	strcpy( m_LogFont.lfFaceName, szFontName );					// ƒtƒHƒ“ƒg–¼
+	m_LogFont.lfHeight			= iSize;						// æ–‡å­—ã‚»ãƒ«ã¾ãŸã¯æ–‡å­—ã®é«˜ã•
+	m_LogFont.lfWidth			= 0;							// å¹³å‡æ–‡å­—å¹…
+	m_LogFont.lfEscapement		= 0;							// æ–‡å­—é€ã‚Šã®æ–¹å‘ã¨Xè»¸ã¨ã®è§’åº¦
+	m_LogFont.lfOrientation		= 0;							// ãƒ™ãƒ¼ã‚¹ãƒ©ã‚¤ãƒ³ã¨Xè»¸ã¨ã®è§’åº¦
+	m_LogFont.lfWeight			= uAttr & ATTR_BOLD ? FW_BOLD : FW_REGULAR;	// ãƒ•ã‚©ãƒ³ãƒˆã®å¤ªã•
+	m_LogFont.lfItalic			= uAttr & ATTR_ITALIC ? TRUE : FALSE;		// ã‚¤ã‚¿ãƒªãƒƒã‚¯ä½“æŒ‡å®š
+	m_LogFont.lfUnderline		= FALSE;						// ä¸‹ç·šä»˜ãæŒ‡å®š
+	m_LogFont.lfStrikeOut		= FALSE;						// æ‰“ã¡æ¶ˆã—ç·šä»˜ãæŒ‡å®š
+	m_LogFont.lfCharSet			= DEFAULT_CHARSET;				// ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ã‚»ãƒƒãƒˆ
+	m_LogFont.lfOutPrecision	= OUT_DEFAULT_PRECIS;			// å‡ºåŠ›ç²¾åº¦
+	m_LogFont.lfClipPrecision	= CLIP_DEFAULT_PRECIS;			// ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°ã®ç²¾åº¦
+	m_LogFont.lfQuality			= PROOF_QUALITY;				// å‡ºåŠ›å“è³ª
+	m_LogFont.lfPitchAndFamily	= FIXED_PITCH | FF_DONTCARE;	// ãƒ”ãƒƒãƒã¨ãƒ•ã‚¡ãƒŸãƒª
+	strcpy( m_LogFont.lfFaceName, szFontName );					// ãƒ•ã‚©ãƒ³ãƒˆå
 	
 	CreateFont();
 }
@@ -69,47 +69,47 @@ const MAT2 CVsdFont::mat = {{ 0, 1 }, { 0, 0 }, { 0, 0 }, { 0, 1 }};
 
 void CVsdFont::CreateFont( void ){
 	
-	// DC, FONT ƒnƒ“ƒhƒ‹æ“¾
+	// DC, FONT ãƒãƒ³ãƒ‰ãƒ«å–å¾—
 	HDC		hdc			= GetDC( NULL );
 	HFONT	hFont		= CreateFontIndirect( &m_LogFont );
 	HFONT	hFontOld	= ( HFONT )SelectObject( hdc, hFont );
 	
-	// tmAscent æ“¾
+	// tmAscent å–å¾—
 	TEXTMETRIC tm;
 	GetTextMetrics( hdc, &tm );
     GLYPHMETRICS	gm;
 	
 	int	iBitmapDepth = IsNoAntialias() ? GGO_BITMAP : GGO_GRAY8_BITMAP;
 	
-	// ƒvƒƒ|[ƒVƒ‡ƒiƒ‹‚Ì Space •æ“¾
+	// ãƒ—ãƒ­ãƒãƒ¼ã‚·ãƒ§ãƒŠãƒ«ã® Space å¹…å–å¾—
 	GetGlyphOutlineW( hdc, ' ', iBitmapDepth, &gm, 0, NULL, &mat );
 	m_iFontW_Space = gm.gmCellIncX;
 	
 	GetGlyphOutlineW( hdc, 'B', iBitmapDepth, &gm, 0, NULL, &mat );
-	m_iFontW = gm.gmCellIncX;	// 'W' ‚ªˆê”Ô•‚ªL‚¢
+	m_iFontW = gm.gmCellIncX;	// 'W' ãŒä¸€ç•ªå¹…ãŒåºƒã„
 	m_iFontH = tm.tmHeight;
 	
 	SelectObject( hdc, hFontOld );
 	DeleteObject( hFont );
-	ReleaseDC( NULL, hdc );			/* ƒEƒCƒ“ƒhƒE‚ÌHDC‰ğ•ú */
+	ReleaseDC( NULL, hdc );			/* ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ã®HDCè§£æ”¾ */
 }
 
-// Š¿š glyph ì¬
+// æ¼¢å­— glyph ä½œæˆ
 CFontGlyph& CVsdFont::CreateFontGlyph( WCHAR c ){
 	
-	// DC, FONT ƒnƒ“ƒhƒ‹æ“¾
+	// DC, FONT ãƒãƒ³ãƒ‰ãƒ«å–å¾—
 	HDC		hdc			= GetDC( NULL );
 	HFONT	hFont		= CreateFontIndirect( &m_LogFont );
 	HFONT	hFontOld	= ( HFONT )SelectObject( hdc, hFont );
 	
-	// tmAscent æ“¾
+	// tmAscent å–å¾—
 	TEXTMETRIC tm;
 	GetTextMetrics( hdc, &tm );
     GLYPHMETRICS	gm;
 	
 	int	iBitmapDepth = IsNoAntialias() ? GGO_BITMAP : GGO_GRAY8_BITMAP;
 	
-	// •K—v”z—ñƒTƒCƒYæ“¾
+	// å¿…è¦é…åˆ—ã‚µã‚¤ã‚ºå–å¾—
 	int iSize = GetGlyphOutlineW( hdc, c, iBitmapDepth, &gm, 0, NULL, &mat );
 	
 	CFontGlyph	*pGlyph;
@@ -122,7 +122,7 @@ CFontGlyph& CVsdFont::CreateFontGlyph( WCHAR c ){
 	if( iSize > 0 ){
 		pGlyph->pBuf = new BYTE[ iSize ];
 		
-		// ƒtƒHƒ“ƒgƒf[ƒ^æ“¾
+		// ãƒ•ã‚©ãƒ³ãƒˆãƒ‡ãƒ¼ã‚¿å–å¾—
 		GetGlyphOutlineW( hdc, c, iBitmapDepth, &gm, iSize, pGlyph->pBuf, &mat );
 		pGlyph->iW			= gm.gmBlackBoxX;
 		pGlyph->iH			= gm.gmBlackBoxY;
@@ -140,7 +140,7 @@ CFontGlyph& CVsdFont::CreateFontGlyph( WCHAR c ){
 	
 	SelectObject( hdc, hFontOld );
 	DeleteObject( hFont );
-	ReleaseDC( NULL, hdc );			/* ƒEƒCƒ“ƒhƒE‚ÌHDC‰ğ•ú */
+	ReleaseDC( NULL, hdc );			/* ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ã®HDCè§£æ”¾ */
 	
 	return *pGlyph;
 }

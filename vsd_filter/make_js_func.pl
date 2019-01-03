@@ -1,14 +1,13 @@
 #!/usr/bin/perl -w
-# .tab=4
 
 $ENV{ 'PATH' } = "$ENV{ 'HOME' }/bin:" . $ENV{ 'PATH' };
 
 $OutputFile = $ARGV[ 0 ];
 
-open( fpOut, "| nkf -sLw > $OutputFile" );
+open( fpOut, "> $OutputFile" );
 
 print fpOut << "-----";
-/*****************************************************************************
+\xEF\xBB\xBF/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -26,7 +25,7 @@ print fpOut << "-----";
 class CScriptIFBase {
 	
   public:
-	// this ¤Ø¤Î¥¢¥¯¥»¥¹¥Ø¥ë¥Ñ
+	// this ã¸ã®ã‚¢ã‚¯ã‚»ã‚¹ãƒ˜ãƒ«ãƒ‘
 	template<typename T>
 	static T* GetThis( Local<Object> handle ){
 		if( handle->GetInternalField( 0 )->IsUndefined()){
@@ -38,7 +37,7 @@ class CScriptIFBase {
 		return static_cast<T*>( pThis );
 	}
 	
-	// °ú¿ô¤Î¿ô¥Á¥§¥Ã¥¯
+	// å¼•æ•°ã®æ•°ãƒã‚§ãƒƒã‚¯
 	static BOOL CheckArgs( BOOL cond ){
 		if( !( cond )){
 			V8ErrorNumOfArg();
@@ -149,7 +148,7 @@ MakeJsIF({
 		}
 	}
 	
-	/*** ¥í¥°¥Ç¡¼¥¿¼èÆÀÍÑ *******************************************************/
+	/*** ãƒ­ã‚°ãƒ‡ãƒ¼ã‚¿å–å¾—ç”¨ *******************************************************/
 	
 	#define DEF_LOG( name ) \
 		static void Get_##name( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){ \
@@ -192,7 +191,7 @@ MakeJsIF({
 MakeJsIF({
 	Class		=> 'CVsdImage',
 	NewObject	=> << '-----',
-		// °ú¿ô¥Á¥§¥Ã¥¯
+		// å¼•æ•°ãƒã‚§ãƒƒã‚¯
 		if ( args.Length() <= 0 ){
 			V8ErrorNumOfArg();
 			return;
@@ -200,7 +199,7 @@ MakeJsIF({
 		
 		CVsdImage* pC_obj;
 		
-		// arg[ 0 ] ¤¬ Image ¤À¤Ã¤¿¾ì¹ç¡¤¤½¤Î¥³¥Ô¡¼¤òºî¤ë
+		// arg[ 0 ] ãŒ Image ã ã£ãŸå ´åˆï¼Œãã®ã‚³ãƒ”ãƒ¼ã‚’ä½œã‚‹
 		if( args[ 0 ]->IsObject()){
 			Local<Object> Image0 = args[ 0 ]->ToObject();
 			if( strcmp( *( String::Utf8Value )( Image0->GetConstructorName()), "Image" ) == 0 ){
@@ -213,7 +212,7 @@ MakeJsIF({
 				return;
 			}
 		}else{
-			// ¥Õ¥¡¥¤¥ëÌ¾»ØÄê¤Ç²èÁü¥í¡¼¥É
+			// ãƒ•ã‚¡ã‚¤ãƒ«åæŒ‡å®šã§ç”»åƒãƒ­ãƒ¼ãƒ‰
 			pC_obj = new CVsdImage();
 			String::Value FileName( args[ 0 ] );
 			
@@ -238,7 +237,7 @@ MakeJsIF({
 MakeJsIF({
 	Class		=> 'CVsdFont',
 	NewObject	=> << '-----'
-		// °ú¿ô¥Á¥§¥Ã¥¯
+		// å¼•æ•°ãƒã‚§ãƒƒã‚¯
 		if ( args.Length() < 2 ){
 			V8ErrorNumOfArg();
 			return;
@@ -267,7 +266,7 @@ MakeJsIF({
 	NewObject	=> << '-----',
 		COle *pC_obj = new COle();
 		
-		// °ú¿ô¥Á¥§¥Ã¥¯
+		// å¼•æ•°ãƒã‚§ãƒƒã‚¯
 		if( args.Length() >= 1 ){
 			String::Value strServer( args[ 0 ]);
 			
@@ -331,20 +330,20 @@ sub MakeJsIF {
 	while( <fpIn> ){
 		if( /!js_func\b/ ){
 			
-			# ´Ø¿ôÌ¾
+			# é–¢æ•°å
 			/(\S+)\s+\*?([\w_][\w_\d]*)\s*\(/;
 			( $RetType, $FuncName ) = ( $1, $2 );
 			
 			$NoArgNumCheck = '';
 			$ArgNum = 0;
 			$ArgMin = 0;
-			$HiddenArg = 0;	# ReturnValue Åù¡¤C ¤Ë¤·¤«¤Ê¤¤°ú¿ô¤Î¿ô
+			$HiddenArg = 0;	# ReturnValue ç­‰ï¼ŒC ã«ã—ã‹ãªã„å¼•æ•°ã®æ•°
 			@Args = ();
 			@Defs = ();
 			
 			$Line = $_;
 			
-			# °ú¿ô¡¤ ); ¤Ş¤ÇÆÉ¤ß¹ş¤à
+			# å¼•æ•°ï¼Œ ); ã¾ã§èª­ã¿è¾¼ã‚€
 			if( $Line !~ /\)(?:\s*=\s*0\s*)?;/ ){
 				while( <fpIn> ){
 					$Line .= $_;
@@ -363,7 +362,7 @@ sub MakeJsIF {
 			@Line = split( /\n/, $_ );
 			
 			foreach $_ ( @Line ){
-				/(\S+)/;	# ·¿
+				/(\S+)/;	# å‹
 				$Type = $1;
 				
 				$Default = /!default:(\S+)/ ? $1 : undef;
@@ -381,13 +380,13 @@ sub MakeJsIF {
 				}
 				
 				elsif( $Type eq 'char' ){
-					# string ·¿
+					# string å‹
 					push( @Defs, "String::Utf8Value str$ArgNum( args[ $ArgPos ] );" );
 					$Args[ $ArgNum + $HiddenArg ] = "*str$ArgNum";
 				}
 				
 				elsif( $Type =~ /^LPC?WSTR$/ ){
-					# WCHAR string ·¿
+					# WCHAR string å‹
 					push( @Defs, "String::Value str$ArgNum( args[ $ArgPos ] );" );
 					$Args[ $ArgNum + $HiddenArg ] = "( $Type )*str$ArgNum";
 				}
@@ -397,12 +396,12 @@ sub MakeJsIF {
 				}
 				
 				elsif( $Type eq 'int' || $Type eq 'UINT' ){
-					# int/UINT ·¿
+					# int/UINT å‹
 					$Args[ $ArgNum + $HiddenArg ] = "args[ $ArgPos ]->Int32Value()";
 				}
 				
 				elsif( $Type eq 'CPixelArg' ){
-					# (¡¦¢Ï¡¦)¥é¥ô¥£!!
+					# (ãƒ»âˆ€ãƒ»)ãƒ©ãƒ´ã‚£!!
 					$Args[ $ArgNum + $HiddenArg ] = "CPixel( args[ $ArgPos ]->Int32Value())";
 				}
 				
@@ -450,7 +449,7 @@ sub MakeJsIF {
  			$PreRet		= 'args.GetReturnValue().Set( ';
 			$PostRet	= '));';
 			
-			# ÊÖ¤êÃÍ
+			# è¿”ã‚Šå€¤
 			if( $RetType eq 'void' ){
 				$PreRet		= '';
 				$PostRet	= ';';
@@ -523,7 +522,7 @@ sub MakeJsIF {
 		}
 		
 		elsif( /!js_const:(\w+)/ ){
-			# CVsdFilter ÀìÍÑ
+			# CVsdFilter å°‚ç”¨
 			$JSvar = $1;
 			
 			s/[\x0D\x0A]//g;
@@ -556,17 +555,17 @@ sub MakeJsIF {
 class $param->{ Class }IF : CScriptIFBase {
   public:
 #if !$param->{ bGlobal }
-	// ¥¯¥é¥¹¥³¥ó¥¹¥È¥é¥¯¥¿
+	// ã‚¯ãƒ©ã‚¹ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 	static void New( const FunctionCallbackInfo<Value>& args ){
 		HandleScope handle_scope( args.GetIsolate());
 		
 $param->{ NewObject }
-		// internal field ¤Ë¥Ğ¥Ã¥¯¥¨¥ó¥É¥ª¥Ö¥¸¥§¥¯¥È¤òÀßÄê
+		// internal field ã«ãƒãƒƒã‚¯ã‚¨ãƒ³ãƒ‰ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’è¨­å®š
 		Local<Object> thisObject = args.This();
 		thisObject->SetInternalField( 0, External::New( args.GetIsolate(), pC_obj ));
 		
 		#if $UseDestructor
-			// JS ¥ª¥Ö¥¸¥§¥¯¥È¤¬ GC ¤µ¤ì¤ë¤È¤­¤Ë¥Ç¥¹¥È¥é¥¯¥¿¤¬¸Æ¤Ğ¤ì¤ë¤ª¤Ş¤¸¤Ê¤¤
+			// JS ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆãŒ GC ã•ã‚Œã‚‹ã¨ãã«ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ãŒå‘¼ã°ã‚Œã‚‹ãŠã¾ã˜ãªã„
 			pC_obj->m_pHolder = new Persistent<Object>( args.GetIsolate(), thisObject );
 			pC_obj->m_pHolder->SetWeak( pC_obj, Dispose );
 		#endif
@@ -577,12 +576,12 @@ $param->{ ExtraNew }
 		#endif
 	}
 	
-	// ¥¯¥é¥¹¥Ç¥¹¥È¥é¥¯¥¿
+	// ã‚¯ãƒ©ã‚¹ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 	#if $UseDestructor
 		static void Dispose( const WeakCallbackData<Object, $param->{ Class }> &data ){
 			$param->{ Class } *pC_obj = data.GetParameter();
 			
-			//release instance. ¤Ï delete c_Obj ¤Ç¼«Æ°Åª¤Ë¤ä¤ë
+			//release instance. ã¯ delete c_Obj ã§è‡ªå‹•çš„ã«ã‚„ã‚‹
 			//pC_obj->m_Holder->Reset();
 			
 			delete pC_obj;
@@ -590,9 +589,9 @@ $param->{ ExtraNew }
 		}
 	#endif
 	
-	// JavaScript ¤«¤é¤ÎÌÀ¼¨Åª¤ÊÇË´ş
+	// JavaScript ã‹ã‚‰ã®æ˜ç¤ºçš„ãªç ´æ£„
 	static void Func_Dispose( const FunctionCallbackInfo<Value>& args ){
-		// pC_obj ¤Î Dispose() ¤ò¸Æ¤Ö
+		// pC_obj ã® Dispose() ã‚’å‘¼ã¶
 		#if $UseDestructor
 			$param->{ Class } *C_obj = GetThis<$param->{ Class }>( args.This());
 			if( C_obj ){
@@ -607,19 +606,19 @@ $param->{ Dispose }
 					DebugMsgD( "<<<Dispose() js obj $param->{ Class }:%X\\n", C_obj );
 				#endif
 				
-				// internalfield ¤ò null ¤Ã¤İ¤¯¤¹¤ë
+				// internalfield ã‚’ null ã£ã½ãã™ã‚‹
 				args.This()->SetInternalField( 0, External::New( args.GetIsolate(), NULL ));
 			}
 		#endif
 	}
 #endif
 	
-	///// ¥×¥í¥Ñ¥Æ¥£¥¢¥¯¥»¥µ /////
+	///// ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã‚¢ã‚¯ã‚»ã‚µ /////
 $AccessorIF
-	///// ¥á¥½¥Ã¥É¥³¡¼¥ë¥Ğ¥Ã¥¯ /////
+	///// ãƒ¡ã‚½ãƒƒãƒ‰ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ /////
 $param->{ FunctionIF }
   public:
-	// ¥¯¥é¥¹¥Æ¥ó¥×¥ì¡¼¥È¤Î½é´ü²½
+	// ã‚¯ãƒ©ã‚¹ãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆã®åˆæœŸåŒ–
 	static void InitializeClass( Isolate *pIsolate, Handle<ObjectTemplate> global, void *pClass = NULL ){
 		HandleScope handle_scope( pIsolate );
 		
@@ -627,17 +626,17 @@ $param->{ FunctionIF }
 		#define inst	global
 		#define proto	global
 	#else
-		// ¥³¥ó¥¹¥È¥é¥¯¥¿¤òºîÀ®
+		// ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã‚’ä½œæˆ
 		Local<String> ClassName = String::NewFromOneByte( pIsolate, ( uint8_t *)"$param->{ JsClass }" );
 		Local<FunctionTemplate> tmpl = FunctionTemplate::New( pIsolate, New );
 		tmpl->SetClassName( ClassName );
-		// ¥Õ¥£¡¼¥ë¥É¤Ê¤É¤Ï¤³¤Á¤é¤Ë
+		// ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ãªã©ã¯ã“ã¡ã‚‰ã«
 		Local<ObjectTemplate> inst = tmpl->InstanceTemplate();
 		inst->SetInternalFieldCount( 1 );
 	#endif
 	
 $Accessor
-		// ¥á¥½¥Ã¥É¤Ï¤³¤Á¤é¤Ë
+		// ãƒ¡ã‚½ãƒƒãƒ‰ã¯ã“ã¡ã‚‰ã«
 	#if !$param->{ bGlobal }
 		Local<ObjectTemplate> proto = tmpl->PrototypeTemplate();
 		proto->Set( String::NewFromOneByte( pIsolate, ( uint8_t *)"Dispose" ), FunctionTemplate::New( pIsolate, Func_Dispose ));
@@ -646,7 +645,7 @@ $Function
 $Const
 $param->{ ExtraInit }
 	#if !$param->{ bGlobal }
-		// ¥°¥í¡¼¥Ğ¥ë¥ª¥Ö¥¸¥§¥¯¥È¤Ë¥¯¥é¥¹¤òÄêµÁ
+		// ã‚°ãƒ­ãƒ¼ãƒãƒ«ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã«ã‚¯ãƒ©ã‚¹ã‚’å®šç¾©
 		global->Set( ClassName, tmpl );
 		#undef inst
 		#undef proto

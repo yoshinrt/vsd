@@ -1,16 +1,16 @@
-#ifndef DEF_CHECKBOX_N
+ï»¿#ifndef DEF_CHECKBOX_N
 	#define DEF_CHECKBOX_N DEF_CHECKBOX
 #endif
 
 //			enum name
-//				|				ƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Ì‰Šú’l (’l‚Í0‚©1)
-//				|				|	ƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Ì–¼‘O
-//				|				|	|						config –¼
+//				|				ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã®åˆæœŸå€¤ (å€¤ã¯0ã‹1)
+//				|				|	ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã®åå‰
+//				|				|	|						config å
 //				|				|	|						|
-DEF_CHECKBOX(	CHECK_LAP,		1,	"ƒ‰ƒbƒvƒ^ƒCƒ€•\Ž¦",		"lap_time"	)
-DEF_CHECKBOX(	CHECK_GRAPH,	0,	"ƒOƒ‰ƒt•\Ž¦",			"graph"		)
-DEF_CHECKBOX_N(	CHECK_GPS_PRIO,	0,	"GPSƒƒO—Dæ",			NULL		)
-DEF_CHECKBOX_N(	CHECK_LOGPOS,	1,	"”¼Ž©“®“¯Šú",			NULL		)
+DEF_CHECKBOX(	CHECK_LAP,		1,	"ãƒ©ãƒƒãƒ—ã‚¿ã‚¤ãƒ è¡¨ç¤º",		"lap_time"	)
+DEF_CHECKBOX(	CHECK_GRAPH,	0,	"ã‚°ãƒ©ãƒ•è¡¨ç¤º",			"graph"		)
+DEF_CHECKBOX_N(	CHECK_GPS_PRIO,	0,	"GPSãƒ­ã‚°å„ªå…ˆ",			NULL		)
+DEF_CHECKBOX_N(	CHECK_LOGPOS,	1,	"åŠè‡ªå‹•åŒæœŸ",			NULL		)
 
 #undef DEF_CHECKBOX
 #undef DEF_CHECKBOX_N

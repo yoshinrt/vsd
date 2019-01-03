@@ -1,4 +1,4 @@
-/*****************************************************************************
+ï»¿/*****************************************************************************
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
@@ -52,19 +52,19 @@ class CVsdFont : public CV8If {
 	BOOL IsNoAntialias( void ){ return m_uAttr & ATTR_NOANTIALIAS; }
 	
 	CFontGlyph& FontGlyph( WCHAR c ){
-		// ASCII ‚ÌƒOƒŠƒt
+		// ASCII ã®ã‚°ãƒªãƒ•
 		if( c <= FONT_CHAR_LAST ){
 			CFontGlyph *p = &m_FontGlyph[ c - FONT_CHAR_FIRST ];
 			return p->iCellIncX >= 0 ? *p : CreateFontGlyph( c );
 		}
 		
-		// Š¿š‚ÌƒOƒŠƒt
+		// æ¼¢å­—ã®ã‚°ãƒªãƒ•
 		std::map<WCHAR, CFontGlyph *>::iterator itr;
 		if(( itr = m_FontGlyphK.find( c )) != m_FontGlyphK.end()){
 			return *( itr->second );
 		}
 		
-		// Œ©‚Â‚©‚ç‚È‚©‚Á‚½‚Ì‚ÅCì¬
+		// è¦‹ã¤ã‹ã‚‰ãªã‹ã£ãŸã®ã§ï¼Œä½œæˆ
 		return CreateFontGlyph( c );
 	}
 	
