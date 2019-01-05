@@ -18,7 +18,7 @@ ScriptIF.h : \
 	./$< $@
 
 rev_num.h:
-	rev=$$((`git log --oneline | wc -l` + 26)); \
+	rev=$$((`git log --oneline | wc -l` + 24)); \
 	if [ `git diff --stat | wc -l` != 0 ]; then rev=$$((rev + 1)); fi; \
 	echo "#define PROG_REVISION	$$rev"		> $@.$$$$; \
 	echo '#define PROG_REVISION_STR	"r'$$rev'"'	>> $@.$$$$; \
