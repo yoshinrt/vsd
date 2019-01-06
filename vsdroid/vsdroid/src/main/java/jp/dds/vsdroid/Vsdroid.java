@@ -78,6 +78,8 @@ public class Vsdroid extends Activity {
 	
 	int iBattery = 100;
 	
+	static final String	strVsdHome	= "/sdcard/OneDrive/vsd/";
+	
 	//*** utils **************************************************************
 
 	void Sleep( int ms ){
@@ -734,6 +736,19 @@ public class Vsdroid extends Activity {
 		Editor ed = Pref.edit();
 		ed.putBoolean( "key_reopen_log",  false );
 		ed.putBoolean( "key_caribration", false );
+		
+		// デフォルト値設定
+		if( Pref.getString( "key_system_dir", null ) == null ){
+			ed.putString( "key_system_dir",	strVsdHome );
+			ed.putString( "key_roms",		strVsdHome + "vsd2.mot" );
+			ed.putString( "key_replay_log",	strVsdHome + "vsd.log" );
+			ed.putString( "key_circuit",	strVsdHome + "circuit/未選択" );
+			
+			ed.putString( "key_bt_devices_gps",	"887 GPS / 00:1C:88:31:0A:77" );
+			ed.putString( "key_bt_devices_vsd",	"VSD / 00:12:02:10:01:76" );
+			ed.putString( "key_ip_addr",		"192.168.0.13" );
+			ed.putString( "key_connection_mode","1" );
+		}
 		ed.commit();
 
 		Intent intent = new Intent( Vsdroid.this, Preference.class );
