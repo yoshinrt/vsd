@@ -6,7 +6,7 @@
 	<ListPreference android:key="key_vsd_mode" android:defaultValue="0" android:dialogTitle="@string/pref_vsd_mode" android:title="@string/pref_vsd_mode" android:entryValues="@array/list_vsd_mode_values" android:entries="@array/list_vsd_mode"/>
 	<jp.dds.dds_lib.FileOpenPreference
 		file_filter="\\.km[zl]$"
-		select_mode="1"
+		select_mode="0x10001"
 		android:dialogTitle="@string/pref_circuit"
 		android:key="key_circuit"
 		android:title="@string/pref_circuit"/>
@@ -23,13 +23,13 @@
 		android:title="@string/pref_system_dir"/>
 	<jp.dds.dds_lib.FileOpenPreference
 		file_filter="\\.log$"
-		select_mode="1"
+		select_mode="0x10001"
 		android:dialogTitle="@string/pref_replay_log"
 		android:key="key_replay_log"
 		android:title="@string/pref_replay_log"/>
 	<jp.dds.dds_lib.FileOpenPreference
 		file_filter="\\.mot$"
-		select_mode="1"
+        select_mode="0x10001"
 		android:dialogTitle="@string/pref_roms"
 		android:key="key_roms"
 		android:title="@string/pref_roms"/>

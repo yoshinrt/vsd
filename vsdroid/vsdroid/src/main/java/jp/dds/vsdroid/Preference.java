@@ -25,6 +25,9 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 	private ListPreference		ListWheelSelect;
 	private EditTextPreference	EditGymkhaStart;
 	private EditTextPreference	EditIPAddr;
+	private jp.dds.dds_lib.FileOpenPreference   fopReplayLog;
+	private jp.dds.dds_lib.FileOpenPreference   fopFirmware;
+	private jp.dds.dds_lib.FileOpenPreference   fopCircuit;
 
 	static final int	RESULT_OK		= 0;
 	static final int	RESULT_RENEW	= 1;
@@ -44,6 +47,10 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		ListWheelSelect		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_wheel_select" );
 		EditGymkhaStart		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_gymkha_start" );
 		EditIPAddr			= ( EditTextPreference )getPreferenceScreen().findPreference( "key_ip_addr" );
+		
+		fopReplayLog		= ( jp.dds.dds_lib.FileOpenPreference )getPreferenceScreen().findPreference( "key_replay_log" );
+		fopFirmware			= ( jp.dds.dds_lib.FileOpenPreference )getPreferenceScreen().findPreference( "key_roms" );
+		fopCircuit			= ( jp.dds.dds_lib.FileOpenPreference )getPreferenceScreen().findPreference( "key_circuit" );
 
 		Bundle extras = getIntent().getExtras();
 		setResult( RESULT_OK );
@@ -172,6 +179,28 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		if( key == null || key.equals( "key_wheel_select" )){
 			ListWheelSelect.setSummary(
 				sharedPreferences.getString( "key_wheel_select", "CE28N" )
+			);
+		}
+		
+		if( key == null || key.equals( "key_replay_log" )){
+			fopReplayLog.setSummary(
+				sharedPreferences.getString( "key_replay_log", null )
+					.replaceAll( ".*/", "" )
+			);
+		}
+		
+		if( key == null || key.equals( "key_roms" )){
+			fopFirmware.setSummary(
+				sharedPreferences.getString( "key_roms", null )
+					.replaceAll( ".*/", "" )
+			);
+		}
+		
+		if( key == null || key.equals( "key_circuit" )){
+			fopCircuit.setSummary(
+				sharedPreferences.getString( "key_circuit", null )
+					.replaceAll( ".*/", "" )
+                    .replaceAll( "\\.[^\\.]*$", "" )
 			);
 		}
 	}
