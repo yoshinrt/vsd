@@ -4,7 +4,7 @@
 .SILENT:
 .PHONY : release
 
-export PATH := /bin:/cygdrive/d/DDS/bin:$(PATH)
+export PATH := /bin:$(PATH)
 
 all: ScriptIF.h rev_num.h
 
@@ -18,7 +18,7 @@ ScriptIF.h : \
 	./$< $@
 
 rev_num.h:
-	rev=$$((`git log --oneline | wc -l` + 24)); \
+	rev=$$((`git log --oneline | wc -l` + 20)); \
 	if [ `git diff --stat | wc -l` != 0 ]; then rev=$$((rev + 1)); fi; \
 	echo "#define PROG_REVISION	$$rev"		> $@.$$$$; \
 	echo '#define PROG_REVISION_STR	"r'$$rev'"'	>> $@.$$$$; \
@@ -37,7 +37,7 @@ release:
 		mv vsd_filter_gps.exe ..; \
 		mkdir plugins; \
 	cd plugins; \
-		cp ../../vsd_filter/ReleaseMT/vsd_filter.auf vsd_filter_gps.auf; \
+		cp ../../vsd_filter/ReleaseMT/vsd_filter.dll vsd_filter_gps.auf; \
 		cp ../../vsd_filter_avs/ReleaseMT/vsd_filter_avs.dll .; \
 		( cd ../../; git archive --format tar HEAD vsd_plugins ) | tar -x; \
 	cd vsd_plugins; \
