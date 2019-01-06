@@ -1,8 +1,8 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+ï»¿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html lang="ja">
 <HEAD>
 	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=shift-jis">
-	<title>VSD for GPS ƒCƒ“ƒXƒg[ƒ‰</title>
+	<title>VSD for GPS ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ©</title>
 	<script>
 		window.resizeTo( 700, 600 );
 	</script>
@@ -20,16 +20,16 @@ BODY {
 
 <body onLoad = "WindowOnLoad()">
 <form name="form1">
-	AviUtl ƒCƒ“ƒXƒg[ƒ‹ƒtƒHƒ‹ƒ_<br/>
+	AviUtl ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ãƒ•ã‚©ãƒ«ãƒ€<br/>
 	<INPUT TYPE="text" NAME="InstallPath" size="80">
-	<input type="button" value="‘I‘ğ..." OnClick="SelectFolder( 'InstallPath' )"/><br/>
+	<input type="button" value="é¸æŠ..." OnClick="SelectFolder( 'InstallPath' )"/><br/>
 	
-	ƒIƒvƒVƒ‡ƒ“<br/>
-	<input type="checkbox" name="update" OnClick="Caption()"/>VSD for GPS ‚ÌƒAƒbƒvƒf[ƒg‚Ì‚İ</br>
-	<input type="checkbox" name="shortcut" />ƒfƒXƒNƒgƒbƒv‚ÉƒVƒ‡[ƒgƒJƒbƒg‚ğì¬</br>
-	<input type="checkbox" name="no_ffdshow" />ffdshow ‚ğƒCƒ“ƒXƒg[ƒ‹‚µ‚È‚¢</br>
+	ã‚ªãƒ—ã‚·ãƒ§ãƒ³<br/>
+	<input type="checkbox" name="update" OnClick="Caption()"/>VSD for GPS ã®ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆã®ã¿</br>
+	<input type="checkbox" name="shortcut" />ãƒ‡ã‚¹ã‚¯ãƒˆãƒƒãƒ—ã«ã‚·ãƒ§ãƒ¼ãƒˆã‚«ãƒƒãƒˆã‚’ä½œæˆ</br>
+	<input type="checkbox" name="no_ffdshow" />ffdshow ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ãªã„</br>
 	<br/>
-	<INPUT TYPE="button" VALUE="ƒCƒ“ƒXƒg[ƒ‹ or ƒAƒbƒvƒf[ƒg" name="install" OnClick="Install()">
+	<INPUT TYPE="button" VALUE="ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ« or ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆ" name="install" OnClick="Install()">
 </form>
 <SPAN ID="Log"></SPAN>
 
@@ -48,7 +48,7 @@ function WindowOnLoad(){
 	
 	document.form1.shortcut.checked = true;
 	
-	// ì‹Æ Dir æ“¾
+	// ä½œæ¥­ Dir å–å¾—
 	if(
 		idVsdInstaller.commandLine.match( /^\s*"(.*?)"/ ) ||
 		idVsdInstaller.commandLine.match( /\s*(\S+)/ )
@@ -56,10 +56,10 @@ function WindowOnLoad(){
 		ScriptName = RegExp.$1;
 		WorkPath = ScriptName.replace( /[^\\]+$/, "" );
 	}else{
-		throw new Error( "ƒXƒNƒŠƒvƒg–¼‚ªæ“¾‚Å‚«‚Ü‚¹‚ñ" );
+		throw new Error( "ã‚¹ã‚¯ãƒªãƒ—ãƒˆåãŒå–å¾—ã§ãã¾ã›ã‚“" );
 	}
 	
-	// Program Files ‚ğ’T‚·
+	// Program Files ã‚’æ¢ã™
 	if( FileSys.FolderExists( "c:\\Program Files (x86)" )){
 		document.form1.InstallPath.value = "c:\\Program Files (x86)\\aviutl";
 	}else if( FileSys.FolderExists( "c:\\Program Files" )){
@@ -84,17 +84,17 @@ function Caption(){
 	LogClear();
 	Log(
 		document.form1.update.checked ?
-			'uVSD for GPS ‚ÌƒAƒbƒvƒf[ƒg‚Ì‚İv‚Éƒ`ƒFƒbƒN‚ğ“ü‚ê‚é‚ÆCVSD for GPS ƒvƒ‰ƒOƒCƒ“‚ÌƒAƒbƒvƒf[ƒg‚Ì‚İ‚ğs‚¢‚Ü‚·D<br/>' +
-			'vsd_plugins\\_user_config.js ˆÈŠO‚Íã‘‚«‚³‚ê‚Ü‚·D<br/>' :
-			'uƒCƒ“ƒXƒg[ƒ‹ŠJnv‚ğ‰Ÿ‚·‚ÆC' +
+			'ã€ŒVSD for GPS ã®ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆã®ã¿ã€ã«ãƒã‚§ãƒƒã‚¯ã‚’å…¥ã‚Œã‚‹ã¨ï¼ŒVSD for GPS ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆã®ã¿ã‚’è¡Œã„ã¾ã™ï¼<br/>' +
+			'vsd_plugins\\_user_config.js ä»¥å¤–ã¯ä¸Šæ›¸ãã•ã‚Œã¾ã™ï¼<br/>' :
+			'ã€Œã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«é–‹å§‹ã€ã‚’æŠ¼ã™ã¨ï¼Œ' +
 			'<a href="http://spring-fragrance.mints.ne.jp/aviutl/">AviUtl</a>, ' +
-			'<a href="https://sites.google.com/site/vsdforgps/home/vsd-for-gps">VSD for GPS</a>C' +
-			'<a href="http://pop.4-bit.jp/">L-SMASH Woks</a>C' +
+			'<a href="https://sites.google.com/site/vsdforgps/home/vsd-for-gps">VSD for GPS</a>ï¼Œ' +
+			'<a href="http://pop.4-bit.jp/">L-SMASH Woks</a>ï¼Œ' +
 			'<a href="https://osdn.jp/projects/ffdshow-tryout/">ffdshow</a>' +
-			' ‚ªƒCƒ“ƒXƒg[ƒ‹‚³‚ê‚Ü‚·D<br/>'
+			' ãŒã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã¾ã™ï¼<br/>'
 	);
 	
-	document.form1.install.value = ( document.form1.update.checked ? "ƒAƒbƒvƒf[ƒg" : "ƒCƒ“ƒXƒg[ƒ‹" ) + "ŠJn";
+	document.form1.install.value = ( document.form1.update.checked ? "ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆ" : "ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«" ) + "é–‹å§‹";
 }
 
 function Install(){
@@ -102,9 +102,9 @@ function Install(){
 	GetPath();
 	try{
 		document.form1.update.checked ? Update() : InstallSub();
-		Log( "‚±‚ÌƒEƒBƒ“ƒhƒE‚Í•Â‚¶‚Ä‚­‚¾‚³‚¢D" );
+		Log( "ã“ã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã¯é–‰ã˜ã¦ãã ã•ã„ï¼" );
 	}catch( e ){
-		Log( "<font color='red'>šƒCƒ“ƒXƒg[ƒ‹‚É¸”s‚µ‚Ü‚µ‚½<font>" );
+		Log( "<font color='red'>â˜…ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã«å¤±æ•—ã—ã¾ã—ãŸ<font>" );
 		document.form1.install.disabled = false;
 		if( e.message != '' ){
 			Log( e.message );
@@ -116,31 +116,42 @@ function Install(){
 
 function InstallSub(){
 	
-	Download( "http://spring-fragrance.mints.ne.jp/aviutl/aviutl100.zip" );
-	Download( "http://pop.4-bit.jp/bin/l-smash/L-SMASH_Works_r911_plugins.zip" );
-	
-	if( !document.form1.no_ffdshow.checked ){
-		Download( "https://sites.google.com/site/vsdforgps/home/sono-ta/ffdshow_rev3631_20101115_clsid.exe_?attredirects=0&d=1", WorkPath + "\\ffdshow_rev3631_20101115_clsid.exe" );
-	}
-	
-	Log( "ƒtƒ@ƒCƒ‹‚ğ‰ğ“€‚µ‚Ä‚¢‚Ü‚·..." );
+	Download( "http://spring-fragrance.mints.ne.jp/aviutl/aviutl100.zip", undefined, 1 );
 	
 	WshShell.Run(
 		'cmd /c cd /d "' + WorkPath + '"&&' +
 		'7za -aoa -o"' + InstallPath + '" x aviutl*.zip&&' +
-		'xcopy /s/y/i "' + WorkPath + '\\plugins" "' + InstallPath + '"&&' +
-		'7za -aoa -o"' + InstallPath + '" x L-SMASH_Works*.zip lwinput.aui',
+		'xcopy /s/y/i "' + WorkPath + '\\plugins" "' + InstallPath + '"',
 		6, 1
 	);
 	
-	Log( "šAviUtl, VSD for GPS, L-SMASH Works ‚ÌƒCƒ“ƒXƒg[ƒ‹Š®—¹" );
+	Log( "<hr />AviUtl ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã‚’é–‹å§‹ã—ã¾ã™" );
+	Log( "AviUtl ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ä¸­..." );
+	Log( "âœ”AviUtl ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«å®Œäº†" );
+	Log( "<hr />VSD for GPS ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã‚’é–‹å§‹ã—ã¾ã™" );
+	Log( "âœ”VSD for GPS ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«å®Œäº†" );
+	
+	Log( "<hr />L-SMASH Works ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã‚’é–‹å§‹ã—ã¾ã™" );
+	Log( "L-SMASH Works ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ä¸­..." );
+	if( !Download( "https://pop.4-bit.jp/bin/l-smash/L-SMASH_Works_r935-2_plugins.zip" )){
+		WshShell.Run(
+			'cmd /c cd /d "' + WorkPath + '"&&' +
+			'7za -aoa -o"' + InstallPath + '" x L-SMASH_Works*.zip lwinput.aui',
+			6, 1
+		);
+		
+		Log( "âœ”L-SMASH Works ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«å®Œäº†" );
+	}
 	
 	if( !document.form1.no_ffdshow.checked ){
-		Log( "ˆø‚«‘±‚« ffdshow ‚ÌƒCƒ“ƒXƒg[ƒ‹‚ğs‚¢‚Ü‚·D" );
+		Log( "<hr />ffdshow ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã‚’é–‹å§‹ã—ã¾ã™" );
+		
+		Download( "https://sites.google.com/site/vsdforgps/home/sono-ta/ffdshow_rev3631_20101115_clsid.exe_?attredirects=0&d=1", WorkPath + "\\ffdshow_rev3631_20101115_clsid.exe" );
 		WshShell.Run(
 			'"' + WorkPath + '\\ffdshow_rev3631_20101115_clsid.exe"',
 			4, 1
 		);
+		Log( "âœ”ffdshow ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«å®Œäº†" );
 	}
 	
 	if( document.form1.shortcut.checked ){
@@ -150,16 +161,17 @@ function InstallSub(){
 		Shortcut.TargetPath = InstallPath + "\\aviutl.exe";
 		Shortcut.Save();
 	}
-	Log( "š‚·‚×‚Ä‚ÌƒCƒ“ƒXƒg[ƒ‹‚ªŠ®—¹‚µ‚Ü‚µ‚½D" );
-	Log( 'Web ƒuƒ‰ƒEƒU‚Ìu<a href="https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install">ƒCƒ“ƒXƒg[ƒ‹E‰Šúİ’èè‡</a>v‚É‚µ‚½‚ª‚Á‚ÄC‰Šúİ’è‚ğs‚Á‚Ä‚­‚¾‚³‚¢D' );
+	
+	Log( "<hr />â˜…â˜…â˜…ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ãŒå®Œäº†ã—ã¾ã—ãŸï¼â˜…â˜…â˜…" );
+	Log( 'Web ãƒ–ãƒ©ã‚¦ã‚¶ã®ã€Œ<a href="https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install">ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ãƒ»åˆæœŸè¨­å®šæ‰‹é †</a>ã€ã«ã—ãŸãŒã£ã¦ï¼ŒåˆæœŸè¨­å®šã‚’è¡Œã£ã¦ãã ã•ã„ï¼' );
 	ShellApp.ShellExecute( "https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install" );
 }
 
 function Update(){
-	Log( "VSD for GPS ‚ğƒAƒbƒvƒf[ƒg‚µ‚Ä‚¢‚Ü‚·..." );
+	Log( "VSD for GPS ã‚’ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆã—ã¦ã„ã¾ã™..." );
 	
 	if( !FileSys.FileExists( InstallPath + "\\vsd_filter_gps.auf" )){
-		throw new Error( "ƒCƒ“ƒXƒg[ƒ‹Ï‚İ‚Ì vsd_filter_gps.auf ‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñD<br/>vsd_filter_gps.auf ‚ª‘¶İ‚·‚éƒtƒHƒ‹ƒ_‚ğuAviUtl ƒCƒ“ƒXƒg[ƒ‹ƒtƒHƒ‹ƒ_v‚Éw’è‚µ‚Ä‚­‚¾‚³‚¢" );
+		throw new Error( "ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«æ¸ˆã¿ã® vsd_filter_gps.auf ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ï¼<br/>vsd_filter_gps.auf ãŒå­˜åœ¨ã™ã‚‹ãƒ•ã‚©ãƒ«ãƒ€ã‚’ã€ŒAviUtl ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ãƒ•ã‚©ãƒ«ãƒ€ã€ã«æŒ‡å®šã—ã¦ãã ã•ã„" );
 	}
 	
 	try{
@@ -172,7 +184,7 @@ function Update(){
 		6, 1
 	);
 	
-	Log( "šVSD for GPS ‚ğƒAƒbƒvƒf[ƒgŠ®—¹" );
+	Log( "â˜…VSD for GPS ã‚’ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆå®Œäº†" );
 }
 
 function Log( Message ){
@@ -183,14 +195,14 @@ function LogClear(){
 	document.getElementById( "Log" ).innerHTML = "";
 }
 
-function Download( url, file ){ 
+function Download( url, file, fatal ){ 
 	
 	if( file === undefined ){
 		url.match( /.*\/(.*)/ );
 		file = WorkPath + "\\" + RegExp.$1;
 	}
 	
-	Log( file + " ‚ğƒ_ƒEƒ“ƒ[ƒh‚µ‚Ä‚¢‚Ü‚·..." );
+	//Log( url + " ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã—ã¦ã„ã¾ã™..." );
 	
 	if( !FileSys.FileExists( file )){
 		WshShell.Run(
@@ -204,14 +216,20 @@ function Download( url, file ){
 		);
 		
 		if( !FileSys.FileExists( file )){
-			throw new Error( file + " ‚ªƒ_ƒEƒ“ƒ[ƒh‚Å‚«‚Ü‚¹‚ñD‚µ‚Î‚ç‚­Œo‚Á‚Ä‚©‚ç‚â‚è’¼‚µ‚Ä‚İ‚Ä‚­‚¾‚³‚¢D" );
+			if( fatal ){
+				throw new Error( url + " ãŒãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã§ãã¾ã›ã‚“ï¼ã—ã°ã‚‰ãçµŒã£ã¦ã‹ã‚‰ã‚„ã‚Šç›´ã—ã¦ã¿ã¦ãã ã•ã„ï¼" );
+			}else{
+				Log( "<font color='red'>" + url + " ã¯ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰å‡ºæ¥ã¾ã›ã‚“ã§ã—ãŸï¼æ‰‹å‹•ã§ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¦ãã ã•ã„ï¼" );
+				return 1;
+			}
 		}
 	}
-	Log( file + " ƒ_ƒEƒ“ƒ[ƒhŠ®—¹" );
+	//Log( ur + " ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰å®Œäº†" );
+	return 0;
 }
 
 function SelectFolder( box ){
-	var folder = ShellApp.BrowseForFolder( 0, 'ƒtƒHƒ‹ƒ_‘I‘ğ', 0x51, "" );
+	var folder = ShellApp.BrowseForFolder( 0, 'ãƒ•ã‚©ãƒ«ãƒ€é¸æŠ', 0x51, "" );
 	if( folder != null ) document.form1[ box ].value = folder.Self.Path;
 	
 	UpdateCheck();
