@@ -25,6 +25,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 	private ListPreference		ListWheelSelect;
 	private EditTextPreference	EditGymkhaStart;
 	private EditTextPreference	EditIPAddr;
+	private EditTextPreference	EditFwSendWait;
 	private jp.dds.dds_lib.FileOpenPreference   fopReplayLog;
 	private jp.dds.dds_lib.FileOpenPreference   fopFirmware;
 	private jp.dds.dds_lib.FileOpenPreference   fopCircuit;
@@ -47,6 +48,7 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 		ListWheelSelect		= ( ListPreference	 )getPreferenceScreen().findPreference( "key_wheel_select" );
 		EditGymkhaStart		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_gymkha_start" );
 		EditIPAddr			= ( EditTextPreference )getPreferenceScreen().findPreference( "key_ip_addr" );
+		EditFwSendWait		= ( EditTextPreference )getPreferenceScreen().findPreference( "key_fw_send_wait" );
 		
 		fopReplayLog		= ( jp.dds.dds_lib.FileOpenPreference )getPreferenceScreen().findPreference( "key_replay_log" );
 		fopFirmware			= ( jp.dds.dds_lib.FileOpenPreference )getPreferenceScreen().findPreference( "key_roms" );
@@ -202,6 +204,16 @@ public class Preference extends PreferenceActivity implements OnSharedPreference
 					.replaceAll( ".*/", "" )
                     .replaceAll( "\\.[^\\.]*$", "" )
 			);
+		}
+		
+		if( key == null || key.equals( "key_fw_send_wait" )){
+			String s = sharedPreferences.getString( "key_fw_send_wait", null );
+			try{
+				Integer.parseInt( s );
+			}catch( NumberFormatException e ){
+				s = "100";
+			}
+			EditFwSendWait.setSummary( s );
 		}
 	}
 

@@ -697,6 +697,11 @@ class VsdInterface implements Runnable {
 
 		int iReadSize = 0;
 		int i = 0;
+		
+		int		iFwSendWait = 100;
+		try{
+			iFwSendWait = Integer.parseInt( Pref.getString( "key_fw_send_wait", "100" ));
+		}catch( NumberFormatException e ){}
 
 		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_loading );
 		
@@ -717,6 +722,7 @@ class VsdInterface implements Runnable {
 			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_sending );
 			while(( iReadSize = fsFirm.read( Buf, 0, iBufSize )) > 0 ){
 				OutStream.write( Buf, 0, iReadSize );
+				Sleep( iFwSendWait );
 			}
 			
 			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );

@@ -20,6 +20,7 @@
 	<string name="pref_system_dir">VSD ディレクトリ</string>
 	<string name="pref_debug_info">デバッグ情報</string>
 	<string name="pref_log_hz">ログ Hz</string>
+	<string name="pref_fw_send_wait">FW 送信 wait (ms)</string>
 	<string name="pref_wheel_select">ホイール選択</string>
 	<string name="pref_wheel_select_normal">ノーマルホイール</string>
 	<string name="pref_wheel_select_CE28N">CE28N</string>
