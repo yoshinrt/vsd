@@ -670,18 +670,21 @@ class VsdInterface implements Runnable {
 	}
 
 	public int WaitChar( char ch ) throws IOException {
+		return WaitChar( ch, 30 );	// *100ms
+	}
+	
+	public int WaitChar( char ch, int iWait ) throws IOException {
 		int iReadSize;
-		int iRetryCnt = 100;
 		int i;
 
-		while( iRetryCnt-- != 0 && !bKillThread ){
+		while( iWait-- != 0 && !bKillThread ){
 			if( InStream.available() > 0 ){
 				iReadSize = InStream.read( Buf, 0, iBufSize );
 				for( i = 0; i < iReadSize; ++i ){
 					if( Buf[ i ] == ( byte )ch ) return i;
 				}
 			}else{
-				Sleep( 30 );
+				Sleep( 100 );
 			}
 		}
 		throw new IOException( "WaitChar() time out" );
@@ -731,19 +734,29 @@ class VsdInterface implements Runnable {
 		}catch( IOException e1 ){}
 		
 		if( bDebug ) Log.d( "VSDroid", "LoadFirm::sending log output request" );
-		Sleep( 100 );
-		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_magic );
-		SendCmd( "F15EF117*" );
-
-		// 最初の 0xFF までスキップ
-		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
-		if( bDebug ) Log.d( "VSDroid", "LoadFirm::waiting first log record" );
-
-		i = WaitChar(( char )0xFF ) + 1;
+		Sleep( 500 );
+		
+		for( int iRetry = 2; iRetry > 0; --iRetry ){
+			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_magic );
+			SendCmd( "F15EF117*" );
+			
+			// 最初の 0xFF までスキップ
+			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
+			if( bDebug ) Log.d( "VSDroid", "LoadFirm::waiting first log record" );
+			
+			try{
+				i = WaitChar(( char )0xFF, 10 ) + 1;
+			}catch( IOException e1 ){
+				if( iRetry == 1 ) throw e1;
+				continue;
+			}
+			break;
+		}
+		
 		for( iBufLen = 0; i < iReadSize; ++i, ++iBufLen ){
 			Buf[ iBufLen ] = Buf[ i ];
 		}
-
+		
 		MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_loaded );
 		if( bDebug ) Log.d( "VSDroid", "LoadFirm::completed." );
 	}
