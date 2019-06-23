@@ -646,8 +646,10 @@ class VsdInterface implements Runnable {
 	
 	public void Open() throws UnrecoverableException, IOException {
 		OpenVsdIf();
-		Gps = new GpsInterface( GpsMsgHandler, Pref );
-		Gps.Start();
+		if( Pref.getBoolean( "key_use_btgps", true )){
+			Gps = new GpsInterface( GpsMsgHandler, Pref );
+			Gps.Start();
+		}
 	}
 	
 	public void Close(){
