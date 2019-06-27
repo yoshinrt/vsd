@@ -748,7 +748,7 @@ public class Vsdroid extends Activity {
 			ed.putString( "key_bt_devices_vsd",	"VSD / 00:12:02:10:01:76" );
 			ed.putString( "key_ip_addr",		"192.168.0.13" );
 			ed.putString( "key_connection_mode","1" );
-			ed.putString( "key_fw_send_wait",	"100" );
+			ed.putString( "key_fw_send_wait",	"0" );
 			ed.putBoolean( "key_use_btgps",		true );
 		}
 		ed.commit();

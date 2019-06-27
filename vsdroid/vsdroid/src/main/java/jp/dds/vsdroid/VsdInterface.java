@@ -646,6 +646,9 @@ class VsdInterface implements Runnable {
 	
 	public void Open() throws UnrecoverableException, IOException {
 		OpenVsdIf();
+		LoadFirmware();
+		SetupMode();
+		
 		if( Pref.getBoolean( "key_use_btgps", true )){
 			Gps = new GpsInterface( GpsMsgHandler, Pref );
 			Gps.Start();
@@ -724,7 +727,7 @@ class VsdInterface implements Runnable {
 			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_sending );
 			while(( iReadSize = fsFirm.read( Buf, 0, iBufSize )) > 0 ){
 				OutStream.write( Buf, 0, iReadSize );
-				Sleep( iFwSendWait );
+				if( iFwSendWait > 0 ) Sleep( iFwSendWait );
 			}
 			
 			MsgHandler.sendEmptyMessage( R.string.statmsg_loadfw_wait );
@@ -860,8 +863,6 @@ class VsdInterface implements Runnable {
 			try{
 				Close(); // 開いていたら一旦 close
 				Open();
-				LoadFirmware();
-				SetupMode();
 				
 				// Read WDT 発動
 				uReadWdt = 0;
