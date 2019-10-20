@@ -1,20 +1,22 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29306.81
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsd_filter", "vsd_filter\vsd_filter.vcxproj", "{F89E27CA-7EA7-4FA4-8FC2-C952092AF277}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C2871555-CB1E-4C55-A9E0-01B255B12E42} = {C2871555-CB1E-4C55-A9E0-01B255B12E42}
-		{3FADD568-9314-46C6-A0E9-831F3F35449C} = {3FADD568-9314-46C6-A0E9-831F3F35449C}
+		{64A1245E-2761-466C-909A-7D0BDE5D3BFE} = {64A1245E-2761-466C-909A-7D0BDE5D3BFE}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dds_lib", "dds_lib\dds_lib\dds_lib.vcxproj", "{3FADD568-9314-46C6-A0E9-831F3F35449C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dds_lib", "dds_lib\dds_lib\dds_lib.vcxproj", "{64A1245E-2761-466C-909A-7D0BDE5D3BFE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "make", "make\make.vcxproj", "{C2871555-CB1E-4C55-A9E0-01B255B12E42}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsd_filter_avs", "vsd_filter_avs\vsd_filter_avs.vcxproj", "{4D6FC7B7-DFE0-407B-8956-2F9594FB2BFF}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C2871555-CB1E-4C55-A9E0-01B255B12E42} = {C2871555-CB1E-4C55-A9E0-01B255B12E42}
-		{3FADD568-9314-46C6-A0E9-831F3F35449C} = {3FADD568-9314-46C6-A0E9-831F3F35449C}
+		{64A1245E-2761-466C-909A-7D0BDE5D3BFE} = {64A1245E-2761-466C-909A-7D0BDE5D3BFE}
 	EndProjectSection
 EndProject
 Global
@@ -30,12 +32,12 @@ Global
 		{F89E27CA-7EA7-4FA4-8FC2-C952092AF277}.Release|Win32.Build.0 = Release|Win32
 		{F89E27CA-7EA7-4FA4-8FC2-C952092AF277}.ReleaseMT|Win32.ActiveCfg = ReleaseMT|Win32
 		{F89E27CA-7EA7-4FA4-8FC2-C952092AF277}.ReleaseMT|Win32.Build.0 = ReleaseMT|Win32
-		{3FADD568-9314-46C6-A0E9-831F3F35449C}.Debug|Win32.ActiveCfg = Debug|Win32
-		{3FADD568-9314-46C6-A0E9-831F3F35449C}.Debug|Win32.Build.0 = Debug|Win32
-		{3FADD568-9314-46C6-A0E9-831F3F35449C}.Release|Win32.ActiveCfg = Release|Win32
-		{3FADD568-9314-46C6-A0E9-831F3F35449C}.Release|Win32.Build.0 = Release|Win32
-		{3FADD568-9314-46C6-A0E9-831F3F35449C}.ReleaseMT|Win32.ActiveCfg = ReleaseMT|Win32
-		{3FADD568-9314-46C6-A0E9-831F3F35449C}.ReleaseMT|Win32.Build.0 = ReleaseMT|Win32
+		{64A1245E-2761-466C-909A-7D0BDE5D3BFE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{64A1245E-2761-466C-909A-7D0BDE5D3BFE}.Debug|Win32.Build.0 = Debug|Win32
+		{64A1245E-2761-466C-909A-7D0BDE5D3BFE}.Release|Win32.ActiveCfg = Release|Win32
+		{64A1245E-2761-466C-909A-7D0BDE5D3BFE}.Release|Win32.Build.0 = Release|Win32
+		{64A1245E-2761-466C-909A-7D0BDE5D3BFE}.ReleaseMT|Win32.ActiveCfg = ReleaseMT|Win32
+		{64A1245E-2761-466C-909A-7D0BDE5D3BFE}.ReleaseMT|Win32.Build.0 = ReleaseMT|Win32
 		{C2871555-CB1E-4C55-A9E0-01B255B12E42}.Debug|Win32.ActiveCfg = Debug|Win32
 		{C2871555-CB1E-4C55-A9E0-01B255B12E42}.Debug|Win32.Build.0 = Debug|Win32
 		{C2871555-CB1E-4C55-A9E0-01B255B12E42}.Release|Win32.ActiveCfg = Release|Win32
@@ -51,5 +53,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F5588C89-6842-4C82-A4B8-6F8C8CB8AF43}
 	EndGlobalSection
 EndGlobal
