@@ -1,5 +1,7 @@
 VSD プロジェクト
 ======================
+[![Build status](https://ci.appveyor.com/api/projects/status/5ggfucun3x6m8vt0/branch/master?svg=true)](https://ci.appveyor.com/project/YoshiNRT/vsd/branch/master)
+
 VSD プロジェクトは，自動車のサーキット走行などにおけるデータロガー環境を自作することを目指し，車両情報の取得，車両情報のリアルタイム表示，
 オフラインでの車両情報と車載動画との合成，を実現するプロジェクトです．
 
