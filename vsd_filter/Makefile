@@ -9,7 +9,7 @@ export PATH := /bin:$(PATH)
 all: ScriptIF.h rev_num.h
 
 ScriptIF.h : \
-	make_js_func.pl \
+	make/make_js_func.pl \
 	CVsdFilter.h \
 	CVsdImage.h \
 	CVsdFont.h \
@@ -18,19 +18,8 @@ ScriptIF.h : \
 	./$< $@
 
 rev_num.h:
-	rev=$$((`git log --oneline | wc -l` + 19)); \
-	if [ `git diff --stat | wc -l` != 0 ]; then rev=$$((rev + 1)); fi; \
-	echo "#define PROG_REVISION	$$rev"		> $@.$$$$; \
-	echo '#define PROG_REVISION_STR	"r'$$rev'"'	>> $@.$$$$; \
-	if [ ! -e $@ ]; then \
-		mv $@.$$$$ $@; \
-	elif diff -q $@.$$$$ $@ > /dev/null; then \
-		rm $@.$$$$; \
-	else \
-		mv $@.$$$$ $@; \
-		echo $@ updated; \
-	fi
-
+	make/set_git_version.pl $@
+	
 release:
 	rm -rf zrelease; cp -r installer zrelease; \
 	cd zrelease; \

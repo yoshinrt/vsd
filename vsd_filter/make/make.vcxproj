@@ -55,9 +55,7 @@
     </Link>
     <PreBuildEvent />
     <CustomBuildStep>
-      <Command>cd ..
-c:\cygwin\bin\make.exe
-</Command>
+      <Command>make.bat</Command>
     </CustomBuildStep>
     <CustomBuildStep>
       <Outputs>all</Outputs>
@@ -77,9 +75,7 @@ c:\cygwin\bin\make.exe
     </Link>
     <PreBuildEvent />
     <CustomBuildStep>
-      <Command>cd ..
-c:\cygwin\bin\make.exe
-</Command>
+      <Command>make.bat</Command>
     </CustomBuildStep>
     <CustomBuildStep>
       <Outputs>all</Outputs>
