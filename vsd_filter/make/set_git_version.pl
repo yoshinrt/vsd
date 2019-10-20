@@ -6,10 +6,15 @@ $File = $ARGV[ 0 ];
 
 # git リビジョンを得る
 $Rev = split( /\n/, `git log --oneline` );
+print "Commit:$Rev ";
 
 # git 更新されているかを得る
 $ModCnt = split( /\n/, `git diff --stat` );
-++$Rev if( $ModCnt > 0 );
+if( $ModCnt > 0 ){
+	++$Rev;
+	
+	print "Modified:$Rev ";
+}
 
 $PrevRev = 0;
 
@@ -22,6 +27,8 @@ if( -e $File ){
 	# バージョンコードを得る
 	$PrevRev = +$1 if( /(\d+)/ );
 }
+
+	print "Prev:$PrevRev\n";
 
 if( $PrevRev != $Rev ){	# rev 番号に差異がある
 	
