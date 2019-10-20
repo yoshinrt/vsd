@@ -24,6 +24,4 @@ rmdir /s/q vsd_filter\Debug
 rmdir /s/q vsd_filter_avs\Release
 rmdir /s/q vsd_filter_avs\ReleaseMT
 rmdir /s/q vsd_filter_avs\Debug
-rmdir /s/q dds_lib\dds_lib\Release
-rmdir /s/q dds_lib\dds_lib\ReleaseMT
-rmdir /s/q dds_lib\dds_lib\Debug
+rmdir /s/q dds_lib\dds_lib\Win32
