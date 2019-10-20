@@ -9,7 +9,7 @@ $Rev = split( /\n/, `git log --oneline` );
 
 # git 更新されているかを得る
 $ModCnt = split( /\n/, `git diff --stat` );
-++$Rev if( $ModCnt > 1 );
+++$Rev if( $ModCnt > 0 );
 
 $PrevRev = 0;
 
@@ -27,7 +27,7 @@ if( $PrevRev != $Rev ){	# rev 番号に差異がある
 	
 	# git diff がないが，何故か rev 番号がずれていた場合，
 	# この修正により rev が一つ進む
-	++$Rev if( $ModCnt <= 1 );
+	++$Rev if( $ModCnt == 0 );
 	
 	print( "r$PrevRev -> $Rev updated\n" );
 	
