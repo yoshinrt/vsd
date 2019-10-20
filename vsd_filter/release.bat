@@ -1,14 +1,20 @@
 :@echo off
 : -*- tab-width: 4 -*-
 
+cd %~dp0
+
 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
 
-set path=%path%;c:\cygwin\bin
+set path=c:\cygwin\bin;C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin;C:\ProgramData\chocolatey\lib\zip\tools;%PATH%
 
 msbuild /p:Configuration=ReleaseMT /t:Rebuild dds_lib\dds_lib\dds_lib.vcxproj
+if errorlevel 1 exit /b %errorlevel%
 msbuild /p:Configuration=Release make\make.vcxproj
+if errorlevel 1 exit /b %errorlevel%
 msbuild /p:Configuration=ReleaseMT /t:Rebuild vsd_filter\vsd_filter.vcxproj
+if errorlevel 1 exit /b %errorlevel%
 msbuild /p:Configuration=ReleaseMT /t:Rebuild vsd_filter_avs\vsd_filter_avs.vcxproj
+if errorlevel 1 exit /b %errorlevel%
 
 set LANG=ja_JP.UTF-8
 
@@ -32,13 +38,15 @@ pushd zrelease
 		del /s/q _log_reader\vsd_log.js
 		move _user_config.js.sample _user_config.js
 	popd
-	zip -9r ../vsd_filter_gps.exe *
+	zip -9r ../vsd_filter_gps.zip *
+	if errorlevel 1 exit /b %errorlevel%
 popd
 
 perl -ne 'rename( "vsd_filter_gps.exe", "vsd_filter_gps_r$1.exe" ) if( /#define\s+PROG_REVISION\s+(\d+)/ );' rev_num.h
 
-if not exist c:\cygwin do exit
+if not exist c:\cygwin exit /b 0
 
+echo press any key...
 pause
 
 rmdir /s/q zrelease

@@ -1,0 +1,54 @@
+version: 1.0.{build}
+image: Visual Studio 2019
+
+configuration:
+  - ReleaseMT
+#  - Debug
+
+platform:
+  - x86
+
+# set clone depth
+#clone_depth: 5
+
+# see "Skip commits" at https://www.appveyor.com/docs/how-to/filtering-commits/#commit-files-github-and-bitbucket-only
+skip_commits:
+  files:
+    - '*.md'
+    - .gitignore
+    - .editorconfig
+    - 'azure-pipelines*.yml'
+    - 'ci/azure-pipelines/template*.yml'
+    - '.github/*.md'
+    - '.github/ISSUE_TEMPLATE/*.md'
+
+cache:
+  - C:\ProgramData\chocolatey\lib
+  - C:\ProgramData\chocolatey\bin
+  - $(USERPROFILE)\v8_lib
+#  - $(USERPROFILE)\v8_lib -> appveyor.yml
+
+install:
+- ps: |
+    if ( !(Test-Path $Env:USERPROFILE\v8_lib\include)) { Start-FileDownload -Url "https://github.com/yoshinrt/vsd/releases/download/release_r986/v8_lib_ReleaseMT.tbz" -FileName $Env:USERPROFILE\v8_lib_ReleaseMT.tbz }
+- cmd: |
+    choco install zip
+    choco install strawberryperl --version 5.30.0.1
+    cd %USERPROFILE%
+    if not exist v8_lib\ mkdir v8_lib
+    cd v8_lib
+    if not exist include\ tar jxf ../*.tbz
+    cd %APPVEYOR_BUILD_FOLDER%\vsd_filter
+    rmdir /s/q v8_lib
+    mklink /j v8_lib %USERPROFILE%\v8_lib
+    git submodule init
+    git submodule update
+
+# Build settings, not to be confused with "before_build" and "after_build".
+# "project" is relative to the original build directory and not influenced by directory changes in "before_build".
+build_script:
+- cmd: |
+    release.bat
+
+artifacts:
+  - path: 'vsd_filter/vsd_filter*.exe'

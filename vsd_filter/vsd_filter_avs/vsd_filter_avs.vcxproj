@@ -84,7 +84,8 @@
     <PreBuildEvent />
     <PreBuildEvent />
     <PostBuildEvent>
-      <Command>del "D:\Program Files\AviSynth 2.5\plugins\vsd_filter_avs.i*"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -110,7 +111,8 @@
     <PreBuildEvent />
     <PreBuildEvent />
     <PostBuildEvent>
-      <Command>del "D:\Program Files\AviSynth 2.5\plugins\vsd_filter_avs.i*"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
@@ -135,7 +137,8 @@
     <PreBuildEvent />
     <PreBuildEvent />
     <PostBuildEvent>
-      <Command>del "D:\Program Files\AviSynth 2.5\plugins\vsd_filter_avs.i*"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
