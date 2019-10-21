@@ -39,24 +39,28 @@ pushd zrelease
 		move _user_config.js.sample _user_config.js
 	popd
 	
-	dir
-	dir ..
-	
-	zip -9r ../vsd_filter_gps.zip *
+	zip -9r ../vsd_filter_gps.exe *
 	if errorlevel 1 exit /b %errorlevel%
 popd
 
-perl -ne 'rename( "vsd_filter_gps.exe", "vsd_filter_gps_r$1.exe" ) if( /#define\s+PROG_REVISION\s+(\d+)/ );' rev_num.h
+call :rename
 
 if not exist c:\cygwin exit /b 0
 
-echo press any key...
 pause
 
 rmdir /s/q zrelease
 call :clean > nul 2>&1
 exit /b 0
 
+:=============================================================================
+:rename
+for /f "tokens=3" %%r in ( rev_num.h ) do (
+	move vsd_filter_gps.exe vsd_filter_gps_r%%r.exe
+	exit /b 0
+)
+
+:=============================================================================
 :clean
 rmdir /s/q vsd_filter\Release
 rmdir /s/q vsd_filter\ReleaseMT
