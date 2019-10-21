@@ -38,6 +38,10 @@ pushd zrelease
 		del /s/q _log_reader\vsd_log.js
 		move _user_config.js.sample _user_config.js
 	popd
+	
+	dir
+	dir ..
+	
 	zip -9r ../vsd_filter_gps.zip *
 	if errorlevel 1 exit /b %errorlevel%
 popd
