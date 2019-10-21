@@ -28,6 +28,11 @@ cache:
   - $(USERPROFILE)\v8_lib
 #  - $(USERPROFILE)\v8_lib -> appveyor.yml
 
+init:
+  - ps: Set-WinSystemLocale ja-JP
+  - ps: Start-Sleep -s 5
+  - ps: Restart-Computer
+
 install:
 - ps: |
     if ( !(Test-Path $Env:USERPROFILE\v8_lib\include)) { Start-FileDownload -Url "https://github.com/yoshinrt/vsd/releases/download/release_r986/v8_lib_ReleaseMT.tbz" -FileName $Env:USERPROFILE\v8_lib_ReleaseMT.tbz }
