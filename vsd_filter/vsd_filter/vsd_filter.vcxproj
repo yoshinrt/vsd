@@ -83,7 +83,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;..\dds_lib\dds_lib\$(Platform)\$(Configuration)\dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base_0.lib;../v8_lib/$(IntDir)/lib/v8_base_1.lib;../v8_lib/$(IntDir)/lib/v8_base_2.lib;../v8_lib/$(IntDir)/lib/v8_base_3.lib;../v8_lib/$(IntDir)/lib/v8_libbase.lib;../v8_lib/$(IntDir)/lib/v8_libplatform.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;..\dds_lib\dds_lib\$(Platform)\$(Configuration)A\dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base_0.lib;../v8_lib/$(IntDir)/lib/v8_base_1.lib;../v8_lib/$(IntDir)/lib/v8_base_2.lib;../v8_lib/$(IntDir)/lib/v8_base_3.lib;../v8_lib/$(IntDir)/lib/v8_libbase.lib;../v8_lib/$(IntDir)/lib/v8_libplatform.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
     <PreBuildEvent />
@@ -113,7 +113,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;..\dds_lib\dds_lib\$(Platform)\$(Configuration)\dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base_0.lib;../v8_lib/$(IntDir)/lib/v8_base_1.lib;../v8_lib/$(IntDir)/lib/v8_base_2.lib;../v8_lib/$(IntDir)/lib/v8_base_3.lib;../v8_lib/$(IntDir)/lib/v8_libbase.lib;../v8_lib/$(IntDir)/lib/v8_libplatform.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;..\dds_lib\dds_lib\$(Platform)\$(Configuration)A\dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base_0.lib;../v8_lib/$(IntDir)/lib/v8_base_1.lib;../v8_lib/$(IntDir)/lib/v8_base_2.lib;../v8_lib/$(IntDir)/lib/v8_base_3.lib;../v8_lib/$(IntDir)/lib/v8_libbase.lib;../v8_lib/$(IntDir)/lib/v8_libplatform.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>
@@ -143,7 +143,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;..\dds_lib\dds_lib\$(Platform)\$(Configuration)\dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base_0.lib;../v8_lib/$(IntDir)/lib/v8_base_1.lib;../v8_lib/$(IntDir)/lib/v8_base_2.lib;../v8_lib/$(IntDir)/lib/v8_base_3.lib;../v8_lib/$(IntDir)/lib/v8_libbase.lib;../v8_lib/$(IntDir)/lib/v8_libplatform.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../zlib/$(IntDir)/zlibstat.lib;..\dds_lib\dds_lib\$(Platform)\$(Configuration)A\dds_lib.lib;../v8_lib/$(IntDir)/lib/v8_base_0.lib;../v8_lib/$(IntDir)/lib/v8_base_1.lib;../v8_lib/$(IntDir)/lib/v8_base_2.lib;../v8_lib/$(IntDir)/lib/v8_base_3.lib;../v8_lib/$(IntDir)/lib/v8_libbase.lib;../v8_lib/$(IntDir)/lib/v8_libplatform.lib;../v8_lib/$(IntDir)/lib/v8_snapshot.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ModuleDefinitionFile>../vsd_filter.def</ModuleDefinitionFile>
     </Link>

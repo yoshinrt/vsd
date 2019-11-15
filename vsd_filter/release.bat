@@ -7,7 +7,7 @@ call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary
 
 set path=c:\cygwin\bin;C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin;C:\ProgramData\chocolatey\lib\zip\tools;%PATH%
 
-msbuild /p:Configuration=ReleaseMT /t:Rebuild dds_lib\dds_lib\dds_lib.vcxproj
+msbuild /p:Configuration=ReleaseMTA /t:Rebuild dds_lib\dds_lib\dds_lib.vcxproj
 if errorlevel 1 exit /b %errorlevel%
 msbuild /p:Configuration=Release make\make.vcxproj
 if errorlevel 1 exit /b %errorlevel%
