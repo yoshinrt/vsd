@@ -181,7 +181,7 @@
     <ClInclude Include="..\CVsdFont.h" />
     <ClInclude Include="..\CVsdImage.h" />
     <ClInclude Include="..\CVsdLog.h" />
-    <ClInclude Include="..\dds.h" />
+    <ClInclude Include="..\dds_lib\dds.h" />
     <ClInclude Include="..\def_checkbox.h" />
     <ClInclude Include="..\def_error.h" />
     <ClInclude Include="..\def_log.h" />

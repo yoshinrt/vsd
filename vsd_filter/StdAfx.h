@@ -39,7 +39,7 @@
 #include <zconf.h>
 #include <zlib.h>
 
-#include "dds.h"
+#include "dds_lib/dds.h"
 #include <assert.h>
 #include "dds_lib/dds_lib.h"
 
