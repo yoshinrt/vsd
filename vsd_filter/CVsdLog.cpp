@@ -703,14 +703,14 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		
 		#define DUMP_LOG
 		#if defined DEBUG && defined DUMP_LOG
-			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_raw.txt" );
+			Dump( "D:\\DDS\\develop\\vsd\\vsd_filter\\z_gpslog_raw.txt" );
 		#endif
 		
 		// ログ再スキャン
 		GPSLogRescan();
 		
 		#if defined DEBUG && defined DUMP_LOG
-			Dump( "D:\\DDS\\vsd\\vsd_filter\\z_gpslog_upcon.txt" );
+			Dump( "D:\\DDS\\develop\\vsd\\vsd_filter\\z_gpslog_upcon.txt" );
 		#endif
 		
 		// Time の Max Min 設定
