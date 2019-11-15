@@ -22,8 +22,9 @@ VSD プロジェクトは，自動車のサーキット走行などにおける�
 ビルド方法 (vsd_filter のみ)
 ------
 ### 必要な環境 ###
-* Microsoft Visual Studio Community 2017
+* Microsoft Visual Studio Community 2019
 * cygwin (make, bash, perl, git, zip, tar, bzip2, etc...)
+  * ビルド時に ScriptIF.h, rev_num.h がないと怒られるときは cygwin の実行に失敗しています
 
 ### ビルド手順 ###
 1. vsd ソースコード一式を git clone --recursive で取得してください．
