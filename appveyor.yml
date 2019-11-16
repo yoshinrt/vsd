@@ -58,3 +58,5 @@ build_script:
 
 artifacts:
   - path: 'vsd_filter/vsd_filter*.exe'
+  - path: 'vsd_filter/ScriptIF.h'
+  - path: 'vsd_filter/rev_num.h'

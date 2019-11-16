@@ -18,13 +18,15 @@ VSD プロジェクトは，自動車のサーキット走行などにおける�
 * `vsd`: 秋月 H8 3664 マイコンボード (すでに廃盤?) 用 Firmware
 * `vsd_psp`: PSP 用 LUA playre で動作する，UI アプリ
 * `vsdwin`: Windows 用 UI アプリ
- 
+
+正式リリース以外の最新バイナリは，[AppVeyor](https://ci.appveyor.com/project/YoshiNRT/vsd/branch/master/artifacts) で公開しています．
+
 ビルド方法 (vsd_filter のみ)
 ------
 ### 必要な環境 ###
 * Microsoft Visual Studio Community 2019
 * cygwin (make, bash, perl, git, zip, tar, bzip2, etc...)
-  * ビルド時に ScriptIF.h, rev_num.h がないと怒られるときは cygwin の実行に失敗しています
+  * ビルド時に ScriptIF.h, rev_num.h がないと怒られるときは，cygwin の実行に失敗しています．[こちら](https://ci.appveyor.com/project/YoshiNRT/vsd/branch/master/artifacts)からダウンロードできます．
 
 ### ビルド手順 ###
 1. vsd ソースコード一式を git clone --recursive で取得してください．
