@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" itemscope="" itemtype="http://schema.org/WebPage">
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="title" content="ログファイルリーダ プラグイン" />
+<meta itemprop="name" content="ログファイルリーダ プラグイン" />
+<meta property="og:title" content="ログファイルリーダ プラグイン" />
+<style type="text/css">
+</style>
+<title>ログファイルリーダ プラグイン</title>
+</head>
+<body xmlns="http://www.google.com/ns/jotspot" id="body" class=" ja            ">
+<table id="sites-chrome-main" class="sites-layout-hbox" cellspacing="0" cellpadding="{scmCellpadding}" border="0">
+<tr>
+<td id="sites-canvas-wrapper">
+<div id="sites-canvas" role="main">
+<div xmlns="http://www.w3.org/1999/xhtml" id="title-crumbs" style="">
+<A href="https://github.com/yoshinrt/vsd" dir="ltr">メニュー</A>‎ &gt; ‎<A href="index.html" dir="ltr">VSD for GPS</A>‎ &gt; ‎
+  </div>
+<h3 xmlns="http://www.w3.org/1999/xhtml" id="sites-page-title-header" style="" align="left">
+<span id="sites-page-title" dir="ltr" tabindex="-1" style="outline: none">ログファイルリーダ プラグイン</span>
+</h3>
+<div id="sites-canvas-main" class="sites-canvas-main">
+<div id="sites-canvas-main-content">
+<div dir="ltr"><hr />
+<h1><a name="TOC--"></a>目次</h1>
+<ol>
+<li><a href="#Overview">概要</a>
+</li>
+<li><a href="#Basic">ログファイルリーダ プラグインの基本</a>
+</li>
+<li><a href="#Internals">ログファイルリーダ プラグインの記述</a>
+</li>
+<li><a href="#Object">プラグインで使用出来る JavaScript オブジェクト</a></li>
+</ol>
+<a name="Overview"></a>
+<hr />
+<h1><a name="TOC--1"></a>概要</h1>
+VSD for GPS (以下 VSD) は，ログファイルのリードを JavaScript で行なっており，この JavaScript を作成することで，様々なログファイル形式に対応することができます．また，データとして読み込む項目を自由に定義することができます．これにより例えばアクセル開度やブースト圧等も読み込むことができます (ただしスキン側でそれらの項目表示に対応している必要があります)．<br />
+以下，この JavaScript のことを ログファイルリーダプラグイン または単に プラグイン と呼称します．
+<p>
+このページでは，プラグインを作成する上でのルールについて説明します．
+<a name="Basic"></a>
+</p>
+<hr />
+<h1><a name="TOC--2"></a>ログファイルリーダ プラグインの基本</h1>
+<h2><a name="TOC--3"></a>プラグインの配置場所</h2>
+プラグインは (vsd_filter_gps.auf が存在するディレクトリ)\vsd_plugins\_log_reader\ ディレクトリ下に，hoge.js のように拡張子 .js で作成します．拡張子が .js であればファイル名はなんでも良いですが例外として，ファイル名がアンダースコア '_' で始まるプラグインは VSD では無視され使用されません．
+<p>
+また，上記ディレクトリ以下に存在するすべてのプラグインは，同時に VSD システムに読み込まれます．したがって，異なるプラグインに同じグローバル function 名またはグローバル変数名が存在する場合，どちらかが上書きされるため予期しない動作になります．後で説明する ReaderFunc 名は他のプラグインと被らないように注意してください．またグローバル変数は極力使用しないようにしてください．
+</p>
+<a name="Internals"></a>
+<hr />
+<h1><a name="TOC--4"></a>ログファイルリーダ プラグインの記述</h1>
+<h2><a name="TOC--5"></a>プラグイン情報の登録</h2>
+プラグイン先頭 (の function 外) で，まずはプラグイン情報の登録を行います．<br />
+JavaScript 配列の LogReaderInfo に 4つの情報を push します．NMEA リーダの例を以下に示します．
+<pre style="border:1px solid #eeeeee"><code>LogReaderInfo.push({
+    Caption:    "NMEA-0183 (*.nme*)",
+    Filter:     "*.nmea;*.nme;*.nmea.gz;*.nme.gz",
+    ReaderFunc: "Read_nmea",
+    Priority:   0x10000000
+});
+</code></pre>
+Caption は，ログファイルオープン時のファイル選択ダイアログボックスの，選択肢リストに表示される文字列です．人間が見るためのものであり，内容はなんでも良いですがわかりやすい名前をつけてください．
+<p>Filter は，対象とするログファイルの拡張子を列挙します．複数の拡張子がある場合は，';' でつなげて記述します．ログファイルオープン時にログ形式を自動認識にした場合，ここの拡張子リストと照合が行われ，マッチした場合はそのプラグインが使用されます．
+</p>
+<p>ReaderFunc は，このプラグインで定義するログファイルリード function の名前を指定します．
+</p>
+<p>Priority は，このログファイルリーダの優先度を指定します．このパラメータは省略可能です．数値が少ないほど高優先度になります．<br />
+ログファイルオープン時にログ形式を自動認識にした場合で，複数のリーダの Filter にマッチする場合，優先度が高いリーダが優先的に使用されます．<br />
+</p>
+<h2><a name="TOC-function-"></a>ログリード function の記述</h2>
+NMEA リーダのログリード function の記述例を以下に示します．
+<pre style="border:1px solid #eeeeee"><code>function Read_nmea( Files ){
+    ... function 本体 ...
+    return Cnt;
+}
+</code></pre>
+Files は，ログファイル名が収められた Array 型の変数です．ログファイルオープンダイアログにて，複数のファイルが選択されると 2個以上のファイル名が格納されているので，そのすべてを処理する必要があります．
+<p>
+ログリード function では，まず最初に，ログファイルフォーマットがそのログリーダで想定しているものと一致しているかどうかをチェックしなければなりません．一致していない場合，(より優先度の低い) 他のログリーダに処理を移すために，INVALID_FORMAT を返す必要があります．
+</p>
+<p>
+また，ログリード function は，読み込めたレコード数を return する必要があります．VSD は，ログリード function から 0 が返された時，何らかの理由でログが読めなかったものとしてエラー処理を行います．
+</p>
+<a name="Property"></a>
+<h2><a name="TOC-VSD-"></a>ログデータの VSD への渡し方</h2>
+読み込んだログデータを VSD に渡すには，Array 型の変数「Log.プロパティ」にデータを格納します．「プロパティ」は実際には Time や Speed などです．プロパティの一覧は次章「プロパティ一覧」を参照してください．<br />
+<br />
+<div>
+ある時刻におけるスピード・緯度・経度 等の情報をひとまとめにして「レコード」と呼びます．例えば，<br />
+Log.Time[0], Log.Speed[0], Log.Longitude[0], Log.Latitude[0] が 1つのレコード，<br />
+Log.Time[1], Log.Speed[1], Log.Longitude[1], Log.Latitude[1] が 1つのレコード，
+という風に，配列のインデックス値が同じ物が 1つのレコードになります．
+<div><br />
+</div>
+<div>Log.Time 以外のプロパティは必ずしも必要ではありません．また「プロパティ一覧」のプロパティ以外に，ユーザが自由にプロパティを追加することができ (例えば Log.Hoge 等)，スキンスクリプトからアクセスすることができます．</div>
+<div><br />
+</div>
+<div>あるプロパティが定義されたときは，Log.LapTime を除き，そのプロパティの全要素に有効な値が格納されている必要があります．例えば GPS ログデータ等は，衛星を捕捉するまでは有効なデータがログファイル内に無い場合があります．そのような場合，SmoothLowFreqLog() または SmoothLowFreqLogSingle() を呼ぶことで，ログの有効な値が入っていないレコードに有効な値をセット出来ます．
+<div>
+<pre style="border:1px solid #eeeeee"><code>// Log の全プロパティに対し，無効データのチェックと有効値のセットを行います．
+SmoothLowFreqLog();
+
+または
+
+// Log の指定されたプロパティに対し，無効データのチェックと有効値のセットを行います．
+// 第 1パラメータ: Log のプロパティ
+// 第 2パラメータ: Log.Time の要素数
+SmoothLowFreqLog( Log.Longitude, Log.Time.length );
+</code></pre>
+<a name="PropertyList"></a>
+<h2><a name="TOC--6"></a>プロパティ一覧</h2>
+<ul>
+<li>Log.Time<br />
+そのレコードの時刻を格納します．1970年1月1日0時0分0秒（UTC）からの経過時間（ミリ秒単位）です．JavaScript の Date.UTC() を使って取得するのが簡単です．<br />
+このプロパティは必須です．また，あるレコードの時刻はそれより前のレコードの時刻よりも必ず後である必要があります (ログの時刻を遡ることは許されません)．
+</li>
+<li>Log.Speed<br />
+時速 [km/h] を格納します．<br />
+このプロパティを定義しなくても，Log.Longitude/Log.Latitude を定義した場合，自動的に生成されます．
+</li>
+<li>Log.Tacho<br />
+エンジン回転数 [rpm] を格納します．
+</li>
+<li>Log.Distance<br />
+走行距離 [m] を格納します．<br />
+このプロパティを定義しなくても，Log.Longitude/Log.Latitude を定義した場合，自動的に生成されます．
+</li>
+<li>Log.Longitude<br />
+経度 [度] を格納します．西経の時はマイナスになります．
+</li>
+<li>Log.Latitude<br />
+緯度 [度] を格納します．南緯の時はマイナスになります．
+</li>
+<li>Log.Direction<br />
+方位 [度] を格納します．真北が 0 で，時計回りに角度が増加します．<br />
+このプロパティを定義しなくても，Log.Longitude/Log.Latitude を定義した場合，自動的に生成されます．
+</li>
+<li>Log.Altitude<br />
+高度 [m] を格納します．
+</li>
+<li>Log.Accel<br />
+アクセル開度 [%] を格納します．
+</li>
+<li>Log.Brake<br />
+ブレーキ強度 [%] を格納します．
+</li>
+<li>Log.Gx<br />
+左右方向の加速度 [G] を格納します．右旋回時にプラスになります．<br />
+このプロパティを定義しなくても，Log.Longitude/Log.Latitude を定義した場合，自動的に生成されます．
+</li>
+<li>Log.Gy<br />
+前後方向の加速度 [G] を格納します．加速時にプラスになります．<br />
+このプロパティを定義しなくても，Log.Longitude/Log.Latitude を定義した場合，自動的に生成されます．
+</li>
+<li>Log.LapTime<br />
+ラップタイム [ミリ秒単位] を格納します．コントロールラインを通過した瞬間のレコードの Log.LapTime にそのラップタイムをセットします．このプロパティに限り，全要素に有効な値が格納されていなくても構いません．最初にコントロールラインを通過した瞬間のレコード (すなわち計測開始時点) の Log.LapTime には 0 を設定します．<br />
+Log.LapTime を定義すると，ラップタイム表示はその設定が使用され，<a href="laptime.html">簡易ラップタイム計測機能</a>は使用できません．
+</li></ul>
+<h2><a name="TOC--7"></a>スキンスクリプト内でのログデータの参照方法</h2>
+スキンスクリプト内でログデータを参照するには，「Log.プロパティ」「Log.Max.プロパティ」「Log.Min.プロパティ」で参照できます．例えば，Log.Speed は現在の時速，Log.Max.Speed / Log.Min.Speed は最大 / 最小の時速が参照できます．
+<p>
+ただし，Time についてはスキンスクリプト内では参照できません．<br />
+また，Longigude, Latitude を定義した場合，Speed, Distance, Direction, Gx, Gy は自動生成され参照できます．<br />
+all_property.js を使用すると，そのときのログで参照できるプロパティをすべて表示できます．</p>
+<p>
+また，ユーザが独自に追加したプロパティも同様の方法で参照でき，例えば，Log.Hoge というプロパティを追加した場合，スキンスクリプト内では Log.Hoge Log.Max.Hoge Log.Min.Hoge という 3つの変数でアクセスできます．</p>
+<a name="Object"></a>
+<hr />
+<h1><a name="TOC-JavaScript-"></a>プラグインで使用出来る JavaScript オブジェクト</h1>
+プラグインで使用出来る JavaScript オブジェクトは，JavaScript 標準オブジェクトと，File オブジェクトのみです．<br />
+詳しくは<a href="skin.html#Object">基本オブジェクトと組込みオブジェクト</a>を参照してください．
+
+</div> 
+</td> 
+</tr>
+</table> 
+</body>
+
+</html>

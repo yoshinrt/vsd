@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" itemscope="" itemtype="http://schema.org/WebPage">
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="title" content="使用方法" />
+<meta itemprop="name" content="使用方法" />
+<meta property="og:title" content="使用方法" />
+<style type="text/css">
+</style>
+<title>使用方法</title>
+<meta itemprop="image" content="menu_filter.jpg?height=311&amp;width=320" />
+<meta property="og:image" content="menu_filter.jpg?height=311&amp;width=320" />
+</head>
+<body xmlns="http://www.google.com/ns/jotspot" id="body" class=" ja            ">
+<table id="sites-chrome-main" class="sites-layout-hbox" cellspacing="0" cellpadding="{scmCellpadding}" border="0">
+<tr>
+<td id="sites-canvas-wrapper">
+<div id="sites-canvas" role="main">
+<div xmlns="http://www.w3.org/1999/xhtml" id="title-crumbs" style="">
+<A href="https://github.com/yoshinrt/vsd" dir="ltr">メニュー</A>‎ &gt; ‎<A href="index.html" dir="ltr">VSD for GPS</A>‎ &gt; ‎
+  </div>
+<h3 xmlns="http://www.w3.org/1999/xhtml" id="sites-page-title-header" style="" align="left">
+<span id="sites-page-title" dir="ltr" tabindex="-1" style="outline: none">使用方法</span>
+</h3>
+<div id="sites-canvas-main" class="sites-canvas-main">
+<div id="sites-canvas-main-content">
+<div dir="ltr">VSD 使用の流れは，主に以下のようになっています．
+
+<ol>
+<li><a href="#TutorialOpen">動画とログを開き，VSD の設定を行う</a>
+</li>
+<li><a href="#TutorialSynchoronize">動画とログの同期を取る</a>
+</li>
+<li><a href="#TutorialLaptime">(任意で) ラップタイムを計測・表示する</a>
+</li>
+<li><a href="#Compressor">(任意で) メーター合成した動画を保存する</a>
+</li>
+</ol>
+以下で，各項目についての説明をします．
+
+<a name="TutorialOpen"></a>
+<hr />
+<h1><a name="TOC-VSD-"></a>動画とログを開き，VSD の設定を行う</h1>
+<ol>
+<li>AviUtl を起動して，適当な動画を開きます．
+	</li>
+<li>メニューの フィルタ→VSDメーター合成 にチェックを入れます．<br />
+<div style="display:block;text-align:left"><a href="menu_filter.jpg" imageanchor="1"><img border="0" height="311" src="menu_filter.jpg?height=311&amp;width=320" width="320" /></a></div>
+</li>
+<li>メニューの 設定→VSDメーター合成の設定 を選ぶと，「VSDメーター合成」ダイアログが表示されます．<br />
+<div style="display:block"><a href="menu_setting.jpg" imageanchor="1"><img border="0" height="320" src="menu_setting.jpg?height=320&amp;width=280" width="280" /></a></div>
+</li>
+<li>設定ダイアログのスキン選択リスト右端の「▼」を押すと，選択可能なスキンの一覧が表示されるので，一旦「同期モード」を選択します．<br />
+<div style="display:block;text-align:left"><a href="dialog1.png" imageanchor="1"><img border="0" height="158" src="dialog1.png?height=158&amp;width=400" width="400" /></a></div>
+下記の同期作業完了後に，好みのスキンを選んでください．代表的なスキンを以下に示します．<ul>
+<li>standard_*.js：標準的なスキンです．メーター位置は左右 2種類があります．
+</li>
+<li>old_style_*.js：古いバージョンの VSD で使われていたデザインです．メーター位置は左右 2種類があります．
+</li>
+<li>bluearc_*.js：何か風のスキンです．メーター位置は左右 2種類があります．</li>
+<li>OpenStreetMap.js：地図を合成します．ツーリング等，長距離移動の GPS ログに適しています．</li>
+<li>同期モード：同期作業に適した表示になります．</li></ul>
+</li>
+<li>車両ログ・GPS ログのどちらか，または両方を読み込みます．車両ログとは，車両の ECU やその他の実センサーから得られたログです．<br />
+設定ダイアログの車両ログ・GPS ログオープンボタンを押すと，ファイル選択ダイアログが表示されるので，そこでログファイルを選択してリードします．<br />
+ログ形式は拡張子から判別されます．*.log や *.dat などといったありがちな拡張子は自動判別に失敗しますので，ファイル選択ダイアログのログ形式の指定で「自動判別」以外を選択してください．<br />
+ログファイル選択時に，SHIFT または CTRL を押しながらファイルをクリックすることで，分割された複数のログファイルを選択・オープンできます．複数ログを選択時は，それらのファイル形式はすべて同一である必要があります．<br />
+<div style="display:block;text-align:left"><a href="open_dialog.png" imageanchor="1"><img border="0" height="258" src="open_dialog.png?height=258&amp;width=320" width="320" /></a></div>
+</li>
+</ol>
+<a name="TutorialSynchoronize"></a>
+<hr />
+<h1><a name="TOC--"></a>動画とログの同期を取る</h1>
+動画と車両ログの同期を取るには，動画と車両ログのオフセットを「車両ログ位置調整」スライダで設定します．同様に，
+<div>動画と GPS ログの同期を取るには，動画と GPS ログのオフセットを「GPS ログ位置調整」スライダで設定します． </div><div>設定ダイアログの「半自動同期」チェックボックスを ON にすると，動画のタイムスタンプとログの時刻から，ある程度自動的に同期が取られます．<br />
+<div>
+<p>
+以下では，設定のコツを説明します．<br />
+</p>
+<h2><a name="TOC-1-GPS-"></a>(1) 車両ログ・GPS ログのどちらか一方のみを読み込んだ場合</h2>
+<div>以下の説明では GPS ログのみを読み込んだ場合の例を説明します．車両ログを読み込んだ場合は，「GPS」を「車両」に読み替えてください．</div>
+<ol>
+<li>動画と GPS ログを読み込んだだけの状態では，下の図のように動画とログがずれている状態です．<br />
+<div style="display:block;text-align:left"><a href="sync1.png" imageanchor="1"><img border="0" src="sync1.png" /></a></div>
+</li>
+<li>「VSDメーター合成」ダイアログのスキン選択リスト右端の「▼」を押し，「同期モード」を選択します．</li>
+<li>AviUtl のメインスライダ・カーソルキーなどを使って，走行を開始したとき (車が動き出した瞬間) やブレーキングした瞬間などの，車速が変化しやすい (スピードグラフの形に特徴が出やすい) 瞬間の映像を表示させます．<br />
+<div style="display:block;text-align:left"><a href="main_setting2.jpg" imageanchor="1"><img border="0" height="223" src="main_setting2.jpg?height=223&amp;width=320" width="320" /></a></div>
+</li>
+<li>「GPS ログ位置調整」スライダを調整して，先ほどの映像に対応する箇所のスピードグラフを表示させます．縦棒の箇所がスピードグラフに重なるよう，「GPS ログ位置調整」スライダを調整します．調整が終わったら再生ボタンを押して，同期がとれているかどうか確認してください．<br />
+※「GPS ログ位置調整」スライダは一度に約±10分しかずらせません．それ以上ずらしたいときは，メインスライダで 1フレーム分映像を進めると，「GPS ログ位置調整」スライダが 0 に戻ります． </li>
+<li>この状態で，ほとんどの場合は同期が完了しています．ただし動画によっては，動画の前半だけ同期を取った場合，まれに動画の後半の同期が取れていない場合があります．
+<div style="display:block;text-align:left"><a href="sync2.png" imageanchor="1"><img border="0" src="sync2.png" /></a></div>
+</li>
+<li>この場合，動画の後半でもう一度「GPS ログ位置調整」スライダを調整し，同期を取る必要があります．<br />
+	メインウィンドウで動画の後半を表示させ，先ほどと同じ要領で「GPS ログ位置調整」スライダを調整してください．<br />
+	2回目の同期では，1回目の同期を保ったまま (ログの再生速度を変えることで) 動画全体の同期を取ることができます．
+<div style="display:block;text-align:left"><a href="sync3.png" imageanchor="1"><img border="0" src="sync3.png" /></a></div>
+</li>
+<li>以上で同期作業は終わりです．同期作業完了後に，好みのスキンを選択しなおしてください．</li>
+</ol>
+<h2><a name="TOC-2-GPS-"></a>(2) 車両ログ・GPS ログの両方を読み込んだ場合</h2>
+<ol><li>この場合，「同期モード」スキン選択時は，2つのスピードグラフ (赤：車両ログ，水色：GPS ログ)  が表示されます．</li>
+<li>まず，車両ログを上記の「車両ログ・GPS ログのどちらか一方のみを読み込んだ場合」の手順に従って，同期してください．</li>
+<li>車両ログの同期が取れたら，赤のスピードグラフに水色のスピードグラフが重なるように，「GPS ログ位置調整」スライダを調整します．
+<div style="display:block;text-align:left"><a href="sync4.png" imageanchor="1"><img border="0" height="251" src="sync4.png?height=251&amp;width=320" width="320" /></a></div>
+</li>
+</ol>
+<hr />
+<h1><a name="TOC--1"></a>ラップタイムを計測する</h1>
+ラップタイム計測・表示機能の詳細は「<a href="laptime.html">簡易ラップタイム計測</a>」を参照してください．<br />
+ここではごく簡単に自動ラップタイム計測機能を使用してみます．
+
+<ol>
+<li>「VSDメーター合成」ダイアログの「ラップタイム表示」チェックボックスにチェックを入れます．
+	</li>
+<li>「VSDメーター合成」ダイアログの「計測地点幅」スライダに 150 を設定します．
+	</li>
+<li>AviUtl のスライダバーを使うなどして，コントロールラインなどの目印になる場所を通過する瞬間の映像を表示させます．
+	</li>
+<li>「M」キーを押します．するとラップタイムが計測されて表示されます．
+</li>
+</ol>
+<a name="Compressor"></a>
+<hr />
+<h1><a name="TOC--2"></a>メーター合成した動画を保存する</h1>
+メーター合成後の動画は，AviUtl の機能を使用して *.avi ファイルに保存することができます．<br />
+ここでは簡単に動画の保存方法について説明します．すでに AviUtl を使いこなしている方は，ここは読まなくてけっこうです．
+
+<ol>
+<li>必要に応じて，保存する範囲を指定します．<br />
+開始時間にメインスライダを移動しキーボードの [ キーを押し，同様に終了時間にメインスライダを移動し ] キーを押します．
+	</li>
+<li>AviUtl メニューの ファイル→AVI 出力 を選びます．
+	</li>
+<li>AVI 出力場所を指定するダイアログボックスが開きます．
+	</li>
+<li>動画の圧縮 Codec を選びます．好みの Codec を使ってください．よくわからない方はひとまず以下のように設定してみることをお勧めします．
+
+<br />
+<div style="display:block;text-align:left"><a href="save1.jpg" imageanchor="1"><img border="0" height="245" src="save1.jpg?height=245&amp;width=320" width="320" /></a><a href="save2.jpg" imageanchor="1" style="line-height:1.25;font-size:10pt"><img border="0" src="save2.jpg" /></a><a href="save3.jpg" imageanchor="1" style="line-height:1.25;font-size:10pt"><img border="0" height="241" src="save3.jpg?height=241&amp;width=320" width="320" /></a></div>
+<ol>
+<li>「ビデオ圧縮」ボタンをクリック
+		</li>
+<li>圧縮プログラムのリストから「ffdshow Video Codec」を選びます
+		</li>
+<li>「設定」をクリック
+		</li>
+<li>「Encoder」をタブをクリックします
+		</li>
+<li>「エンコーダ」「モード」「品質」を図のとおりに設定．「品質」の数値は，ファイルサイズと画質のトレードオフになりますので，いろいろ試してみてください．数値が高いほど画質がよいですが，ファイルサイズが大きくなります．
+		</li>
+<li>OK をクリック
+		</li>
+<li>OK をクリック
+	</li>
+</ol>
+</li>
+<li>保存する場所を選んだ後，「保存」をクリックします．
+</li>
+</ol>
+</td> 
+</tr>
+</table> 
+</body>
+
+</html>

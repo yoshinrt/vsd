@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" itemscope="" itemtype="http://schema.org/WebPage">
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="title" content="VSD for GPS" />
+<meta itemprop="name" content="VSD for GPS" />
+<meta property="og:title" content="VSD for GPS" />
+<style type="text/css">
+</style>
+<title>VSD for GPS</title>
+</head>
+<body xmlns="http://www.google.com/ns/jotspot" id="body" class=" ja            ">
+<table id="sites-chrome-main" class="sites-layout-hbox" cellspacing="0" cellpadding="{scmCellpadding}" border="0">
+<tr>
+<td id="sites-canvas-wrapper">
+<div id="sites-canvas" role="main">
+<div xmlns="http://www.w3.org/1999/xhtml" id="title-crumbs" style="">
+<A href="https://github.com/yoshinrt/vsd" dir="ltr">メニュー</A>‎ &gt; ‎
+  </div>
+<h3 xmlns="http://www.w3.org/1999/xhtml" id="sites-page-title-header" style="" align="left">
+<span id="sites-page-title" dir="ltr" tabindex="-1" style="outline: none">VSD for GPS</span>
+</h3>
+<div id="sites-canvas-main" class="sites-canvas-main">
+<div id="sites-canvas-main-content">
+<div dir="ltr"><hr />
+<h1><a name="TOC--"></a>目次</h1>
+<ol>
+<li><a href="#Download">ダウンロード</a></li>
+<li><a href="#Overview">概要</a></li>
+<li><a href="install.html">インストール・初期設定手順</a></li>
+<li><a href="usage.html">使用方法</a></li>
+<li><a href="screen_explanation.html">画面表示説明</a></li>
+<li><a href="laptime.html">簡易ラップタイム計測</a></li>
+<li>スキンファイル別の解説</li>
+<ol>
+<li><a href="race_monitor.html">レースモニター機能 (race_monitor.js)</a></li>
+<li><a href="streetview.html">ストリートビュー合成 (streetview.js)</a></li>
+</ol>
+<li><a href="skin.html">スキンファイルの作成</a></li>
+<li><a href="log_reader.html">ログファイルリーダ プラグインの作成</a></li>
+<li><a href="q_and_a.html#QandA">Q&amp;A</a></li>
+<li><a href="license.html">使用ライブラリのライセンスに関する表示</a></li>
+</ol>
+<a name="Overview"></a>
+<hr />
+<h1><a name="TOC--1"></a>概要</h1>
+<h2><a name="TOC--2"></a>機能概要</h2>
+<div class="sites-embed-align-left-wrapping-off"><div class="sites-embed-border-off sites-embed" style="width:560px;"><div class="sites-embed-content sites-embed-type-youtube"><iframe title="YouTube video player" class="youtube-player" type="text/html" src="https://www.youtube.com/embed/VmpCkBfSSo8?rel=0&amp;wmode=opaque" frameborder="0" allowFullScreen="true" width="560" height="315"></iframe></div></div></div>
+<div style="display:block;text-align:left">VSD for GPS (以下，VSD) は，GPS データロガーで記録したログファイルと，車載ビデオカメラの映像を合成してメーターを合成表示 (スーパーインポーズ) するソフトです．主に以下のような機能があります．</div>
+<ul>
+<li>スピードメーター・加速度の合成表示</li>
+<li>タコメータ・ギアポジション・アクセル開度の合成表示 (※ログにデータが有る場合のみ)</li>
+<li>地図 (OpenStreetMap, Google マップ) の合成表示</li>
+<li>走行ラインの表示</li>
+<li>簡易ラップタイム計測・表示</li>
+<li><a href="streetview.html">Google ストリートビュー上で GPS ログを再生</a></li>
+<li>レース動画に全車ラップタイム，全車走行位置表示を行う<a href="race_monitor.html">レースモニター機能</a></li>
+<li>これらの表示・画面デザインをユーザが自由に作成可能なスキン機能</li>
+</ul>
+
+読み込み可能なログファイル形式は，以下のとおりです．
+<ul>
+<li>NMEA-0183 フォーマット<br />
+</li>
+<li>*.gpx フォーマット</li>
+<li>KML (Google マイマップ，Android の My tracks)</li>
+<li><a href="http://dp3.jp/" target="_blank" rel="nofollow">LAP+ / Lap+Android</a> 用ログファイル *.dp3 *.dp3x 形式
+</li>
+<li>Android アプリの <a href="https://play.google.com/store/apps/details?id=org.prowl.torquefree&amp;feature=search_result#?t=W251bGwsMSwyLDEsIm9yZy5wcm93bC50b3JxdWVmcmVlIl0.">Torque Lite</a> ログ</li>
+<li>DriftBox / PerformanceBox の *.dbn</li></ul>
+標準で読み込めるログは以上ですが，ログファイルリーダ プラグイン (JavaScript) を自作することで，事実上どんなログ形式でも読み込めます．
+<p>
+VSD は，フリーの動画編集ソフトとして有名な AviUtl のプラグインモジュールとして動作しますので，別途 AviUtl が必要です．
+
+</p>
+<h2><a name="TOC--3"></a>動作確認環境</h2>
+<ul>
+<li>Windows7 SP1 (x86, x64) / Windows10 (x86, x64)
+	</li>
+<li>AviUtl v1.00</li>
+<li>Torque Lite 1.1.49</li>
+<li>GPS機器: PhotoMate887 (ログ記録周期: 5Hz・10Hz)
+</li></ul>
+</div></div></div>
+<a name="Download"></a>
+<hr />
+<h1><a name="TOC--4"></a>ダウンロード</h1>
+<h2><a name="TOC--5"></a>★ダウンロード前に必ずお読みください★</h2>
+<ul>
+<li>スキンスクリプト開発者様向け：r777 からスキンスクリプト内でログデータを参照する方法が変更されました．これによるエラーを回避するために，<a href="skin.html#Basics" style="background-color:transparent;font-size:10pt">こちら</a>を参考にスキンスクリプトに Include() を追加してください．</li>
+<li>メーター合成後に何も設定せずに動画を保存すると，動画ファイルサイズが巨大になり，時間もたいへんかかります．<br />
+動画保存時は必ず圧縮コーデックの設定をしてください．詳細は「<a href="usage.html#Compressor">メーター合成した動画を保存する</a>」を参照してください．</li>
+</ul>
+<br /><div><a href="https://github.com/yoshinrt/vsd/releases" rel="nofollow"><font size="5">ダウンロードはこちら</font></a></div></div>
+</div> 
+</div> 
+</div> 
+</td> 
+</tr>
+</table> 
+</body>
+
+</html>

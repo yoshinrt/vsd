@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" itemscope="" itemtype="http://schema.org/WebPage">
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="title" content="簡易ラップタイム計測機能" />
+<meta itemprop="name" content="簡易ラップタイム計測機能" />
+<meta property="og:title" content="簡易ラップタイム計測機能" />
+<style type="text/css">
+</style>
+<title>簡易ラップタイム計測機能</title>
+<meta itemprop="image" content="menu_mark.jpg?height=254&amp;width=320" />
+<meta property="og:image" content="menu_mark.jpg?height=254&amp;width=320" />
+</head>
+<body xmlns="http://www.google.com/ns/jotspot" id="body" class=" ja            ">
+<table id="sites-chrome-main" class="sites-layout-hbox" cellspacing="0" cellpadding="{scmCellpadding}" border="0">
+<tr>
+<td id="sites-canvas-wrapper">
+<div id="sites-canvas" role="main">
+<div xmlns="http://www.w3.org/1999/xhtml" id="title-crumbs" style="">
+<A href="https://github.com/yoshinrt/vsd" dir="ltr">メニュー</A>‎ &gt; ‎<A href="index.html" dir="ltr">VSD for GPS</A>‎ &gt; ‎
+  </div>
+<h3 xmlns="http://www.w3.org/1999/xhtml" id="sites-page-title-header" style="" align="left">
+<span id="sites-page-title" dir="ltr" tabindex="-1" style="outline: none">簡易ラップタイム計測機能</span>
+</h3>
+<div id="sites-canvas-main" class="sites-canvas-main">
+<div id="sites-canvas-main-content">
+<div dir="ltr">VSD では，簡易的にラップタイムを計測し，画面に表示することができます．3種類の計測モードがあります．
+<ul>
+<li>自動計測モード<br />
+GPS 測位データからラップタイムを自動計測するモードです．</li>
+<li>手動計測モード<br />
+コントロールラインを通過した映像の間隔から，各周のラップタイムを手動計測するモードです．
+</li>
+<li>ラップ記録ファイル使用モード<br />
+ラップタイムが記述されたテキストファイルを読込み，それを映像に表示するモードです．<br />
+</li></ul>
+<hr />
+<h1><a name="TOC--"></a>自動計測モード</h1>
+<div>コントロールラインの位置と幅を (一箇所だけ) 指定することで，そこを通過する時間を自動認識し自動的にラップタイムを計測するモードです．サーキット走行など，同一コースを何度も周回する場合は手軽にラップタイムを計測できます．<br />
+計測タイム精度は GPS 測位精度に左右されます．またジムカーナ等スタート・ゴール地点が違う場合にはこのモードは使用できません．また GPS ログを読み込まない場合，このモードは使用できません．</div>
+<h2><a name="TOC--1"></a>操作手順</h2>
+<ol>
+<li>「VSDメーター合成」ダイアログの「ラップタイム表示」チェックボックスにチェックを入れます．
+	</li>
+<li>「VSDメーター合成」ダイアログの「計測地点幅」スライダでコントロールラインの幅を設定します．幅[m]×10 の値を設定します．(必ず 1以上の値を設定してください)
+	</li>
+<li>AviUtl のスライダバーを使うなどして，コントロールラインなどの目印になる場所を通過する瞬間のフレームを表示させます．
+	</li>
+<li>「M」キーを押します．タイトルバーに [mark] と表示され，またラップタイム表示が更新されるのを確認してください．マークを解除するには，もう一度「M」キーを押します．<br />
+<div style="display:block;text-align:left"><a href="menu_mark.jpg" imageanchor="1"><img border="0" height="254" src="menu_mark.jpg?height=254&amp;width=320" width="320" /></a></div>
+</li>
+<li>コントロールラインを通過し損ねている，または間違って通過したと認識されたラップがないか確認します．必要であれば「計測地点幅」を調整したり，マークするフレームを別のラップに変えてみてください．<br />
+	また「スピードグラフ表示」ON 時は，走行軌跡にコントロールラインが表示されますので，調整の目安にしてください．<br />
+	ちなみに，自車方位が ±45度以上ずれているときは，コントロールラインを通過しても新しいラップとは認識されません．
+</li>
+</ol>
+<hr />
+<h1><a name="TOC--2"></a>手動計測モード</h1>
+<div>コントロールラインなどを通過した瞬間の映像に手動でマークをつけ，そのマークとマークの間の時間を計ることで，ラップタイムを計測するモードです．<br />
+複数周のラップタイムを計測する場合は，すべての周回のコントロールライン(等)を手動でマークする必要があります．計測タイム精度は，動画の fps (例: 30fps の動画なら 1/30秒) の精度で計測されます．GPS ログは必要ありません．<br />
+手動計測モードにはさらに 2つのモードがあります．
+<ul><li>周回コースモード<br />
+サーキット走行のように，スタート・ゴール時点が同一であるコースでの計測に使用します．全てのマーク間のタイムを計測・表示します．</li>
+<li>ジムカーナモード<br />
+ジムカーナやラリーのように，スタート・ゴール地点が分かれているコースでの計測に使用します．奇数番目のマークをスタート・偶数番目のマークをゴールとみなし，偶数番目～奇数番目のマーク間はタイム計測・表示しません．</li></ul>
+</div>
+<h2><a name="TOC--3"></a>操作手順</h2>
+<ol>
+<li>「VSDメーター合成」ダイアログの「ラップタイム表示」チェックボックスにチェックを入れます．
+	</li>
+<li>「VSDメーター合成」ダイアログの「計測地点幅」スライダを，周回コースモードの場合は 0 に，ジムカーナモードの場合は -1 に設定します．
+	</li>
+<li>AviUtl のスライダバーを使うなどして，コントロールラインなどの目印になる場所を通過する瞬間のフレームを表示させます．
+	</li>
+<li>「M」キーを押します．タイトルバーに [mark] と表示され，またラップタイム表示が更新されるのを確認してください．マークを解除するには，もう一度「M」キーを押します．<br />
+</li>
+<li>次にコントロールラインを通過するフレームを表示させ，マークをつけます．動画のコントロールラインを通過するフレームごとに，この作業を繰り返します．
+</li>
+</ol>
+<hr />
+<h1><a name="TOC--4"></a>ラップ記録ファイル使用モード</h1>
+<div>ラップタイムが記述されたテキストファイルを読込み，それを映像に表示するモードです．コース公式の計測器の正確なタイムを表示することができます．GPS ログは必要ありません．</div>
+<h2><a name="TOC--5"></a>操作手順</h2>
+<ol>
+<li>ラップ記録ファイルを作成します．ラップ記録ファイルはテキストファイルで，以下のようにラップタイムが縦に書き並べられたファイルです．<br />
+時間の表記は，1:23.456 のように 分:秒 で，または 99.999 のように秒だけでも記述できます．
+<pre style="border:1px solid #eeeeee"><code>1:11.111
+1:12.111
+1:13.111
+1:14.111
+1:15.111
+</code></pre>
+</li>
+<li>「VSD メーター合成」ダイアログの「LAP表」の開くボタンをクリックし，先ほど作成したラップ記録ファイルをリードします．</li>
+<li>AviUtl のメインスライダバーを使うなどして，ラップタイム計測を開始した瞬間の映像を表示させます (車が動き出した瞬間ではなく，車がタイム計測ラインの上を通過した瞬間です)．そしてその状態で，「VSD メーター合成」ダイアログの「LAP表」右の「始」ボタンを押します．
+</li>
+<li>AviUtl のメインスライダバーを使うなどして，ラップタイム計測を終了した瞬間の映像を表示させます．そしてその状態で，「VSD メーター合成」ダイアログの「LAP表」右の「終」ボタンを押します．
+</li>
+</ol></div>
+</div> 
+</div> 
+</div> 
+</td> 
+</tr>
+</table> 
+</body>
+
+</html>

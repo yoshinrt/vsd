@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" itemscope="" itemtype="http://schema.org/WebPage">
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="title" content="スキンファイル 作成マニュアル" />
+<meta itemprop="name" content="スキンファイル 作成マニュアル" />
+<meta property="og:title" content="スキンファイル 作成マニュアル" />
+<style type="text/css">
+</style>
+<title>スキンファイル 作成マニュアル</title>
+</head>
+<body xmlns="http://www.google.com/ns/jotspot" id="body" class=" ja            ">
+<table id="sites-chrome-main" class="sites-layout-hbox" cellspacing="0" cellpadding="{scmCellpadding}" border="0">
+<tr>
+<td id="sites-canvas-wrapper">
+<div id="sites-canvas" role="main">
+<div xmlns="http://www.w3.org/1999/xhtml" id="title-crumbs" style="">
+<A href="https://github.com/yoshinrt/vsd" dir="ltr">メニュー</A>‎ &gt; ‎<A href="index.html" dir="ltr">VSD for GPS</A>‎ &gt; ‎
+  </div>
+<h3 xmlns="http://www.w3.org/1999/xhtml" id="sites-page-title-header" style="" align="left">
+<span id="sites-page-title" dir="ltr" tabindex="-1" style="outline: none">スキンファイル 作成マニュアル</span>
+</h3>
+<div id="sites-canvas-main" class="sites-canvas-main">
+<div id="sites-canvas-main-content">
+<div dir="ltr"><hr />
+<h1><a name="TOC--"></a>目次</h1>
+<ol>
+<li><a href="#Overview">概要</a>
+</li>
+<li><a href="#Basics">スキンスクリプトの基本</a>
+</li>
+<li><a href="#Object">基本オブジェクトと組込みオブジェクト</a>
+</li>
+<li><a href="skin_reference.html">VSD 組込みオブジェクトリファレンス</a>
+</li>
+</ol>
+<a name="Overview"></a>
+<hr />
+<h1><a name="TOC--1"></a>概要</h1>
+VSD for GPS (以下 VSD) は，動画のメーター等のデザイン・レイアウトをユーザが自由に作成・変更することができます．これを「スキン機能」と呼びます．<br />
+スキンの実態は JavaScript で記述されたテキストファイルです．簡単にデザインを変更出来るだけでなく，JavaScript で制御することにより自由度の高いデザインを行うことができます．
+<div>以下，スキン用 JavaScript ファイルのことを「スキンスクリプト」と呼称します．   <a name="Basics"></a>
+<hr />
+<h1><a name="TOC--2"></a>スキンスクリプトの基本</h1>
+<h2><a name="TOC--3"></a>スキンスクリプトの配置場所</h2>
+スキンスクリプトは (vsd_filter_gps.auf が存在するディレクトリ)\vsd_plugins\ ディレクトリ下に，hoge.js のように拡張子 .js で作成します．拡張子が .js であればファイル名はなんでも良いですが例外として，ファイル名がアンダースコア '_' で始まるスキンスクリプトは VSD では無視され使用されません．
+
+<h2><a name="TOC--4"></a>スキンスクリプトの文字コード</h2>
+スキンスクリプトの文字コードは，必ず UTF-8 で記述します．
+
+<h2><a name="TOC--5"></a>スキンスクリプトの基本構成</h2>
+スキンスクリプトは，大きく分けて Initialize() と Draw() で構成されます．<br />
+Initialize() は，スキンが VSD システムにロードされた時に 1回だけ実行されます．<br />
+通常，スキンで使用する画像ファイルのロードやフォントの作成を行います．
+<p>Draw() は動画の毎フレームごとに呼び出される関数です．通常，動画のフレームに対して何らかの描画を行う処理が記述されます．</p>
+<p>また，スキンスクリプトの先頭で以下を行ってください．
+</p><ul>
+<li>作成するスキンが対象とする (つまり，スキン作成時に使用中の) VSD のリビジョン番号を，TargetVSDRevision に設定します．</li>
+<li>_system/OldApiSupport.js を Include します．</li>
+</ul>VSD は，TargetVSDRevision に設定されたリビジョンから変更された JavaScript 仕様がある場合，古い仕様と互換性がある記述を OldApiSupport.js からロードします．これにより，今後 VSD の JavaScript 仕様が変更された場合も，可能な限りスキンの修正を抑えることができます．
+<p>
+スキンスクリプトの基本例：
+</p>
+<pre style="border:1px solid #eeeeee"><code>// 古いスキンスクリプト仕様に対応するための Include．
+TargetVSDRevision = 768; // ←例．実際は<span style="font-size:13.3333330154419px;line-height:16.6666660308838px;font-family:Lucida Grande,Lucida Sans Unicode,sans-serif;background-color:transparent">スキン作成時の VSD リビジョンを設定する</span>
+Include( "_system/OldApiSupport.js" );
+
+function Initialize(){
+    img = new Image( ... );     // Initialize() ファンクション
+    font = new Font( ... );     //     〃
+}
+
+function Draw(){                // Draw() ファンクション
+    Vsd.PutImage( ... );        //     〃
+    ...                         //     〃
+}                               //     〃
+</code></pre>
+<a name="Object"></a>
+<hr />
+<h1><a name="TOC--6"></a>基本オブジェクトと組込みオブジェクト</h1>
+JavaScript には，JavaScript 言語仕様によって標準で備えている基本オブジェクト (Date, Math 等) と，JavaScript が組み込まれたアプリケーション (代表的なのは Web ブラウザや Windows Scripting Host (WSH)) が独自に用意している組込みオブジェクト (例えばブラウザの window) があります．<br />
+基本オブジェクトは VSD でも使用できます．「<a href="http://www.tohoho-web.com/js/index.htm" rel="nofollow">とほほのJavaScriptリファレンス</a>」の「基本オブジェクト編」を参考にしてください．<br />
+組込みオブジェクトは，VSD が独自に用意しているオブジェクト (Image, Font 等) が使用できます．VSD で使用可能なオブジェクトについては <a href="skin_reference.html">VSD オブジェクトリファレンス</a>を参照してください．
+<p>
+逆に，Web ブラウザ等の組込みオブジェクト (window 等) は VSD では使用できません．JavaScript について検索するとよく引っかかるのが Web ブラウザや WSH の JavaScript 記述例なので，注意が必要です．
+
+<a name="VsdObject"></a>
+</p>
+<hr />
+<h1><a name="TOC-VSD-"></a>VSD 組込みオブジェクトリファレンス</h1>
+こちら→<a href="skin_reference.html">VSD 組込みオブジェクトリファレンス</a></div></div>
+</div> 
+</div> 
+</div> 
+</td> 
+</tr>
+</table> 
+</body>
+
+</html>

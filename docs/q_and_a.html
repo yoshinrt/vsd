@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" itemscope="" itemtype="http://schema.org/WebPage">
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="title" content="Q&amp;A" />
+<meta itemprop="name" content="Q&amp;A" />
+<meta property="og:title" content="Q&amp;A" />
+<style type="text/css">
+</style>
+<title>Q&amp;A</title>
+<meta itemprop="image" content="time_diff.png?height=158&amp;width=400" />
+<meta property="og:image" content="time_diff.png?height=158&amp;width=400" />
+</head>
+<body xmlns="http://www.google.com/ns/jotspot" id="body" class=" ja            ">
+<table id="sites-chrome-main" class="sites-layout-hbox" cellspacing="0" cellpadding="{scmCellpadding}" border="0">
+<tr>
+<td id="sites-canvas-wrapper">
+<div id="sites-canvas" role="main">
+<div xmlns="http://www.w3.org/1999/xhtml" id="title-crumbs" style="">
+<A href="https://github.com/yoshinrt/vsd" dir="ltr">メニュー</A>‎ &gt; ‎<A href="index.html" dir="ltr">VSD for GPS</A>‎ &gt; ‎
+  </div>
+<h3 xmlns="http://www.w3.org/1999/xhtml" id="sites-page-title-header" style="" align="left">
+<span id="sites-page-title" dir="ltr" tabindex="-1" style="outline: none">Q&amp;A</span>
+</h3>
+<div id="sites-canvas-main" class="sites-canvas-main">
+<div id="sites-canvas-main-content">
+<div dir="ltr"><a name="KnownBug"></a>
+<hr />
+<h1><a name="TOC--"></a>既知のバグ</h1>
+<ul>
+<li>16:9 の動画にメーターを合成した場合，メーターが楕円形になる場合があります．この場合，AviUtl の
+「サイズの変更」機能を使用し動画のアスペクト比が正しくなるよう，映像を拡大・縮小してください．</li>
+<li>タイム計測の表示は 1/1000秒ですが当然そんなに精度はありません．1/1000桁は所詮飾りです．偉い人にはそれがわからn(ry
+</li></ul>
+<a name="QandA"></a>
+<hr />
+<h1><a name="TOC-Q-A"></a>Q&amp;A</h1>
+<h2><a name="TOC--1"></a>動画保存すると，動画ファイルサイズが巨大になる</h2>
+動画保存時に<a href="usage.html#Compressor">圧縮コーデックの設定</a>をしてください．よくわからなければ，巨大な動画ファイルを他の動画編集ソフト (Windows ムービーメーカー等) で再圧縮するのも一つの手です．
+
+<h2><a name="TOC--2"></a>走行軌跡が表示されない，直線しか表示されない</h2>
+殆どの場合 GPS ログがおかしいです．例えば 緯度0，経度0 がログに含まれていたりすると，その地点を含んだ (大変大きな範囲の) 全体の走行軌跡を表示しようとするため，表示としてはただ直線になってしまいます．<br />これを解決するためには，不正な地点を削除するか，dp3 等であれば特定のラップを切り出して不正な地点をログから消す必要があります．
+
+<h2><a name="TOC--3"></a>動画が読み込めない，動画の音声が消える</h2>
+基本的に AviUtl が扱える動画は *.avi 型式のみです．その他の型式はプラグインを使用して読み込めることがありますが，音声が出なかったり等様々な弊害が出ることがあります．<br />
+その場合は，他のフォーマット変換ソフトでいったん *.avi 型式に変換してください．
+
+<h2><a name="TOC--4"></a>同期合わせにくいんだけど</h2>
+お察しください…（；´д⊂）
+<ul>
+<li>動画に正確な時間が映っている場合，「同期情報」を ON にして表示される GPS 時刻と合わせれば同期が取れます．
+
+</li>
+<li>メインウィンドウでカーソルキーの→を押し続けるとスロー再生のようになるので，車が動き出した瞬間などは特定しやすくなります．
+</li>
+<li>*.avi 以外のファイルを読み込んでいる場合，うまく同期がとれない場合がありますので，いったん *.avi に再エンコードしてから同期してみてください．
+</li></ul>
+<h2><a name="TOC--5"></a>画面表示の◯◯の大きさ・色等を変えたい</h2>
+スキンファイルを編集してください．例えば走行軌跡の表示大きさを変えたければ <a href="skin_reference.html#Vsd_DrawMap">Vsd.DrawMap()</a> の第 1～4 パラメータの値を変更します．
+
+<h2><a name="TOC-VSD-GPS-"></a>VSD が対応していない GPS ログを読み込みたい</h2>
+<ul>
+<li><a href="http://www.google.co.jp/search?ie=UTF-8&amp;q=GPS+Babel">GPS Babel</a> を使えば，かなり多くのフォーマットから NMEA に変換できます．がヘタすると変換時にスピード情報が欠落したりするので，過度な期待はしないでください．
+
+</li>
+<li>GPS Babel でも対応していない形式は，ログファイルリーダを自作することで読み込むことができます．
+</li></ul>
+<h2><a name="TOC--6"></a>簡易ラップタイムの計測誤差はどのくらい?</h2>
+超ざっくりと言って，50% の確率で ±0.03秒 位の精度です．<br />
+下のグラフはコース公式の計測器と簡易ラップタイム計測との差分をプロットしたもので，紺色のグラフと右側のスケールを参照してください．公式タイムの計測ラインと簡易ラップタイム計測の計測ラインの場所がずれているので，タイムが遅い ( = 計測ラインの通過速度が遅い ) ラップの前後は誤差が大きくなります．<br />
+<div style="display:block;text-align:left"><a href="time_diff.png" imageanchor="1"><img border="0" height="158" src="time_diff.png?height=158&amp;width=400" width="400" /></a></div>
+<h2><a name="TOC-GPS-GPS-"></a>車両情報と GPS データがひとつになったログは，「GPS」「車両」どちらに読みこめばいい?</h2>
+ログを片方しか読み込まない場合，どちらに読み込んでも機能的には同じです．「GPS」「車両」双方に同じログ項目がある場合，どちらを優先的に使うかの違いです．<br />
+緯度・経度: GPS ログが優先的に使用されます．<br />
+それ以外: 車両ログが優先的に使用されます．
+<h2><a name="TOC--7"></a>なんか使いにくい，インストールがめんどくさい</h2>
+お察しください…（；´д⊂）
+
+<h2><a name="TOC--8"></a>メーターがダサい</h2>
+お察しください…（；´д⊂）</div>
+</div> 
+</div> 
+</div> 
+</td> 
+</tr>
+</table> 
+</body>
+
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" itemscope="" itemtype="http://schema.org/WebPage">
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="title" content="インストール・初期設定手順" />
+<meta itemprop="name" content="インストール・初期設定手順" />
+<meta property="og:title" content="インストール・初期設定手順" />
+<style type="text/css">
+</style>
+<title>インストール・初期設定手順</title>
+<meta itemprop="image" content="replay_setting.png?height=208&amp;width=320" />
+<meta property="og:image" content="replay_setting.png?height=208&amp;width=320" />
+</head>
+<body xmlns="http://www.google.com/ns/jotspot" id="body" class=" ja            ">
+<table id="sites-chrome-main" class="sites-layout-hbox" cellspacing="0" cellpadding="{scmCellpadding}" border="0">
+<tr>
+<td id="sites-canvas-wrapper">
+<div id="sites-canvas" role="main">
+<div xmlns="http://www.w3.org/1999/xhtml" id="title-crumbs" style="">
+<A href="https://github.com/yoshinrt/vsd" dir="ltr">メニュー</A>‎ &gt; ‎<A href="index.html" dir="ltr">VSD for GPS</A>‎ &gt; ‎
+  </div>
+<h3 xmlns="http://www.w3.org/1999/xhtml" id="sites-page-title-header" style="" align="left">
+<span id="sites-page-title" dir="ltr" tabindex="-1" style="outline: none">インストール・初期設定手順</span>
+</h3>
+<div id="sites-canvas-main" class="sites-canvas-main">
+<div id="sites-canvas-main-content">
+<div dir="ltr">※すでに AviUtl を使っている等，インストーラに頼らずに手動でインストールする場合は<a href="manual_install.html">こちら</a>．<br /><br />
+<ol>
+<li><a href="index.html#Download">ダウンロード</a>から vsd_filter_gps???.exe をダウンロードし，実行してください．すると自動的に AviUtl, VSD for GPS, L-SMASH Works, ffdshow のダウンロード・インストールを行います．
+</li>
+<li>インストールが完了したら，AviUtl メニューの ファイル→環境設定→システムの設定 で「システムの設定」タイアログを開きます．そこの「再生ウィンドウの動画再生をメインウィンドウに表示する」にチェックを入れます．そして OK を押したあと，<b>AviUtl を一旦終了します．</b><br />
+<div style="display:block;text-align:left"><a href="replay_setting.png" imageanchor="1"><img border="0" height="208" src="replay_setting.png?height=208&amp;width=320" width="320" /></a>
+</div>
+</li>
+<li>
+エンジン回転数が取得できるログをリードする場合のみ：正しいギアポジションを表示するためにギアレシオの設定を行います．<br />(AviUtl インストールフォルダ)\vsd_plugins\_user_config.js をテキストエディタで開きます．
+<pre style="border:1px solid #eeeeee"><code>// ギア比の設定  各ギアの エンジン回転[rpm]／スピード[km/h] を設定
+GEAR_RATIO = [
+	101.9192993,	// 1速
+	61.08177186,	// 2速
+	45.72406922,	// 3速
+	35.95098573,	// 4速
+	29.66828919,	// 5速  6速以降がある場合は同じように追加
+];
+
+REV_LIMIT = 6500;	// レブリミット (上限)
+</code></pre>
+ここの，「GEAR_RATIO」の各数値をご自分の車に合わせて修正します．各ギアにおける 「エンジン回転数」／「時速」の数値を GEAR_RATIO に設定します．例えば 1速で 60km/h 時に 6000rpm ならば，「6000/60,」と記述します．GEAR_RATIO の要素数は車のギア数に応じて増減してください．<br />
+また「REV_LIMIT」にレブリミット値を設定します．スキンによっては，レブリミットを超えた場合に点滅する等の効果が現れます．</li>
+<li><a name="GoogleAPIKey"></a>google_maps.js，streetview.js を使用する場合：Google サーバにアクセスし地図・画像データを得るために，「API キー」が必要です．<br />
+キーは無料で取得出来ます．キー取得方法は以下を参照してください．<br />
+<ul>
+<li>Google マップの場合：<a href="https://developers.google.com/maps/documentation/staticmaps/?hl=ja#api_key">こちら</a></li>
+<li>ストリートビューの場合：<a href="https://developers.google.com/maps/documentation/streetview/index?hl=ja#api_key">こちら</a></li>
+</ul>
+キーの文字列自体は，Google マップとストリートビュー共通で 1つあれば十分です．<br />
+キーを取得したら，vsd_plugins\_user_config.js をテキストエディタで開きます．"～" の部分を取得したキーに書き換えてください．
+<pre style="border:1px solid #eeeeee"><code>GoogleAPIKey = [
+  "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	// 例
+];</code></pre>
+</li>
+</ol>
+<ol>
+</ol></div>
+</div> 
+</div> 
+</div> 
+</td> 
+</tr>
+</table> 
+</body>
+
+</html>

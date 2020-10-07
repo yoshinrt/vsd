@@ -1,0 +1,2396 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" itemscope="" itemtype="http://schema.org/WebPage">
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="title" content="VSD スキンスクリプト用オブジェクト リファレンス" />
+<meta itemprop="name" content="VSD スキンスクリプト用オブジェクト リファレンス" />
+<meta property="og:title" content="VSD スキンスクリプト用オブジェクト リファレンス" />
+<style type="text/css">
+</style>
+<title>VSD スキンスクリプト用オブジェクト リファレンス</title>
+<meta itemprop="image" content="skin_reference/DrawArc.png?height=98&amp;width=320" />
+<meta property="og:image" content="skin_reference/DrawArc.png?height=98&amp;width=320" />
+</head>
+<body xmlns="http://www.google.com/ns/jotspot" id="body" class=" ja            ">
+<table id="sites-chrome-main" class="sites-layout-hbox" cellspacing="0" cellpadding="{scmCellpadding}" border="0">
+<tr>
+<td id="sites-canvas-wrapper">
+<div id="sites-canvas" role="main">
+<div xmlns="http://www.w3.org/1999/xhtml" id="title-crumbs" style="">
+<A href="https://github.com/yoshinrt/vsd" dir="ltr">メニュー</A>‎ &gt; ‎<A href="index.html" dir="ltr">VSD for GPS</A>‎ &gt; ‎<A href="skin.html" dir="ltr">スキンファイル 作成マニュアル</A>‎ &gt; ‎
+  </div>
+<h3 xmlns="http://www.w3.org/1999/xhtml" id="sites-page-title-header" style="" align="left">
+<span id="sites-page-title" dir="ltr" tabindex="-1" style="outline: none">VSD スキンスクリプト用オブジェクト リファレンス</span>
+</h3>
+<div id="sites-canvas-main" class="sites-canvas-main">
+<div id="sites-canvas-main-content">
+<div dir="ltr"><hr />
+<h1><a name="TOC-VSD-"></a>VSD 組込みオブジェクト一覧</h1>
+<table border="">
+<tbody>
+<tr>
+<th>オブジェクト名</th>
+<th>説明</th>
+</tr>
+<tr>
+<td><a href="#Object_Global">グローバルメソッド・オブジェクト</a></td>
+<td>どのオブジェクトにも属さない，グローバルなメソッド・オブジェクトです</td>
+</tr>
+<tr>
+<td><a href="#Object_Vsd">Vsd</a></td>
+<td>画面描画等，VSD システムの基本となるオブジェクトです</td>
+</tr>
+<tr>
+<td><a href="#Object_Log">Log</a></td>
+<td>走行データの取得を行うためのオブジェクトです</td>
+</tr>
+<tr>
+<td><a href="#Object_Image">Image</a></td>
+<td>画像ファイルを扱うためのオブジェクトです</td>
+</tr>
+<tr>
+<td><a href="#Object_Font">Font</a></td>
+<td>フォントを扱うためのオブジェクトです</td>
+</tr>
+<tr>
+<td><a href="#Object_File">File</a></td>
+<td>ファイルを扱うためのオブジェクトです</td>
+</tr>
+<tr>
+<td><a href="#Object_ActiveXObject">ActiveXObject</a></td>
+<td>オートメーション オブジェクトへのインターフェイスを提供するオブジェクトです</td>
+</tr>
+</tbody>
+</table>
+<a name="Object_Global"></a>
+<hr />
+<h1><a name="TOC--"></a>グローバルメソッド・オブジェクト</h1>
+<h2><a name="TOC--1"></a>一覧</h2>
+<table border="">
+<tbody>
+<tr><th colspan="2">メソッド</th></tr>
+<tr><td><a href="#Global_GetDistanceByLngLat">GetDistanceByLngLat()</a></td><td>緯度・経度を指定した 2点間の距離を求めます</td></tr>
+<tr><td><a href="#Global_Include">Include()</a></td><td>他の JavaScript ファイルをインクルードします</td></tr>
+<tr><td><a href="#Global_MessageBox">MessageBox()</a></td><td>メッセージボックスを表示します</td></tr>
+<tr><td><a href="#Global_Print">Print()</a></td><td>コンソールに文字列表示します</td></tr>
+<tr><td><a href="#Global_Printf">Printf()</a></td><td>書式指定変換した文字列をコンソールに表示します</td></tr>
+<tr><td><a href="#Global_Sprintf">Sprintf()</a></td><td>書式指定変換した文字列を返します</td></tr>
+</tbody>
+</table>
+<a name="Global_MessageBox"></a>
+<hr />
+<h2><a name="TOC--2"></a>メッセージボックスの表示</h2>
+<b>MessageBox</b>( string [, caption [, type]] )<br />
+<p>
+</p>
+<h3><a name="TOC--3"></a>パラメータ</h3>
+<ul>
+<li>string<br />表示する文字列を指定します．</li>
+<li>caption<br />メッセージボックスのキャプションを指定します．省略時は，デフォルトのキャプションが表示されます．</li>
+<li>type<br />メッセージボックスのスタイルを指定します (解説参照)．省略時は MB_OK が指定されたものとみなされます．</li>
+</ul>
+<h3><a name="TOC--4"></a>返り値</h3>
+成功すると，0 以外の値が返ります (解説参照)
+
+<h3><a name="TOC--5"></a>解説</h3>
+メッセージボックスを表示します．<br />
+Windows API の MessageBox() と同等の機能です．type, 返り値についての詳細は<a href="https://msdn.microsoft.com/ja-jp/library/cc410914.aspx" rel="nofollow">Windows API の解説ページ</a>を参照してください．Windows API の解説ページに記載の MB_*, ID* 定数は VSD でも使用できます．
+
+<a name="Global_Print"></a>
+<hr />
+<h2><a name="TOC--6"></a>コンソールへの文字列表示</h2>
+<b>Print</b>( string )<br />
+<p>
+</p>
+<h3><a name="TOC--7"></a>パラメータ</h3>
+<ul>
+<li>string<br />表示する文字列を指定します．</li>
+</ul>
+<h3><a name="TOC--8"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--9"></a>解説</h3>
+コンソールウィンドウを開き，そこにメッセージを表示します．<br />
+MessageBox() は，そこで JavaScript の実行が一時停止してしまいますが，Print() は停止しませんので，JavaScript のデバッグ等で情報を表示したい場合などに便利です．
+<p>
+コンソールウィンドウを閉じるためには，コンソールウィンドウにフォーカスがある状態で Ctrl+C キーを押してください (ウィンドウ右上の閉じるボタンで閉じることはできません)．
+</p>
+<a name="Global_Printf"></a>
+<hr />
+<h2><a name="TOC--10"></a>書式指定変換した文字列のコンソールへの表示</h2>
+<b>Printf</b>( format [, arg ...] )<br />
+<p>
+</p>
+<h3><a name="TOC--11"></a>パラメータ</h3>
+<ul>
+<li>format<br />表示する文字列を指定します．</li>
+<li>arg<br />変換に使用する値を指定します．</li>
+</ul>
+<h3><a name="TOC--12"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--13"></a>解説</h3>
+format に指定された書式に従って変換を行った文字列をコンソールウィンドウに表示します．C 言語の printf() と同等の機能です．<br />
+コンソールウィンドウについては <a href="#Global_Print">Print()</a> を，書式変換については <a href="#Global_Sprintf">Sprintf()</a> を参照してください．
+
+<a name="Global_Sprintf"></a>
+<hr />
+<h2><a name="TOC--14"></a>書式指定変換した文字列の取得</h2>
+<b>Sprintf</b>( format [, arg ...] )<br />
+<p>
+</p>
+<h3><a name="TOC--15"></a>パラメータ</h3>
+<ul>
+<li>format<br />表示する文字列を指定します．</li>
+<li>arg<br />変換に使用する値を指定します．</li>
+</ul>
+<h3><a name="TOC--16"></a>返り値</h3>
+変換結果の文字列を返します．
+
+<h3><a name="TOC--17"></a>解説</h3>
+format に指定された書式に従って変換を行った文字列を取得します．C 言語の sprintf() と同等の機能です．<br />
+Sprintf() で使用できる書式構文は<a href="https://msdn.microsoft.com/ja-jp/library/56e442dc.aspx" rel="nofollow">こちら</a>を参照してください．
+ただし，以下の機能は使用できません．
+<ul>
+<li>文字幅指定，精度指定の *</li>
+<li>型フィールド文字の n p S Z</li>
+<li>サイズ指定の h l ll w I I32 I64</li>
+</ul>
+<a name="Global_Include"></a>
+<hr />
+<h2><a name="TOC-JavaScript-"></a>他の JavaScript ファイルのインクルード</h2>
+<b>Include</b>( file )<br />
+<p>
+</p>
+<h3><a name="TOC--18"></a>パラメータ</h3>
+<ul>
+<li>file<br />
+		読み込む JavaScript ファイルを指定します
+	</li>
+</ul>
+<h3><a name="TOC--19"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--20"></a>解説</h3>
+他の JavaScript ファイルをインクルードします．<br />
+file を「Vsd.SkinDir + "file.js"」等とすることで，インクルード元 *.js と同じディレクトリにある file.js をインクルードすることができます．
+
+<a name="Global_GetDistanceByLngLat"></a>
+<hr />
+<h2><a name="TOC-2-"></a>緯度・経度を指定した 2点間の距離を求める</h2>
+<b>GetDistanceByLngLat</b>( lng1, lat1, lng2, lat2 )<br />
+<p>
+</p>
+<h3><a name="TOC--21"></a>パラメータ</h3>
+<ul>
+<li>lng1, lng2<br />地点 1, 2 の経度を度単位で指定します．西経時はマイナスの値になります．</li>
+<li>lat1, lat2<br />地点 1, 2 の緯度を度単位で指定します．南緯時はマイナスの値になります．</li>
+</ul>
+<h3><a name="TOC--22"></a>返り値</h3>
+2点間の距離をメートル単位で返します．
+
+<h3><a name="TOC--23"></a>解説</h3>
+ヒュベニの公式を使用して，2点間の距離をメートル単位で返します．
+
+<a name="Object_Vsd"></a>
+<hr />
+<h1><a name="TOC-Vsd-"></a>Vsd オブジェクト</h1>
+<h2><a name="TOC--24"></a>一覧</h2>
+<table border="">
+<tbody>
+<tr>
+<th colspan="2">プロパティ</th>
+</tr>
+<tr>
+<td><a href="#Vsd_BestLapTime">BestLapTime</a></td>
+<td>ベストラップタイム</td>
+</tr>
+<tr>
+<td><a href="#Vsd_Config_graph">Config_graph</a></td>
+<td>VSD 設定ダイアログの グラフ表示 取得</td>
+</tr>
+<tr>
+<td><a href="#Vsd_Config_lap_time">Config_lap_time</a></td>
+<td>VSD 設定ダイアログの ラップタイム表示 取得</td>
+</tr>
+<tr>
+<td><a href="#Vsd_Config_map_length">Config_map_length</a></td>
+<td>VSD 設定ダイアログの 走行軌跡長さ 取得</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DateTime">DateTime</a></td>
+<td>GPS 時刻の取得</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DiffTime">DiffTime</a></td>
+<td>最速ラップとの時間差</td>
+</tr>
+<tr>
+<td><a href="#Vsd_ElapsedTime">ElapsedTime</a></td>
+<td>ラップ経過時間</td>
+</tr>
+<tr>
+<td><a href="#Vsd_FrameCnt">FrameCnt</a></td>
+<td>現在のフレーム番号</td>
+</tr>
+<tr>
+<td><a href="#Vsd_FramePerSecond">FramePerSecond</a></td>
+<td>動画の FPS</td>
+</tr>
+<tr>
+<td><a href="#Vsd_Height">Height</a></td>
+<td>動画の縦サイズ</td>
+</tr>
+<tr>
+<td><a href="#Vsd_IsSaving">IsSaving</a></td>
+<td>AVIUtl が動画保存中かどうか</td>
+</tr>
+<tr>
+<td><a href="#Vsd_LapCnt">LapCnt</a></td>
+<td>走行中ラップ数</td>
+</tr>
+<tr>
+<td><a href="#Vsd_LapTime">LapTime</a></td>
+<td>走行中ラップタイム</td>
+</tr>
+<tr>
+<td><a href="#Vsd_MaxFrameCnt">MaxFrameCnt</a></td>
+<td>動画の総フレーム数</td>
+</tr>
+<tr>
+<td><a href="#Vsd_MaxLapCnt">MaxLapCnt</a></td>
+<td>総ラップ数</td>
+</tr>
+<tr>
+<td><a href="#Vsd_Revision">Revision</a></td>
+<td>VSD for GPS リビジョン番号</td>
+</tr>
+<tr>
+<td><a href="#Vsd_SkinDir">SkinDir</a></td>
+<td>スキンファイルが置かれているディレクトリ名</td>
+</tr>
+<tr>
+<td><a href="#Vsd_Width">Width</a></td>
+<td>動画の横サイズ</td>
+</tr>
+<tr>
+<th colspan="2">メソッド</th>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawArc">DrawArc()</a></td>
+<td>円弧・楕円を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawCircle">DrawCircle()</a></td>
+<td>円・楕円を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawGSnake">DrawGSnake()</a></td>
+<td>G スネークを描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawGoogleMaps">DrawGoogleMaps()</a></td>
+<td>Google マップを描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawGraph">DrawGraph()</a></td>
+<td>各種グラフを描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawLapTime">DrawLapTime()</a></td>
+<td>ラップタイム表示を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawLapTimeLog">DrawLapTimeLog()</a></td>
+<td>ラップタイム表示を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawLine">DrawLine()</a></td>
+<td>直線を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawLinearMeterScale">DrawLinearMeterScale()</a></td>
+<td>線形メーター用の目盛りを描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawMap">DrawMap()</a></td>
+<td>走行軌跡を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawMapPosition">DrawMapPosition()</a></td>
+<td>走行軌跡と全車位置を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawNeedle">DrawNeedle()</a></td>
+<td>円形メータ用の針を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawRect">DrawRect()</a></td>
+<td>四角形を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawRoadMap">DrawRoadMap()</a></td>
+<td>地図 (OpenStreetMap) を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawPolygon">DrawPolygon()</a></td>
+<td>多角形を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawRaceLapTime">DrawRaceLapTime()</a></td>
+<td>全車ラップタイムを表示します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawRoundMeterScale">DrawRoundMeterScale()</a></td>
+<td>円形メーター用の目盛りを描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawText">DrawText()</a></td>
+<td>文字列を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_DrawText">DrawTextAlign()</a></td>
+<td>文字列の配置方法を指定して文字列を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_FormatTime">FormatTime()</a></td>
+<td>数値を時間を表す文字列に変換します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_Geocoding">Geocoding</a></td>
+<td>Google マップの逆ジオコーディングによる住所を取得します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_PutImage">PutImage()</a></td>
+<td>画像を描画します</td>
+</tr>
+<tr>
+<td><a href="#Vsd_PutPixel">PutPixel()</a></td>
+<td>点を描画します</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2><a name="TOC--25"></a>動画の情報取得</h2>
+<a name="Vsd_Width"></a><b>Vsd.Width</b><br />
+動画の横サイズを取得します．<br />
+<a name="Vsd_Height"></a><b>Vsd.Height</b><br />
+動画の縦サイズを取得します．<br />
+<a name="Vsd_FrameCnt"></a><b>Vsd.FrameCnt</b><br />
+現在のフレーム番号を取得します．フレーム番号は 0 から始まります．<br />
+<a name="Vsd_MaxFrameCnt"></a><b>Vsd.MaxFrameCnt</b><br />
+動画の総フレーム数を取得します．<br />
+<a name="Vsd_FramePerSecond"></a><b>Vsd.FramePerSecond</b><br />
+動画の FPS を取得します．<br />
+<h2><a name="TOC--26"></a>ラップ情報の取得</h2>
+時間に関しては，すべてミリ秒単位の整数が取得されます．<a href="#Vsd_FormatTime">FormatTime()</a> を使用することで，時間を表す文字列に変換できます．
+<p>
+<a name="Vsd_LapTime"></a><b>Vsd.LapTime</b><br />
+現在走行中のラップタイムをミリ秒単位で取得します．現在がラップタイム計測中の期間でない場合は，undefined が返されます．<br />
+<a name="Vsd_BestLapTime"></a><b>Vsd.BestLapTime</b><br />
+ベストラップタイムをミリ秒単位で取得します．ラップタイム計測をおこなっていない場合は，undefined が返されます．<br />
+<a name="Vsd_ElapsedTime"></a><b>Vsd.ElapsedTime</b><br />
+現在走行中のラップの経過時間をミリ秒単位で取得します．現在がラップタイム計測中の期間でない場合は，undefined が返されます．<br />
+<a name="Vsd_DiffTime"></a><b>Vsd.DiffTime</b><br />
+現在走行中のラップの，ベストラップとの時間差をミリ秒単位で取得します．現在がラップタイム計測中の期間でない場合は，undefined が返されます．<br />
+<a name="Vsd_DateTime"></a><b>Vsd.DateTime</b><br />
+GPS 時刻を取得します．1970年1月1日0時0分0秒（UTC）からの経過時間（ミリ秒単位）です．<br />
+<a name="Vsd_LapCnt"></a><b>Vsd.LapCnt</b><br />
+現在走行中のラップ数を取得します．<br />
+<a name="Vsd_MaxLapCnt"></a><b>Vsd.MaxLapCnt</b><br />
+総ラップ数を取得します．<br />
+</p>
+<h2><a name="TOC-VSD-1"></a>VSD システム情報の取得</h2>
+<a name="Vsd_Config_graph"></a><b>Vsd.Config_graph</b><br />
+VSD 設定ダイアログの グラフ表示 のチェックボックス状態を取得します．<br />
+<a name="Vsd_Config_lap_time"></a><b>Vsd.Config_lap_time</b><br />
+VSD 設定ダイアログの ラップタイム表示 のチェックボックス状態を取得します．<br />
+<a name="Vsd_Config_map_length"></a><b>Vsd.Config_map_length</b><br />
+VSD 設定ダイアログの 走行軌跡長さ のスライダ値を取得します．<br />
+<a name="Vsd_SkinDir"></a><b>Vsd.SkinDir</b><br />
+スキンファイル (*.js) のディレクトリ名を取得します．<br />
+<a name="Vsd_Revision"></a><b>Vsd.Revision</b><br />
+VSD for GPS のリビジョン番号を取得します．<br />
+<a name="Vsd_IsSaving"></a><b>Vsd.IsSaving</b><br />
+AVIUtl が動画保存を実行中の場合，0 以外の値になります．<br />
+<a name="Vsd_PutPixel"></a>
+<hr />
+<h2><a name="TOC-1-"></a>1ピクセルを描画</h2>
+<b>Vsd.PutPixel</b>( x, y, color )
+<p>
+</p>
+<h3><a name="TOC--27"></a>パラメータ</h3>
+<ul>
+<li>x, y<br />
+点を打つ座標を指定します．
+	</li>
+<li>color<br />
+点の<a href="#Param_ColorCode">カラーコード</a>を指定します．
+</li></ul>
+<h3><a name="TOC--28"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--29"></a>解説</h3>
+1ピクセルを，指定された座標に描画します．
+
+<a name="Vsd_DrawLine"></a>
+<hr />
+<h2><a name="TOC--30"></a>直線の描画</h2>
+<b>Vsd.DrawLine</b>( x1, y1, x2, y2, color [, width [, pattern]] )
+<p>
+</p>
+<h3><a name="TOC--31"></a>パラメータ</h3>
+<ul>
+<li>x1, y1<br />
+直線の開始座標を指定します．</li>
+<li>x2, y2<br />
+直線の終了座標を指定します．</li>
+<li>color<br />
+直線の色を<a href="#Param_ColorCode">カラーコード</a>で指定します．</li>
+<li>width<br />
+直線の太さを指定します．省略時は 1 が指定されたものとみなされます．</li>
+<li>pattern<br />
+直線のパターンを指定します．省略時は 0xFFFFFFFF が指定されたものとみなされます．</li>
+</ul>
+<h3><a name="TOC--32"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--33"></a>解説</h3>
+直線を描画します．
+<p>
+pattern で指定する数値により点線を描画することができます．pattern の各 bit が 1 のピクセルにのみ実際に描画される直線が，32ピクセルごとに繰り返されて，直線全体が描画されます．<br />
+例えば 0xAAAAAAAA を指定すると 1ピクセルごとの点線，0xFFFF0000 なら 16ピクセル毎の点線が描画されます．
+</p>
+<p>
+バグ: width に 1 以外を指定し，かつ <a href="#Param_ColorCode">カラーコード</a>のアルファ値が 0x00 でも 0xFF でもない場合，アルファ値が正常に反映されません．
+
+</p>
+<a name="Vsd_DrawRect"></a>
+<hr />
+<h2><a name="TOC--34"></a>四角形の描画</h2>
+<b>Vsd.DrawRect</b>( x1, y1, x2, y2, color [, flag] )
+<p>
+</p>
+<h3><a name="TOC--35"></a>パラメータ</h3>
+<ul>
+<li>x1, y1<br />
+長方形の頂点の座標を指定します．
+	</li>
+<li>x2, y2<br />
+x1, y1 と対角をなす頂点の座標を指定します．
+	</li>
+<li>color<br />
+長方形を描画する<a href="#Param_ColorCode">カラーコード</a>を指定します．
+	</li>
+<li>flag<br />
+長方形の内部を塗りつぶす場合，DRAW_FILL を指定します．
+</li></ul>
+<h3><a name="TOC--36"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--37"></a>解説</h3>
+長方形，またはその内部を塗りつぶした図形を描画します．
+
+<a name="Vsd_DrawCircle"></a>
+<hr />
+<h2><a name="TOC--38"></a>円の描画</h2>
+<b>Vsd.DrawCircle</b>( x, y, r, color [, flag] )
+<p>
+</p>
+<h3><a name="TOC--39"></a>パラメータ</h3>
+<ul>
+<li>x, y<br />
+円の中心座標を指定します．
+	</li>
+<li>r<br />
+円の半径を指定します．
+	</li>
+<li>color<br />
+円を描画する<a href="#Param_ColorCode">カラーコード</a>を指定します．
+	</li>
+<li>flag<br />
+円の内部を塗りつぶす場合，DRAW_FILL を指定します．
+</li></ul>
+<h3><a name="TOC--40"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--41"></a>解説</h3>
+円，またはその内部を塗りつぶした図形を描画します．
+
+<a name="Vsd_DrawArc"></a>
+<hr />
+<h2><a name="TOC--42"></a>円弧・楕円の描画</h2>
+<b>Vsd.DrawArc</b>( x, y, a, b, start_angle, end_angle, color [, flag] )<br />
+<b>Vsd.DrawArc</b>( x, y, a, b, c, d, start_angle, end_angle, color )
+<p>
+</p>
+<h3><a name="TOC--43"></a>パラメータ</h3>
+<ul>
+<li>x, y<br />
+円弧の中心座標を指定します．
+	</li>
+<li>a, b<br />
+外側の楕円の x 方向 / y 方向の半径を指定します．
+	</li>
+<li>c, d<br />
+内側の楕円の x 方向 / y 方向の半径を指定します．
+	</li>
+<li>start_angle, end_angle<br />
+円弧の開始<a href="#Param_Angle">角度</a>・終了<a href="#Param_Angle">角度</a>を指定します．
+	</li>
+<li>color<br />
+円弧の<a href="#Param_ColorCode">カラーコード</a>を指定します．
+	</li>
+<li>flag<br />
+楕円の内部を塗りつぶす場合，DRAW_FILL を指定します．start_angle と end_angle が等しくない場合，DRAW_FILL を指定することはできません．
+</li></ul>
+<h3><a name="TOC--44"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--45"></a>解説</h3>
+円弧または楕円を描画します．
+<p>
+</p>
+<div style="display:block;text-align:left"><a href="DrawArc.png" imageanchor="1"><img border="0" height="98" src="DrawArc.png?height=98&amp;width=320" width="320" /></a></div>
+一つ目の書式では，太さ 1 の線で円弧・楕円を描画，または内部が塗りつぶされた楕円を描画します．<br />
+二つ目の書式では，外側の円弧と内側の円弧で囲まれた，幅を持った円弧・楕円を描画します．<br />
+start_angle と end_angle の値が等しい場合は，楕円が描画されます．
+start_angle と end_angle の値が等しくない場合は，start_angle を開始<a href="#Param_Angle">角度</a>として，時計回りに円弧が描画されます．したがって，start_angle と end_angle の指定順序には意味があります．
+<p>
+a と b が等しくない場合，start_angle, end_angle は実際に描画される角度とは異なります．イメージとしては，正円で指定の角度で円弧を描いた後，a, b にしたがって縦横比を変形させる感じです．
+</p>
+<a name="Vsd_DrawText"></a>
+<hr />
+<h2><a name="TOC--46"></a>文字列の描画</h2>
+<b>Vsd.DrawTextAlign</b>( x, y, align, text, font [, color [, outline_color]] )<br />
+<b>Vsd.DrawText</b>( x, y, text, font [, color [, outline_color]] )
+<p>
+</p>
+<h3><a name="TOC--47"></a>パラメータ</h3>
+<ul>
+<li>x, y<br />
+文字列を描画する座標を指定します．
+	</li>
+<li>align<br />
+指定した座標に対し，文字列をどのように配置するか (<a href="#Param_Align">アライメント</a>) を指定します．
+	</li>
+<li>text<br />
+表示する文字列を指定します．
+	</li>
+<li>font<br />
+表示に使用する <a href="#Object_Font">Font</a> オブジェクトを指定します．
+	</li>
+<li>color<br />
+文字列の<a href="#Param_ColorCode">カラーコード</a>を指定します．省略時は 0xFFFFFF (白) を指定したものとみなされます．
+	</li>
+<li>outline_color<br />
+font が縁取り (FONT_OUTLINE) 属性付きで作成された<a href="#Object_Font">フォント</a>の場合，縁取り部分の<a href="#Param_ColorCode">カラーコード</a>を指定します．省略時は 0x000000 (黒) を指定したものとみなされます．font が縁取りでない場合，このパラメータは無視されます．
+</li></ul>
+<h3><a name="TOC--48"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--49"></a>解説</h3>
+文字列を描画します．<br />
+Vsd.DrawText は，Vsd.DrawTextAlign の align パラメータに ALIGN_LEFT | ALIGN_TOP を指定したのと同じです．
+<a name="Vsd_PutImage"></a>
+<hr />
+<h2><a name="TOC--50"></a>画像の描画</h2>
+<b>Vsd.PutImage</b>( x, y, image [, align [, img_x , img_y , img_w , img_h ]] )
+<p>
+</p>
+<h3><a name="TOC--51"></a>パラメータ</h3>
+<ul>
+<li>x, y<br />
+画像を描画する座標を指定します．
+	</li>
+<li>image<br />
+表示する <a href="#Object_Image">Image</a> オブジェクトを指定します．
+	</li>
+<li>align<br />
+指定した座標に対し，画像をどのように配置するか (<a href="#Param_Align">アライメント</a>) を指定します．省略時は 0 を指定したものとみなされます．
+</li>
+<li>img_x, img_y, img_w, img_h<br />
+画像の一部だけを描画したい場合，画像内 x, y 座標，描画幅，描画高さを指定します．省略時は，画像全体が描画されます．
+</li>
+</ul>
+<h3><a name="TOC--52"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--53"></a>解説</h3>
+指定された座標に対し指定された画像を描画します．
+
+<a name="Vsd_DrawGSnake"></a>
+<hr />
+<h2><a name="TOC-G-"></a>G スネークの描画</h2>
+<b>Vsd.DrawGSnake</b>( x, y, r, ball_r, width, color_ball, color_line [, length] )
+<p>
+</p>
+<h3><a name="TOC--54"></a>パラメータ</h3>
+<ul>
+<li>x, y<br />
+G メーターの中心座標を指定します．
+	</li>
+<li>r<br />
+1G 時の半径を指定します．
+	</li>
+<li>ball_r<br />
+G ボールの半径を指定します．
+	</li>
+<li>width<br />
+G スネークの線の太さを指定します．
+	</li>
+<li>color_ball<br />
+G ボールの<a href="#Param_ColorCode">カラーコード</a>を指定します．
+	</li>
+<li>color_line<br />
+G スネークの<a href="#Param_ColorCode">カラーコード</a>を指定します．
+</li>
+<li>length<br />
+G スネークの長さを秒数で指定します．省略時は 3秒が指定されたものとみなされます．</li></ul>
+<h3><a name="TOC--55"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--56"></a>解説</h3>
+G メーター用に，下図のような G ボール (現在の加速度を示す円) と G スネーク (過去の G ボールの動きをトレースした線) を描画します．G スネークの時間的な長さは，length パラメータで設定します． <br />
+r は，1G 時の半径であり，G メーター自体の半径ではないことに注意してください．例えば半径 100，最大値 1.5G の G メーターを描画する場合，r は 100 / 1.5 を設定することになります．
+<div>
+<div style="display:block;text-align:left"><a href="DrawGSnake.png" imageanchor="1"><img border="0" src="DrawGSnake.png" /></a></div>
+<a name="Vsd_DrawGraph"></a>
+<hr />
+<h2><a name="TOC--57"></a>グラフの描画</h2>
+<b>Vsd.DrawGraph</b>( x1, y1, x2, y2, font, flag, param )
+<p>
+</p>
+<h3><a name="TOC--58"></a>パラメータ</h3>
+<ul>
+<li>x1, y1, x2, y2<br />
+グラフを表示する矩形範囲を指定します．
+	</li>
+<li>font<br />
+グラフ数値を表示する <a href="skin_reference.html#Object_Font">Font</a> オブジェクトを指定します．
+	</li>
+<li>flag<br />
+表示するグラフの表示方法保を指定します． <br />
+<table>
+<tbody>
+<tr>
+<td>GRAPH_HTILE</td>
+<td>：複数のグラフが選択され，またこのパラメータが指定されている場合，各グラフを横に並べて表示します．</td>
+</tr>
+<tr>
+<td>GRAPH_VTILE</td>
+<td>：複数のグラフが選択され，またこのパラメータが指定されている場合，各グラフを縦に並べて表示します．</td>
+</tr>
+</tbody>
+</table>
+GRAPH_HTILE と GRAPH_VTILE はどちらも指定しないときは 0 を指定します．その場合はすべてのグラフが重ねて表示されます．
+</li>
+<li>param<br />
+表示するグラフ項目の指定，色等を指定する配列を指定します．詳細は解説を参照してください．
+	</li>
+</ul>
+<h3><a name="TOC--59"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--60"></a>解説</h3>
+スピード・加速度等のグラフを描画します．<br />
+まず，MakeGraphParam() 呼び出し前に，描画したいグラフについてのパラメータを配列に指定します．以下に例を示します．
+<pre style="border:1px solid #eeeeee"><code>GraphParam = [
+//  グラフ項目  数値フォーマット 色
+    "Speed",    "%.0f km/h",    0x00FFFF,
+    "Tacho",    "%.0f rpm",     0xFF4000,
+    "Accel",    "%.0f %%",      0x00FF00,
+    "Gx",       "%.2f G[lon]",  0x00FF00,
+    "Gy",       "%.2f G[lat]",  0xFF00FF,
+];
+</code></pre>
+ひとつのグラフに付き，3つのパラメータを指定します．<br />
+1つ目は，描画するグラフの項目です．Speed や Gx などといった，「<a href="#Vsd_MaxSpeed">走行ログ情報の取得</a>」で示されているパラメータ名を指定できる他，ログファイルリーダプラグインでオリジナルの項目を追加している場合，それも指定できます．また，実際にログに記録されていない項目名を指定することもでき，この場合単に無視されます．<br />
+2つ目は，グラフの現在値を表示する数値フォーマットを指定します．「%.2f」等が現在の数値に置き換わり，例えば「%.2f」ならば小数点以下 2桁まで表示され，「%.0f」なら小数点以下は表示されません．また，「%」文字自体を表示したい場合は，「%%」と記述する必要があります．<br />
+3つ目は，グラフを表示する<a href="#Param_ColorCode">カラーコード</a>を指定します．
+<p>
+このように作成した配列を <a href="Vsd_DrawGraph.html">DrawGraph()</a> に指定してください．
+
+</p>
+<a name="Vsd_DrawLapTime"></a>
+<hr />
+<h2><a name="TOC--61"></a>ラップタイム情報の描画</h2>
+<b>Vsd.DrawLapTime</b>( x, y, align, font [, color [, color_best [, color_plus [, color_outline]]]] )
+<p>
+</p>
+<h3><a name="TOC--62"></a>パラメータ</h3>
+<ul>
+<li>x, y<br />
+ラップタイム情報を描画する座標を指定します．
+	</li>
+<li>align<br />
+指定した座標に対し，ラップタイム情報をどのように配置するか (<a href="#Param_Align">アライメント</a>) を指定します．
+	</li>
+<li>font<br />
+ラップタイム情報を描画する <a href="skin_reference.html#Object_Font">Font</a> オブジェクトを指定します．
+	</li>
+<li>color<br />
+文字列の<a href="#Param_ColorCode">カラーコード</a>を指定します．省略時は，0xFFFFFF (白) が指定されたものとみなされます．
+	</li>
+<li>color_best<br />
+ベストラップ，及び最速ラップとの時間差がマイナスの時に使用される<a href="#Param_ColorCode">カラーコード</a>を指定します．省略時は，0x00FFFF (シアン) が指定されたものとみなされます．
+	</li>
+<li>color_plus<br />
+最速ラップとの時間差がプラスの時に使用される<a href="#Param_ColorCode">カラーコード</a>を指定します．省略時は，0xFF0000 (赤) が指定されたものとみなされます．
+	</li>
+<li>color_outline<br />
+font が縁取り (FONT_OUTLINE) 属性付きで作成された<a href="#Object_Font">フォント</a>の場合，縁取り部分の<a href="#Param_ColorCode">カラーコード</a>を指定します．省略時は 0x000000 (黒) を指定したものとみなされます．font が縁取りでない場合，このパラメータは無視されます．
+</li></ul>
+<h3><a name="TOC--63"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--64"></a>解説</h3>
+下図のような，ラップタイムに関する情報を一括で表示します．<br />
+上から，現在ラップの経過時間・ベストラップとの時間差・ベストラップ・過去 3ラップ分のタイムが表示されます．<br />
+「ベストラップとの時間差」は，現在ラップとベストラップのタイム差がリアルタイムで表示されます．タイム差は走行距離から算出しているので，走行ラインが大幅に違っていたりすると不正確な値になります．<br />
+「過去 3ラップ分のタイム」は，一番下に現在走行中のタイムが表示されます．一般的なレース放送やゲームなどと違い，現在ラップがゴールする前にそのタイムが表示されています．またベストラップは color_best で指定した色で表示されます．
+<p>
+<a href="#Object_Font">フォント</a>によっては，表示が縦に綺麗に揃わない場合があります．この場合は，font 作成時に attr パラメータに FONT_FIXED を指定してください．
+
+</p>
+<div style="display:block;text-align:left"><a href="DrawLapTime.png" imageanchor="1"><img border="0" height="200" src="DrawLapTime.png?height=200&amp;width=192" width="192" /></a></div>
+<a name="Vsd_DrawRaceLapTime"></a>
+<hr />
+<h2><a name="TOC--65"></a>全車ラップタイム情報の描画</h2>
+<b>Vsd.DrawRaceLapTime</b>( x, y, align, num, font [, color [, color_outline]] )
+<p>
+</p>
+<h3><a name="TOC--66"></a>パラメータ</h3>
+<ul>
+<li>x, y<br />
+ラップタイム情報を描画する座標を指定します．
+	</li>
+<li>align<br />
+指定した座標に対し，ラップタイム情報をどのように配置するか (<a href="#Param_Align">アライメント</a>) を指定します．
+	</li>
+<li>num<br />
+ラップタイムを表示する行数を指定します．<br />
+num &gt; 0 時は，上位 num 人分のラップタイムが表示されます．全ドライバー人数が num に満たない場合でも，num 人分の表示スペースを使って表示します．<br />
+num = 0 時は，全ドライバーのラップタイムが表示されます．<br />
+num &lt; 0 時は，上位 (-num) 人分のラップタイムが表示されます．全ドライバー人数が (-num) に満たない場合は，その人数分の表示スペースを使って表示します．<br />
+表示スペースの違いは，align に ALIGN_VCENTER または ALIGN_BOTTOM を指定時に，表示に差異が現れます．
+</li>
+<li>font<br />
+ラップタイム情報を描画する <a href="skin_reference.html#Object_Font">Font</a> オブジェクトを指定します．
+	</li>
+<li>color<br />
+文字列の<a href="#Param_ColorCode">カラーコード</a>を指定します．省略時は，0xFFFFFF (白) が指定されたものとみなされます．
+	</li>
+<li>color_outline<br />
+font が縁取り (FONT_OUTLINE) 属性付きで作成された<a href="#Object_Font">フォント</a>の場合，縁取り部分の<a href="#Param_ColorCode">カラーコード</a>を指定します．省略時は 0x000000 (黒) を指定したものとみなされます．font が縁取りでない場合，このパラメータは無視されます．
+</li></ul>
+<h3><a name="TOC--67"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--68"></a>解説</h3>
+<a href="../race_monitor.html">
+レースモニター機能</a>における，全車ラップタイムを表示します．<br />
+各車の順位・ドライバー名・周回数・ラップタイム・首位からの時間差を表示します．ラップタイムは，一般的なレース放送やゲームなどと違い，現在ラップがゴールする前にそのタイムが表示されています．
+<p>
+<a href="#Object_Font">フォント</a>によっては，表示が縦に綺麗に揃わない場合があります．この場合は，font 作成時に attr パラメータに FONT_FIXED を指定してください．
+</p>
+<a name="Vsd_DrawLapTimeLog"></a>
+<hr />
+<h2><a name="TOC--69"></a>ラップタイム履歴の描画</h2>
+<b>Vsd.DrawLapTimeLog</b>( x, y, align, lap_num, font [, color [, color_best [, color_outline]]] )
+<p>
+</p>
+<h3><a name="TOC--70"></a>パラメータ</h3>
+<ul>
+<li>x, y<br />
+ラップタイム履歴を描画する座標を指定します．
+	</li>
+<li>align<br />
+指定した座標に対し，ラップタイム履歴をどのように配置するか (<a href="#Param_Align">アライメント</a>) を指定します．
+	</li>
+<li>lap_num<br />
+タイムを表示する最大ラップ数を指定します．
+	</li>
+<li>font<br />
+ラップタイム履歴を描画する <a href="skin_reference.html#Object_Font">Font</a> オブジェクトを指定します．
+	</li>
+<li>color<br />
+文字列の<a href="#Param_ColorCode">カラーコード</a>を指定します．省略時は，0xFFFFFF (白) が指定されたものとみなされます．
+	</li>
+<li>color_best<br />
+ベストラップ，及び最速ラップとの時間差がマイナスの時に使用される<a href="#Param_ColorCode">カラーコード</a>を指定します．省略時は，0x00FFFF (シアン) が指定されたものとみなされます．
+	</li>
+<li>color_outline<br />
+font が縁取り (FONT_OUTLINE) 属性付きで作成された<a href="#Object_Font">フォント</a>の場合，縁取り部分の<a href="#Param_ColorCode">カラーコード</a>を指定します．省略時は 0x000000 (黒) を指定したものとみなされます．font が縁取りでない場合，このパラメータは無視されます．
+</li></ul>
+<h3><a name="TOC--71"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--72"></a>解説</h3>
+下図のような，ラップタイム履歴を表示します．<br />
+一番下に現在走行中のタイムが表示されます．一般的なレース放送やゲームなどと違い，現在ラップがゴールする前にそのタイムが表示されています．またベストラップは color_best で指定した色で表示されます．<br />
+<a href="#Vsd_DrawLapTime">DrawLapTime()</a> とは違い，ラップタイムの一覧のみが表示されます．
+<p>
+<a href="#Object_Font">フォント</a>によっては，表示が縦に綺麗に揃わない場合があります．この場合は，font 作成時に attr パラメータに FONT_FIXED を指定してください．
+
+</p>
+<div style="display:block;text-align:left"><a href="DrawLapTimeLog.png" imageanchor="1"><img border="0" height="178" src="DrawLapTimeLog.png?height=178&amp;width=200" width="200" /></a></div>
+<a name="Vsd_DrawMap"></a>
+<hr />
+<h2><a name="TOC--73"></a>走行軌跡の描画</h2>
+<b>Vsd.DrawMap</b>( x1, y1, x2, y2, align, width, r, color_indicator, color_0g, color_plus, color_minus )
+<p>
+</p>
+<h3><a name="TOC--74"></a>パラメータ</h3>
+<ul>
+<li>x1, y1, x2, y2<br />
+走行軌跡を表示する矩形範囲を指定します．
+	</li>
+<li>align<br />
+上記で指定した矩形範囲内に走行軌跡をどのように配置するかを指定します．以下のパラメータの幾つかを `|' (OR 演算子) でつなげて指定します．
+	
+<table>
+<tbody>
+<tr>
+<td>ALIGN_LEFT</td>
+<td>：矩形範囲の左端に配置します</td>
+</tr>
+<tr>
+<td>ALIGN_HCENTER</td>
+<td>：矩形範囲の幅中央に配置します</td>
+</tr>
+<tr>
+<td>ALIGN_RIGHT</td>
+<td>：矩形範囲の右端に配置します</td>
+</tr>
+<tr>
+<td>ALIGN_TOP</td>
+<td>：矩形範囲の上端に配置します</td>
+</tr>
+<tr>
+<td>ALIGN_VCENTER</td>
+<td>：矩形範囲の高さ中央に配置します</td>
+</tr>
+<tr>
+<td>ALIGN_BOTTOM</td>
+<td>：矩形範囲の下端に配置します</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>width<br />
+走行軌跡の線の太さを指定します．
+	</li>
+<li>r<br />
+自車位置を示す円の半径を指定します．
+	</li>
+<li>color_indicator<br />
+自車位置を示す円の<a href="#Param_ColorCode">カラーコード</a>を指定します．
+	</li>
+<li>color_0g, color_plus, color_minus<br />
+それぞれ前後方向の G が 0 / 加速 / 減速時の走行軌跡の色を指定します．
+</li></ul>
+<h3><a name="TOC--75"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--76"></a>解説</h3>
+走行軌跡 (コースマップ) を表示します．走行軌跡は指定された矩形範囲内に収まる範囲の最大の大きさで描画されますので，横幅か高さのどちらかは範囲内いっぱいに描画されます．<br />
+また，走行軌跡の時間的な長さは，VSD 設定ダイアログの「走行軌跡長さ」で設定された秒数の長さだけ描画されます．ただし簡易ラップタイム計測を行なっている場合は，走行中のラップの走行軌跡のみが表示されます．
+
+<a name="Vsd_DrawMapPosition"></a>
+<hr />
+<h2><a name="TOC--77"></a>走行軌跡と全車位置の描画</h2>
+<b>Vsd.DrawMapPosition</b>( x1, y1, x2, y2, align, width, color_line, font [, color_font [, color_outline]] )
+<p>
+</p>
+<h3><a name="TOC--78"></a>パラメータ</h3>
+<ul>
+<li>x1, y1, x2, y2<br />
+走行軌跡を表示する矩形範囲を指定します．
+	</li>
+<li>align<br />
+上記で指定した矩形範囲内に走行軌跡をどのように配置するかを指定します．以下のパラメータの幾つかを `|' (OR 演算子) でつなげて指定します．
+	
+<table>
+<tbody>
+<tr>
+<td>ALIGN_LEFT</td>
+<td>：矩形範囲の左端に配置します</td>
+</tr>
+<tr>
+<td>ALIGN_HCENTER</td>
+<td>：矩形範囲の幅中央に配置します</td>
+</tr>
+<tr>
+<td>ALIGN_RIGHT</td>
+<td>：矩形範囲の右端に配置します</td>
+</tr>
+<tr>
+<td>ALIGN_TOP</td>
+<td>：矩形範囲の上端に配置します</td>
+</tr>
+<tr>
+<td>ALIGN_VCENTER</td>
+<td>：矩形範囲の高さ中央に配置します</td>
+</tr>
+<tr>
+<td>ALIGN_BOTTOM</td>
+<td>：矩形範囲の下端に配置します</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>width<br />
+走行軌跡の線の太さを指定します．
+	</li>
+<li>color_line<br />
+走行軌跡の色を指定します．
+</li>
+<li>font<br />
+ドライバー名を描画する <a href="skin_reference.html#Object_Font">Font</a> オブジェクトを指定します．
+	</li>
+<li>color_font<br />
+ドライバー名の<a href="#Param_ColorCode">カラーコード</a>を指定します．省略時は，0xFFFFFF (白) が指定されたものとみなされます．
+	</li>
+<li>color_outline<br />
+font が縁取り (FONT_OUTLINE) 属性付きで作成された<a href="#Object_Font">フォント</a>の場合，縁取り部分の<a href="#Param_ColorCode">カラーコード</a>を指定します．省略時は 0x000000 (黒) を指定したものとみなされます．font が縁取りでない場合，このパラメータは無視されます．
+</li></ul>
+<h3><a name="TOC--79"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--80"></a>解説</h3>
+<a href="../race_monitor.html">
+レースモニター機能</a>において，走行軌跡 (コースマップ) と全車位置を表示します．走行軌跡は指定された矩形範囲内に収まる範囲の最大の大きさで描画されますので，横幅か高さのどちらかは範囲内いっぱいに描画されます．<br />
+また，走行軌跡の時間的な長さは，VSD 設定ダイアログの「走行軌跡長さ」で設定された秒数の長さだけ描画されます．ただし簡易ラップタイム計測を行なっている場合は，走行中のラップの走行軌跡のみが表示されます．
+
+<a name="Vsd_DrawGoogleMaps"></a>
+<hr />
+<h2><a name="TOC-Google-"></a>Google マップの描画</h2>
+<b>Vsd.DrawGoogleMaps</b>( param )
+<p>
+</p>
+<h3><a name="TOC--81"></a>パラメータ</h3>
+<ul>
+<li>param<br />
+Google マップ描画用のパラメータを格納したオブジェクトを指定します．オブジェクトの作成方法は<a href="#Param_ObjParam">オブジェクトによるパラメータ一括指定</a>を参照してください．以下では，オブジェクトに必要なプロパティ名を説明します．
+<ul>
+<li>Zoom<br />
+ズームレベルを 0～21 で指定します</li>
+<li>Maptype<br />
+地図タイプを<b>文字列で</b>指定します．
+<table>
+<tbody>
+<tr>
+<td>"roadmap"</td>
+<td>：地図</td>
+</tr>
+<tr>
+<td>"satellite"</td>
+<td>：航空写真</td>
+</tr>
+<tr>
+<td>"terrain"</td>
+<td>：地形図</td>
+</tr>
+<tr>
+<td>"hybrid"</td>
+<td>：地図+航空写真</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>X, Y<br />
+地図画像左上の x, y 座標を指定します．</li>
+<li>Width<br />
+地図画像の幅を指定します．最大 640ピクセルまでです．</li>
+<li>Height<br />
+地図画像の高さを指定します．最大 640ピクセルまでです．</li>
+<li>IndicatorSize<br />
+自車インジケータ大きさ (半径) を指定します．</li>
+<li>IndicatorColor<br />
+自車インジケータの<a href="#Param_ColorCode">カラーコード</a>を指定します．</li>
+<li>UpdateTime, UpdateDistance<br />
+地図の更新頻度を指定します．前回地図データを取得してから動画が UpdateTime ミリ秒以上経過し，かつ UpdateDistance ピクセル以上移動した場合にのみ，地図データを更新します．</li>
+</ul>
+</li></ul>
+<h3><a name="TOC--82"></a>解説</h3>
+Google マップを描画します．
+<p>
+</p>
+<h3><a name="TOC--83"></a>返り値</h3>
+返り値はありません．
+
+<a name="Vsd_DrawGoogleMaps_APIKey"></a>
+このメソッドは Google にアクセスし地図データを得ています．Google マップにアクセスするためには「API キー」が必要です．キーは無料で取得できます．キー取得方法は<a href="../install.html#GoogleAPIKey">こちら</a>を参照してください．また，マップデータの取得は Google によって1日あたり 25,000 枚に制限されています．
+
+<p>
+類似機能である <a href="#Vsd_DrawRoadMap">DrawRoadMap()</a> との機能比較は<a href="#Vsd_GMaps_VS_OSM">こちら</a>を参照してください．
+</p>
+<a name="Vsd_DrawRoadMap"></a>
+<hr />
+<h2><a name="TOC-OpenStreetMap-"></a>地図 (OpenStreetMap) の描画</h2>
+<b>Vsd.DrawRoadMap</b>( param )
+<p>
+</p>
+<h3><a name="TOC--84"></a>パラメータ</h3>
+<ul>
+<li>param<br />
+		地図描画用のパラメータを格納したオブジェクトを指定します．オブジェクトの作成方法は<a href="#Param_ObjParam">オブジェクトによるパラメータ一括指定</a>を参照してください．以下では，オブジェクトに必要なプロパティ名を説明します．
+	
+<ul>
+<li>Zoom<br />
+ズームレベルを 0～19 で指定します</li>
+<li>Maptype<br />
+将来の拡張のために予約されています．<br />
+<b>必ず "openstreetmap" を指定してください．</b></li>
+<li>X, Y<br />
+地図画像左上の x, y 座標を指定します．</li>
+<li>Width<br />
+地図画像の幅を指定します．</li>
+<li>Height<br />
+地図画像の高さを指定します．</li>
+<li>IndicatorSize<br />
+自車インジケータ大きさ (半径) を指定します．</li>
+<li>IndicatorColor<br />
+自車インジケータの<a href="#Param_ColorCode">カラーコード</a>を指定します．</li>
+<li>PathColor<br />
+走行軌跡の<a href="#Param_ColorCode">カラーコード</a>を指定します．-1 を指定すると走行軌跡を表示しません．</li>
+<li>PathWidth<br />
+走行軌跡の線の幅を指定します．</li>
+</ul>
+</li></ul>
+<h3><a name="TOC--85"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--86"></a>解説</h3>
+地図 (OpenStreetMap) を描画します．<br />
+類似機能である <a href="#Vsd_DrawGoogleMaps">DrawGoogleMaps()</a> と比べ，主に地図の著作権から来る制約が緩いものになっています．
+<p>
+<a name="Vsd_GMaps_VS_OSM"></a>
+DrawRoadMap() と <a href="#Vsd_DrawGoogleMaps">DrawGoogleMaps()</a> との機能比較を以下に示します．
+</p>
+<table border="">
+<tbody>
+<tr>
+<th></th>
+<th>DrawGoogleMaps()</th>
+<th>DrawLoadMap()</th>
+</tr>
+<tr>
+<td>地図データ			</td>
+<td>Google マップ			</td>
+<td>OpenStreetMap</td>
+</tr>
+<tr>
+<td>地図種別			</td>
+<td>○道路地図，航空写真，地形図，<br />
+									　道路地図+航空写真		</td>
+<td>×道路地図</td>
+</tr>
+<tr>
+<td>最大サイズ			</td>
+<td>×640x640				</td>
+<td>○無制限</td>
+</tr>
+<tr>
+<td>地図データ取得制限	</td>
+<td>×25,000枚 / 1日		</td>
+<td>○無制限</td>
+</tr>
+<tr>
+<td>API キーの取得		</td>
+<td>×必要					</td>
+<td>○不要</td>
+</tr>
+<tr>
+<td>地図スクロール		</td>
+<td>×設定したタイミングでスクロールし，<br />
+									　それ以外では自車インジケータが移動</td>
+<td>○自車インジケータは常に地図中央に固定，<br />
+																　地図がスムースにスクロールする</td>
+</tr>
+<tr>
+<td>走行軌跡表示</td>
+<td>×なし</td>
+<td>○あり</td>
+</tr>
+</tbody>
+</table>
+<a name="Vsd_Geocoding"></a>
+<hr />
+<h2><a name="TOC-Google-1"></a>Google マップの逆ジオコーディングによる住所取得</h2>
+<b>Vsd.Geocoding</b>( param )
+<p>
+</p>
+<h3><a name="TOC--87"></a>パラメータ</h3>
+<ul>
+<li>param<br />
+逆ジオコーディング用のパラメータを格納したオブジェクトを指定します．オブジェクトの作成方法は<a href="#Param_ObjParam">オブジェクトによるパラメータ一括指定</a>を参照してください．以下では，オブジェクトに必要なプロパティ名を説明します．
+<ul>
+<li>UpdateTime<br />
+住所の取得頻度を指定します．前回住所データを取得してから動画が UpdateTime ミリ秒以上経過した場合にのみ，住所データを更新します．</li>
+</ul>
+</li></ul>
+<h3><a name="TOC--88"></a>返り値</h3>
+住所を表す文字列が返されます．
+
+<h3><a name="TOC--89"></a>解説</h3>
+Google マップ逆ジオコーディングを実行し，住所を表す文字列を取得します．
+<p>
+結果は Vsd.Geocoding() の返り値として返されるほか，param.Address にも返されます．また，param.Result にはすべてのレスポンスが格納されます．逆ジオコーディングのレスポンスの詳細は<a href="https://developers.google.com/maps/documentation/geocoding/?hl=ja#ReverseGeocoding">こちら</a>を参照してください．
+</p>
+<p>
+Vsd.Geocoding() は何度実行されても，Google に対しては param.UpdateTime で指定した時間間隔でしかリクエストが実行されません．param.UpdateTime より短い間隔で実行された場合は，前回と同じ結果が返されます．また逆ジオコーディングのリクエストの実行は Google によって1日あたり 2,500 回に制限されています．
+</p>
+<a name="Vsd_DrawRoundMeterScale"></a>
+<hr />
+<h2><a name="TOC--90"></a>円形メータ用目盛り描画</h2>
+<b>Vsd.DrawRoundMeterScale</b>( param )
+<p>
+</p>
+<h3><a name="TOC--91"></a>パラメータ</h3>
+<ul>
+<li>param<br />
+描画用のパラメータを格納したオブジェクトを指定します．オブジェクトの作成方法は<a href="#Param_ObjParam">オブジェクトによるパラメータ一括指定</a>を参照してください．以下では，オブジェクトに必要なプロパティ名を説明します．
+<ul>
+<li>X, Y<br />
+メーター円の中心座標を指定します．</li>
+<li>R<br />
+メーター円の半径を指定します．</li>
+<li>Line1Len, Line2Len<br />
+大目盛り・小目盛りの長さを指定します．</li>
+<li>Line1Width, Line2Width<br />
+大目盛り・小目盛りの線の太さを指定します．</li>
+<li>Line1Color, Line2Color<br />
+大目盛り・小目盛りの線の<a href="#Param_ColorCode">カラーコード</a>を指定します．</li>
+<li>Line1Cnt<br />
+MinAngle ～ MaxAngle の範囲を，大目盛りによって<b>最大</b>何分割するかを指定します．実際に何分割されるかは，解説を参照してください．</li>
+<li>Line2Cnt<br />
+大目盛りを何分割して小目盛りを表示するかを指定します．</li>
+<li>MinVal<br />
+メーターの最小数値を指定します．マイナス値も指定可能です．</li>
+<li>MaxVal<br />
+メーターの最大数値を指定します．</li>
+<li>MinAngle<br />
+メーター数値が最小の時の<a href="#Param_Angle">角度</a>を指定します．</li>
+<li>MaxAngle<br />
+メーター数値が最大の時の<a href="#Param_Angle">角度</a>を指定します．MinAngle と値が等しい場合，360°の目盛りが描画されます．</li>
+<li>NumR<br />
+数値を配置する円周の半径を指定します．</li>
+<li>FontColor<br />
+目盛り数値を表示する<a href="#Param_ColorCode">カラーコード</a>を指定します．</li>
+<li>Font<br />
+目盛り数値を表示する <a href="skin_reference.html#Object_Font">Font</a> オブジェクトを指定します．</li>
+</ul>
+</li></ul>
+<h3><a name="TOC--92"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--93"></a>解説</h3>
+円形メータ用の目盛り・数値を描画します．以下の 3 つのパーツから構成されます．
+</div>
+<div>
+<div style="display:block;text-align:left"><a href="DrawMeter.png" imageanchor="1"><img border="0" height="175" src="DrawMeter.png?height=175&amp;width=200" width="200" /></a></div>
+<ul>
+<li>目盛り数値
+	</li>
+<li>大目盛り．目盛り数値 1個につき一つの大目盛りが描画されます．
+	</li>
+<li>小目盛り．大目盛りを Line2Cnt 等分して描画されます．
+</li></ul>
+何個の大目盛り (と目盛り数値) を描画するかは，MinVal, MaxVal と Line1Cnt から自動的に決定されます．つまり，MinVal ～ MaxVal の範囲が大目盛りによって最大で Line1Cnt 個に分割されるように，大目盛り 1つ分の値が調整されます．<br />
+例えば，MinVal=0, MaxVal=120, Line1Cnt=12 の場合，0, 10, 20, ... , 120 と大目盛り (と数値) が描画され，大目盛りによって 12個に分割されます．<br />
+ここで MaxVal=130 に変更すると，大目盛り間隔が 10 だと分割数が 13 個になってしまうため，大目盛り間隔は 20 に調整され 0, 20, 40, ... , 120 の数値が描画されます．
+<p>
+MaxAngle, MinAngle 値が等しい場合，360°の目盛りが描画され，また MaxVal に当たる数値は描画されません．例えば，MinAngle == MaxAngle, MinVal=0, MaxVal=10, Line1Cnt=10 とした場合，目盛り数値 10 は (0 に重なるため) 描画されません．</p>
+<p>
+大目盛り・小目盛りは，それぞれ個別に長さ，太さ，色を指定できます．</p>
+<p>
+目盛り数値は，幅・高さ中心点が半径 NumR の円周上になるように配置されます．</p>
+<a name="Vsd_DrawLinearMeterScale"></a>
+<hr />
+<h2><a name="TOC--94"></a>線形メータ用目盛り描画</h2>
+<b>Vsd.DrawLinearMeterScale</b>( param )
+<p>
+</p>
+<h3><a name="TOC--95"></a>パラメータ</h3>
+<ul>
+<li>param<br />
+描画用のパラメータを格納したオブジェクトを指定します．オブジェクトの作成方法は<a href="#Param_ObjParam">オブジェクトによるパラメータ一括指定</a>を参照してください．以下では，オブジェクトに必要なプロパティ名を説明します．
+<ul>
+<li>Flag<br />
+メーターの描画方向，及び目盛り数値のアライメントを指定します．以下のパラメータの幾つかを `|' (OR 演算子) でつなげて指定します．
+	
+<table>
+<tbody>
+<tr>
+<td>LMS_HORIZONTAL</td>
+<td>：水平のメータ用目盛りを描画します．</td>
+</tr>
+<tr>
+<td>LMS_VERTICAL</td>
+<td>：垂直のメータ用目盛りを描画します．</td>
+</tr>
+<tr>
+<td>ALIGN_*</td>
+<td>：目盛り数値の文字列をどのように配置するか (<a href="#Param_Align">アライメント</a>) を指定します．</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>X, Y<br />
+メーターの座標を指定します．</li>
+<li>Width<br />
+メーターの横幅 (LMS_HORIZONTAL 指定時)，縦高さ (LMS_VERTICAL 指定時) を指定します．マイナス値が指定された場合，通常の方向とは逆方向に目盛りが描画されます．</li>
+<li>Line1Len, Line2Len<br />
+大目盛り・小目盛りの長さを指定します．マイナス値が指定された場合，通常の方向とは逆方向に目盛りが描画されます．</li>
+<li>Line1Width, Line2Width<br />
+大目盛り・小目盛りの線の太さを指定します．</li>
+<li>Line1Color, Line2Color<br />
+大目盛り・小目盛りの線の<a href="#Param_ColorCode">カラーコード</a>を指定します．</li>
+<li>Line1Cnt<br />
+MinVal ～ MaxVal の範囲を，大目盛りによって<b>最大</b>何分割するかを指定します．実際に何分割されるかは，解説を参照してください．</li>
+<li>Line2Cnt<br />
+大目盛りを何分割して小目盛りを表示するかを指定します．</li>
+<li>MinVal<br />
+メーターの最小数値を指定します．マイナス値も指定可能です．</li>
+<li>MaxVal<br />
+メーターの最大数値を指定します．</li>
+<li>NumPos<br />
+数値を配置する座標を，Y (LMS_HORIZONTAL 指定時)，X (LMS_VERTICAL 指定時) に対する相対位置で指定します．ここで指定された座標に対し，更に Flag で指定された<a href="#Param_Align">アライメント</a>が加味され，最終的な目盛り数値描画位置が決まります．</li>
+<li>FontColor<br />
+目盛り数値を表示する<a href="#Param_ColorCode">カラーコード</a>を指定します．</li>
+<li>Font<br />
+目盛り数値を表示する <a href="skin_reference.html#Object_Font">Font</a> オブジェクトを指定します．</li>
+</ul>
+</li></ul>
+<h3><a name="TOC--96"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--97"></a>解説</h3>
+線形メータ用の目盛り・数値を描画します．以下の 3 つのパーツから構成されます．</div>
+<div>
+<div style="display:block;text-align:left"><a href="DrawLinearMeterScale.png" imageanchor="1"><img border="0" src="DrawLinearMeterScale.png" /></a></div>
+</div>
+<ul>
+<li>目盛り数値
+	</li>
+<li>大目盛り．目盛り数値 1個につき一つの大目盛りが描画されます．
+	</li>
+<li>小目盛り．大目盛りを Line2Cnt 等分して描画されます．
+</li></ul>
+何個の大目盛り (と目盛り数値) を描画するかは，MinVal, MaxVal と Line1Cnt から自動的に決定されます．つまり，MinVal ～ MaxVal の範囲が大目盛りによって最大で Line1Cnt 個に分割されるように，大目盛り 1つ分の値が調整されます．<br />
+例えば，MinVal=0, MaxVal=120, Line1Cnt=12 の場合，0, 10, 20, ... , 120 と大目盛り (と数値) が描画され，大目盛りによって 12個に分割されます．<br />
+ここで MaxVal=130 に変更すると，大目盛り間隔が 10 だと分割数が 13 個になってしまうため，大目盛り間隔は 20 に調整され 0, 20, 40, ... , 120 の数値が描画されます．
+<p>
+大目盛り・小目盛りは，それぞれ個別に長さ，太さ，色を指定できます．</p>
+<a name="Vsd_DrawNeedle"></a>
+<hr />
+<h2><a name="TOC--98"></a>円形メータ用針描画</h2>
+<b>Vsd.DrawNeedle</b>( x, y, r1, r2, min_angle, max_angle, value, color [, width] )
+<p>
+</p>
+<h3><a name="TOC--99"></a>パラメータ</h3>
+<ul>
+<li>x, y<br />
+針回転の中心座標を指定します．
+	</li>
+<li>r1, r2<br />
+針の長さを指定します．詳細は解説を参照してください．
+	</li>
+<li>min_angle<br />
+メーター数値が 0 の時の針の<a href="#Param_Angle">角度</a>を指定します．
+	</li>
+<li>max_angle<br />
+メーター数値が最大の時の針の<a href="#Param_Angle">角度</a>を指定します．
+	</li>
+<li>value<br />
+針が指す数値を 0～1 の範囲で指定します．
+	</li>
+<li>color<br />
+針の<a href="#Param_ColorCode">カラーコード</a>を指定します．
+	</li>
+<li>width<br />
+針の線の太さを指定します．
+</li></ul>
+<h3><a name="TOC--100"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--101"></a>解説</h3>
+円形メーター用の針を描画します．<br />
+メーターの針が指す数値 (value) は 0～1 の範囲で指定します．すなわち value が 1 の時に針は max_angle の<a href="#Param_Angle">角度</a>を指すことになります．例えば最大 180km/h のスピードメータを描画したい場合，value には <a href="#Vsd_Speed">Vsd.Speed</a> / 180 を指定します．<br />
+r2 にはマイナスの値を指定できます．この場合，中心座標の反対側まで伸びる針を描画します．
+
+<a name="Vsd_DrawPolygon"></a>
+<hr />
+<h2><a name="TOC--102"></a>多角形の描画</h2>
+<b>Vsd.DrawPolygon</b>( points, color [, flag] )<br />
+<p>
+</p>
+<h3><a name="TOC--103"></a>パラメータ</h3>
+<ul>
+<li>points<br />
+多角形の頂点の x, y 座標を格納した，配列を指定します．</li>
+<li>color<br />
+多角形を描画する色の<a href="#Param_ColorCode">カラーコード</a>を指定します．</li>
+<li>flag<br />
+下記のいずれかの値を指定します．
+<table>
+<tbody>
+<tr>
+<td>DRAW_FILL</td>
+<td>：多角形の内部を塗りつぶします</td>
+</tr>
+<tr>
+<td>DRAW_NOCLOSE</td>
+<td>：points で指定された開始座標と終了座標を結ぶ直線を描画しません</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<h3><a name="TOC--104"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--105"></a>解説</h3>
+DrawPolygon() は，直線で構成される多角形を描画します．<br />
+多角形の頂点の x, y 座標を格納した配列を作成し，points に指定します．配列の要素数は必ず偶数個にし，配列の 2n 番目の要素に x 座標，2n+1 番目の要素に y 座標を格納します．
+<p>
+例: 菱型を描画します
+</p>
+<pre style="border:1px solid #eeeeee"><code>var Points = [
+// x座標  y座標
+     10, 20,  // 頂点1
+     20, 10,  // 頂点2
+     10,  0,  // 頂点3
+      0, 10,  // 頂点4
+];
+Vsd.DrawPolygon( Points, 0xFFFFFF, DRAW_FILL );
+</code></pre>
+<a name="Vsd_FormatTime"></a>
+<hr />
+<h2><a name="TOC--106"></a>時間を表す文字列への変換</h2>
+<b>Vsd.FormatTime</b>( time )
+<p>
+</p>
+<h3><a name="TOC--107"></a>パラメータ</h3>
+<ul>
+<li>time<br />
+ミリ秒単位の整数を指定します．
+</li></ul>
+<h3><a name="TOC--108"></a>返り値</h3>
+時間を表す文字列を返します．
+
+<h3><a name="TOC--109"></a>解説</h3>
+ミリ秒単位の数値を「1'23.456」などの時間を表す文字列に変換します．
+
+<a name="Object_Log"></a>
+<hr />
+<h1><a name="TOC-Log-"></a>Log オブジェクト</h1>
+<h2><a name="TOC--110"></a>一覧</h2>
+<table border="">
+<tbody>
+<tr>
+<th colspan="2">プロパティ</th>
+</tr>
+<tr>
+<td><a href="#Log_Property">プロパティ名</a></td>
+<td>(例: Speed) 現在の「プロパティ名」のログの値を取得します</td>
+</tr>
+<tr>
+<td><a href="#Log_Property">Min.プロパティ名</a></td>
+<td>(例: Min.Speed)「プロパティ名」の最小値を取得します</td>
+</tr>
+<tr>
+<td><a href="#Log_Property">Max.プロパティ名</a></td>
+<td>(例: Max.Speed)「プロパティ名」の最大値を取得します</td>
+</tr>
+<tr>
+<th colspan="2">メソッド</th>
+</tr>
+<tr>
+<td><a href="#Log_ValueOfIndex">ValueOfIndex()</a></td>
+<td>任意の時刻のログの値を取得します</td>
+</tr>
+</tbody>
+</table>
+<a name="Log_Property"></a>
+<hr />
+<h2><a name="TOC--111"></a>走行ログ情報の取得</h2>
+<div>ログ情報のプロパティは，ログファイルリーダでどのプロパティを定義したかで使用できるかどうかが決まります．詳しくは<a href="../log_reader.html#Property">ログデータの VSD への渡し方</a>を参照してください．</div>
+例えば，Log.Speed は現在のスピードを取得します．また，Log.Min.Speed でスピードの最小値，Log.Max.Speed でスピードの最大値を取得します．<br />
+<div>以下では代表的なプロパティを示しますが，これらが常に使用できるとは限らず，また別のプロパティが使用できる事もあります．</div>
+<div>all_property.js スキンを使用すると，そのときのログで参照できるプロパティをすべて表示できます．</div>
+<br />
+<a name="Log_MaxSpeed"></a><b>Log.Max.Speed</b><br />
+ログ中の最大スピードを取得します．<br />
+<a name="Log_Speed"></a><b>Log.Speed</b><br />
+現在のスピードを取得します．<br />
+<a name="Log_Gx"></a><b>Log.Gx</b><br />
+現在の左右方向の加速度を取得します．<br />
+<a name="Log_Gy"></a><b>Log.Gy</b><br />
+現在の前後方向の加速度を取得します．<br />
+<a name="Log_MaxGx"></a><b>Log.Max.Gx</b><br />
+左右方向の加速度の絶対値の最大値を取得します．<br />
+<a name="Log_MaxGy"></a><b>Log.Max.Gy</b><br />
+前後方向の加速度の絶対値の最大値を取得します．<br />
+<a name="Log_ValueOfIndex"></a>
+<hr />
+<h2><a name="TOC--112"></a>任意の時刻のログの値の取得</h2>
+<b>Log.ValueOfIndex</b>( property, frame )<br />
+<p>
+</p>
+<h3><a name="TOC--113"></a>パラメータ</h3>
+<ul>
+<li>property<br />
+		値を取得するプロパティ名を文字列で指定します．(例: "Speed")
+	</li>
+<li>frame<br />
+		値を取得する時刻を，フレーム番号で指定します．
+	</li>
+</ul>
+<h3><a name="TOC--114"></a>返り値</h3>
+取得したログの値を返します．property で指定されたプロパティが存在しない場合は，undefined が返ります．
+
+
+<h3><a name="TOC--115"></a>解説</h3>
+任意の時刻のログの値を取得します．<br />
+Log.Speed などでは，現在値しか取得できませんが，ValueOfIndex() を使用することで，過去または未来の値を取得することができます．
+<p>
+時刻はフレーム番号で指定します．ミリ秒や，ログリーダのレコード番号ではありませんので注意してください．<br />
+また frame には小数値を指定することができます．その場合は，例えば 10.3 を指定した場合，フレーム #10 と #11 の値から線形補間した値を取得します．
+
+</p>
+<a name="Object_Image"></a>
+<hr />
+<h1><a name="TOC-Image-"></a>Image オブジェクト</h1>
+<h2><a name="TOC--116"></a>一覧</h2>
+<table border="">
+<tbody>
+<tr>
+<th colspan="2">コンストラクタ</th>
+</tr>
+<tr>
+<td><a href="#Image_Image">Image()</a></td>
+<td>画像ファイルをロードします．</td>
+</tr>
+<tr>
+<td><a href="#Image_Image2">Image()</a></td>
+<td>既存の Image オブジェクトのコピーを作成します</td>
+</tr>
+<tr>
+<th colspan="2">プロパティ</th>
+</tr>
+<tr>
+<td><a href="#Image_Width">Width</a></td>
+<td>画像の横サイズ</td>
+</tr>
+<tr>
+<td><a href="#Image_Height">Height</a></td>
+<td>画像の縦サイズ</td>
+</tr>
+<tr>
+<th colspan="2">メソッド</th>
+</tr>
+<tr>
+<td><a href="#Image_Dispose">Dispose()</a></td>
+<td>Image オブジェクトを明示的に破棄します</td>
+</tr>
+<tr>
+<td><a href="#Image_Resize">Resize()</a></td>
+<td>画像を拡大・縮小します</td>
+</tr>
+<tr>
+<td><a href="#Image_Rotate">Rotate()</a></td>
+<td>画像を回転します</td>
+</tr>
+</tbody>
+</table>
+<a name="Image_Image"></a>
+<hr />
+<h2><a name="TOC--117"></a>コンストラクタ</h2>
+image = new <b>Image</b>( file )<br />
+<p>
+</p>
+<h3><a name="TOC--118"></a>パラメータ</h3>
+<ul>
+<li>file<br />
+		画像ファイル名を指定します．
+	</li>
+</ul>
+<h3><a name="TOC--119"></a>解説</h3>
+画像ファイルをオープンし，メモリに読込みます．読み込めるフォーマットは，BMP，GIF，JPEG，PNG，TIFF，Exif，WMF，EMF です．<br />
+file を「Vsd.SkinDir + "file.png"」等とすることで，スキンファイルと同じディレクトリにある file.png をロードすることができます．
+
+<a name="Image_Image2"></a>
+<h2><a name="TOC-Image-1"></a>Image オブジェクトのコピー</h2>
+image = new <b>Image</b>( org_image )<br />
+<p>
+</p>
+<h3><a name="TOC--120"></a>パラメータ</h3>
+<ul>
+<li>org_image<br />
+		コピーしたい Image オブジェクトを指定します．
+</li></ul>
+<h3><a name="TOC--121"></a>解説</h3>
+Image オブジェクトをコピーします．同じ画像ファイルを複数読み込む場合，ファイルから読み込むより高速に処理できます．
+
+<hr />
+<h2><a name="TOC--122"></a>プロパティ</h2>
+<a name="Image_Width"></a>
+image.<b>Width</b><br />
+画像の幅を取得します．<br />
+<a name="Image_Height"></a>
+image.<b>Height</b><br />
+画像の高さを取得します．<br />
+<a name="Image_Dispose"></a>
+<hr />
+<h2><a name="TOC-Image-2"></a>Image オブジェクトの明示的な破棄</h2>
+image.<b>Dispose</b>()<br />
+<p>
+</p>
+<h3><a name="TOC--123"></a>パラメータ</h3>
+パラメータはありません．
+
+<h3><a name="TOC--124"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--125"></a>解説</h3>
+Image オブジェクトを明示的に破棄します．<br />
+JavaScript は，使用されなくなったオブジェクトは自動的に破棄されますが，メモリ節約のためにスクリプトで使用されなくなった時に，明示的に破棄することをおすすめします．
+
+<a name="Image_Resize"></a>
+<hr />
+<h2><a name="TOC--126"></a>画像サイズの変更</h2>
+image.<b>Resize</b>( width, height )<br />
+<p>
+</p>
+<h3><a name="TOC--127"></a>パラメータ</h3>
+<ul>
+<li>width<br />
+		変更後の画像幅を指定します．
+	</li>
+<li>height<br />
+		変更後の画像高さを指定します．
+</li></ul>
+<h3><a name="TOC--128"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--129"></a>解説</h3>
+画像を拡大・縮小して画像サイズを変更します．
+<a name="Image_Rotate"></a>
+<hr />
+<h2><a name="TOC--130"></a>画像の回転</h2>
+image.<b>Rotate</b>( x, y, angle )<br />
+<p>
+</p>
+<h3><a name="TOC--131"></a>パラメータ</h3>
+<ul>
+<li>x, y<br />
+		回転の中心となる x, y 座標を指定します．
+	</li>
+<li>angle<br />
+		回転する<a href="#Param_Angle">角度</a>を度単位で指定します．
+</li></ul>
+<h3><a name="TOC--132"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--133"></a>解説</h3>
+画像を指定された座標を中心に回転します．<br />
+画像サイズは変更されませんので，回転後の画像が画像範囲をはみ出る場合，はみ出た部分は切り捨てられます．また，画像範囲外の領域が画像範囲内に現れた場合，その領域は透明になります．
+
+<a name="Object_Font"></a>
+<hr />
+<h1><a name="TOC-Font-"></a>Font オブジェクト</h1>
+<h2><a name="TOC--134"></a>一覧</h2>
+<table border="">
+<tbody>
+<tr>
+<th colspan="2">コンストラクタ</th>
+</tr>
+<tr>
+<td><a href="#Font_Font">Font()</a></td>
+<td>フォントを作成します</td>
+</tr>
+<tr>
+<th colspan="2">プロパティ</th>
+</tr>
+<tr>
+<td><a href="#Font_Height">Height</a></td>
+<td>フォントの高さ</td>
+</tr>
+<tr>
+<th colspan="2">メソッド</th>
+</tr>
+<tr>
+<td><a href="#Font_Dispose">Dispose()</a></td>
+<td>Font オブジェクトを明示的に破棄します</td>
+</tr>
+<tr>
+<td><a href="#Font_GetTextWidth">GetTextWidth()</a></td>
+<td>文字列を表示した時の横幅を取得します</td>
+</tr>
+</tbody>
+</table>
+<a name="Font_Font"></a>
+<hr />
+<h2><a name="TOC--135"></a>コンストラクタ</h2>
+font = new <b>Font</b>( font_name, size [, attr] )<br />
+<p>
+</p>
+<h3><a name="TOC--136"></a>パラメータ</h3>
+<ul>
+<li>font_name<br />
+		フォント名を指定します．
+	</li>
+<li>size<br />
+		フォントサイズを指定します．
+	</li>
+<li>attr<br />
+		フォントの修飾情報を指定します．以下のパラメータの幾つかを `|' (OR 演算子) でつなげて指定します．<br />
+		省略時は，0 を指定したものとみなされます．
+		
+<table>
+<tbody>
+<tr>
+<td>FONT_BOLD</td>
+<td>：フォントを太字にします．</td>
+</tr>
+<tr>
+<td>FONT_ITALIC</td>
+<td>：フォントを斜体にします．</td>
+</tr>
+<tr>
+<td>FONT_OUTLINE</td>
+<td>：フォントを縁取りにします．</td>
+</tr>
+<tr>
+<td>FONT_FIXED</td>
+<td>：プロポーショナルフォントを，強制的に固定幅として扱います．</td>
+</tr>
+<tr>
+<td>FONT_NOANTIALIAS</td>
+<td>：フォントをなめらかにする処理 (アンチエイリアス) を無効にし，フォント描画を高速化します．</td>
+</tr>
+</tbody>
+</table>
+</li></ul>
+<h3><a name="TOC--137"></a>解説</h3>
+指定されたフォント・サイズでフォントを作成します．DrawText() 等，文字列を描画するメソッドに作成したフォントオブジェクトを渡します．
+<p>
+プロポーショナルフォントは各文字の幅が違うため，複数の文字列を縦に並べた場合綺麗に揃わない場合があります．その場合は attr に FONT_FIXED を指定してください．
+</p>
+<p>
+attr に FONT_NOANTIALIAS を指定した場合，文字のギザギザが目立つようになりますが，描画処理は高速になります．
+</p>
+<p>
+日本語を正しく表示するためには，日本語フォント名を指定する必要があります．<br />
+また "FixedSys" 等，一部のフォントは使用できないことがわかっています．DrawText 等で全く表示されない場合は，他のフォントを試してください．
+
+<a name="Font_Height"></a>
+</p>
+<hr />
+<h2><a name="TOC--138"></a>フォントの高さ取得</h2>
+font.<b>Height</b><br />
+そのフォントの高さ (空白部分を含む) を取得します．<br />
+<a name="Font_Dispose"></a>
+<hr />
+<h2><a name="TOC-Font-1"></a>Font オブジェクトの明示的な破棄</h2>
+font.<b>Dispose</b>()<br />
+<p>
+</p>
+<h3><a name="TOC--139"></a>パラメータ</h3>
+パラメータはありません．
+
+<h3><a name="TOC--140"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--141"></a>解説</h3>
+Font オブジェクトを明示的に破棄します．<br />
+JavaScript は，使用されなくなったオブジェクトは自動的に破棄されますが，メモリ節約のためにスクリプトで使用されなくなった時に，明示的に破棄することをおすすめします．
+
+<a name="Font_GetTextWidth"></a>
+<hr />
+<h2><a name="TOC--142"></a>文字列の描画時の幅取得</h2>
+font.<b>GetTextWidth</b>( string )<br />
+<p>
+</p>
+<h3><a name="TOC--143"></a>パラメータ</h3>
+<ul>
+<li>string<br />
+		幅を取得する文字列を指定します．
+	</li>
+</ul>
+<h3><a name="TOC--144"></a>返り値</h3>
+横幅をピクセル数で返します．
+
+<h3><a name="TOC--145"></a>解説</h3>
+Vsd.DrawTextAlign / Vsd.DrawText 等で，font で指定したフォントで文字列 string を描画した時の横幅 (空白部分を含む) を取得します．
+<a name="Object_File"></a>
+<hr />
+<h1><a name="TOC-File-"></a>File オブジェクト</h1>
+<h2><a name="TOC--146"></a>一覧</h2>
+<table border="">
+<tbody>
+<tr>
+<th colspan="2">コンストラクタ</th>
+</tr>
+<tr>
+<td><a href="#Font_File">File()</a></td>
+<td>ファイル オブジェクトを作成します</td>
+</tr>
+<tr>
+<th colspan="2">メソッド</th>
+</tr>
+<tr>
+<td><a href="#File_Dispose">Dispose()</a></td>
+<td>File オブジェクトを明示的に破棄します</td>
+</tr>
+<tr>
+<td><a href="#File_Open">Open()</a></td>
+<td>ファイルをオープンします</td>
+</tr>
+<tr>
+<td><a href="#File_Close">Close()</a></td>
+<td>ファイルをクローズします</td>
+</tr>
+<tr>
+<td><a href="#File_ReadLine">ReadLine()</a></td>
+<td>テキストファイルを 1行読込みます</td>
+</tr>
+<tr>
+<td><a href="#File_Seek">Seek()</a></td>
+<td>ファイルの読み書きオフセットの位置を変更します</td>
+</tr>
+<tr>
+<td><a href="#File_IsEOF">IsEOF()</a></td>
+<td>ファイルが終端 (EOF) に達したかを調べます</td>
+</tr>
+<tr>
+<td><a href="#File_ReadBin">ReadChar()</a></td>
+<td>8bit 符号付き整数をリードします</td>
+</tr>
+<tr>
+<td><a href="#File_ReadBin">ReadUChar()</a></td>
+<td>8bit 符号無し整数をリードします</td>
+</tr>
+<tr>
+<td><a href="#File_ReadBin">ReadShortL()</a></td>
+<td>16bit 符号付き整数をリードします</td>
+</tr>
+<tr>
+<td><a href="#File_ReadBin">ReadUShortL()</a></td>
+<td>16bit 符号無し整数をリードします</td>
+</tr>
+<tr>
+<td><a href="#File_ReadBin">ReadIntL()</a></td>
+<td>32bit 符号付き整数をリードします</td>
+</tr>
+<tr>
+<td><a href="#File_ReadBin">ReadUIntL()</a></td>
+<td>32bit 符号無し整数をリードします</td>
+</tr>
+<tr>
+<td><a href="#File_ReadBin">ReadFloat()</a></td>
+<td>単精度浮動小数をリードします</td>
+</tr>
+<tr>
+<td><a href="#File_ReadBin">ReadDouble()</a></td>
+<td>倍精度浮動小数をリードします</td>
+</tr>
+<tr>
+<td><a href="#File_ReadBin">ReadShortB()</a></td>
+<td>16bit 符号付き整数をリードします</td>
+</tr>
+<tr>
+<td><a href="#File_ReadBin">ReadUShortB()</a></td>
+<td>16bit 符号無し整数をリードします</td>
+</tr>
+<tr>
+<td><a href="#File_ReadBin">ReadIntB()</a></td>
+<td>32bit 符号付き整数をリードします</td>
+</tr>
+<tr>
+<td><a href="#File_ReadBin">ReadUIntB()</a></td>
+<td>32bit 符号無し整数をリードします</td>
+</tr>
+<tr>
+<td><a href="#File_WriteBin">WriteChar()</a></td>
+<td>8bit 符号付き整数をライトします</td>
+</tr>
+<tr>
+<td><a href="#File_WriteBin">WriteDouble()</a></td>
+<td>倍精度浮動小数をライトします</td>
+</tr>
+<tr>
+<td><a href="#File_WriteBin">WriteFloat()</a></td>
+<td>単精度浮動小数をライトします</td>
+</tr>
+<tr>
+<td><a href="#File_WriteBin">WriteIntB()</a></td>
+<td>32bit 符号付き整数をライトします</td>
+</tr>
+<tr>
+<td><a href="#File_WriteBin">WriteIntL()</a></td>
+<td>32bit 符号付き整数をライトします</td>
+</tr>
+<tr>
+<td><a href="#File_WriteLine">WriteLine()</a></td>
+<td>文字列をライトします</td>
+</tr>
+<tr>
+<td><a href="#File_WriteBin">WriteShortB()</a></td>
+<td>16bit 符号付き整数をライトします</td>
+</tr>
+<tr>
+<td><a href="#File_WriteBin">WriteShortL()</a></td>
+<td>16bit 符号付き整数をライトします</td>
+</tr>
+<tr>
+<td><a href="#File_ZipNextFile">ZipNextFile()</a></td>
+<td>zip 書庫内の次のファイルをオープンします</td>
+</tr>
+</tbody>
+</table>
+<a name="Font_File"></a>
+<hr />
+<h2><a name="TOC--147"></a>コンストラクタ</h2>
+file = new <b>File</b>()<br />
+<p>
+</p>
+<h3><a name="TOC--148"></a>パラメータ</h3>
+パラメータはありません．
+
+<h3><a name="TOC--149"></a>解説</h3>
+ファイル オブジェクトを作成します．<br />
+ファイルのオープン自体は Open メソッドで行います．
+
+<a name="File_Dispose"></a>
+<hr />
+<h2><a name="TOC-File-1"></a>File オブジェクトの明示的な破棄</h2>
+file.<b>Dispose</b>()<br />
+<p>
+</p>
+<h3><a name="TOC--150"></a>パラメータ</h3>
+パラメータはありません．
+
+<h3><a name="TOC--151"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--152"></a>解説</h3>
+File オブジェクトを明示的に破棄します．同時に開かれていたファイルは閉じられます．<br />
+JavaScript は，使用されなくなったオブジェクトは自動的に破棄されますが，メモリ節約のためにスクリプトで使用されなくなった時に，明示的に破棄することをおすすめします．
+
+<a name="File_Open"></a>
+<hr />
+<h2><a name="TOC--153"></a>ファイルを開く</h2>
+file.<b>Open</b>( file, mode )<br />
+<p>
+</p>
+<h3><a name="TOC--154"></a>パラメータ</h3>
+<ul>
+<li>file<br />
+		開くファイル名を指定します．
+	</li>
+<li>mode<br />
+			ファイルオープン時のモードを指定します．
+<table>
+<tbody>
+<tr>
+<td>"r"</td>
+<td>：テキストモードで読込みファイルとして開きます</td>
+</tr>
+<tr>
+<td>"rb"</td>
+<td>：バイナリモードで読込みファイルとして開きます</td>
+</tr>
+<tr>
+<td>"zrb"</td>
+<td>：gzip ファイルをバイナリモードで読込みファイルとして開きます．gzip で圧縮されたファイルを展開しながらリードします．</td>
+</tr>
+<tr>
+<td>"Zrb"</td>
+<td>：zip ファイルをバイナリモードで読込みファイルとして開きます．zip で圧縮されたファイルを展開しながらリードします．</td>
+</tr>
+<tr>
+<td>"w"</td>
+<td>：テキストモードで書込みファイルとして開きます</td>
+</tr>
+<tr>
+<td>"wb"</td>
+<td>：バイナリモードで書込みファイルとして開きます</td>
+</tr>
+<tr>
+<td>"zwb"</td>
+<td>：gzip ファイルをバイナリモードで書込みファイルとして開きます．書込みデータを gzip で圧縮しながら書き込みます．</td>
+</tr>
+</tbody>
+</table>
+</li></ul>
+<h3><a name="TOC--155"></a>返り値</h3>
+成功した場合は 0 を返します．
+
+<h3><a name="TOC--156"></a>解説</h3>
+ファイルを開きます．<br />
+テキスト形式のログをリードする場合はテキストモードで，バイナリ形式のログをリードする場合はバイナリモードで開きます．
+<p>
+zip モードでオープンしたファイルは，リードしかサポートされないため，ライト系のメソッドは実行できません．また Seek() は実行できません．<br />
+zip 書庫内には複数のファイルが格納されているため，書庫内のファイルを順次オープンするために <a href="#File_ZipNextFile">ZipNextFile()</a> の実行が必要です．詳細は <a href="#File_ZipNextFile">ZipNextFile()</a> の解説を参照してください．
+
+</p>
+<a name="File_Close"></a>
+<hr />
+<h2><a name="TOC--157"></a>ファイルを閉じる</h2>
+file.<b>Close</b>()<br />
+<p>
+</p>
+<h3><a name="TOC--158"></a>パラメータ</h3>
+パラメータはありません．
+<h3><a name="TOC--159"></a>返り値</h3>
+返り値はありません．
+
+<h3><a name="TOC--160"></a>解説</h3>
+ファイルをクローズします．
+<a name="File_ReadLine"></a>
+<hr />
+<h2><a name="TOC-1-1"></a>テキストファイルを 1行読む</h2>
+file.<b>ReadLine</b>()<br />
+<p>
+</p>
+<h3><a name="TOC--161"></a>パラメータ</h3>
+パラメータはありません．
+<h3><a name="TOC--162"></a>返り値</h3>
+読み込んだ文字列を返します．
+
+<h3><a name="TOC--163"></a>解説</h3>
+テキストファイルを 1行読みます．
+<a name="File_WriteLine"></a>
+<hr />
+<h2><a name="TOC--164"></a>文字列を書き込む</h2>
+file.<b>WriteLine</b>( str )
+
+<h3><a name="TOC--165"></a>パラメータ</h3>
+<ul>
+<li>str<br />
+		ファイルに書き込む文字列を指定します．
+	</li>
+</ul>
+<h3><a name="TOC--166"></a>返り値</h3>
+ファイルに書き込んだバイト数を返します．<br />
+エラー時は 0 以下の値が返ります．
+
+<h3><a name="TOC--167"></a>解説</h3>
+文字列をファイルに書き込みます．<br />
+文字列の最後後に改行は自動的には<b>付加されません</b>．
+<a name="File_Seek"></a>
+<hr />
+<h2><a name="TOC--168"></a>ファイルアクセス位置の移動</h2>
+file.<b>Seek</b>( offset, whence )<br />
+<p>
+</p>
+<h3><a name="TOC--169"></a>パラメータ</h3>
+<ul>
+<li>offset<br />
+		whence で指定された位置からのオフセット位置を指定します．
+	</li>
+<li>whence<br />
+			ファイル位置の基準となる位置を指定します．
+			
+<table>
+<tbody>
+<tr>
+<td>SEEK_SET</td>
+<td>：オフセットは offset 位置にセットされます</td>
+</tr>
+<tr>
+<td>SEEK_CUR</td>
+<td>：オフセットは現在位置に offset バイトを足した位置に設定されます</td>
+</tr>
+<tr>
+<td>SEEK_END</td>
+<td>：オフセットはファイルのサイズに offset バイトを足した位置に設定されます</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<h3><a name="TOC--170"></a>返り値</h3>
+成功すると 0 を返します．
+
+<h3><a name="TOC--171"></a>解説</h3>
+ファイルのアクセス位置を変更します．<br />
+Seek() メソッド実行直後は，IsEOF() の返り値は常に 0 になります．<br />
+zip モードでオープンしたファイルは Seek() は実行できません．
+<a name="File_IsEOF"></a>
+<hr />
+<h2><a name="TOC-EOF-"></a>ファイルの EOF 状態の取得</h2>
+file.<b>IsEOF</b>()<br />
+<p>
+</p>
+<h3><a name="TOC--172"></a>パラメータ</h3>
+パラメータはありません．
+<h3><a name="TOC--173"></a>返り値</h3>
+ファイルが終端に達している場合，0 以外を返します．
+
+<h3><a name="TOC--174"></a>解説</h3>
+ファイルが終端に達しているかどうかを調べます．<br />
+Seek() メソッドを実行直後に IsEOF() メソッドを実行した場合は，必ず 0 が返されます．
+
+<a name="File_ReadBin"></a>
+<hr />
+<h2><a name="TOC--175"></a>バイナリデータを読む</h2>
+file.<b>ReadChar</b>()<br />
+file.<b>ReadUChar</b>()<br />
+file.<b>ReadShortL</b>()<br />
+file.<b>ReadUShortL</b>()<br />
+file.<b>ReadShortB</b>()<br />
+file.<b>ReadUShortB</b>()<br />
+file.<b>ReadIntL</b>()<br />
+file.<b>ReadUIntL</b>()<br />
+file.<b>ReadIntB</b>()<br />
+file.<b>ReadUIntB</b>()<br />
+file.<b>ReadFloat</b>()<br />
+file.<b>ReadDouble</b>()<br />
+<p>
+</p>
+<h3><a name="TOC--176"></a>パラメータ</h3>
+パラメータはありません．
+<h3><a name="TOC--177"></a>返り値</h3>
+読み込んだ数値を返します．
+
+<h3><a name="TOC--178"></a>解説</h3>
+各メソッドごとに規定されたバイト数のデータを読込み，それを数値に変換します．<br />
+各メソッドごとのバイト数・符号・エンディアンは以下のとおりです．
+<table border="">
+<tbody>
+<tr>
+<th>メソッド</th>
+<th>データ種別</th>
+<th>バイト数</th>
+<th>エンディアン</th>
+</tr>
+<tr>
+<td>ReadChar</td>
+<td>符号有り整数</td>
+<td>1</td>
+<td>-</td>
+</tr>
+<tr>
+<td>ReadUChar</td>
+<td>符号無し整数</td>
+<td>1</td>
+<td>-</td>
+</tr>
+<tr>
+<td>ReadShortL</td>
+<td>符号有り整数</td>
+<td>2</td>
+<td>little</td>
+</tr>
+<tr>
+<td>ReadUShortL</td>
+<td>符号無し整数</td>
+<td>2</td>
+<td>little</td>
+</tr>
+<tr>
+<td>ReadShortB</td>
+<td>符号有り整数</td>
+<td>2</td>
+<td>big</td>
+</tr>
+<tr>
+<td>ReadUShortB</td>
+<td>符号無し整数</td>
+<td>2</td>
+<td>big</td>
+</tr>
+<tr>
+<td>ReadIntL</td>
+<td>符号有り整数</td>
+<td>4</td>
+<td>little</td>
+</tr>
+<tr>
+<td>ReadUIntL</td>
+<td>符号無し整数</td>
+<td>4</td>
+<td>little</td>
+</tr>
+<tr>
+<td>ReadIntB</td>
+<td>符号有り整数</td>
+<td>4</td>
+<td>big</td>
+</tr>
+<tr>
+<td>ReadUIntB</td>
+<td>符号無し整数</td>
+<td>4</td>
+<td>big</td>
+</tr>
+<tr>
+<td>ReadFloat</td>
+<td>単精度浮動小数</td>
+<td>4</td>
+<td>little</td>
+</tr>
+<tr>
+<td>ReadDouble</td>
+<td>倍精度浮動小数</td>
+<td>8</td>
+<td>little</td>
+</tr>
+</tbody>
+</table>
+<a name="File_WriteBin"></a>
+<hr />
+<h2><a name="TOC--179"></a>バイナリデータを書き込む</h2>
+file.<b>WriteChar</b>( num )<br />
+file.<b>WriteShortL</b>( num )<br />
+file.<b>WriteShortB</b>( num )<br />
+file.<b>WriteIntL</b>( num )<br />
+file.<b>WriteIntB</b>( num )<br />
+file.<b>WriteFloat</b>( num )<br />
+file.<b>WriteDouble</b>( num )<br />
+<p>
+</p>
+<h3><a name="TOC--180"></a>パラメータ</h3>
+<ul>
+<li>num<br />
+		ファイルに書き込む数値を指定します．
+	</li>
+</ul>
+<h3><a name="TOC--181"></a>返り値</h3>
+ファイルに書き込んだバイト数を返します．<br />
+エラー時は 0 以下の値が返ります．
+
+<h3><a name="TOC--182"></a>解説</h3>
+数値をバイナリデータに変換し，各メソッドごとに指定された規定されたバイト数のデータをファイルに書き込みます．<br />
+各メソッドごとのバイト数・符号・エンディアンは以下のとおりです．
+<table border="">
+<tbody>
+<tr>
+<th>メソッド</th>
+<th>データ種別</th>
+<th>バイト数</th>
+<th>エンディアン</th>
+</tr>
+<tr>
+<td>WriteChar</td>
+<td>整数</td>
+<td>1</td>
+<td>-</td>
+</tr>
+<tr>
+<td>WriteShortL</td>
+<td>整数</td>
+<td>2</td>
+<td>little</td>
+</tr>
+<tr>
+<td>WriteShortB</td>
+<td>整数</td>
+<td>2</td>
+<td>big</td>
+</tr>
+<tr>
+<td>WriteIntL</td>
+<td>整数</td>
+<td>4</td>
+<td>little</td>
+</tr>
+<tr>
+<td>WriteIntB</td>
+<td>整数</td>
+<td>4</td>
+<td>big</td>
+</tr>
+<tr>
+<td>WriteFloat</td>
+<td>単精度浮動小数</td>
+<td>4</td>
+<td>little</td>
+</tr>
+<tr>
+<td>WriteDouble</td>
+<td>倍精度浮動小数</td>
+<td>8</td>
+<td>little</td>
+</tr>
+</tbody>
+</table>
+<a name="File_ZipNextFile"></a>
+<hr />
+<h2><a name="TOC-zip-"></a>zip 書庫内の次のファイルをオープンする</h2>
+file.<b>ZipNextFile</b>()<br />
+<p>
+</p>
+<h3><a name="TOC--183"></a>パラメータ</h3>
+パラメータはありません．
+<h3><a name="TOC--184"></a>返り値</h3>
+オープンされた zip 書庫内のファイル名を返します．<br />
+それ以上書庫内にファイルがない場合は undefined を返します．
+
+<h3><a name="TOC--185"></a>解説</h3>
+zip 書庫内の最初・次のファイルをオープンし，ReadLine() 等が実行できる状態にします．
+<p>
+zip ファイルを zip モードで Open() した後，最初に ZipNextFile() を実行する必要があります．ZipNextFile() 実行後は，通常のリード系メソッドや IsEOF() を実行できます．<br />
+書庫内の一つのファイル処理が終わった後，書庫内の次のファイル処理に進むために ZipNextFile() を実行します．<br />
+ZipNextFile() はオープンした書庫内ファイル名を返すため，処理したい目的のファイルかどうかを判断することができます．<br />
+zip 書庫内の個々のファイルに対するクローズ操作はありません．
+</p>
+<p>
+以下に，zip 書庫内の *.txt ファイルの内容をすべてコンソールに出力する例を示します．
+</p>
+<pre style="border:1px solid #eeeeee"><code>var file = new File();
+file.Open( "test.zip", "Zrb" );  // zip モードでオープン
+
+var filename;
+
+// zip 書庫内のファイルごとに処理を行う
+while( filename = file.ZipNextFile()){
+  
+  // 拡張子が .txt か判定する
+  if( filename.match( /\.txt$/i )){
+    
+    // 書庫内の 1つのファイルが EOF になるまで，内容をコンソールに出力
+    while( !file.IsEOF()) Print( file.ReadLine());
+  }
+}
+file.Close();</code></pre>
+<a name="Object_ActiveXObject"></a>
+<hr />
+<h1><a name="TOC-ActiveXObject-"></a>ActiveXObject オブジェクト</h1>
+<h2><a name="TOC--186"></a>一覧</h2>
+<table border="">
+<tbody>
+<tr>
+<th colspan="2">コンストラクタ</th>
+</tr>
+<tr>
+<td><a href="#Font_ActiveXObject">ActiveXObject()</a></td>
+<td>オートメーション オブジェクトへのインターフェイスを作成します</td>
+</tr>
+</tbody>
+</table>
+<a name="Font_ActiveXObject"></a>
+<hr />
+<h2><a name="TOC--187"></a>コンストラクタ</h2>
+obj = new <b>ActiveXObject</b>( server_name )<br />
+<p>
+</p>
+<h3><a name="TOC--188"></a>パラメータ</h3>
+<ul>
+<li>server_name<br />
+		オブジェクトを提供するアプリケーション名，クラス名を指定します
+	</li>
+</ul>
+<h3><a name="TOC--189"></a>解説</h3>
+Windows Scripting Host 等で提供されている ActiveXObject とほぼ同等の機能です．より詳細な解説は他の ActiveXObject の解説を参照してください．<br />
+実装されていない機能も多々ありますが，"WScript.Shell" や "Msxml2.XMLHTTP.6.0" 程度なら動作すると思います．
+
+<hr />
+<h1><a name="TOC--190"></a>パラメータについての補足</h1>
+<a name="Param_ColorCode"></a>
+<h2><a name="TOC--191"></a>カラーコード</h2>
+カラーコードは，16進数 8桁で以下のフォーマットで指定します．
+<p>
+0xAARRGGBB
+</p>
+<p>
+一般的なカラーコードに加えて，アルファ値 (透明度) を指定できます．<br />
+AA はアルファ値を 0x00～0xFF で指定します．0x00 は完全な不透明，0xFF は完全な透明です．アルファ値が 0x00 の時はそれを省略した 0xRRGGBB 形式で記述できます．アルファ値が 0x00・0xFF 以外の場合，処理が重くなるので多用は避けるべきです．<br />
+</p>
+<p>
+RR, GG, BB は，それぞれ赤・緑・青を 0x00～0xFF で指定します．
+</p>
+<p>
+例:<br />
+0xFFFFFF : 白<br />
+0x80FF0000 : 50% の透明度の赤<br />
+0 : 16進数で 0x000000，つまり黒
+
+<a name="Param_Angle"></a>
+</p>
+<h2><a name="TOC--192"></a>角度指定</h2>
+角度を指定するパラメータには，度単位の数値を指定します．時計の針で言う所の 3時が 0度であり，時計回りに角度が増加します．<br />
+<div style="display:block;text-align:left"><a href="angle.png" imageanchor="1"><img border="0" height="180" src="angle.png?height=180&amp;width=200" width="200" /></a>   </div>
+<a name="Param_Align"></a>
+<h2><a name="TOC--193"></a>アライメント指定</h2>
+アライメント指定を持つメソッドでは，
+文字列や図形等が描画される範囲を長方形とみなした時 (例えば，文字列であれば文字列の横幅×文字高さを長方形とみなす)，指定された x, y 座標に対し長方形をどのように配置するかを指定することができます．<br />
+以下のパラメータの幾つかを `|' (OR 演算子) でつなげて指定します．
+<table>
+<tbody>
+<tr>
+<td>ALIGN_LEFT</td>
+<td>：x 座標が長方形の左端になるよう配置します</td>
+</tr>
+<tr>
+<td>ALIGN_HCENTER</td>
+<td>：x 座標が長方形の幅中央になるよう配置します</td>
+</tr>
+<tr>
+<td>ALIGN_RIGHT</td>
+<td>：x 座標が長方形の右端になるよう配置します</td>
+</tr>
+<tr>
+<td>ALIGN_TOP</td>
+<td>：y 座標が長方形の上端になるよう配置します</td>
+</tr>
+<tr>
+<td>ALIGN_VCENTER</td>
+<td>：y 座標が長方形の高さ中央になるよう配置します</td>
+</tr>
+<tr>
+<td>ALIGN_BOTTOM</td>
+<td>：y 座標が長方形の下端になるよう配置します</td>
+</tr>
+</tbody>
+</table>
+<br />
+<div style="display:block;text-align:left"><a href="align.png" imageanchor="1"><img border="0" height="133" src="align.png?height=133&amp;width=320" width="320" /></a></div>
+<a name="Param_ObjParam"></a>
+<h2><a name="TOC--194"></a>オブジェクトによるパラメータ一括指定</h2>
+ここでは，パラメータをオブジェクトで指定するメソッドの，オブジェクト作成，使用方法を説明します．<br />
+具体的なパラメータは，一つのオブジェクトに全て格納し，メソッドにはそのオブジェクトを指定します．オブジェクトは Initialize() 内で 1回だけ作成するのが良いです．
+<p>
+以下に，DrawGoogleMaps() の例を示します．
+</p>
+<pre style="border:1px solid #eeeeee"><code>function Initialize(){
+    
+    // パラメータ作成
+    GoogleMapsParam = {
+        APIKey: "abcdefg",
+        Zoom: 14,
+        Maptype: "roadmap",
+        X:      0,
+        Y:      0,
+        Width:  400,
+        Height: 300,
+        IndicatorSize:  12 * Scale,
+        IndicatorColor: 0x0080FF,
+        UpdateTime:     1000,
+        UpdateDistance: 5,
+    };
+    ...
+}
+
+function Draw(){
+    // Google マップ描画
+    Vsd.DrawGoogleMaps( GoogleMapsParam );
+    ...
+}
+</code></pre></div>
+</div> 
+</div> 
+</div> 
+</td> 
+</tr>
+</table> 
+</body>
+
+</html>

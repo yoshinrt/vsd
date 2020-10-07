@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" itemscope="" itemtype="http://schema.org/WebPage">
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="title" content="レースモニター機能 (race_monitor.js)" />
+<meta itemprop="name" content="レースモニター機能 (race_monitor.js)" />
+<meta property="og:title" content="レースモニター機能 (race_monitor.js)" />
+<style type="text/css">
+</style>
+<title>レースモニター機能 (race_monitor.js)</title>
+<meta itemprop="image" content="lapchart.png" />
+<meta property="og:image" content="lapchart.png" />
+</head>
+<body xmlns="http://www.google.com/ns/jotspot" id="body" class=" ja            ">
+<table id="sites-chrome-main" class="sites-layout-hbox" cellspacing="0" cellpadding="{scmCellpadding}" border="0">
+<tr>
+<td id="sites-canvas-wrapper">
+<div id="sites-canvas" role="main">
+<div xmlns="http://www.w3.org/1999/xhtml" id="title-crumbs" style="">
+<A href="https://github.com/yoshinrt/vsd" dir="ltr">メニュー</A>‎ &gt; ‎<A href="index.html" dir="ltr">VSD for GPS</A>‎ &gt; ‎
+  </div>
+<h3 xmlns="http://www.w3.org/1999/xhtml" id="sites-page-title-header" style="" align="left">
+<span id="sites-page-title" dir="ltr" tabindex="-1" style="outline: none">レースモニター機能 (race_monitor.js)</span>
+</h3>
+<div id="sites-canvas-main" class="sites-canvas-main">
+<div id="sites-canvas-main-content">
+<div dir="ltr"><hr />
+<h1><a name="TOC--"></a>概要</h1>
+<div><div class="sites-embed-align-left-wrapping-off"><div class="sites-embed-border-off sites-embed" style="width:560px;"><div class="sites-embed-content sites-embed-type-youtube"><iframe title="YouTube video player" class="youtube-player" type="text/html" src="https://www.youtube.com/embed/lNpDYl8VI5w?rel=0&amp;wmode=opaque" frameborder="0" allowFullScreen="true" width="560" height="315"></iframe></div></div></div></div>
+レースモニター機能は，レースのカメラ映像に全車ラップタイム表示，全車走行位置を表示する機能です．<br />
+車載カメラ映像・GPS ログだけではわからない，他車の順位や追い上げの様子など，レースの様子を映像で再現することができます．<br />
+<p>
+他車の位置情報はラップタイム記録のみから推定しているので，正確に位置を再現できるわけではありません．例えば自車や他車がスピンしたりすると，他車の位置情報は不正確なものになります．</p>
+<hr />
+<h1><a name="TOC--1"></a>使用方法</h1>
+<ol>
+<li>レースモニター機能を使用するためには，以下の 2つの情報が必要です．
+<ul>
+<li>全車のラップタイム記録</li>
+<li>全車の，トップチェッカーから何秒後にゴールしたかの記録</li>
+</ul>
+これらの情報から，ラップ記録ファイルを作成します．ラップ記録ファイルは，テキストファイルです．<br />
+以下では，AMB (多くのサーキット・レンタルカート場で使用されている時間計測器) のタイムシートを元に，ラップ記録ファイルを作成する例を示します．
+<br />
+<div style="display:block;text-align:left"><a href="lapchart.png" imageanchor="1"><img border="0" src="lapchart.png" /></a></div>
+<ul>
+<li>Name: に続けて，カメラ車のドライバー名 (ここでは AAA とします) を記述します．後に記述する全ドライバー名のどれかに一致する必要があります．</li>
+<li>次の行の LapTable: はそのまま記述します．</li>
+<li>次の行に，全員のドライバー名を記述します．各ドライバー名はカンマ「,」またはタブで区切って記述します．</li>
+<li>次の行から，各車の全周回のラップタイムを記述します．時間の表記は，1:23.456 のように 分:秒 で，または 99.999 のように秒だけでも記述できます．各車のラップタイムはカンマ「,」またはタブで区切って記述します．1台のタイムは縦に並ぶことになります．タブとカンマを混在させることはできません．Excel をお持ちの方は，Excel で入力しテキストファイルに保存するのが簡単です．この情報は AMB ではラップタイム表に載っています．</li>
+<li>最後の行のタイムは，ゴール時間差分を記述します．この例では，BBB がトップチェッカー，AAA が BBB の 0.58秒後にゴール，CCC は BBB の 7.8秒後にゴールしたことを示しています．この情報は AMB ではレース結果表に載っています．</li>
+</ul></li>
+<p>
+</p>
+<li>まずは<a href="usage.html">通常の手順で，GPS ログとカメラ映像の同期を取ります</a>．<br />
+レースモニター機能では，ラップタイム簡易計測機能は使用しません (ラップ記録ファイルの記録が優先されます) ので，ラップ簡易計測の操作は不要です．<br />
+以降で，カメラ映像とラップ記録との同期を取ります．
+<p>
+</p>
+</li>
+<li>「VSD メーター合成」ダイアログのスキン選択リストから，「race_monitor.js」スキンを選びます．
+</li>
+<li>「VSD メーター合成」ダイアログの「LAP表」の開くボタンをクリックし，先ほど作成したラップ記録ファイルをリードします．
+</li>
+<li>AviUtl のメインスライダバーを使うなどして，ラップタイム計測を開始した瞬間の映像を表示させます (車が動き出した瞬間ではなく，車がタイム計測ラインの上を通過した瞬間です)．そしてその状態で，「VSD メーター合成」ダイアログの「LAP表」右の「始」ボタンを押します．
+</li>
+<li>AviUtl のメインスライダバーを使うなどして，ラップタイム計測を終了した瞬間の映像を表示させます．そしてその状態で，「VSD メーター合成」ダイアログの「LAP表」右の「終」ボタンを押します．
+<p>
+</p>
+</li>
+<li>以上で同期作業は終わりです．後は通常の手順で，動画を保存する等を行ってください．
+</li>
+</ol></div>
+</div> 
+</div> 
+</div> 
+</td> 
+</tr>
+</table> 
+</body>
+
+</html>

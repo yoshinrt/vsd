@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" itemscope="" itemtype="http://schema.org/WebPage">
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="title" content="画面表示説明" />
+<meta itemprop="name" content="画面表示説明" />
+<meta property="og:title" content="画面表示説明" />
+<style type="text/css">
+</style>
+<title>画面表示説明</title>
+<meta itemprop="image" content="screen_shot.jpg?height=307&amp;width=320" />
+<meta property="og:image" content="screen_shot.jpg?height=307&amp;width=320" />
+</head>
+<body xmlns="http://www.google.com/ns/jotspot" id="body" class=" ja            ">
+<table id="sites-chrome-main" class="sites-layout-hbox" cellspacing="0" cellpadding="{scmCellpadding}" border="0">
+<tr>
+<td id="sites-canvas-wrapper">
+<div id="sites-canvas" role="main">
+<div xmlns="http://www.w3.org/1999/xhtml" id="title-crumbs" style="">
+<A href="https://github.com/yoshinrt/vsd" dir="ltr">メニュー</A>‎ &gt; ‎<A href="index.html" dir="ltr">VSD for GPS</A>‎ &gt; ‎
+  </div>
+<h3 xmlns="http://www.w3.org/1999/xhtml" id="sites-page-title-header" style="" align="left">
+<span id="sites-page-title" dir="ltr" tabindex="-1" style="outline: none">画面表示説明</span>
+</h3>
+<div id="sites-canvas-main" class="sites-canvas-main">
+<div id="sites-canvas-main-content">
+<div dir="ltr"><div style="display:block;text-align:left"><a href="screen_shot.jpg" imageanchor="1"><img border="0" height="307" src="screen_shot.jpg?height=307&amp;width=320" width="320" /></a></div>
+<ul>
+<li>メーターパネル<br />
+		スピードメーターと加速度の複合表示メーターです．<br />
+		加速度は，緑丸で現在の加速度が，過去 3秒間 (設定可能) の軌跡が緑のラインで表示されます．また前後左右あわせた加速度の値が数値で表示されます．
+	</li>
+<li>走行軌跡<br />
+		走行軌跡が表示され，また現在の自車位置が赤丸で表示されます．走行軌跡は，縦加速度に応じて 緑(加速)～黄～赤(減速) で表示されます．
+	</li>
+<li>ラップタイム<br />
+		上から，現在ラップの経過時間・ベストラップとの時間差・ベストラップ・過去 3ラップ分のタイムが表示されます．<br />
+		「ベストラップとの時間差」は，現在ラップとベストラップのタイム差がリアルタイムで表示されます．タイム差は走行距離から算出しているので，走行ラインが大幅に違っていたりすると不正確な値になります．<br />
+		「過去 3ラップ分のタイム」は，現在走行中のタイムが「*」印で示されます．一般的なレース放送やゲームなどと違い，<b>現在ラップがゴールする前にそのタイムが表示されています．</b>またベストラップは水色で表示されます．
+	</li>
+<li>スピードグラフ<br />
+		設定ダイアログの「スピードグラフ表示」を ON にしたときのみ表示されます．スピードがグラフで表示されます．
+</li></ul>
+
+メニューの 設定→VSDメーター合成の設定 を選ぶと，「VSDメーター合成」ダイアログが表示されます．設定ダイアログの各設定項目の意味は以下のとおりです．
+<div style="display:block;text-align:left"><a href="dialog1.png" imageanchor="1"><img border="0" height="158" src="dialog1.png?height=158&amp;width=400" width="400" /></a></div>
+<ul>
+<li>設定スライダ・チェックボックス
+		
+<ul>
+<li>車両ログ位置調整<br />
+動画と車両ログのタイミング合わせに使用します．</li>
+<li>GPS ログ位置調整<br />
+				動画と GPS ログのタイミング合わせに使用します．
+			</li>
+<li>走行軌跡長さ<br />
+				走行軌跡の長さを秒単位で設定します．ただし簡易ラップタイム計測を行っているときは，現在走行中のラップの軌跡のみが表示されます．<br />
+				0 に設定すると，走行軌跡は表示されません．
+			</li>
+<li>走行軌跡回転<br />
+				走行軌跡を回転させて表示します．
+			</li>
+<li>計測地点幅<br />
+				ラップタイム自動計測モード時のコントロールラインの幅を設定します．幅[m]×10 の値を設定します．<br />
+				0 を指定すると手動計測モードになります．-1 を設定するとジムカーナモードになります．<br />
+詳細は<a href="#LapTime" style="line-height:1.25;font-size:10pt">簡易ラップタイム計測</a>を参照してください．</li>
+<li>ラップタイム表示<br />
+				簡易ラップタイム計測を行う場合，ON に設定します．
+			</li>
+<li>GPS ログ優先<br />
+この項目がチェックされている場合，スピード・G センサー等は GPS ログのデータが優先的に使用されます．<br />
+この項目がチェックされていない場合，スピード・G センサー等は車両ログのデータが優先的に使用されます．</li>
+<li>半自動同期<br />
+動画のタイムスタンプと，各ログの時間情報から，ある程度自動的に同期を取ります．</li>
+<li>グラフ表示<br />
+			グラフ表示を行う場合，ON に設定します．</li>
+</ul>
+</li>
+<li>車両ログオープンボタン<br />
+読み込む車両ログを選択します．車両ログとは，車両の ECU やその他の実センサーから得られたログです．</li>
+<li>GPS ログオープンボタン<br />
+		読み込むGPSログを選択します．
+	</li>
+<li>LAP表・開くポタン・始ボタン・終ボタン<br /><a href="race_monitor.html">レースモニター機能</a>，または<a href="laptime.html">簡易ラップタイム計測機能</a>のラップ記録ファイルのリードと同期に使用します．</li><li>スキン選択ドロップダウンリスト<br />
+スキンを選択します．(vsd_filter_gps.aufをコピーしたパス)\vsd_plugins 以下のスキンファイルが一覧に表れます．このパス以外のスキンは，リスト最下部の「ファイル名を指定して開く...」で選択することができます．</li>
+<li>*.cfg ロード・セーブボタン<br />
+		このダイアログの設定内容を *.cfg にセーブするとき，または *.cfg の内容をロードするときに使用します．
+</li></ul></div>
+</div> 
+</div> 
+</div> 
+</td> 
+</tr>
+</table> 
+</body>
+
+</html>

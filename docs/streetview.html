@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" itemscope="" itemtype="http://schema.org/WebPage">
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="title" content="ストリートビュー (streetview.js)" />
+<meta itemprop="name" content="ストリートビュー (streetview.js)" />
+<meta property="og:title" content="ストリートビュー (streetview.js)" />
+<style type="text/css">
+</style>
+<title>ストリートビュー (streetview.js)</title>
+</head>
+<body xmlns="http://www.google.com/ns/jotspot" id="body" class=" ja            ">
+<table id="sites-chrome-main" class="sites-layout-hbox" cellspacing="0" cellpadding="{scmCellpadding}" border="0">
+<tr>
+<td id="sites-canvas-wrapper">
+<div id="sites-canvas" role="main">
+<div xmlns="http://www.w3.org/1999/xhtml" id="title-crumbs" style="">
+<A href="https://github.com/yoshinrt/vsd" dir="ltr">メニュー</A>‎ &gt; ‎<A href="index.html" dir="ltr">VSD for GPS</A>‎ &gt; ‎
+  </div>
+<h3 xmlns="http://www.w3.org/1999/xhtml" id="sites-page-title-header" style="" align="left">
+<span id="sites-page-title" dir="ltr" tabindex="-1" style="outline: none">ストリートビュー (streetview.js)</span>
+</h3>
+<div class="sites-embed-content sites-embed-type-youtube"><iframe title="YouTube video player" class="youtube-player" type="text/html" src="https://www.youtube.com/embed/Q7YH6T_X_Yc?rel=0&amp;wmode=opaque" frameborder="0" allowFullScreen="true" width="480" height="360"></iframe></div></div></div></div>
+streetview.js スキンは，Google ストリートビューの画像を使用して GPS ログを再生するスキンです．<br />
+車載カメラがなくても，GPS ログだけで車載動画 (っぽい) 映像を作ることができます．また <a href="https://www.google.com/maps/d/">Google マイマップ</a>で作成したルート (KML) もリードできますので，この場合 GPS ログも必要ありません．(Google マイマップの KML リード時は，速度は 60km/h に固定されます)
+<p>
+ストリートビューの画像は (おそらく) 約 10m 間隔で撮影されているので，実時間で GPS ログを再生してもカクカクの動画になってしまいます．また，Google 側の制約により，ストリートビュー画像の取得は 25,000枚/日に制限されており，これは 30fps の動画で 14分ほどの動画しか作れません．したがって，上の動画のような hyperlapse (早送り) のような映像を作るのに適していると思われます．
+
+</p>
+<p>AviUtl での再生時は，Google サーバから画像を取得する関係で，約 7.5fps でしか再生できません．<br />
+動画を保存すると，保存した動画は 30fps の動画になります．</p>
+<hr />
+<h1><a name="TOC--1"></a>使用方法</h1>
+<ol>
+<li>このスキンは Google サーバにアクセスし画像データを得ています．Google サーバにアクセスするためには「API キー」が必要です．キーは無料で取得出来ます．キー取得方法は<a href="install.html#GoogleAPIKey">こちら</a> を参照してください．<br />
+キーを取得したら，_user_config.js を直接書き換えて，API キーを設定します．
+</li>
+<li>このスキンには車載動画は必要ありませんが，AviUtl には何らかの動画を読み込む必要があります．<a href="https://github.com/yoshinrt/vsd/releases/download/release_r986/blank.zip">こちら</a>に 640x480pix，黒画面の avi ファイルを用意しましたので，ダウンロード・解凍後に，AviUtl に読み込んでください．</li>
+<li>「VSD メーター合成」ダイアログボックスで GPS ログを読み込みます．</li>
+<li><a href="https://github.com/yoshinrt/vsd/releases/download/release_r986/streetview.cfg">streetview.cfg</a> をダウンロードして下さい．「VSD メーター合成」ダイアログボックスで cfg ファイルの「開く」ボタンを押し，ダウンロードした streetview.cfg を読み込みます．この cfg を読み込むことで 20倍速の動画を作成することができます．倍率を変更したい場合は，cfg ファイルを編集し「gps_end=???」に，倍率 * 1000 の値を指定してください．</li>
+<li>AviUtl のメインスライダなどを使用して，GPS ログ最後のフレームを表示させます．その状態で「]」キーを押し，それ以降の動画をエンコード・保存しないようにします．</li>
+<li>あとは AviUtl の機能を使用して，動画のエンコード・保存を行ってください．</li>
+</ol>
+<h2><a name="TOC--2"></a>倍速設定についてのヒント</h2>
+<div>上で説明されたとおり，GPS ログ再生倍率が低すぎると，連続した複数フレームが同じ画像になり，結果としてカクカクした動画になります．理想的な動画は，毎フレームが違う画像になり，なおかつフレーム間の距離が長すぎない (倍率が大きすぎない) 倍率であると言えます．最適な倍率は GPS ログの速度とストリートビューの画像の撮影間隔距離によって決まり，以下の式で求められます．</div>
+<p>　最適倍率 = ストリートビュー撮影間隔[m] * 108 / 速度[km/h]</p>
+<div>Google マイマップで作成した KML リード時は時速は 60km/h 固定であり，またストリートビューの撮影間隔は 10m と思われるため，最適な倍率は 10 * 108 / 60 = 18倍 ということになります．</div><div>実走行 GPS ログの場合は，そのログで最も長い時間現れる時速に合わせて倍率を決定すると良いと思われます．</div>
+</td> 
+</tr>
+</table> 
+</body>
+
+</html>
