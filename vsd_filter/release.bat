@@ -47,7 +47,7 @@ call :rename
 
 if not exist c:\cygwin exit /b 0
 
-pause
+if "%APPVEYOR%"=="" pause
 
 rmdir /s/q zrelease
 call :clean > nul 2>&1
