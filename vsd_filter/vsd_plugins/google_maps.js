@@ -44,7 +44,7 @@ function Initialize(){
 			MB_OKCANCEL | MB_ICONINFORMATION
 		) == IDOK ){
 			var WshShell = new ActiveXObject( "WScript.Shell" );
-			WshShell.Run( "cmd /c start https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install#GoogleAPIKey" );
+			WshShell.Run( "cmd /c start https://yoshinrt.github.io/vsd/install#GoogleAPIKey" );
 		}
 	}
 	

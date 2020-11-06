@@ -88,7 +88,7 @@ function Caption(){
 			'vsd_plugins\\_user_config.js 以外は上書きされます．<br/>' :
 			'「インストール開始」を押すと，' +
 			'<a href="http://spring-fragrance.mints.ne.jp/aviutl/">AviUtl</a>, ' +
-			'<a href="https://sites.google.com/site/vsdforgps/home/vsd-for-gps">VSD for GPS</a>，' +
+			'<a href="https://yoshinrt.github.io/vsd/">VSD for GPS</a>，' +
 			'<a href="http://pop.4-bit.jp/">L-SMASH Woks</a>，' +
 			'<a href="https://osdn.jp/projects/ffdshow-tryout/">ffdshow</a>' +
 			' がインストールされます．<br/>'
@@ -146,7 +146,7 @@ function InstallSub(){
 	if( !document.form1.no_ffdshow.checked ){
 		Log( "<hr />ffdshow のインストールを開始します" );
 		
-		Download( "https://sites.google.com/site/vsdforgps/home/sono-ta/ffdshow_rev3631_20101115_clsid.exe_?attredirects=0&d=1", WorkPath + "\\ffdshow_rev3631_20101115_clsid.exe" );
+		Download( "https://github.com/yoshinrt/vsd/releases/download/release_r986/ffdshow_rev3631_20101115_clsid.exe", WorkPath + "\\ffdshow_rev3631_20101115_clsid.exe" );
 		WshShell.Run(
 			'"' + WorkPath + '\\ffdshow_rev3631_20101115_clsid.exe"',
 			4, 1
@@ -163,8 +163,8 @@ function InstallSub(){
 	}
 	
 	Log( "<hr />★★★インストールが完了しました．★★★" );
-	Log( 'Web ブラウザの「<a href="https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install">インストール・初期設定手順</a>」にしたがって，初期設定を行ってください．' );
-	ShellApp.ShellExecute( "https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install" );
+	Log( 'Web ブラウザの「<a href="https://yoshinrt.github.io/vsd/install">インストール・初期設定手順</a>」にしたがって，初期設定を行ってください．' );
+	ShellApp.ShellExecute( "https://yoshinrt.github.io/vsd/install" );
 }
 
 function Update(){

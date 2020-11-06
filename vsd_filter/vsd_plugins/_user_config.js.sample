@@ -13,7 +13,7 @@ GEAR_RATIO = [
 REV_LIMIT		= 6500;
 
 // Google マップ・ストリートビュー画像取得のための API キーを設定します．
-//   参考: https://sites.google.com/site/vsdforgps/home/vsd-for-gps/install#GoogleAPIKey
+//   参考: https://yoshinrt.github.io/vsd/install#GoogleAPIKey
 GoogleAPIKey = [
 //	"AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg",	// 例
 	"",
