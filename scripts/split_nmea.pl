@@ -2,13 +2,14 @@
 
 use Time::Local;
 
-$SpeedTh = 10;
-$TimeTh  = 60 * 5;
+$SpeedTh = 10;			# 動いたとみなす時速
+$TimeTh  = 60 * 5;		# 止まっていた時間
 
 $Line = '';
 
-$LastMoved = 0;
-$InFileName = $ARGV[ 0 ];
+$LastMoved	= 0;
+$InFileName	= $ARGV[ 0 ];
+$MaxSpeed	= 0;
 
 while( <> ){
 	if( /^\$GPRMC/ ){
@@ -29,12 +30,21 @@ while( <> ){
 		$Speed = $_[ 7 ] * 1.85200;
 		
 		if( $Speed >= $SpeedTh ){
+			
+			$MaxSpeed = $Speed if( $MaxSpeed < $Speed );
+			
 			if( $Time - $LastMoved >= $TimeTh ){
 				# 最後に動いてから TimeTh 以上空いた場合，
 				# そこが split 開始点になる．
 				
 				# 前回の終了点
-				push( @SplitTbl, $LastMoved ) if( $LastMoved );
+				if( $LastMoved ){
+					push( @SplitTbl, $LastMoved );
+					push( @SplitTbl, $MaxSpeed );
+				}
+				
+				$MaxSpeed = 0;
+				
 				# 開始点
 				push( @SplitTbl, $Time );
 			}
@@ -52,9 +62,10 @@ while( <> ){
 
 exit( 0 ) if( !$LastMoved );
 push( @SplitTbl, $LastMoved );
+push( @SplitTbl, $MaxSpeed );
 
-$End = 0;
-$bOutput = 0;
+$End		= 0;
+$bOutput	= 0;
 
 for( $i = 0; $i <= $#Data; ++$i ){
 	
@@ -66,12 +77,16 @@ for( $i = 0; $i <= $#Data; ++$i ){
 		# 分割した nmea の最後に TimeTh 分のダミーデータをつける
 		AddDummyRMC( ${ $Data[ $i - 1 ] }[ 1 ], $End + ( $TimeTh >> 1 )) if( $End != 0 );
 		
-		$Start = shift( @SplitTbl );
-		$End   = shift( @SplitTbl );
+		$Start		= shift( @SplitTbl );
+		$End		= shift( @SplitTbl );
+		$MaxSpeed	= shift( @SplitTbl );
 		
-		printf( "%s - %s\n",
+		printf( "%s - %s %2d:%02d (%dkm/h)\n",
 			GetDate( $Start + 9 * 3600 ),
-			GetDate( $End   + 9 * 3600 )
+			GetDate( $End   + 9 * 3600 ),
+			( $End - $Start ) / 60,
+			( $End - $Start ) % 60,
+			$MaxSpeed
 		);
 		
 		# ファイル名を作る
