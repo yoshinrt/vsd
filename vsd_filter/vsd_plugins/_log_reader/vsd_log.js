@@ -13,6 +13,8 @@ function ReadVsdLog( Files ){
 	var Long	= [];
 	var Alti	= [];
 	
+	var LapTimeExist = 0;
+	
 	var ParamDef = {
 		// csv 項目名	Vsd 変数名			function or 乗数
 		"Date/Time"		: [ "Time",			StrToUTC ],
@@ -28,7 +30,7 @@ function ReadVsdLog( Files ){
 	};
 	
 	var Cnt = ReadVsdSub( Files, ParamDef );
-	
+	if( !LapTimeExist ) delete Log.LapTime;
 	if( GpsTime.length == 0 ) return Cnt;
 	
 	// GPS ログを VSD ログにマージ
@@ -83,11 +85,12 @@ function ReadVsdLog( Files ){
 	function StrToLapTime( str ){
 		// 1:23.456
 		if( typeof( str ) == "string" && str.match( /(?:(\d+):)?([\d\.]+)/ )){
+			LapTimeExist = 1;
 			return RegExp.$1 * 60000 + RegExp.$2 * 1000;
 		}
 		return -1;
 	}
-
+	
 	function ReadVsdSub( Files, ParamDef ){
 		var ParamUsed = [];
 		
