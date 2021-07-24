@@ -1554,8 +1554,13 @@ BOOL func_update( FILTER *filter, int status ){
 			}
 		#else
 			if( filter->check[ CHECK_LOGPOS ] && g_Vsd->m_VsdLog ){
-				filter->track[ PARAM_LSt ] = ( int )( g_Vsd->m_VsdLog->m_iCalibStart * SLIDER_TIME );
-				filter->track[ PARAM_LEd ] = ( int )( g_Vsd->m_VsdLog->m_iCalibStop  * SLIDER_TIME );
+				if( g_Vsd->m_VsdLog->m_iCalibStart >= 0 ){
+					filter->track[ PARAM_LSt ] = ( int )( g_Vsd->m_VsdLog->m_iCalibStart * SLIDER_TIME );
+				}
+				
+				if( g_Vsd->m_VsdLog->m_iCalibStop >= 0 ){
+					filter->track[ PARAM_LEd ] = ( int )( g_Vsd->m_VsdLog->m_iCalibStop  * SLIDER_TIME );
+				}
 				
 				// 設定再描画
 				filter->exfunc->filter_window_update( filter );
