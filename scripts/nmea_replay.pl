@@ -1,18 +1,23 @@
 #!/usr/bin/perl -w
 
 use Time::HiRes qw(sleep);
+use Time::Piece;
 
 $Scale	= 1;	# 倍速設定
-$Dist	= 1;	# 最低移動距離 [m]
+$Dist	= -1;	# 最低移動距離 [m]，マイナス時は間引かない
 
 # BT COM の着信を有効，COMn の n - 1 をttySm に設定
-open( fpCom, "> /dev/ttyS4" ) || die( "Can't open COM\n" );
+open( fpCom, "> /dev/ttyS6" ) || die( "Can't open COM\n" );
 #open( fpCom, "| cat" ) || die( "Can't open COM\n" );
 
-if( $ARGV[ 0 ] =~ /\.gz$/ ){
-	open( fpIn, "gunzip -c $ARGV[ 0 ] |" );
+if( $#ARGV >= 0 ){
+	if( $ARGV[ 0 ] =~ /\.gz$/ ){
+		open( $fpIn, "gunzip -c $ARGV[ 0 ] |" );
+	}else{
+		open( $fpIn, "< $ARGV[ 0 ]" );
+	}
 }else{
-	open( fpIn, "< $ARGV[ 0 ]" );
+	$fpIn = STDIN;
 }
 
 $PrevTime = 0;
@@ -41,7 +46,7 @@ sub Distance{
 	sqrt(( $dy * $M ) ** 2 + ( $dx * $N * cos( $My )) ** 2 );
 };
 
-while( <fpIn> ){
+while( <$fpIn> ){
 	s/[\x0D\x0A]+//g;
 	s/\*..$//;
 	
@@ -63,27 +68,30 @@ while( <fpIn> ){
 		$_[ 5 ] =~ /^(\d+)(\d\d(\.\d+)?)$/;
 		$Lon = $1 + $2 / 60 * ( $_[ 6 ] eq 'E' ? 1 : -1 );
 		
-		next if( Distance( $Lon, $Lat, $PrevLon, $PrevLat ) < $Dist );
+		next if( $Dist > 0 && Distance( $Lon, $Lat, $PrevLon, $PrevLat ) < $Dist );
 		
 		# wait 時間計算
 		$_[ 1 ] =~ /(\d\d)(\d\d)(\d\d)\.?(\d*)/;
 		
 		$Time = $1 * 3600 + $2 * 60 + $3 + "0.$4";
+		$StartTime = int( $Time ) if( !defined( $StartTime ));
 		
 		( $Sleep, $PrevTime ) = ( $Time - $PrevTime, $Time );
 		$Sleep += 24 * 3600 if( $Sleep < 0 );
 		$Sleep = 5 if( $Sleep > 5 );
 		
-		# NMEA の時刻を現在時に修正
-#		( $sec, $min, $hour, $mday, $mon, $year ) = gmtime( time );
-#		$_[ 1 ] = sprintf( '%02d%02d%02d', $hour, $min, $sec );
-#		$_[ 9 ] = sprintf( '%02d%02d%02d', $mday, $mon + 1, $year % 100 );
-		
-		$_ = '';
-		
-		if( defined( $Alt )){
-			$_ = AddChksum( "\$GPGGA,$_[ 1 ],$_[ 3 ],$_[ 4 ],$_[ 5 ],$_[ 6 ],2,12,0.5,$Alt,M,,,," );
+		if( defined( $NowTime )){
+			$DiffSec = int( $Time ) - $StartTime;
+			$DiffSec += 24 * 3600 if( $DiffSec < 0 );
+			
+			# NMEA の時刻を現在時に修正
+			$AdjTime = $NowTime + Time::Seconds->new( $DiffSec );
+			$_[ 1 ] = $AdjTime->strftime( "%H%M%S." ) . sprintf( "%03d", int(( $Time - int( $Time )) * 1000 + 0.5 ));
+			$_[ 9 ] = $AdjTime->strftime( "%d%m%y" );
 		}
+		
+		$Alt = 0 if( !defined( $Alt ));
+		$_ = AddChksum( "\$GPGGA,$_[ 1 ],$_[ 3 ],$_[ 4 ],$_[ 5 ],$_[ 6 ],2,12,0.5,$Alt,M,,,," );
 		
 		$_ .= AddChksum( join( ',', @_ ));
 		
@@ -91,6 +99,9 @@ while( <fpIn> ){
 		
 		print( fpCom );
 		print;
+		
+		# COM に出力できた時間を開始時間とする
+		$NowTime = gmtime if( !defined( $NowTime ));
 		
 		$PrevLon = $Lon;
 		$PrevLat = $Lat;
