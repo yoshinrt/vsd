@@ -32,52 +32,56 @@ sub AddChksum {
 	return sprintf( "$_*%02X\n", $Sum );
 }
 
-open( $fpIn, "zcat $ARGV[ 0 ] |" );
-
-while( <$fpIn> ){
-	if( /^GPS/ ){
-		
-		@_ = split( /\t/, $_ );
-		
-		# 0   1                        2            3           4      5
-		# 0   Date/Time                lon          lat         alt    spd
-		# GPS 2021-07-23T02:08:23.100Z 136.50534833 34.80690667 41.800 6.130
-		
-		$_[ 1 ] =~ /\d\d(\d+)-(\d+)-(\d+)T(\d+):(\d+):([\d\.]+)/;
-		
-		$Date	= "$3$2$1";
-		$Time	= "$4$5$6";
-		$Lat	= $_[ 3 ];
-		$Lng	= $_[ 2 ];
-		$_[ 5 ]	/= 1.85200;	# knot
-		
-		if( !defined( $Lng2M )){
-			$Lng0 = $Lng;
-			$Lat0 = $Lat;
+foreach $File ( @ARGV ){
+	open( $fpIn, "zcat $File |" );
+	
+	while( <$fpIn> ){
+		if( /^GPS/ ){
 			
-			$Lng2M = AccurateDistance( $Lng, $Lat, $Lng + 1 / 3600, $Lat ) * 3600;
-			$Lat2M = AccurateDistance( $Lng, $Lat, $Lng, $Lat + 1 / 3600 ) * 3600;
+			@_ = split( /\t/, $_ );
+			
+			# 0   1                        2            3           4      5
+			# 0   Date/Time                lon          lat         alt    spd
+			# GPS 2021-07-23T02:08:23.100Z 136.50534833 34.80690667 41.800 6.130
+			
+			$_[ 1 ] =~ /\d\d(\d+)-(\d+)-(\d+)T(\d+):(\d+):([\d\.]+)/;
+			
+			$Date	= "$3$2$1";
+			$Time	= "$4$5$6";
+			$Lat	= $_[ 3 ];
+			$Lng	= $_[ 2 ];
+			$_[ 5 ]	/= 1.85200;	# knot
+			
+			if( !defined( $Lng2M )){
+				$Lng0 = $Lng;
+				$Lat0 = $Lat;
+				
+				$Lng2M = AccurateDistance( $Lng, $Lat, $Lng + 1 / 3600, $Lat ) * 3600;
+				$Lat2M = AccurateDistance( $Lng, $Lat, $Lng, $Lat + 1 / 3600 ) * 3600;
+			}
+			
+			$LatStr = int( $Lat ) * 100 + fmod( $Lat, 1 ) * 60;
+			$LngStr = int( $Lng ) * 100 + fmod( $Lng, 1 ) * 60;
+			
+			# 方位
+			$Bearing =
+				atan2(( $Lng - $Lng0 ) * $Lng2M, ( $Lat - $Lat0 ) * $Lat2M )
+				* ( 180 / 3.14159265358979 ) + 360;
+			$Bearing -= 360 if( $Bearing >= 360 );
+			
+			print(
+				AddChksum( "\$GPGGA,$Time,$LatStr,$LngStr,1,12,0.5,$_[4],M,,,," ) .
+				AddChksum( sprintf(
+					"\$GPRMC,$Time,A,$LatStr,N,$LngStr,E,%.3f,%.3f,$Date,,,A",
+					$_[ 5 ], $Bearing
+				))
+			);
+			
+			( $Lng0, $Lat0 ) = ( $Lng, $Lat );
 		}
-		
-		$LatStr = int( $Lat ) * 100 + fmod( $Lat, 1 ) * 60;
-		$LngStr = int( $Lng ) * 100 + fmod( $Lng, 1 ) * 60;
-		
-		# 方位
-		$Bearing =
-			atan2(( $Lng - $Lng0 ) * $Lng2M, ( $Lat - $Lat0 ) * $Lat2M )
-			* ( 180 / 3.14159265358979 ) + 360;
-		$Bearing -= 360 if( $Bearing >= 360 );
-		
-		print(
-			AddChksum( "\$GPGGA,$Time,$LatStr,$LngStr,1,12,0.5,$_[4],M,,,," ) .
-			AddChksum( sprintf(
-				"\$GPRMC,$Time,A,$LatStr,N,$LngStr,E,%.3f,%.3f,$Date,,,A",
-				$_[ 5 ], $Bearing
-			))
-		);
-		
-		( $Lng0, $Lat0 ) = ( $Lng, $Lat );
 	}
+	
+	close( $fpIn );
 }
 
 sub fmod {
