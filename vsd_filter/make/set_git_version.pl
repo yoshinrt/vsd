@@ -4,16 +4,20 @@
 
 $File = $ARGV[ 0 ];
 
+print "Appveyor " if( $ENV{ APPVEYOR });
+
 # git リビジョンを得る
 $Rev = split( /\n/, `git log --oneline` );
 print "Commit:$Rev ";
 
-# git 更新されているかを得る
-$ModCnt = split( /\n/, `git diff --stat` );
-if( $ModCnt > 0 ){
-	++$Rev;
-	
-	print "Modified:$Rev ";
+if( !$ENV{ APPVEYOR }){
+	# git 更新されているかを得る
+	$ModCnt = split( /\n/, `git diff --stat` );
+	if( $ModCnt > 0 ){
+		++$Rev;
+		
+		print "Modified:$Rev ";
+	}
 }
 
 $PrevRev = 0;
