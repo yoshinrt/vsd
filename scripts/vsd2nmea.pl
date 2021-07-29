@@ -61,7 +61,9 @@ foreach $File ( @ARGV ){
 			}
 			
 			$LatStr = int( $Lat ) * 100 + fmod( $Lat, 1 ) * 60;
+			$LatStr .= $Lat >= 0 ? ',N' : ',S';
 			$LngStr = int( $Lng ) * 100 + fmod( $Lng, 1 ) * 60;
+			$LngStr .= $Lng >= 0 ? ',E' : ',W';
 			
 			# 方位
 			$Bearing =
@@ -72,7 +74,7 @@ foreach $File ( @ARGV ){
 			print(
 				AddChksum( "\$GPGGA,$Time,$LatStr,$LngStr,1,12,0.5,$_[4],M,,,," ) .
 				AddChksum( sprintf(
-					"\$GPRMC,$Time,A,$LatStr,N,$LngStr,E,%.3f,%.3f,$Date,,,A",
+					"\$GPRMC,$Time,A,$LatStr,$LngStr,%.3f,%.3f,$Date,,,A",
 					$_[ 5 ], $Bearing
 				))
 			);
