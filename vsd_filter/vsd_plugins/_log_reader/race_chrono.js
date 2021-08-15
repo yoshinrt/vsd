@@ -1,11 +1,11 @@
 // Race Chrono (*.rcz) ログリーダ
 
-// 1: ULONG 時刻 [ms]
+// 1: ULONG epoch 時刻 [ms]
 // 2: ULONG 走行距離 [1/1000m]
 // 3: int latitude, int longitude [1/6000000度]
 // 4: UINT 速度 [1/277.7792km/h, キリがいいのに近いのは 1/512knot?]
 // 5: 高度 [1/1000m]
-// 6: UINT bearing [1/100度]
+// 6: UINT bearing [1/1000度]
 // 30002: 捕捉衛生数
 // 30003: 位置特定品質 ($GPGGA)
 // 30004: DOP 座標精度 [*1/1000]
