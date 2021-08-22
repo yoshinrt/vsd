@@ -10,14 +10,14 @@ VSD プロジェクトは，自動車のサーキット走行などにおける�
 * `vsd_filter`: GPS ログ・データロガーのログを車載動画に合成する [VSD for GPS](https://yoshinrt.github.io/vsd/)
 * `vsd2`: ARM マイコンボード (DesignWave 2008年5月号付属) を，車両データ取得用データロガーとするための Firmware
 * `vsdroid`: 上記 ARM マイコンの UI として動作するための Android アプリ
-* `seri2eth`: Fonera+ (FON 2201) を UART⇔Ether コンバータとして使用するためのプログラム
 * `scripts`: 開発過程で作成した多雑なスクリプト
 
 以下は過去の産物であり，すでに未メンテ
 
-* `vsd`: 秋月 H8 3664 マイコンボード (すでに廃盤?) 用 Firmware
-* `vsd_psp`: PSP 用 LUA playre で動作する，UI アプリ
-* `vsdwin`: Windows 用 UI アプリ
+* `deprecated/vsd`: 秋月 H8 3664 マイコンボード (すでに廃盤?) 用 Firmware
+* `deprecated/seri2eth`: Fonera+ (FON 2201) を UART⇔Ether コンバータとして使用するためのプログラム
+* `deprecated/vsd_psp`: PSP 用 LUA playre で動作する，UI アプリ
+* `deprecated/vsdwin`: Windows 用 UI アプリ
 
 正式リリース以外の最新バイナリは，[AppVeyor](https://ci.appveyor.com/project/YoshiNRT/vsd/branch/master/artifacts) で公開しています．
 
