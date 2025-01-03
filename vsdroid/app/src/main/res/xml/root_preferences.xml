@@ -1,0 +1,122 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+	<PreferenceCategory app:title="@string/pref_category_main" app:iconSpaceReserved="false"/>
+	
+	<Preference app:key="key_reopen_log" app:title="@string/pref_reopen_log"/>
+	<Preference app:key="key_set_to_ready_state" app:title="@string/pref_set_to_ready_state"/>
+	<Preference app:key="key_rm_fastest_lap" app:title="@string/pref_rm_fastest_lap"/>
+	<Preference app:key="key_caribration" app:title="@string/pref_caribration"/>
+	
+	<ListPreference
+		app:key="key_vsd_mode"
+		app:defaultValue="0"
+		app:dialogTitle="@string/pref_vsd_mode"
+		app:title="@string/pref_vsd_mode"
+		app:entryValues="@array/list_vsd_mode_values"
+		app:useSimpleSummaryProvider="true"
+		app:entries="@array/list_vsd_mode"/>
+	
+	<ListPreference
+		app:dialogTitle="@string/pref_wheel_select"
+		app:entries="@array/list_wheel_select"
+		app:entryValues="@array/list_wheel_select"
+		app:key="key_wheel_select"
+		app:useSimpleSummaryProvider="true"
+		app:title="@string/pref_wheel_select"/>
+	
+	<PreferenceCategory app:title="@string/pref_category_circuit" app:iconSpaceReserved="false"/>
+	
+	<Preference
+		app:dialogTitle="@string/pref_circuit"
+		app:key="key_circuit"
+		app:summary="-"
+		app:title="@string/pref_circuit"/>
+	
+	<ListPreference
+		app:key="key_sectors"
+		app:title="@string/pref_sectors"
+		app:dialogTitle="@string/pref_sectors"
+		app:entries="@array/list_sectors"
+		app:useSimpleSummaryProvider="true"
+		app:entryValues="@array/list_sectors"/>
+	
+	<EditTextPreference
+		app:defaultValue="1.0"
+		app:dialogTitle="@string/pref_gymkhana_start"
+		app:key="key_gymkha_start"
+		app:useSimpleSummaryProvider="true"
+		app:title="@string/pref_gymkhana_start"/>
+	
+	<PreferenceCategory app:title="@string/pref_category_connect" app:iconSpaceReserved="false"/>
+	
+	<ListPreference
+		app:entryValues="@array/list_connection_mode_values"
+		app:entries="@array/list_connection_mode"
+		app:dialogTitle="@string/pref_connection_mode"
+		app:key="key_connection_mode"
+		app:useSimpleSummaryProvider="true"
+		app:title="@string/pref_connection_mode"/>
+	
+	<ListPreference
+		app:key="key_log_hz"
+		app:title="@string/pref_log_hz"
+		app:dialogTitle="@string/pref_log_hz"
+		app:entries="@array/list_log_hz"
+		app:useSimpleSummaryProvider="true"
+		app:entryValues="@array/list_log_hz"/>
+	
+	<Preference
+		app:key="key_system_dir"
+		app:summary="-"
+		app:title="@string/pref_system_dir"/>
+	
+	<Preference
+		app:key="key_replay_log"
+		app:summary="-"
+		app:title="@string/pref_replay_log"/>
+	
+	<Preference
+		app:key="key_roms"
+		app:summary="-"
+		app:title="@string/pref_roms"/>
+	
+	<ListPreference
+		app:dialogTitle="@string/pref_bt_devices_vsd"
+		app:key="key_bt_devices_vsd"
+		app:useSimpleSummaryProvider="true"
+		app:title="@string/pref_bt_devices_vsd"/>
+	
+	<CheckBoxPreference
+		app:key="key_use_btgps"
+		app:title="@string/pref_use_btgps"/>
+	
+	<ListPreference
+		app:dialogTitle="@string/pref_bt_devices_gps"
+		app:key="key_bt_devices_gps"
+		app:useSimpleSummaryProvider="true"
+		app:title="@string/pref_bt_devices_gps"/>
+	
+	<EditTextPreference app:key="key_ip_addr"
+		app:defaultValue="192.168.0.1"
+		app:title="@string/pref_ip_addr"
+		app:useSimpleSummaryProvider="true"
+		app:dialogTitle="@string/pref_ip_addr"/>
+	
+	<EditTextPreference
+		app:defaultValue="100"
+		app:dialogTitle="@string/pref_fw_send_wait"
+		app:key="key_fw_send_wait"
+		app:useSimpleSummaryProvider="true"
+		app:title="@string/pref_fw_send_wait"/>
+	
+	<PreferenceCategory app:title="@string/pref_category_other" app:iconSpaceReserved="false"/>
+
+	<CheckBoxPreference
+		app:key="key_eco_mode"
+		app:summary="@string/pref_summery_eco_mode"
+		app:title="@string/pref_eco_mode"/>
+	
+	<CheckBoxPreference
+		app:key="key_debug_info"
+		app:title="@string/pref_debug_info"/>
+	
+</PreferenceScreen>
