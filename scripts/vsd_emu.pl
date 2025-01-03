@@ -43,7 +43,7 @@ for( $i = 0; $i <= $#_; ++$i ){
 	}
 }
 
-if( 0 ){
+if( 1 ){
 	print( "IdxDate = $IdxDate\n" );
 	print( "IdxTacho = $IdxTacho\n" );
 	print( "IdxSpeed = $IdxSpeed\n" );
@@ -61,53 +61,51 @@ my $Handle;
 if( $ConnMode == 2 ){
 	# BT COM の着信を有効，COMn の n - 1 をttySm に設定
 	open( $Handle, "> /dev/ttyS4" ) || die( "Can't open COM\n" );
+}elsif( $ConnMode == 1 ){
+	### サーバ
+	# 1. 受付用ソケットの作成
+	my $SockListen;
+	socket( $SockListen, PF_INET, SOCK_STREAM, getprotobyname( 'tcp' ))
+		or die "Cannot create socket: $!";
+	
+	setsockopt( $SockListen, SOL_SOCKET, SO_REUSEADDR, 1 );
+	
+	# 2. 受付用ソケット情報の作成
+	my $pack_addr = sockaddr_in( 12345, INADDR_ANY );
+	
+	# 3. 受付用ソケットと受付用ソケット情報を結びつける
+	bind( $SockListen, $pack_addr ) or die "Cannot bind: $!";
+	
+	# 4. 接続を受け付ける準備をする。
+	listen( $SockListen, SOMAXCONN ) or die "Cannot listen: $!";
+	
+	# 5. 接続を受け付けて応答する。
+	# 接続まち
+	accept( $Handle, $SockListen );
+	print "Connected\n";
 }else{
-	if( $ConnMode == 1 ){
-		### サーバ
-		# 1. 受付用ソケットの作成
-		my $SockListen;
-		socket( $SockListen, PF_INET, SOCK_STREAM, getprotobyname( 'tcp' ))
-			or die "Cannot create socket: $!";
-		
-		setsockopt( $SockListen, SOL_SOCKET, SO_REUSEADDR, 1 );
-		
-		# 2. 受付用ソケット情報の作成
-		my $pack_addr = sockaddr_in( 12345, INADDR_ANY );
-		
-		# 3. 受付用ソケットと受付用ソケット情報を結びつける
-		bind( $SockListen, $pack_addr ) or die "Cannot bind: $!";
-		
-		# 4. 接続を受け付ける準備をする。
-		listen( $SockListen, SOMAXCONN ) or die "Cannot listen: $!";
-		
-		# 5. 接続を受け付けて応答する。
-		# 接続まち
-		accept( $Handle, $SockListen );
-		print "Connected\n";
-	}else{
-		# クライアント
-		# 1. ソケットの作成
-		socket( $Handle, PF_INET, SOCK_STREAM, getprotobyname( 'tcp' ))
-			or die "Cannot create socket: $!";
-		
-		# 2. ソケット情報の作成
-		
-		# 接続先のホスト名
-		my $remote_host = '192.168.0.132';
-		my $packed_remote_host = inet_aton( $remote_host )
-			or die "Cannot pack $remote_host: $!";
-		
-		# 接続先のポート番号
-		my $remote_port = 12345;
-		
-		# ホスト名とポート番号をパック
-		my $sock_addr = sockaddr_in( $remote_port, $packed_remote_host )
-			or die "Cannot pack $remote_host:$remote_port: $!";
-		
-		# 3. ソケットを使って接続
-		connect( $Handle, $sock_addr ) 
-			or die "Cannot connect $remote_host:$remote_port: $!";
-	}
+	# クライアント
+	# 1. ソケットの作成
+	socket( $Handle, PF_INET, SOCK_STREAM, getprotobyname( 'tcp' ))
+		or die "Cannot create socket: $!";
+	
+	# 2. ソケット情報の作成
+	
+	# 接続先のホスト名
+	my $remote_host = '192.168.0.132';
+	my $packed_remote_host = inet_aton( $remote_host )
+		or die "Cannot pack $remote_host: $!";
+	
+	# 接続先のポート番号
+	my $remote_port = 12345;
+	
+	# ホスト名とポート番号をパック
+	my $sock_addr = sockaddr_in( $remote_port, $packed_remote_host )
+		or die "Cannot pack $remote_host:$remote_port: $!";
+	
+	# 3. ソケットを使って接続
+	connect( $Handle, $sock_addr ) 
+		or die "Cannot connect $remote_host:$remote_port: $!";
 }
 
 # unbuffered
@@ -127,6 +125,7 @@ $iCnt = 0;
 $PrevLapTime = 1;
 $PrevTime = -1;
 
+$z = 0;
 while( <fpIn> ){
 	
 	s/[\x0D\x0A]//g;
@@ -162,6 +161,7 @@ while( <fpIn> ){
 	$PrevTime = $Time;
 	
 	#GetData( MSG_DONTWAIT );
+	if($z++ > 10){while(1){sleep(10000);}}
 }
 
 sub GetData {
@@ -179,7 +179,7 @@ sub GetData {
 	$tmp = $_;
 	
 	s/([\x00-\x1F\[\x7E-\xFF])/sprintf( '[%02X]', ord( $1 ))/ge;
-	print "Recv:$_\n";
+	print "Recv:<<<$_>>>\n";
 	
 	$tmp;
 }
@@ -201,10 +201,10 @@ sub SendData {
 sub WaitCmd {
 	local( $_ ) = @_;
 	
-	print( "Waiting $_\n" );
+	print( "Waiting [$_]\n" );
 	
 	while( $Buf !~ /$_/ ){
-		print $Buf;
+		#print $Buf;
 		$Buf .= GetData();
 	}
 	print( "OK\n" );
