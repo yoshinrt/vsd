@@ -62,15 +62,6 @@ class SettingsActivity : AppCompatActivity() {
 			PrefReOpenLog = findPreference("key_reopen_log")
 			PrefCalibration = findPreference("key_caribration")
 
-		//#	fopReplayLog =
-		//#		findPreference("key_replay_log") as jp.dds.dds_lib.FileOpenPreference
-		//#	fopFirmware =
-		//#		findPreference("key_roms") as jp.dds.dds_lib.FileOpenPreference
-		//#	fopCircuit =
-		//#		findPreference("key_circuit") as jp.dds.dds_lib.FileOpenPreference
-	
-		//#	val extras = intent.extras
-			
 			(PrefContext as SettingsActivity).setResult(RESULT_OK)
 
 			//////////////////////////////////////////////////////////////////////
@@ -200,20 +191,26 @@ class SettingsActivity : AppCompatActivity() {
 			val Pref = PreferenceManager.getDefaultSharedPreferences(PrefContext!!)
 			Pref!!.unregisterOnSharedPreferenceChangeListener(this)
 		}
-	
+
+		private fun SupressVsdDirName(name: String?): String? {
+			if(name == null) return null
+			val pos: Int = name.indexOf("/vsd/")
+			return if(pos < 0) name else name?.substring(pos + 5)
+		}
+
 		// 設定変更時
 		private fun SetupSummery(Pref: SharedPreferences?, key: String?) {
 			if (PrefGpsCtrlLine != null && (key == null || key == "key_circuit")) {
-				PrefGpsCtrlLine?.summary = Pref?.getString("key_circuit", "-")
+				PrefGpsCtrlLine?.summary = SupressVsdDirName(Pref?.getString("key_circuit", "-"))
 			}
 			if (PrefVsdDir != null && (key == null || key == "key_system_dir")) {
 				PrefVsdDir?.summary = Pref?.getString("key_system_dir", "-")
 			}
 			if (PrefReplayLog != null && (key == null || key == "key_replay_log")) {
-				PrefReplayLog?.summary = Pref?.getString("key_replay_log", "-")
+				PrefReplayLog?.summary = SupressVsdDirName(Pref?.getString("key_replay_log", "-"))
 			}
 			if (PrefFirmware != null && (key == null || key == "key_roms")) {
-				PrefFirmware?.summary = Pref?.getString("key_roms", "-")
+				PrefFirmware?.summary = SupressVsdDirName(Pref?.getString("key_roms", "-"))
 			}
 		}
 	
