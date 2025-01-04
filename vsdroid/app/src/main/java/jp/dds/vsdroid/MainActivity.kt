@@ -242,7 +242,7 @@ class MainActivity : AppCompatActivity() {
 									}
 									2 -> {
 										Toast.makeText(this@MainActivity, "最速ラップ削除", Toast.LENGTH_LONG).show()
-										//this@MainActivity.Vsd?.SetToReadyState()
+										this@MainActivity.Vsd?.DeleteFastestLap()
 									}
 									3 -> this@MainActivity.Vsd?.Calibration()
 									else -> {}

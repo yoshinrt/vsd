@@ -308,14 +308,14 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 			paint.textSize = 32f
 			canvas.drawText(s, fLapX, 355f, paint)
 			paint.textSize = 64f
-			canvas.drawText(String.format(Locale.US, "%02d", Vsd.iLapNum), fLapX, 410f, paint)
+			canvas.drawText(String.format(Locale.US, "%02d", Vsd.GetLapNum()), fLapX, 410f, paint)
 
 			// Lap タイム
 			if(fLapTimeX == 0f){
 				fLapTimeX = BASE_WIDTH - fLapX - paint.measureText("0'00.000")
 			}
-			paint.color = if (Vsd.iTimeLastRaw == 0) Color.GRAY else if (Vsd.iTimeLastRaw <= Vsd.iTimeBestRaw) Color.CYAN else Color.RED
-			canvas.drawText(VsdInterface.FormatTime(Vsd.iTimeLastRaw), fLapTimeX, 410f, paint)
+			paint.color = if (Vsd.GetLastLapTime() == 0) Color.GRAY else if (Vsd.GetLastLapTime() <= Vsd.iTimeBestRaw) Color.CYAN else Color.RED
+			canvas.drawText(VsdInterface.FormatTime(Vsd.GetLastLapTime()), fLapTimeX, 410f, paint)
 			paint.color = Color.GRAY
 			canvas.drawText(VsdInterface.FormatTime(Vsd.iTimeBestRaw), fLapTimeX, 470f, paint)
 

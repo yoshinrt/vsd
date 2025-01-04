@@ -62,11 +62,6 @@ open class VsdInterface(context: Context) : Runnable {
 	private var iGCaribCnt: Int = iGCaribCntMax
 	private var LapState: LAP_STATE = LAP_STATE.NONE
 
-	// レコード
-	var iLapNum: Int = 0
-	var iTimeLastRaw: Int = 0
-	var iTimeBestRaw: Int = 0
-
 	var Buf: ByteArray = ByteArray(iBufSize)
 	private var iBufLen: Int = 0
 	private var iBufPtr: Int = 0
@@ -331,10 +326,9 @@ open class VsdInterface(context: Context) : Runnable {
 						// 1周回った
 						LapState = LAP_STATE.UPDATE
 
-						++iLapNum
-						iTimeLastRaw = iRtcRaw - iRtcPrevRaw
-						if (iTimeBestRaw == 0 || iTimeLastRaw < iTimeBestRaw) iTimeBestRaw =
-							iTimeLastRaw
+						val iLapTimeRaw = iRtcRaw - iRtcPrevRaw
+						if (iTimeBestRaw == 0 || iLapTimeRaw < iTimeBestRaw) iTimeBestRaw = iLapTimeRaw
+						iLapTimeList.add(iLapTimeRaw)
 
 						if (iMainMode != MODE_LAPTIME) {
 							// Laptime モード以外でゴールしたら，Ready 状態に戻す
@@ -424,8 +418,8 @@ open class VsdInterface(context: Context) : Runnable {
 
 		// ラップタイム
 		when (LapState) {
-			LAP_STATE.UPDATE -> s.append("\t").append(FormatTime2(iTimeLastRaw)).append("\t")
-			LAP_STATE.START -> s.append("\t0:00.000\t")
+			LAP_STATE.UPDATE -> s.append("\t").append(FormatTime2(GetLastLapTime())).append("\t")
+			LAP_STATE.START  -> s.append("\t0:00.000\t")
 			LAP_STATE.SECTOR -> s.append("\t\t").append(FormatTime2(iRtcRaw - iRtcPrevRaw))
 			else -> {}
 		}
@@ -548,11 +542,12 @@ open class VsdInterface(context: Context) : Runnable {
 
 		if (iRtcPrevRaw != -1) {
 			// 1周回った
-			++iLapNum
-			iTimeLastRaw = iTime - iRtcPrevRaw
-			if (iTimeLastRaw < 0) iTimeLastRaw += 24 * 3600 * 1000
-			iTimeLastRaw = iTimeLastRaw * (TIMER_HZ / 1000) // TIMER_HZ が 1000 で割り切れないときは★要修正
-			if (iTimeBestRaw == 0 || iTimeLastRaw < iTimeBestRaw) iTimeBestRaw = iTimeLastRaw
+			var iLapTimeRaw = iTime - iRtcPrevRaw
+			if (iLapTimeRaw < 0) iLapTimeRaw += 24 * 3600 * 1000
+			iLapTimeRaw = iLapTimeRaw * (TIMER_HZ / 1000) // TIMER_HZ が 1000 で割り切れないときは★要修正
+			if (iTimeBestRaw == 0 || iLapTimeRaw < iTimeBestRaw) iTimeBestRaw = iLapTimeRaw
+			
+			iLapTimeList.add(iLapTimeRaw)
 		}
 		iRtcPrevRaw = iTime
 	}
@@ -800,7 +795,26 @@ open class VsdInterface(context: Context) : Runnable {
 	var uReadWdt: Int = 0
 	
 	//////////////////////////////////////////////////////////////////////////
-	
+	// レコード
+
+	var iLapTimeList: MutableList<Int> = mutableListOf()
+	var iTimeBestRaw: Int = 0
+
+	fun GetLapNum(): Int {return iLapTimeList.size}
+	fun GetLastLapTime(): Int {return if(iLapTimeList.size == 0){0} else iLapTimeList.last()}
+
+	// (不正な) 最速ラップ削除
+	fun DeleteFastestLap(){
+		iLapTimeList.remove(iTimeBestRaw)
+
+		iTimeBestRaw = 0
+		for(iTime in iLapTimeList){
+			if(iTimeBestRaw == 0 || iTimeBestRaw > iTime) iTimeBestRaw = iTime
+		}
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+
 	fun Calibration(){
 		try {
 			SendCmd("c")
@@ -830,8 +844,6 @@ open class VsdInterface(context: Context) : Runnable {
 		LapState = LAP_STATE.NONE
 
 		// レコード
-		iLapNum = 0
-		iTimeLastRaw = 0
 		iTimeBestRaw = 0
 
 		iBufLen = 0
