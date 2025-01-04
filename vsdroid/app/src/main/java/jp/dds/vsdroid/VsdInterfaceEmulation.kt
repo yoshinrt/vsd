@@ -244,6 +244,8 @@ internal class VsdInterfaceEmulation(context: Context) : VsdInterface(context) {
 		
 		Gps?.iPrevNmeaTime = Gps?.iNmeaTime!!
 		Gps?.iNmeaTime = (calendar.timeInMillis % (24 * 3600 * 1000)).toInt()
+
+		Gps?.Connected = true
 		UpdateGps()
 	}
 	

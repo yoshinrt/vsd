@@ -320,7 +320,7 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 			canvas.drawText(VsdInterface.FormatTime(Vsd.iTimeBestRaw), fLapTimeX, 470f, paint)
 
 			// GPS ステータス
-			if (Vsd.Gps != null && !java.lang.Double.isNaN(Vsd.Gps!!.dLong)) {
+			if (Vsd?.Gps?.Connected ?: false) {
 				paint.color = Color.WHITE
 				paint.textSize = 32f
 				canvas.drawText("🛰", 0f, 468f, paint)

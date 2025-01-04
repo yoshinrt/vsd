@@ -29,8 +29,6 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 	var BTSock: BluetoothSocket? = null
 	var mBluetoothAdapter: BluetoothAdapter? = null
 
-	var bDebugInfo: Boolean = false
-
 	var brInput: BufferedReader? = null
 	var OutStream: OutputStream? = null
 
@@ -52,6 +50,7 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 	var iPrevNmeaTime: Int = -1
 	var dPrevLong: Double = Double.NaN
 	var dPrevLati: Double = 0.0
+	var Connected = false
 
 	//*** リトライしないerror ************************************************
 
@@ -153,6 +152,7 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 			}
 		} catch (_: IOException) {}
 
+		Connected = false
 		dPrevLong = Double.NaN
 		dLong = dPrevLong
 
@@ -249,6 +249,7 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 			// NMEA データが 1組分揃った
 
 			iNmeaFlag = 0
+			Connected = true
 
 			if (!java.lang.Double.isNaN(dLong)) {
 				MsgHandler!!.sendEmptyMessage(R.string.statmsg_gps_updated)
