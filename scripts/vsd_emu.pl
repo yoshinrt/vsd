@@ -128,6 +128,7 @@ $PrevTime = -1;
 $z = 0;
 while( <fpIn> ){
 	
+	next if(/^GPS/);
 	s/[\x0D\x0A]//g;
 	@_ = split( /\t/, $_ );
 	
@@ -161,7 +162,6 @@ while( <fpIn> ){
 	$PrevTime = $Time;
 	
 	#GetData( MSG_DONTWAIT );
-	if($z++ > 10){while(1){sleep(10000);}}
 }
 
 sub GetData {
