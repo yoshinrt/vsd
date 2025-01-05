@@ -24,6 +24,7 @@ import java.util.Locale
 import java.util.TimeZone
 import java.util.zip.GZIPOutputStream
 import kotlin.concurrent.Volatile
+import kotlin.concurrent.thread
 import kotlin.math.atan2
 import kotlin.math.cos
 
@@ -96,6 +97,9 @@ open class VsdInterface(context: Context) : Runnable {
 	var dCtrlLineY1: Double = Double.NaN
 	var dCtrlLineAngle: Double = 0.0
 
+	var GpsData: GpsInterface.CGpsData? = null
+	var GpsDataPrev: GpsInterface.CGpsData? = null
+	
 	//*** リトライしないerror ************************************************
 	class UnrecoverableException(message: String?) : Exception(message) {
 		companion object {
@@ -465,7 +469,11 @@ open class VsdInterface(context: Context) : Runnable {
 	//*** GPS message handler ********************************************
 	var GpsMsgHandler: Handler = object : Handler(Looper.getMainLooper()) {
 		override fun handleMessage(Msg: Message) {
+
 			if (Msg.what == R.string.statmsg_gps_updated) {
+				GpsDataPrev = GpsData
+				GpsData = Msg.obj as GpsInterface.CGpsData
+				
 				UpdateGps()
 			} else {
 				MsgHandler!!.sendEmptyMessage(Msg.what)
@@ -482,22 +490,22 @@ open class VsdInterface(context: Context) : Runnable {
 						Locale.US,
 						"GPS\t%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
 								"%.8f\t%.8f\t%.3f\t%.3f\n",
-						Gps!!.GpsTime[Calendar.YEAR], Gps!!.GpsTime[Calendar.MONTH] + 1,
-						Gps!!.GpsTime[Calendar.DATE],
-						Gps!!.GpsTime[Calendar.HOUR_OF_DAY],
-						Gps!!.GpsTime[Calendar.MINUTE],
-						Gps!!.GpsTime[Calendar.SECOND],
-						Gps!!.GpsTime[Calendar.MILLISECOND],
-						Gps!!.dLong, Gps!!.dLati, Gps!!.dAlt, Gps!!.dSpeed
+						GpsData!!.GpsTime[Calendar.YEAR], GpsData!!.GpsTime[Calendar.MONTH] + 1,
+						GpsData!!.GpsTime[Calendar.DATE],
+						GpsData!!.GpsTime[Calendar.HOUR_OF_DAY],
+						GpsData!!.GpsTime[Calendar.MINUTE],
+						GpsData!!.GpsTime[Calendar.SECOND],
+						GpsData!!.GpsTime[Calendar.MILLISECOND],
+						GpsData!!.dLong, GpsData!!.dLati, GpsData!!.dAlt, GpsData!!.dSpeed
 					).toByteArray()
 				)
 			}
 		} catch (_: IOException) {}
 
-		if (java.lang.Double.isNaN(Gps!!.dPrevLong) || java.lang.Double.isNaN(dCtrlLineX0)) return
+		if (java.lang.Double.isNaN(GpsDataPrev?.dLong ?: Double.NaN) || java.lang.Double.isNaN(dCtrlLineX0)) return
 
 		// コントロールライン通過から 10秒経過するまでスキップ
-		var iDiffTime = Gps!!.iNmeaTime - iRtcPrevRaw
+		var iDiffTime = GpsData!!.iNmeaTime - iRtcPrevRaw
 		if (iDiffTime < 0) iDiffTime += 3600 * 24 * 1000
 		if (iDiffTime < 10 * 1000) return
 
@@ -506,10 +514,10 @@ open class VsdInterface(context: Context) : Runnable {
 		val y1 = dCtrlLineY0
 		val x2 = dCtrlLineX1
 		val y2 = dCtrlLineY1
-		val x3 = Gps!!.dPrevLong
-		val y3 = Gps!!.dPrevLati
-		val x4 = Gps!!.dLong
-		val y4 = Gps!!.dLati
+		val x3 = GpsDataPrev!!.dLong
+		val y3 = GpsDataPrev!!.dLati
+		val x4 = GpsData!!.dLong
+		val y4 = GpsData!!.dLati
 
 		// 交点が iLogNum ～ +1 線分上かの判定
 		val s1 = (x1 - x2) * (y3 - y1) + (y1 - y2) * (x1 - x3)
@@ -530,7 +538,7 @@ open class VsdInterface(context: Context) : Runnable {
 		/*** ここまで来たらコントロールライン通過  */
 
 		// 直前座標の時間との差分, 5Hz なら 200[ms]
-		var iTime = Gps!!.iNmeaTime - Gps!!.iPrevNmeaTime
+		var iTime = GpsData!!.iNmeaTime - GpsDataPrev!!.iNmeaTime
 		if (iTime < 0) iTime += 3600 * 24 * 1000
 
 
@@ -538,7 +546,7 @@ open class VsdInterface(context: Context) : Runnable {
 		iTime = if (s1 == s2) 0
 		else (iTime * s1 / (s1 - s2)).toInt()
 
-		iTime += Gps!!.iPrevNmeaTime // 通過時間確定
+		iTime += GpsDataPrev!!.iNmeaTime // 通過時間確定
 
 		if (iRtcPrevRaw != -1) {
 			// 1周回った
@@ -591,14 +599,14 @@ open class VsdInterface(context: Context) : Runnable {
 
 		if (Pref!!.getBoolean("key_use_btgps", true)) {
 			Gps = GpsInterface(AppContext, GpsMsgHandler, Pref)
-			Gps!!.Start()
+			Gps?.Start()
 		}
 	}
 
 	protected open fun Close() {
 		if (Gps != null) {
-			Gps!!.KillThread()
-			Gps!!.Close()
+			Gps?.KillThread()
+			Gps?.Close()
 		}
 
 		CloseVsdIf()
@@ -817,7 +825,7 @@ open class VsdInterface(context: Context) : Runnable {
 
 	fun Calibration(){
 		try {
-			SendCmd("c")
+			thread{SendCmd("c")}
 		} catch (_: IOException) {}
 	}
 	

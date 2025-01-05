@@ -37,20 +37,21 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 
 	var MsgHandler: Handler? = null
 
+	//////////////////////////////////////////////////////////////////////////
 	// GPS データ
+	private var iNmeaRcvState: Int = 0
 	var iCurrentYear: Int
-	var iNmeaFlag: Int = 0
-	var iNmeaTime: Int = -1
-	var GpsTime: Calendar
-	var dLong: Double = Double.NaN
-	var dLati: Double = 0.0
-	var dAlt: Double = 0.0
-	var dSpeed: Double = 0.0
 
-	var iPrevNmeaTime: Int = -1
-	var dPrevLong: Double = Double.NaN
-	var dPrevLati: Double = 0.0
-	var Connected = false
+	class CGpsData {
+		var iNmeaTime: Int = -1
+		var GpsTime: Calendar = Calendar.getInstance()
+		var dLong: Double = Double.NaN
+		var dLati: Double = 0.0
+		var dAlt: Double = 0.0
+		var dSpeed: Double = 0.0
+	}
+
+	protected var GpsData: CGpsData? = null
 
 	//*** リトライしないerror ************************************************
 
@@ -70,10 +71,9 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 
 		val bluetoothManager = context?.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 		mBluetoothAdapter = bluetoothManager.getAdapter()
-
+		
 		// 現在の年取得
-		GpsTime = Calendar.getInstance(TimeZone.getTimeZone("GMT+0"))
-		iCurrentYear = GpsTime[Calendar.YEAR]
+		iCurrentYear = Calendar.getInstance(TimeZone.getTimeZone("GMT+0"))[Calendar.YEAR]
 	}
 
 	@Throws(IOException::class, UnrecoverableException::class)
@@ -152,9 +152,7 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 			}
 		} catch (_: IOException) {}
 
-		Connected = false
-		dPrevLong = Double.NaN
-		dLong = dPrevLong
+		GpsData = null
 
 		return 0
 	}
@@ -183,38 +181,31 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 
 	@Throws(IOException::class)
 	fun Read() {
-		val str =
-			brInput!!.readLine().split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+		val str = brInput!!.readLine().split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
 
 		if (str[0] == "\$GPRMC") {
-			dPrevLong = dLong
-			dPrevLati = dLati
-			iPrevNmeaTime = iNmeaTime
-
+			if(GpsData == null) GpsData = CGpsData()
+			
 			//		時間		 lat		   long		   knot  方位   日付
 			// 0	  1		  2 3		   4 5			6 7	 8	  9
 			// $GPRMC,043431.200,A,3439.997825,N,13523.377978,E,0.602,178.29,240612,,,A*59
 			val iTime = ParseTime(str[1])
 
-			if (iNmeaFlag == 0) {
-				iNmeaTime = iTime
-				iNmeaFlag = 1
-			} else {
-				iNmeaFlag = iNmeaFlag or 1
-			}
+			GpsData!!.iNmeaTime = iTime
+			iNmeaRcvState = iNmeaRcvState or 1
 
 			// Lat
-			dLati = ParseDouble(str[3])
-			dLati = floor(dLati / 100) + (dLati % 100.0) / 60.0
-			if (str[4] == "S") dLati = -dLati
+			GpsData!!.dLati = ParseDouble(str[3])
+			GpsData!!.dLati = floor(GpsData!!.dLati / 100) + (GpsData!!.dLati % 100.0) / 60.0
+			if (str[4] == "S") GpsData!!.dLati = -GpsData!!.dLati
 
 			// Long
-			dLong = ParseDouble(str[5])
-			dLong = floor(dLong / 100) + (dLong % 100.0) / 60.0
-			if (str[6] == "W") dLong = -dLong
+			GpsData!!.dLong = ParseDouble(str[5])
+			GpsData!!.dLong = floor(GpsData!!.dLong / 100) + (GpsData!!.dLong % 100.0) / 60.0
+			if (str[6] == "W") GpsData!!.dLong = -GpsData!!.dLong
 
 			// Speed
-			dSpeed = ParseDouble(str[7]) * 1.85200
+			GpsData!!.dSpeed = ParseDouble(str[7]) * 1.85200
 
 			// 日付
 			var iYear = ParseInt(str[9].substring(4, 6), 0) +
@@ -222,38 +213,41 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 
 			if ((iCurrentYear % 100) >= 50 && iYear < 50) iYear += 100
 
-			GpsTime[iYear, ParseInt(str[9].substring(2, 4), 1) - 1, ParseInt(
+			GpsData!!.GpsTime[iYear, ParseInt(str[9].substring(2, 4), 1) - 1, ParseInt(
 				str[9].substring(0, 2),
 				1
 			), iTime / (3600 * 1000), iTime / (60 * 1000) % 60] =
 				iTime / (1000) % 60
-			GpsTime[Calendar.MILLISECOND] = iTime % 1000
+			GpsData!!.GpsTime[Calendar.MILLISECOND] = iTime % 1000
 		} else if (str[0] == "\$GPGGA") {
+			if(GpsData == null) GpsData = CGpsData()
+			
 			//		時間	   lat		   long			   高度
 			// 0	  1		  2		   3 4			5 6 789
 			// $GPGGA,233132.000,3439.997825,N,13523.377978,E,1,,,293.425,M,,,,*21
 
 			val iTime = ParseTime(str[1])
 
-			if (iNmeaFlag == 0) {
-				iNmeaTime = iTime
-				iNmeaFlag = 2
+			if (iNmeaRcvState == 0) {
+				GpsData!!.iNmeaTime = iTime
+				iNmeaRcvState = 2
 			} else {
-				iNmeaFlag = iNmeaFlag or 2
+				iNmeaRcvState = iNmeaRcvState or 2
 			}
 
-			dAlt = ParseDouble(str[9])
+			GpsData!!.dAlt = ParseDouble(str[9])
 		}
 
-		if (iNmeaFlag == 3) {
+		if (iNmeaRcvState == 3) {
 			// NMEA データが 1組分揃った
-
-			iNmeaFlag = 0
-			Connected = true
-
-			if (!java.lang.Double.isNaN(dLong)) {
-				MsgHandler!!.sendEmptyMessage(R.string.statmsg_gps_updated)
+			if (!java.lang.Double.isNaN(GpsData!!.dLong)) {
+				MsgHandler!!.sendMessage(
+					MsgHandler!!.obtainMessage(R.string.statmsg_gps_updated, GpsData)
+				)
 			}
+			
+			GpsData = null
+			iNmeaRcvState = 0
 		}
 	}
 
@@ -269,6 +263,7 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 		bKillThread = false
 
 		if (bDebug) Log.d("VSDroid", "GpsInterface:run_loop()")
+		GpsData = null
 
 		MainLoop@ while (!bKillThread) {
 			// 開く，失敗したらやり直し
@@ -329,8 +324,7 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 		GpsThread = null
 		if (bDebug) Log.d("VSDroid", "GpsInterface:KillThread: done")
 
-		dPrevLong = Double.NaN
-		dLong = dPrevLong
+		GpsData = null
 	}
 
 	companion object {

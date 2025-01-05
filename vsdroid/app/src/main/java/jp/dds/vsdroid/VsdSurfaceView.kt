@@ -320,7 +320,7 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 			canvas.drawText(VsdInterface.FormatTime(Vsd.iTimeBestRaw), fLapTimeX, 470f, paint)
 
 			// GPS ステータス
-			if (Vsd?.Gps?.Connected ?: false) {
+			if (Vsd.GpsData != null) {
 				paint.color = Color.WHITE
 				paint.textSize = 32f
 				canvas.drawText("🛰", 0f, 468f, paint)
@@ -361,13 +361,13 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 					30.let { y += it; y }.toFloat(),
 					paint
 				)
-				if (Vsd.Gps != null) {
+				if (Vsd.GpsData != null) {
 					canvas.drawText(
 						String.format(
 							Locale.US,
 							"GPS: %.8f, %8f",
-							Vsd.Gps!!.dLong,
-							Vsd.Gps!!.dLati
+							Vsd.GpsData!!.dLong,
+							Vsd.GpsData!!.dLati
 						), 0f, 30.let { y += it; y }.toFloat(), paint
 					)
 				}

@@ -33,6 +33,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.*
+import kotlin.concurrent.thread
 import kotlin.coroutines.EmptyCoroutineContext
 
 class MainActivity : AppCompatActivity() {
@@ -238,7 +239,7 @@ class MainActivity : AppCompatActivity() {
 								when (ButtonPushCnt) {
 									1 -> {
 										Toast.makeText(this@MainActivity, "ラップ計測初期化", Toast.LENGTH_LONG).show()
-										this@MainActivity.Vsd?.SetToReadyState()
+										thread{this@MainActivity.Vsd?.SetToReadyState()}
 									}
 									2 -> {
 										Toast.makeText(this@MainActivity, "最速ラップ削除", Toast.LENGTH_LONG).show()

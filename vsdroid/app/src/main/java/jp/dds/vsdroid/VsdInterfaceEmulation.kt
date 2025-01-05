@@ -232,20 +232,17 @@ internal class VsdInterfaceEmulation(context: Context) : VsdInterface(context) {
 		val zonedDateTime = ZonedDateTime.parse(strToken[1])
 		val calendar = Calendar.getInstance()
 		calendar.timeInMillis = zonedDateTime.toInstant().toEpochMilli()
-		
-		Gps?.dPrevLong		= Gps?.dLong!!
-		Gps?.dPrevLati		= Gps?.dLati!!
-		
-		Gps?.GpsTime		= calendar
-		Gps?.dLong			= strToken[2]?.toDouble()!!
-		Gps?.dLati			= strToken[3]?.toDouble()!!
-		Gps?.dAlt			= strToken[4]?.toDouble()!!
-		Gps?.dSpeed			= strToken[5]?.toDouble()!!
-		
-		Gps?.iPrevNmeaTime = Gps?.iNmeaTime!!
-		Gps?.iNmeaTime = (calendar.timeInMillis % (24 * 3600 * 1000)).toInt()
 
-		Gps?.Connected = true
+		GpsDataPrev = GpsData
+		GpsData = GpsInterface.CGpsData()
+
+		GpsData?.GpsTime		= calendar
+		GpsData?.dLong			= strToken[2]?.toDouble()!!
+		GpsData?.dLati			= strToken[3]?.toDouble()!!
+		GpsData?.dAlt			= strToken[4]?.toDouble()!!
+		GpsData?.dSpeed			= strToken[5]?.toDouble()!!
+		
+		GpsData?.iNmeaTime = (calendar.timeInMillis % (24 * 3600 * 1000)).toInt()
 		UpdateGps()
 	}
 	
