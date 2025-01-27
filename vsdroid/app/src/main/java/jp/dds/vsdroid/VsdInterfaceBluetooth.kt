@@ -6,11 +6,12 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.util.Log
+import androidx.activity.ComponentActivity
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.util.UUID
 
-internal class VsdInterfaceBluetooth(context: Context) : VsdInterface(context) {
+internal class VsdInterfaceBluetooth(activity: ComponentActivity) : VsdInterface(activity) {
 	var device: BluetoothDevice? = null
 	var BTSock: BluetoothSocket? = null
 	var mBluetoothAdapter: BluetoothAdapter? = null
@@ -18,7 +19,7 @@ internal class VsdInterfaceBluetooth(context: Context) : VsdInterface(context) {
 	init {
 		if (bDebug) Log.d("VSDroid", "VsdInterfaceBluetooth::new")
 		// Get local Bluetooth adapter
-		val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+		val bluetoothManager = activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 		mBluetoothAdapter = bluetoothManager.getAdapter()
 	}
 

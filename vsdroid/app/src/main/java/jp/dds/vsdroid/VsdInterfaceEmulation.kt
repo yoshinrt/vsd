@@ -1,7 +1,7 @@
 package jp.dds.vsdroid
 
-import android.content.Context
 import android.util.Log
+import androidx.activity.ComponentActivity
 import java.io.BufferedReader
 import java.io.FileReader
 import java.io.IOException
@@ -10,7 +10,7 @@ import java.util.Calendar
 import java.util.StringTokenizer
 
 //*** エミュレーションモード *********************************************
-internal class VsdInterfaceEmulation(context: Context) : VsdInterface(context) {
+internal class VsdInterfaceEmulation(activity: ComponentActivity) : VsdInterface(activity) {
 	var brEmuLog: BufferedReader? = null
 	var dTimePrev: Double = 0.0
 
@@ -56,7 +56,7 @@ internal class VsdInterfaceEmulation(context: Context) : VsdInterface(context) {
 		if (bDebug) Log.d("VSDroid", "VsdInterfaceEmu::Open")
 
 		SetToReadyState()
-		Gps = GpsInterface(AppContext, GpsMsgHandler, Pref)
+		Gps = GpsInterface(mActivity, GpsMsgHandler, Pref)
 
 		try {
 			brEmuLog = BufferedReader(FileReader(Pref!!.getString("key_replay_log", null)))

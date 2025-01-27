@@ -1,11 +1,11 @@
 package jp.dds.vsdroid
 
-import android.content.Context
 import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.util.Log
+import androidx.activity.ComponentActivity
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -29,7 +29,7 @@ import kotlin.math.atan2
 import kotlin.math.cos
 
 //*** VSD アクセス *******************************************************
-open class VsdInterface(context: Context) : Runnable {
+open class VsdInterface(activity: ComponentActivity) : Runnable {
 	// モード・config
 	var iMainMode: Int = MODE_LAPTIME
 	private var dPulsePer1Km: Double = PULSE_PER_1KM_CE28N
@@ -81,7 +81,7 @@ open class VsdInterface(context: Context) : Runnable {
 	var bKillThread: Boolean = false
 	var MsgHandler: Handler? = null
 	var Gps: GpsInterface? = null
-	var AppContext: Context? = null
+	var mActivity: ComponentActivity? = null
 
 	internal enum class LAP_STATE {
 		NONE,
@@ -598,7 +598,7 @@ open class VsdInterface(context: Context) : Runnable {
 		SetToReadyState()
 
 		if (Pref!!.getBoolean("key_use_btgps", true)) {
-			Gps = GpsInterface(AppContext, GpsMsgHandler, Pref)
+			Gps = GpsInterface(mActivity, GpsMsgHandler, Pref)
 			Gps?.Start()
 		}
 	}
@@ -870,7 +870,7 @@ open class VsdInterface(context: Context) : Runnable {
 
 		InStream = null
 		OutStream = null
-		AppContext = context
+		mActivity = activity
 	}
 
 	override fun run() {
