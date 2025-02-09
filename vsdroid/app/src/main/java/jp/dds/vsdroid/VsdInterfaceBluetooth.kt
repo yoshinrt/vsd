@@ -94,7 +94,7 @@ internal class VsdInterfaceBluetooth(activity: ComponentActivity) : VsdInterface
 		}
 	}
 
-	override fun CloseVsdIf(): Int {
+	override fun CloseVsdIf() {
 		if (bDebug) Log.d("VSDroid", "VsdInterfaceBluetooth::CloseVsdIf")
 
 
@@ -109,7 +109,6 @@ internal class VsdInterfaceBluetooth(activity: ComponentActivity) : VsdInterface
 				BTSock = null
 			}
 		} catch (_: IOException) {}
-		return 0
 	}
 
 	companion object {

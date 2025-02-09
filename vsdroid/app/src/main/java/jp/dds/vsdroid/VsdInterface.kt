@@ -448,9 +448,8 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 		return 0
 	}
 
-	protected open fun CloseVsdIf(): Int {
+	protected open fun CloseVsdIf() {
 		if (bDebug) Log.d("VSDroid", "VsdInterface::CloseVsdIf")
-
 
 		// BT 切断すると AT コマンドモードになるので，シリアル出力を止める
 		try {
@@ -463,7 +462,6 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 				Sock = null
 			}
 		} catch (_: IOException) {}
-		return 0
 	}
 
 	//*** GPS message handler ********************************************
