@@ -219,12 +219,14 @@ class CLogVariant : public CLog {
 	void SetMax( UINT	&v ){ v = UINT_MAX; }	void SetMin( UINT	&v ){ v = 0; }
 	void SetMax( int	&v ){ v = INT_MAX; }	void SetMin( int	&v ){ v = INT_MIN; }
 	void SetMax( float	&v ){ v = FLT_MAX; }	void SetMin( float	&v ){ v = -FLT_MAX; }
-	
+	void SetMax( double &v ){ v = DBL_MAX; }	void SetMin( double &v ){ v = -DBL_MAX; }
+
 	// 内部形式変換
 	T Scaled( double d ){ return ( T )( d * Scale ); }
 	double UnScaled( T v ){ return ( double )v / Scale; }
 };
 
+typedef CLogVariant<double, 1>		CLogDouble;
 typedef CLogVariant<float,	1>		CLogFloat;
 typedef CLogVariant<short,	4096>	CLogShort4096;
 typedef CLogVariant<USHORT,	64>		CLogUShort64;
@@ -243,16 +245,16 @@ class CLogInt : public CLogVariant<int, 1> {
 	}
 };
 
-class CLogFloatOffset : public CLogFloat {
+class CLogDoubleOffset : public CLogDouble {
   public:
-	CLogFloatOffset(){
+	CLogDoubleOffset(){
 		m_dBaseVal	= 0;
 	}
 	
 	// 値取得
-	double GetRaw( int    iIndex ){ return CLogFloat::GetRaw( iIndex ) + m_dBaseVal; }
+	double GetRaw( int    iIndex ){ return CLogDouble::GetRaw( iIndex ) + m_dBaseVal; }
 	
-	double GetDiff( int    iIndex ){ return CLogFloat::GetRaw( iIndex ); }
+	double GetDiff( int    iIndex ){ return CLogDouble::GetRaw( iIndex ); }
 	double GetDiff( double dIndex ){
 		double alfa = dIndex - ( UINT )dIndex;
 		return
@@ -260,13 +262,13 @@ class CLogFloatOffset : public CLogFloat {
 			( GetDiff(( int )dIndex + 1 ) - GetDiff(( int )dIndex )) * alfa;
 	}
 	
-	double GetMin(){ return CLogFloat::GetMin() + m_dBaseVal; }
-	double GetMax(){ return CLogFloat::GetMax() + m_dBaseVal; }
-	void SetMinRaw( double d ){ CLogFloat::SetMinRaw( d - m_dBaseVal ); }
-	void SetMaxRaw( double d ){ CLogFloat::SetMaxRaw( d - m_dBaseVal ); }
+	double GetMin(){ return CLogDouble::GetMin() + m_dBaseVal; }
+	double GetMax(){ return CLogDouble::GetMax() + m_dBaseVal; }
+	void SetMinRaw( double d ){ CLogDouble::SetMinRaw( d - m_dBaseVal ); }
+	void SetMaxRaw( double d ){ CLogDouble::SetMaxRaw( d - m_dBaseVal ); }
 	
 	void SetRaw( int iIndex, double dVal ){
-		CLogFloat::SetRaw( iIndex, dVal - m_dBaseVal );
+		CLogDouble::SetRaw( iIndex, dVal - m_dBaseVal );
 	}
 	
 	void SetBaseVal( double dVal ){ m_dBaseVal = dVal; }
@@ -384,7 +386,7 @@ class CVsdLog : public CV8If {
 		return pLog ? pLog->GetMax() : NaN;
 	}
 	
-	#define DEF_LOG( name )	DEF_LOG_T( name, CLogFloat )
+	#define DEF_LOG( name )	DEF_LOG_T( name, CLogDouble )
 	#define DEF_LOG_T( name, type )	type	*m_pLog##name;
 	#include "def_log.h"
 	

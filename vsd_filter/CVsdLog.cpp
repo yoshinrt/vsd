@@ -127,12 +127,12 @@ CLog *CVsdLog::GetElement( const char *szKey, BOOL bCreate ){
 		
 		// Speed とか基本データの参照用ポインタに代入
 		if( 0 );
-		#define DEF_LOG( name )	DEF_LOG_T( name, CLogFloat )
+		#define DEF_LOG( name )	DEF_LOG_T( name, CLogDouble )
 		#define DEF_LOG_T( name, type )	\
 			else if( strKey == #name ) p = m_pLog##name = new type();
 		#include "def_log.h"
 		else{
-			p = new CLogFloat();
+			p = new CLogDouble();
 		}
 		
 		m_Logs[ strKey ] = p;
