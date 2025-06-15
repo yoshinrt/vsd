@@ -1,18 +1,18 @@
 package jp.dds.vsdroid
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothSocket
-import android.content.Context
 import android.content.SharedPreferences
 import android.os.Handler
 import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
+import jp.dds.Bluetooth.BluetoothCom
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.OutputStream
-import java.net.SocketTimeoutException
 import java.util.Calendar
 import java.util.TimeZone
 import java.util.UUID
@@ -20,22 +20,15 @@ import kotlin.concurrent.Volatile
 import kotlin.math.floor
 
 //*** VSD アクセス *******************************************************
-class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPreferences?) : Runnable {
+class GpsInterface(_activity: ComponentActivity?, _MsgHandler: Handler?, _Pref: SharedPreferences?) {
 	var Pref: SharedPreferences?
 	var GpsThread: Thread? = null
-
-	// Bluetooth アダプタ
-	var device: BluetoothDevice? = null
-	var BTSock: BluetoothSocket? = null
-	var mBluetoothAdapter: BluetoothAdapter? = null
-
-	var brInput: BufferedReader? = null
-	var OutStream: OutputStream? = null
+	var BtCom: BluetoothCom? = null
 
 	@Volatile
 	var bKillThread: Boolean = false
-
 	var MsgHandler: Handler? = null
+	var activity: ComponentActivity? = null
 
 	//////////////////////////////////////////////////////////////////////////
 	// GPS データ
@@ -53,6 +46,21 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 
 	protected var GpsData: CGpsData? = null
 
+	//************************************************************************
+	// コンストラクタ - 変数の初期化だけやってる
+	init {
+		if (bDebug) Log.d("VSDroid:GPS", "GpsInterface:GpsInterface::constructor")
+
+		MsgHandler = _MsgHandler
+		Pref = _Pref
+		activity = _activity
+
+		// 現在の年取得
+		iCurrentYear = Calendar.getInstance(TimeZone.getTimeZone("GMT+0"))[Calendar.YEAR]
+
+		BtCom = BluetoothCom(_activity!!)
+	}
+
 	//*** リトライしないerror ************************************************
 
 	class UnrecoverableException(message: String?) : Exception(message) {
@@ -61,100 +69,35 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 		}
 	}
 
-	//************************************************************************
-	// コンストラクタ - 変数の初期化だけやってる
-	init {
-		if (bDebug) Log.d("VSDroid", "GpsInterface:GpsInterface::constructor")
-
-		MsgHandler = _MsgHandler
-		Pref = _Pref
-
-		val bluetoothManager = context?.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-		mBluetoothAdapter = bluetoothManager.getAdapter()
-		
-		// 現在の年取得
-		iCurrentYear = Calendar.getInstance(TimeZone.getTimeZone("GMT+0"))[Calendar.YEAR]
-	}
-
 	@Throws(IOException::class, UnrecoverableException::class)
 	fun Open() {
-		if (bDebug) Log.d("VSDroid", "GpsInterface:GpsInterface::Open")
-		// If the adapter is null, then Bluetooth is not supported
-		if (mBluetoothAdapter == null) {
-			//MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_na );
-			throw UnrecoverableException("Bluetooth error")
-		}
+		activity!!.lifecycleScope.launch(Dispatchers.IO) {
+			if (bDebug) Log.d("VSDroid:GPS", "GpsInterface:GpsInterface::Open")
 
-		// BT ON でなければエラーで帰る
-		if (bDebug) Log.d("VSDroid", "GpsInterface:GpsInterface::Enable")
-		if (!mBluetoothAdapter!!.isEnabled) {
-			throw UnrecoverableException("Bluetooth error")
-		}
+			// Enable Bluetooth adapter
+			val result = BtCom?.EnableBluetooth()
+			if (result != BluetoothCom.BtResult.OK) {
+				throw UnrecoverableException("Bluetooth error")
+			}
 
-		// BT の MAC アドレスを求める
-		val s = Pref!!.getString("key_bt_devices_gps", null)
-			?: //MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_dev_not_selected );
-			throw UnrecoverableException("Bluetooth error")
-		device = mBluetoothAdapter!!.getRemoteDevice(s.substring(s.length - 17))
-
-		try {
-			//MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_connecting );
-			// Get a BluetoothSocket for a connection with the
-			// given BluetoothDevice
-			if (bDebug) Log.d("VSDroid", "GpsInterface:GpsInterface::createRfcommSocket")
-			BTSock = device!!.createInsecureRfcommSocketToServiceRecord(BT_UUID)
-
-			// ソケットの作成 12秒でタイムアウトらしい
-			if (bDebug) Log.d("VSDroid", "GpsInterface:GpsInterface::Open:connecting...")
-			BTSock!!.connect()
-			val `in` = BTSock!!.getInputStream()
-			brInput = BufferedReader(InputStreamReader(`in`))
-			OutStream = BTSock!!.getOutputStream()
-
-			if (bDebug) Log.d("VSDroid", "GpsInterface:GpsInterface::Open:connected")
-			//MsgHandler.sendEmptyMessage( R.string.statmsg_gps_connected );
-		} catch (e: SocketTimeoutException) {
-			if (bDebug) Log.d("VSDroid", "GpsInterface:GpsInterface::Open:timeout")
-			Close()
-			throw IOException("Bluetooth error")
-		} catch (e: SecurityException) {
-			if (bDebug) Log.d("VSDroid", "GpsInterface:GpsInterface::Open:SeculityException")
-			Close()
-			throw e
-		} catch (e: IOException) {
-			if (bDebug) Log.d("VSDroid", "GpsInterface:GpsInterface::Open:IOException")
-			Close()
-			throw e
+			// Open Bluetooth
+			val BtName = Pref!!.getString("key_bt_devices_gps", null)
+			while (
+				!bKillThread &&
+				BtCom?.Open(BtName) != BluetoothCom.BtResult.OK
+			) {
+				delay(1000)
+			}
+			
+			// Open buffered reader
+			BtCom?.OpenBufferedReader()
 		}
 	}
 
-	fun Close(): Int {
-		if (bDebug) Log.d("VSDroid", "GpsInterface:GpsInterface::Close")
-
-		try {
-			if (brInput != null) {
-				brInput!!.close()
-				brInput = null
-			}
-		} catch (_: IOException) {}
-
-		try {
-			if (OutStream != null) {
-				OutStream!!.close()
-				OutStream = null
-			}
-		} catch (_: IOException) {}
-
-		try {
-			if (BTSock != null) {
-				BTSock!!.close()
-				BTSock = null
-			}
-		} catch (_: IOException) {}
-
+	fun Close() {
+		if (bDebug) Log.d("VSDroid:GPS", "GpsInterface:GpsInterface::Close")
+		BtCom?.Close()
 		GpsData = null
-
-		return 0
 	}
 
 	//*** 1行処理 ************************************************************
@@ -181,7 +124,7 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 
 	@Throws(IOException::class)
 	fun Read() {
-		val str = brInput!!.readLine().split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+		val str = BtCom!!.bfReader!!.readLine().split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
 
 		if (str[0] == "\$GPRMC") {
 			if(GpsData == null) GpsData = CGpsData()
@@ -252,68 +195,66 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 	}
 
 	//*** データ処理スレッド *********************************************
+	
 	fun Start() {
-		if (bDebug) Log.d("VSDroid", "Start()")
+		if (bDebug) Log.d("VSDroid:GPS", "Start()")
 		// VSD スレッド起動
-		GpsThread = Thread(this)
-		GpsThread!!.start()
-	}
-
-	override fun run() {
-		bKillThread = false
-
-		if (bDebug) Log.d("VSDroid", "GpsInterface:run_loop()")
-		GpsData = null
-
-		MainLoop@ while (!bKillThread) {
-			// 開く，失敗したらやり直し
-
-			while (!bKillThread) {
-				try {
-					if (bDebug) Log.d("VSDroid", "GpsInterface:opening...")
-					Close() // 開いていたら一旦 close
-					Open()
-					break
-				} catch (e: UnrecoverableException) {
-					// BT off 等，リカバリ不能な問題
-					if (bDebug) Log.d("VSDroid", "GpsInterface:Unrecoverable exception")
-					break@MainLoop
-				} catch (e: IOException) {
-					// 一般的な IOException
-					if (bDebug) Log.d("VSDroid", "GpsInterface:retrying open...")
+		GpsThread = Thread {
+			bKillThread = false
+	
+			if (bDebug) Log.d("VSDroid:GPS", "GpsInterface:run_loop()")
+			GpsData = null
+	
+			MainLoop@ while (!bKillThread) {
+				// 開く，失敗したらやり直し
+	
+				while (!bKillThread) {
 					try {
-						Thread.sleep((3 * 1000).toLong())
-					} catch (_: InterruptedException) {}
+						if (bDebug) Log.d("VSDroid:GPS", "GpsInterface:opening...")
+						Close() // 開いていたら一旦 close
+						Open()
+						break
+					} catch (e: UnrecoverableException) {
+						// BT off 等，リカバリ不能な問題
+						if (bDebug) Log.d("VSDroid:GPS", "GpsInterface:Unrecoverable exception")
+						break@MainLoop
+					} catch (e: IOException) {
+						// 一般的な IOException
+						if (bDebug) Log.d("VSDroid:GPS", "GpsInterface:retrying open...")
+						try {
+							Thread.sleep((3 * 1000).toLong())
+						} catch (_: InterruptedException) {}
+					}
 				}
-			}
-
-			if (bDebug) Log.d("VSDroid", "GpsInterface:open done.")
-
-			// 1行読む
-			while (!bKillThread) {
-				try {
-					Read()
-				} catch (e: IOException) {
-					break
+	
+				if (bDebug) Log.d("VSDroid:GPS", "GpsInterface:open done.")
+	
+				// 1行読む
+				while (!bKillThread) {
+					try {
+						Read()
+					} catch (e: IOException) {
+						break
+					}
 				}
+				
+				// ここに来たということは，何らかの理由で GPS 切断
 			}
 			
-			// ここに来たということは，何らかの理由で GPS 切断
-			//MsgHandler.sendEmptyMessage( R.string.statmsg_gps_disconnected );
+			if (bDebug) Log.d("VSDroid:GPS", "GpsInterface:run() loop extting.")
+			
+			Close()
+			
+			bKillThread = false
+			if (bDebug) Log.d("VSDroid:GPS", "GpsInterface:exit_run()")
 		}
-
-		if (bDebug) Log.d("VSDroid", "GpsInterface:run() loop extting.")
-
-		Close()
-
-		bKillThread = false
-		if (bDebug) Log.d("VSDroid", "GpsInterface:exit_run()")
+		GpsThread!!.start()
 	}
 
 	fun KillThread() {
 		bKillThread = true
 
-		if (bDebug) Log.d("VSDroid", "GpsInterface:KillThread: killing...")
+		if (bDebug) Log.d("VSDroid:GPS", "GpsInterface:KillThread: killing...")
 		try {
 			while (bKillThread && GpsThread != null && GpsThread!!.isAlive) {
 				Thread.sleep(100)
@@ -322,14 +263,12 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 		} catch (_: InterruptedException) {}
 
 		GpsThread = null
-		if (bDebug) Log.d("VSDroid", "GpsInterface:KillThread: done")
+		if (bDebug) Log.d("VSDroid:GPS", "GpsInterface:KillThread: done")
 
 		GpsData = null
 	}
 
 	companion object {
 		val bDebug: Boolean = BuildConfig.DEBUG
-
-		private val BT_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 	}
 }
