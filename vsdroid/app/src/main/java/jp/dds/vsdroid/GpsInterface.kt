@@ -183,7 +183,7 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 	fun Read() {
 		val str = brInput!!.readLine().split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
 
-		if (str[0] == "\$GPRMC") {
+		if (str[0] == "\$GNRMC" || str[0] == "\$GPRMC") {
 			if(GpsData == null) GpsData = CGpsData()
 			
 			//		時間		 lat		   long		   knot  方位   日付
@@ -219,7 +219,7 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 			), iTime / (3600 * 1000), iTime / (60 * 1000) % 60] =
 				iTime / (1000) % 60
 			GpsData!!.GpsTime[Calendar.MILLISECOND] = iTime % 1000
-		} else if (str[0] == "\$GPGGA") {
+		} else if (str[0] == "\$GNGGA" || str[0] == "\$GPGGA") {
 			if(GpsData == null) GpsData = CGpsData()
 			
 			//		時間	   lat		   long			   高度
