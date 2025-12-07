@@ -98,6 +98,8 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 		// メッセージ push
 		if (Msg == R.string.statmsg_update) {
 			bMsgLogShow = false
+		} else if(Msg == R.string.statmsg_gps_disconnected){
+			Vsd?.GpsData = null
 		} else {
 			bMsgLogShow = true
 			iMsgLog[iMsgLogPtr] = Msg

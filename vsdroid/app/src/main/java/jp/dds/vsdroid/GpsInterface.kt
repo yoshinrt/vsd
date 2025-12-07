@@ -300,7 +300,7 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 			}
 			
 			// ここに来たということは，何らかの理由で GPS 切断
-			//MsgHandler.sendEmptyMessage( R.string.statmsg_gps_disconnected );
+			MsgHandler?.sendEmptyMessage( R.string.statmsg_gps_disconnected );
 		}
 
 		if (bDebug) Log.d("VSDroid", "GpsInterface:run() loop extting.")
