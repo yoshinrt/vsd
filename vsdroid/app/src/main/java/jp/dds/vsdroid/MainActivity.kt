@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity() {
 			ed.putString("key_replay_log", strVsdHome + "vsd.log")
 			ed.putString("key_circuit", strVsdHome + "circuit/未選択")
 
-			ed.putString("key_bt_devices_gps", "887 GPS / 00:1C:88:31:0A:77")
+			ed.putString("key_bt_devices_gps", "xinghewei / 98:DA:A0:01:3F:AB")
 			ed.putString("key_bt_devices_vsd", "VSD / 00:12:02:10:01:76")
 			ed.putString("key_ip_addr", "192.168.0.13")
 			ed.putString("key_connection_mode", "1")
