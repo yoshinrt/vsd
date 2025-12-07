@@ -173,10 +173,11 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 	}
 
 	private fun ParseTime(str: String): Int {
-		return ParseInt(str.substring(0, 2), 0) * 3600 * 1000 + ParseInt(
-			str.substring(2, 4),
-			0
-		) * 60 * 1000 + (ParseDouble(str.substring(4)) * 1000).toInt()
+		return (
+			ParseInt(str.substring(0, 2), 0) * 3600 * 1000 +
+			ParseInt(str.substring(2, 4), 0)   * 60 * 1000 +
+			(ParseDouble(str.substring(4)) * 1000).toInt()
+		)
 	}
 
 	@Throws(IOException::class)
@@ -186,8 +187,8 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 		if (str[0] == "\$GNRMC" || str[0] == "\$GPRMC") {
 			if(GpsData == null) GpsData = CGpsData()
 			
-			//		時間		 lat		   long		   knot  方位   日付
-			// 0	  1		  2 3		   4 5			6 7	 8	  9
+			//      時間           lat           long           knot  方位   日付
+			// 0      1          2 3           4 5            6 7     8      9
 			// $GPRMC,043431.200,A,3439.997825,N,13523.377978,E,0.602,178.29,240612,,,A*59
 			val iTime = ParseTime(str[1])
 
@@ -222,8 +223,8 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 		} else if (str[0] == "\$GNGGA" || str[0] == "\$GPGGA") {
 			if(GpsData == null) GpsData = CGpsData()
 			
-			//		時間	   lat		   long			   高度
-			// 0	  1		  2		   3 4			5 6 789
+			//        時間       lat           long               高度
+			// 0      1          2           3 4            5 6 789
 			// $GPGGA,233132.000,3439.997825,N,13523.377978,E,1,,,293.425,M,,,,*21
 
 			val iTime = ParseTime(str[1])
