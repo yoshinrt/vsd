@@ -367,7 +367,8 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 					canvas.drawText(
 						String.format(
 							Locale.US,
-							"GPS: %.8f, %8f",
+							"GPS:%02d: %.8f, %8f",
+							Vsd.GpsData!!.iNmeaTime / 100 % 100,
 							Vsd.GpsData!!.dLong,
 							Vsd.GpsData!!.dLati
 						), 0f, 30.let { y += it; y }.toFloat(), paint
