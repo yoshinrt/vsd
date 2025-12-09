@@ -234,7 +234,7 @@ internal class VsdInterfaceEmulation(activity: ComponentActivity) : VsdInterface
 		calendar.timeInMillis = zonedDateTime.toInstant().toEpochMilli()
 
 		GpsDataPrev = GpsData
-		GpsData = GpsInterface.CGpsData()
+		GpsData = GpsInterface.CGpsData((calendar.timeInMillis % (24 * 3600 * 1000)).toInt())
 
 		GpsData?.GpsTime		= calendar
 		GpsData?.dLong			= strToken[2]?.toDouble()!!
@@ -242,7 +242,6 @@ internal class VsdInterfaceEmulation(activity: ComponentActivity) : VsdInterface
 		GpsData?.dAlt			= strToken[4]?.toDouble()!!
 		GpsData?.dSpeed			= strToken[5]?.toDouble()!!
 		
-		GpsData?.iNmeaTime = (calendar.timeInMillis % (24 * 3600 * 1000)).toInt()
 		UpdateGps()
 	}
 	

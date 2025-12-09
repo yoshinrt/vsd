@@ -39,11 +39,9 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 
 	//////////////////////////////////////////////////////////////////////////
 	// GPS データ
-	private var iNmeaRcvState: Int = 0
 	var iCurrentYear: Int
 
-	class CGpsData {
-		var iNmeaTime: Int = -1
+	class CGpsData (var iNmeaTime: Int) {
 		var GpsTime: Calendar = Calendar.getInstance()
 		var dLong: Double = Double.NaN
 		var dLati: Double = 0.0
@@ -180,20 +178,36 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 		)
 	}
 
+	private fun IsNewGpsRecord(GpsData: CGpsData?, strTime: String): CGpsData {
+		val iTime = ParseTime(strTime)
+
+		// GpsData が null の場合は new
+		if (GpsData == null){
+			return CGpsData(iTime)
+		}
+
+		// 直前の iNmeeTime と異なる場合，直前のレコードを出力
+		if(GpsData.iNmeaTime != iTime) {
+			if(GpsData.GpsTime != null) MsgHandler!!.sendMessage(
+				MsgHandler!!.obtainMessage(R.string.statmsg_gps_updated, GpsData)
+			)
+
+			return CGpsData(iTime)
+		}
+
+		return GpsData
+	}
+
 	@Throws(IOException::class)
 	fun Read() {
 		val str = brInput!!.readLine().split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
 
 		if (str[0] == "\$GNRMC" || str[0] == "\$GPRMC") {
-			if(GpsData == null) GpsData = CGpsData()
-			
 			//      時間           lat           long           knot  方位   日付
 			// 0      1          2 3           4 5            6 7     8      9
 			// $GPRMC,043431.200,A,3439.997825,N,13523.377978,E,0.602,178.29,240612,,,A*59
-			val iTime = ParseTime(str[1])
 
-			GpsData!!.iNmeaTime = iTime
-			iNmeaRcvState = iNmeaRcvState or 1
+			GpsData = IsNewGpsRecord(GpsData, str[1])
 
 			// Lat
 			GpsData!!.dLati = ParseDouble(str[3])
@@ -214,41 +228,24 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 
 			if ((iCurrentYear % 100) >= 50 && iYear < 50) iYear += 100
 
-			GpsData!!.GpsTime[iYear, ParseInt(str[9].substring(2, 4), 1) - 1, ParseInt(
-				str[9].substring(0, 2),
-				1
-			), iTime / (3600 * 1000), iTime / (60 * 1000) % 60] =
-				iTime / (1000) % 60
-			GpsData!!.GpsTime[Calendar.MILLISECOND] = iTime % 1000
-		} else if (str[0] == "\$GNGGA" || str[0] == "\$GPGGA") {
-			if(GpsData == null) GpsData = CGpsData()
+			GpsData!!.GpsTime.set(
+				iYear,
+				ParseInt(str[9].substring(2, 4), 1) - 1,
+				ParseInt(str[9].substring(0, 2), 1),
+				GpsData!!.iNmeaTime / (3600 * 1000),
+				GpsData!!.iNmeaTime / (60 * 1000) % 60,
+				GpsData!!.iNmeaTime / (1000) % 60
+			)
 			
+			GpsData!!.GpsTime[Calendar.MILLISECOND] = GpsData!!.iNmeaTime % 1000
+			
+		} else if (str[0] == "\$GNGGA" || str[0] == "\$GPGGA") {
 			//        時間       lat           long               高度
 			// 0      1          2           3 4            5 6 789
 			// $GPGGA,233132.000,3439.997825,N,13523.377978,E,1,,,293.425,M,,,,*21
 
-			val iTime = ParseTime(str[1])
-
-			if (iNmeaRcvState == 0) {
-				GpsData!!.iNmeaTime = iTime
-				iNmeaRcvState = 2
-			} else {
-				iNmeaRcvState = iNmeaRcvState or 2
-			}
-
+			GpsData = IsNewGpsRecord(GpsData, str[1])
 			GpsData!!.dAlt = ParseDouble(str[9])
-		}
-
-		if (iNmeaRcvState == 3) {
-			// NMEA データが 1組分揃った
-			if (!java.lang.Double.isNaN(GpsData!!.dLong)) {
-				MsgHandler!!.sendMessage(
-					MsgHandler!!.obtainMessage(R.string.statmsg_gps_updated, GpsData)
-				)
-			}
-			
-			GpsData = null
-			iNmeaRcvState = 0
 		}
 	}
 
