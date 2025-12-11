@@ -5,8 +5,9 @@ import androidx.activity.ComponentActivity
 import java.io.BufferedReader
 import java.io.FileReader
 import java.io.IOException
-import java.time.ZonedDateTime
-import java.util.Calendar
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
 import java.util.StringTokenizer
 
 //*** エミュレーションモード *********************************************
@@ -229,18 +230,17 @@ internal class VsdInterfaceEmulation(activity: ComponentActivity) : VsdInterface
 		// GPS	2024-12-31T02:29:26.900Z	136.52792667	34.84315000	43.200	0.093
 		// 0	1							2				3			4		5
 
-		val zonedDateTime = ZonedDateTime.parse(strToken[1])
-		val calendar = Calendar.getInstance()
-		calendar.timeInMillis = zonedDateTime.toInstant().toEpochMilli()
+		val utcZoneId: ZoneId = ZoneOffset.UTC
 
 		GpsDataPrev = GpsData
-		GpsData = GpsInterface.CGpsData((calendar.timeInMillis % (24 * 3600 * 1000)).toInt())
+		GpsData = GpsInterface.CGpsData(0)
 
-		GpsData?.GpsTime		= calendar
+		GpsData?.GpsTime		= Instant.parse(strToken[1]).atZone(utcZoneId).toLocalDateTime()
 		GpsData?.dLong			= strToken[2]?.toDouble()!!
 		GpsData?.dLati			= strToken[3]?.toDouble()!!
 		GpsData?.dAlt			= strToken[4]?.toDouble()!!
 		GpsData?.dSpeed			= strToken[5]?.toDouble()!!
+		GpsData?.iNmeaTime		= (GpsData?.GpsTime?.toInstant(ZoneOffset.UTC)?.toEpochMilli()?.toInt() ?: 0) and 0x7FFFFFFF
 		
 		UpdateGps()
 	}

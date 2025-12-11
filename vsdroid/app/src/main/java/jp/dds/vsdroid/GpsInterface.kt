@@ -13,8 +13,7 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.io.OutputStream
 import java.net.SocketTimeoutException
-import java.util.Calendar
-import java.util.TimeZone
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.concurrent.Volatile
 import kotlin.math.floor
@@ -41,7 +40,7 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 	// GPS データ
 
 	class CGpsData (var iNmeaTime: Int) {
-		var GpsTime: Calendar = Calendar.getInstance()
+		var GpsTime: LocalDateTime? = null
 		var dLong: Double = Double.NaN
 		var dLati: Double = 0.0
 		var dAlt: Double = 0.0
@@ -221,17 +220,16 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 			GpsData!!.dSpeed = ParseDouble(str[7]) * 1.85200
 
 			// Calender
-			GpsData!!.GpsTime.set(
+			GpsData!!.GpsTime = LocalDateTime.of(
 				ParseInt(str[9].substring(4, 6), 0) + 2000,
 				ParseInt(str[9].substring(2, 4), 1) - 1,
 				ParseInt(str[9].substring(0, 2), 1),
 				GpsData!!.iNmeaTime / (3600 * 1000),
 				GpsData!!.iNmeaTime /   (60 * 1000) % 60,
-				GpsData!!.iNmeaTime / (1000) % 60
+				GpsData!!.iNmeaTime / (1000) % 60,
+				(GpsData!!.iNmeaTime % 1000) * 1000000
 			)
-			
-			GpsData!!.GpsTime[Calendar.MILLISECOND] = GpsData!!.iNmeaTime % 1000
-			
+
 		} else if (line.startsWith("GGA", 3)) {
 			val str = line.split(",", limit = 11)
 			

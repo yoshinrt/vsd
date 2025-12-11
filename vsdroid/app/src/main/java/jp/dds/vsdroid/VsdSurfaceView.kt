@@ -10,7 +10,7 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import java.util.Calendar
+import java.time.LocalDateTime
 import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
@@ -386,12 +386,8 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 		}
 
 		// 時計
-		val cal = Calendar.getInstance()
-		s = String.format(
-			Locale.US,
-			"%02d:%02d", cal[Calendar.HOUR_OF_DAY],
-			cal[Calendar.MINUTE]
-		)
+		val Now = LocalDateTime.now()
+		s = String.format(Locale.US, "%02d:%02d", Now.getHour(), Now.getMinute())
 		paint.color = Color.GRAY
 		paint.textSize = 64f
 		canvas.drawText(s, 0f, paint.textSize, paint)

@@ -19,9 +19,10 @@ import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketAddress
 import java.net.SocketTimeoutException
-import java.util.Calendar
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Locale
-import java.util.TimeZone
 import java.util.zip.GZIPOutputStream
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.thread
@@ -46,8 +47,6 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 	private var iTSCRaw: Int = 0
 	private var iSectorCnt: Int = 0
 	private var iSectorCntMax: Int = 1
-	private var Cal: Calendar
-	private var CalDev: Calendar
 
 	var iGx: Int = 0
 	var iGy: Int = 0
@@ -99,6 +98,7 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 
 	var GpsData: GpsInterface.CGpsData? = null
 	var GpsDataPrev: GpsInterface.CGpsData? = null
+	val IsoDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
 	
 	//*** リトライしないerror ************************************************
 	class UnrecoverableException(message: String?) : Exception(message) {
@@ -151,17 +151,12 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 		dir.mkdirs()
 
 		// 日付
-		val Now = Calendar.getInstance()
+		val Now = LocalDateTime.now()
 		val s = String.format(
 			Locale.US,
-			"%s/log/vsd%04d%02d%02d_%02d%02d%02d",
+			"%s/log/%s",
 			Pref!!.getString("key_system_dir", null),
-			Now[Calendar.YEAR],
-			Now[Calendar.MONTH] + 1,
-			Now[Calendar.DAY_OF_MONTH],
-			Now[Calendar.HOUR_OF_DAY],
-			Now[Calendar.MINUTE],
-			Now[Calendar.SECOND]
+			Now.format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")),
 		)
 
 		// ログファイルオープン
@@ -389,29 +384,23 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 		// iTSCRaw から時刻算出
 		if ((iTSC and 0xFFFF) > iTSCRaw) iTSC += 0x10000
 		iTSC = (iTSC and -0x10000) or iTSCRaw
-		Cal.timeInMillis = iLogTimeMilli + Tsc2Milli(iTSC)
-		CalDev.timeInMillis = System.currentTimeMillis()
+		
+		val iVsdMs: Long = iLogTimeMilli + Tsc2Milli(iTSC)
+		val dtVsd = LocalDateTime.ofEpochSecond(iVsdMs / 1000, (iVsdMs % 1000 * 1000000).toInt(), ZoneOffset.UTC)
+
+		val iSysMs = System.currentTimeMillis()
+		val dtSys = LocalDateTime.ofEpochSecond(iSysMs / 1000, (iSysMs % 1000 * 1000000).toInt(), ZoneOffset.UTC)
 
 		// 基本データ
 		val s = StringBuilder(
 			String.format(
 				Locale.US,
-				"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
-						"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
-						"%d\t%.2f\t%.2f\t" +
-						"%.3f\t%.3f\t" +
-						"%.1f\t%d\t%d",
-				Cal[Calendar.YEAR], Cal[Calendar.MONTH] + 1,
-				Cal[Calendar.DATE],
-				Cal[Calendar.HOUR_OF_DAY],
-				Cal[Calendar.MINUTE],
-				Cal[Calendar.SECOND],
-				Cal[Calendar.MILLISECOND],
-				CalDev[Calendar.YEAR], CalDev[Calendar.MONTH] + 1,
-				CalDev[Calendar.DATE],
-				CalDev[Calendar.HOUR_OF_DAY],
-				CalDev[Calendar.MINUTE], CalDev[Calendar.SECOND],
-				CalDev[Calendar.MILLISECOND],
+				"%sZ\t%s\t" +
+				"%d\t%.2f\t%.2f\t" +
+				"%.3f\t%.3f\t" +
+				"%.1f\t%d\t%d",
+				dtVsd.format(IsoDateFormat),
+				dtSys.format(IsoDateFormat),
 				iTacho, iSpeedRaw / 100.0,
 				iMileageRaw * (1000 / dPulsePer1Km),
 				iGy / 4096.0, iGx / 4096.0,
@@ -486,14 +475,8 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 				fsLog!!.write(
 					String.format(
 						Locale.US,
-						"GPS\t%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\t" +
-								"%.8f\t%.8f\t%.3f\t%.3f\n",
-						GpsData!!.GpsTime[Calendar.YEAR], GpsData!!.GpsTime[Calendar.MONTH] + 1,
-						GpsData!!.GpsTime[Calendar.DATE],
-						GpsData!!.GpsTime[Calendar.HOUR_OF_DAY],
-						GpsData!!.GpsTime[Calendar.MINUTE],
-						GpsData!!.GpsTime[Calendar.SECOND],
-						GpsData!!.GpsTime[Calendar.MILLISECOND],
+						"GPS\t%s\t%.8f\t%.8f\t%.3f\t%.3f\n",
+						GpsData!!.GpsTime!!.format(IsoDateFormat),
 						GpsData!!.dLong, GpsData!!.dLati, GpsData!!.dAlt, GpsData!!.dSpeed
 					).toByteArray()
 				)
@@ -843,9 +826,6 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 		iSectorCnt = 0
 		iSectorCntMax = 1
 		dGymkhaStart = 1.0
-
-		Cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+0"))
-		CalDev = Calendar.getInstance(TimeZone.getTimeZone("GMT+0"))
 
 		LapState = LAP_STATE.NONE
 
