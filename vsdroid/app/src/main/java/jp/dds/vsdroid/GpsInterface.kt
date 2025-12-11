@@ -39,7 +39,6 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 
 	//////////////////////////////////////////////////////////////////////////
 	// GPS データ
-	var iCurrentYear: Int
 
 	class CGpsData (var iNmeaTime: Int) {
 		var GpsTime: Calendar = Calendar.getInstance()
@@ -69,9 +68,6 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 
 		val bluetoothManager = context?.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 		mBluetoothAdapter = bluetoothManager.getAdapter()
-		
-		// 現在の年取得
-		iCurrentYear = Calendar.getInstance(TimeZone.getTimeZone("GMT+0"))[Calendar.YEAR]
 	}
 
 	@Throws(IOException::class, UnrecoverableException::class)
@@ -200,9 +196,11 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 
 	@Throws(IOException::class)
 	fun Read() {
-		val str = brInput!!.readLine().split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+		val line = brInput!!.readLine()
 
-		if (str[0] == "\$GNRMC" || str[0] == "\$GPRMC") {
+		if (line.startsWith("RMC", 3)) {
+			val str = line.split(",", limit = 11)
+			
 			//      時間           lat           long           knot  方位   日付
 			// 0      1          2 3           4 5            6 7     8      9
 			// $GPRMC,043431.200,A,3439.997825,N,13523.377978,E,0.602,178.29,240612,,,A*59
@@ -212,34 +210,31 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 			// Lat
 			GpsData!!.dLati = ParseDouble(str[3])
 			GpsData!!.dLati = floor(GpsData!!.dLati / 100) + (GpsData!!.dLati % 100.0) / 60.0
-			if (str[4] == "S") GpsData!!.dLati = -GpsData!!.dLati
+			if (str[4].startsWith("S")) GpsData!!.dLati = -GpsData!!.dLati
 
 			// Long
 			GpsData!!.dLong = ParseDouble(str[5])
 			GpsData!!.dLong = floor(GpsData!!.dLong / 100) + (GpsData!!.dLong % 100.0) / 60.0
-			if (str[6] == "W") GpsData!!.dLong = -GpsData!!.dLong
+			if (str[6].startsWith("W")) GpsData!!.dLong = -GpsData!!.dLong
 
 			// Speed
 			GpsData!!.dSpeed = ParseDouble(str[7]) * 1.85200
 
-			// 日付
-			var iYear = ParseInt(str[9].substring(4, 6), 0) +
-					(iCurrentYear / 100 * 100)
-
-			if ((iCurrentYear % 100) >= 50 && iYear < 50) iYear += 100
-
+			// Calender
 			GpsData!!.GpsTime.set(
-				iYear,
+				ParseInt(str[9].substring(4, 6), 0) + 2000,
 				ParseInt(str[9].substring(2, 4), 1) - 1,
 				ParseInt(str[9].substring(0, 2), 1),
 				GpsData!!.iNmeaTime / (3600 * 1000),
-				GpsData!!.iNmeaTime / (60 * 1000) % 60,
+				GpsData!!.iNmeaTime /   (60 * 1000) % 60,
 				GpsData!!.iNmeaTime / (1000) % 60
 			)
 			
 			GpsData!!.GpsTime[Calendar.MILLISECOND] = GpsData!!.iNmeaTime % 1000
 			
-		} else if (str[0] == "\$GNGGA" || str[0] == "\$GPGGA") {
+		} else if (line.startsWith("GGA", 3)) {
+			val str = line.split(",", limit = 11)
+			
 			//        時間       lat           long               高度
 			// 0      1          2           3 4            5 6 789
 			// $GPGGA,233132.000,3439.997825,N,13523.377978,E,1,,,293.425,M,,,,*21
