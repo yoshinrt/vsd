@@ -103,6 +103,7 @@ class MainActivity : AppCompatActivity() {
 			ed.putString("key_connection_mode", "1")
 			ed.putString("key_fw_send_wait", "0")
 			ed.putBoolean("key_use_btgps", true)
+			ed.putBoolean("key_use_gga", true)
 			ed.commit()
 		}
 

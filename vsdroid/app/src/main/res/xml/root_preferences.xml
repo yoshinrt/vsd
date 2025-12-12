@@ -101,6 +101,10 @@
 		app:useSimpleSummaryProvider="true"
 		app:dialogTitle="@string/pref_ip_addr"/>
 	
+	<CheckBoxPreference
+		app:key="key_use_gga"
+		app:title="@string/pref_use_gga"/>
+	
 	<EditTextPreference
 		app:defaultValue="100"
 		app:dialogTitle="@string/pref_fw_send_wait"

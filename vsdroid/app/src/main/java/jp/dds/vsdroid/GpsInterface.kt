@@ -19,8 +19,7 @@ import kotlin.concurrent.Volatile
 import kotlin.math.floor
 
 //*** VSD アクセス *******************************************************
-class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPreferences?) : Runnable {
-	var Pref: SharedPreferences?
+class GpsInterface(context: Context?, var MsgHandler: Handler?, var Pref: SharedPreferences?) : Runnable {
 	var GpsThread: Thread? = null
 
 	// Bluetooth アダプタ
@@ -34,7 +33,18 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 	@Volatile
 	var bKillThread: Boolean = false
 
-	var MsgHandler: Handler? = null
+	private var UbxInitData: ByteArray = byteArrayOf(
+		0xB5.toByte(), 0x62.toByte(),	// UBX protocol
+		0x06.toByte(), 0x8A.toByte(),	// CFG-VALSET
+		0x13.toByte(), 0x00.toByte(), 	// Len
+		0x00.toByte(),					// Ver.
+		0x01.toByte(),					// Layer = SRAM
+		0x00.toByte(), 0x00.toByte(),	// Reserved
+		0xBB.toByte(), 0x00.toByte(), 0x91.toByte(), 0x20.toByte(), 0x00.toByte(),	// GGA
+		0xC0.toByte(), 0x00.toByte(), 0x91.toByte(), 0x20.toByte(), 0x00.toByte(),	// GSA
+		0xC5.toByte(), 0x00.toByte(), 0x91.toByte(), 0x20.toByte(), 0x00.toByte(),	// GSV
+		0x00.toByte(), 0x00.toByte()	// checksum
+	)
 
 	//////////////////////////////////////////////////////////////////////////
 	// GPS データ
@@ -62,9 +72,6 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 	init {
 		if (bDebug) Log.d("VSDroid", "GpsInterface:GpsInterface::constructor")
 
-		MsgHandler = _MsgHandler
-		Pref = _Pref
-
 		val bluetoothManager = context?.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 		mBluetoothAdapter = bluetoothManager.getAdapter()
 	}
@@ -89,7 +96,7 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 			?: //MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_dev_not_selected );
 			throw UnrecoverableException("Bluetooth error")
 		device = mBluetoothAdapter!!.getRemoteDevice(s.substring(s.length - 17))
-
+		
 		try {
 			//MsgHandler.sendEmptyMessage( R.string.statmsg_bluetooth_connecting );
 			// Get a BluetoothSocket for a connection with the
@@ -279,7 +286,14 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 			}
 
 			if (bDebug) Log.d("VSDroid", "GpsInterface:open done.")
-
+			
+			// GGA センテンス使用
+			UbxInitData[14] = (if(Pref!!.getBoolean("key_use_gga", true)) 1 else 0).toByte()
+			
+			// 初期化コード送信
+			OutStream?.write(AddUbxChecksum(UbxInitData))
+			OutStream?.flush()
+			
 			// 1行読む
 			while (!bKillThread) {
 				try {
@@ -316,6 +330,19 @@ class GpsInterface(context: Context?, _MsgHandler: Handler?, _Pref: SharedPrefer
 		if (bDebug) Log.d("VSDroid", "GpsInterface:KillThread: done")
 
 		GpsData = null
+	}
+
+	fun AddUbxChecksum(data: ByteArray): ByteArray{
+		var a: UInt = 0u
+		var b: UInt = 0u
+
+		for(i in 2 .. data.size - 3){
+			a += data[i].toUInt()
+			b += a
+		}
+		data[data.size - 2] = a.toByte()
+		data[data.size - 1] = b.toByte()
+		return data
 	}
 
 	companion object {
