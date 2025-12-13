@@ -238,8 +238,8 @@ internal class VsdInterfaceEmulation(activity: ComponentActivity) : VsdInterface
 		GpsData?.GpsTime		= Instant.parse(strToken[1]).atZone(utcZoneId).toLocalDateTime()
 		GpsData?.dLong			= strToken[2]?.toDouble()!!
 		GpsData?.dLati			= strToken[3]?.toDouble()!!
-		GpsData?.dAlt			= strToken[4]?.toDouble()!!
-		GpsData?.dSpeed			= strToken[5]?.toDouble()!!
+		GpsData?.fAlt			= strToken[4]?.toFloat()!!
+		GpsData?.fSpeed			= strToken[5]?.toFloat()!!
 		GpsData?.iNmeaTime		= (GpsData?.GpsTime?.toInstant(ZoneOffset.UTC)?.toEpochMilli()?.toInt() ?: 0) and 0x7FFFFFFF
 		
 		UpdateGps()

@@ -32,6 +32,9 @@ class GpsInterface(context: Context?, var MsgHandler: Handler?, var Pref: Shared
 
 	@Volatile
 	var bKillThread: Boolean = false
+	var iPrevSec: Int = 0
+	var iLogCntPerSec: Int = 0
+	var fUpdateRate: Float = 0.0F
 
 	private var UbxInitData: ByteArray = byteArrayOf(
 		/*  0 */	0xB5.toByte(), 0x62.toByte(),	// UBX protocol
@@ -54,8 +57,9 @@ class GpsInterface(context: Context?, var MsgHandler: Handler?, var Pref: Shared
 		var GpsTime: LocalDateTime? = null
 		var dLong: Double = Double.NaN
 		var dLati: Double = 0.0
-		var dAlt: Double = 0.0
-		var dSpeed: Double = 0.0
+		var fAlt: Float = 0.0F
+		var fSpeed: Float = 0.0F
+		var fUpdateRate: Float = 0.0F
 	}
 
 	protected var GpsData: CGpsData? = null
@@ -191,10 +195,10 @@ class GpsInterface(context: Context?, var MsgHandler: Handler?, var Pref: Shared
 
 		// 直前の iNmeeTime と異なる場合，直前のレコードを出力
 		if(GpsData.iNmeaTime != iTime) {
+			GpsData.fUpdateRate = fUpdateRate
 			if(GpsData.GpsTime != null) MsgHandler!!.sendMessage(
 				MsgHandler!!.obtainMessage(R.string.statmsg_gps_updated, GpsData)
 			)
-
 			return CGpsData(iTime)
 		}
 
@@ -225,7 +229,7 @@ class GpsInterface(context: Context?, var MsgHandler: Handler?, var Pref: Shared
 			if (str[6].startsWith("W")) GpsData!!.dLong = -GpsData!!.dLong
 
 			// Speed
-			GpsData!!.dSpeed = ParseDouble(str[7]) * 1.85200
+			GpsData!!.fSpeed = (ParseDouble(str[7]) * 1.85200).toFloat()
 
 			// Calender
 			GpsData!!.GpsTime = LocalDateTime.of(
@@ -238,6 +242,20 @@ class GpsInterface(context: Context?, var MsgHandler: Handler?, var Pref: Shared
 				(GpsData!!.iNmeaTime % 1000) * 1000000
 			)
 
+			// Update rate
+			val iSec = GpsData!!.iNmeaTime / (1000) % 60
+			if(iPrevSec != iSec){
+				if(fUpdateRate > iLogCntPerSec.toFloat()) {
+					fUpdateRate = iLogCntPerSec.toFloat()
+				}else {
+					fUpdateRate = (fUpdateRate + iLogCntPerSec.toFloat()) / 2
+				}
+				iLogCntPerSec = 1
+				iPrevSec = iSec
+			}else{
+				++iLogCntPerSec
+			}
+
 		} else if (line.startsWith("GGA", 3)) {
 			val str = line.split(",", limit = 11)
 			
@@ -246,7 +264,7 @@ class GpsInterface(context: Context?, var MsgHandler: Handler?, var Pref: Shared
 			// $GPGGA,233132.000,3439.997825,N,13523.377978,E,1,,,293.425,M,,,,*21
 
 			GpsData = IsNewGpsRecord(GpsData, str[1])
-			GpsData!!.dAlt = ParseDouble(str[9])
+			GpsData!!.fAlt = ParseDouble(str[9]).toFloat()
 		}
 	}
 
@@ -297,6 +315,10 @@ class GpsInterface(context: Context?, var MsgHandler: Handler?, var Pref: Shared
 			// 初期化コード送信
 			OutStream?.write(AddUbxChecksum(UbxInitData))
 			OutStream?.flush()
+
+			iPrevSec = -1
+			iLogCntPerSec = 0
+			fUpdateRate = 10.0F
 			
 			// 1行読む
 			while (!bKillThread) {

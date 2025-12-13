@@ -260,6 +260,13 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 		)
 		canvas.drawRoundRect(rectf, 28f, 28f, paint)
 
+		// 時計
+		val Now = LocalDateTime.now()
+		s = String.format(Locale.US, "%02d:%02d", Now.getHour(), Now.getMinute())
+		paint.color = Color.GRAY
+		paint.textSize = 64f
+		canvas.drawText(s, 0f, paint.textSize, paint)
+
 		if (Vsd != null) {
 			// Vsd.iTacho 針
 			paint.color = Color.RED
@@ -367,8 +374,8 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 					canvas.drawText(
 						String.format(
 							Locale.US,
-							"GPS:%02d: %.8f, %8f",
-							Vsd.GpsData!!.iNmeaTime / 100 % 100,
+							"GPS:%.1f: %.8f %.8f",
+							Vsd.GpsData!!.fUpdateRate,
 							Vsd.GpsData!!.dLong,
 							Vsd.GpsData!!.dLati
 						), 0f, 30.let { y += it; y }.toFloat(), paint
@@ -384,13 +391,6 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 			paint.color = Color.RED
 			canvas.drawLine(0f, (480 - 480 * (Setting?.iBattery ?: 0) / 30).toFloat(), 0f, 480f, paint)
 		}
-
-		// 時計
-		val Now = LocalDateTime.now()
-		s = String.format(Locale.US, "%02d:%02d", Now.getHour(), Now.getMinute())
-		paint.color = Color.GRAY
-		paint.textSize = 64f
-		canvas.drawText(s, 0f, paint.textSize, paint)
 
 		// メッセージログ
 		if (bMsgLogShow) {

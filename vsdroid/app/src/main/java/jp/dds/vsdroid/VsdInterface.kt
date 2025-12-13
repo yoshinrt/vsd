@@ -477,7 +477,7 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 						Locale.US,
 						"GPS\t%s\t%.8f\t%.8f\t%.3f\t%.3f\n",
 						GpsData!!.GpsTime!!.format(IsoDateFormat),
-						GpsData!!.dLong, GpsData!!.dLati, GpsData!!.dAlt, GpsData!!.dSpeed
+						GpsData!!.dLong, GpsData!!.dLati, GpsData!!.fAlt, GpsData!!.fSpeed
 					).toByteArray()
 				)
 			}
