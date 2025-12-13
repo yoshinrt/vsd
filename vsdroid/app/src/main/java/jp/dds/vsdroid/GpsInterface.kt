@@ -34,16 +34,17 @@ class GpsInterface(context: Context?, var MsgHandler: Handler?, var Pref: Shared
 	var bKillThread: Boolean = false
 
 	private var UbxInitData: ByteArray = byteArrayOf(
-		0xB5.toByte(), 0x62.toByte(),	// UBX protocol
-		0x06.toByte(), 0x8A.toByte(),	// CFG-VALSET
-		0x13.toByte(), 0x00.toByte(), 	// Len
-		0x00.toByte(),					// Ver.
-		0x01.toByte(),					// Layer = SRAM
-		0x00.toByte(), 0x00.toByte(),	// Reserved
-		0xBB.toByte(), 0x00.toByte(), 0x91.toByte(), 0x20.toByte(), 0x00.toByte(),	// GGA
-		0xC0.toByte(), 0x00.toByte(), 0x91.toByte(), 0x20.toByte(), 0x00.toByte(),	// GSA
-		0xC5.toByte(), 0x00.toByte(), 0x91.toByte(), 0x20.toByte(), 0x00.toByte(),	// GSV
-		0x00.toByte(), 0x00.toByte()	// checksum
+		/*  0 */	0xB5.toByte(), 0x62.toByte(),	// UBX protocol
+		/*  2 */	0x06.toByte(), 0x8A.toByte(),	// CFG-VALSET
+		/*  4 */	0x13.toByte(), 0x00.toByte(), 	// Len
+		/*  6 */	0x00.toByte(),					// Ver.
+		/*  7 */	0x01.toByte(),					// Layer = SRAM
+		/*  8 */	0x00.toByte(), 0x00.toByte(),	// Reserved
+		/* 10 */	0xBB.toByte(), 0x00.toByte(), 0x91.toByte(), 0x20.toByte(), 0x00.toByte(),	// GGA
+		/* 15 */	0xC0.toByte(), 0x00.toByte(), 0x91.toByte(), 0x20.toByte(), 0x00.toByte(),	// GSA
+		/* 20 */	0xC5.toByte(), 0x00.toByte(), 0x91.toByte(), 0x20.toByte(), 0x00.toByte(),	// GSV
+		/* 25 */	0x22.toByte(), 0x00.toByte(), 0x31.toByte(), 0x10.toByte(), 0x01.toByte(),	// BeiDou
+		/* 30 */	0x00.toByte(), 0x00.toByte()	// checksum
 	)
 
 	//////////////////////////////////////////////////////////////////////////
@@ -288,7 +289,10 @@ class GpsInterface(context: Context?, var MsgHandler: Handler?, var Pref: Shared
 			if (bDebug) Log.d("VSDroid", "GpsInterface:open done.")
 			
 			// GGA センテンス使用
-			UbxInitData[14] = (if(Pref!!.getBoolean("key_use_gga", true)) 1 else 0).toByte()
+			UbxInitData[14] = (if(Pref!!.getBoolean("key_use_ubx_gga", true)) 1 else 0).toByte()
+			
+			// BeiDou
+			UbxInitData[29] = (if(Pref!!.getBoolean("key_use_ubx_beidou", true)) 1 else 0).toByte()
 			
 			// 初期化コード送信
 			OutStream?.write(AddUbxChecksum(UbxInitData))
@@ -335,7 +339,10 @@ class GpsInterface(context: Context?, var MsgHandler: Handler?, var Pref: Shared
 	fun AddUbxChecksum(data: ByteArray): ByteArray{
 		var a: UInt = 0u
 		var b: UInt = 0u
-
+		
+		data[5] = ((data.size - 6 - 2) shl 8   ).toByte()
+		data[4] = ((data.size - 6 - 2) and 0xFF).toByte()
+		
 		for(i in 2 .. data.size - 3){
 			a += data[i].toUInt()
 			b += a

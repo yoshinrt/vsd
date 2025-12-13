@@ -101,16 +101,22 @@
 		app:useSimpleSummaryProvider="true"
 		app:dialogTitle="@string/pref_ip_addr"/>
 	
-	<CheckBoxPreference
-		app:key="key_use_gga"
-		app:title="@string/pref_use_gga"/>
-	
 	<EditTextPreference
 		app:defaultValue="100"
 		app:dialogTitle="@string/pref_fw_send_wait"
 		app:key="key_fw_send_wait"
 		app:useSimpleSummaryProvider="true"
 		app:title="@string/pref_fw_send_wait"/>
+	
+	<PreferenceCategory app:title="@string/pref_category_ubx" app:iconSpaceReserved="false"/>
+	
+	<CheckBoxPreference
+		app:key="key_use_ubx_gga"
+		app:title="@string/pref_use_ubx_gga"/>
+	
+	<CheckBoxPreference
+		app:key="key_use_ubx_beidou"
+		app:title="@string/pref_use_ubx_beidou"/>
 	
 	<PreferenceCategory app:title="@string/pref_category_other" app:iconSpaceReserved="false"/>
 
