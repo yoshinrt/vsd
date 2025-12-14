@@ -43,8 +43,8 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 	var iSpeedRaw: Int = 0
 	private var iRtcRaw: Int = 0
 	var iRtcPrevRaw: Int = -1
-	private var iMileageRaw: Int = 0
-	private var iTSCRaw: Int = 0
+	protected var iMileageRaw: Int = 0
+	protected var iTSCRaw: Int = 0
 	private var iSectorCnt: Int = 0
 	private var iSectorCntMax: Int = 1
 
@@ -168,7 +168,7 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 					)
 				)
 			)
-			if (bDebugInfo) {
+			if (bDebugInfo && this !is VsdInterfaceGps) {
 				fsBinLog = BufferedOutputStream(FileOutputStream("$s.bin"))
 			}
 		} catch (e: Exception) {
@@ -236,7 +236,7 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 
 	// 1 <= :受信したレコード数  0:新データなし
 	@Throws(IOException::class, UnrecoverableException::class)
-	private fun Read(): Int {
+	protected open fun Read(): Int {
 		var iMileage16: Int
 		var iRet = 0
 		var iEOLPos = 0
@@ -364,7 +364,7 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 	private var iLogTimeMilli: Long = 0
 	private var iTSC: Int = 0 // 200KHz >> 8
 
-	private fun WriteLog() {
+	protected fun WriteLog() {
 		if (!bLogStart) {
 			// まだ動いていないので，Log 保留
 			if (!bDebugInfo && iSpeedRaw == 0) return
@@ -932,7 +932,8 @@ open class VsdInterface(activity: ComponentActivity) : Runnable {
 
 		const val CONN_MODE_ETHER: Int = 0
 		const val CONN_MODE_BLUETOOTH: Int = 1
-		const val CONN_MODE_LOGREPLAY: Int = 2
+		const val CONN_MODE_GPS : Int = 2
+		const val CONN_MODE_LOGREPLAY: Int = 3
 
 		const val ERROR: Int = -1
 		const val FATAL_ERROR: Int = -2

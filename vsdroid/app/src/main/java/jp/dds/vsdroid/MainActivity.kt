@@ -143,6 +143,7 @@ class MainActivity : AppCompatActivity() {
 		when (iConnMode) {
 			VsdInterface.CONN_MODE_BLUETOOTH -> Vsd = VsdInterfaceBluetooth(this)
 			VsdInterface.CONN_MODE_LOGREPLAY -> Vsd = VsdInterfaceEmulation(this)
+			VsdInterface.CONN_MODE_GPS       -> Vsd = VsdInterfaceGps(this)
 			else -> Vsd = VsdInterface(this)
 		}
 
