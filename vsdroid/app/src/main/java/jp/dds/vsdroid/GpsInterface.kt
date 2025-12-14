@@ -178,11 +178,14 @@ class GpsInterface(context: Context?, var MsgHandler: Handler?, var Pref: Shared
 	}
 
 	private fun ParseTime(str: String): Int {
-		return (
-			ParseInt(str.substring(0, 2), 0) * 3600 * 1000 +
-			ParseInt(str.substring(2, 4), 0)   * 60 * 1000 +
-			(ParseDouble(str.substring(4)) * 1000).toInt()
-		)
+		try {
+			return (
+					ParseInt(str.substring(0, 2), 0) * 3600 * 1000 +
+							ParseInt(str.substring(2, 4), 0) * 60 * 1000 +
+							(ParseDouble(str.substring(4)) * 1000).toInt()
+					)
+		} catch (_: Exception){}
+		return 0
 	}
 
 	private fun IsNewGpsRecord(GpsData: CGpsData?, strTime: String): CGpsData {
