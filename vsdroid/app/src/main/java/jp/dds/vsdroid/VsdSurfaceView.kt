@@ -313,6 +313,7 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 			}
 
 			// Lap 数
+			paint.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD))
 			paint.color = Color.GRAY
 			paint.textSize = 32f
 			canvas.drawText(s, fLapX, 355f, paint)
@@ -336,6 +337,8 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 			}
 
 			if (Setting?.bDebugInfo ?: false) {
+				paint.setTypeface(Typeface.MONOSPACE)
+				
 				// デバッグ用
 				var y = 0
 				paint.color = Color.CYAN
@@ -343,7 +346,8 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 				canvas.drawText(
 					String.format(
 						Locale.US,
-						"Throttle: %d (%d - %d)",
+						"Throttle:%.1f%% %d (%d - %d)",
+						Vsd.iThrottle / 10.0,
 						Vsd.iThrottleRaw + Vsd.iThrottle0,
 						Vsd.iThrottle0,
 						Vsd.iThrottleMax + Vsd.iThrottle0
@@ -351,21 +355,15 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 					0f, 30.let { y += it; y }.toFloat(), paint
 				)
 				canvas.drawText(
-					String.format(Locale.US, "Throttle(%%): %.1f", Vsd.iThrottle / 10.0),
-					0f,
-					30.let { y += it; y }.toFloat(),
-					paint
-				)
-				canvas.drawText(
 					String.format(
 						Locale.US,
-						"Gx: %+.2f Gy: %+.2f",
+						"Gx:%+.2f Gy:%+.2f",
 						Vsd.iGx / 4096.0,
 						Vsd.iGy / 4096.0
 					), 0f, 30.let { y += it; y }.toFloat(), paint
 				)
 				canvas.drawText(
-					String.format(Locale.US, "Batt: %d", Setting?.iBattery ?: 0),
+					String.format(Locale.US, "Batt:%d", Setting?.iBattery ?: 0),
 					0f,
 					30.let { y += it; y }.toFloat(),
 					paint
@@ -374,7 +372,7 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 					canvas.drawText(
 						String.format(
 							Locale.US,
-							"GPS:%.1f: %.8f %.8f",
+							"GPS:%.1f:%.8f, %.8f",
 							Vsd.GpsData!!.fUpdateRate,
 							Vsd.GpsData!!.dLong,
 							Vsd.GpsData!!.dLati
@@ -456,7 +454,7 @@ class VsdSurfaceView (context: Context?, attrs: AttributeSet) : SurfaceView(cont
 		private const val iGearBottom			= 155
 		private const val iGearFontSize			= 140
 		private const val iSpeedUnderlineW		= 372
-		private const val fLapX					= iMeterCx - 190f
+		private const val fLapX					= iMeterCx - 200f
 
 		private const val COLOR_ORANGE = -0xa000
 		private const val COLOR_PURPLE = -0xbbff58
