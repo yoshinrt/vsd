@@ -1,3 +1,12 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,7 +15,17 @@ plugins {
 android {
     namespace = "jp.dds.vsdroid"
     compileSdk = 35
-
+    
+    signingConfigs {
+        create("release") {
+            storeFile = file("C:/Users/yoshi/Documents/develop/android/dds.keystore") 
+            
+            storePassword = localProperties.getProperty("signing.store.password")
+            keyAlias = localProperties.getProperty("signing.key.alias")
+            keyPassword = localProperties.getProperty("signing.key.password")
+        }
+    }
+    
     defaultConfig {
         applicationId = "jp.dds.vsdroid"
         minSdk = 24
@@ -24,6 +43,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
