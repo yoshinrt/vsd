@@ -148,6 +148,7 @@ class MainActivity : AppCompatActivity() {
 		}
 
 		UpdateSetting()
+		VsdScreen?.Draw(R.string.statmsg_gps_disconnected, Vsd, Setting)
 		Vsd?.Start()        // VSD スレッド起動
 	}
 
