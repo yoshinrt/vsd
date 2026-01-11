@@ -15,7 +15,7 @@ open class VsdInterfaceGps(activity: ComponentActivity) : VsdInterface(activity)
 		try {
 			if (GpsData != null) {
 				iSpeedRaw = (GpsData!!.fSpeed * 100).toInt()
-				iTacho = GpsData!!.fSpeed.toInt()
+				iTacho = iSpeedRaw
 				iTSCRaw = GpsData!!.iNmeaTime
 			}
 		}catch(e: Exception){}
