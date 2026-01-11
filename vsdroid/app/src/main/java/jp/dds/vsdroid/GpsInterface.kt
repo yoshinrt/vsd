@@ -211,63 +211,70 @@ class GpsInterface(context: Context?, var MsgHandler: Handler?, var Pref: Shared
 	@Throws(IOException::class)
 	fun Read() {
 		val line = brInput!!.readLine()
+		//Log.d("VSDroid", "GPS:" + line)
 
-		if (line.startsWith("RMC", 3)) {
-			val str = line.split(",", limit = 11)
-			
-			//      時間           lat           long           knot  方位   日付
-			// 0      1          2 3           4 5            6 7     8      9
-			// $GPRMC,043431.200,A,3439.997825,N,13523.377978,E,0.602,178.29,240612,,,A*59
-
-			GpsData = IsNewGpsRecord(GpsData, str[1])
-
-			// Lat
-			GpsData!!.dLati = ParseDouble(str[3])
-			GpsData!!.dLati = floor(GpsData!!.dLati / 100) + (GpsData!!.dLati % 100.0) / 60.0
-			if (str[4].startsWith("S")) GpsData!!.dLati = -GpsData!!.dLati
-
-			// Long
-			GpsData!!.dLong = ParseDouble(str[5])
-			GpsData!!.dLong = floor(GpsData!!.dLong / 100) + (GpsData!!.dLong % 100.0) / 60.0
-			if (str[6].startsWith("W")) GpsData!!.dLong = -GpsData!!.dLong
-
-			// Speed
-			GpsData!!.fSpeed = (ParseDouble(str[7]) * 1.85200).toFloat()
-
-			// Calender
-			GpsData!!.GpsTime = LocalDateTime.of(
-				ParseInt(str[9].substring(4, 6), 0) + 2000,
-				ParseInt(str[9].substring(2, 4), 1) - 1,
-				ParseInt(str[9].substring(0, 2), 1),
-				GpsData!!.iNmeaTime / (3600 * 1000),
-				GpsData!!.iNmeaTime /   (60 * 1000) % 60,
-				GpsData!!.iNmeaTime / (1000) % 60,
-				(GpsData!!.iNmeaTime % 1000) * 1000000
-			)
-
-			// Update rate
-			val iSec = GpsData!!.iNmeaTime / (1000) % 60
-			if(iPrevSec != iSec){
-				if(fUpdateRate > iLogCntPerSec.toFloat()) {
-					fUpdateRate = iLogCntPerSec.toFloat()
-				}else {
-					fUpdateRate = (fUpdateRate + iLogCntPerSec.toFloat()) / 2
+		try{
+			if (line.startsWith("RMC", 3)) {
+				val str = line.split(",", limit = 11)
+				
+				//      時間           lat           long           knot  方位   日付
+				// 0      1          2 3           4 5            6 7     8      9
+				// $GPRMC,043431.200,A,3439.997825,N,13523.377978,E,0.602,178.29,240612,,,A*59
+	
+				GpsData = IsNewGpsRecord(GpsData, str[1])
+	
+				// Lat
+				GpsData!!.dLati = ParseDouble(str[3])
+				GpsData!!.dLati = floor(GpsData!!.dLati / 100) + (GpsData!!.dLati % 100.0) / 60.0
+				if (str[4].startsWith("S")) GpsData!!.dLati = -GpsData!!.dLati
+	
+				// Long
+				GpsData!!.dLong = ParseDouble(str[5])
+				GpsData!!.dLong = floor(GpsData!!.dLong / 100) + (GpsData!!.dLong % 100.0) / 60.0
+				if (str[6].startsWith("W")) GpsData!!.dLong = -GpsData!!.dLong
+	
+				// Speed
+				GpsData!!.fSpeed = (ParseDouble(str[7]) * 1.85200).toFloat()
+	
+				// Calender
+				if(!str.isEmpty()) {
+					GpsData!!.GpsTime = LocalDateTime.of(
+						ParseInt(str[9].substring(4, 6), 0) + 2000,
+						ParseInt(str[9].substring(2, 4), 1),
+						ParseInt(str[9].substring(0, 2), 1),
+						GpsData!!.iNmeaTime / (3600 * 1000),
+						GpsData!!.iNmeaTime / (60 * 1000) % 60,
+						GpsData!!.iNmeaTime / (1000) % 60,
+						(GpsData!!.iNmeaTime % 1000) * 1000000
+					)
 				}
-				iLogCntPerSec = 1
-				iPrevSec = iSec
-			}else{
-				++iLogCntPerSec
+	
+				// Update rate
+				val iSec = GpsData!!.iNmeaTime / (1000) % 60
+				if(iPrevSec != iSec){
+					if(fUpdateRate > iLogCntPerSec.toFloat()) {
+						fUpdateRate = iLogCntPerSec.toFloat()
+					}else {
+						fUpdateRate = (fUpdateRate + iLogCntPerSec.toFloat()) / 2
+					}
+					iLogCntPerSec = 1
+					iPrevSec = iSec
+				}else{
+					++iLogCntPerSec
+				}
+	
+			} else if (line.startsWith("GGA", 3)) {
+				val str = line.split(",", limit = 11)
+				
+				//        時間       lat           long               高度
+				// 0      1          2           3 4            5 6 789
+				// $GPGGA,233132.000,3439.997825,N,13523.377978,E,1,,,293.425,M,,,,*21
+	
+				GpsData = IsNewGpsRecord(GpsData, str[1])
+				GpsData!!.fAlt = ParseDouble(str[9]).toFloat()
 			}
-
-		} else if (line.startsWith("GGA", 3)) {
-			val str = line.split(",", limit = 11)
-			
-			//        時間       lat           long               高度
-			// 0      1          2           3 4            5 6 789
-			// $GPGGA,233132.000,3439.997825,N,13523.377978,E,1,,,293.425,M,,,,*21
-
-			GpsData = IsNewGpsRecord(GpsData, str[1])
-			GpsData!!.fAlt = ParseDouble(str[9]).toFloat()
+		}catch(_: Exception){
+			GpsData = null
 		}
 	}
 
