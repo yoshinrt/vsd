@@ -93,6 +93,9 @@ class MainActivity : AppCompatActivity() {
 		if (Pref!!.getString("key_system_dir", null) == null) {
 			val ed = Pref!!.edit()
 			ed.putString("key_system_dir", strVsdHome)
+			ed.putString("key_sectors", "1")
+			ed.putString("key_log_hz", "16")
+			ed.putString("key_wheel_select", "CE28N")
 			ed.putString("key_roms", strVsdHome + "vsd2.mot")
 			ed.putString("key_replay_log", strVsdHome + "vsd.log")
 			ed.putString("key_circuit", strVsdHome + "circuit/未選択")
@@ -104,7 +107,7 @@ class MainActivity : AppCompatActivity() {
 			ed.putString("key_fw_send_wait", "0")
 			ed.putBoolean("key_use_btgps", true)
 			ed.putBoolean("key_use_ubx_gga", true)
-			ed.putBoolean("key_use_ubx_beidou", true)
+			ed.putBoolean("key_use_ubx_beidou", false)
 			ed.commit()
 		}
 
