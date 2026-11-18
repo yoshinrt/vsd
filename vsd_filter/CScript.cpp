@@ -32,7 +32,7 @@ CScript::CScript( CVsdFilter *pVsd ){
 	
 	if( pVsd ) m_pVsd = pVsd;
 	
-	m_szErrorMsg	= NULL;
+	m_szErrorMsg	= nullptr;
 	m_uError		= ERR_OK;
 }
 
@@ -139,14 +139,14 @@ LPWSTR CScript::SprintfSub( const FunctionCallbackInfo<Value>& args ){
 	
 	if( CScriptIFBase::CheckArgs( args.Length() >= 1 )){
 		JsErrorNumOfArg();
-		return NULL;
+		return nullptr;
 	}
 	
 	// arg 用 buf
 	UINT *puArgBuf	= new UINT[ args.Length() * 2 ];
 	UINT uArgBufPtr	= 0;
 	int iArgNum	= 1;
-	LPWSTR wszBuf	= NULL;
+	LPWSTR wszBuf	= nullptr;
 	std::vector<String::Value *> vecStrValue;
 	
 	// Fmt 文字列取得
@@ -157,7 +157,7 @@ LPWSTR CScript::SprintfSub( const FunctionCallbackInfo<Value>& args ){
 	// % 引数解析
 	for( ;; ++iArgNum, ++p ){
 		// % サーチ
-		if(( p = wcschr( p, L'%' )) == NULL ) break;
+		if(( p = wcschr( p, L'%' )) == nullptr ) break;
 		
 		// 型フィールドサーチ
 		for( ++p; *p && strchr( "+-0123456789.# ", *p ); ++p );
@@ -252,7 +252,7 @@ int CScript::MessageBox(
 	LPCWSTR szCaption,
 	UINT	uType
 ){
-	return MessageBoxW( NULL, szMsg,
+	return MessageBoxW( nullptr, szMsg,
 		szCaption ? szCaption : L"VSD filter JavaScript message",
 		uType
 	);
@@ -303,7 +303,7 @@ UINT CScript::Initialize( LPCWSTR wszFileName ){
 	
 	// グローバルオブジェクトから環境を生成
 	m_Context = *(new Persistent<Context>( m_pIsolate,
-		Context::New( m_pIsolate, NULL, global )
+		Context::New( m_pIsolate, nullptr, global )
 	));
 	
 	if( wszFileName ) return RunFile( wszFileName );
@@ -342,7 +342,7 @@ UINT CScript::RunFileCore( LPCWSTR szFileName ){
 	CPushDir push_dir( m_pVsd->m_szPluginDirA );
 	fp = _wfopen( szFileName, L"r" );
 	
-	if( fp == NULL ) return m_uError = ERR_CANT_OPEN_FILE;
+	if( fp == nullptr ) return m_uError = ERR_CANT_OPEN_FILE;
 	
 	// ファイルサイズ取得
 	fseek( fp, 0, SEEK_END );
@@ -383,7 +383,7 @@ UINT CScript::Run( LPCWSTR szFunc, BOOL bNoFunc ){
 	HandleScope handle_scope( m_pIsolate );
 	Context::Scope context_scope( GetContext());
 	
-	return RunArg( szFunc, 0, NULL, bNoFunc );
+	return RunArg( szFunc, 0, nullptr, bNoFunc );
 }
 
 UINT CScript::Run_s( LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc ){
@@ -452,7 +452,7 @@ BOOL LogReaderCallback( const char *szPath, const char *szFile, void *pParam ){
 	char szBuf[ MAX_PATH + 1 ];
 	strcat( strcpy( szBuf, szPath ), szFile );
 	
-	LPWSTR pFile = NULL;
+	LPWSTR pFile = nullptr;
 	Script.RunFile( StringNew( pFile, szBuf ));
 	delete pFile;
 	

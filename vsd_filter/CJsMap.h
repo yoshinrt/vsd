@@ -51,6 +51,6 @@
 	T *GetObj( void ){
 		return ToValue()->IsExternal() ? static_cast<T *>(
 			Handle<External>::Cast( ToValue())->Value()
-		) : NULL;
+		) : nullptr;
 	}
 };

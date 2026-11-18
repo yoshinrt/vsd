@@ -14,7 +14,7 @@ class CSemaphore {
 	
   public:
 	CSemaphore(){
-		m_hSemaphore = CreateSemaphore( NULL, 1, 1, NULL );
+		m_hSemaphore = CreateSemaphore( nullptr, 1, 1, nullptr );
 	}
 	
 	~CSemaphore(){
@@ -36,7 +36,7 @@ class CSemaphore {
 	
 	void Release( void ){
 		DebugMsgD( "Semaphore%08X: exiting critical section\n", this );
-		ReleaseSemaphore( m_hSemaphore, 1, NULL );
+		ReleaseSemaphore( m_hSemaphore, 1, nullptr );
 	}
 	
   private:

@@ -20,9 +20,9 @@ class CFontGlyph {
 	short	iCellIncX;
 	
 	CFontGlyph(){
-		pBuf		= NULL;
+		pBuf		= nullptr;
 		iCellIncX	= -1;
-		//pBufOutline = NULL;
+		//pBufOutline = nullptr;
 	}
 	
 	~CFontGlyph(){

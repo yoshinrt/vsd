@@ -459,9 +459,9 @@ class CVsdFilter
 	char *SetSkinFile( const char *szSkinFile ){
 		char szBuf[ MAX_PATH + 1 ];
 		
-		if( szSkinFile == NULL ){
-			StringNew( m_szSkinDirW, ( LPCWSTR )NULL );
-			return StringNew( m_szSkinDirA, NULL );
+		if( szSkinFile == nullptr ){
+			StringNew( m_szSkinDirW, ( LPCWSTR )nullptr );
+			return StringNew( m_szSkinDirA, nullptr );
 		}
 		
 		StringNew( m_szSkinFile, szSkinFile );
@@ -479,7 +479,7 @@ class CVsdFilter
 	char *SetPluginDir( void ){
 		char szBuf[ MAX_PATH + 1 ];
 		GetModuleFileName(( HMODULE )m_hInst, szBuf, MAX_PATH );
-		char *p = StrTokFile( NULL, szBuf, STF_NODE );
+		char *p = StrTokFile( nullptr, szBuf, STF_NODE );
 		if( p ) strcpy( p, PLUGIN_DIR "\\" );
 		StringNew( m_szPluginDirA, szBuf );
 		StringNew( m_szPluginDirW, m_szPluginDirA );
@@ -544,7 +544,7 @@ class CVsdFilter
 	void DeleteScript( void ){
 		if( m_Script ){
 			delete m_Script;
-			m_Script = NULL;
+			m_Script = nullptr;
 		}
 	}
 	
@@ -691,7 +691,7 @@ BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, L
 class CPushDir {
   public:
 	CPushDir( char *szPath ){
-		int iBufSize = GetCurrentDirectory( 0, NULL );
+		int iBufSize = GetCurrentDirectory( 0, nullptr );
 		m_szCurDir = new char[ iBufSize ];
 		GetCurrentDirectory( iBufSize, m_szCurDir );
 		SetCurrentDirectory( szPath );

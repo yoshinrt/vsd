@@ -131,24 +131,24 @@ FILTER_DLL filter = {
 	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_MAIN_MESSAGE | FILTER_FLAG_EX_INFORMATION,
 	0,0,						//	設定ウインドウのサイズ (FILTER_FLAG_WINDOW_SIZEが立っている時に有効)
 	(TCHAR*)PROG_NAME_J,		//	フィルタの名前
-	TRACK_N,					//	トラックバーの数 (0なら名前初期値等もNULLでよい)
+	TRACK_N,					//	トラックバーの数 (0なら名前初期値等もnullptrでよい)
 	(TCHAR**)track_name,		//	トラックバーの名前郡へのポインタ
 	track_default,				//	トラックバーの初期値郡へのポインタ
-	track_s, track_e,			//	トラックバーの数値の下限上限 (NULLなら全て0～256)
-	CHECK_N,					//	チェックボックスの数 (0なら名前初期値等もNULLでよい)
+	track_s, track_e,			//	トラックバーの数値の下限上限 (nullptrなら全て0～256)
+	CHECK_N,					//	チェックボックスの数 (0なら名前初期値等もnullptrでよい)
 	(TCHAR**)check_name,		//	チェックボックスの名前郡へのポインタ
 	check_default,				//	チェックボックスの初期値郡へのポインタ
-	func_proc,					//	フィルタ処理関数へのポインタ (NULLなら呼ばれません)
-	NULL, //func_init,			//	開始時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
-	NULL, //func_exit,			//	終了時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
-	func_update,				//	設定が変更されたときに呼ばれる関数へのポインタ (NULLなら呼ばれません)
-	func_WndProc,				//	設定ウィンドウにウィンドウメッセージが来た時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
-	NULL,NULL,					//	システムで使いますので使用しないでください
-	NULL,						//  拡張データ領域へのポインタ (FILTER_FLAG_EX_DATAが立っている時に有効)
-	NULL,						//  拡張データサイズ (FILTER_FLAG_EX_DATAが立っている時に有効)
+	func_proc,					//	フィルタ処理関数へのポインタ (nullptrなら呼ばれません)
+	nullptr, //func_init,		//	開始時に呼ばれる関数へのポインタ (nullptrなら呼ばれません)
+	nullptr, //func_exit,		//	終了時に呼ばれる関数へのポインタ (nullptrなら呼ばれません)
+	func_update,				//	設定が変更されたときに呼ばれる関数へのポインタ (nullptrなら呼ばれません)
+	func_WndProc,				//	設定ウィンドウにウィンドウメッセージが来た時に呼ばれる関数へのポインタ (nullptrなら呼ばれません)
+	nullptr, nullptr,			//	システムで使いますので使用しないでください
+	nullptr,					//  拡張データ領域へのポインタ (FILTER_FLAG_EX_DATAが立っている時に有効)
+	0,							//  拡張データサイズ (FILTER_FLAG_EX_DATAが立っている時に有効)
 	g_szDescription,			//  フィルタ情報へのポインタ (FILTER_FLAG_EX_INFORMATIONが立っている時に有効)
-	NULL,						//	セーブが開始される直前に呼ばれる関数へのポインタ (NULLなら呼ばれません)
-	NULL,						//	セーブが終了した直前に呼ばれる関数へのポインタ (NULLなら呼ばれません)
+	nullptr,					//	セーブが開始される直前に呼ばれる関数へのポインタ (nullptrなら呼ばれません)
+	nullptr,					//	セーブが終了した直前に呼ばれる関数へのポインタ (nullptrなら呼ばれません)
 };
 
 
@@ -230,8 +230,8 @@ CVsdFilter::CVsdFilter( FILTER *filter, void *editp ) :
 	m_iAdjustPointVid[ 0 ] =
 	m_iAdjustPointVid[ 1 ] = INVALID_INT;
 	
-	m_szLogFilter	= NULL;
-	fpip			= NULL;
+	m_szLogFilter	= nullptr;
+	fpip			= nullptr;
 }
 
 CVsdFilter::~CVsdFilter(){
@@ -506,16 +506,16 @@ void CVsdFilter::GetFileCreationTime( void ){
 		fileinfo->name,			// ファイル名
 		GENERIC_READ,			// アクセスモード
 		FILE_SHARE_READ,		// 共有モード
-		NULL,					// セキュリティ記述子
+		nullptr,					// セキュリティ記述子
 		OPEN_EXISTING,			// 作成方法
 		FILE_ATTRIBUTE_NORMAL,	// ファイル属性
-		NULL					// テンプレートファイルのハンドル
+		nullptr					// テンプレートファイルのハンドル
 	);
 	
-	if( hFile == NULL ) return;
+	if( hFile == nullptr ) return;
 	
-	//if( GetFileTime( hFile, NULL, NULL, &ft )){		// デバッグ用 ライトタイム
-	if( GetFileTime( hFile, &ft, NULL, NULL )){
+	//if( GetFileTime( hFile, nullptr, nullptr, &ft )){		// デバッグ用 ライトタイム
+	if( GetFileTime( hFile, &ft, nullptr, nullptr )){
 		m_iVideoStartTime =
 			(
 				((( LONGLONG )ft.dwHighDateTime << 32 ) + ft.dwLowDateTime ) -
@@ -537,7 +537,7 @@ void CVsdFilter::GetFileCreationTime( void ){
 void CVsdFilter::AutoSync( CVsdLog *pLog, int *piParam ){
 	// filetime が取得できていない
 	if(
-		pLog == NULL ||
+		pLog == nullptr ||
 		m_piParamC[ CHECK_LOGPOS ] == 0 ||
 		m_iVideoStartTime == -1
 	) return;
@@ -630,7 +630,7 @@ BOOL func_proc( FILTER *fp, FILTER_PROC_INFO *fpip ){
 	
 	BOOL bRet = g_Vsd->DrawVSD();
 	#ifdef DEBUG
-	g_Vsd->fpip	= NULL;
+	g_Vsd->fpip	= nullptr;
 	#endif
 	
 	return bRet;
@@ -668,7 +668,7 @@ void SetSkinFileList( HWND hwnd ){
 	hwndChild = CreateWindow( \
 		"BUTTON", ( Caption ), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, \
 		( x ), ( y ), POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT, \
-		hwnd, ( id ), hInst, NULL \
+		hwnd, ( id ), hInst, nullptr \
 	), \
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 ) \
 )
@@ -684,7 +684,7 @@ void CreateControlFileName(
 		"STATIC", szCap, WS_CHILD | WS_VISIBLE,
 		iX, iY,
 		POS_FILE_CAPTION_SIZE, POS_FILE_HEIGHT,
-		hwnd, 0, hInst, NULL
+		hwnd, 0, hInst, nullptr
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
@@ -693,7 +693,7 @@ void CreateControlFileName(
 		"EDIT", szEdit, WS_CHILD | WS_VISIBLE | ES_READONLY,
 		iX + POS_FILE_CAPTION_SIZE, iY,
 		POS_FILE_NAME_SIZE, POS_FILE_HEIGHT,
-		hwnd, ( HMENU )iID, hInst, NULL
+		hwnd, ( HMENU )iID, hInst, nullptr
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
@@ -701,7 +701,7 @@ void CreateControlFileName(
 		"BUTTON", szButt, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		iX + POS_FILE_CAPTION_SIZE + POS_FILE_NAME_SIZE, iY,
 		POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT,
-		hwnd, ( HMENU )( iID + 1 ), hInst, NULL
+		hwnd, ( HMENU )( iID + 1 ), hInst, nullptr
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
@@ -720,16 +720,16 @@ void CreateControlSkinName(
 		"STATIC", szCap, WS_CHILD | WS_VISIBLE,
 		iX, iY,
 		POS_FILE_CAPTION_SIZE, POS_FILE_HEIGHT,
-		hwnd, 0, hInst, NULL
+		hwnd, 0, hInst, nullptr
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
 	hwndChild = CreateWindowEx(
 		WS_EX_CLIENTEDGE,
-		"COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWN,
+		"COMBOBOX", nullptr, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWN,
 		iX + POS_FILE_CAPTION_SIZE, iY,
 		POS_FILE_NAME_SIZE + POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT * 10,
-		hwnd, ( HMENU )iID, hInst, NULL
+		hwnd, ( HMENU )iID, hInst, nullptr
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	SendMessage( hwndChild, CB_SETCURSEL, 0, 0 );
@@ -748,8 +748,8 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	} rect;
 	RECT	rectClient;
 	
-	HWND	hwndChild	= NULL;
-	HFONT	hfont		= NULL;
+	HWND	hwndChild	= nullptr;
+	HFONT	hfont		= nullptr;
 	
 	// クライアント領域のサイズ get 後にリサイズ
 	GetWindowRect( hwnd, &rectClient );
@@ -764,7 +764,7 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 	
 	while( 1 ){
 		/*** 子パーツのサイズ変更 ***/
-		hwndChild = FindWindowEx( hwnd, hwndChild, NULL, NULL );
+		hwndChild = FindWindowEx( hwnd, hwndChild, nullptr, nullptr );
 		if( !hwndChild ) break;
 		
 		// screen -> client 座標に変換
@@ -819,7 +819,7 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 				"BUTTON", "set", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 				rectClient.right - POS_SET_BUTT_SIZE, 14 + ( i + 2 ) * 24,
 				POS_SET_BUTT_SIZE, 16,
-				hwnd, ( HMENU )( ID_BUTT_SET_VSt + i ), hInst, NULL
+				hwnd, ( HMENU )( ID_BUTT_SET_VSt + i ), hInst, nullptr
 			);
 			SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 		}
@@ -846,7 +846,7 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 		"STATIC", "VSD for GPS " PROG_REVISION_STR, WS_CHILD | WS_VISIBLE,
 		POS_FILE_CAPTION_POS + POS_FILE_CAPTION_SIZE, y,
 		POS_FILE_NAME_SIZE / 2, POS_FILE_HEIGHT,
-		hwnd, 0, hInst, NULL
+		hwnd, 0, hInst, nullptr
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
@@ -855,7 +855,7 @@ void ExtendDialog( HWND hwnd, HINSTANCE hInst ){
 		"STATIC", "cfgファイル", WS_CHILD | WS_VISIBLE,
 		rectClient.right - ( POS_FILE_BUTT_SIZE * 2 + POS_FILE_CAPTION_SIZE ), y,
 		POS_FILE_CAPTION_SIZE, POS_FILE_HEIGHT,
-		hwnd, 0, hInst, NULL
+		hwnd, 0, hInst, nullptr
 	);
 	SendMessage( hwndChild, WM_SETFONT, ( WPARAM )hfont, 0 );
 	
@@ -911,7 +911,7 @@ BOOL CVsdFilter::CreateFilter( void ){
 					-1,						// マップ元文字列のバイト数
 					pBuf,					// マップ先ワイド文字列を入れるバッファのアドレス
 					BUF_SIZE - ( pBuf - szBuf ),	// バッファのサイズ
-					NULL, NULL
+					nullptr, nullptr
 				);
 				
 				pBuf = strchr( pBuf, '\0' ) + 1;
@@ -941,7 +941,7 @@ BOOL CVsdFilter::FileOpenDialog( char *&szOut, char *&szReaderFunc ){
 	char szBuf[ BUF_SIZE ];
 	
 	// ログリーダ用フィルタ作成
-	if( m_szLogFilter == NULL && CreateFilter() != TRUE ){
+	if( m_szLogFilter == nullptr && CreateFilter() != TRUE ){
 		return FALSE;
 	}
 	
@@ -971,7 +971,7 @@ BOOL CVsdFilter::FileOpenDialog( char *&szOut, char *&szReaderFunc ){
 	StringNew(
 		szReaderFunc,
 		ofn.nFilterIndex >= 2 ? m_vecReaderFunc[ ofn.nFilterIndex - 2 ].c_str() :
-								NULL
+								nullptr
 	);
 	return TRUE;
 }
@@ -992,7 +992,7 @@ char *CVsdFilter::IsConfigParam( const char *szParamName, char *szBuf, int &iVal
 		return szBuf + iLen + 1;
 	}
 	
-	return NULL;
+	return nullptr;
 }
 
 char *CVsdFilter::IsConfigParamStr( const char *szParamName, char *szBuf, char *&szDst ){
@@ -1023,7 +1023,7 @@ char *CVsdFilter::IsConfigParamStr( const char *szParamName, char *szBuf, char *
 		return szDst;
 	}
 	
-	return NULL;
+	return nullptr;
 }
 
 BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
@@ -1032,7 +1032,7 @@ BOOL CVsdFilter::ConfigLoad( const char *szFileName ){
 	FILE	*fp;
 	char	szBuf[ BUF_SIZE ];
 	
-	if(( fp = fopen( szFileName, "r" )) != NULL ){
+	if(( fp = fopen( szFileName, "r" )) != nullptr ){
 		m_bCalcLapTimeReq = TRUE;
 		
 		while( fgets( szBuf, BUF_SIZE, fp )){
@@ -1101,7 +1101,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	int		i;
 	UINT	uStrParamFlag = 0;
 	
-	if(( fp = fopen( szFileName, "w" )) == NULL ) return FALSE;
+	if(( fp = fopen( szFileName, "w" )) == nullptr ) return FALSE;
 	
 	fprintf( fp,
 		"DirectShowSource( \"%s\", pixel_type=\"YUY2\", fps=%d.0/%d )\n"
@@ -1114,7 +1114,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	
 	// str param に初期値設定
 	#define DEF_STR_PARAM( id, var, init, conf_name ) \
-		if( var && ( init == NULL || strcmp( var, init ) != 0 )){ \
+		if( var && ( init == nullptr || strcmp( var, init ) != 0 )){ \
 			fprintf( fp, "%c \\\n\t" conf_name "=\"%s\"", cSep, var ); \
 			cSep = ','; \
 			uStrParamFlag |= 1 << id; \
@@ -1123,7 +1123,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	
 	for( i = 0; i < TRACK_N; ++i ){
 		if(
-			m_szTrackbarName[ i ] == NULL ||
+			m_szTrackbarName[ i ] == nullptr ||
 			i >= TRACK_LineTrace && m_piParamT[ i ] == track_default[ i ] ||
 			( i == PARAM_LSt || i == PARAM_LEd ) && !( uStrParamFlag & ( 1 << STRPARAM_LOGFILE )) ||
 			( i == PARAM_GSt || i == PARAM_GEd ) && !( uStrParamFlag & ( 1 << STRPARAM_GPSFILE ))
@@ -1137,7 +1137,7 @@ BOOL CVsdFilter::ConfigSave( const char *szFileName ){
 	
 	for( i = 0; i < CHECK_N; ++i ){
 		if(
-			m_szCheckboxName[ i ] == NULL ||
+			m_szCheckboxName[ i ] == nullptr ||
 			m_piParamC[ i ] == check_default[ i ]
 		) continue;
 		
@@ -1232,7 +1232,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		
 	  Case WM_FILTER_FILE_CLOSE:
 		delete g_Vsd;
-		g_Vsd = NULL;
+		g_Vsd = nullptr;
 		
 	  Case WM_FILTER_MAIN_KEY_DOWN:
 		switch( wparam ){
@@ -1299,7 +1299,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		switch( wparam ){
 		  case ID_BUTT_LOAD_CFG:	// .avs ロード
 			if(
-				filter->exfunc->dlg_get_load_name( szBuf, (LPSTR)FILE_CFG_EXT, NULL ) &&
+				filter->exfunc->dlg_get_load_name( szBuf, (LPSTR)FILE_CFG_EXT, nullptr ) &&
 				g_Vsd->ConfigLoad( szBuf )
 			){
 				StrTokFile( szBuf2, szBuf, STF_PATH2 );
@@ -1351,7 +1351,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			}
 			
 		  Case ID_BUTT_SAVE_CFG:
-			if( filter->exfunc->dlg_get_save_name( szBuf, (LPSTR)FILE_CFG_EXT, NULL ))
+			if( filter->exfunc->dlg_get_save_name( szBuf, (LPSTR)FILE_CFG_EXT, nullptr ))
 				return g_Vsd->ConfigSave( szBuf );
 			
 		  Case ID_BUTT_LOAD_LOG:	// .log ロード
@@ -1379,7 +1379,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			
 		  Case ID_BUTT_LOAD_LAPCHART:	// ラップチャート ロード
 			if(
-				filter->exfunc->dlg_get_load_name( szBuf, (LPSTR)FILE_LAPCHART_EXT, NULL ) &&
+				filter->exfunc->dlg_get_load_name( szBuf, (LPSTR)FILE_LAPCHART_EXT, nullptr ) &&
 				g_Vsd->LapChartRead( szBuf )
 			){
 				StringNew( g_Vsd->m_szLapChart, szBuf );
@@ -1408,7 +1408,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				if( SendMessage( hWndCombo, CB_GETCOUNT, 0, 0 ) - 1 == i ){
 					
 					// ダイアログがキャンセルされた
-					if( !filter->exfunc->dlg_get_load_name( szBuf, (LPSTR)FILE_SKIN_EXT, NULL )){
+					if( !filter->exfunc->dlg_get_load_name( szBuf, (LPSTR)FILE_SKIN_EXT, nullptr )){
 						// とりあえず，直前の skin 名をそのままコピーしとく
 						//strcpy( szBuf, g_Vsd->m_szSkinFile );
 						//SetWindowText( hWndCombo, g_Vsd->m_szSkinFile );

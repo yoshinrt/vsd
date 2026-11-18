@@ -26,15 +26,15 @@
 
 CVsdImage::CVsdImage(){
 	DebugMsgD( "new CVsdImage %X\n", this );
-	m_pBuf	= NULL;
+	m_pBuf	= nullptr;
 	
 	m_iWidth  = 0;	// 画像の幅
 	m_iHeight = 0;	//  〃  高さ
 	m_iOffsX = m_iOffsY = 0;
 	
 	m_iStatus	= IMG_STATUS_LOAD_INCOMPLETE;
-	m_pFileName	= NULL;
-	m_pSemaphore = NULL;
+	m_pFileName	= nullptr;
+	m_pSemaphore = nullptr;
 }
 
 CVsdImage::CVsdImage( CVsdImage &Org ){
@@ -42,7 +42,7 @@ CVsdImage::CVsdImage( CVsdImage &Org ){
 	*this = Org;
 	m_pBuf = new CPixelImg[ m_iRawWidth * m_iRawHeight ];
 	memcpy( m_pBuf, Org.m_pBuf, sizeof( CPixelImg ) * m_iRawWidth * m_iRawHeight );
-	m_pSemaphore = NULL;
+	m_pSemaphore = nullptr;
 }
 
 CVsdImage::~CVsdImage(){
@@ -63,13 +63,13 @@ CVsdImage::~CVsdImage(){
 void CVsdImage::DeleteAsync( void ){
 	m_iStatus	= IMG_STATUS_DESTROYED;
 	/*
-	if( m_pSemaphore == NULL ){
+	if( m_pSemaphore == nullptr ){
 		// セマフォがない
 		delete this;
 	}else if( m_pSemaphore->LockTest() == WAIT_OBJECT_0 ){
 		m_pSemaphore->Release();
 		delete m_pSemaphore;
-		m_pSemaphore = NULL;
+		m_pSemaphore = nullptr;
 		delete this;
 	}else{
 		std::thread AsyncDelete([=]{ delete this; });
@@ -98,10 +98,10 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 	int iMaxY = MININT;
 	
 	CPixelImg	yc;
-	Gdiplus::Bitmap*	pBitmap = NULL;
+	Gdiplus::Bitmap*	pBitmap = nullptr;
 	
-	HGLOBAL		hBuffer		= NULL;
-	void*		pBuffer		= NULL;
+	HGLOBAL		hBuffer		= nullptr;
+	void*		pBuffer		= nullptr;
 	
 	if(
 		wcsncmp( szFileName, L"http://",  7 ) == 0 ||
@@ -119,7 +119,7 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 			std::thread LoadThread([&]{
 				Load( m_pFileName );
 				delete [] m_pFileName;
-				m_pFileName = NULL;
+				m_pFileName = nullptr;
 				m_pSemaphore->Release();
 			});
 			
@@ -128,8 +128,8 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 		}
 		
 		// URL で開く
-		HINTERNET	hInternet	= NULL;
-		HINTERNET	hFile		= NULL;
+		HINTERNET	hInternet	= nullptr;
+		HINTERNET	hFile		= nullptr;
 		
 		DWORD		dwReadSize;
 		BOOL		bResult;
@@ -147,11 +147,11 @@ UINT CVsdImage::Load( LPCWSTR szFileName, UINT uFlag ){
 							//"WININET Sample Program",
 							"Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)",
 							INTERNET_OPEN_TYPE_PRECONFIG,
-							NULL, NULL, 0
+							nullptr, nullptr, 0
 						)
 					) && (
 						/* URLのオープン */
-						hFile = InternetOpenUrlW( hInternet, szFileName, NULL, 0, 0, 0 )
+						hFile = InternetOpenUrlW( hInternet, szFileName, nullptr, 0, 0, 0 )
 					)
 				)
 			){
@@ -635,7 +635,7 @@ UINT CVsdImage::WaitAsyncLoadComplete( int iMsec ){
 		m_pSemaphore->Lock();
 		m_pSemaphore->Release();
 		delete m_pSemaphore;
-		m_pSemaphore = NULL;
+		m_pSemaphore = nullptr;
 	}
 	return m_iStatus;
 }

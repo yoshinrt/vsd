@@ -13,7 +13,7 @@ class CJsClass {
 	Persistent<Object> *m_pHolder;
 	
 	CJsClass(){
-		m_pHolder = NULL;
+		m_pHolder = nullptr;
 	}
 	
 	~CJsClass(){

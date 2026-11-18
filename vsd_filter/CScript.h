@@ -34,7 +34,7 @@ class ArrayBufferAllocator : public ArrayBuffer::Allocator {
 public:
 	virtual void* Allocate(size_t length) {
 		void* data = AllocateUninitialized(length);
-		return data == NULL ? data : memset(data, 0, length);
+		return data == nullptr ? data : memset(data, 0, length);
 	}
 	virtual void* AllocateUninitialized(size_t length) { return malloc(length); }
 	virtual void Free(void* data, size_t) { free(data); }
@@ -44,7 +44,7 @@ class CScriptRoot {
   public:
 	CScriptRoot(){
 		char expose_gc[] = "--expose_gc";
-		char *opt[] = { NULL, expose_gc };
+		char *opt[] = { nullptr, expose_gc };
 		int i = 2;
 		V8::SetFlagsFromCommandLine( &i, opt, 0 );
 		
@@ -82,7 +82,7 @@ class CScript : public CJsClass {
 		return Local<Context>::New( m_pIsolate, m_Context );
 	}
 	
-	UINT Initialize( LPCWSTR wszFileName = NULL );
+	UINT Initialize( LPCWSTR wszFileName = nullptr );
 	UINT RunFile( LPCWSTR szFileName );
 	UINT RunFileCore( LPCWSTR szFileName );
 	UINT Run( LPCWSTR szFunc, BOOL bNoFunc = FALSE );
@@ -103,7 +103,7 @@ class CScript : public CJsClass {
 	static void DebugPrint( const FunctionCallbackInfo<Value>& args );	// !js_func
 	static int MessageBox(	// !js_func
 		LPCWSTR szMsg,
-		LPCWSTR szCaption,	// !default:NULL
+		LPCWSTR szCaption,	// !default:nullptr
 		UINT	uType		// !default:MB_OK
 	);
 	

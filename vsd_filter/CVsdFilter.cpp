@@ -19,7 +19,7 @@
 
 /*** static member **********************************************************/
 
-HINSTANCE	CVsdFilter::m_hInst 	= NULL;
+HINSTANCE	CVsdFilter::m_hInst 	= nullptr;
 const int CVsdFilter::m_iRevision	= PROG_REVISION;
 
 const int CVsdFilter::m_iPrivateBuild =
@@ -37,25 +37,25 @@ CScriptRoot	CVsdFilter::m_ScriptRoot;
 
 void CVsdFilter::Constructor( void ){
 	
-	m_VsdLog 			= NULL;
-	m_GPSLog 			= NULL;
-	m_LapLog			= NULL;
+	m_VsdLog 			= nullptr;
+	m_GPSLog 			= nullptr;
+	m_LapLog			= nullptr;
 	
 	m_bCalcLapTimeReq	= TRUE;
 	
-	m_Polygon			= NULL;	// DrawPolygon 用バッファ
-	m_pFont				= NULL;
+	m_Polygon			= nullptr;	// DrawPolygon 用バッファ
+	m_pFont				= nullptr;
 	
-	m_szLogFile			= NULL;
-	m_szLogFileReader	= NULL;
-	m_szGPSLogFile		= NULL;
-	m_szGPSLogFileReader= NULL;
-	m_szLapChart		= NULL;
-	m_szSkinFile		= NULL;
-	m_szSkinDirA		= NULL;
-	m_szPluginDirA		= NULL;
-	m_szSkinDirW		= NULL;
-	m_szPluginDirW		= NULL;
+	m_szLogFile			= nullptr;
+	m_szLogFileReader	= nullptr;
+	m_szGPSLogFile		= nullptr;
+	m_szGPSLogFileReader= nullptr;
+	m_szLapChart		= nullptr;
+	m_szSkinFile		= nullptr;
+	m_szSkinDirA		= nullptr;
+	m_szPluginDirA		= nullptr;
+	m_szSkinDirW		= nullptr;
+	m_szPluginDirW		= nullptr;
 	m_bConsoleOn		= FALSE;
 	
 	// str param に初期値設定
@@ -68,7 +68,7 @@ void CVsdFilter::Constructor( void ){
 	// SkinDir セット
 	SetSkinFile( m_szSkinFile );
 	
-	m_Script	= NULL;
+	m_Script	= nullptr;
 	
 	m_iWidth	=
 	m_iHeight	= 0;
@@ -76,12 +76,12 @@ void CVsdFilter::Constructor( void ){
 	
 	//---- GDI+の初期設定
 	COle::Initialize();
-	Gdiplus::GdiplusStartup( &m_gdiplusToken, &m_gdiplusStartupInput, NULL );
+	Gdiplus::GdiplusStartup( &m_gdiplusToken, &m_gdiplusStartupInput, nullptr );
 	
 	// WinInet 同時接続数
 	DWORD		uMaxConnect = 30;
-	InternetSetOption( NULL, INTERNET_OPTION_MAX_CONNS_PER_SERVER, &uMaxConnect, sizeof( DWORD ));
-	InternetSetOption( NULL, INTERNET_OPTION_MAX_CONNS_PER_1_0_SERVER, &uMaxConnect, sizeof( DWORD ));
+	InternetSetOption( nullptr, INTERNET_OPTION_MAX_CONNS_PER_SERVER, &uMaxConnect, sizeof( DWORD ));
+	InternetSetOption( nullptr, INTERNET_OPTION_MAX_CONNS_PER_1_0_SERVER, &uMaxConnect, sizeof( DWORD ));
 }
 
 /*** デストラクタ ***********************************************************/
@@ -115,7 +115,7 @@ int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szR
 	if( pLog ) delete pLog;
 	pLog = new CVsdLog( this );
 	
-	CLapLog *pLapLog = NULL;
+	CLapLog *pLapLog = nullptr;
 	
 	int iRet = pLog->ReadLog( szFileName, szReaderFunc, pLapLog );
 	if( iRet ){
@@ -123,7 +123,7 @@ int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szR
 			pLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
 	}else{
 		delete pLog;
-		pLog = NULL;
+		pLog = nullptr;
 	}
 	
 	if( pLapLog ){
@@ -241,7 +241,7 @@ CLapLog *CVsdFilter::CreateLapTimeHand( int iLapSrc ){
 	
 	if( pLapLog->m_Lap.size() == 0 ){
 		delete pLapLog;
-		return NULL;
+		return nullptr;
 	}
 	LapTime.fLogNum	= FLT_MAX;	// 番犬
 	LapTime.iTime	= 0;		// 番犬
@@ -257,7 +257,7 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	int iFrame;
 	LAP_t	LapTime;
 	
-	if(( iFrame = GetFrameMark( 0 )) < 0 ) return NULL;
+	if(( iFrame = GetFrameMark( 0 )) < 0 ) return nullptr;
 	
 	/*** スタートラインの位置を取得 ***/
 	// iFrame に対応する GPS ログ番号取得
@@ -350,7 +350,7 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	
 	if( pLapLog->m_Lap.size() == 0 ){
 		delete pLapLog;
-		return NULL;
+		return nullptr;
 	}
 	
 	LapTime.fLogNum	= FLT_MAX;	// 番犬
@@ -399,7 +399,7 @@ void CVsdFilter::AddLogAccessorSub(
 	for( it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it ){
 		const char *szName = it->first.c_str();
 		
-		if( m_VsdLog == NULL || pLog == m_VsdLog || m_VsdLog->GetElement( szName ) == NULL ){
+		if( m_VsdLog == nullptr || pLog == m_VsdLog || m_VsdLog->GetElement( szName ) == nullptr ){
 			Local<String> v8strName = String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)szName );
 			
 			// Max 登録
@@ -529,7 +529,7 @@ void CVsdFilter::OpenConsole( void ){
 void CVsdFilter::Print( LPCWSTR szMsg ){
 	OpenConsole();
 	
-	char *p = NULL;
+	char *p = nullptr;
 	StringNew( p, szMsg );
 	fputs( p, stdout );
 	delete [] p;

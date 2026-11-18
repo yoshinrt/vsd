@@ -52,7 +52,7 @@ CVsdFilter::CVsdFilter(
 	m_piParamS	= new int[ SHADOW_N ];
 	m_iMarkCnt	= 0;
 	
-	m_env = NULL;
+	m_env = nullptr;
 	
 	// パラメータ初期値
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	m_piParamT[ id ] = init;
@@ -80,27 +80,27 @@ CVsdFilter::CVsdFilter(
 	#include "def_shadow.h"
 	
 	// mark= 引数処理
-	if( p = args[ ARGID_MARK ].AsString( NULL )) ParseMarkStr( p );
+	if( p = args[ ARGID_MARK ].AsString( nullptr )) ParseMarkStr( p );
 	
 	// ラップチャート
-	if( p = args[ ARGID_STRPARAM_LAPCHART ].AsString( NULL )){
+	if( p = args[ ARGID_STRPARAM_LAPCHART ].AsString( nullptr )){
 		if( !LapChartRead( p )) env->ThrowError( PROG_NAME ": read lap chart \"%s\" failed.", p );
 	}
 	
 	// ログリード
-	if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( NULL )){
-		const char *szReader = args[ ARGID_STRPARAM_LOGFILE_READER ].AsString( NULL );
+	if( p = args[ ARGID_STRPARAM_LOGFILE ].AsString( nullptr )){
+		const char *szReader = args[ ARGID_STRPARAM_LOGFILE_READER ].AsString( nullptr );
 		if( !ReadLog( m_VsdLog, p, szReader )) env->ThrowError( PROG_NAME ": read log \"%s\" failed.", p );
 	}
 	
 	// GPS ログリード
-	if( p = args[ ARGID_STRPARAM_GPSFILE ].AsString( NULL )){
-			const char *szReader = args[ ARGID_STRPARAM_GPSFILE_READER ].AsString( NULL );
+	if( p = args[ ARGID_STRPARAM_GPSFILE ].AsString( nullptr )){
+			const char *szReader = args[ ARGID_STRPARAM_GPSFILE_READER ].AsString( nullptr );
 		if( !ReadLog( m_GPSLog, p, szReader )) env->ThrowError( PROG_NAME ": read GPS log \"%s\" failed.", p );
 	}
 	
 	// スキンロード
-	if( p = args[ ARGID_STRPARAM_SKINFILE ].AsString( NULL )){
+	if( p = args[ ARGID_STRPARAM_SKINFILE ].AsString( nullptr )){
 		SetSkinFile( p );
 	}else{
 		SetSkinFile( DEFAULT_SKIN );

@@ -79,7 +79,7 @@ class ICallbackJSFunc : public IDispatch {
 class COle : public CJsClass {
   public:
 	COle( void ){
-		m_pApp			= NULL;
+		m_pApp			= nullptr;
 	}
 	
 	~COle(){
@@ -147,7 +147,7 @@ class COle : public CJsClass {
 	static void ThrowHResultError( HRESULT hr );
 	
 	// 初期化・終了
-	static void Initialize( void ){		CoInitialize( NULL ); }
+	static void Initialize( void ){		CoInitialize( nullptr ); }
 	static void Uninitialize( void ){	CoUninitialize(); }
 	
   private:

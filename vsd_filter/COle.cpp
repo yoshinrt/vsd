@@ -21,9 +21,9 @@ UINT COle::CreateInstance( LPCWSTR strServer ){
 	if( FAILED( hr )) return ERR_OLE_NO_SERVER;
 	
 	// Start server and get IDispatch...
-	hr = ::CoCreateInstance( clsid, NULL, CLSCTX_LOCAL_SERVER, IID_IDispatch, ( void ** )&m_pApp );
+	hr = ::CoCreateInstance( clsid, nullptr, CLSCTX_LOCAL_SERVER, IID_IDispatch, ( void ** )&m_pApp );
 	if( FAILED( hr )){
-		hr = ::CoCreateInstance( clsid, NULL, CLSCTX_INPROC_SERVER, IID_IDispatch, ( void ** )&m_pApp );
+		hr = ::CoCreateInstance( clsid, nullptr, CLSCTX_INPROC_SERVER, IID_IDispatch, ( void ** )&m_pApp );
 		if( FAILED( hr )) return ERR_OLE_CREATE_FAILED;
 	}
 	
@@ -50,7 +50,7 @@ void COle::OleFuncCaller(
 	obj->Invoke(
 		args.Data()->Int32Value(),
 		args.GetReturnValue(), args,
-		*( Local<Value> *)NULL, DISPATCH_METHOD
+		*( Local<Value> *)nullptr, DISPATCH_METHOD
 	);
 }
 
@@ -64,7 +64,7 @@ void COle::CallAsFunctionHandler(
 	obj->Invoke(
 		args.Data()->Int32Value(),
 		args.GetReturnValue(), args,
-		*( Local<Value> *)NULL, DISPATCH_PROPERTYGET
+		*( Local<Value> *)nullptr, DISPATCH_PROPERTYGET
 	);
 }
 
@@ -80,8 +80,8 @@ void COle::OleValueSetter(
 	
 	obj->Invoke(
 		info.Data()->Int32Value(),
-		*( ReturnValue<Value> *)NULL,
-		*( FunctionCallbackInfo<Value> *)NULL,
+		*( ReturnValue<Value> *)nullptr,
+		*( FunctionCallbackInfo<Value> *)nullptr,
 		value, DISPATCH_PROPERTYPUT
 	);
 }
@@ -97,8 +97,8 @@ void COle::OleValueGetter(
 	obj->Invoke(
 		info.Data()->Int32Value(),
 		info.GetReturnValue(),
-		*( FunctionCallbackInfo<Value> *)NULL,
-		*( Local<Value> *)NULL, DISPATCH_PROPERTYGET
+		*( FunctionCallbackInfo<Value> *)nullptr,
+		*( Local<Value> *)nullptr, DISPATCH_PROPERTYGET
 	);
 }
 
@@ -220,7 +220,7 @@ Local<Value> COle::CreateActiveXObject(
 		return Undefined( Isolate::GetCurrent());
 	}
 	
-	Local<Object> JSObj = hFunction->NewInstance( 0, NULL );
+	Local<Object> JSObj = hFunction->NewInstance( 0, nullptr );
 	COle *obj = static_cast<COle *>(
 		Local<External>::Cast( JSObj->GetInternalField( 0 ))->Value()
 	);
@@ -317,7 +317,7 @@ void COle::Val2Variant(
 		}
 		/* Create and fill VARIANT array */
 		psa = SafeArrayCreate( VT_VARIANT, dim, psab );
-		if( psa == NULL ) hr = E_OUTOFMEMORY;
+		if( psa == nullptr ) hr = E_OUTOFMEMORY;
 		else hr = SafeArrayLock( psa );
 		
 		if( SUCCEEDED( hr )){
@@ -331,7 +331,7 @@ void COle::Val2Variant(
 		if( SUCCEEDED( hr )){
 			V_VT( var ) = VT_VARIANT | VT_ARRAY;
 			V_ARRAY( var ) = psa;
-		}else if( psa != NULL ) SafeArrayDestroy( psa );
+		}else if( psa != nullptr ) SafeArrayDestroy( psa );
 	}else if( val->IsString()){
 		V_VT(var) = VT_BSTR;
 		String::Value str( val );
@@ -445,7 +445,7 @@ Local<Value> COle::Variant2Val( VARIANT *pvar ){
 		
 	  Case VT_BSTR: {
 			uint16_t *str =  V_ISBYREF( pvar ) ? ( uint16_t *)*V_BSTRREF( pvar ) : ( uint16_t *)V_BSTR( pvar );
-			if( str == NULL ) return Null( Isolate::GetCurrent());
+			if( str == nullptr ) return Null( Isolate::GetCurrent());
 			ret = String::NewFromTwoByte( Isolate::GetCurrent(), str );
 		}
 		
@@ -467,7 +467,7 @@ Local<Value> COle::Variant2Val( VARIANT *pvar ){
 			
 			punk = V_ISBYREF( pvar ) ? *V_UNKNOWNREF( pvar ) : V_UNKNOWN( pvar );
 			
-			if( punk != NULL ){
+			if( punk != nullptr ){
 				hr = punk->QueryInterface( IID_IDispatch, ( void **)&pDispatch );
 				if( SUCCEEDED( hr )) {
 					ret = CreateActiveXObject( pDispatch );
@@ -515,7 +515,7 @@ void COle::Invoke(
 	
 	EXCEPINFO excepinfo;
 	VARIANT result;
-	VARIANTARG* realargs = NULL;
+	VARIANTARG* realargs = nullptr;
 	unsigned int argErr = 0;
 	unsigned int i;
 	struct oleparam op;
@@ -523,15 +523,15 @@ void COle::Invoke(
 	
 	VariantInit(&result);
 	
-	op.dp.rgvarg = NULL;
-	op.dp.rgdispidNamedArgs = NULL;
+	op.dp.rgvarg = nullptr;
+	op.dp.rgdispidNamedArgs = nullptr;
 	op.dp.cNamedArgs = 0;
 	op.dp.cArgs = 0;
 	
 	/*--------------------------------------
 	  non hash args ==> dispatch parameters 
 	 ----------------------------------------*/
-	if( &args != NULL && ( op.dp.cArgs = args.Length())){
+	if( &args != nullptr && ( op.dp.cArgs = args.Length())){
 		realargs		= ALLOCA_N(VARIANTARG, op.dp.cArgs);
 		op.dp.rgvarg	= ALLOCA_N(VARIANTARG, op.dp.cArgs);
 		
@@ -576,7 +576,7 @@ void COle::Invoke(
 			memset(&excepinfo, 0, sizeof(EXCEPINFO));
 			hr = m_pApp->Invoke( DispID, 
 												 IID_NULL, lcid, wFlags,
-												 &op.dp, NULL,
+												 &op.dp, nullptr,
 												 &excepinfo, &argErr);
 			for(i = 0; i < op.dp.cArgs; i++) {
 				VariantClear(&op.dp.rgvarg[ i ]);
@@ -590,7 +590,7 @@ void COle::Invoke(
 			memset(&excepinfo, 0, sizeof(EXCEPINFO));
 			hr = m_pApp->Invoke( DispID, 
 												 IID_NULL, lcid, wFlags,
-												 &op.dp, NULL,
+												 &op.dp, nullptr,
 												 &excepinfo, &argErr);
 		
 		}
@@ -622,10 +622,10 @@ void COle::ThrowHResultError( HRESULT hr ){
 	
 	FormatMessageW(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL, hr, MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ),
-		( LPWSTR )&pMsg, 0, NULL
+		nullptr, hr, MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ),
+		( LPWSTR )&pMsg, 0, nullptr
 	);
-	if( pMsg != NULL ){
+	if( pMsg != nullptr ){
 		Isolate::GetCurrent()->ThrowException( Exception::Error( String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)pMsg )));
 		LocalFree( pMsg );
 	}else{
@@ -657,10 +657,10 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 	TryCatch try_catch;
 	
 	Local<Function>::New( m_pIsolate, m_CallbackFunc )
-		->Call( context->Global(), 0, NULL );
+		->Call( context->Global(), 0, nullptr );
 	
 	if( try_catch.HasCaught()){
-		LPWSTR pMsg = CScript::ReportException( NULL, try_catch );
+		LPWSTR pMsg = CScript::ReportException( nullptr, try_catch );
 		fputws( pMsg, stdout );
 		delete [] pMsg;
 	}

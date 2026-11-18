@@ -77,8 +77,8 @@ static char *StringNew( char *&szDst, const char *szSrc ){
 	if( szDst == szSrc ) return( szDst );
 	if( szDst ) delete [] szDst;
 	
-	if( szSrc == NULL || *szSrc == '\0' ){
-		return szDst = NULL;
+	if( szSrc == nullptr || *szSrc == '\0' ){
+		return szDst = nullptr;
 	}
 	szDst = new char[ strlen( szSrc ) + 1 ];
 	return strcpy( szDst, szSrc );
@@ -88,8 +88,8 @@ static LPWSTR StringNew( LPWSTR& szDst, LPCWSTR szSrc ){
 	if( szDst == szSrc ) return( szDst );
 	if( szDst ) delete [] szDst;
 	
-	if( szSrc == NULL || *szSrc == '\0' ){
-		return szDst = NULL;
+	if( szSrc == nullptr || *szSrc == '\0' ){
+		return szDst = nullptr;
 	}
 	szDst = new WCHAR[ wcslen( szSrc ) + 1 ];
 	return wcscpy( szDst, szSrc );
@@ -98,8 +98,8 @@ static LPWSTR StringNew( LPWSTR& szDst, LPCWSTR szSrc ){
 static LPWSTR StringNew( LPWSTR& szDst, const char *szSrc ){
 	if( szDst ) delete [] szDst;
 	
-	if( szSrc == NULL || *szSrc == '\0' ){
-		return szDst = NULL;
+	if( szSrc == nullptr || *szSrc == '\0' ){
+		return szDst = nullptr;
 	}
 	// SJIS->WCHAR 変換
 	int iLen = MultiByteToWideChar(
@@ -107,7 +107,7 @@ static LPWSTR StringNew( LPWSTR& szDst, const char *szSrc ){
 		0,					// 文字の種類を指定するフラグ
 		szSrc,				// マップ元文字列のアドレス
 		-1,					// マップ元文字列のバイト数
-		NULL,				// マップ先ワイド文字列を入れるバッファのアドレス
+		nullptr,				// マップ先ワイド文字列を入れるバッファのアドレス
 		0					// バッファのサイズ
 	);
 	szDst = new WCHAR[ iLen ];
@@ -127,8 +127,8 @@ static LPWSTR StringNew( LPWSTR& szDst, const char *szSrc ){
 static char *StringNew( char *&szDst, LPCWSTR &szSrc ){
 	if( szDst ) delete [] szDst;
 	
-	if( szSrc == NULL || *szSrc == '\0' ){
-		return szDst = NULL;
+	if( szSrc == nullptr || *szSrc == '\0' ){
+		return szDst = nullptr;
 	}
 	// SJIS->WCHAR 変換
 	int iLen = WideCharToMultiByte(
@@ -136,9 +136,9 @@ static char *StringNew( char *&szDst, LPCWSTR &szSrc ){
 		0,					// 文字の種類を指定するフラグ
 		szSrc,				// マップ元文字列のアドレス
 		-1,					// マップ元文字列のバイト数
-		NULL,				// マップ先ワイド文字列を入れるバッファのアドレス
+		nullptr,				// マップ先ワイド文字列を入れるバッファのアドレス
 		0,					// バッファのサイズ
-		NULL, NULL
+		nullptr, nullptr
 	);
 	szDst = new char[ iLen ];
 	
@@ -149,7 +149,7 @@ static char *StringNew( char *&szDst, LPCWSTR &szSrc ){
 		-1,					// マップ元文字列のバイト数
 		szDst,				// マップ先ワイド文字列を入れるバッファのアドレス
 		iLen,				// バッファのサイズ
-		NULL, NULL
+		nullptr, nullptr
 	);
 	
 	return szDst;

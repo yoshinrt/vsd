@@ -358,7 +358,7 @@ class CVsdLog : public CJsClass {
 	CLog *GetLog( const char *szKey ){
 		std::string strKey( szKey );
 		if( m_Logs.find( strKey ) == m_Logs.end()){
-			return NULL;
+			return nullptr;
 		}
 		return m_Logs[ strKey ];
 	}

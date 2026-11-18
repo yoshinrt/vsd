@@ -13,7 +13,7 @@
 class CVsdFile : public CJsClass {
   public:
 	CVsdFile(){
-		m_fp		= NULL;
+		m_fp		= nullptr;
 		m_uMode		= MODE_NORMAL;
 		m_uBufSize	= 0;
 		m_uBufPtr	= 0;

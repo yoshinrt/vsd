@@ -30,7 +30,7 @@ CVsdLog::CVsdLog( CVsdFilter *pVsd ){
 	m_iCalibStart	=
 	m_iCalibStop	= -1;
 	
-	#define DEF_LOG( name )	m_pLog##name = NULL;
+	#define DEF_LOG( name )	m_pLog##name = nullptr;
 	#include "def_log.h"
 }
 
@@ -138,7 +138,7 @@ CLog *CVsdLog::GetElement( const char *szKey, BOOL bCreate ){
 		m_Logs[ strKey ] = p;
 		return p;
 	}
-	return NULL;
+	return nullptr;
 }
 
 /*** ログの Set *************************************************************/
@@ -182,7 +182,7 @@ UINT CVsdLog::GPSLogRescan( void ){
 	BOOL	bCreateTurnR	= FALSE;
 #endif
 	
-	if( m_pLogLongitude != NULL && m_pLogLatitude != NULL ){
+	if( m_pLogLongitude != nullptr && m_pLogLatitude != nullptr ){
 		if( !m_pLogSpeed ){
 			bCreateSpeed = TRUE;
 			GetElement( "Speed", TRUE );
@@ -413,8 +413,8 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 		}
 		
 		// スクリプト実行
-		LPWSTR pStr = NULL;
-		LPWSTR pReader = NULL;
+		LPWSTR pStr = nullptr;
+		LPWSTR pReader = nullptr;
 		Script.Run_ss( L"ReadLog",
 			StringNew( pStr, szFileName ),
 			StringNew( pReader, szReaderFunc )
@@ -475,7 +475,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 					else if( !strcmp( *strKey, "Latitude"  )) uIdxLati		= uIdx;
 					else if( !strcmp( *strKey, "LapTime"   )){
 						uIdxLapTime	= uIdx;
-						CArrays.push_back( NULL );
+						CArrays.push_back( nullptr );
 						goto Skip;	// LapTime は CVsdLog には積まない
 					}
 					
@@ -647,7 +647,7 @@ int CVsdLog::ReadLog( const char *szFileName, const char *szReaderFunc, CLapLog 
 				
 				// ラップタイムを積む
 				if( iLapTime >= 0 ){
-					if( pLapLog == NULL ){
+					if( pLapLog == nullptr ){
 						pLapLog = new CLapLog();
 						pLapLog->m_iLapMode = LAPMODE_MAGNET;
 					}
@@ -759,8 +759,8 @@ int CLapLogAll::LapChartRead( const char *szFileName, CVsdFilter *pVsd ){
 		
 		if( Script.Initialize( L"_system/InitLapChartReader.js" ) == ERR_OK ){
 			// スクリプト実行
-			LPWSTR pStr = NULL;
-			LPWSTR pReader = NULL;
+			LPWSTR pStr = nullptr;
+			LPWSTR pReader = nullptr;
 			Script.Run_s( L"ReadLapChart", StringNew( pStr, szFileName ));
 			delete [] pStr;
 			delete [] pReader;

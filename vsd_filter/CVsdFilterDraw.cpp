@@ -1860,10 +1860,10 @@ BOOL CVsdFilter::DrawVSD( void ){
 				m_piParamS[ SHADOW_LAP_CHART_St ],
 				m_piParamS[ SHADOW_LAP_CHART_Ed ]
 			);
-		}else if( m_LapLog == NULL || m_LapLog->m_iLapMode != LAPMODE_MAGNET ){
+		}else if( m_LapLog == nullptr || m_LapLog->m_iLapMode != LAPMODE_MAGNET ){
 			if( m_LapLog ){
 				delete m_LapLog;
-				m_LapLog = NULL;
+				m_LapLog = nullptr;
 			}
 			
 			// GPS からラップタイム計算してみる
@@ -1895,7 +1895,7 @@ BOOL CVsdFilter::DrawVSD( void ){
 		m_Script = new CScript( this );
 		
 		if( m_Script->Initialize( L"_system/InitSkin.js" ) == ERR_OK ){
-			LPWSTR p = NULL;
+			LPWSTR p = nullptr;
 			StringNew( p, m_szSkinFile );
 			m_Script->RunFile( p );
 			delete [] p;

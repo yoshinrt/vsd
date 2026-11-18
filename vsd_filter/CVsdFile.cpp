@@ -23,8 +23,8 @@ int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 	// gz open
 	if( *pMode == 'z' ){
 		++pMode;
-		char *pFile = NULL;
-		char *pMode = NULL;
+		char *pFile = nullptr;
+		char *pMode = nullptr;
 		
 		StringNew( pFile, szFile );
 		StringNew( pMode, szMode );
@@ -38,7 +38,7 @@ int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 	
 	// zip open
 	else if( *pMode == 'Z' ){
-		char *pFile = NULL;
+		char *pFile = nullptr;
 		
 		StringNew( pFile, szFile );
 		m_unzfp = unzOpen( pFile );
@@ -52,7 +52,7 @@ int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 		m_fp = _wfopen( szFile, szMode );
 	}
 	
-	if( m_fp == NULL ) JsError( ERR_CANT_OPEN_FILE );
+	if( m_fp == nullptr ) JsError( ERR_CANT_OPEN_FILE );
 	return 0;
 }
 
@@ -66,7 +66,7 @@ void CVsdFile::Close( void ){
 		Case MODE_ZIP_OPENED:	unzCloseCurrentFile( m_unzfp );
 		case MODE_ZIP:			unzClose( m_unzfp );
 	}
-	m_fp = NULL;
+	m_fp = nullptr;
 }
 
 /*** ラインリード ***********************************************************/
@@ -209,7 +209,7 @@ int CVsdFile::IsEOF( void ){
 void CVsdFile::ZipNextFile( ReturnValue<Value> Ret ){
 	unz_file_info fileInfo;
 	
-	LPWSTR	wszFileName = NULL;
+	LPWSTR	wszFileName = nullptr;
 	
 	// zip じゃなければ ret
 	if( !( MODE_ZIP <= m_uMode && m_uMode <= MODE_ZIP_OPENED )){
@@ -239,7 +239,7 @@ void CVsdFile::ZipNextFile( ReturnValue<Value> Ret ){
 			unzGetCurrentFileInfo(
 				m_unzfp, &fileInfo,
 				m_cBuf, FILEBUF_LEN - 1,
-				NULL, 0, NULL, 0
+				nullptr, 0, nullptr, 0
 			) != UNZ_OK
 		){
 			JsError( "zlib: unzGetCurrentFileInfo failed (maybe wrong zip format?)" );
