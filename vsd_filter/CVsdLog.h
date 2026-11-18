@@ -324,7 +324,7 @@ class CVsdLog : public CV8If {
 	double GetIndex( int iTime, int iPrevIdx = -1 );
 	
 	#ifdef DEBUG
-		void Dump( char *szFileName );
+		void Dump( const char *szFileName );
 	#endif
 	
 	BOOL IsDataExist( int iLogNum ){

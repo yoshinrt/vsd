@@ -46,7 +46,7 @@ class CScriptIFBase {
 		return FALSE;
 	}
 	
-	static BOOL CheckClass( Local<Object> obj, char *name, char *msg ){
+	static BOOL CheckClass( Local<Object> obj, const char *name, const char *msg ){
 		if( strcmp( *( String::Utf8Value )( obj->GetConstructorName()), name )){
 			V8TypeError( msg );
 			return TRUE;

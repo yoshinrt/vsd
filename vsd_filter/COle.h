@@ -116,7 +116,7 @@ class COle : public CV8If {
 	static Local<Value> Variant2Val( VARIANT *pvar );
 	void Invoke(
 		DISPID DispID,
-		ReturnValue<Value>& Ret,
+		ReturnValue<Value> Ret,
 		const 	FunctionCallbackInfo<Value>& args,
 		Local<Value>& value,
 		UINT wFlags

@@ -82,7 +82,7 @@ enum {
 //---------------------------------------------------------------------
 
 // トラックバーの名前
-TCHAR	*track_name[] = {
+const TCHAR	*track_name[] = {
 	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	name,
 	#include "def_trackbar.h"
 };
@@ -103,7 +103,7 @@ int		track_e[] = {
 };
 
 // チェックボックスの名前
-TCHAR	*check_name[] = {
+const TCHAR	*check_name[] = {
 	#define DEF_CHECKBOX( id, init, name, conf_name )	name,
 	#include "def_checkbox.h"
 };
@@ -130,13 +130,13 @@ char g_szDescription[] = PROG_NAME_J " " PROG_REVISION_STR;
 FILTER_DLL filter = {
 	FILTER_FLAG_EX_INFORMATION | FILTER_FLAG_MAIN_MESSAGE | FILTER_FLAG_EX_INFORMATION,
 	0,0,						//	設定ウインドウのサイズ (FILTER_FLAG_WINDOW_SIZEが立っている時に有効)
-	PROG_NAME_J,				//	フィルタの名前
+	(TCHAR*)PROG_NAME_J,		//	フィルタの名前
 	TRACK_N,					//	トラックバーの数 (0なら名前初期値等もNULLでよい)
-	track_name,					//	トラックバーの名前郡へのポインタ
+	(TCHAR**)track_name,		//	トラックバーの名前郡へのポインタ
 	track_default,				//	トラックバーの初期値郡へのポインタ
 	track_s, track_e,			//	トラックバーの数値の下限上限 (NULLなら全て0～256)
 	CHECK_N,					//	チェックボックスの数 (0なら名前初期値等もNULLでよい)
-	check_name,					//	チェックボックスの名前郡へのポインタ
+	(TCHAR**)check_name,		//	チェックボックスの名前郡へのポインタ
 	check_default,				//	チェックボックスの初期値郡へのポインタ
 	func_proc,					//	フィルタ処理関数へのポインタ (NULLなら呼ばれません)
 	NULL, //func_init,			//	開始時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
@@ -675,7 +675,7 @@ void SetSkinFileList( HWND hwnd ){
 
 void CreateControlFileName(
 	HWND hwnd, HINSTANCE hInst, int &iID, HFONT hfont, int iX, int &iY, RECT rectClient,
-	char *szCap, char *szEdit, char *szButt
+	const char *szCap, const char *szEdit, const char *szButt
 ) {
 	
 	HWND hwndChild;
@@ -711,7 +711,7 @@ void CreateControlFileName(
 
 void CreateControlSkinName(
 	HWND hwnd, HINSTANCE hInst, int &iID, HFONT hfont, int iX, int &iY, RECT rectClient,
-	char *szCap, char *szEdit
+	const char *szCap, const char *szEdit
 ) {
 	
 	HWND hwndChild;
@@ -1299,7 +1299,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 		switch( wparam ){
 		  case ID_BUTT_LOAD_CFG:	// .avs ロード
 			if(
-				filter->exfunc->dlg_get_load_name( szBuf, FILE_CFG_EXT, NULL ) &&
+				filter->exfunc->dlg_get_load_name( szBuf, (LPSTR)FILE_CFG_EXT, NULL ) &&
 				g_Vsd->ConfigLoad( szBuf )
 			){
 				StrTokFile( szBuf2, szBuf, STF_PATH2 );
@@ -1351,7 +1351,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			}
 			
 		  Case ID_BUTT_SAVE_CFG:
-			if( filter->exfunc->dlg_get_save_name( szBuf, FILE_CFG_EXT, NULL ))
+			if( filter->exfunc->dlg_get_save_name( szBuf, (LPSTR)FILE_CFG_EXT, NULL ))
 				return g_Vsd->ConfigSave( szBuf );
 			
 		  Case ID_BUTT_LOAD_LOG:	// .log ロード
@@ -1379,7 +1379,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 			
 		  Case ID_BUTT_LOAD_LAPCHART:	// ラップチャート ロード
 			if(
-				filter->exfunc->dlg_get_load_name( szBuf, FILE_LAPCHART_EXT, NULL ) &&
+				filter->exfunc->dlg_get_load_name( szBuf, (LPSTR)FILE_LAPCHART_EXT, NULL ) &&
 				g_Vsd->LapChartRead( szBuf )
 			){
 				StringNew( g_Vsd->m_szLapChart, szBuf );
@@ -1408,7 +1408,7 @@ BOOL func_WndProc( HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *edit
 				if( SendMessage( hWndCombo, CB_GETCOUNT, 0, 0 ) - 1 == i ){
 					
 					// ダイアログがキャンセルされた
-					if( !filter->exfunc->dlg_get_load_name( szBuf, FILE_SKIN_EXT, NULL )){
+					if( !filter->exfunc->dlg_get_load_name( szBuf, (LPSTR)FILE_SKIN_EXT, NULL )){
 						// とりあえず，直前の skin 名をそのままコピーしとく
 						//strcpy( szBuf, g_Vsd->m_szSkinFile );
 						//SetWindowText( hWndCombo, g_Vsd->m_szSkinFile );

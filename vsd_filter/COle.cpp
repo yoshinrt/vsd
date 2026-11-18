@@ -505,7 +505,7 @@ Local<Value> COle::Variant2Val( VARIANT *pvar ){
 
 void COle::Invoke(
 	DISPID DispID,
-	ReturnValue<Value>& Ret,
+	ReturnValue<Value> Ret,
 	const FunctionCallbackInfo<Value>& args,
 	Local<Value>& value,
 	UINT wFlags

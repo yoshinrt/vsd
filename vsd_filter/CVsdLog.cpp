@@ -88,7 +88,7 @@ double CVsdLog::GetIndex( int iTime, int iPrevIdx ){
 /*** GPS ログのダンプ *******************************************************/
 
 #ifdef DEBUG
-void CVsdLog::Dump( char *szFileName ){
+void CVsdLog::Dump( const char *szFileName ){
 	FILE *fp = fopen( szFileName, "w" );
 	
 	BOOL bFirst = TRUE;

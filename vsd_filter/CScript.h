@@ -43,7 +43,8 @@ public:
 class CScriptRoot {
   public:
 	CScriptRoot(){
-		char *opt[] = { NULL, "--expose_gc" };
+		char expose_gc[] = "--expose_gc";
+		char *opt[] = { NULL, expose_gc };
 		int i = 2;
 		V8::SetFlagsFromCommandLine( &i, opt, 0 );
 		
@@ -126,7 +127,7 @@ class CScript : public CV8If {
 	}
 	
 	// msg であればスルーパス，ERR_ID であればメッセージを返す
-	static Handle<String> ErrMsgOrID( char *szMsg ){
+	static Handle<String> ErrMsgOrID( const char *szMsg ){
 		return String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)szMsg );
 	}
 	
