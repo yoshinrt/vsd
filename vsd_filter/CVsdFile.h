@@ -9,7 +9,6 @@
 #pragma once
 
 #include "CV8If.h"
-#include "unzip.h"
 
 class CVsdFile : public CV8If {
   public:

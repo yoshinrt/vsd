@@ -38,6 +38,7 @@
 
 #include <zconf.h>
 #include <zlib.h>
+#include <contrib/minizip/unzip.h>
 
 #include "dds_lib/dds.h"
 #include <assert.h>
