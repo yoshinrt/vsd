@@ -29,7 +29,7 @@ class CScriptIFBase {
 	template<typename T>
 	static T* GetThis( Local<Object> handle ){
 		if( handle->GetInternalField( 0 )->IsUndefined()){
-			V8TypeError( "Object is undefined" );
+			JsTypeError( "Object is undefined" );
 			return NULL;
 		}
 		
@@ -40,7 +40,7 @@ class CScriptIFBase {
 	// 引数の数チェック
 	static BOOL CheckArgs( BOOL cond ){
 		if( !( cond )){
-			V8ErrorNumOfArg();
+			JsErrorNumOfArg();
 			return TRUE;
 		}
 		return FALSE;
@@ -48,7 +48,7 @@ class CScriptIFBase {
 	
 	static BOOL CheckClass( Local<Object> obj, const char *name, const char *msg ){
 		if( strcmp( *( String::Utf8Value )( obj->GetConstructorName()), name )){
-			V8TypeError( msg );
+			JsTypeError( msg );
 			return TRUE;
 		}
 		return FALSE;
@@ -68,7 +68,7 @@ MakeJsIF({
 		
 		CVsdFilter *pC_obj = static_cast<CVsdFilter *>( Local<External>::Cast( args[ 0 ] )->Value());
 		if( !pC_obj ){
-			V8Error( ERR_NOT_ENOUGH_MEMORY );
+			JsError( ERR_NOT_ENOUGH_MEMORY );
 			return;
 		}
 -----
@@ -177,7 +177,7 @@ MakeJsIF({
 		
 		CVsdFilterLog *pC_obj = static_cast<CVsdFilterLog *>( Local<External>::Cast( args[ 0 ] )->Value());
 		if( !pC_obj ){
-			V8Error( ERR_NOT_ENOUGH_MEMORY );
+			JsError( ERR_NOT_ENOUGH_MEMORY );
 			return;
 		}
 -----
@@ -193,7 +193,7 @@ MakeJsIF({
 	NewObject	=> << '-----',
 		// 引数チェック
 		if ( args.Length() <= 0 ){
-			V8ErrorNumOfArg();
+			JsErrorNumOfArg();
 			return;
 		}
 		
@@ -208,7 +208,7 @@ MakeJsIF({
 				
 				pC_obj = new CVsdImage( *obj0 );
 			}else{
-				V8TypeError( "arg[ 0 ] must be Image or string" );
+				JsTypeError( "arg[ 0 ] must be Image or string" );
 				return;
 			}
 		}else{
@@ -221,7 +221,7 @@ MakeJsIF({
 				args.Length() <= 1 ? 0 : args[ 1 ]->Int32Value()
 			);
 			if( uRet != ERR_OK ){
-				V8Error( uRet );
+				JsError( uRet );
 				delete pC_obj;
 				return;
 			}
@@ -239,7 +239,7 @@ MakeJsIF({
 	NewObject	=> << '-----'
 		// 引数チェック
 		if ( args.Length() < 2 ){
-			V8ErrorNumOfArg();
+			JsErrorNumOfArg();
 			return;
 		}
 		
@@ -272,7 +272,7 @@ MakeJsIF({
 			
 			UINT uRet = pC_obj->CreateInstance(( LPCWSTR )*strServer );
 			if( uRet != ERR_OK ){
-				V8Error( uRet );
+				JsError( uRet );
 				delete pC_obj;
 				return;
 			}

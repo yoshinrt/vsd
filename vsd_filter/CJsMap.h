@@ -1,22 +1,22 @@
-﻿class CV8Map : public Handle<Value> {
+﻿class CJsMap : public Handle<Value> {
   public:
 	
 	// [] オペレータ
-	CV8Map operator []( LPCWSTR wszPropName ){
+	CJsMap operator []( LPCWSTR wszPropName ){
 		return Cast( ToArray()->Get( String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)wszPropName )));
 	}
 	
-	CV8Map operator []( LPCSTR szPropName ){
+	CJsMap operator []( LPCSTR szPropName ){
 		return Cast( ToArray()->Get( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)szPropName )));
 	}
 	
-	CV8Map operator []( int iIndex ){
+	CJsMap operator []( int iIndex ){
 		return Cast( ToArray()->Get( iIndex ));
 	}
 	
 	// 変換
-	static CV8Map Cast( Handle<Value> handle ){
-		return *( static_cast<CV8Map *>( &handle ));
+	static CJsMap Cast( Handle<Value> handle ){
+		return *( static_cast<CJsMap *>( &handle ));
 	}
 	
 	Handle<Array> ToArray( void ){

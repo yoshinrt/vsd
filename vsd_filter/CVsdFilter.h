@@ -13,7 +13,7 @@
 #include "CScript.h"
 #include "CVsdImage.h"
 #include "CPixel.h"
-#include "CV8If.h"
+#include "CJsClass.h"
 
 #ifdef AVS_PLUGIN
 	#include "avisynth.h"

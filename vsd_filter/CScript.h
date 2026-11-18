@@ -9,20 +9,20 @@
 #pragma once
 
 #include "CVsdLog.h"
-#include "CV8Map.h"
-#include "CV8If.h"
+#include "CJsMap.h"
+#include "CJsClass.h"
 #include "error_code.h"
 
 /*** エラー *****************************************************************/
 
-#define V8AnyError( type, msg ) Isolate::GetCurrent()->ThrowException( Exception::type( CScript::ErrMsgOrID( msg )))
-#define V8RangeError( msg )		V8AnyError( RangeError, msg )
-#define V8ReferenceError( msg ) V8AnyError( ReferenceError, msg )
-#define V8SyntaxError( msg )	V8AnyError( SyntaxError, msg )
-#define V8TypeError( msg )		V8AnyError( TypeError, msg )
-#define V8Error( msg )			V8AnyError( Error, msg )
+#define JsAnyError( type, msg ) Isolate::GetCurrent()->ThrowException( Exception::type( CScript::ErrMsgOrID( msg )))
+#define JsRangeError( msg )		JsAnyError( RangeError, msg )
+#define JsReferenceError( msg ) JsAnyError( ReferenceError, msg )
+#define JsSyntaxError( msg )	JsAnyError( SyntaxError, msg )
+#define JsTypeError( msg )		JsAnyError( TypeError, msg )
+#define JsError( msg )			JsAnyError( Error, msg )
 
-#define V8ErrorNumOfArg()		V8SyntaxError( ERR_NUM_OF_ARG )
+#define JsErrorNumOfArg()		JsSyntaxError( ERR_NUM_OF_ARG )
 
 /****************************************************************************/
 
@@ -73,7 +73,7 @@ class CScriptRoot {
 	Isolate::CreateParams m_CreateParams;
 };
 
-class CScript : public CV8If {
+class CScript : public CJsClass {
   public:
 	CScript( CVsdFilter *pVsd );
 	~CScript( void );
@@ -123,7 +123,7 @@ class CScript : public CV8If {
 	static CScript *GetCScript( Local<Object> handle ){
 		HandleScope handle_scope( Isolate::GetCurrent());
 		
-		return CV8Map::Cast( handle )[ "__CScript" ].GetObj<CScript>();
+		return CJsMap::Cast( handle )[ "__CScript" ].GetObj<CScript>();
 	}
 	
 	// msg であればスルーパス，ERR_ID であればメッセージを返す

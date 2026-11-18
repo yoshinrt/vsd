@@ -138,7 +138,7 @@ void CScript::Dispose( void ){
 LPWSTR CScript::SprintfSub( const FunctionCallbackInfo<Value>& args ){
 	
 	if( CScriptIFBase::CheckArgs( args.Length() >= 1 )){
-		V8ErrorNumOfArg();
+		JsErrorNumOfArg();
 		return NULL;
 	}
 	
@@ -171,7 +171,7 @@ LPWSTR CScript::SprintfSub( const FunctionCallbackInfo<Value>& args ){
 		// arg 数チェック
 		if( args.Length() <= iArgNum ){
 			//  引数が足りないエラー
-			V8ErrorNumOfArg();
+			JsErrorNumOfArg();
 			goto ErrorExit;
 		}
 		
@@ -190,14 +190,14 @@ LPWSTR CScript::SprintfSub( const FunctionCallbackInfo<Value>& args ){
 			uArgBufPtr += 2;
 		}else{
 			// 非対応の型
-			V8SyntaxError( "unknown printf type field" );
+			JsSyntaxError( "unknown printf type field" );
 			goto ErrorExit;
 		}
 	}
 	
 	// 引数あまりチェック
 	if( args.Length() != iArgNum ){
-		V8ErrorNumOfArg();
+		JsErrorNumOfArg();
 		goto ErrorExit;
 	}
 	
@@ -273,7 +273,7 @@ void CScript::Include( LPCWSTR wszFileName ){
 	UINT uRet = RunFileCore( wszFileName );
 	
 	if( uRet == ERR_CANT_OPEN_FILE ){
-		V8Error( ERR_CANT_OPEN_FILE );
+		JsError( ERR_CANT_OPEN_FILE );
 	}
 }
 

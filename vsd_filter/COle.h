@@ -7,7 +7,7 @@
 *****************************************************************************/
 
 #pragma once
-#include "CV8If.h"
+#include "CJsClass.h"
 #include "error_code.h"
 
 class ICallbackJSFunc : public IDispatch {
@@ -76,7 +76,7 @@ class ICallbackJSFunc : public IDispatch {
 	UINT	m_uRefCnt;
 };
 
-class COle : public CV8If {
+class COle : public CJsClass {
   public:
 	COle( void ){
 		m_pApp			= NULL;

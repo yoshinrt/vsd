@@ -7,7 +7,7 @@
 *****************************************************************************/
 
 #pragma once
-#include "CV8If.h"
+#include "CJsClass.h"
 
 /*** macros *****************************************************************/
 
@@ -295,7 +295,7 @@ class CLogDirection : public CLogUShort128 {
 /*** 1個のログセット ********************************************************/
 
 class CVsdFilter;
-class CVsdLog : public CV8If {
+class CVsdLog : public CJsClass {
 	
   public:
 	int GetCnt( void ){ return m_iCnt; }

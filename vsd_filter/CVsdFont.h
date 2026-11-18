@@ -7,7 +7,7 @@
 *****************************************************************************/
 
 #pragma once
-#include "CV8If.h"
+#include "CJsClass.h"
 
 /*** new type ***************************************************************/
 
@@ -31,7 +31,7 @@ class CFontGlyph {
 	}
 };
 
-class CVsdFont : public CV8If {
+class CVsdFont : public CJsClass {
   public:
 	CVsdFont( const char *szFontName, int iSize, UINT uAttr = 0 );
 	CVsdFont( LPCWSTR szFontName, int iSize, UINT uAttr = 0 );

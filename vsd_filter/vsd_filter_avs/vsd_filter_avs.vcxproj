@@ -161,13 +161,15 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\YTanaka2.NUVOTON\Documents\vsd\vsd_filter\CJsClass.h" />
+    <ClInclude Include="..\..\..\..\..\YTanaka2.NUVOTON\Documents\vsd\vsd_filter\CJsIf.h" />
+    <ClInclude Include="..\..\..\..\..\YTanaka2.NUVOTON\Documents\vsd\vsd_filter\CJsMap.h" />
     <ClInclude Include="..\avisynth.h" />
     <ClInclude Include="..\COle.h" />
     <ClInclude Include="..\CPixel.h" />
     <ClInclude Include="..\CPixelBase.h" />
     <ClInclude Include="..\CScript.h" />
     <ClInclude Include="..\CSemaphore.h" />
-    <ClInclude Include="..\CV8Map.h" />
     <ClInclude Include="..\CVsdFile.h" />
     <ClInclude Include="..\CVsdFilter.h" />
     <ClInclude Include="..\CVsdFilterLog.h" />

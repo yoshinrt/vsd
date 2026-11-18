@@ -8,13 +8,13 @@
 
 #pragma once
 #include "CPixel.h"
-#include "CV8If.h"
+#include "CJsClass.h"
 #include "CSemaphore.h"
 
 #define RABY_TRANSPARENT	0x80FF8000
 #define IMG_INET_ASYNC		0x1
 
-class CVsdImage : public CV8If {
+class CVsdImage : public CJsClass {
   public:
 	CVsdImage();
 	CVsdImage( CVsdImage &Org );

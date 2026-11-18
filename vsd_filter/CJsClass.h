@@ -2,21 +2,21 @@
 	
 	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
-	CV8If.cpp - CV8If class implementation
+	CJsClass.cpp - CJsClass class implementation
 	
 *****************************************************************************/
 
 #pragma once
 
-class CV8If {
+class CJsClass {
   public:
 	Persistent<Object> *m_pHolder;
 	
-	CV8If(){
+	CJsClass(){
 		m_pHolder = NULL;
 	}
 	
-	~CV8If(){
+	~CJsClass(){
 		if( m_pHolder ) m_pHolder->Reset();
 	}
 };

@@ -303,7 +303,7 @@ void COle::Val2Variant(
 			if( pub ) delete [] pub;
 			if( psab ) delete [] psab;
 			if( pid ) delete [] pid;
-			V8Error( ERR_NOT_ENOUGH_MEMORY );
+			JsError( ERR_NOT_ENOUGH_MEMORY );
 		}
 		val1 = val;
 		i = 0;
@@ -399,7 +399,7 @@ Local<Value> COle::Variant2Val( VARIANT *pvar ){
 			if( pID ) delete [] pID;
 			if( pLB ) delete [] pLB;
 			if( pUB ) delete [] pUB;
-			V8Error( ERR_NOT_ENOUGH_MEMORY );
+			JsError( ERR_NOT_ENOUGH_MEMORY );
 			return Undefined( Isolate::GetCurrent());
 		}
 		

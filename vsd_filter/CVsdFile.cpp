@@ -10,9 +10,9 @@
 #include "CVsdFile.h"
 #include "CScript.h"
 
-#define V8ErrorClosedHandle()		V8Error( "operation not permitted on closed handle" )
-#define V8ErrorZipNotSupported()	V8Error( "operation not supported on zip-mode" )
-#define V8ErrorZipNotOpened()		V8Error( "file in zip not opened, execute ZipNextFile() first." )
+#define JsErrorClosedHandle()		JsError( "operation not permitted on closed handle" )
+#define JsErrorZipNotSupported()	JsError( "operation not supported on zip-mode" )
+#define JsErrorZipNotOpened()		JsError( "file in zip not opened, execute ZipNextFile() first." )
 
 /*** ファイルオープン *******************************************************/
 
@@ -52,7 +52,7 @@ int CVsdFile::Open( LPCWSTR szFile, LPCWSTR szMode ){
 		m_fp = _wfopen( szFile, szMode );
 	}
 	
-	if( m_fp == NULL ) V8Error( ERR_CANT_OPEN_FILE );
+	if( m_fp == NULL ) JsError( ERR_CANT_OPEN_FILE );
 	return 0;
 }
 
@@ -75,7 +75,7 @@ void CVsdFile::ReadLine( ReturnValue<Value> Ret ){
 	*m_cBuf = '\0';
 	
 	if( !m_fp ){
-		V8ErrorClosedHandle();
+		JsErrorClosedHandle();
 		return;
 	}
 	
@@ -84,7 +84,7 @@ void CVsdFile::ReadLine( ReturnValue<Value> Ret ){
 		Case MODE_GZIP:			gzgets( m_gzfp, m_cBuf, FILEBUF_LEN );
 		
 		Case MODE_ZIP: {
-			V8ErrorZipNotOpened();
+			JsErrorZipNotOpened();
 			return;
 		}
 		
@@ -126,9 +126,9 @@ int CVsdFile::WriteLine( char *str ){
 		case MODE_GZIP:			return gzputs( m_gzfp, str );
 		
 		case MODE_ZIP:
-		case MODE_ZIP_OPENED:	V8ErrorZipNotSupported();
+		case MODE_ZIP_OPENED:	JsErrorZipNotSupported();
 	}
-	else V8ErrorClosedHandle();
+	else JsErrorClosedHandle();
 	
 	return 0;
 }
@@ -142,9 +142,9 @@ int CVsdFile::Seek( int iOffs, int iOrg ){
 		case MODE_GZIP:			return gzseek( m_gzfp, iOffs, iOrg ) >= 0 ? 0 : -1;
 		
 		case MODE_ZIP:
-		case MODE_ZIP_OPENED:	V8ErrorZipNotSupported();
+		case MODE_ZIP_OPENED:	JsErrorZipNotSupported();
 	}
-	else V8ErrorClosedHandle();
+	else JsErrorClosedHandle();
 	
 	return 0;
 }
@@ -159,7 +159,7 @@ UCHAR *CVsdFile::ReadBin( int iSize ){
 	if( m_fp )	switch( m_uMode ){
 		case MODE_NORMAL:		fread( cBuf, 1, iSize, m_fp );
 		Case MODE_GZIP:			gzread( m_gzfp, cBuf, iSize );
-		Case MODE_ZIP:			V8ErrorZipNotOpened();
+		Case MODE_ZIP:			JsErrorZipNotOpened();
 		Case MODE_ZIP_OPENED: {
 			// buf 残量が足りなかったら，読む
 			if( iSize > ( int )( m_uBufSize - m_uBufPtr )) ReadZip();
@@ -181,9 +181,9 @@ int CVsdFile::WriteBin( void *pBuf, int iSize ){
 		case MODE_GZIP:			return gzread( m_gzfp, pBuf, iSize );
 		
 		case MODE_ZIP:
-		case MODE_ZIP_OPENED:	V8ErrorZipNotSupported();
+		case MODE_ZIP_OPENED:	JsErrorZipNotSupported();
 	}
-	else V8ErrorClosedHandle();
+	else JsErrorClosedHandle();
 	return 0;
 }
 
@@ -194,13 +194,13 @@ int CVsdFile::IsEOF( void ){
 		case MODE_NORMAL:		return feof( m_fp );
 		case MODE_GZIP:			return gzeof( m_gzfp );
 		
-		case MODE_ZIP:			V8ErrorZipNotSupported();
+		case MODE_ZIP:			JsErrorZipNotSupported();
 		
 		case MODE_ZIP_OPENED: return
 			!( m_uFlag & FLAG_EOF ) ? 0 :
 			m_uBufPtr == m_uBufSize ? -1 : 0;
 	}
-	else V8ErrorClosedHandle();
+	else JsErrorClosedHandle();
 	return 0;
 }
 
@@ -213,7 +213,7 @@ void CVsdFile::ZipNextFile( ReturnValue<Value> Ret ){
 	
 	// zip じゃなければ ret
 	if( !( MODE_ZIP <= m_uMode && m_uMode <= MODE_ZIP_OPENED )){
-		V8Error( "not opened by zip-mode" );
+		JsError( "not opened by zip-mode" );
 		return;
 	}
 	
@@ -242,7 +242,7 @@ void CVsdFile::ZipNextFile( ReturnValue<Value> Ret ){
 				NULL, 0, NULL, 0
 			) != UNZ_OK
 		){
-			V8Error( "zlib: unzGetCurrentFileInfo failed (maybe wrong zip format?)" );
+			JsError( "zlib: unzGetCurrentFileInfo failed (maybe wrong zip format?)" );
 			return;
 		}
 		
@@ -263,7 +263,7 @@ void CVsdFile::ZipNextFile( ReturnValue<Value> Ret ){
 		return;
 	}
 	
-	V8Error( "zlib: can't open file in zip (maybe wrong zip format?)" );
+	JsError( "zlib: can't open file in zip (maybe wrong zip format?)" );
 }
 
 /*** zip ファイルの body リード *********************************************/

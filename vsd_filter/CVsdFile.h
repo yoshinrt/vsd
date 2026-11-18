@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "CV8If.h"
+#include "CJsClass.h"
 
-class CVsdFile : public CV8If {
+class CVsdFile : public CJsClass {
   public:
 	CVsdFile(){
 		m_fp		= NULL;
