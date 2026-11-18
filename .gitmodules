@@ -4,3 +4,9 @@
 [submodule "vsd_filter/zlib/zlib"]
 	path = vsd_filter/zlib/zlib
 	url = https://github.com/madler/zlib.git
+[submodule "vsd_filter/qjsbridge"]
+	path = vsd_filter/qjsbridge
+	url = https://github.com/WhiredPlanck/qjsbridge.git
+[submodule "vsd_filter/quickjs"]
+	path = vsd_filter/quickjs
+	url = https://github.com/quickjs-ng/quickjs.git

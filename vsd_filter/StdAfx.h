@@ -44,6 +44,16 @@
 #include <assert.h>
 #include "dds_lib/dds_lib.h"
 
+#include "quickjs.h"
+#include "quickjs-libc.h"
+
+inline bool JS_IsArray(JSContext*, JSValueConst val) {
+	return JS_IsArray(val);
+}
+
+#define QJSBRIDGE_QUICKJS_NG
+#include "qjsbridge.hpp"
+
 using namespace v8;
 
 #ifdef _OPENMP
