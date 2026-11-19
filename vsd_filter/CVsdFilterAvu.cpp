@@ -361,7 +361,7 @@ void CVsdFilter::DrawSyncInfoSub(
 	time_t time	= (time_t)(iBaseTime + iCurTime) / 1000;
 	
 	localtime_s(&tmLocal, &time);
-	wcsftime(szBuf, sizeof(szBuf), L"%Y/%m/%d", &tmLocal);
+	wcsftime(szBuf, sizeof(szBuf) / sizeof(WCHAR), L"%Y/%m/%d", &tmLocal);
 	DrawText(POS_DEFAULT, POS_DEFAULT, szBuf, Font, color_white);
 	
 	// 時間 x 3
