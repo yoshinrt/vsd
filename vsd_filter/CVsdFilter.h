@@ -31,23 +31,13 @@
 #define G_CX_CNT		30
 #define POS_DEFAULT		0x80000000
 
-#ifdef PUBLIC_MODE
-	#define VideoSt			m_piParamS[PARAM_VSt]
-	#define VideoEd			m_piParamS[PARAM_VEd]
-	#define VsdSt			m_piParamS[PARAM_LSt]
-	#define VsdEd			m_piParamS[PARAM_LEd]
-	#define GPSSt			m_piParamS[PARAM_GSt]
-	#define GPSEd			m_piParamS[PARAM_GEd]
-	#define DEFAULT_SKIN	"同期モード.js"
-#else
-	#define VideoSt			m_piParamT[PARAM_VSt]
-	#define VideoEd			m_piParamT[PARAM_VEd]
-	#define VsdSt			m_piParamT[PARAM_LSt]
-	#define VsdEd			m_piParamT[PARAM_LEd]
-	#define GPSSt			m_piParamT[PARAM_GSt]
-	#define GPSEd			m_piParamT[PARAM_GEd]
-	#define DEFAULT_SKIN	"standard_r.js"
-#endif
+#define VideoSt			m_piParamT[PARAM_VSt]
+#define VideoEd			m_piParamT[PARAM_VEd]
+#define VsdSt			m_piParamT[PARAM_LSt]
+#define VsdEd			m_piParamT[PARAM_LEd]
+#define GPSSt			m_piParamT[PARAM_GSt]
+#define GPSEd			m_piParamT[PARAM_GEd]
+#define DEFAULT_SKIN	"standard_r.js"
 
 #define PLUGIN_DIR		"vsd_plugins"
 #define LOG_READER_DIR	"_log_reader"
@@ -677,10 +667,7 @@ class CVsdFilter
 	static const char *m_szShadowParamName[];
 	
 	void GetFileCreationTime(void);
-#ifdef PUBLIC_MODE
-	void AutoSync(CVsdLog *pLog, int *piParam);
-#endif
-	
+
   private:
 	INT64	m_iVideoStartTime;
 #endif

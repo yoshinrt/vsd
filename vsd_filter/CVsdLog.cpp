@@ -177,17 +177,14 @@ UINT CVsdLog::GPSLogRescan(void){
 	
 	BOOL	bCreateSpeed	= FALSE;
 	BOOL	bCreateG		= FALSE;
-#ifdef USE_TURN_R
-	BOOL	bCreateTurnR	= FALSE;
-#endif
-	
+
 	if(m_pLogLongitude != nullptr && m_pLogLatitude != nullptr){
 		if(!m_pLogSpeed){
 			bCreateSpeed = TRUE;
 			GetElement("Speed", TRUE);
 			m_pLogSpeed->Resize(GetCnt(), 0);
 		}
-		
+
 		if(!m_pLogGx){
 			bCreateG = TRUE;
 			GetElement("Gx", TRUE);
@@ -195,14 +192,7 @@ UINT CVsdLog::GPSLogRescan(void){
 			GetElement("Gy", TRUE);
 			m_pLogGy->Resize(GetCnt(), 0);
 		}
-		
-		#ifdef USE_TURN_R
-			if(!m_pLogTurnR){
-				bCreateTurnR = TRUE;
-				GetElement("TurnR", TRUE);
-				m_pLogTurnR->Resize(GetCnt(), MAX_TURN_R);
-			}
-		#endif
+
 	}
 	
 	#pragma omp parallel
@@ -351,21 +341,7 @@ UINT CVsdLog::GPSLogRescan(void){
 				SetMaxMinGx(dMaxGx, dMinGx);
 				SetMaxMinGy(dMaxGy, dMinGy);
 			}
-			
-			#ifdef USE_TURN_R
-				if(bCreateTurnR){
-					#pragma omp for
-					for(int i = 2; i < GetCnt(); ++i){
-						// r = v * v / G
-						double dTurnR = Gx(i) == 0 || Speed(i) < 1 ?
-							MAX_TURN_R :
-							pow(Speed(i) * (1000.0 / 3600), 2) / (fabs(Gx(i)) * GRAVITY);
-						
-						if(dTurnR > MAX_TURN_R) dTurnR = MAX_TURN_R;
-						SetTurnR(i, dTurnR);
-					}
-				}
-			#endif
+
 		}
 		
 		// Direction 補正

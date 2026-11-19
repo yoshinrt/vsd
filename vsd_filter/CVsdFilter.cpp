@@ -22,12 +22,7 @@
 HINSTANCE	CVsdFilter::m_hInst 	= nullptr;
 const int CVsdFilter::m_iRevision	= PROG_REVISION;
 
-const int CVsdFilter::m_iPrivateBuild =
-#ifdef PUBLIC_MODE
-	0;
-#else
-	1;
-#endif
+const int CVsdFilter::m_iPrivateBuild = 1;
 
 /*** コンストラクタ *********************************************************/
 

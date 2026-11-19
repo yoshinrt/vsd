@@ -68,9 +68,6 @@ using namespace v8;
 #define ToRAD		(M_PI / 180)
 #define SLIDER_TIME	(LOG_FREQ / 1000.0)
 #define NaN			std::numeric_limits<double>::quiet_NaN()
-#ifdef PUBLIC_MODE
-	#define USE_TURN_R
-#endif
 #define INVALID_INT		INT_MIN
 
 static char *StringNew(char *&szDst, const char *szSrc){

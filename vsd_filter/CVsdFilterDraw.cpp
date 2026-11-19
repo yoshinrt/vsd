@@ -13,15 +13,9 @@
 
 #define SPRINTF_BUF		128
 
-#define GScale			(m_piParamS[SHADOW_G_SCALE] * (G_MULT / 1000.0))
+#define GScale			(m_piParamS[SHADOW_G_SCALE] * (1 / 1000.0))
 #define GPSPriority		m_piParamC[CHECK_GPS_PRIO]
 #define ToInt(d)		((int)((d) + 0.5))
-
-#if defined PUBLIC_MODE || defined INVERT_G
-	#define G_MULT			(-1)
-#else
-	#define G_MULT			1
-#endif
 
 #define DEFAULT_FONT	"ＭＳ ゴシック"
 
@@ -973,8 +967,6 @@ void CVsdFilter::DrawGSnake(
 	int	i;
 	
 	SelectLogVsd;
-	
-	iR = iR * G_MULT;
 	
 	if(m_CurLog && m_CurLog->m_pLogGx){
 		if(dLength > 0){

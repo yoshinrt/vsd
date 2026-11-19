@@ -52,22 +52,7 @@ for %%A in (Win32 x64) do (
 		cmake --build build_%%A --config %%C --parallel
 		if errorlevel 1 exit /b 1
 	)
-
-	rem ReleaseMT=/MT
-	cmake -S . -B build_%%A_MT ^
-		-G "%GENERATOR%" ^
-		-A %%A ^
-		-DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded"
-	if errorlevel 1 exit /b 1
-
-	cmake --build build_%%A_MT --config Release --parallel
-	if errorlevel 1 exit /b 1
 )
-
-rmdir /s /q quickjs\build_Win32\ReleaseMT
-rmdir /s /q quickjs\build_x64\ReleaseMT
-move /y quickjs\build_Win32_MT\Release quickjs\build_Win32\ReleaseMT
-move /y quickjs\build_x64_MT\Release quickjs\build_x64\ReleaseMT
 
 endlocal
 popd
