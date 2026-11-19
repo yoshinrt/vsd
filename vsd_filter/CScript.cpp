@@ -294,7 +294,6 @@ UINT CScript::Initialize(LPCWSTR wszFileName){
 	CVsdFilterLogIF::InitializeClass(m_pIsolate, global, g_pVsd);
 	CVsdFileIF::InitializeClass(m_pIsolate, global);
 	CScriptIF::InitializeClass(m_pIsolate, global);
-	COleIF::InitializeClass(m_pIsolate, global);
 	
 	global->Set(String::NewFromOneByte(m_pIsolate, (uint8_t *)"__CVsdFilter"), External::New(m_pIsolate, g_pVsd));
 	global->Set(String::NewFromOneByte(m_pIsolate, (uint8_t *)"__CScript"), External::New(m_pIsolate, this));

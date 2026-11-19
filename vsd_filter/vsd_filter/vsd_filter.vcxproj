@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build" ToolsVersion="14.0">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -43,9 +43,9 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    </PropertyGroup>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    </PropertyGroup>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>VSD_FILTER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -80,7 +80,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\CJsClass.h" />
-    <ClInclude Include="..\COle.h" />
     <ClInclude Include="..\CPixel.h" />
     <ClInclude Include="..\CPixelBase.h" />
     <ClInclude Include="..\CScript.h" />
@@ -108,7 +107,6 @@
     <ClInclude Include="..\zlib\unzip.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\COle.cpp" />
     <ClCompile Include="..\CScript.cpp" />
     <ClCompile Include="..\CVsdFile.cpp" />
     <ClCompile Include="..\CVsdFilter.cpp" />

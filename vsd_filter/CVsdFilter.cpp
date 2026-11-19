@@ -66,7 +66,6 @@ void CVsdFilter::Constructor(void){
 	m_bSaving	= FALSE;
 	
 	//---- GDI+の初期設定
-	COle::Initialize();
 	Gdiplus::GdiplusStartup(&m_gdiplusToken, &m_gdiplusStartupInput, nullptr);
 	
 	// WinInet 同時接続数
@@ -97,7 +96,6 @@ void CVsdFilter::Destructor(void){
 	
 	//---- GDI+の解放
 	Gdiplus::GdiplusShutdown(m_gdiplusToken);
-	COle::Uninitialize();
 }
 
 /*** ログリード ************************************************************/

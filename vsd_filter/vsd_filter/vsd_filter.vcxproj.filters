@@ -66,9 +66,6 @@
     <ClInclude Include="..\rev_num.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\COle.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="..\CPixel.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -93,7 +90,7 @@
     <ClInclude Include="..\dds_lib\dds.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\YTanaka2.NUVOTON\Documents\vsd\vsd_filter\CJsClass.h">
+    <ClInclude Include="..\CJsClass.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
@@ -123,9 +120,6 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="..\CVsdFile.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="..\COle.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>

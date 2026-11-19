@@ -20,7 +20,6 @@ print fpOut << "-----";
 #include "CVsdFilter.h"
 #include "CVsdFilterLog.h"
 #include "CVsdFile.h"
-#include "COle.h"
 
 class CScriptIFBase {
 	
@@ -256,34 +255,6 @@ MakeJsIF({
 
 MakeJsIF({
 	Class		=> 'CVsdFile',
-});
-
-### COle #####################################################################
-
-MakeJsIF({
-	Class		=> 'COle',
-	JsClass		=> 'ActiveXObject',
-	NewObject	=> << '-----',
-		COle *pC_obj = new COle();
-		
-		// 引数チェック
-		if(args.Length() >= 1){
-			String::Value strServer(args[0]);
-			
-			UINT uRet = pC_obj->CreateInstance((LPCWSTR)*strServer);
-			if(uRet != ERR_OK){
-				JsError(uRet);
-				delete pC_obj;
-				return;
-			}
-		}
------
-	ExtraInit	=> << '-----',
-		COle::InitJS(tmpl);
------
-	ExtraNew	=> << '-----'
-		if(args.Length() >= 1) pC_obj->AddOLEFunction(thisObject);
------
 });
 
 ### Global ###################################################################
