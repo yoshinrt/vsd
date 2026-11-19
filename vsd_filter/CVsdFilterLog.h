@@ -11,8 +11,8 @@
 class CVsdFilterLog : public CVsdFilter {
 	
   public:
-	static CVsdFilterLog *Cast( CVsdFilter *obj ){
-		return static_cast<CVsdFilterLog *>( obj );
+	static CVsdFilterLog *Cast(CVsdFilter *obj){
+		return static_cast<CVsdFilterLog *>(obj);
 	}
 	
 	void ValueOfIndex(	// !js_func
@@ -20,6 +20,6 @@ class CVsdFilterLog : public CVsdFilter {
 		const char *szPropName,
 		double dIdx
 	){
-		AccessLog( Ret, szPropName, dIdx );
+		AccessLog(Ret, szPropName, dIdx);
 	}
 };

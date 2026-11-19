@@ -65,40 +65,40 @@ using namespace v8;
 
 #define LOG_FREQ	16.0
 #define BUF_SIZE	1024
-#define ToRAD		( M_PI / 180 )
-#define SLIDER_TIME	( LOG_FREQ / 1000.0 )
+#define ToRAD		(M_PI / 180)
+#define SLIDER_TIME	(LOG_FREQ / 1000.0)
 #define NaN			std::numeric_limits<double>::quiet_NaN()
 #ifdef PUBLIC_MODE
 	#define USE_TURN_R
 #endif
 #define INVALID_INT		INT_MIN
 
-static char *StringNew( char *&szDst, const char *szSrc ){
-	if( szDst == szSrc ) return( szDst );
-	if( szDst ) delete [] szDst;
+static char *StringNew(char *&szDst, const char *szSrc){
+	if(szDst == szSrc) return(szDst);
+	if(szDst) delete [] szDst;
 	
-	if( szSrc == nullptr || *szSrc == '\0' ){
+	if(szSrc == nullptr || *szSrc == '\0'){
 		return szDst = nullptr;
 	}
-	szDst = new char[ strlen( szSrc ) + 1 ];
-	return strcpy( szDst, szSrc );
+	szDst = new char[strlen(szSrc) + 1];
+	return strcpy(szDst, szSrc);
 }
 
-static LPWSTR StringNew( LPWSTR& szDst, LPCWSTR szSrc ){
-	if( szDst == szSrc ) return( szDst );
-	if( szDst ) delete [] szDst;
+static LPWSTR StringNew(LPWSTR& szDst, LPCWSTR szSrc){
+	if(szDst == szSrc) return(szDst);
+	if(szDst) delete [] szDst;
 	
-	if( szSrc == nullptr || *szSrc == '\0' ){
+	if(szSrc == nullptr || *szSrc == '\0'){
 		return szDst = nullptr;
 	}
-	szDst = new WCHAR[ wcslen( szSrc ) + 1 ];
-	return wcscpy( szDst, szSrc );
+	szDst = new WCHAR[wcslen(szSrc) + 1];
+	return wcscpy(szDst, szSrc);
 }
 
-static LPWSTR StringNew( LPWSTR& szDst, const char *szSrc ){
-	if( szDst ) delete [] szDst;
+static LPWSTR StringNew(LPWSTR& szDst, const char *szSrc){
+	if(szDst) delete [] szDst;
 	
-	if( szSrc == nullptr || *szSrc == '\0' ){
+	if(szSrc == nullptr || *szSrc == '\0'){
 		return szDst = nullptr;
 	}
 	// SJIS->WCHAR 変換
@@ -110,7 +110,7 @@ static LPWSTR StringNew( LPWSTR& szDst, const char *szSrc ){
 		nullptr,				// マップ先ワイド文字列を入れるバッファのアドレス
 		0					// バッファのサイズ
 	);
-	szDst = new WCHAR[ iLen ];
+	szDst = new WCHAR[iLen];
 	
 	MultiByteToWideChar(
 		CP_ACP,				// コードページ
@@ -124,10 +124,10 @@ static LPWSTR StringNew( LPWSTR& szDst, const char *szSrc ){
 	return szDst;
 }
 
-static char *StringNew( char *&szDst, LPCWSTR &szSrc ){
-	if( szDst ) delete [] szDst;
+static char *StringNew(char *&szDst, LPCWSTR &szSrc){
+	if(szDst) delete [] szDst;
 	
-	if( szSrc == nullptr || *szSrc == '\0' ){
+	if(szSrc == nullptr || *szSrc == '\0'){
 		return szDst = nullptr;
 	}
 	// SJIS->WCHAR 変換
@@ -140,7 +140,7 @@ static char *StringNew( char *&szDst, LPCWSTR &szSrc ){
 		0,					// バッファのサイズ
 		nullptr, nullptr
 	);
-	szDst = new char[ iLen ];
+	szDst = new char[iLen];
 	
 	WideCharToMultiByte(
 		CP_ACP,				// コードページ

@@ -39,7 +39,7 @@
 #ifndef __AVISYNTH_H__
 #define __AVISYNTH_H__
 
-enum { AVISYNTH_INTERFACE_VERSION = 2 };
+enum {AVISYNTH_INTERFACE_VERSION = 2};
 
 
 /* Define all types necessary for interfacing with avisynth.dll
@@ -113,7 +113,7 @@ enum {
    PLANAR_Y_ALIGNED=PLANAR_Y|PLANAR_ALIGNED,
    PLANAR_U_ALIGNED=PLANAR_U|PLANAR_ALIGNED,
    PLANAR_V_ALIGNED=PLANAR_V|PLANAR_ALIGNED,
-  };
+};
 
 struct VideoInfo {
   int width, height;    // width=0 means no video
@@ -127,17 +127,17 @@ struct VideoInfo {
     CS_YUV = 1<<29,
     CS_INTERLEAVED = 1<<30,
     CS_PLANAR = 1<<31
-  };
+};
 
   // Specific colorformats
-  enum { CS_UNKNOWN = 0,
+  enum {CS_UNKNOWN = 0,
          CS_BGR24 = 1<<0 | CS_BGR | CS_INTERLEAVED,
          CS_BGR32 = 1<<1 | CS_BGR | CS_INTERLEAVED,
          CS_YUY2 = 1<<2 | CS_YUV | CS_INTERLEAVED,
          CS_YV12 = 1<<3 | CS_YUV | CS_PLANAR,  // y-v-u, planar
          CS_I420 = 1<<4 | CS_YUV | CS_PLANAR,  // y-u-v, planar
          CS_IYUV = 1<<4 | CS_YUV | CS_PLANAR  // same as above
-         };
+};
   int pixel_type;                // changed to int as of 2.5
   
 
@@ -154,43 +154,43 @@ struct VideoInfo {
     IT_BFF = 1<<0,
     IT_TFF = 1<<1,
     IT_FIELDBASED = 1<<2
-  };
+};
 
   // useful functions of the above
-  bool HasVideo() const { return (width!=0); }
-  bool HasAudio() const { return (audio_samples_per_second!=0); }
-  bool IsRGB() const { return !!(pixel_type&CS_BGR); }
-  bool IsRGB24() const { return (pixel_type&CS_BGR24)==CS_BGR24; } // Clear out additional properties
-  bool IsRGB32() const { return (pixel_type & CS_BGR32) == CS_BGR32 ; }
-  bool IsYUV() const { return !!(pixel_type&CS_YUV ); }
-  bool IsYUY2() const { return (pixel_type & CS_YUY2) == CS_YUY2; }  
-  bool IsYV12() const { return ((pixel_type & CS_YV12) == CS_YV12)||((pixel_type & CS_I420) == CS_I420); }
-  bool IsColorSpace(int c_space) const { return ((pixel_type & c_space) == c_space); }
-  bool Is(int property) const { return ((pixel_type & property)==property ); }
-  bool IsPlanar() const { return !!(pixel_type & CS_PLANAR); }
-  bool IsFieldBased() const { return !!(image_type & IT_FIELDBASED); }
-  bool IsParityKnown() const { return ((image_type & IT_FIELDBASED)&&(image_type & (IT_BFF||IT_TFF))); }
-  bool IsBFF() const { return !!(image_type & IT_BFF); }
-  bool IsTFF() const { return !!(image_type & IT_TFF); }
+  bool HasVideo() const {return (width!=0);}
+  bool HasAudio() const {return (audio_samples_per_second!=0);}
+  bool IsRGB() const {return !!(pixel_type&CS_BGR);}
+  bool IsRGB24() const {return (pixel_type&CS_BGR24)==CS_BGR24;} // Clear out additional properties
+  bool IsRGB32() const {return (pixel_type & CS_BGR32) == CS_BGR32 ;}
+  bool IsYUV() const {return !!(pixel_type&CS_YUV);}
+  bool IsYUY2() const {return (pixel_type & CS_YUY2) == CS_YUY2;}  
+  bool IsYV12() const {return ((pixel_type & CS_YV12) == CS_YV12)||((pixel_type & CS_I420) == CS_I420);}
+  bool IsColorSpace(int c_space) const {return ((pixel_type & c_space) == c_space);}
+  bool Is(int property) const {return ((pixel_type & property)==property);}
+  bool IsPlanar() const {return !!(pixel_type & CS_PLANAR);}
+  bool IsFieldBased() const {return !!(image_type & IT_FIELDBASED);}
+  bool IsParityKnown() const {return ((image_type & IT_FIELDBASED)&&(image_type & (IT_BFF||IT_TFF)));}
+  bool IsBFF() const {return !!(image_type & IT_BFF);}
+  bool IsTFF() const {return !!(image_type & IT_TFF);}
   
-  bool IsVPlaneFirst() const {return ((pixel_type & CS_YV12) == CS_YV12); }  // Don't use this 
-  int BytesFromPixels(int pixels) const { return pixels * (BitsPerPixel()>>3); }   // Will not work on planar images, but will return only luma planes
-  int RowSize() const { return BytesFromPixels(width); }  // Also only returns first plane on planar images
-  int BMPSize() const { if (IsPlanar()) {int p = height * ((RowSize()+3) & ~3); p+=p>>1; return p;  } return height * ((RowSize()+3) & ~3); }
-  __int64 AudioSamplesFromFrames(__int64 frames) const { return HasVideo() ? ((__int64)(frames) * audio_samples_per_second * fps_denominator / fps_numerator) : 0; }
-  int FramesFromAudioSamples(__int64 samples) const { return (HasAudio()) ? (int)(samples * (__int64)fps_numerator / (__int64)fps_denominator / (__int64)audio_samples_per_second) : 0; }
-  __int64 AudioSamplesFromBytes(__int64 bytes) const { return HasAudio() ? bytes / BytesPerAudioSample() : 0; }
-  __int64 BytesFromAudioSamples(__int64 samples) const { return samples * BytesPerAudioSample(); }
-  int AudioChannels() const { return nchannels; }
-  int SampleType() const{ return sample_type;}
-  bool IsSampleType(int testtype) const{ return !!(sample_type&testtype);}
-  int SamplesPerSecond() const { return audio_samples_per_second; }
-  int BytesPerAudioSample() const { return nchannels*BytesPerChannelSample();}
-  void SetFieldBased(bool isfieldbased)  { if (isfieldbased) image_type|=IT_FIELDBASED; else  image_type&=~IT_FIELDBASED; }
-  void Set(int property)  { image_type|=property; }
-  void Clear(int property)  { image_type&=~property; }
+  bool IsVPlaneFirst() const {return ((pixel_type & CS_YV12) == CS_YV12);}  // Don't use this 
+  int BytesFromPixels(int pixels) const {return pixels * (BitsPerPixel()>>3);}   // Will not work on planar images, but will return only luma planes
+  int RowSize() const {return BytesFromPixels(width);}  // Also only returns first plane on planar images
+  int BMPSize() const {if (IsPlanar()) {int p = height * ((RowSize()+3) & ~3); p+=p>>1; return p;} return height * ((RowSize()+3) & ~3);}
+  __int64 AudioSamplesFromFrames(__int64 frames) const {return HasVideo() ? ((__int64)(frames) * audio_samples_per_second * fps_denominator / fps_numerator) : 0;}
+  int FramesFromAudioSamples(__int64 samples) const {return (HasAudio()) ? (int)(samples * (__int64)fps_numerator / (__int64)fps_denominator / (__int64)audio_samples_per_second) : 0;}
+  __int64 AudioSamplesFromBytes(__int64 bytes) const {return HasAudio() ? bytes / BytesPerAudioSample() : 0;}
+  __int64 BytesFromAudioSamples(__int64 samples) const {return samples * BytesPerAudioSample();}
+  int AudioChannels() const {return nchannels;}
+  int SampleType() const{return sample_type;}
+  bool IsSampleType(int testtype) const{return !!(sample_type&testtype);}
+  int SamplesPerSecond() const {return audio_samples_per_second;}
+  int BytesPerAudioSample() const {return nchannels*BytesPerChannelSample();}
+  void SetFieldBased(bool isfieldbased)  {if (isfieldbased) image_type|=IT_FIELDBASED; else  image_type&=~IT_FIELDBASED;}
+  void Set(int property)  {image_type|=property;}
+  void Clear(int property)  {image_type&=~property;}
 
-  int BitsPerPixel() const { 
+  int BitsPerPixel() const {
     switch (pixel_type) {
       case CS_BGR24:
         return 24;
@@ -203,9 +203,9 @@ struct VideoInfo {
         return 12;
       default:
         return 0;
-    }
-  }
-  int BytesPerChannelSample() const { 
+}
+}
+  int BytesPerChannelSample() const {
     switch (sample_type) {
     case SAMPLE_INT8:
       return sizeof(signed char);
@@ -220,24 +220,24 @@ struct VideoInfo {
     default:
       _ASSERTE("Sample type not recognized!");
       return 0;
-    }
-  }
+}
+}
 
   // useful mutator
   void SetFPS(unsigned numerator, unsigned denominator) {
     unsigned x=numerator, y=denominator;
-    while (y) {   // find gcd
+    while (y) {// find gcd
       unsigned t = x%y; x = y; y = t;
-    }
+}
     fps_numerator = numerator/x;
     fps_denominator = denominator/x;
-  }
+}
   // Test for same colorspace
   bool IsSameColorspace(const VideoInfo& vi) {
     if (vi.pixel_type == pixel_type) return TRUE;
     if (IsYV12() && vi.IsYV12()) return TRUE;
     return FALSE;
-  }
+}
 
 };
 
@@ -253,7 +253,7 @@ enum {
   FILTER_ARGS_DESCRIPTION=10,
   FILTER_DESCRIPTION=11,
 };
-enum {  //SUBTYPES
+enum {//SUBTYPES
   FILTER_TYPE_AUDIO=1,
   FILTER_TYPE_VIDEO=2,
   FILTER_OUTPUT_TYPE_SAME=3,
@@ -285,11 +285,11 @@ public:
   VideoFrameBuffer();
   ~VideoFrameBuffer();
 
-  const BYTE* GetReadPtr() const { return data; }
-  BYTE* GetWritePtr() { ++sequence_number; return data; }
-  int GetDataSize() { return data_size; }
-  int GetSequenceNumber() { return sequence_number; }
-  int GetRefcount() { return refcount; }
+  const BYTE* GetReadPtr() const {return data;}
+  BYTE* GetWritePtr() {++sequence_number; return data;}
+  int GetDataSize() {return data_size;}
+  int GetSequenceNumber() {return sequence_number;}
+  int GetRefcount() {return refcount;}
 };
 
 
@@ -309,8 +309,8 @@ class VideoFrame {
   const int offset, pitch, row_size, height, offsetU, offsetV, pitchUV;  // U&V offsets are from top of picture.
 
   friend class PVideoFrame;
-  void AddRef() { InterlockedIncrement((long *)&refcount); }
-  void Release() { if (refcount==1) InterlockedDecrement(&vfb->refcount); InterlockedDecrement((long *)&refcount); }
+  void AddRef() {InterlockedIncrement((long *)&refcount);}
+  void Release() {if (refcount==1) InterlockedDecrement(&vfb->refcount); InterlockedDecrement((long *)&refcount);}
 
   friend class ScriptEnvironment;
   friend class Cache;
@@ -321,64 +321,64 @@ class VideoFrame {
   void* operator new(unsigned size);
 // TESTME: OFFSET U/V may be switched to what could be expected from AVI standard!
 public:
-  int GetPitch() const { return pitch; }
-  int GetPitch(int plane) const { switch (plane) {case PLANAR_U: case PLANAR_V: return pitchUV;} return pitch; }
-  int GetRowSize() const { return row_size; }
-  int GetRowSize(int plane) const { 
+  int GetPitch() const {return pitch;}
+  int GetPitch(int plane) const {switch (plane) {case PLANAR_U: case PLANAR_V: return pitchUV;} return pitch;}
+  int GetRowSize() const {return row_size;}
+  int GetRowSize(int plane) const {
     switch (plane) {
     case PLANAR_U: case PLANAR_V: if (pitchUV) return row_size>>1; else return 0;
     case PLANAR_U_ALIGNED: case PLANAR_V_ALIGNED: 
-      if (pitchUV) { 
+      if (pitchUV) {
         int r = ((row_size+FRAME_ALIGN-1)&(~(FRAME_ALIGN-1)))>>1; // Aligned rowsize
         if (r<=pitchUV) 
           return r; 
         return row_size>>1; 
-      } else return 0;
+} else return 0;
     case PLANAR_Y_ALIGNED:
       int r = (row_size+FRAME_ALIGN-1)&(~(FRAME_ALIGN-1)); // Aligned rowsize
       if (r<=pitch) 
         return r; 
       return row_size;
-    }
-    return row_size; }
-  int GetHeight() const { return height; }
-  int GetHeight(int plane) const {  switch (plane) {case PLANAR_U: case PLANAR_V: if (pitchUV) return height>>1; return 0;} return height; }
+}
+    return row_size;}
+  int GetHeight() const {return height;}
+  int GetHeight(int plane) const {switch (plane) {case PLANAR_U: case PLANAR_V: if (pitchUV) return height>>1; return 0;} return height;}
 
   // generally you shouldn't use these three
-  VideoFrameBuffer* GetFrameBuffer() const { return vfb; }
-  int GetOffset() const { return offset; }
-  int GetOffset(int plane) const { switch (plane) {case PLANAR_U: return offsetU;case PLANAR_V: return offsetV;default: return offset;}; }
+  VideoFrameBuffer* GetFrameBuffer() const {return vfb;}
+  int GetOffset() const {return offset;}
+  int GetOffset(int plane) const {switch (plane) {case PLANAR_U: return offsetU;case PLANAR_V: return offsetV;default: return offset;};}
 
   // in plugins use env->SubFrame()
   VideoFrame* Subframe(int rel_offset, int new_pitch, int new_row_size, int new_height) const;
   VideoFrame* Subframe(int rel_offset, int new_pitch, int new_row_size, int new_height, int rel_offsetU, int rel_offsetV, int pitchUV) const;
 
 
-  const BYTE* GetReadPtr() const { return vfb->GetReadPtr() + offset; }
-  const BYTE* GetReadPtr(int plane) const { return vfb->GetReadPtr() + GetOffset(plane); }
+  const BYTE* GetReadPtr() const {return vfb->GetReadPtr() + offset;}
+  const BYTE* GetReadPtr(int plane) const {return vfb->GetReadPtr() + GetOffset(plane);}
 
-  bool IsWritable() const { return (refcount == 1 && vfb->refcount == 1); }
+  bool IsWritable() const {return (refcount == 1 && vfb->refcount == 1);}
 
   BYTE* GetWritePtr() const {
     if (vfb->GetRefcount()>1) {
       _ASSERT(FALSE);
       //throw AvisynthError("Internal Error - refcount was more than one!");
-    }
+}
     return IsWritable() ? (vfb->GetWritePtr() + offset) : 0;
-  }
+}
 
   BYTE* GetWritePtr(int plane) const {
     if (plane==PLANAR_Y) {
       if (vfb->GetRefcount()>1) {
         _ASSERT(FALSE);
 //        throw AvisynthError("Internal Error - refcount was more than one!");
-      }
+}
       return IsWritable() ? vfb->GetWritePtr() + GetOffset(plane) : 0;
-    }
+}
     return vfb->data + GetOffset(plane);
-  }
+}
 
-  ~VideoFrame() { InterlockedDecrement(&vfb->refcount); }
+  ~VideoFrame() {InterlockedDecrement(&vfb->refcount);}
 };
 
 enum {
@@ -386,19 +386,19 @@ enum {
   CACHE_RANGE=1,
   CACHE_ALL=2,
   CACHE_AUDIO=3
- };
+};
 
 // Base class for all filters.
 class IClip {
   friend class PClip;
   friend class AVSValue;
   int refcnt;
-  void AddRef() { InterlockedIncrement((long *)&refcnt); }
-  void Release() { InterlockedDecrement((long *)&refcnt); if (!refcnt) delete this; }
+  void AddRef() {InterlockedIncrement((long *)&refcnt);}
+  void Release() {InterlockedDecrement((long *)&refcnt); if (!refcnt) delete this;}
 public:
   IClip() : refcnt(0) {}
 
-  virtual int __stdcall GetVersion() { return AVISYNTH_INTERFACE_VERSION; }
+  virtual int __stdcall GetVersion() {return AVISYNTH_INTERFACE_VERSION;}
   
   virtual PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env) = 0;
   virtual bool __stdcall GetParity(int n) = 0;  // return field parity if field_based, else parity of first field in frame
@@ -414,34 +414,34 @@ class PClip {
 
   IClip* p;
 
-  IClip* GetPointerWithAddRef() const { if (p) p->AddRef(); return p; }
+  IClip* GetPointerWithAddRef() const {if (p) p->AddRef(); return p;}
   friend class AVSValue;
   friend class VideoFrame;
 
   void Init(IClip* x) {
     if (x) x->AddRef();
     p=x;
-  }
+}
   void Set(IClip* x) {
     if (x) x->AddRef();
     if (p) p->Release();
     p=x;
-  }
+}
 
 public:
-  PClip() { p = 0; }
-  PClip(const PClip& x) { Init(x.p); }
-  PClip(IClip* x) { Init(x); }
-  void operator=(IClip* x) { Set(x); }
-  void operator=(const PClip& x) { Set(x.p); }
+  PClip() {p = 0;}
+  PClip(const PClip& x) {Init(x.p);}
+  PClip(IClip* x) {Init(x);}
+  void operator=(IClip* x) {Set(x);}
+  void operator=(const PClip& x) {Set(x.p);}
 
-  IClip* operator->() const { return p; }
+  IClip* operator->() const {return p;}
 
   // useful in conditional expressions
-  operator void*() const { return p; }
-  bool operator!() const { return !p; }
+  operator void*() const {return p;}
+  bool operator!() const {return !p;}
 
-  ~PClip() { if (p) p->Release(); }
+  ~PClip() {if (p) p->Release();}
 };
 
 
@@ -453,78 +453,78 @@ class PVideoFrame {
   void Init(VideoFrame* x) {
     if (x) x->AddRef();
     p=x;
-  }
+}
   void Set(VideoFrame* x) {
     if (x) x->AddRef();
     if (p) p->Release();
     p=x;
-  }
+}
 
 public:
-  PVideoFrame() { p = 0; }
-  PVideoFrame(const PVideoFrame& x) { Init(x.p); }
-  PVideoFrame(VideoFrame* x) { Init(x); }
-  void operator=(VideoFrame* x) { Set(x); }
-  void operator=(const PVideoFrame& x) { Set(x.p); }
+  PVideoFrame() {p = 0;}
+  PVideoFrame(const PVideoFrame& x) {Init(x.p);}
+  PVideoFrame(VideoFrame* x) {Init(x);}
+  void operator=(VideoFrame* x) {Set(x);}
+  void operator=(const PVideoFrame& x) {Set(x.p);}
 
-  VideoFrame* operator->() const { return p; }
+  VideoFrame* operator->() const {return p;}
 
   // for conditional expressions
-  operator void*() const { return p; }
-  bool operator!() const { return !p; }
+  operator void*() const {return p;}
+  bool operator!() const {return !p;}
 
-  ~PVideoFrame() { if (p) p->Release();}
+  ~PVideoFrame() {if (p) p->Release();}
 };
 
 
 class AVSValue {
 public:
 
-  AVSValue() { type = 'v'; }
-  AVSValue(IClip* c) { type = 'c'; clip = c; if (c) c->AddRef(); }
-  AVSValue(const PClip& c) { type = 'c'; clip = c.GetPointerWithAddRef(); }
-  AVSValue(bool b) { type = 'b'; boolean = b; }
-  AVSValue(int i) { type = 'i'; integer = i; }
-//  AVSValue(__int64 l) { type = 'l'; longlong = l; }
-  AVSValue(float f) { type = 'f'; floating_pt = f; }
-  AVSValue(double f) { type = 'f'; floating_pt = float(f); }
-  AVSValue(const char* s) { type = 's'; string = s; }
-  AVSValue(const AVSValue* a, int size) { type = 'a'; array = a; array_size = size; }
-  AVSValue(const AVSValue& v) { Assign(&v, true); }
+  AVSValue() {type = 'v';}
+  AVSValue(IClip* c) {type = 'c'; clip = c; if (c) c->AddRef();}
+  AVSValue(const PClip& c) {type = 'c'; clip = c.GetPointerWithAddRef();}
+  AVSValue(bool b) {type = 'b'; boolean = b;}
+  AVSValue(int i) {type = 'i'; integer = i;}
+//  AVSValue(__int64 l) {type = 'l'; longlong = l;}
+  AVSValue(float f) {type = 'f'; floating_pt = f;}
+  AVSValue(double f) {type = 'f'; floating_pt = float(f);}
+  AVSValue(const char* s) {type = 's'; string = s;}
+  AVSValue(const AVSValue* a, int size) {type = 'a'; array = a; array_size = size;}
+  AVSValue(const AVSValue& v) {Assign(&v, true);}
 
-  ~AVSValue() { if (IsClip() && clip) clip->Release(); }
-  AVSValue& operator=(const AVSValue& v) { Assign(&v, false); return *this; }
+  ~AVSValue() {if (IsClip() && clip) clip->Release();}
+  AVSValue& operator=(const AVSValue& v) {Assign(&v, false); return *this;}
 
   // Note that we transparently allow 'int' to be treated as 'float'.
   // There are no int<->bool conversions, though.
 
-  bool Defined() const { return type != 'v'; }
-  bool IsClip() const { return type == 'c'; }
-  bool IsBool() const { return type == 'b'; }
-  bool IsInt() const { return type == 'i'; }
-//  bool IsLong() const { return (type == 'l'|| type == 'i'); }
-  bool IsFloat() const { return type == 'f' || type == 'i'; }
-  bool IsString() const { return type == 's'; }
-  bool IsArray() const { return type == 'a'; }
+  bool Defined() const {return type != 'v';}
+  bool IsClip() const {return type == 'c';}
+  bool IsBool() const {return type == 'b';}
+  bool IsInt() const {return type == 'i';}
+//  bool IsLong() const {return (type == 'l'|| type == 'i');}
+  bool IsFloat() const {return type == 'f' || type == 'i';}
+  bool IsString() const {return type == 's';}
+  bool IsArray() const {return type == 'a';}
 
-  PClip AsClip() const { _ASSERTE(IsClip()); return IsClip()?clip:0; }
-  bool AsBool() const { _ASSERTE(IsBool()); return boolean; }
-  int AsInt() const { _ASSERTE(IsInt()); return integer; }   
-//  int AsLong() const { _ASSERTE(IsLong()); return longlong; } 
-  const char* AsString() const { _ASSERTE(IsString()); return IsString()?string:0; }
-  double AsFloat() const { _ASSERTE(IsFloat()); return IsInt()?integer:floating_pt; }
+  PClip AsClip() const {_ASSERTE(IsClip()); return IsClip()?clip:0;}
+  bool AsBool() const {_ASSERTE(IsBool()); return boolean;}
+  int AsInt() const {_ASSERTE(IsInt()); return integer;}   
+//  int AsLong() const {_ASSERTE(IsLong()); return longlong;} 
+  const char* AsString() const {_ASSERTE(IsString()); return IsString()?string:0;}
+  double AsFloat() const {_ASSERTE(IsFloat()); return IsInt()?integer:floating_pt;}
 
-  bool AsBool(bool def) const { _ASSERTE(IsBool()||!Defined()); return IsBool() ? boolean : def; }
-  int AsInt(int def) const { _ASSERTE(IsInt()||!Defined()); return IsInt() ? integer : def; }
-  double AsFloat(double def) const { _ASSERTE(IsFloat()||!Defined()); return IsInt() ? integer : type=='f' ? floating_pt : def; }
-  const char* AsString(const char* def) const { _ASSERTE(IsString()||!Defined()); return IsString() ? string : def; }
+  bool AsBool(bool def) const {_ASSERTE(IsBool()||!Defined()); return IsBool() ? boolean : def;}
+  int AsInt(int def) const {_ASSERTE(IsInt()||!Defined()); return IsInt() ? integer : def;}
+  double AsFloat(double def) const {_ASSERTE(IsFloat()||!Defined()); return IsInt() ? integer : type=='f' ? floating_pt : def;}
+  const char* AsString(const char* def) const {_ASSERTE(IsString()||!Defined()); return IsString() ? string : def;}
 
-  int ArraySize() const { _ASSERTE(IsArray()); return IsArray()?array_size:1; }
+  int ArraySize() const {_ASSERTE(IsArray()); return IsArray()?array_size:1;}
 
   const AVSValue& operator[](int index) const {
     _ASSERTE(IsArray() && index>=0 && index<array_size);
     return (IsArray() && index>=0 && index<array_size) ? array[index] : *this;
-  }
+}
 
 private:
 
@@ -538,7 +538,7 @@ private:
     const char* string;
     const AVSValue* array;
 //    __int64 longlong;
-  };
+};
 
   void Assign(const AVSValue* src, bool init) {
     if (src->IsClip() && src->clip)
@@ -548,7 +548,7 @@ private:
     // make sure this copies the whole struct!
     ((__int32*)this)[0] = ((__int32*)src)[0];
     ((__int32*)this)[1] = ((__int32*)src)[1];
-  }
+}
 };
 
 
@@ -558,12 +558,12 @@ protected:
   PClip child;
   VideoInfo vi;
 public:
-  GenericVideoFilter(PClip _child) : child(_child) { vi = child->GetVideoInfo(); }
-  PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env) { return child->GetFrame(n, env); }
-  void __stdcall GetAudio(void* buf, __int64 start, __int64 count, IScriptEnvironment* env) { child->GetAudio(buf, start, count, env); }
-  const VideoInfo& __stdcall GetVideoInfo() { return vi; }
-  bool __stdcall GetParity(int n) { return child->GetParity(n); }
-  void __stdcall SetCacheHints(int cachehints,int frame_range) { } ;  // We do not pass cache requests upwards, only to the next filter.
+  GenericVideoFilter(PClip _child) : child(_child) {vi = child->GetVideoInfo();}
+  PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env) {return child->GetFrame(n, env);}
+  void __stdcall GetAudio(void* buf, __int64 start, __int64 count, IScriptEnvironment* env) {child->GetAudio(buf, start, count, env);}
+  const VideoInfo& __stdcall GetVideoInfo() {return vi;}
+  bool __stdcall GetParity(int n) {return child->GetParity(n);}
+  void __stdcall SetCacheHints(int cachehints,int frame_range) {} ;  // We do not pass cache requests upwards, only to the next filter.
 };
 
 
@@ -634,7 +634,7 @@ private:
 
 
 // For GetCPUFlags.  These are backwards-compatible with those in VirtualDub.
-enum {                    
+enum {
                     /* slowest CPU to support extension */
   CPUF_FORCE			  = 0x01,   // N/A
   CPUF_FPU			    = 0x02,   // 386/486DX

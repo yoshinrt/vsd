@@ -1,10 +1,10 @@
 #!/usr/bin/perl -w
 
-$ENV{ 'PATH' } = "$ENV{ 'HOME' }/bin:" . $ENV{ 'PATH' };
+$ENV{'PATH'} = "$ENV{'HOME'}/bin:" . $ENV{'PATH'};
 
-$OutputFile = $ARGV[ 0 ];
+$OutputFile = $ARGV[0];
 
-open( fpOut, "> $OutputFile" );
+open(fpOut, "> $OutputFile");
 
 print fpOut << "-----";
 \xEF\xBB\xBF/*****************************************************************************
@@ -27,28 +27,28 @@ class CScriptIFBase {
   public:
 	// this へのアクセスヘルパ
 	template<typename T>
-	static T* GetThis( Local<Object> handle ){
-		if( handle->GetInternalField( 0 )->IsUndefined()){
-			JsTypeError( "Object is undefined" );
+	static T* GetThis(Local<Object> handle){
+		if(handle->GetInternalField(0)->IsUndefined()){
+			JsTypeError("Object is undefined");
 			return NULL;
 		}
 		
-		void* pThis = Local<External>::Cast( handle->GetInternalField( 0 ))->Value();
-		return static_cast<T*>( pThis );
+		void* pThis = Local<External>::Cast(handle->GetInternalField(0))->Value();
+		return static_cast<T*>(pThis);
 	}
 	
 	// 引数の数チェック
-	static BOOL CheckArgs( BOOL cond ){
-		if( !( cond )){
+	static BOOL CheckArgs(BOOL cond){
+		if(!(cond)){
 			JsErrorNumOfArg();
 			return TRUE;
 		}
 		return FALSE;
 	}
 	
-	static BOOL CheckClass( Local<Object> obj, const char *name, const char *msg ){
-		if( strcmp( *( String::Utf8Value )( obj->GetConstructorName()), name )){
-			JsTypeError( msg );
+	static BOOL CheckClass(Local<Object> obj, const char *name, const char *msg){
+		if(strcmp(*(String::Utf8Value)(obj->GetConstructorName()), name)){
+			JsTypeError(msg);
 			return TRUE;
 		}
 		return FALSE;
@@ -64,103 +64,103 @@ MakeJsIF({
 	JsClass		=> '__VSD_System__',
 	NewObject	=> << '-----',
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 1 )) return;
+		if(CheckArgs(iLen == 1)) return;
 		
-		CVsdFilter *pC_obj = static_cast<CVsdFilter *>( Local<External>::Cast( args[ 0 ] )->Value());
-		if( !pC_obj ){
-			JsError( ERR_NOT_ENOUGH_MEMORY );
+		CVsdFilter *pC_obj = static_cast<CVsdFilter *>(Local<External>::Cast(args[0])->Value());
+		if(!pC_obj){
+			JsError(ERR_NOT_ENOUGH_MEMORY);
 			return;
 		}
 -----
 	FunctionIF	=> << '-----',
 	/*** DrawArc ****************************************************************/
 	
-	static void Func_DrawArc( const FunctionCallbackInfo<Value>& args ){
+	static void Func_DrawArc(const FunctionCallbackInfo<Value>& args){
 		int iLen = args.Length();
-		if( CheckArgs( 7 <= iLen && iLen <= 9 )) return;
+		if(CheckArgs(7 <= iLen && iLen <= 9)) return;
 		
-		CVsdFilter *C_obj = GetThis<CVsdFilter>( args.This());
-		if( !C_obj ) return;
+		CVsdFilter *C_obj = GetThis<CVsdFilter>(args.This());
+		if(!C_obj) return;
 		
-		if( iLen >= 9 ){
+		if(iLen >= 9){
 			C_obj->DrawArc(
-				args[ 0 ]->Int32Value(),
-				args[ 1 ]->Int32Value(),
-				args[ 2 ]->Int32Value(),
-				args[ 3 ]->Int32Value(),
-				args[ 4 ]->Int32Value(),
-				args[ 5 ]->Int32Value(),
-				args[ 6 ]->NumberValue(),
-				args[ 7 ]->NumberValue(),
-				CPixel( args[ 8 ]->Int32Value())
+				args[0]->Int32Value(),
+				args[1]->Int32Value(),
+				args[2]->Int32Value(),
+				args[3]->Int32Value(),
+				args[4]->Int32Value(),
+				args[5]->Int32Value(),
+				args[6]->NumberValue(),
+				args[7]->NumberValue(),
+				CPixel(args[8]->Int32Value())
 			);
 		}else{
 			C_obj->DrawArc(
-				args[ 0 ]->Int32Value(),
-				args[ 1 ]->Int32Value(),
-				args[ 2 ]->Int32Value(),
-				args[ 3 ]->Int32Value(),
-				args[ 4 ]->NumberValue(),
-				args[ 5 ]->NumberValue(),
-				CPixel( args[ 6 ]->Int32Value()),
-				iLen <= 7 ? 0 : args[ 7 ]->Int32Value()
+				args[0]->Int32Value(),
+				args[1]->Int32Value(),
+				args[2]->Int32Value(),
+				args[3]->Int32Value(),
+				args[4]->NumberValue(),
+				args[5]->NumberValue(),
+				CPixel(args[6]->Int32Value()),
+				iLen <= 7 ? 0 : args[7]->Int32Value()
 			);
 		}
 	}
 	
-	static void Func_DrawMap( const FunctionCallbackInfo<Value>& args ){
+	static void Func_DrawMap(const FunctionCallbackInfo<Value>& args){
 		int iLen = args.Length();
 		
-		CVsdFilter *C_obj = GetThis<CVsdFilter>( args.This());
-		UINT uFlag = args[ 4 ]->Int32Value();
+		CVsdFilter *C_obj = GetThis<CVsdFilter>(args.This());
+		UINT uFlag = args[4]->Int32Value();
 		
-		if( uFlag & CVsdFilter::IMG_LOADMAP ){
-			if( CheckArgs( 8 == iLen )) return;
+		if(uFlag & CVsdFilter::IMG_LOADMAP){
+			if(CheckArgs(8 == iLen)) return;
 			
-			if( !C_obj ) return;
+			if(!C_obj) return;
 			C_obj->DrawMap(
-				args[ 0 ]->Int32Value(),
-				args[ 1 ]->Int32Value(),
-				args[ 2 ]->Int32Value(),
-				args[ 3 ]->Int32Value(),
-				args[ 5 ]->Int32Value(),
-				args[ 6 ]->Int32Value(),
-				CPixel( args[ 7 ]->Int32Value())
+				args[0]->Int32Value(),
+				args[1]->Int32Value(),
+				args[2]->Int32Value(),
+				args[3]->Int32Value(),
+				args[5]->Int32Value(),
+				args[6]->Int32Value(),
+				CPixel(args[7]->Int32Value())
 			);
 		}else{
-			if( CheckArgs( 11 <= iLen && iLen <= 12 )) return;
+			if(CheckArgs(11 <= iLen && iLen <= 12)) return;
 			
-			if( !C_obj ) return;
+			if(!C_obj) return;
 			C_obj->DrawMap(
-				args[ 0 ]->Int32Value(),
-				args[ 1 ]->Int32Value(),
-				args[ 2 ]->Int32Value(),
-				args[ 3 ]->Int32Value(),
-				args[ 4 ]->Int32Value(),
-				args[ 5 ]->Int32Value(),
-				args[ 6 ]->Int32Value(),
-				CPixel( args[ 7 ]->Int32Value()),
-				CPixel( args[ 8 ]->Int32Value()),
-				CPixel( args[ 9 ]->Int32Value()),
-				CPixel( args[ 10 ]->Int32Value()),
-				iLen <= 11 ? INVALID_INT : args[ 11 ]->Int32Value()
+				args[0]->Int32Value(),
+				args[1]->Int32Value(),
+				args[2]->Int32Value(),
+				args[3]->Int32Value(),
+				args[4]->Int32Value(),
+				args[5]->Int32Value(),
+				args[6]->Int32Value(),
+				CPixel(args[7]->Int32Value()),
+				CPixel(args[8]->Int32Value()),
+				CPixel(args[9]->Int32Value()),
+				CPixel(args[10]->Int32Value()),
+				iLen <= 11 ? INVALID_INT : args[11]->Int32Value()
 			);
 		}
 	}
 	
 	/*** ログデータ取得用 *******************************************************/
 	
-	#define DEF_LOG( name ) \
-		static void Get_##name( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){ \
-			CVsdFilter *pC_obj = GetThis<CVsdFilter>( info.Holder()); \
-			if( pC_obj ) info.GetReturnValue().Set( pC_obj->Get##name()); \
+	#define DEF_LOG(name) \
+		static void Get_##name(Local<String> propertyName, const PropertyCallbackInfo<Value>& info){\
+			CVsdFilter *pC_obj = GetThis<CVsdFilter>(info.Holder()); \
+			if(pC_obj) info.GetReturnValue().Set(pC_obj->Get##name()); \
 		}
 	#include "def_log.h"
 	
-	static void Get_Value( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){
-		CVsdFilter *pC_obj = GetThis<CVsdFilter>( info.Holder());
-		String::Utf8Value str( propertyName );
-		if( pC_obj ) pC_obj->GetValue( info.GetReturnValue(), *str ); \
+	static void Get_Value(Local<String> propertyName, const PropertyCallbackInfo<Value>& info){
+		CVsdFilter *pC_obj = GetThis<CVsdFilter>(info.Holder());
+		String::Utf8Value str(propertyName);
+		if(pC_obj) pC_obj->GetValue(info.GetReturnValue(), *str); \
 	}
 -----
 });
@@ -173,16 +173,16 @@ MakeJsIF({
 	JsClass		=> '__VSD_SystemLog__',
 	NewObject	=> << '-----',
 		int iLen = args.Length();
-		if( CheckArgs( iLen == 1 )) return;
+		if(CheckArgs(iLen == 1)) return;
 		
-		CVsdFilterLog *pC_obj = static_cast<CVsdFilterLog *>( Local<External>::Cast( args[ 0 ] )->Value());
-		if( !pC_obj ){
-			JsError( ERR_NOT_ENOUGH_MEMORY );
+		CVsdFilterLog *pC_obj = static_cast<CVsdFilterLog *>(Local<External>::Cast(args[0])->Value());
+		if(!pC_obj){
+			JsError(ERR_NOT_ENOUGH_MEMORY);
 			return;
 		}
 -----
 	ExtraNew	=> << '-----',
-		pC_obj->AddLogAccessor( thisObject );
+		pC_obj->AddLogAccessor(thisObject);
 -----
 });
 
@@ -192,36 +192,36 @@ MakeJsIF({
 	Class		=> 'CVsdImage',
 	NewObject	=> << '-----',
 		// 引数チェック
-		if ( args.Length() <= 0 ){
+		if (args.Length() <= 0){
 			JsErrorNumOfArg();
 			return;
 		}
 		
 		CVsdImage* pC_obj;
 		
-		// arg[ 0 ] が Image だった場合，そのコピーを作る
-		if( args[ 0 ]->IsObject()){
-			Local<Object> Image0 = args[ 0 ]->ToObject();
-			if( strcmp( *( String::Utf8Value )( Image0->GetConstructorName()), "Image" ) == 0 ){
-				CVsdImage *obj0 = GetThis<CVsdImage>( Image0 );
-				if( !obj0 ) return;
+		// arg[0] が Image だった場合，そのコピーを作る
+		if(args[0]->IsObject()){
+			Local<Object> Image0 = args[0]->ToObject();
+			if(strcmp(*(String::Utf8Value)(Image0->GetConstructorName()), "Image") == 0){
+				CVsdImage *obj0 = GetThis<CVsdImage>(Image0);
+				if(!obj0) return;
 				
-				pC_obj = new CVsdImage( *obj0 );
+				pC_obj = new CVsdImage(*obj0);
 			}else{
-				JsTypeError( "arg[ 0 ] must be Image or string" );
+				JsTypeError("arg[0] must be Image or string");
 				return;
 			}
 		}else{
 			// ファイル名指定で画像ロード
 			pC_obj = new CVsdImage();
-			String::Value FileName( args[ 0 ] );
+			String::Value FileName(args[0]);
 			
 			UINT uRet = pC_obj->Load(
-				( LPCWSTR )*FileName,
-				args.Length() <= 1 ? 0 : args[ 1 ]->Int32Value()
+				(LPCWSTR)*FileName,
+				args.Length() <= 1 ? 0 : args[1]->Int32Value()
 			);
-			if( uRet != ERR_OK ){
-				JsError( uRet );
+			if(uRet != ERR_OK){
+				JsError(uRet);
 				delete pC_obj;
 				return;
 			}
@@ -238,16 +238,16 @@ MakeJsIF({
 	Class		=> 'CVsdFont',
 	NewObject	=> << '-----'
 		// 引数チェック
-		if ( args.Length() < 2 ){
+		if (args.Length() < 2){
 			JsErrorNumOfArg();
 			return;
 		}
 		
-		String::Value FontName( args[ 0 ] );
+		String::Value FontName(args[0]);
 		CVsdFont *pC_obj = new CVsdFont(
-			( LPCWSTR )*FontName,
-			args[ 1 ]->Int32Value(),
-			args.Length() <= 2 ? 0 : args[ 2 ]->Int32Value()
+			(LPCWSTR)*FontName,
+			args[1]->Int32Value(),
+			args.Length() <= 2 ? 0 : args[2]->Int32Value()
 		);
 -----
 });
@@ -267,22 +267,22 @@ MakeJsIF({
 		COle *pC_obj = new COle();
 		
 		// 引数チェック
-		if( args.Length() >= 1 ){
-			String::Value strServer( args[ 0 ]);
+		if(args.Length() >= 1){
+			String::Value strServer(args[0]);
 			
-			UINT uRet = pC_obj->CreateInstance(( LPCWSTR )*strServer );
-			if( uRet != ERR_OK ){
-				JsError( uRet );
+			UINT uRet = pC_obj->CreateInstance((LPCWSTR)*strServer);
+			if(uRet != ERR_OK){
+				JsError(uRet);
 				delete pC_obj;
 				return;
 			}
 		}
 -----
 	ExtraInit	=> << '-----',
-		COle::InitJS( tmpl );
+		COle::InitJS(tmpl);
 -----
 	ExtraNew	=> << '-----'
-		if( args.Length() >= 1 ) pC_obj->AddOLEFunction( thisObject );
+		if(args.Length() >= 1) pC_obj->AddOLEFunction(thisObject);
 -----
 });
 
@@ -296,27 +296,27 @@ MakeJsIF({
 ##############################################################################
 
 sub MakeJsIF {
-	my( $param ) = @_;
+	my($param) = @_;
 	
-	$param->{ NewObject } = << "-----" if( !defined( $param->{ NewObject } ));
-		$param->{ Class } *pC_obj = new $param->{ Class }();
+	$param->{NewObject} = << "-----" if(!defined($param->{NewObject}));
+		$param->{Class} *pC_obj = new $param->{Class}();
 -----
 	
-	$param->{ bGlobal }		= $param->{ Class } eq 'CScript' ? 1 : 0;
-	$param->{ FunctionIF }	= '' if( !defined( $param->{ FunctionIF } ));
-	$param->{ ExtraInit }	= '' if( !defined( $param->{ ExtraInit } ));
-	$param->{ ExtraNew }	= '' if( !defined( $param->{ ExtraNew } ));
+	$param->{bGlobal}		= $param->{Class} eq 'CScript' ? 1 : 0;
+	$param->{FunctionIF}	= '' if(!defined($param->{FunctionIF}));
+	$param->{ExtraInit}	= '' if(!defined($param->{ExtraInit}));
+	$param->{ExtraNew}	= '' if(!defined($param->{ExtraNew}));
 	
-	if( defined( $param->{ Dispose })){
+	if(defined($param->{Dispose})){
 		$UseCustomDispose = 1;
 	}else{
-		$param->{ Dispose } = '';
+		$param->{Dispose} = '';
 		$UseCustomDispose = 0;
 	}
 	
-	if( !defined( $param->{ 'JsClass' })){
-		$param->{ 'Class' }		=~ /^CVsd(.+)/;
-		$param->{ 'JsClass' }	= $1;
+	if(!defined($param->{'JsClass'})){
+		$param->{'Class'}		=~ /^CVsd(.+)/;
+		$param->{'JsClass'}	= $1;
 	}
 	
 	$Accessor	= '';
@@ -324,15 +324,15 @@ sub MakeJsIF {
 	$Function	= '';
 	$Const	= '';
 	
-	$UseDestructor = $param->{ NoDestructor } ? '0' : '1';
+	$UseDestructor = $param->{NoDestructor} ? '0' : '1';
 	
-	open( fpIn,	"< $param->{ Class }.h" );
-	while( <fpIn> ){
-		if( /!js_func\b/ ){
+	open(fpIn,	"< $param->{Class}.h");
+	while(<fpIn>){
+		if(/!js_func\b/){
 			
 			# 関数名
 			/(\S+)\s+\*?([\w_][\w_\d]*)\s*\(/;
-			( $RetType, $FuncName ) = ( $1, $2 );
+			($RetType, $FuncName) = ($1, $2);
 			
 			$NoArgNumCheck = '';
 			$ArgNum = 0;
@@ -343,11 +343,11 @@ sub MakeJsIF {
 			
 			$Line = $_;
 			
-			# 引数， ); まで読み込む
-			if( $Line !~ /\)(?:\s*=\s*0\s*)?;/ ){
-				while( <fpIn> ){
+			# 引数，); まで読み込む
+			if($Line !~ /\)(?:\s*=\s*0\s*)?;/){
+				while(<fpIn>){
 					$Line .= $_;
-					last if( $Line =~ /\)(?:\s*=\s*0\s*)?;/ );
+					last if($Line =~ /\)(?:\s*=\s*0\s*)?;/);
 				}
 			}
 			
@@ -359,79 +359,79 @@ sub MakeJsIF {
 			s/,\s*/\n/g;
 			s#\n\s*//# //#g;
 			
-			@Line = split( /\n/, $_ );
+			@Line = split(/\n/, $_);
 			
-			foreach $_ ( @Line ){
+			foreach $_ (@Line){
 				/(\S+)/;	# 型
 				$Type = $1;
 				
 				$Default = /!default:(\S+)/ ? $1 : undef;
 				$ArgPos  = /!arg:(\d+)/ ? $1 : $ArgNum;
 				
-				if( $Type =~ /^CVsd(.+)/ ){
+				if($Type =~ /^CVsd(.+)/){
 					$_ = $1;
 					
 					$ArgPos_p1 = $ArgPos + 1;
-					push( @Defs, "Local<Object> $_$ArgNum = args[ $ArgPos ]->ToObject();" );
-					push( @Defs, "if( CheckClass( $_$ArgNum, \"$_\", \"arg[ $ArgPos_p1 ] must be $_\" )) return;" );
-					push( @Defs, "$Type *obj$ArgNum = GetThis<$Type>( $_$ArgNum );" );
-					push( @Defs, "if( !obj$ArgNum ) return;" );
-					$Args[ $ArgNum + $HiddenArg ] = "*obj$ArgNum";
+					push(@Defs, "Local<Object> $_$ArgNum = args[$ArgPos]->ToObject();");
+					push(@Defs, "if(CheckClass($_$ArgNum, \"$_\", \"arg[$ArgPos_p1] must be $_\")) return;");
+					push(@Defs, "$Type *obj$ArgNum = GetThis<$Type>($_$ArgNum);");
+					push(@Defs, "if(!obj$ArgNum) return;");
+					$Args[$ArgNum + $HiddenArg] = "*obj$ArgNum";
 				}
 				
-				elsif( $Type eq 'char' ){
+				elsif($Type eq 'char'){
 					# string 型
-					push( @Defs, "String::Utf8Value str$ArgNum( args[ $ArgPos ] );" );
-					$Args[ $ArgNum + $HiddenArg ] = "*str$ArgNum";
+					push(@Defs, "String::Utf8Value str$ArgNum(args[$ArgPos]);");
+					$Args[$ArgNum + $HiddenArg] = "*str$ArgNum";
 				}
 				
-				elsif( $Type =~ /^LPC?WSTR$/ ){
+				elsif($Type =~ /^LPC?WSTR$/){
 					# WCHAR string 型
-					push( @Defs, "String::Value str$ArgNum( args[ $ArgPos ] );" );
-					$Args[ $ArgNum + $HiddenArg ] = "( $Type )*str$ArgNum";
+					push(@Defs, "String::Value str$ArgNum(args[$ArgPos]);");
+					$Args[$ArgNum + $HiddenArg] = "($Type)*str$ArgNum";
 				}
 				
-				elsif( $Type eq 'double' ){
-					$Args[ $ArgNum + $HiddenArg ] = "args[ $ArgPos ]->NumberValue()";
+				elsif($Type eq 'double'){
+					$Args[$ArgNum + $HiddenArg] = "args[$ArgPos]->NumberValue()";
 				}
 				
-				elsif( $Type eq 'int' || $Type eq 'UINT' ){
+				elsif($Type eq 'int' || $Type eq 'UINT'){
 					# int/UINT 型
-					$Args[ $ArgNum + $HiddenArg ] = "args[ $ArgPos ]->Int32Value()";
+					$Args[$ArgNum + $HiddenArg] = "args[$ArgPos]->Int32Value()";
 				}
 				
-				elsif( $Type eq 'CPixelArg' ){
+				elsif($Type eq 'CPixelArg'){
 					# (・∀・)ラヴィ!!
-					$Args[ $ArgNum + $HiddenArg ] = "CPixel( args[ $ArgPos ]->Int32Value())";
+					$Args[$ArgNum + $HiddenArg] = "CPixel(args[$ArgPos]->Int32Value())";
 				}
 				
-				elsif( $Type eq 'v8Array' ){
+				elsif($Type eq 'v8Array'){
 					# V8 array object 
-					$Args[ $ArgNum + $HiddenArg ] = "Local<Array>::Cast( args[ $ArgPos ] )";
+					$Args[$ArgNum + $HiddenArg] = "Local<Array>::Cast(args[$ArgPos])";
 				}
 				
-				elsif( $Type eq 'FunctionCallbackInfo<Value>&' ){
-					$Args[ $ArgNum + $HiddenArg ] = 'args';
+				elsif($Type eq 'FunctionCallbackInfo<Value>&'){
+					$Args[$ArgNum + $HiddenArg] = 'args';
 					$NoArgNumCheck = '//';
 				}
 				
-				elsif( $Type eq 'ReturnValue<Value>' ){
-					$Args[ $ArgNum + $HiddenArg ] = 'args.GetReturnValue()';
+				elsif($Type eq 'ReturnValue<Value>'){
+					$Args[$ArgNum + $HiddenArg] = 'args.GetReturnValue()';
 					++$HiddenArg;
 					--$ArgMin;
 					--$ArgNum;
 				}
 				
-				elsif( $Type eq 'void' ){
+				elsif($Type eq 'void'){
 					next;
 				}
 				
 				else{
-					$Args[ $ArgNum + $HiddenArg ] = "????";
+					$Args[$ArgNum + $HiddenArg] = "????";
 				}
 				
-				if( defined( $Default )){
-					$Args[ $ArgNum + $HiddenArg ] = "iLen <= $ArgPos ? $Default : $Args[ $ArgNum + $HiddenArg ]";
+				if(defined($Default)){
+					$Args[$ArgNum + $HiddenArg] = "iLen <= $ArgPos ? $Default : $Args[$ArgNum + $HiddenArg]";
 				}else{
 					++$ArgMin;
 				}
@@ -439,18 +439,18 @@ sub MakeJsIF {
 				++$ArgNum;
 			}
 			
-			$Defs = join( "\n\t\t", @Defs );
-			$Args = join( ",\n\t\t\t", @Args );
-			$Args = "\n\t\t\t$Args\n\t\t" if( $Args ne '' );
+			$Defs = join("\n\t\t", @Defs);
+			$Args = join(",\n\t\t\t", @Args);
+			$Args = "\n\t\t\t$Args\n\t\t" if($Args ne '');
 			
 			$Len = $ArgMin == $ArgNum ?
 				"iLen == $ArgNum" : "$ArgMin <= iLen && iLen <= $ArgNum";
 			
- 			$PreRet		= 'args.GetReturnValue().Set( ';
+ 			$PreRet		= 'args.GetReturnValue().Set(';
 			$PostRet	= '));';
 			
 			# 返り値
-			if( $RetType eq 'void' ){
+			if($RetType eq 'void'){
 				$PreRet		= '';
 				$PostRet	= ';';
 			}
@@ -462,12 +462,12 @@ sub MakeJsIF {
 				$PreRet		.= "(";
 			}
 			
-			elsif( $RetType eq 'char' ){
-				$PreRet		.= "String::NewFromOneByte( args.GetIsolate(), ( uint8_t *)";
+			elsif($RetType eq 'char'){
+				$PreRet		.= "String::NewFromOneByte(args.GetIsolate(), (uint8_t *)";
 			}
 			
-			elsif( $RetType	=~ /^LPC?WSTR$/ ){
-				$PreRet		.= "String::NewFromTwoByte( args.GetIsolate(), ( uint16_t *)";
+			elsif($RetType	=~ /^LPC?WSTR$/){
+				$PreRet		.= "String::NewFromTwoByte(args.GetIsolate(), (uint16_t *)";
 			}
 			
 			else{
@@ -475,20 +475,20 @@ sub MakeJsIF {
 				$PostRet	= " unknown type:$RetType	= ";
 			}
 #-----
-			$GetThis = $param->{ bGlobal } ? 'CScript::GetCScript' : "GetThis<$param->{ Class }>";
-			$param->{ FunctionIF } .= << "-----";
-	static void Func_$FuncName( const FunctionCallbackInfo<Value>& args ){
+			$GetThis = $param->{bGlobal} ? 'CScript::GetCScript' : "GetThis<$param->{Class}>";
+			$param->{FunctionIF} .= << "-----";
+	static void Func_$FuncName(const FunctionCallbackInfo<Value>& args){
 		${NoArgNumCheck}int iLen = args.Length();
-		${NoArgNumCheck}if( CheckArgs( $Len )) return;
+		${NoArgNumCheck}if(CheckArgs($Len)) return;
 		$Defs
-		$param->{ Class } *C_obj = $GetThis( args.This());
-		if( !C_obj ) return;
+		$param->{Class} *C_obj = $GetThis(args.This());
+		if(!C_obj) return;
 		${PreRet}C_obj->$FuncName($Args)$PostRet
 	}
 -----
 		}
 		
-		elsif( /!js_var:(\w+)/ ){
+		elsif(/!js_var:(\w+)/){
 			$JSvar = $1;
 			
 			s/[\x0D\x0A]//g;
@@ -503,25 +503,25 @@ sub MakeJsIF {
 			$Ret =
 				/\b(?:int|UINT|double|Handle|Local)\b/
 									? "pC_obj->$RealVar" :
-				/\bchar\b/			? "String::NewFromOneByte( info.GetIsolate(), ( uint8_t *)pC_obj->$RealVar )" :
-				/\bLPC?WSTR\b/		? "String::NewFromTwoByte( info.GetIsolate(), ( uint16_t *)pC_obj->$RealVar )" :
+				/\bchar\b/			? "String::NewFromOneByte(info.GetIsolate(), (uint8_t *)pC_obj->$RealVar)" :
+				/\bLPC?WSTR\b/		? "String::NewFromTwoByte(info.GetIsolate(), (uint16_t *)pC_obj->$RealVar)" :
 									  "unknown ret type:$_ pC_obj->$RealVar";
 			
-			if( /\bvoid\b/ ){
+			if(/\bvoid\b/){
 				$Ret = "pC_obj->$RealVar";
 			}else{
-				$Ret = "info.GetReturnValue().Set( $Ret )";
+				$Ret = "info.GetReturnValue().Set($Ret)";
 			}
 #-----
 			$AccessorIF .= << "-----";
-	static void Get_$JSvar( Local<String> propertyName, const PropertyCallbackInfo<Value>& info ){
-		$param->{ Class } *pC_obj = GetThis<$param->{ Class }>( info.Holder());
-		if( pC_obj ) $Ret;
+	static void Get_$JSvar(Local<String> propertyName, const PropertyCallbackInfo<Value>& info){
+		$param->{Class} *pC_obj = GetThis<$param->{Class}>(info.Holder());
+		if(pC_obj) $Ret;
 	}
 -----
 		}
 		
-		elsif( /!js_const:(\w+)/ ){
+		elsif(/!js_const:(\w+)/){
 			# CVsdFilter 専用
 			$JSvar = $1;
 			
@@ -533,81 +533,81 @@ sub MakeJsIF {
 			$RealVar = $1;
 			
 			$Type =
-				/\b(?:int|UINT)\b/	? "Int32::New( pIsolate, " :
-				/\bdouble\b/		? "Number::New( pIsolate, " :
-				/\bchar\b/			? "String::NewFromOneByte( pIsolate, ( uint8_t *)" :
-				/\bLPC?WSTR\b/		? "String::NewFromTwoByte( pIsolate, ( uint16_t *)" :
+				/\b(?:int|UINT)\b/	? "Int32::New(pIsolate, " :
+				/\bdouble\b/		? "Number::New(pIsolate, " :
+				/\bchar\b/			? "String::NewFromOneByte(pIsolate, (uint8_t *)" :
+				/\bLPC?WSTR\b/		? "String::NewFromTwoByte(pIsolate, (uint16_t *)" :
 									  "???";
 #-----
 			$Const .= << "-----";
-		proto->Set( String::NewFromOneByte( pIsolate, ( uint8_t *)"$JSvar" ), ${Type}(( $param->{ Class } *)pClass )->$RealVar ));
+		proto->Set(String::NewFromOneByte(pIsolate, (uint8_t *)"$JSvar"), ${Type}(($param->{Class} *)pClass)->$RealVar));
 -----
 		}
 	}
-	close( fpIn );
+	close(fpIn);
 	
-	$AccessorIF =~ s/Get_(\w+)/AddAccessor( $1, $param->{ Class } )/ge;
-	$param->{ FunctionIF } =~ s/Func_(\w+)/AddFunction( $1, $param->{ Class } )/ge;
+	$AccessorIF =~ s/Get_(\w+)/AddAccessor($1, $param->{Class})/ge;
+	$param->{FunctionIF} =~ s/Func_(\w+)/AddFunction($1, $param->{Class})/ge;
 	
 	print fpOut << "-----";
 /****************************************************************************/
 
-class $param->{ Class }IF : CScriptIFBase {
+class $param->{Class}IF : CScriptIFBase {
   public:
-#if !$param->{ bGlobal }
+#if !$param->{bGlobal}
 	// クラスコンストラクタ
-	static void New( const FunctionCallbackInfo<Value>& args ){
-		HandleScope handle_scope( args.GetIsolate());
+	static void New(const FunctionCallbackInfo<Value>& args){
+		HandleScope handle_scope(args.GetIsolate());
 		
-$param->{ NewObject }
+$param->{NewObject}
 		// internal field にバックエンドオブジェクトを設定
 		Local<Object> thisObject = args.This();
-		thisObject->SetInternalField( 0, External::New( args.GetIsolate(), pC_obj ));
+		thisObject->SetInternalField(0, External::New(args.GetIsolate(), pC_obj));
 		
 		#if $UseDestructor
 			// JS オブジェクトが GC されるときにデストラクタが呼ばれるおまじない
-			pC_obj->m_pHolder = new Persistent<Object>( args.GetIsolate(), thisObject );
-			pC_obj->m_pHolder->SetWeak( pC_obj, Dispose );
+			pC_obj->m_pHolder = new Persistent<Object>(args.GetIsolate(), thisObject);
+			pC_obj->m_pHolder->SetWeak(pC_obj, Dispose);
 		#endif
 		
-$param->{ ExtraNew }
+$param->{ExtraNew}
 		#ifdef DEBUG
-			DebugMsgD( ">>>new js obj $param->{ Class }:%X\\n", pC_obj );
+			DebugMsgD(">>>new js obj $param->{Class}:%X\\n", pC_obj);
 		#endif
 	}
 	
 	// クラスデストラクタ
 	#if $UseDestructor
-		static void Dispose( const WeakCallbackData<Object, $param->{ Class }> &data ){
-			$param->{ Class } *pC_obj = data.GetParameter();
+		static void Dispose(const WeakCallbackData<Object, $param->{Class}> &data){
+			$param->{Class} *pC_obj = data.GetParameter();
 			
 			//release instance. は delete c_Obj で自動的にやる
 			//pC_obj->m_Holder->Reset();
 			
 			delete pC_obj;
-			DebugMsgD( "<<<del by WeakCallback $param->{ Class }:%X\\n", pC_obj );
+			DebugMsgD("<<<del by WeakCallback $param->{Class}:%X\\n", pC_obj);
 		}
 	#endif
 	
 	// JavaScript からの明示的な破棄
-	static void Func_Dispose( const FunctionCallbackInfo<Value>& args ){
+	static void Func_Dispose(const FunctionCallbackInfo<Value>& args){
 		// pC_obj の Dispose() を呼ぶ
 		#if $UseDestructor
-			$param->{ Class } *C_obj = GetThis<$param->{ Class }>( args.This());
-			if( C_obj ){
+			$param->{Class} *C_obj = GetThis<$param->{Class}>(args.This());
+			if(C_obj){
 				
 				#if $UseCustomDispose
-$param->{ Dispose }
+$param->{Dispose}
 				#else
 					delete C_obj;
 				#endif
 				
 				#ifdef DEBUG
-					DebugMsgD( "<<<Dispose() js obj $param->{ Class }:%X\\n", C_obj );
+					DebugMsgD("<<<Dispose() js obj $param->{Class}:%X\\n", C_obj);
 				#endif
 				
 				// internalfield を null っぽくする
-				args.This()->SetInternalField( 0, External::New( args.GetIsolate(), NULL ));
+				args.This()->SetInternalField(0, External::New(args.GetIsolate(), NULL));
 			}
 		#endif
 	}
@@ -616,37 +616,37 @@ $param->{ Dispose }
 	///// プロパティアクセサ /////
 $AccessorIF
 	///// メソッドコールバック /////
-$param->{ FunctionIF }
+$param->{FunctionIF}
   public:
 	// クラステンプレートの初期化
-	static void InitializeClass( Isolate *pIsolate, Handle<ObjectTemplate> global, void *pClass = NULL ){
-		HandleScope handle_scope( pIsolate );
+	static void InitializeClass(Isolate *pIsolate, Handle<ObjectTemplate> global, void *pClass = NULL){
+		HandleScope handle_scope(pIsolate);
 		
-	#if $param->{ bGlobal }
+	#if $param->{bGlobal}
 		#define inst	global
 		#define proto	global
 	#else
 		// コンストラクタを作成
-		Local<String> ClassName = String::NewFromOneByte( pIsolate, ( uint8_t *)"$param->{ JsClass }" );
-		Local<FunctionTemplate> tmpl = FunctionTemplate::New( pIsolate, New );
-		tmpl->SetClassName( ClassName );
+		Local<String> ClassName = String::NewFromOneByte(pIsolate, (uint8_t *)"$param->{JsClass}");
+		Local<FunctionTemplate> tmpl = FunctionTemplate::New(pIsolate, New);
+		tmpl->SetClassName(ClassName);
 		// フィールドなどはこちらに
 		Local<ObjectTemplate> inst = tmpl->InstanceTemplate();
-		inst->SetInternalFieldCount( 1 );
+		inst->SetInternalFieldCount(1);
 	#endif
 	
 $Accessor
 		// メソッドはこちらに
-	#if !$param->{ bGlobal }
+	#if !$param->{bGlobal}
 		Local<ObjectTemplate> proto = tmpl->PrototypeTemplate();
-		proto->Set( String::NewFromOneByte( pIsolate, ( uint8_t *)"Dispose" ), FunctionTemplate::New( pIsolate, Func_Dispose ));
+		proto->Set(String::NewFromOneByte(pIsolate, (uint8_t *)"Dispose"), FunctionTemplate::New(pIsolate, Func_Dispose));
 	#endif
 $Function
 $Const
-$param->{ ExtraInit }
-	#if !$param->{ bGlobal }
+$param->{ExtraInit}
+	#if !$param->{bGlobal}
 		// グローバルオブジェクトにクラスを定義
-		global->Set( ClassName, tmpl );
+		global->Set(ClassName, tmpl);
 		#undef inst
 		#undef proto
 	#endif
@@ -658,17 +658,17 @@ $param->{ ExtraInit }
 ##############################################################################
 
 sub AddAccessor {
-	my( $Name, $Class )= @_;
+	my($Name, $Class)= @_;
 	$Accessor .= << "-----";
-		inst->SetAccessor( String::NewFromOneByte( pIsolate, ( uint8_t *)"$Name" ), Get_$Name );
+		inst->SetAccessor(String::NewFromOneByte(pIsolate, (uint8_t *)"$Name"), Get_$Name);
 -----
 	return "Get_$Name";
 }
 
 sub AddFunction {
-	my( $Name, $Class )= @_;
+	my($Name, $Class)= @_;
 	$Function .= << "-----";
-		proto->Set( String::NewFromOneByte( pIsolate, ( uint8_t *)"$Name" ), FunctionTemplate::New( pIsolate, Func_$Name ));
+		proto->Set(String::NewFromOneByte(pIsolate, (uint8_t *)"$Name"), FunctionTemplate::New(pIsolate, Func_$Name));
 -----
 	return "Func_$Name";
 }

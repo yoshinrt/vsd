@@ -19,14 +19,14 @@ int CVsdFont::m_iObjCnt = 0;
 
 /*** コンストラクタ *********************************************************/
 
-CVsdFont::CVsdFont( const char *szFontName, int iSize, UINT uAttr ){
-	//DebugMsgD( "new CFont %d:%X\n", ++m_iObjCnt, this );
-	CreateFont( szFontName, iSize, uAttr );
+CVsdFont::CVsdFont(const char *szFontName, int iSize, UINT uAttr){
+	//DebugMsgD("new CFont %d:%X\n", ++m_iObjCnt, this);
+	CreateFont(szFontName, iSize, uAttr);
 }
 
-CVsdFont::CVsdFont( LPCWSTR szFontName, int iSize, UINT uAttr ){
-	//DebugMsgD( "new CFont %d:%X\n", ++m_iObjCnt, this );
-	char szFont[ LF_FACESIZE ];
+CVsdFont::CVsdFont(LPCWSTR szFontName, int iSize, UINT uAttr){
+	//DebugMsgD("new CFont %d:%X\n", ++m_iObjCnt, this);
+	char szFont[LF_FACESIZE];
 	
 	WideCharToMultiByte(
 		CP_ACP,				// コードページ
@@ -34,17 +34,17 @@ CVsdFont::CVsdFont( LPCWSTR szFontName, int iSize, UINT uAttr ){
 		szFontName,			// ワイド文字列のアドレス
 		-1,					// ワイド文字列の文字数
 		szFont,				// 新しい文字列を受け取るバッファのアドレス
-		sizeof( szFont ),	// 新しい文字列を受け取るバッファのサイズ
+		sizeof(szFont),	// 新しい文字列を受け取るバッファのサイズ
 		nullptr,				// マップできない文字の既定値のアドレス
 		nullptr				// 既定の文字を使ったときにセットするフラグのアドレス
 	);
 	
-	CreateFont( szFont, iSize, uAttr );
+	CreateFont(szFont, iSize, uAttr);
 }
 
 /*** フォント作成 ***********************************************************/
 
-void CVsdFont::CreateFont( const char *szFontName, int iSize, UINT uAttr ){
+void CVsdFont::CreateFont(const char *szFontName, int iSize, UINT uAttr){
 	m_uAttr = uAttr;
 	
 	m_LogFont.lfHeight			= iSize;						// 文字セルまたは文字の高さ
@@ -60,74 +60,74 @@ void CVsdFont::CreateFont( const char *szFontName, int iSize, UINT uAttr ){
 	m_LogFont.lfClipPrecision	= CLIP_DEFAULT_PRECIS;			// クリッピングの精度
 	m_LogFont.lfQuality			= PROOF_QUALITY;				// 出力品質
 	m_LogFont.lfPitchAndFamily	= FIXED_PITCH | FF_DONTCARE;	// ピッチとファミリ
-	strcpy( m_LogFont.lfFaceName, szFontName );					// フォント名
+	strcpy(m_LogFont.lfFaceName, szFontName);					// フォント名
 	
 	CreateFont();
 }
 
-const MAT2 CVsdFont::mat = {{ 0, 1 }, { 0, 0 }, { 0, 0 }, { 0, 1 }};
+const MAT2 CVsdFont::mat = {{0, 1}, {0, 0}, {0, 0}, {0, 1}};
 
-void CVsdFont::CreateFont( void ){
+void CVsdFont::CreateFont(void){
 	
 	// DC, FONT ハンドル取得
-	HDC		hdc			= GetDC( nullptr );
-	HFONT	hFont		= CreateFontIndirect( &m_LogFont );
-	HFONT	hFontOld	= ( HFONT )SelectObject( hdc, hFont );
+	HDC		hdc			= GetDC(nullptr);
+	HFONT	hFont		= CreateFontIndirect(&m_LogFont);
+	HFONT	hFontOld	= (HFONT)SelectObject(hdc, hFont);
 	
 	// tmAscent 取得
 	TEXTMETRIC tm;
-	GetTextMetrics( hdc, &tm );
+	GetTextMetrics(hdc, &tm);
     GLYPHMETRICS	gm;
 	
 	int	iBitmapDepth = IsNoAntialias() ? GGO_BITMAP : GGO_GRAY8_BITMAP;
 	
 	// プロポーショナルの Space 幅取得
-	GetGlyphOutlineW( hdc, ' ', iBitmapDepth, &gm, 0, nullptr, &mat );
+	GetGlyphOutlineW(hdc, ' ', iBitmapDepth, &gm, 0, nullptr, &mat);
 	m_iFontW_Space = gm.gmCellIncX;
 	
-	GetGlyphOutlineW( hdc, 'B', iBitmapDepth, &gm, 0, nullptr, &mat );
+	GetGlyphOutlineW(hdc, 'B', iBitmapDepth, &gm, 0, nullptr, &mat);
 	m_iFontW = gm.gmCellIncX;	// 'W' が一番幅が広い
 	m_iFontH = tm.tmHeight;
 	
-	SelectObject( hdc, hFontOld );
-	DeleteObject( hFont );
-	ReleaseDC( nullptr, hdc );			/* ウインドウのHDC解放 */
+	SelectObject(hdc, hFontOld);
+	DeleteObject(hFont);
+	ReleaseDC(nullptr, hdc);			/* ウインドウのHDC解放 */
 }
 
 // 漢字 glyph 作成
-CFontGlyph& CVsdFont::CreateFontGlyph( WCHAR c ){
+CFontGlyph& CVsdFont::CreateFontGlyph(WCHAR c){
 	
 	// DC, FONT ハンドル取得
-	HDC		hdc			= GetDC( nullptr );
-	HFONT	hFont		= CreateFontIndirect( &m_LogFont );
-	HFONT	hFontOld	= ( HFONT )SelectObject( hdc, hFont );
+	HDC		hdc			= GetDC(nullptr);
+	HFONT	hFont		= CreateFontIndirect(&m_LogFont);
+	HFONT	hFontOld	= (HFONT)SelectObject(hdc, hFont);
 	
 	// tmAscent 取得
 	TEXTMETRIC tm;
-	GetTextMetrics( hdc, &tm );
+	GetTextMetrics(hdc, &tm);
     GLYPHMETRICS	gm;
 	
 	int	iBitmapDepth = IsNoAntialias() ? GGO_BITMAP : GGO_GRAY8_BITMAP;
 	
 	// 必要配列サイズ取得
-	int iSize = GetGlyphOutlineW( hdc, c, iBitmapDepth, &gm, 0, nullptr, &mat );
+	int iSize = GetGlyphOutlineW(hdc, c, iBitmapDepth, &gm, 0, nullptr, &mat);
 	
 	CFontGlyph	*pGlyph;
-	if( c <= FONT_CHAR_LAST ){
-		pGlyph = &m_FontGlyph[ c - FONT_CHAR_FIRST ];
+	if(c <= FONT_CHAR_LAST){
+		pGlyph = &m_FontGlyph[c - FONT_CHAR_FIRST];
 	}else{
 		pGlyph = new CFontGlyph;
 	}
 	
-	if( iSize > 0 ){
-		pGlyph->pBuf = new BYTE[ iSize ];
+	if(iSize > 0){
+		pGlyph->pBuf = new BYTE[iSize];
 		
 		// フォントデータ取得
-		GetGlyphOutlineW( hdc, c, iBitmapDepth, &gm, iSize, pGlyph->pBuf, &mat );
+		GetGlyphOutlineW(hdc, c, iBitmapDepth, &gm, iSize, pGlyph->pBuf, &mat);
 		pGlyph->iW			= gm.gmBlackBoxX;
 		pGlyph->iH			= gm.gmBlackBoxY;
-		pGlyph->iOrgY		= ( short )( tm.tmAscent - gm.gmptGlyphOrigin.y );
-		pGlyph->iCellIncX	= ( short )gm.gmCellIncX;
+		pGlyph->iOrgY		= (short)(tm.tmAscent - gm.gmptGlyphOrigin.y);
+		pGlyph->iCellIncX	= (short)gm.gmCellIncX;
 	}else{
 		pGlyph->pBuf		= nullptr;
 		pGlyph->iW			=
@@ -136,11 +136,11 @@ CFontGlyph& CVsdFont::CreateFontGlyph( WCHAR c ){
 		pGlyph->iCellIncX	= m_iFontW_Space;
 	}
 	
-	if( c > FONT_CHAR_LAST ) m_FontGlyphK[ c ] = pGlyph;
+	if(c > FONT_CHAR_LAST) m_FontGlyphK[c] = pGlyph;
 	
-	SelectObject( hdc, hFontOld );
-	DeleteObject( hFont );
-	ReleaseDC( nullptr, hdc );			/* ウインドウのHDC解放 */
+	SelectObject(hdc, hFontOld);
+	DeleteObject(hFont);
+	ReleaseDC(nullptr, hdc);			/* ウインドウのHDC解放 */
 	
 	return *pGlyph;
 }

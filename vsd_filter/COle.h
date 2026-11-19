@@ -12,39 +12,39 @@
 
 class ICallbackJSFunc : public IDispatch {
   public:
-	ICallbackJSFunc( Local<Function> Func ) :
-		m_pIsolate( Isolate::GetCurrent())
+	ICallbackJSFunc(Local<Function> Func) :
+		m_pIsolate(Isolate::GetCurrent())
 	{
-		m_Context = *(new Persistent<Context>( m_pIsolate,
+		m_Context = *(new Persistent<Context>(m_pIsolate,
 			m_pIsolate->GetCurrentContext()
 		));
-		m_CallbackFunc = *( new Persistent<Function>( Isolate::GetCurrent(), Func ));
+		m_CallbackFunc = *(new Persistent<Function>(Isolate::GetCurrent(), Func));
 		m_uRefCnt = 1;
 	}
 	
 	~ICallbackJSFunc(){
-		if( !m_CallbackFunc.IsEmpty()) m_CallbackFunc.Reset();
+		if(!m_CallbackFunc.IsEmpty()) m_CallbackFunc.Reset();
 	}
 	
 	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject){
-		*ppvObject = static_cast<ICallbackJSFunc *>( this );
+		*ppvObject = static_cast<ICallbackJSFunc *>(this);
 		return S_OK;
 	}
 	
-	ULONG STDMETHODCALLTYPE AddRef( void ){
+	ULONG STDMETHODCALLTYPE AddRef(void){
 		return m_uRefCnt++;
 	}
 	
 	ULONG STDMETHODCALLTYPE Release(void){
-		if( --m_uRefCnt == 0 ){
+		if(--m_uRefCnt == 0){
 			delete this;
 			return 0;
 		}
 		return m_uRefCnt;
 	}
 	
-	HRESULT STDMETHODCALLTYPE GetTypeInfoCount( unsigned int FAR* pctinfo ){ return 1; }
-	HRESULT STDMETHODCALLTYPE GetTypeInfo( UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo ){
+	HRESULT STDMETHODCALLTYPE GetTypeInfoCount(unsigned int FAR* pctinfo){return 1;}
+	HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo){
 		return S_OK;
 	}
 	
@@ -78,16 +78,16 @@ class ICallbackJSFunc : public IDispatch {
 
 class COle : public CJsClass {
   public:
-	COle( void ){
+	COle(void){
 		m_pApp			= nullptr;
 	}
 	
 	~COle(){
-		if( m_pApp ) m_pApp->Release();
+		if(m_pApp) m_pApp->Release();
 	}
 	
-	UINT CreateInstance( LPCWSTR strServer );
-	static void InitJS( Local<FunctionTemplate> tmpl );
+	UINT CreateInstance(LPCWSTR strServer);
+	static void InitJS(Local<FunctionTemplate> tmpl);
 	
 	static Local<Value> CreateActiveXObject(
 		IDispatch *pDispatch
@@ -113,7 +113,7 @@ class COle : public CJsClass {
 		int iMaxDim, int iDim
 	);
 	
-	static Local<Value> Variant2Val( VARIANT *pvar );
+	static Local<Value> Variant2Val(VARIANT *pvar);
 	void Invoke(
 		DISPID DispID,
 		ReturnValue<Value> Ret,
@@ -141,14 +141,14 @@ class COle : public CJsClass {
 		const PropertyCallbackInfo<void>& info
 	);
 	
-	void AddOLEFunction( Local<Object> ThisObj );
-	HRESULT AddOLEFunction( Local<Object> ThisObj, ITypeInfo *pTypeInfo );
+	void AddOLEFunction(Local<Object> ThisObj);
+	HRESULT AddOLEFunction(Local<Object> ThisObj, ITypeInfo *pTypeInfo);
 	
-	static void ThrowHResultError( HRESULT hr );
+	static void ThrowHResultError(HRESULT hr);
 	
 	// 初期化・終了
-	static void Initialize( void ){		CoInitialize( nullptr ); }
-	static void Uninitialize( void ){	CoUninitialize(); }
+	static void Initialize(void){		CoInitialize(nullptr);}
+	static void Uninitialize(void){	CoUninitialize();}
 	
   private:
 	IDispatch	*m_pApp;

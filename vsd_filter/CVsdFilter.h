@@ -32,20 +32,20 @@
 #define POS_DEFAULT		0x80000000
 
 #ifdef PUBLIC_MODE
-	#define VideoSt			m_piParamS[ PARAM_VSt ]
-	#define VideoEd			m_piParamS[ PARAM_VEd ]
-	#define VsdSt			m_piParamS[ PARAM_LSt ]
-	#define VsdEd			m_piParamS[ PARAM_LEd ]
-	#define GPSSt			m_piParamS[ PARAM_GSt ]
-	#define GPSEd			m_piParamS[ PARAM_GEd ]
+	#define VideoSt			m_piParamS[PARAM_VSt]
+	#define VideoEd			m_piParamS[PARAM_VEd]
+	#define VsdSt			m_piParamS[PARAM_LSt]
+	#define VsdEd			m_piParamS[PARAM_LEd]
+	#define GPSSt			m_piParamS[PARAM_GSt]
+	#define GPSEd			m_piParamS[PARAM_GEd]
 	#define DEFAULT_SKIN	"同期モード.js"
 #else
-	#define VideoSt			m_piParamT[ PARAM_VSt ]
-	#define VideoEd			m_piParamT[ PARAM_VEd ]
-	#define VsdSt			m_piParamT[ PARAM_LSt ]
-	#define VsdEd			m_piParamT[ PARAM_LEd ]
-	#define GPSSt			m_piParamT[ PARAM_GSt ]
-	#define GPSEd			m_piParamT[ PARAM_GEd ]
+	#define VideoSt			m_piParamT[PARAM_VSt]
+	#define VideoEd			m_piParamT[PARAM_VEd]
+	#define VsdSt			m_piParamT[PARAM_LSt]
+	#define VsdEd			m_piParamT[PARAM_LEd]
+	#define GPSSt			m_piParamT[PARAM_GSt]
+	#define GPSEd			m_piParamT[PARAM_GEd]
 	#define DEFAULT_SKIN	"standard_r.js"
 #endif
 
@@ -53,36 +53,36 @@
 #define LOG_READER_DIR	"_log_reader"
 
 // パラメータを変換
-#define GetLogIndex( frame, to, prev ) \
-	m_##to##Log->GetIndex( frame, &VideoSt, &to##St, prev )
+#define GetLogIndex(frame, to, prev) \
+	m_##to##Log->GetIndex(frame, &VideoSt, &to##St, prev)
 
 // VSD log を優先，ただしチェックボックスでオーバーライドできる
-#define SelectLogVsd ( m_CurLog = ( GPSPriority && m_GPSLog || !m_VsdLog ) ? m_GPSLog : m_VsdLog )
+#define SelectLogVsd (m_CurLog = (GPSPriority && m_GPSLog || !m_VsdLog) ? m_GPSLog : m_VsdLog)
 
 // GPS log を優先
-#define SelectLogGPS ( m_CurLog = m_GPSLog ? m_GPSLog : m_VsdLog )
+#define SelectLogGPS (m_CurLog = m_GPSLog ? m_GPSLog : m_VsdLog)
 
 // Laptime 計算用
-#define SelectLogForLapTime	( m_CurLog = \
+#define SelectLogForLapTime	(m_CurLog = \
 	m_LapLog && m_LapLog->m_iLapSrc == LAPSRC_VSD \
-	? m_VsdLog : m_GPSLog )
+	? m_VsdLog : m_GPSLog)
 
 /*** track / check ID *******************************************************/
 
 enum {
-	#define DEF_TRACKBAR( id, init, min, max, name, conf_name )	id,
+	#define DEF_TRACKBAR(id, init, min, max, name, conf_name)	id,
 	#include "def_trackbar.h"
 	TRACK_N
 };
 
 enum {
-	#define DEF_CHECKBOX( id, init, name, conf_name )	id,
+	#define DEF_CHECKBOX(id, init, name, conf_name)	id,
 	#include "def_checkbox.h"
 	CHECK_N
 };
 
 enum {
-	#define DEF_SHADOW( id, init, conf_name )	id,
+	#define DEF_SHADOW(id, init, conf_name)	id,
 	#include "def_shadow.h"
 	SHADOW_N
 };
@@ -107,8 +107,8 @@ class CVsdFilter
 {
   public:
 	~CVsdFilter();
-	void Constructor( void );
-	void Destructor( void );
+	void Constructor(void);
+	void Destructor(void);
 	
 	/*** 画像オペレーション *************************************************/
 	// *C なメソッドは，クリッピングが完了している想定
@@ -117,13 +117,13 @@ class CVsdFilter
 		int x, int y, CPixelArg yc,
 		UINT uFlag	// !default:0
 	);
-	void PutPixelC( int x, int y, CPixelArg yc );
+	void PutPixelC(int x, int y, CPixelArg yc);
 	
-	void PutPixel( int x, int y, CPixelArg yc ){
-		if( !IsClipped( x, y )) PutPixelC( x, y, yc );
+	void PutPixel(int x, int y, CPixelArg yc){
+		if(!IsClipped(x, y)) PutPixelC(x, y, yc);
 	}
 	
-	void FillLineC( int x1, int y1, int x2, CPixelArg yc );
+	void FillLineC(int x1, int y1, int x2, CPixelArg yc);
 	
 	void PutImage(	// !js_func
 		int x, int y, CVsdImage &img,
@@ -139,7 +139,7 @@ class CVsdFilter
 	int ix_st, int iy_st, int ix_ed, int iy_ed
 	);
 	
-	void DrawLine( int x1, int y1, int x2, int y2, CPixelArg yc, UINT uPattern = 0xFFFFFFFF );
+	void DrawLine(int x1, int y1, int x2, int y2, CPixelArg yc, UINT uPattern = 0xFFFFFFFF);
 	void DrawLine(		// !js_func
 		int x1, int y1, int x2, int y2,
 		int width,		// !arg:5 !default:1
@@ -157,7 +157,7 @@ class CVsdFilter
 		CPixelArg yc,
 		UINT uFlag		// !default:0
 	);
-	void DrawCircle( int x, int y, int a, int b, CPixelArg yc, UINT uFlag );
+	void DrawCircle(int x, int y, int a, int b, CPixelArg yc, UINT uFlag);
 	void DrawArc(
 		int x, int y,
 		int a, int b,
@@ -173,14 +173,14 @@ class CVsdFilter
 		CPixelArg yc
 	);
 	
-	int DrawFont0( int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc );
-	int DrawFont( int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc, CPixelArg ycOutline = color_black );
-	void DrawText( // !js_func
+	int DrawFont0(int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc);
+	int DrawFont(int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc, CPixelArg ycOutline = color_black);
+	void DrawText(// !js_func
 		int x, int y, LPCWSTR szMsg, CVsdFont &Font,
 		CPixelArg yc,						// !default:color_white
 		CPixelArg ycOutline = color_black	// !default:color_black
 	);
-	void DrawTextAlign( // !js_func
+	void DrawTextAlign(// !js_func
 		int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFont &Font,
 		CPixelArg yc,						// !default:color_white
 		CPixelArg ycOutline = color_black	// !default:color_black
@@ -213,22 +213,22 @@ class CVsdFilter
 		CVsdFont &Font
 	);
 	
-	void DrawSyncInfo( // !js_func
+	void DrawSyncInfo(// !js_func
 		int x, int y, CVsdFont &Font,
 		UINT uAlign = 0	// !default:0
 	);
 	
 	// ポリゴン描写
-	void InitPolygon( void );
-	void FillPolygon( CPixelArg yc );
-	void DrawPolygon( // !js_func
+	void InitPolygon(void);
+	void FillPolygon(CPixelArg yc);
+	void DrawPolygon(// !js_func
 		v8Array pixs,
 		CPixelArg yc,
 		UINT uFlag	// !default:0
 	);
 	
-	void DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, CPixelArg yc );
-	void DrawPolygon( UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMaxY, CPixelArg yc );
+	void DrawPolygon(UINT uEdgeCnt, Edge *EdgeList, CPixelArg yc);
+	void DrawPolygon(UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMaxY, CPixelArg yc);
 	
 	UINT BlendColor(
 		CPixelArg yc0,
@@ -236,8 +236,8 @@ class CVsdFilter
 		double	dAlfa
 	);
 	
-	BOOL DrawVSD( void );
-	void DrawGSnake( // !js_func
+	BOOL DrawVSD(void);
+	void DrawGSnake(// !js_func
 		int iCx, int iCy, int iR, int iIndicatorR, int iWidth,
 		CPixelArg ycBall, CPixelArg ycLine,
 		double dLength	// !default:3
@@ -305,7 +305,7 @@ class CVsdFilter
 		CPixelArg yc,			// !default:color_white
 		CPixelArg ycOutline		// !default:color_black
 	);
-	void DrawNeedle( // !js_func
+	void DrawNeedle(// !js_func
 		int x, int y, int r1, int r2,
 		int iStart, int iEnd, double dVal,
 		CPixelArg yc,
@@ -313,44 +313,44 @@ class CVsdFilter
 	);
 	
 	// ラップタイム情報
-	LPCWSTR FormatTime( int iTime ); // !js_func
+	LPCWSTR FormatTime(int iTime); // !js_func
 	
-	static inline void UndefIfTimeNone( ReturnValue<Value> Ret, int i ){
-		if( i != TIME_NONE ) Ret.Set( i );
+	static inline void UndefIfTimeNone(ReturnValue<Value> Ret, int i){
+		if(i != TIME_NONE) Ret.Set(i);
 	}
 	
-	void CurTime( ReturnValue<Value> Ret ){	// !js_var:ElapsedTime
-		if( m_LapLog ) UndefIfTimeNone( Ret, m_LapLog->m_iCurTime );
+	void CurTime(ReturnValue<Value> Ret){	// !js_var:ElapsedTime
+		if(m_LapLog) UndefIfTimeNone(Ret, m_LapLog->m_iCurTime);
 	}
-	void BestLapTime( ReturnValue<Value> Ret ){	// !js_var:BestLapTime
-		if( m_LapLog ) UndefIfTimeNone( Ret, m_LapLog->m_iBestTime );
+	void BestLapTime(ReturnValue<Value> Ret){	// !js_var:BestLapTime
+		if(m_LapLog) UndefIfTimeNone(Ret, m_LapLog->m_iBestTime);
 	}
-	void DiffTime( ReturnValue<Value> Ret ){	// !js_var:DiffTime
-		if( m_LapLog ) UndefIfTimeNone( Ret, m_LapLog->m_iDiffTime );
+	void DiffTime(ReturnValue<Value> Ret){	// !js_var:DiffTime
+		if(m_LapLog) UndefIfTimeNone(Ret, m_LapLog->m_iDiffTime);
 	}
-	void LapTime( ReturnValue<Value> Ret ){	// !js_var:LapTime
-		if( !m_LapLog || m_LapLog->m_iLapIdx < 0 ){
+	void LapTime(ReturnValue<Value> Ret){	// !js_var:LapTime
+		if(!m_LapLog || m_LapLog->m_iLapIdx < 0){
 			//Ret.SetUndefined();
-		}else if( m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime ){
-			UndefIfTimeNone( Ret, m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].iTime );
+		}else if(m_LapLog->m_Lap[m_LapLog->m_iLapIdx + 1].iTime){
+			UndefIfTimeNone(Ret, m_LapLog->m_Lap[m_LapLog->m_iLapIdx + 1].iTime);
 		}else{
-			UndefIfTimeNone( Ret, m_LapLog->m_Lap[ m_LapLog->m_iLapIdx ].iTime );
+			UndefIfTimeNone(Ret, m_LapLog->m_Lap[m_LapLog->m_iLapIdx].iTime);
 		}
 	}
 	
-	int LapCnt( void ){ // !js_var:LapCnt
-		if( !m_LapLog ) return 0;
-		return m_LapLog->m_Lap[ m_LapLog->m_iLapIdx + 1 ].uLap;
+	int LapCnt(void){// !js_var:LapCnt
+		if(!m_LapLog) return 0;
+		return m_LapLog->m_Lap[m_LapLog->m_iLapIdx + 1].uLap;
 	}
-	int MaxLapCnt( void ){ // !js_var:MaxLapCnt
-		return m_LapLog ? m_LapLog->m_Lap[ m_LapLog->m_iLapNum - 1 ].uLap : 0;
+	int MaxLapCnt(void){// !js_var:MaxLapCnt
+		return m_LapLog ? m_LapLog->m_Lap[m_LapLog->m_iLapNum - 1].uLap : 0;
 	}
 	
-	void DispErrorMessage( LPCWSTR szMsg );
+	void DispErrorMessage(LPCWSTR szMsg);
 	
 	enum {
-		IMG_FILL		= ( 1 << 0 ),
-		IMG_NOCLOSE		= ( 1 << 1 ),
+		IMG_FILL		= (1 << 0),
+		IMG_NOCLOSE		= (1 << 1),
 	};
 	
 	enum {
@@ -373,13 +373,13 @@ class CVsdFilter
 		int x2 = INVALID_INT,
 		int y2 = INVALID_INT
 	){
-		if( x1 > x2 ){ int x = x1; x1 = x2; x2 = x; }
-		if( y1 > y2 ){ int y = y1; y1 = y2; y2 = y; }
+		if(x1 > x2){int x = x1; x1 = x2; x2 = x;}
+		if(y1 > y2){int y = y1; y1 = y2; y2 = y;}
 		
-		if( x1 < 0 || x1 == INVALID_INT ) x1 = 0;
-		if( x2 >= GetWidth() || x2 == INVALID_INT ) x2 = GetWidth() - 1;
-		if( y1 < 0 || y1 == INVALID_INT ) y1 = 0;
-		if( y2 >= GetHeight() || y2 == INVALID_INT ) y2 = GetHeight() - 1;
+		if(x1 < 0 || x1 == INVALID_INT) x1 = 0;
+		if(x2 >= GetWidth() || x2 == INVALID_INT) x2 = GetWidth() - 1;
+		if(y1 < 0 || y1 == INVALID_INT) y1 = 0;
+		if(y2 >= GetHeight() || y2 == INVALID_INT) y2 = GetHeight() - 1;
 		
 		m_iClipX1 = x1;
 		m_iClipX2 = x2;
@@ -388,45 +388,45 @@ class CVsdFilter
 	}
 	
 	template <class T>
-	static void Sort2( T &a, T &b ){
-		if( a > b ){
+	static void Sort2(T &a, T &b){
+		if(a > b){
 			T tmp = a;
 			a = b;
 			b = tmp;
 		}
 	}
 	
-	BOOL IsClippedX( int x1, int x2 ){
+	BOOL IsClippedX(int x1, int x2){
 		return x1 < m_iClipX1 && x2 < m_iClipX1 || x1 > m_iClipX2 && x2 > m_iClipX2;
 	}
 	
-	BOOL IsClippedY( int y1, int y2 ){
+	BOOL IsClippedY(int y1, int y2){
 		return y1 < m_iClipY1 && y2 < m_iClipY1 || y1 > m_iClipY2 && y2 > m_iClipY2;
 	}
 	
-	BOOL IsClipped( int x1, int y1, int x2, int y2 ){
-		return IsClippedX( x1, x2 ) || IsClippedY( y1, y2 );
+	BOOL IsClipped(int x1, int y1, int x2, int y2){
+		return IsClippedX(x1, x2) || IsClippedY(y1, y2);
 	}
 	
-	BOOL IsClipped( int x1, int y1, int x2 ){
+	BOOL IsClipped(int x1, int y1, int x2){
 		return (
-			IsClippedX( x1, x2 ) ||
-			( y1 < m_iClipY1 || y1 > m_iClipY2 )
+			IsClippedX(x1, x2) ||
+			(y1 < m_iClipY1 || y1 > m_iClipY2)
 		);
 	}
 	
-	BOOL IsClipped( int x1, int y1 ){
+	BOOL IsClipped(int x1, int y1){
 		return (
-			( x1 < m_iClipX1 || x1 > m_iClipX2 ) ||
-			( y1 < m_iClipY1 || y1 > m_iClipY2 )
+			(x1 < m_iClipX1 || x1 > m_iClipX2) ||
+			(y1 < m_iClipY1 || y1 > m_iClipY2)
 		);
 	}
 	
 	// ダイアログ設定リード
 	
-	int LineTrace( void ){ return m_piParamT[ TRACK_LineTrace ]; }	// !js_var:Config_map_length
-	int DispLap( void ){ return m_piParamC[ CHECK_LAP ]; }			// !js_var:Config_lap_time
-	int DispGraph( void ){ return m_piParamC[ CHECK_GRAPH ]; }		// !js_var:Config_graph
+	int LineTrace(void){return m_piParamT[TRACK_LineTrace];}	// !js_var:Config_map_length
+	int DispLap(void){return m_piParamC[CHECK_LAP];}			// !js_var:Config_lap_time
+	int DispGraph(void){return m_piParamC[CHECK_GRAPH];}		// !js_var:Config_graph
 	
 	static CScriptRoot	m_ScriptRoot;
 	
@@ -446,43 +446,43 @@ class CVsdFilter
 	static const int	m_iPrivateBuild;	// !js_const:PrivateBuild
 	
 	// ログリードヘルパ
-	int ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc );
-	double LapNum2LogNum( CVsdLog *Log, int iLapNum );
-	CLapLog *CreateLapTimeHand( int iLapSrc );
-	CLapLog *CreateLapTimeAuto( void );
-	void CalcLapTime( void );
+	int ReadLog(CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc);
+	double LapNum2LogNum(CVsdLog *Log, int iLapNum);
+	CLapLog *CreateLapTimeHand(int iLapSrc);
+	CLapLog *CreateLapTimeAuto(void);
+	void CalcLapTime(void);
 	
 	// ラップチャートリーダ
-	int LapChartRead( const char *szFileName );
+	int LapChartRead(const char *szFileName);
 	
 	// スキン dir 取得
-	char *SetSkinFile( const char *szSkinFile ){
-		char szBuf[ MAX_PATH + 1 ];
+	char *SetSkinFile(const char *szSkinFile){
+		char szBuf[MAX_PATH + 1];
 		
-		if( szSkinFile == nullptr ){
-			StringNew( m_szSkinDirW, ( LPCWSTR )nullptr );
-			return StringNew( m_szSkinDirA, nullptr );
+		if(szSkinFile == nullptr){
+			StringNew(m_szSkinDirW, (LPCWSTR)nullptr);
+			return StringNew(m_szSkinDirA, nullptr);
 		}
 		
-		StringNew( m_szSkinFile, szSkinFile );
+		StringNew(m_szSkinFile, szSkinFile);
 		
 		// スキンファイル名を CWD=m_szPluginDirA とみなしフルパスに変換
-		GetFullPathWithCDir( szBuf, szSkinFile, m_szPluginDirA );
+		GetFullPathWithCDir(szBuf, szSkinFile, m_szPluginDirA);
 		
 		// ↑のディレクトリ名を得る
-		StringNew( m_szSkinDirA, StrTokFile( szBuf, szBuf, STF_FULL | STF_PATH2 ));
-		StringNew( m_szSkinDirW, m_szSkinDirA );
+		StringNew(m_szSkinDirA, StrTokFile(szBuf, szBuf, STF_FULL | STF_PATH2));
+		StringNew(m_szSkinDirW, m_szSkinDirA);
 		return m_szSkinDirA;
 	}
 	
 	// プラグイン dll dir 取得
-	char *SetPluginDir( void ){
-		char szBuf[ MAX_PATH + 1 ];
-		GetModuleFileName(( HMODULE )m_hInst, szBuf, MAX_PATH );
-		char *p = StrTokFile( nullptr, szBuf, STF_NODE );
-		if( p ) strcpy( p, PLUGIN_DIR "\\" );
-		StringNew( m_szPluginDirA, szBuf );
-		StringNew( m_szPluginDirW, m_szPluginDirA );
+	char *SetPluginDir(void){
+		char szBuf[MAX_PATH + 1];
+		GetModuleFileName((HMODULE)m_hInst, szBuf, MAX_PATH);
+		char *p = StrTokFile(nullptr, szBuf, STF_NODE);
+		if(p) strcpy(p, PLUGIN_DIR "\\");
+		StringNew(m_szPluginDirA, szBuf);
+		StringNew(m_szPluginDirW, m_szPluginDirA);
 		return m_szPluginDirA;
 	}
 	
@@ -505,29 +505,29 @@ class CVsdFilter
 	CVsdLog *m_CurLog;
 	CLapLog	*m_LapLog;
 	
-	BOOL ParseMarkStr( const char *szMark );
+	BOOL ParseMarkStr(const char *szMark);
 	
 	BOOL		m_bCalcLapTimeReq;
 	
 	// JavaScript 用パラメータ
 	
-	#define DEF_LOG( name ) double Get##name( void ){ \
-		if( m_VsdLog && m_VsdLog->m_pLog##name ) return m_VsdLog->name(); \
+	#define DEF_LOG(name) double Get##name(void){\
+		if(m_VsdLog && m_VsdLog->m_pLog##name) return m_VsdLog->name(); \
 		return m_GPSLog->name(); \
 	}
 	#include "def_log.h"
 	
-	void DateTime( ReturnValue<Value> Ret ){	// !js_var:DateTime
-		if     ( m_VsdLog ) Ret.Set( m_VsdLog->DateTime());
-		else if( m_GPSLog ) Ret.Set( m_GPSLog->DateTime());
+	void DateTime(ReturnValue<Value> Ret){	// !js_var:DateTime
+		if     (m_VsdLog) Ret.Set(m_VsdLog->DateTime());
+		else if(m_GPSLog) Ret.Set(m_GPSLog->DateTime());
 	}
 	
-	void GetValue( ReturnValue<Value> Ret, char *szKey ){
+	void GetValue(ReturnValue<Value> Ret, char *szKey){
 		double dRet;
-		if( m_VsdLog && !_isnan( dRet = m_VsdLog->Get( szKey, m_VsdLog->m_dLogNum ))){
-			Ret.Set( dRet );
-		}else if( m_GPSLog && !_isnan( dRet = m_GPSLog->Get( szKey, m_GPSLog->m_dLogNum ))){
-			Ret.Set( dRet );
+		if(m_VsdLog && !_isnan(dRet = m_VsdLog->Get(szKey, m_VsdLog->m_dLogNum))){
+			Ret.Set(dRet);
+		}else if(m_GPSLog && !_isnan(dRet = m_GPSLog->Get(szKey, m_GPSLog->m_dLogNum))){
+			Ret.Set(dRet);
 		}
 	}
 	
@@ -537,20 +537,20 @@ class CVsdFilter
 		Local<Array> objMin,
 		Local<Array> objMax
 	);
-	void AddLogAccessor( Local<Object> thisObj );
+	void AddLogAccessor(Local<Object> thisObj);
 	
 	static HINSTANCE	m_hInst;	// dll handle
 	
-	void DeleteScript( void ){
-		if( m_Script ){
+	void DeleteScript(void){
+		if(m_Script){
 			delete m_Script;
 			m_Script = nullptr;
 		}
 	}
 	
-	static void OpenConsole( void );
-	static void Print( LPCWSTR szMsg );
-	static void Print( const char *szFormat, ... );
+	static void OpenConsole(void);
+	static void Print(LPCWSTR szMsg);
+	static void Print(const char *szFormat, ...);
 	
 	BOOL	m_bConsoleOn;
 	
@@ -570,8 +570,8 @@ class CVsdFilter
 	double	m_dStartLineX2;
 	double	m_dStartLineY2;
 	
-	void SetFrameMark( int iFrame );
-	int  GetFrameMark( int iFrame );
+	void SetFrameMark(int iFrame);
+	int  GetFrameMark(int iFrame);
 	
 	PolygonData_t	*m_Polygon;
 	int m_iPolygonMinY;
@@ -591,21 +591,21 @@ class CVsdFilter
 		IScriptEnvironment* env
 	);
 	
-	PVideoFrame __stdcall GetFrame( int n, IScriptEnvironment* env );
+	PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env);
 	
 	/////////////
 	
-	int GetIndex( int x, int y ){ return m_iBytesPerLine * y + x * 2; }
+	int GetIndex(int x, int y){return m_iBytesPerLine * y + x * 2;}
 	
 	// 仮想関数
-	void PutPixelC( int iIndex, CPixelArg yc, int iAlfa );
+	void PutPixelC(int iIndex, CPixelArg yc, int iAlfa);
 	
-	int	GetWidth( void )	{ return m_SrcFrame->GetRowSize()>>1; }	// !js_var:Width
-	int	GetHeight( void )	{ return m_SrcFrame->GetHeight(); }	// !js_var:Height
-	int	GetFrameMax( void )	{ return vi.num_frames; }	// !js_var:MaxFrameCnt
-	int	GetFrameCnt( void )	{ return m_iFrameCnt; }	// !js_var:FrameCnt
-	double GetFPS( void )	{ return ( double )vi.fps_numerator / vi.fps_denominator; } // !js_var:FramePerSecond
-	int IsSaving( void )	{ return m_piParamS[ SHADOW_SAVING ]; }	// !js_var:IsSaving
+	int	GetWidth(void)	{return m_SrcFrame->GetRowSize()>>1;}	// !js_var:Width
+	int	GetHeight(void)	{return m_SrcFrame->GetHeight();}	// !js_var:Height
+	int	GetFrameMax(void)	{return vi.num_frames;}	// !js_var:MaxFrameCnt
+	int	GetFrameCnt(void)	{return m_iFrameCnt;}	// !js_var:FrameCnt
+	double GetFPS(void)	{return (double)vi.fps_numerator / vi.fps_denominator;} // !js_var:FramePerSecond
+	int IsSaving(void)	{return m_piParamS[SHADOW_SAVING];}	// !js_var:IsSaving
 	
 	// パラメータ
 	int	m_iFrameCnt, m_iFrameMax;
@@ -626,32 +626,32 @@ class CVsdFilter
 	FILE_INFO			*fileinfo;
 	FILTER_PROC_INFO	*fpip;
 	
-	CVsdFilter( FILTER *filter, void *editp );
+	CVsdFilter(FILTER *filter, void *editp);
 	
-	int GetIndex( int x, int y ){ return fpip->max_w * y + x; }
-	BOOL ConfigSave( const char *szFileName );
+	int GetIndex(int x, int y){return fpip->max_w * y + x;}
+	BOOL ConfigSave(const char *szFileName);
 	
-	BOOL ReadVsdLog( HWND hwnd );
-	BOOL ReadGPSLog( HWND hwnd );
+	BOOL ReadVsdLog(HWND hwnd);
+	BOOL ReadGPSLog(HWND hwnd);
 	
-	char *IsConfigParamStr( const char *szParamName, char *szBuf, char *&szDst );
-	char *IsConfigParam( const char *szParamName, char *szBuf, int &iVal );
-	BOOL ConfigLoad( const char *szFileName );
-	void SetSkinName( char *szSkinFile, HWND hwnd );
+	char *IsConfigParamStr(const char *szParamName, char *szBuf, char *&szDst);
+	char *IsConfigParam(const char *szParamName, char *szBuf, int &iVal);
+	BOOL ConfigLoad(const char *szFileName);
+	void SetSkinName(char *szSkinFile, HWND hwnd);
 	
 	// ログリーダ用
-	BOOL CreateFilter( void );
-	BOOL FileOpenDialog( char *&szOut, char *&szReaderFunc );
+	BOOL CreateFilter(void);
+	BOOL FileOpenDialog(char *&szOut, char *&szReaderFunc);
 	char *m_szLogFilter;
 	std::vector<std::string> m_vecReaderFunc;
 	
 	// 仮想関数
-	int	GetWidth( void )	{ return fpip->w; }
-	int	GetHeight( void )	{ return fpip->h; }
-	int	GetFrameMax( void )	{ return filter->exfunc->get_frame_n( editp ); }
-	int	GetFrameCnt( void )	{ return fpip->frame; }
-	double	GetFPS( void )	{ return ( double )fileinfo->video_rate / fileinfo->video_scale; }
-	int IsSaving( void )	{ return filter->exfunc->is_saving( editp ); }
+	int	GetWidth(void)	{return fpip->w;}
+	int	GetHeight(void)	{return fpip->h;}
+	int	GetFrameMax(void)	{return filter->exfunc->get_frame_n(editp);}
+	int	GetFrameCnt(void)	{return fpip->frame;}
+	double	GetFPS(void)	{return (double)fileinfo->video_rate / fileinfo->video_scale;}
+	int IsSaving(void)	{return filter->exfunc->is_saving(editp);}
 	
 	// 同期情報表示
 	WCHAR *DrawSyncInfoFormatTime(
@@ -668,17 +668,17 @@ class CVsdFilter
 	
 	// 1スライダ調整用パラメータ
 	int	m_iAdjustPointNum;
-	int	m_iAdjustPointVid[ 2 ];
-	int	m_iAdjustPointVsd[ 2 ];
-	int	m_iAdjustPointGPS[ 2 ];
+	int	m_iAdjustPointVid[2];
+	int	m_iAdjustPointVsd[2];
+	int	m_iAdjustPointGPS[2];
 	
 	static const char *m_szTrackbarName[];
 	static const char *m_szCheckboxName[];
 	static const char *m_szShadowParamName[];
 	
-	void GetFileCreationTime( void );
+	void GetFileCreationTime(void);
 #ifdef PUBLIC_MODE
-	void AutoSync( CVsdLog *pLog, int *piParam );
+	void AutoSync(CVsdLog *pLog, int *piParam);
 #endif
 	
   private:
@@ -686,19 +686,19 @@ class CVsdFilter
 #endif
 };
 
-BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, LPCTSTR, void * ), void *pParam );
+BOOL ListTree(LPTSTR szPath, LPCTSTR szFile, BOOL (*CallbackFunc)(LPCTSTR, LPCTSTR, void *), void *pParam);
 
 class CPushDir {
   public:
-	CPushDir( char *szPath ){
-		int iBufSize = GetCurrentDirectory( 0, nullptr );
-		m_szCurDir = new char[ iBufSize ];
-		GetCurrentDirectory( iBufSize, m_szCurDir );
-		SetCurrentDirectory( szPath );
+	CPushDir(char *szPath){
+		int iBufSize = GetCurrentDirectory(0, nullptr);
+		m_szCurDir = new char[iBufSize];
+		GetCurrentDirectory(iBufSize, m_szCurDir);
+		SetCurrentDirectory(szPath);
 	}
 	
 	~CPushDir(){
-		SetCurrentDirectory( m_szCurDir );
+		SetCurrentDirectory(m_szCurDir);
 		delete [] m_szCurDir;
 	}
 	

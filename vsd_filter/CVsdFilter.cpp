@@ -15,7 +15,7 @@
 
 /*** macros *****************************************************************/
 
-#define SLineWidth		( m_piParamT[ TRACK_SLineWidth ] / 10.0 )
+#define SLineWidth		(m_piParamT[TRACK_SLineWidth] / 10.0)
 
 /*** static member **********************************************************/
 
@@ -35,7 +35,7 @@ CScriptRoot	CVsdFilter::m_ScriptRoot;
 
 /*** コンストラクタ *********************************************************/
 
-void CVsdFilter::Constructor( void ){
+void CVsdFilter::Constructor(void){
 	
 	m_VsdLog 			= nullptr;
 	m_GPSLog 			= nullptr;
@@ -59,14 +59,14 @@ void CVsdFilter::Constructor( void ){
 	m_bConsoleOn		= FALSE;
 	
 	// str param に初期値設定
-	#define DEF_STR_PARAM( id, var, init, conf_name ) StringNew( var, init );
+	#define DEF_STR_PARAM(id, var, init, conf_name) StringNew(var, init);
 	#include "def_str_param.h"
 	
 	// plugin dll path 取得
 	SetPluginDir();
 	
 	// SkinDir セット
-	SetSkinFile( m_szSkinFile );
+	SetSkinFile(m_szSkinFile);
 	
 	m_Script	= nullptr;
 	
@@ -76,17 +76,17 @@ void CVsdFilter::Constructor( void ){
 	
 	//---- GDI+の初期設定
 	COle::Initialize();
-	Gdiplus::GdiplusStartup( &m_gdiplusToken, &m_gdiplusStartupInput, nullptr );
+	Gdiplus::GdiplusStartup(&m_gdiplusToken, &m_gdiplusStartupInput, nullptr);
 	
 	// WinInet 同時接続数
 	DWORD		uMaxConnect = 30;
-	InternetSetOption( nullptr, INTERNET_OPTION_MAX_CONNS_PER_SERVER, &uMaxConnect, sizeof( DWORD ));
-	InternetSetOption( nullptr, INTERNET_OPTION_MAX_CONNS_PER_1_0_SERVER, &uMaxConnect, sizeof( DWORD ));
+	InternetSetOption(nullptr, INTERNET_OPTION_MAX_CONNS_PER_SERVER, &uMaxConnect, sizeof(DWORD));
+	InternetSetOption(nullptr, INTERNET_OPTION_MAX_CONNS_PER_1_0_SERVER, &uMaxConnect, sizeof(DWORD));
 }
 
 /*** デストラクタ ***********************************************************/
 
-void CVsdFilter::Destructor( void ){
+void CVsdFilter::Destructor(void){
 	delete m_Script;
 	delete m_VsdLog;
 	delete m_GPSLog;
@@ -105,31 +105,31 @@ void CVsdFilter::Destructor( void ){
 	delete m_pFont;
 	
 	//---- GDI+の解放
-	Gdiplus::GdiplusShutdown( m_gdiplusToken );
+	Gdiplus::GdiplusShutdown(m_gdiplusToken);
 	COle::Uninitialize();
 }
 
 /*** ログリード ************************************************************/
 
-int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc ){
-	if( pLog ) delete pLog;
-	pLog = new CVsdLog( this );
+int CVsdFilter::ReadLog(CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc){
+	if(pLog) delete pLog;
+	pLog = new CVsdLog(this);
 	
 	CLapLog *pLapLog = nullptr;
 	
-	int iRet = pLog->ReadLog( szFileName, szReaderFunc, pLapLog );
-	if( iRet ){
-		if( pLog->m_pLogLongitude )
-			pLog->RotateMap( m_piParamT[ TRACK_MapAngle ] * ( -ToRAD / 10 ));
+	int iRet = pLog->ReadLog(szFileName, szReaderFunc, pLapLog);
+	if(iRet){
+		if(pLog->m_pLogLongitude)
+			pLog->RotateMap(m_piParamT[TRACK_MapAngle] * (-ToRAD / 10));
 	}else{
 		delete pLog;
 		pLog = nullptr;
 	}
 	
-	if( pLapLog ){
+	if(pLapLog){
 		pLapLog->m_iLapSrc = pLog == m_VsdLog ? LAPSRC_VSD : LAPSRC_GPS;
 		
-		if( m_LapLog ){
+		if(m_LapLog){
 			// 重複しているので，優先度の高いモードを残すか，VSD の方を優先
 			if(
 				m_LapLog->m_iLapMode <  LAPMODE_MAGNET ||
@@ -150,15 +150,15 @@ int CVsdFilter::ReadLog( CVsdLog *&pLog, const char *szFileName, const char *szR
 
 /***************************************************************************/
 
-BOOL CVsdFilter::ParseMarkStr( const char *szMark ){
+BOOL CVsdFilter::ParseMarkStr(const char *szMark){
 	
 	do{
-		while( *szMark && !isdigit( *szMark )) ++szMark;	// 数字までスキップ
-		if( !*szMark ) break;
+		while(*szMark && !isdigit(*szMark)) ++szMark;	// 数字までスキップ
+		if(!*szMark) break;
 		
-		SetFrameMark( atoi( szMark ));
-		if( szMark = strchr( szMark, ',' )) ++szMark;	// 次のパラメータ
-	}while( szMark );
+		SetFrameMark(atoi(szMark));
+		if(szMark = strchr(szMark, ',')) ++szMark;	// 次のパラメータ
+	}while(szMark);
 	
 	m_bCalcLapTimeReq = TRUE;
 	return TRUE;
@@ -167,41 +167,41 @@ BOOL CVsdFilter::ParseMarkStr( const char *szMark ){
 
 /*** ラップ番号 → ログ番号 変換 ********************************************/
 
-double CVsdFilter::LapNum2LogNum( CVsdLog* Log, int iLapNum ){
+double CVsdFilter::LapNum2LogNum(CVsdLog* Log, int iLapNum){
 	
 	// iLapNum がおかしいときは 0 を返しとく
-	if( iLapNum < 0 ) return 2;	// 番犬を除いた Time=0 のログ
+	if(iLapNum < 0) return 2;	// 番犬を除いた Time=0 のログ
 	
-	if( m_LapLog->m_iLapSrc == LAPSRC_VSD ){
+	if(m_LapLog->m_iLapSrc == LAPSRC_VSD){
 		// fLogNum は VSD ログ番号
-		if( Log == m_VsdLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
+		if(Log == m_VsdLog) return m_LapLog->m_Lap[iLapNum].fLogNum;
 		
 		// ラップ番号(VSD)→GPS ログ番号に変換
 		return Log->GetIndex(
-			m_VsdLog->GetTime( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME,
+			m_VsdLog->GetTime(m_LapLog->m_Lap[iLapNum].fLogNum) * SLIDER_TIME,
 			&VsdSt, &GPSSt
 		);
-	}else if( m_LapLog->m_iLapSrc == LAPSRC_GPS ){
+	}else if(m_LapLog->m_iLapSrc == LAPSRC_GPS){
 		// fLogNum は GPS ログ番号
-		if( Log == m_GPSLog ) return m_LapLog->m_Lap[ iLapNum ].fLogNum;
+		if(Log == m_GPSLog) return m_LapLog->m_Lap[iLapNum].fLogNum;
 		
 		// ラップ番号(GPS)→VSD ログ番号に変換
 		return Log->GetIndex(
-			Log->GetTime( m_LapLog->m_Lap[ iLapNum ].fLogNum ) * SLIDER_TIME,
+			Log->GetTime(m_LapLog->m_Lap[iLapNum].fLogNum) * SLIDER_TIME,
 			&GPSSt, &VsdSt
 		);
 	}
 	
 	// fLogNum はビデオフレーム番号
 	return Log->GetIndex(
-		m_LapLog->m_Lap[ iLapNum ].fLogNum,
+		m_LapLog->m_Lap[iLapNum].fLogNum,
 		&VideoSt, Log == m_VsdLog ? &VsdSt : &GPSSt
 	);
 }
 
 /*** ラップタイム再生成 (手動) **********************************************/
 
-CLapLog *CVsdFilter::CreateLapTimeHand( int iLapSrc ){
+CLapLog *CVsdFilter::CreateLapTimeHand(int iLapSrc){
 	
 	int		iTime, iPrevTime;
 	int		iFrame = 0;
@@ -212,22 +212,22 @@ CLapLog *CVsdFilter::CreateLapTimeHand( int iLapSrc ){
 	pLapLog->m_iLapMode = LAPMODE_HAND;
 	pLapLog->m_iLapSrc  = iLapSrc;
 	
-	while(( iFrame = GetFrameMark( iFrame )) >= 0 ){
+	while((iFrame = GetFrameMark(iFrame)) >= 0){
 		
-		if( pLapLog->m_iLapSrc == LAPSRC_GPS ){
-			dLogNum	= GetLogIndex( iFrame, GPS, -1 );
-			iTime	= m_GPSLog->GetTime( dLogNum );
-			LapTime.fLogNum	= ( float )dLogNum;
+		if(pLapLog->m_iLapSrc == LAPSRC_GPS){
+			dLogNum	= GetLogIndex(iFrame, GPS, -1);
+			iTime	= m_GPSLog->GetTime(dLogNum);
+			LapTime.fLogNum	= (float)dLogNum;
 		}else{
 			// LAPSRC_VIDEO
-			iTime	= ( int )( iFrame * 1000.0 / GetFPS());
-			LapTime.fLogNum	= ( float )iFrame;
+			iTime	= (int)(iFrame * 1000.0 / GetFPS());
+			LapTime.fLogNum	= (float)iFrame;
 		}
 		
-		if( m_piParamT[ TRACK_SLineWidth ] < 0 ){
+		if(m_piParamT[TRACK_SLineWidth] < 0){
 			// ジムカーナモード
-			LapTime.uLap	= ( pLapLog->m_iLapNum / 2 ) + 1;
-			LapTime.iTime	= ( pLapLog->m_iLapNum & 1 ) ? iTime - iPrevTime : 0;
+			LapTime.uLap	= (pLapLog->m_iLapNum / 2) + 1;
+			LapTime.iTime	= (pLapLog->m_iLapNum & 1) ? iTime - iPrevTime : 0;
 		}else{
 			LapTime.uLap	= pLapLog->m_iLapNum;
 			LapTime.iTime	= pLapLog->m_iLapNum ? iTime - iPrevTime : 0;
@@ -236,59 +236,59 @@ CLapLog *CVsdFilter::CreateLapTimeHand( int iLapSrc ){
 		iPrevTime = iTime;
 		++iFrame;
 		
-		pLapLog->PushLap( LapTime );
+		pLapLog->PushLap(LapTime);
 	}
 	
-	if( pLapLog->m_Lap.size() == 0 ){
+	if(pLapLog->m_Lap.size() == 0){
 		delete pLapLog;
 		return nullptr;
 	}
 	LapTime.fLogNum	= FLT_MAX;	// 番犬
 	LapTime.iTime	= 0;		// 番犬
-	pLapLog->m_Lap.push_back( LapTime );
+	pLapLog->m_Lap.push_back(LapTime);
 	
 	return pLapLog;
 }
 
 /*** ラップタイム再生成 (GPS auto) ******************************************/
 
-CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
+CLapLog *CVsdFilter::CreateLapTimeAuto(void){
 	
 	int iFrame;
 	LAP_t	LapTime;
 	
-	if(( iFrame = GetFrameMark( 0 )) < 0 ) return nullptr;
+	if((iFrame = GetFrameMark(0)) < 0) return nullptr;
 	
 	/*** スタートラインの位置を取得 ***/
 	// iFrame に対応する GPS ログ番号取得
-	double dLogNum = GetLogIndex( iFrame, GPS, -1 );
+	double dLogNum = GetLogIndex(iFrame, GPS, -1);
 	
-	int iLogNum = ( int )dLogNum;
+	int iLogNum = (int)dLogNum;
 	
 	// iLogNum ～ iLogNum + 1 の方位を算出
 	
 	double dAngle = atan2(
-		( m_GPSLog->Y0( iLogNum + 1 ) - m_GPSLog->Y0( iLogNum )),
-		( m_GPSLog->X0( iLogNum + 1 ) - m_GPSLog->X0( iLogNum ))
+		(m_GPSLog->Y0(iLogNum + 1) - m_GPSLog->Y0(iLogNum)),
+		(m_GPSLog->X0(iLogNum + 1) - m_GPSLog->X0(iLogNum))
 	);
 	
 	#define x1 m_dStartLineX1
 	#define y1 m_dStartLineY1
 	#define x2 m_dStartLineX2
 	#define y2 m_dStartLineY2
-	#define x3 m_GPSLog->X0( i )
-	#define y3 m_GPSLog->Y0( i )
-	#define x4 m_GPSLog->X0( i + 1 )
-	#define y4 m_GPSLog->Y0( i + 1 )
+	#define x3 m_GPSLog->X0(i)
+	#define y3 m_GPSLog->Y0(i)
+	#define x4 m_GPSLog->X0(i + 1)
+	#define y4 m_GPSLog->Y0(i + 1)
 	
 	// 仮想光電管の位置を求める
-	x2 = m_GPSLog->X0( dLogNum );	// スタート地点
-	y2 = m_GPSLog->Y0( dLogNum );
+	x2 = m_GPSLog->X0(dLogNum);	// スタート地点
+	y2 = m_GPSLog->Y0(dLogNum);
 	
-	x1 = x2 + cos( dAngle + 90 * ToRAD ) * SLineWidth / 2;
-	y1 = y2 + sin( dAngle + 90 * ToRAD ) * SLineWidth / 2;
-	x2 = x2 + cos( dAngle - 90 * ToRAD ) * SLineWidth / 2;
-	y2 = y2 + sin( dAngle - 90 * ToRAD ) * SLineWidth / 2;
+	x1 = x2 + cos(dAngle + 90 * ToRAD) * SLineWidth / 2;
+	y1 = y2 + sin(dAngle + 90 * ToRAD) * SLineWidth / 2;
+	x2 = x2 + cos(dAngle - 90 * ToRAD) * SLineWidth / 2;
+	y2 = y2 + sin(dAngle - 90 * ToRAD) * SLineWidth / 2;
 	
 	/*****/
 	
@@ -299,29 +299,29 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 	int iTime, iPrevTime;
 	int	iLapNum = 0;
 	
-	for( int i = 1; i < m_GPSLog->GetCnt() - 1; ++i ){
+	for(int i = 1; i < m_GPSLog->GetCnt() - 1; ++i){
 		
 		/*** 交差判定，交点判定 ***/
 		double s1, s2, s3, s4;
 		
 		// 交点が iLogNum ～ +1 線分上かの判定
-		s1 = ( x1 - x2 ) * ( y3 - y1 ) + ( y1 - y2 ) * ( x1 - x3 );
-		s2 = ( x1 - x2 ) * ( y4 - y1 ) + ( y1 - y2 ) * ( x1 - x4 );
-		if( s2 == 0 || s1 * s2 > 0 ) continue;
+		s1 = (x1 - x2) * (y3 - y1) + (y1 - y2) * (x1 - x3);
+		s2 = (x1 - x2) * (y4 - y1) + (y1 - y2) * (x1 - x4);
+		if(s2 == 0 || s1 * s2 > 0) continue;
 		
 		// 交点がスタートライン線分上かの判定
-		s3 = ( x3 - x4 ) * ( y1 - y3 ) + ( y3 - y4 ) * ( x3 - x1 );
-		s4 = ( x3 - x4 ) * ( y2 - y3 ) + ( y3 - y4 ) * ( x3 - x2 );
-		if( s3 * s4 > 0 ) continue;
+		s3 = (x3 - x4) * (y1 - y3) + (y3 - y4) * (x3 - x1);
+		s4 = (x3 - x4) * (y2 - y3) + (y3 - y4) * (x3 - x2);
+		if(s3 * s4 > 0) continue;
 		
 		// 進行方向の判定，dAngle ±45度
 		double dAngle2 = dAngle - atan2(
-			( m_GPSLog->Y0( i + 1 ) - m_GPSLog->Y0( i )),
-			( m_GPSLog->X0( i + 1 ) - m_GPSLog->X0( i ))
+			(m_GPSLog->Y0(i + 1) - m_GPSLog->Y0(i)),
+			(m_GPSLog->X0(i + 1) - m_GPSLog->X0(i))
 		);
-		if     ( dAngle2 < -180 * ToRAD ) dAngle2 += 360 * ToRAD;
-		else if( dAngle2 >  180 * ToRAD ) dAngle2 -= 360 * ToRAD;
-		if( dAngle2 < -45 * ToRAD || dAngle2 > 45 * ToRAD ) continue;
+		if     (dAngle2 < -180 * ToRAD) dAngle2 += 360 * ToRAD;
+		else if(dAngle2 >  180 * ToRAD) dAngle2 -= 360 * ToRAD;
+		if(dAngle2 < -45 * ToRAD || dAngle2 > 45 * ToRAD) continue;
 		
 		#undef x1
 		#undef y1
@@ -333,29 +333,29 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 		#undef y4
 		
 		// 半端な LogNum
-		dLogNum = i + s1 / ( s1 - s2 );
-		iTime = m_GPSLog->GetTime( dLogNum );
+		dLogNum = i + s1 / (s1 - s2);
+		iTime = m_GPSLog->GetTime(dLogNum);
 		
-		if( m_piParamS[ SHADOW_LAP_START ] - 1 <= iLapNum && iLapNum <= m_piParamS[ SHADOW_LAP_END ] ){
+		if(m_piParamS[SHADOW_LAP_START] - 1 <= iLapNum && iLapNum <= m_piParamS[SHADOW_LAP_END]){
 			LapTime.uLap	= pLapLog->m_iLapNum;
-			LapTime.fLogNum	= ( float )dLogNum;
+			LapTime.fLogNum	= (float)dLogNum;
 			LapTime.iTime	= pLapLog->m_iLapNum ? iTime - iPrevTime : 0;
 			
 			iPrevTime = iTime;
 			
-			pLapLog->PushLap( LapTime );
+			pLapLog->PushLap(LapTime);
 		}
 		++iLapNum;
 	}
 	
-	if( pLapLog->m_Lap.size() == 0 ){
+	if(pLapLog->m_Lap.size() == 0){
 		delete pLapLog;
 		return nullptr;
 	}
 	
 	LapTime.fLogNum	= FLT_MAX;	// 番犬
 	LapTime.iTime	= 0;		// 番犬
-	pLapLog->m_Lap.push_back( LapTime );
+	pLapLog->m_Lap.push_back(LapTime);
 	
 	return pLapLog;
 }
@@ -364,22 +364,22 @@ CLapLog *CVsdFilter::CreateLapTimeAuto( void ){
 
 #define NAME_BUF_SIZE	64
 
-int CVsdFilter::LapChartRead( const char *szFileName ){
+int CVsdFilter::LapChartRead(const char *szFileName){
 	
 	// 既に優先度の高い Log があればリターン (今はない)
-	if( m_LapLog && m_LapLog->m_iLapMode > LAPMODE_CHART ){
+	if(m_LapLog && m_LapLog->m_iLapMode > LAPMODE_CHART){
 		return 0;
 	}
 	
 	CLapLogAll *pLapLog = new CLapLogAll();
-	int iRet = pLapLog->LapChartRead( szFileName, this );
-	if( iRet == 0 ){
+	int iRet = pLapLog->LapChartRead(szFileName, this);
+	if(iRet == 0){
 		delete pLapLog;
 		return 0;
 	}
 	
 	// ここでやっと m_LapLog を上書き
-	if( m_LapLog ) delete m_LapLog;
+	if(m_LapLog) delete m_LapLog;
 	m_LapLog = pLapLog;
 	return iRet;
 }
@@ -392,72 +392,72 @@ void CVsdFilter::AddLogAccessorSub(
 	Local<Array> objMin,
 	Local<Array> objMax
 ){
-	if( !pLog ) return;
+	if(!pLog) return;
 	
 	std::map<std::string, CLog *>::iterator it;
 	
-	for( it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it ){
+	for(it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it){
 		const char *szName = it->first.c_str();
 		
-		if( m_VsdLog == nullptr || pLog == m_VsdLog || m_VsdLog->GetElement( szName ) == nullptr ){
-			Local<String> v8strName = String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)szName );
+		if(m_VsdLog == nullptr || pLog == m_VsdLog || m_VsdLog->GetElement(szName) == nullptr){
+			Local<String> v8strName = String::NewFromOneByte(Isolate::GetCurrent(), (uint8_t *)szName);
 			
 			// Max 登録
-			objMax->Set( v8strName, Number::New( Isolate::GetCurrent(), pLog->GetMax( szName )));
+			objMax->Set(v8strName, Number::New(Isolate::GetCurrent(), pLog->GetMax(szName)));
 			
 			// Min 登録
-			objMin->Set( v8strName, Number::New( Isolate::GetCurrent(), pLog->GetMin( szName )));
+			objMin->Set(v8strName, Number::New(Isolate::GetCurrent(), pLog->GetMin(szName)));
 			
 			// 現在値登録
-			if( 0 );
-			#define DEF_LOG( name ) \
-			else if( strcmp( szName, #name ) == 0 ){ \
-				objLog->SetAccessor( v8strName, CVsdFilterIF::Get_##name ); \
+			if(0);
+			#define DEF_LOG(name) \
+			else if(strcmp(szName, #name) == 0){\
+				objLog->SetAccessor(v8strName, CVsdFilterIF::Get_##name); \
 			}
 			#include "def_log.h"
 			else{
-				objLog->SetAccessor( v8strName, CVsdFilterIF::Get_Value );
+				objLog->SetAccessor(v8strName, CVsdFilterIF::Get_Value);
 			}
 		}
 	}
 }
 
-void CVsdFilter::AddLogAccessor( Local<Object> thisObj ){
+void CVsdFilter::AddLogAccessor(Local<Object> thisObj){
 	
 	// Vsd.Log, Min, Max, Get を作る
-	#define AddLogObj( name ) \
-		Local<Array> obj##name = Array::New( Isolate::GetCurrent(), 0 ); \
-		thisObj->Set( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)#name ), obj##name );
+	#define AddLogObj(name) \
+		Local<Array> obj##name = Array::New(Isolate::GetCurrent(), 0); \
+		thisObj->Set(String::NewFromOneByte(Isolate::GetCurrent(), (uint8_t *)#name), obj##name);
 	
-	AddLogObj( Min );
-	AddLogObj( Max );
+	AddLogObj(Min);
+	AddLogObj(Max);
 	
-	AddLogAccessorSub( m_VsdLog, thisObj, objMin, objMax );
-	AddLogAccessorSub( m_GPSLog, thisObj, objMin, objMax );
+	AddLogAccessorSub(m_VsdLog, thisObj, objMin, objMax);
+	AddLogAccessorSub(m_GPSLog, thisObj, objMin, objMax);
 }
 
 /*** 位置指定ログアクセス ***************************************************/
 
-void CVsdFilter::AccessLog( ReturnValue<Value> Ret, const char *szKey, double dFrameCnt ){
+void CVsdFilter::AccessLog(ReturnValue<Value> Ret, const char *szKey, double dFrameCnt){
 	double dRet;
 	
 	if(
 		m_VsdLog &&
-		!_isnan( dRet = m_VsdLog->Get( szKey, GetLogIndex( dFrameCnt, Vsd, m_VsdLog->m_iLogNum )))
+		!_isnan(dRet = m_VsdLog->Get(szKey, GetLogIndex(dFrameCnt, Vsd, m_VsdLog->m_iLogNum)))
 	){
-		Ret.Set( dRet );
+		Ret.Set(dRet);
 	}else if(
 		m_GPSLog &&
-		!_isnan( dRet = m_GPSLog->Get( szKey, GetLogIndex( dFrameCnt, GPS, m_GPSLog->m_iLogNum )))
+		!_isnan(dRet = m_GPSLog->Get(szKey, GetLogIndex(dFrameCnt, GPS, m_GPSLog->m_iLogNum)))
 	){
-		Ret.Set( dRet );
+		Ret.Set(dRet);
 	}
 }
 
 /*** ファイルリスト取得 *****************************************************/
 
-// szPath は [ MAX_PATH + 1 ] の配列で，work に使用される
-BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, LPCTSTR, void * ), void *pParam ){
+// szPath は [MAX_PATH + 1] の配列で，work に使用される
+BOOL ListTree(LPTSTR szPath, LPCTSTR szFile, BOOL (*CallbackFunc)(LPCTSTR, LPCTSTR, void *), void *pParam){
 	
 	HANDLE				hFindFile;		/* find handle						*/
 	WIN32_FIND_DATA		FindData;		/* find data struc					*/
@@ -465,43 +465,43 @@ BOOL ListTree( LPTSTR szPath, LPCTSTR szFile, BOOL ( *CallbackFunc )( LPCTSTR, L
 	BOOL	bSuccess = TRUE;			/* success flag						*/
 	
 	// szPath が \ で終わってない時の対処
-	int iFileIdx = _tcslen( szPath );	// \0
+	int iFileIdx = _tcslen(szPath);	// \0
 	
-	if( iFileIdx != 0 && szPath[ iFileIdx - 1 ] != '\\' ){
-		_tcscat_s( szPath, MAX_PATH, _T( "\\" ));
+	if(iFileIdx != 0 && szPath[iFileIdx - 1] != '\\'){
+		_tcscat_s(szPath, MAX_PATH, _T("\\"));
 		++iFileIdx;
 	}
 	
-	_tcscat_s( szPath, MAX_PATH, szFile );
+	_tcscat_s(szPath, MAX_PATH, szFile);
 	
-	if(( hFindFile = FindFirstFile( szPath, &FindData )) != INVALID_HANDLE_VALUE ){
+	if((hFindFile = FindFirstFile(szPath, &FindData)) != INVALID_HANDLE_VALUE){
 		do{
-			if( *FindData.cFileName != _T( '_' ) &&
-				_tcscmp( FindData.cFileName, _T( "." ))&&
-				_tcscmp( FindData.cFileName, _T( ".." ))){
+			if(*FindData.cFileName != _T('_') &&
+				_tcscmp(FindData.cFileName, _T("."))&&
+				_tcscmp(FindData.cFileName, _T(".."))){
 				
-				if( FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ){
-					_tcscpy_s( &szPath[ iFileIdx ], MAX_PATH - iFileIdx, FindData.cFileName );
-					ListTree( szPath, szFile, CallbackFunc, pParam );
+				if(FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY){
+					_tcscpy_s(&szPath[iFileIdx], MAX_PATH - iFileIdx, FindData.cFileName);
+					ListTree(szPath, szFile, CallbackFunc, pParam);
 				}else{
-					szPath[ iFileIdx ] = _T( '\0' );
-					if( !CallbackFunc( szPath, FindData.cFileName, pParam )){
+					szPath[iFileIdx] = _T('\0');
+					if(!CallbackFunc(szPath, FindData.cFileName, pParam)){
 						bSuccess = FALSE;
 						break;
 					}
 				}
 			}
-		}while( FindNextFile( hFindFile, &FindData ));
+		}while(FindNextFile(hFindFile, &FindData));
 		
-		FindClose( hFindFile );
+		FindClose(hFindFile);
 	}
-	return( bSuccess );
+	return(bSuccess);
 }
 
 /*** コンソールウィンドウに表示 *********************************************/
 
-BOOL WINAPI HandlerRoutine( DWORD dwCtrlType ){
-	if( dwCtrlType == CTRL_C_EVENT ){
+BOOL WINAPI HandlerRoutine(DWORD dwCtrlType){
+	if(dwCtrlType == CTRL_C_EVENT){
 		FreeConsole();
 		return TRUE;
 	}
@@ -509,39 +509,39 @@ BOOL WINAPI HandlerRoutine( DWORD dwCtrlType ){
 	return FALSE;
 }
 
-void CVsdFilter::OpenConsole( void ){
-	if( AllocConsole()){
-		freopen ( "CONOUT$", "w", stdout );
-		freopen ( "CONIN$", "r", stdin );
+void CVsdFilter::OpenConsole(void){
+	if(AllocConsole()){
+		freopen ("CONOUT$", "w", stdout);
+		freopen ("CONIN$", "r", stdin);
 		
-		SetConsoleCtrlHandler( HandlerRoutine, TRUE );
+		SetConsoleCtrlHandler(HandlerRoutine, TRUE);
 		// ウィンドウタイトル変更
-		SetConsoleTitle( "VSD for GPS コンソール" );
+		SetConsoleTitle("VSD for GPS コンソール");
 		
 		// 閉じるボタン無効化
-		HMENU hmenu = GetSystemMenu( GetConsoleWindow(), FALSE );
-		RemoveMenu( hmenu, SC_CLOSE, MF_BYCOMMAND );
+		HMENU hmenu = GetSystemMenu(GetConsoleWindow(), FALSE);
+		RemoveMenu(hmenu, SC_CLOSE, MF_BYCOMMAND);
 		
-		Print( "このウィンドウを閉じるには Ctrl+C を押してください\n" );
+		Print("このウィンドウを閉じるには Ctrl+C を押してください\n");
 	}
 }
 
-void CVsdFilter::Print( LPCWSTR szMsg ){
+void CVsdFilter::Print(LPCWSTR szMsg){
 	OpenConsole();
 	
 	char *p = nullptr;
-	StringNew( p, szMsg );
-	fputs( p, stdout );
+	StringNew(p, szMsg);
+	fputs(p, stdout);
 	delete [] p;
 }
 
-void CVsdFilter::Print( const char *szFormat, ... ){
+void CVsdFilter::Print(const char *szFormat, ...){
 	OpenConsole();
 	
 	va_list	arg;
-	va_start( arg, szFormat );
-	vprintf( szFormat, arg );
-	va_end( arg );
+	va_start(arg, szFormat);
+	vprintf(szFormat, arg);
+	va_end(arg);
 }
 
 /****************************************************************************/
@@ -551,7 +551,7 @@ BOOL WINAPI DllMain(
 	DWORD		fdwReason,	// reason for calling function
 	LPVOID		lpvReserved	// reserved
 ){
-	if( fdwReason == DLL_PROCESS_ATTACH ){
+	if(fdwReason == DLL_PROCESS_ATTACH){
 		CVsdFilter::m_hInst = hinstDLL;
 	}
 	return TRUE;

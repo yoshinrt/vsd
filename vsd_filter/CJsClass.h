@@ -17,6 +17,6 @@ class CJsClass {
 	}
 	
 	~CJsClass(){
-		if( m_pHolder ) m_pHolder->Reset();
+		if(m_pHolder) m_pHolder->Reset();
 	}
 };

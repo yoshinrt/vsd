@@ -1,6 +1,6 @@
 ﻿/*****************************************************************************
 	
-	VSD -- vehicle data logger system  Copyright( C ) by DDS
+	VSD -- vehicle data logger system  Copyright(C) by DDS
 	
 	COle.cpp - OLE class implementation
 	
@@ -13,18 +13,18 @@
 
 /*** OLE インスタンス作成 ***************************************************/
 
-UINT COle::CreateInstance( LPCWSTR strServer ){
+UINT COle::CreateInstance(LPCWSTR strServer){
 	// Get CLSID for our server...
 	CLSID clsid;
-	HRESULT hr = CLSIDFromProgID( strServer, &clsid );
+	HRESULT hr = CLSIDFromProgID(strServer, &clsid);
 	
-	if( FAILED( hr )) return ERR_OLE_NO_SERVER;
+	if(FAILED(hr)) return ERR_OLE_NO_SERVER;
 	
 	// Start server and get IDispatch...
-	hr = ::CoCreateInstance( clsid, nullptr, CLSCTX_LOCAL_SERVER, IID_IDispatch, ( void ** )&m_pApp );
-	if( FAILED( hr )){
-		hr = ::CoCreateInstance( clsid, nullptr, CLSCTX_INPROC_SERVER, IID_IDispatch, ( void ** )&m_pApp );
-		if( FAILED( hr )) return ERR_OLE_CREATE_FAILED;
+	hr = ::CoCreateInstance(clsid, nullptr, CLSCTX_LOCAL_SERVER, IID_IDispatch, (void **)&m_pApp);
+	if(FAILED(hr)){
+		hr = ::CoCreateInstance(clsid, nullptr, CLSCTX_INPROC_SERVER, IID_IDispatch, (void **)&m_pApp);
+		if(FAILED(hr)) return ERR_OLE_CREATE_FAILED;
 	}
 	
 	return ERR_OK;
@@ -32,10 +32,10 @@ UINT COle::CreateInstance( LPCWSTR strServer ){
 
 /*** JavaScript IF 初期化追加処理 *******************************************/
 
-void COle::InitJS( Local<FunctionTemplate> tmpl ){
+void COle::InitJS(Local<FunctionTemplate> tmpl){
 	Local<ObjectTemplate> inst = tmpl->InstanceTemplate();
 	// Default function 登録
-	inst->SetCallAsFunctionHandler( COle::CallAsFunctionHandler, Int32::New( Isolate::GetCurrent(), 0 ));
+	inst->SetCallAsFunctionHandler(COle::CallAsFunctionHandler, Int32::New(Isolate::GetCurrent(), 0));
 }
 
 /*** OLE function 追加 ******************************************************/
@@ -44,13 +44,13 @@ void COle::InitJS( Local<FunctionTemplate> tmpl ){
 void COle::OleFuncCaller(
 	const FunctionCallbackInfo<Value>& args
 ){
-	COle *obj = CScriptIFBase::GetThis<COle>( args.This());
-	if( !obj ) return;
+	COle *obj = CScriptIFBase::GetThis<COle>(args.This());
+	if(!obj) return;
 	
 	obj->Invoke(
 		args.Data()->Int32Value(),
 		args.GetReturnValue(), args,
-		*( Local<Value> *)nullptr, DISPATCH_METHOD
+		*(Local<Value> *)nullptr, DISPATCH_METHOD
 	);
 }
 
@@ -58,13 +58,13 @@ void COle::OleFuncCaller(
 void COle::CallAsFunctionHandler(
 	const FunctionCallbackInfo<Value>& args
 ){
-	COle *obj = CScriptIFBase::GetThis<COle>( args.This());
-	if( !obj ) return;
+	COle *obj = CScriptIFBase::GetThis<COle>(args.This());
+	if(!obj) return;
 	
 	obj->Invoke(
 		args.Data()->Int32Value(),
 		args.GetReturnValue(), args,
-		*( Local<Value> *)nullptr, DISPATCH_PROPERTYGET
+		*(Local<Value> *)nullptr, DISPATCH_PROPERTYGET
 	);
 }
 
@@ -75,13 +75,13 @@ void COle::OleValueSetter(
 	Local<Value> value,
 	const PropertyCallbackInfo<void>& info
 ){
-	COle *obj = CScriptIFBase::GetThis<COle>( info.Holder());
-	if( !obj ) return;
+	COle *obj = CScriptIFBase::GetThis<COle>(info.Holder());
+	if(!obj) return;
 	
 	obj->Invoke(
 		info.Data()->Int32Value(),
-		*( ReturnValue<Value> *)nullptr,
-		*( FunctionCallbackInfo<Value> *)nullptr,
+		*(ReturnValue<Value> *)nullptr,
+		*(FunctionCallbackInfo<Value> *)nullptr,
 		value, DISPATCH_PROPERTYPUT
 	);
 }
@@ -91,39 +91,39 @@ void COle::OleValueGetter(
 	Local<String> propertyName,
 	const PropertyCallbackInfo<Value>& info
 ){
-	COle *obj = CScriptIFBase::GetThis<COle>( info.Holder());
-	if( !obj ) return;
+	COle *obj = CScriptIFBase::GetThis<COle>(info.Holder());
+	if(!obj) return;
 	
 	obj->Invoke(
 		info.Data()->Int32Value(),
 		info.GetReturnValue(),
-		*( FunctionCallbackInfo<Value> *)nullptr,
-		*( Local<Value> *)nullptr, DISPATCH_PROPERTYGET
+		*(FunctionCallbackInfo<Value> *)nullptr,
+		*(Local<Value> *)nullptr, DISPATCH_PROPERTYGET
 	);
 }
 
-void COle::AddOLEFunction( Local<Object> ThisObj ){
+void COle::AddOLEFunction(Local<Object> ThisObj){
 	UINT	uTypeInfoCnt;
 	HRESULT	hr;
 	
-	if( m_pApp->GetTypeInfoCount( &uTypeInfoCnt ) != S_OK || uTypeInfoCnt == 0 ){
+	if(m_pApp->GetTypeInfoCount(&uTypeInfoCnt) != S_OK || uTypeInfoCnt == 0){
 		return;
 	}
 	
 	ITypeInfo	*pTypeInfo;
-	for( UINT u = 0; u < uTypeInfoCnt; ++u ){
-		if( FAILED( hr = m_pApp->GetTypeInfo( u, LOCALE_SYSTEM_DEFAULT, &pTypeInfo ))) break;
-		hr = AddOLEFunction( ThisObj, pTypeInfo );
+	for(UINT u = 0; u < uTypeInfoCnt; ++u){
+		if(FAILED(hr = m_pApp->GetTypeInfo(u, LOCALE_SYSTEM_DEFAULT, &pTypeInfo))) break;
+		hr = AddOLEFunction(ThisObj, pTypeInfo);
 		pTypeInfo->Release();
-		if( FAILED( hr )) break;
+		if(FAILED(hr)) break;
 	}
 	
-	if( FAILED( hr )){
-		ThrowHResultError( hr );
+	if(FAILED(hr)){
+		ThrowHResultError(hr);
 	}
 }
 
-HRESULT COle::AddOLEFunction( Local<Object> ThisObj, ITypeInfo *pTypeInfo ){
+HRESULT COle::AddOLEFunction(Local<Object> ThisObj, ITypeInfo *pTypeInfo){
 	HRESULT	hr;
 	
 	TYPEATTR	*pTypeAttr;
@@ -131,76 +131,76 @@ HRESULT COle::AddOLEFunction( Local<Object> ThisObj, ITypeInfo *pTypeInfo ){
 	VARDESC		*pVarDesc;
 	BSTR		Name;
 	
-	if( FAILED( hr = pTypeInfo->GetTypeAttr( &pTypeAttr ))){
+	if(FAILED(hr = pTypeInfo->GetTypeAttr(&pTypeAttr))){
 		return hr;
 	}
 	
 	// 変数一覧を取得
-	for( UINT u = 0; u < pTypeAttr->cVars; ++u ){
-		if( FAILED( hr = pTypeInfo->GetVarDesc( u, &pVarDesc ))) break;
+	for(UINT u = 0; u < pTypeAttr->cVars; ++u){
+		if(FAILED(hr = pTypeInfo->GetVarDesc(u, &pVarDesc))) break;
 		
 		UINT v;
-		hr = pTypeInfo->GetNames( pVarDesc->memid, &Name, 1, &v );
+		hr = pTypeInfo->GetNames(pVarDesc->memid, &Name, 1, &v);
 		
 		// var 追加
 		ThisObj->SetAccessor(
-			String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)Name ),
+			String::NewFromTwoByte(Isolate::GetCurrent(), (uint16_t *)Name),
 			OleValueGetter,
 			OleValueSetter,
-			Int32::New( Isolate::GetCurrent(), pVarDesc->memid )
+			Int32::New(Isolate::GetCurrent(), pVarDesc->memid)
 		);
-		DebugMsgD( L"Var:%X:%s\n", pVarDesc->memid, Name );
+		DebugMsgD(L"Var:%X:%s\n", pVarDesc->memid, Name);
 		
-		SysFreeString( Name );
-		pTypeInfo->ReleaseVarDesc( pVarDesc );
+		SysFreeString(Name);
+		pTypeInfo->ReleaseVarDesc(pVarDesc);
 	}
 	
 	// function 一覧を取得
-	for( UINT u = 0; u < pTypeAttr->cFuncs; ++u ){
-		if( FAILED( hr = pTypeInfo->GetFuncDesc( u, &pFuncDesc ))) break;
+	for(UINT u = 0; u < pTypeAttr->cFuncs; ++u){
+		if(FAILED(hr = pTypeInfo->GetFuncDesc(u, &pFuncDesc))) break;
 		
 		UINT v;
-		hr = pTypeInfo->GetNames( pFuncDesc->memid, &Name, 1, &v );
+		hr = pTypeInfo->GetNames(pFuncDesc->memid, &Name, 1, &v);
 		
-		if( pFuncDesc->invkind & INVOKE_FUNC ){
+		if(pFuncDesc->invkind & INVOKE_FUNC){
 			// function 追加
 			ThisObj->Set(
-				String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)Name ),
-				FunctionTemplate::New( Isolate::GetCurrent(),
+				String::NewFromTwoByte(Isolate::GetCurrent(), (uint16_t *)Name),
+				FunctionTemplate::New(Isolate::GetCurrent(),
 					OleFuncCaller,
-					Int32::New( Isolate::GetCurrent(), pFuncDesc->memid )
+					Int32::New(Isolate::GetCurrent(), pFuncDesc->memid)
 				)->GetFunction()
 			);
-			DebugMsgD( L"Fuc:%08X:%s\n", pFuncDesc->memid, Name );
+			DebugMsgD(L"Fuc:%08X:%s\n", pFuncDesc->memid, Name);
 		}else{
 			// var 追加
 			ThisObj->SetAccessor(
-				String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)Name ),
+				String::NewFromTwoByte(Isolate::GetCurrent(), (uint16_t *)Name),
 				OleValueGetter,
 				OleValueSetter,
-				Int32::New( Isolate::GetCurrent(), pFuncDesc->memid )
+				Int32::New(Isolate::GetCurrent(), pFuncDesc->memid)
 			);
-			DebugMsgD( L"Var:%08X:%s\n", pFuncDesc->memid, Name );
+			DebugMsgD(L"Var:%08X:%s\n", pFuncDesc->memid, Name);
 		}
-		SysFreeString( Name );
-		pTypeInfo->ReleaseFuncDesc( pFuncDesc );
+		SysFreeString(Name);
+		pTypeInfo->ReleaseFuncDesc(pFuncDesc);
 	}
 	
     // 継承クラスの情報を登録
     ITypeInfo	*pRefTypeInfo;
     HREFTYPE href;
 	
-	for( UINT u = 0; u < pTypeAttr->cImplTypes; ++u ){
-		hr = pTypeInfo->GetRefTypeOfImplType( u, &href );
-		if( FAILED( hr )) break;
-		hr = pTypeInfo->GetRefTypeInfo( href, &pRefTypeInfo );
-		if( FAILED( hr )) break;
-		hr = AddOLEFunction( ThisObj, pRefTypeInfo );
+	for(UINT u = 0; u < pTypeAttr->cImplTypes; ++u){
+		hr = pTypeInfo->GetRefTypeOfImplType(u, &href);
+		if(FAILED(hr)) break;
+		hr = pTypeInfo->GetRefTypeInfo(href, &pRefTypeInfo);
+		if(FAILED(hr)) break;
+		hr = AddOLEFunction(ThisObj, pRefTypeInfo);
 		pRefTypeInfo->Release();
-		if( FAILED( hr )) break;
+		if(FAILED(hr)) break;
 	}
 	
-	pTypeInfo->ReleaseTypeAttr( pTypeAttr );
+	pTypeInfo->ReleaseTypeAttr(pTypeAttr);
 	return hr;
 }
 
@@ -211,29 +211,29 @@ Local<Value> COle::CreateActiveXObject(
 ){
 	// ActiveXObject を New する
 	Local<Function> hFunction = Local<Function>::Cast(
-		Isolate::GetCurrent()->GetCurrentContext()->Global()->Get( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)"ActiveXObject" ))
+		Isolate::GetCurrent()->GetCurrentContext()->Global()->Get(String::NewFromOneByte(Isolate::GetCurrent(), (uint8_t *)"ActiveXObject"))
 	);
-	if( hFunction->IsUndefined()){
-		Isolate::GetCurrent()->ThrowException( Exception::Error( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)
+	if(hFunction->IsUndefined()){
+		Isolate::GetCurrent()->ThrowException(Exception::Error(String::NewFromOneByte(Isolate::GetCurrent(), (uint8_t *)
 			"Internal error : Can't call ActiveXOjbect constructor"
 		)));
-		return Undefined( Isolate::GetCurrent());
+		return Undefined(Isolate::GetCurrent());
 	}
 	
-	Local<Object> JSObj = hFunction->NewInstance( 0, nullptr );
+	Local<Object> JSObj = hFunction->NewInstance(0, nullptr);
 	COle *obj = static_cast<COle *>(
-		Local<External>::Cast( JSObj->GetInternalField( 0 ))->Value()
+		Local<External>::Cast(JSObj->GetInternalField(0))->Value()
 	);
 	obj->m_pApp = pDispatch;
 	obj->m_pApp->AddRef();
-	obj->AddOLEFunction( JSObj );
+	obj->AddOLEFunction(JSObj);
 	
 	return JSObj;
 }
 
 /*** invoke *****************************************************************/
 
-#define ALLOCA_N( t, n )	new t[ n ]
+#define ALLOCA_N(t, n)	new t[n]
 
 struct oleparam {
 	DISPPARAMS dp;
@@ -248,15 +248,15 @@ void COle::V8Array2SafeArray(
 ){
 	VARIANT variant;
 	
-	for( pID[ iDim ] = 0; pID[ iDim ] <= pUB[ iDim ]; ++pID[ iDim ]){
-		if( iDim == iMaxDim - 1 ){
+	for(pID[iDim] = 0; pID[iDim] <= pUB[iDim]; ++pID[iDim]){
+		if(iDim == iMaxDim - 1){
 			// 要素を書く
-			HRESULT hr = SafeArrayPtrOfIndex( psa, pID, &V_BYREF( &variant ));
-			if( FAILED( hr )) break;
-			Val2Variant( val->Get( pID[ iDim ]), &variant );
+			HRESULT hr = SafeArrayPtrOfIndex(psa, pID, &V_BYREF(&variant));
+			if(FAILED(hr)) break;
+			Val2Variant(val->Get(pID[iDim]), &variant);
 		}else{
 			// 子 array を walk
-			V8Array2SafeArray( Local<Array>::Cast( val->Get( pID[ iDim ])), psa, pUB, pID, iMaxDim, iDim + 1 );
+			V8Array2SafeArray(Local<Array>::Cast(val->Get(pID[iDim])), psa, pUB, pID, iMaxDim, iDim + 1);
 		}
 	}
 }
@@ -267,20 +267,20 @@ void COle::Val2Variant(
 ){
 #if 0
 	struct oledata *pole;
-	if( rb_obj_is_kind_of( val, cWIN32OLE )){
-		Data_Get_Struct( val, struct oledata, pole );
-		OLE_ADDREF( pole->pDispatch );
-		V_VT( var ) = VT_DISPATCH;
-		V_DISPATCH( var ) = pole->pDispatch;
+	if(rb_obj_is_kind_of(val, cWIN32OLE)){
+		Data_Get_Struct(val, struct oledata, pole);
+		OLE_ADDREF(pole->pDispatch);
+		V_VT(var) = VT_DISPATCH;
+		V_DISPATCH(var) = pole->pDispatch;
 		return;
 	}
-	if( rb_obj_is_kind_of( val, rb_cTime )){
-		V_VT( var ) = VT_DATE;
-		V_DATE( var ) = time_object2date( val );
+	if(rb_obj_is_kind_of(val, rb_cTime)){
+		V_VT(var) = VT_DATE;
+		V_DATE(var) = time_object2date(val);
 		return;
 	}
 #endif
-	if( val->IsArray()){
+	if(val->IsArray()){
 		Local<Value> val1;
 		long dim = 0;
 		int  i = 0;
@@ -291,63 +291,63 @@ void COle::Val2Variant(
 		long	  *pub, *pid;
 
 		val1 = val;
-		while( val1->IsArray()){
-			val1 = Local<Array>::Cast( val1 )->Get( 0 );
+		while(val1->IsArray()){
+			val1 = Local<Array>::Cast(val1)->Get(0);
 			dim += 1;
 		}
-		psab = new SAFEARRAYBOUND[ dim ];
-		pub  = new long[ dim ];
-		pid  = new long[ dim ];
+		psab = new SAFEARRAYBOUND[dim];
+		pub  = new long[dim];
+		pid  = new long[dim];
 
-		if( !psab || !pub || !pid ){
-			if( pub ) delete [] pub;
-			if( psab ) delete [] psab;
-			if( pid ) delete [] pid;
-			JsError( ERR_NOT_ENOUGH_MEMORY );
+		if(!psab || !pub || !pid){
+			if(pub) delete [] pub;
+			if(psab) delete [] psab;
+			if(pid) delete [] pid;
+			JsError(ERR_NOT_ENOUGH_MEMORY);
 		}
 		val1 = val;
 		i = 0;
-		while( val1->IsArray()){
-			psab[ i ].cElements = Local<Array>::Cast( val1 )->Length();
-			psab[ i ].lLbound = 0;
-			pub[ i ] = psab[ i ].cElements;
-			pid[ i ] = 0;
+		while(val1->IsArray()){
+			psab[i].cElements = Local<Array>::Cast(val1)->Length();
+			psab[i].lLbound = 0;
+			pub[i] = psab[i].cElements;
+			pid[i] = 0;
 			i ++;
-			val1 = Local<Array>::Cast( val1 )->Get( 0 );
+			val1 = Local<Array>::Cast(val1)->Get(0);
 		}
 		/* Create and fill VARIANT array */
-		psa = SafeArrayCreate( VT_VARIANT, dim, psab );
-		if( psa == nullptr ) hr = E_OUTOFMEMORY;
-		else hr = SafeArrayLock( psa );
+		psa = SafeArrayCreate(VT_VARIANT, dim, psab);
+		if(psa == nullptr) hr = E_OUTOFMEMORY;
+		else hr = SafeArrayLock(psa);
 		
-		if( SUCCEEDED( hr )){
-			V8Array2SafeArray( Local<Array>::Cast( val ), psa, pub, pid, dim, 0 );
-			hr = SafeArrayUnlock( psa );
+		if(SUCCEEDED(hr)){
+			V8Array2SafeArray(Local<Array>::Cast(val), psa, pub, pid, dim, 0);
+			hr = SafeArrayUnlock(psa);
 		}
-		if( pub ) delete [] pub;
-		if( psab ) delete [] psab;
-		if( pid ) delete [] pid;
+		if(pub) delete [] pub;
+		if(psab) delete [] psab;
+		if(pid) delete [] pid;
 		
-		if( SUCCEEDED( hr )){
-			V_VT( var ) = VT_VARIANT | VT_ARRAY;
-			V_ARRAY( var ) = psa;
-		}else if( psa != nullptr ) SafeArrayDestroy( psa );
-	}else if( val->IsString()){
+		if(SUCCEEDED(hr)){
+			V_VT(var) = VT_VARIANT | VT_ARRAY;
+			V_ARRAY(var) = psa;
+		}else if(psa != nullptr) SafeArrayDestroy(psa);
+	}else if(val->IsString()){
 		V_VT(var) = VT_BSTR;
-		String::Value str( val );
-		V_BSTR(var) = SysAllocString(( LPCWSTR )*str );
-	}else if( val->IsInt32() || val->IsUint32() && val->Uint32Value() < 0x80000000 ){
+		String::Value str(val);
+		V_BSTR(var) = SysAllocString((LPCWSTR)*str);
+	}else if(val->IsInt32() || val->IsUint32() && val->Uint32Value() < 0x80000000){
 		V_VT(var) = VT_I4;
 		V_I4(var) = val->Int32Value();
-	}else if( val->IsNumber()){
+	}else if(val->IsNumber()){
 		V_VT(var) = VT_R8;
 		V_R8(var) = val->NumberValue();
-	}else if( val->IsBoolean()){
+	}else if(val->IsBoolean()){
 		V_VT(var) = VT_BOOL;
 		V_BOOL(var) = val->IsTrue() ? VARIANT_TRUE : VARIANT_FALSE;
-	}else if( val->IsFunction()){
+	}else if(val->IsFunction()){
 		V_VT(var) = VT_DISPATCH;
-		V_DISPATCH(var) = new ICallbackJSFunc( Local<Function>::Cast( val ));
+		V_DISPATCH(var) = new ICallbackJSFunc(Local<Function>::Cast(val));
 	}else{
 		V_VT(var) = VT_ERROR;
 		V_ERROR(var) = DISP_E_PARAMNOTFOUND;
@@ -360,103 +360,103 @@ Local<Value> COle::SafeArray2V8Array(
 	long *pLB, long *pUB, long *pID,
 	int iMaxDim, int iDim
 ){
-	Local<Array> ret = Array::New( Isolate::GetCurrent(), 0 );
+	Local<Array> ret = Array::New(Isolate::GetCurrent(), 0);
 	
-	for( pID[ iDim ] = pLB[ iDim ]; pID[ iDim ] <= pUB[ iDim ]; ++pID[ iDim ]){
-		if( iDim == iMaxDim - 1 ){
+	for(pID[iDim] = pLB[iDim]; pID[iDim] <= pUB[iDim]; ++pID[iDim]){
+		if(iDim == iMaxDim - 1){
 			// 要素をpush
-			HRESULT hr = SafeArrayPtrOfIndex( psa, pID, &V_BYREF( &variant ));
-			if( FAILED( hr )) break;
-			ret->Set( ret->Length(), Variant2Val( &variant ));
+			HRESULT hr = SafeArrayPtrOfIndex(psa, pID, &V_BYREF(&variant));
+			if(FAILED(hr)) break;
+			ret->Set(ret->Length(), Variant2Val(&variant));
 		}else{
 			// 子 array を push
-			ret->Set( ret->Length(), SafeArray2V8Array( variant, psa, pLB, pUB, pID, iMaxDim, iDim + 1 ));
+			ret->Set(ret->Length(), SafeArray2V8Array(variant, psa, pLB, pUB, pID, iMaxDim, iDim + 1));
 		}
 	}
 	return ret;
 }
 
-Local<Value> COle::Variant2Val( VARIANT *pvar ){
+Local<Value> COle::Variant2Val(VARIANT *pvar){
 	Local<Value> ret;
 	
-	while( V_VT( pvar ) == ( VT_BYREF | VT_VARIANT )) pvar = V_VARIANTREF( pvar );
+	while(V_VT(pvar) == (VT_BYREF | VT_VARIANT)) pvar = V_VARIANTREF(pvar);
 	
-	if( V_ISARRAY( pvar )){
-		SAFEARRAY *psa = V_ISBYREF( pvar ) ? *V_ARRAYREF( pvar ) : V_ARRAY( pvar );
+	if(V_ISARRAY(pvar)){
+		SAFEARRAY *psa = V_ISBYREF(pvar) ? *V_ARRAYREF(pvar) : V_ARRAY(pvar);
 		long i;
 		long *pID, *pLB, *pUB;
 		VARIANT variant;
 		
-		int dim = SafeArrayGetDim( psa );
-		VariantInit( &variant );
-		V_VT( &variant ) = ( V_VT( pvar ) & ~VT_ARRAY ) | VT_BYREF;
+		int dim = SafeArrayGetDim(psa);
+		VariantInit(&variant);
+		V_VT(&variant) = (V_VT(pvar) & ~VT_ARRAY) | VT_BYREF;
 		
-		pID = new long[ dim ];
-		pLB = new long[ dim ];
-		pUB = new long[ dim ];
+		pID = new long[dim];
+		pLB = new long[dim];
+		pUB = new long[dim];
 		
-		if( !pID || !pLB || !pUB ){
-			if( pID ) delete [] pID;
-			if( pLB ) delete [] pLB;
-			if( pUB ) delete [] pUB;
-			JsError( ERR_NOT_ENOUGH_MEMORY );
-			return Undefined( Isolate::GetCurrent());
+		if(!pID || !pLB || !pUB){
+			if(pID) delete [] pID;
+			if(pLB) delete [] pLB;
+			if(pUB) delete [] pUB;
+			JsError(ERR_NOT_ENOUGH_MEMORY);
+			return Undefined(Isolate::GetCurrent());
 		}
 		
-		for( i = 0; i < dim; ++i ){
-			SafeArrayGetLBound( psa, i + 1, &pLB[ i ] );
-			SafeArrayGetUBound( psa, i + 1, &pUB[ i ] );
+		for(i = 0; i < dim; ++i){
+			SafeArrayGetLBound(psa, i + 1, &pLB[i]);
+			SafeArrayGetUBound(psa, i + 1, &pUB[i]);
 		}
 		
-		HRESULT hr = SafeArrayLock( psa );
-		if( SUCCEEDED( hr )){
-			ret = SafeArray2V8Array( variant, psa, pLB, pUB, pID, dim, 0 );
-			SafeArrayUnlock( psa );
+		HRESULT hr = SafeArrayLock(psa);
+		if(SUCCEEDED(hr)){
+			ret = SafeArray2V8Array(variant, psa, pLB, pUB, pID, dim, 0);
+			SafeArrayUnlock(psa);
 		}
 		
-		if( pID ) delete [] pID;
-		if( pLB ) delete [] pLB;
-		if( pUB ) delete [] pUB;
+		if(pID) delete [] pID;
+		if(pLB) delete [] pLB;
+		if(pUB) delete [] pUB;
 		
 		return ret;
 	}
 	
-	switch( V_VT( pvar ) & ~VT_BYREF ){
+	switch(V_VT(pvar) & ~VT_BYREF){
 	  case VT_EMPTY:
-		return Undefined( Isolate::GetCurrent());
+		return Undefined(Isolate::GetCurrent());
 		
 	  Case VT_NULL:
-		return Null( Isolate::GetCurrent());
+		return Null(Isolate::GetCurrent());
 		
 	  Case VT_UI1:
-		ret = Int32::New( Isolate::GetCurrent(), V_ISBYREF( pvar ) ? *V_UI1REF( pvar ) : V_UI1( pvar ));
+		ret = Int32::New(Isolate::GetCurrent(), V_ISBYREF(pvar) ? *V_UI1REF(pvar) : V_UI1(pvar));
 		
 	  Case VT_I2:
-		ret = Int32::New( Isolate::GetCurrent(), V_ISBYREF( pvar ) ? *V_I2REF( pvar ) : V_I2( pvar ));
+		ret = Int32::New(Isolate::GetCurrent(), V_ISBYREF(pvar) ? *V_I2REF(pvar) : V_I2(pvar));
 		
 	  Case VT_I4:
-		ret = Int32::New( Isolate::GetCurrent(), V_ISBYREF( pvar ) ? *V_I4REF( pvar ) : V_I4( pvar ));
+		ret = Int32::New(Isolate::GetCurrent(), V_ISBYREF(pvar) ? *V_I4REF(pvar) : V_I4(pvar));
 		
 	  Case VT_R4:
-		ret = Number::New( Isolate::GetCurrent(), V_ISBYREF( pvar ) ? *V_R4REF( pvar ) : V_R4( pvar ));
+		ret = Number::New(Isolate::GetCurrent(), V_ISBYREF(pvar) ? *V_R4REF(pvar) : V_R4(pvar));
 		
 	  Case VT_R8:
-		ret = Number::New( Isolate::GetCurrent(), V_ISBYREF( pvar ) ? *V_R8REF( pvar ) : V_R8( pvar ));
+		ret = Number::New(Isolate::GetCurrent(), V_ISBYREF(pvar) ? *V_R8REF(pvar) : V_R8(pvar));
 		
 	  Case VT_BSTR: {
-			uint16_t *str =  V_ISBYREF( pvar ) ? ( uint16_t *)*V_BSTRREF( pvar ) : ( uint16_t *)V_BSTR( pvar );
-			if( str == nullptr ) return Null( Isolate::GetCurrent());
-			ret = String::NewFromTwoByte( Isolate::GetCurrent(), str );
+			uint16_t *str =  V_ISBYREF(pvar) ? (uint16_t *)*V_BSTRREF(pvar) : (uint16_t *)V_BSTR(pvar);
+			if(str == nullptr) return Null(Isolate::GetCurrent());
+			ret = String::NewFromTwoByte(Isolate::GetCurrent(), str);
 		}
 		
 	  Case VT_ERROR:
-		ret = Int32::New( Isolate::GetCurrent(), V_ISBYREF( pvar ) ? *V_ERRORREF( pvar ) : V_ERROR( pvar ));
+		ret = Int32::New(Isolate::GetCurrent(), V_ISBYREF(pvar) ? *V_ERRORREF(pvar) : V_ERROR(pvar));
 		
 	  Case VT_BOOL:
-		ret = ( V_ISBYREF( pvar ) ? *V_BOOLREF( pvar ) : V_BOOL( pvar )) ? True( Isolate::GetCurrent()) : False( Isolate::GetCurrent());
+		ret = (V_ISBYREF(pvar) ? *V_BOOLREF(pvar) : V_BOOL(pvar)) ? True(Isolate::GetCurrent()) : False(Isolate::GetCurrent());
 		
 	  Case VT_DISPATCH:
-		ret = CreateActiveXObject( V_ISBYREF( pvar ) ? *V_DISPATCHREF( pvar ) : V_DISPATCH( pvar ));
+		ret = CreateActiveXObject(V_ISBYREF(pvar) ? *V_DISPATCHREF(pvar) : V_DISPATCH(pvar));
 		
 	  Case VT_UNKNOWN:
 		{
@@ -465,12 +465,12 @@ Local<Value> COle::Variant2Val( VARIANT *pvar ){
 			IDispatch *pDispatch;
 			HRESULT hr;
 			
-			punk = V_ISBYREF( pvar ) ? *V_UNKNOWNREF( pvar ) : V_UNKNOWN( pvar );
+			punk = V_ISBYREF(pvar) ? *V_UNKNOWNREF(pvar) : V_UNKNOWN(pvar);
 			
-			if( punk != nullptr ){
-				hr = punk->QueryInterface( IID_IDispatch, ( void **)&pDispatch );
-				if( SUCCEEDED( hr )) {
-					ret = CreateActiveXObject( pDispatch );
+			if(punk != nullptr){
+				hr = punk->QueryInterface(IID_IDispatch, (void **)&pDispatch);
+				if(SUCCEEDED(hr)) {
+					ret = CreateActiveXObject(pDispatch);
 				}
 			}
 			break;
@@ -480,8 +480,8 @@ Local<Value> COle::Variant2Val( VARIANT *pvar ){
 	  case VT_DATE:
 		{
 			DATE date;
-			date = V_ISBYREF( pvar ) ? *V_DATEREF( pvar ) : V_DATE( pvar );
-			ret =  date2time_str( date );
+			date = V_ISBYREF(pvar) ? *V_DATEREF(pvar) : V_DATE(pvar);
+			ret =  date2time_str(date);
 			break;
 		}
 	  case VT_CY:
@@ -491,12 +491,12 @@ Local<Value> COle::Variant2Val( VARIANT *pvar ){
 		{
 			HRESULT hr;
 			VARIANT variant;
-			VariantInit( &variant );
-			hr = VariantChangeTypeEx( &variant, pvar, LOCALE_SYSTEM_DEFAULT, 0, VT_BSTR );
-			if( SUCCEEDED( hr ) && V_VT( &variant ) == VT_BSTR ){
-				ret = String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)V_BSTR( &variant ));
+			VariantInit(&variant);
+			hr = VariantChangeTypeEx(&variant, pvar, LOCALE_SYSTEM_DEFAULT, 0, VT_BSTR);
+			if(SUCCEEDED(hr) && V_VT(&variant) == VT_BSTR){
+				ret = String::NewFromTwoByte(Isolate::GetCurrent(), (uint16_t *)V_BSTR(&variant));
 			}
-			VariantClear( &variant );
+			VariantClear(&variant);
 			break;
 		}
 	}
@@ -531,24 +531,24 @@ void COle::Invoke(
 	/*--------------------------------------
 	  non hash args ==> dispatch parameters 
 	 ----------------------------------------*/
-	if( &args != nullptr && ( op.dp.cArgs = args.Length())){
+	if(&args != nullptr && (op.dp.cArgs = args.Length())){
 		realargs		= ALLOCA_N(VARIANTARG, op.dp.cArgs);
 		op.dp.rgvarg	= ALLOCA_N(VARIANTARG, op.dp.cArgs);
 		
 		for(i = 0; i < op.dp.cArgs; i++) {
-			VariantInit(&realargs[ i ]);
-			VariantInit(&op.dp.rgvarg[ i ]);
+			VariantInit(&realargs[i]);
+			VariantInit(&op.dp.rgvarg[i]);
 			
-			Val2Variant( args[ op.dp.cArgs - i - 1 ], &realargs[ i ] );
-			V_VT(&op.dp.rgvarg[ i ]) = VT_VARIANT | VT_BYREF;
-			V_VARIANTREF(&op.dp.rgvarg[ i ]) = &realargs[ i ];
+			Val2Variant(args[op.dp.cArgs - i - 1], &realargs[i]);
+			V_VT(&op.dp.rgvarg[i]) = VT_VARIANT | VT_BYREF;
+			V_VARIANTREF(&op.dp.rgvarg[i]) = &realargs[i];
 		}
 	}
 	
 	/* apparent you need to call propput, you need this */
 	else if (wFlags & DISPATCH_PROPERTYPUT) {
 		op.dp.cNamedArgs = 1;
-		op.dp.rgdispidNamedArgs = ALLOCA_N( DISPID, 1 );
+		op.dp.rgdispidNamedArgs = ALLOCA_N(DISPID, 1);
 		op.dp.rgdispidNamedArgs[0] = DISPID_PROPERTYPUT;
 		
 		op.dp.cArgs = 1;
@@ -558,12 +558,12 @@ void COle::Invoke(
 		VariantInit(&realargs[0]);
 		VariantInit(&op.dp.rgvarg[0]);
 		
-		Val2Variant( value, &realargs[ 0 ] );
+		Val2Variant(value, &realargs[0]);
 		V_VT(&op.dp.rgvarg[0]) = VT_VARIANT | VT_BYREF;
 		V_VARIANTREF(&op.dp.rgvarg[0]) = &realargs[0];
 	}
 	
-	hr = m_pApp->Invoke( DispID, 
+	hr = m_pApp->Invoke(DispID, 
 										 IID_NULL, lcid, wFlags, &op.dp, 
 										 &result, &excepinfo, &argErr);
 	if (FAILED(hr)) {
@@ -571,15 +571,15 @@ void COle::Invoke(
 		if(op.dp.cArgs > 0) {
 			for(i = 0; i < op.dp.cArgs; i++) {
 				// ★prop セットの時ぬるぽ
-				Val2Variant( args[ i ], &op.dp.rgvarg[ i ] );
+				Val2Variant(args[i], &op.dp.rgvarg[i]);
 			}
 			memset(&excepinfo, 0, sizeof(EXCEPINFO));
-			hr = m_pApp->Invoke( DispID, 
+			hr = m_pApp->Invoke(DispID, 
 												 IID_NULL, lcid, wFlags,
 												 &op.dp, nullptr,
 												 &excepinfo, &argErr);
 			for(i = 0; i < op.dp.cArgs; i++) {
-				VariantClear(&op.dp.rgvarg[ i ]);
+				VariantClear(&op.dp.rgvarg[i]);
 			}
 		}
 		/* mega kludge. if a method in WORD is called and we ask
@@ -588,7 +588,7 @@ void COle::Invoke(
 		 * functions whose DISPID > 0x8000 */
 		if (hr == DISP_E_EXCEPTION && DispID > 0x8000) {
 			memset(&excepinfo, 0, sizeof(EXCEPINFO));
-			hr = m_pApp->Invoke( DispID, 
+			hr = m_pApp->Invoke(DispID, 
 												 IID_NULL, lcid, wFlags,
 												 &op.dp, nullptr,
 												 &excepinfo, &argErr);
@@ -597,41 +597,41 @@ void COle::Invoke(
 	}
 	/* clear dispatch parameter */
 	for(i = 0; i < op.dp.cArgs; i++) {
-		VariantClear(&op.dp.rgvarg[ i ]);
+		VariantClear(&op.dp.rgvarg[i]);
 	}
 	
 	Local<Value> ret;
-	if( FAILED( hr )) {
-		ThrowHResultError( hr );
-		ret = Undefined( Isolate::GetCurrent());
+	if(FAILED(hr)) {
+		ThrowHResultError(hr);
+		ret = Undefined(Isolate::GetCurrent());
 	}else{
-		ret = Variant2Val( &result );
+		ret = Variant2Val(&result);
 		VariantClear(&result);
 	}
 	
 	delete [] realargs;
 	delete [] op.dp.rgdispidNamedArgs;
 	
-	if( &Ret ) Ret.Set( ret );
+	if(&Ret) Ret.Set(ret);
 }
 
 /*** HRESULT のエラーメッセージを投げる *************************************/
 
-void COle::ThrowHResultError( HRESULT hr ){
+void COle::ThrowHResultError(HRESULT hr){
 	LPWSTR pMsg;
 	
 	FormatMessageW(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		nullptr, hr, MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ),
-		( LPWSTR )&pMsg, 0, nullptr
+		nullptr, hr, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPWSTR)&pMsg, 0, nullptr
 	);
-	if( pMsg != nullptr ){
-		Isolate::GetCurrent()->ThrowException( Exception::Error( String::NewFromTwoByte( Isolate::GetCurrent(), ( uint16_t *)pMsg )));
-		LocalFree( pMsg );
+	if(pMsg != nullptr){
+		Isolate::GetCurrent()->ThrowException(Exception::Error(String::NewFromTwoByte(Isolate::GetCurrent(), (uint16_t *)pMsg)));
+		LocalFree(pMsg);
 	}else{
-		char szMsg[ 64 ];
-		sprintf( szMsg, "OLE Error 0x%X", hr );
-		Isolate::GetCurrent()->ThrowException( Exception::Error( String::NewFromOneByte( Isolate::GetCurrent(), ( uint8_t *)szMsg )));
+		char szMsg[64];
+		sprintf(szMsg, "OLE Error 0x%X", hr);
+		Isolate::GetCurrent()->ThrowException(Exception::Error(String::NewFromOneByte(Isolate::GetCurrent(), (uint8_t *)szMsg)));
 	}
 }
 
@@ -647,24 +647,24 @@ HRESULT STDMETHODCALLTYPE ICallbackJSFunc::Invoke(
 	EXCEPINFO *pExcepInfo,
 	UINT *puArgErr
 ){
-	DebugMsgD( ">ICallbackJSFunc::Invoke\n" );
+	DebugMsgD(">ICallbackJSFunc::Invoke\n");
 	
-	Locker locker( m_pIsolate );
-	Isolate::Scope IsolateScope( m_pIsolate );
-	HandleScope handle_scope( m_pIsolate );
-	Local<Context> context = Local<Context>::New( m_pIsolate, m_Context );
-	Context::Scope context_scope( context );
+	Locker locker(m_pIsolate);
+	Isolate::Scope IsolateScope(m_pIsolate);
+	HandleScope handle_scope(m_pIsolate);
+	Local<Context> context = Local<Context>::New(m_pIsolate, m_Context);
+	Context::Scope context_scope(context);
 	TryCatch try_catch;
 	
-	Local<Function>::New( m_pIsolate, m_CallbackFunc )
-		->Call( context->Global(), 0, nullptr );
+	Local<Function>::New(m_pIsolate, m_CallbackFunc)
+		->Call(context->Global(), 0, nullptr);
 	
-	if( try_catch.HasCaught()){
-		LPWSTR pMsg = CScript::ReportException( nullptr, try_catch );
-		fputws( pMsg, stdout );
+	if(try_catch.HasCaught()){
+		LPWSTR pMsg = CScript::ReportException(nullptr, try_catch);
+		fputws(pMsg, stdout);
 		delete [] pMsg;
 	}
 	
-	DebugMsgD( "<ICallbackJSFunc::Invoke\n" );
+	DebugMsgD("<ICallbackJSFunc::Invoke\n");
 	return S_OK;
 }
