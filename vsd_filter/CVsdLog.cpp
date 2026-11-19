@@ -17,7 +17,7 @@
 
 /*** コンストラクタ *********************************************************/
 
-CVsdLog::CVsdLog(CVsdFilter *pVsd){
+CVsdLog::CVsdLog(){
 	m_dFreq	= LOG_FREQ;
 	
 	m_iLogStartTime	= -1;
@@ -25,7 +25,6 @@ CVsdLog::CVsdLog(CVsdFilter *pVsd){
 	m_dLong2Meter = 0;
 	m_dLati2Meter = 0;
 	m_iCnt		= 0;
-	m_pVsd		= pVsd;
 	
 	m_iCalibStart	=
 	m_iCalibStop	= -1;
@@ -407,7 +406,7 @@ double CVsdLog::GPSLogGetLength(
 int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *&pLapLog){
 	{
 		// JavaScript オブジェクト初期化
-		CScript Script(m_pVsd);
+		CScript Script;
 		if(Script.InitLogReader() != ERR_OK){
 			return 0;
 		}
@@ -423,7 +422,7 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *
 		delete [] pReader;
 		
 		if(Script.m_uError != ERR_OK){
-			m_pVsd->DispErrorMessage(Script.GetErrorMessage());
+			g_pVsd->DispErrorMessage(Script.GetErrorMessage());
 			return 0;
 		}
 		
@@ -749,13 +748,13 @@ void CVsdLog::RotateMap(double dAngle){
 
 /*** チャートリード *********************************************************/
 
-int CLapLogAll::LapChartRead(const char *szFileName, CVsdFilter *pVsd){
+int CLapLogAll::LapChartRead(const char *szFileName){
 	m_iLapMode = LAPMODE_CHART;
 	m_iLapSrc  = LAPSRC_VIDEO;
 	
 	{
 		// JavaScript オブジェクト初期化
-		CScript Script(pVsd);
+		CScript Script;
 		
 		if(Script.Initialize(L"_system/InitLapChartReader.js") == ERR_OK){
 			// スクリプト実行
@@ -767,7 +766,7 @@ int CLapLogAll::LapChartRead(const char *szFileName, CVsdFilter *pVsd){
 		}
 		
 		if(Script.m_uError != ERR_OK){
-			pVsd->DispErrorMessage(Script.GetErrorMessage());
+			g_pVsd->DispErrorMessage(Script.GetErrorMessage());
 			return 0;
 		}
 		

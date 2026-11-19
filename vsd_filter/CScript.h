@@ -28,8 +28,6 @@
 
 typedef Local<Array> v8Array;
 
-class CVsdFilter;
-
 class ArrayBufferAllocator : public ArrayBuffer::Allocator {
 public:
 	virtual void* Allocate(size_t length) {
@@ -75,7 +73,7 @@ class CScriptRoot {
 
 class CScript : public CJsClass {
   public:
-	CScript(CVsdFilter *pVsd);
+	CScript();
 	~CScript(void);
 	
 	Local<Context> GetContext(void){
@@ -135,7 +133,6 @@ class CScript : public CJsClass {
 		return String::NewFromTwoByte(Isolate::GetCurrent(), (uint16_t *)m_szErrorMsgID[uID]);
 	}
 	
-	CVsdFilter	*m_pVsd;	// エ…
 	Persistent<Context,CopyablePersistentTraits<Context>> m_Context;
 	Isolate *m_pIsolate;
 	LPWSTR m_szErrorMsg;

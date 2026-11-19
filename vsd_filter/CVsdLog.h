@@ -124,7 +124,7 @@ class CLapLogAll : public CLapLog {
 	}
 	
 	std::vector<int>& CamCarLap(void){return m_LapTable[m_iCamCarIdx];}
-	int LapChartRead(const char *szFileName, CVsdFilter *pVsd);
+	int LapChartRead(const char *szFileName);
 	void MakeCamLapData(int iStartFrame, int iEndFrame);
 	void CalcLapInfo(int iFrameCnt, double dFPS);
 	
@@ -316,7 +316,7 @@ class CVsdLog : public CJsClass {
 	std::map<std::string, CLog *> m_Logs;
 	
 	// コンストラクタ・デストラクタ
-	CVsdLog(CVsdFilter *pVsd);
+	CVsdLog();
 	
 	UINT GPSLogRescan();
 	void RotateMap(double dAngle);
@@ -432,5 +432,4 @@ class CVsdLog : public CJsClass {
 	double m_dLati2Meter;
 	
 	int	m_iCnt;
-	CVsdFilter	*m_pVsd;
 };

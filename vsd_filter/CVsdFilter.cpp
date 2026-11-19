@@ -29,10 +29,6 @@ const int CVsdFilter::m_iPrivateBuild =
 	1;
 #endif
 
-CVsdFilter	*g_Vsd;
-
-CScriptRoot	CVsdFilter::m_ScriptRoot;
-
 /*** コンストラクタ *********************************************************/
 
 void CVsdFilter::Constructor(void){
@@ -113,7 +109,7 @@ void CVsdFilter::Destructor(void){
 
 int CVsdFilter::ReadLog(CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc){
 	if(pLog) delete pLog;
-	pLog = new CVsdLog(this);
+	pLog = new CVsdLog;
 	
 	CLapLog *pLapLog = nullptr;
 	
@@ -372,7 +368,7 @@ int CVsdFilter::LapChartRead(const char *szFileName){
 	}
 	
 	CLapLogAll *pLapLog = new CLapLogAll();
-	int iRet = pLapLog->LapChartRead(szFileName, this);
+	int iRet = pLapLog->LapChartRead(szFileName);
 	if(iRet == 0){
 		delete pLapLog;
 		return 0;

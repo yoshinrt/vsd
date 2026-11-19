@@ -186,8 +186,6 @@ BOOL func_exit(FILTER *fp){
 
 /*** CVsdFilter クラス ***************************************************/
 
-extern CVsdFilter	*g_Vsd;
-
 /*** tarckbar / checkbox conf_name 名 ***/
 
 const char *CVsdFilter::m_szTrackbarName[] = {
@@ -624,13 +622,13 @@ BOOL CVsdFilter::ReadGPSLog(HWND hwnd){
 /*** func_proc **************************************************************/
 
 BOOL func_proc(FILTER *fp, FILTER_PROC_INFO *fpip){
-	if(!g_Vsd) return 0;
+	if(!g_pVsd) return 0;
 	// クラスに変換
-	g_Vsd->fpip	= fpip;
+	g_pVsd->fpip	= fpip;
 	
-	BOOL bRet = g_Vsd->DrawVSD();
+	BOOL bRet = g_pVsd->DrawVSD();
 	#ifdef DEBUG
-	g_Vsd->fpip	= nullptr;
+	g_pVsd->fpip	= nullptr;
 	#endif
 	
 	return bRet;
@@ -644,7 +642,7 @@ BOOL ListTreeCallback(const char *szPath, const char *szFile, void *pParam){
 	char szBuf[MAX_PATH + 1];
 	
 	strcat(strcpy(szBuf, szPath), szFile);
-	char *p = szBuf + strlen(g_Vsd->m_szPluginDirA);
+	char *p = szBuf + strlen(g_pVsd->m_szPluginDirA);
 	
 	SendMessage((HWND)pParam, CB_ADDSTRING, 0, (LPARAM)p);
 	
@@ -656,10 +654,10 @@ void SetSkinFileList(HWND hwnd){
 	
 	if(SendMessage(hwnd, CB_GETCOUNT, 0, 0) > 0) return;
 	
-	strcpy(szBuf, g_Vsd->m_szPluginDirA);
+	strcpy(szBuf, g_pVsd->m_szPluginDirA);
 	ListTree(szBuf, "*", ListTreeCallback, hwnd);
 	SendMessage(hwnd, CB_ADDSTRING, 0, (LPARAM)"ファイル名を指定して開く...");
-	SetWindowText(hwnd, g_Vsd->m_szSkinFile);
+	SetWindowText(hwnd, g_pVsd->m_szSkinFile);
 }
 
 /*** ダイアログサイズ拡張とパーツ追加 ***************************************/
@@ -871,7 +869,7 @@ BOOL CVsdFilter::CreateFilter(void){
 	
 	{
 		// JavaScript オブジェクト初期化
-		CScript Script(this);
+		CScript Script;
 		if(Script.InitLogReader() != ERR_OK){
 			return FALSE;
 		}
@@ -1207,32 +1205,32 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 	switch(message) {
 	  case WM_FILTER_FILE_OPEN:
 		
-		g_Vsd = new CVsdFilter(filter, editp);
+		g_pVsd = new CVsdFilter(filter, editp);
 		
 		// trackbar 設定
 		#ifdef PUBLIC_MODE
-			g_Vsd->VideoSt = 0;
-			g_Vsd->VideoEd = (int)(g_Vsd->GetFPS() * (OFFSET_ADJUST_WIDTH / 1000.0));
+			g_pVsd->VideoSt = 0;
+			g_pVsd->VideoEd = (int)(g_pVsd->GetFPS() * (OFFSET_ADJUST_WIDTH / 1000.0));
 		#else
 			track_e[PARAM_VSt] =
 			track_e[PARAM_VEd] = filter->exfunc->get_frame_n(editp);
 		#endif
 		
-		g_Vsd->m_piParamS[SHADOW_LAP_CHART_St] = 0;
-		g_Vsd->m_piParamS[SHADOW_LAP_CHART_Ed] = filter->exfunc->get_frame_n(editp);
+		g_pVsd->m_piParamS[SHADOW_LAP_CHART_St] = 0;
+		g_pVsd->m_piParamS[SHADOW_LAP_CHART_Ed] = filter->exfunc->get_frame_n(editp);
 		
 		// リストボックスアイテム追加
 		SetSkinFileList(GetDlgItem(hwnd, ID_COMBO_SEL_SKIN));
 		
 		// ファイルタイム取得
-		g_Vsd->GetFileCreationTime();
+		g_pVsd->GetFileCreationTime();
 		
 		// 設定再描画
 		filter->exfunc->filter_window_update(filter);
 		
 	  Case WM_FILTER_FILE_CLOSE:
-		delete g_Vsd;
-		g_Vsd = nullptr;
+		delete g_pVsd;
+		g_pVsd = nullptr;
 		
 	  Case WM_FILTER_MAIN_KEY_DOWN:
 		switch(wparam){
@@ -1246,11 +1244,11 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 			
 			// 自動ラップ計測モードのとき，他のマークをすべて解除する
 			if(
-				g_Vsd->m_piParamC[CHECK_LAP] &&
-				g_Vsd->m_piParamT[TRACK_SLineWidth] > 0 &&
+				g_pVsd->m_piParamC[CHECK_LAP] &&
+				g_pVsd->m_piParamT[TRACK_SLineWidth] > 0 &&
 				!(fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME)
 			){
-				for(int i = 0; i < g_Vsd->GetFrameMax(); ++i){
+				for(int i = 0; i < g_pVsd->GetFrameMax(); ++i){
 					filter->exfunc->get_frame_status(editp, i, &fsp);
 					if(fsp.edit_flag & EDIT_FRAME_EDIT_FLAG_MARKFRAME){
 						fsp.edit_flag &= ~EDIT_FRAME_EDIT_FLAG_MARKFRAME;
@@ -1263,19 +1261,19 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 			fsp.edit_flag ^= EDIT_FRAME_EDIT_FLAG_MARKFRAME;
 			filter->exfunc->set_frame_status(editp, iFrame, &fsp);
 			
-			g_Vsd->m_bCalcLapTimeReq = TRUE;
+			g_pVsd->m_bCalcLapTimeReq = TRUE;
 			return TRUE;
 		}
 		
 	  Case WM_FILTER_UPDATE:
 		iFrame = filter->exfunc->get_frame(editp);
 		if(
-			g_Vsd->m_iAdjustPointNum == 0 ||
-			g_Vsd->m_iAdjustPointNum == 1 && g_Vsd->m_iAdjustPointVid[0] != iFrame ||
-			g_Vsd->m_iAdjustPointNum == 2 && g_Vsd->m_iAdjustPointVid[0] != iFrame && g_Vsd->m_iAdjustPointVid[1] != iFrame
+			g_pVsd->m_iAdjustPointNum == 0 ||
+			g_pVsd->m_iAdjustPointNum == 1 && g_pVsd->m_iAdjustPointVid[0] != iFrame ||
+			g_pVsd->m_iAdjustPointNum == 2 && g_pVsd->m_iAdjustPointVid[0] != iFrame && g_pVsd->m_iAdjustPointVid[1] != iFrame
 		){
-			g_Vsd->m_piParamT[TRACK_VsdLogOffset] = 0;
-			g_Vsd->m_piParamT[TRACK_GPSLogOffset] = 0;
+			g_pVsd->m_piParamT[TRACK_VsdLogOffset] = 0;
+			g_pVsd->m_piParamT[TRACK_GPSLogOffset] = 0;
 			filter->exfunc->filter_window_update(filter);
 		}
 		
@@ -1286,10 +1284,10 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 			switch(wparam){
 				case ID_BUTT_SET_VSt:	filter->track[PARAM_VSt] = filter->exfunc->get_frame(editp);
 				Case ID_BUTT_SET_VEd:	filter->track[PARAM_VEd] = filter->exfunc->get_frame(editp);
-				Case ID_BUTT_SET_LSt:	if(g_Vsd->m_VsdLog) filter->track[PARAM_LSt] = g_Vsd->m_VsdLog->m_iLogNum;
-				Case ID_BUTT_SET_LEd:	if(g_Vsd->m_VsdLog) filter->track[PARAM_LEd] = g_Vsd->m_VsdLog->m_iLogNum;
-				Case ID_BUTT_SET_GSt:	if(g_Vsd->m_GPSLog) filter->track[PARAM_GSt] = g_Vsd->m_GPSLog->m_iLogNum;
-				Case ID_BUTT_SET_GEd:	if(g_Vsd->m_GPSLog) filter->track[PARAM_GEd] = g_Vsd->m_GPSLog->m_iLogNum;
+				Case ID_BUTT_SET_LSt:	if(g_pVsd->m_VsdLog) filter->track[PARAM_LSt] = g_pVsd->m_VsdLog->m_iLogNum;
+				Case ID_BUTT_SET_LEd:	if(g_pVsd->m_VsdLog) filter->track[PARAM_LEd] = g_pVsd->m_VsdLog->m_iLogNum;
+				Case ID_BUTT_SET_GSt:	if(g_pVsd->m_GPSLog) filter->track[PARAM_GSt] = g_pVsd->m_GPSLog->m_iLogNum;
+				Case ID_BUTT_SET_GEd:	if(g_pVsd->m_GPSLog) filter->track[PARAM_GEd] = g_pVsd->m_GPSLog->m_iLogNum;
 			}
 			// 設定再描画
 			filter->exfunc->filter_window_update(filter);
@@ -1300,45 +1298,45 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 		  case ID_BUTT_LOAD_CFG:	// .avs ロード
 			if(
 				filter->exfunc->dlg_get_load_name(szBuf, (LPSTR)FILE_CFG_EXT, nullptr) &&
-				g_Vsd->ConfigLoad(szBuf)
+				g_pVsd->ConfigLoad(szBuf)
 			){
 				StrTokFile(szBuf2, szBuf, STF_PATH2);
 				CPushDir push_dir(szBuf2);
 				
 				if(
-					g_Vsd->m_szLapChart &&
-					g_Vsd->LapChartRead(g_Vsd->m_szLapChart)
+					g_pVsd->m_szLapChart &&
+					g_pVsd->LapChartRead(g_pVsd->m_szLapChart)
 				){
 					filter->exfunc->filter_window_update(filter);
-					SetWindowText(GetDlgItem(hwnd, ID_EDIT_LOAD_LAPCHART), g_Vsd->m_szLapChart);
-					g_Vsd->DeleteScript();
+					SetWindowText(GetDlgItem(hwnd, ID_EDIT_LOAD_LAPCHART), g_pVsd->m_szLapChart);
+					g_pVsd->DeleteScript();
 				}
 				
 				// ログリード
-				if(g_Vsd->m_szLogFile){
+				if(g_pVsd->m_szLogFile){
 					DebugCmd(
 						UINT	uTimer = GetTickCount();
 						DebugMsgD("VSD Log read start\n");
 					);
 					
-					g_Vsd->ReadVsdLog(hwnd);
+					g_pVsd->ReadVsdLog(hwnd);
 					
 					DebugCmd(DebugMsgD("VSD Log read time = %d\n", GetTickCount() - uTimer);)
 				}
 				
-				if(g_Vsd->m_szGPSLogFile){
+				if(g_pVsd->m_szGPSLogFile){
 					DebugCmd(
 						UINT	uTimer = GetTickCount();
 						DebugMsgD("GPS Log read start\n");
 					);
 					// 単発ファイル
-					g_Vsd->ReadGPSLog(hwnd);
+					g_pVsd->ReadGPSLog(hwnd);
 					
 					DebugCmd(DebugMsgD("GPS Log read time = %d\n", GetTickCount() - uTimer);)
 				}
 				
-				if(g_Vsd->m_szSkinFile){
-					g_Vsd->SetSkinName(g_Vsd->m_szSkinFile, hwnd);
+				if(g_pVsd->m_szSkinFile){
+					g_pVsd->SetSkinName(g_pVsd->m_szSkinFile, hwnd);
 				}
 				
 				// 設定再描画
@@ -1352,11 +1350,11 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 			
 		  Case ID_BUTT_SAVE_CFG:
 			if(filter->exfunc->dlg_get_save_name(szBuf, (LPSTR)FILE_CFG_EXT, nullptr))
-				return g_Vsd->ConfigSave(szBuf);
+				return g_pVsd->ConfigSave(szBuf);
 			
 		  Case ID_BUTT_LOAD_LOG:	// .log ロード
-			if(g_Vsd->FileOpenDialog(g_Vsd->m_szLogFile, g_Vsd->m_szLogFileReader)){
-				if(g_Vsd->ReadVsdLog(hwnd)){
+			if(g_pVsd->FileOpenDialog(g_pVsd->m_szLogFile, g_pVsd->m_szLogFileReader)){
+				if(g_pVsd->ReadVsdLog(hwnd)){
 					// 設定再描画
 					filter->exfunc->filter_window_update(filter);
 					
@@ -1365,38 +1363,38 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 						func_update(filter, FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS);
 					#endif
 				}
-				g_Vsd->DeleteScript();
+				g_pVsd->DeleteScript();
 			}
 			
 		  Case ID_BUTT_LOAD_GPS:	// GPS ログロード
-			if(g_Vsd->FileOpenDialog(g_Vsd->m_szGPSLogFile, g_Vsd->m_szGPSLogFileReader)){
-				if(g_Vsd->ReadGPSLog(hwnd)){
+			if(g_pVsd->FileOpenDialog(g_pVsd->m_szGPSLogFile, g_pVsd->m_szGPSLogFileReader)){
+				if(g_pVsd->ReadGPSLog(hwnd)){
 					// 設定再描画
 					filter->exfunc->filter_window_update(filter);
 				}
-				g_Vsd->DeleteScript();
+				g_pVsd->DeleteScript();
 			}
 			
 		  Case ID_BUTT_LOAD_LAPCHART:	// ラップチャート ロード
 			if(
 				filter->exfunc->dlg_get_load_name(szBuf, (LPSTR)FILE_LAPCHART_EXT, nullptr) &&
-				g_Vsd->LapChartRead(szBuf)
+				g_pVsd->LapChartRead(szBuf)
 			){
-				StringNew(g_Vsd->m_szLapChart, szBuf);
+				StringNew(g_pVsd->m_szLapChart, szBuf);
 				filter->exfunc->filter_window_update(filter);
 				SetWindowText(GetDlgItem(hwnd, ID_EDIT_LOAD_LAPCHART), szBuf);
-				g_Vsd->m_bCalcLapTimeReq = TRUE;
-				g_Vsd->DeleteScript();
+				g_pVsd->m_bCalcLapTimeReq = TRUE;
+				g_pVsd->DeleteScript();
 			}
 			
 		  Case ID_BUTT_LAP_START:
-			g_Vsd->m_piParamS[SHADOW_LAP_CHART_St] = filter->exfunc->get_frame(editp);
-			g_Vsd->m_bCalcLapTimeReq = TRUE;
+			g_pVsd->m_piParamS[SHADOW_LAP_CHART_St] = filter->exfunc->get_frame(editp);
+			g_pVsd->m_bCalcLapTimeReq = TRUE;
 			return TRUE;
 			
 		  Case ID_BUTT_LAP_END:
-			g_Vsd->m_piParamS[SHADOW_LAP_CHART_Ed] = filter->exfunc->get_frame(editp);
-			g_Vsd->m_bCalcLapTimeReq = TRUE;
+			g_pVsd->m_piParamS[SHADOW_LAP_CHART_Ed] = filter->exfunc->get_frame(editp);
+			g_pVsd->m_bCalcLapTimeReq = TRUE;
 			return TRUE;
 			
 		  Case (CBN_SELCHANGE << 16) | ID_COMBO_SEL_SKIN:	// スキン選択
@@ -1410,8 +1408,8 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 					// ダイアログがキャンセルされた
 					if(!filter->exfunc->dlg_get_load_name(szBuf, (LPSTR)FILE_SKIN_EXT, nullptr)){
 						// とりあえず，直前の skin 名をそのままコピーしとく
-						//strcpy(szBuf, g_Vsd->m_szSkinFile);
-						//SetWindowText(hWndCombo, g_Vsd->m_szSkinFile);
+						//strcpy(szBuf, g_pVsd->m_szSkinFile);
+						//SetWindowText(hWndCombo, g_pVsd->m_szSkinFile);
 						// 何しても無駄だった...
 						return TRUE;
 					}
@@ -1423,7 +1421,7 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 					SendMessage(hWndCombo, CB_GETLBTEXT, i, (LPARAM)szBuf);
 				}
 				
-				g_Vsd->SetSkinName(szBuf, hwnd);
+				g_pVsd->SetSkinName(szBuf, hwnd);
 				filter->exfunc->filter_window_update(filter);	// 設定再描画
 			}
 		  Default:
@@ -1439,85 +1437,85 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 
 void SetupLogOffset(FILTER *filter){
 	
-	int	iFrame = filter->exfunc->get_frame(g_Vsd->editp);
+	int	iFrame = filter->exfunc->get_frame(g_pVsd->editp);
 	int	iPoint;
 	
 	// 調整ポイントを判断する
-	switch(g_Vsd->m_iAdjustPointNum){
+	switch(g_pVsd->m_iAdjustPointNum){
 	  case 0:
 		iPoint = 0;
-		g_Vsd->m_iAdjustPointNum = 1;
+		g_pVsd->m_iAdjustPointNum = 1;
 		
 	  Case 1:
-		if(abs(g_Vsd->m_iAdjustPointVid[0] - iFrame) <= (int)(g_Vsd->GetFPS() * 60)){
+		if(abs(g_pVsd->m_iAdjustPointVid[0] - iFrame) <= (int)(g_pVsd->GetFPS() * 60)){
 			// フレーム位置が前回と 1分以内なら，前回と同じ場所を使用する
 			iPoint = 0;
 		}else{
 			iPoint = 1;
-			g_Vsd->m_iAdjustPointNum = 2;
+			g_pVsd->m_iAdjustPointNum = 2;
 		}
 		
 	  Default: //Case 2:
 		// 2ポイントのうち，近いほうを採用する
 		iPoint = (
-			abs(g_Vsd->m_iAdjustPointVid[0] - iFrame) >
-			abs(g_Vsd->m_iAdjustPointVid[1] - iFrame)
+			abs(g_pVsd->m_iAdjustPointVid[0] - iFrame) >
+			abs(g_pVsd->m_iAdjustPointVid[1] - iFrame)
 		) ? 1 : 0;
 	}
 	
 	// フレーム位置が前回と違っていれば，GPS ログ位置再取得
 	// m_iAdjustPointNum = 0 時にはここを通ることはない
-	if(g_Vsd->m_iAdjustPointVid[iPoint] != iFrame){
-		g_Vsd->m_iAdjustPointVsd[iPoint] =
-			g_Vsd->VideoEd == g_Vsd->VideoSt ? 0
+	if(g_pVsd->m_iAdjustPointVid[iPoint] != iFrame){
+		g_pVsd->m_iAdjustPointVsd[iPoint] =
+			g_pVsd->VideoEd == g_pVsd->VideoSt ? 0
 			: (int)(
-				(double)(g_Vsd->VsdEd - g_Vsd->VsdSt)
-				* (iFrame - g_Vsd->VideoSt) 
-				/ (g_Vsd->VideoEd - g_Vsd->VideoSt)
-				+ g_Vsd->VsdSt
+				(double)(g_pVsd->VsdEd - g_pVsd->VsdSt)
+				* (iFrame - g_pVsd->VideoSt) 
+				/ (g_pVsd->VideoEd - g_pVsd->VideoSt)
+				+ g_pVsd->VsdSt
 			);
-		g_Vsd->m_piParamT[TRACK_VsdLogOffset] = 0;
+		g_pVsd->m_piParamT[TRACK_VsdLogOffset] = 0;
 		
-		g_Vsd->m_iAdjustPointGPS[iPoint] =
-			g_Vsd->VideoEd == g_Vsd->VideoSt ? 0
+		g_pVsd->m_iAdjustPointGPS[iPoint] =
+			g_pVsd->VideoEd == g_pVsd->VideoSt ? 0
 			: (int)(
-				(double)(g_Vsd->GPSEd - g_Vsd->GPSSt)
-				* (iFrame - g_Vsd->VideoSt) 
-				/ (g_Vsd->VideoEd - g_Vsd->VideoSt)
-				+ g_Vsd->GPSSt
+				(double)(g_pVsd->GPSEd - g_pVsd->GPSSt)
+				* (iFrame - g_pVsd->VideoSt) 
+				/ (g_pVsd->VideoEd - g_pVsd->VideoSt)
+				+ g_pVsd->GPSSt
 			);
-		g_Vsd->m_piParamT[TRACK_GPSLogOffset] = 0;
+		g_pVsd->m_piParamT[TRACK_GPSLogOffset] = 0;
 		
-		g_Vsd->m_iAdjustPointVid[iPoint] =
-		(iPoint ? g_Vsd->VideoEd : g_Vsd->VideoSt) = iFrame;
+		g_pVsd->m_iAdjustPointVid[iPoint] =
+		(iPoint ? g_pVsd->VideoEd : g_pVsd->VideoSt) = iFrame;
 	}
 	
 	// 対象調整ポイントの設定
-	(iPoint ? g_Vsd->VsdEd : g_Vsd->VsdSt) =
-		g_Vsd->m_iAdjustPointVsd[iPoint] - g_Vsd->m_piParamT[TRACK_VsdLogOffset];
-	(iPoint ? g_Vsd->GPSEd : g_Vsd->GPSSt) =
-		g_Vsd->m_iAdjustPointGPS[iPoint] - g_Vsd->m_piParamT[TRACK_GPSLogOffset];
+	(iPoint ? g_pVsd->VsdEd : g_pVsd->VsdSt) =
+		g_pVsd->m_iAdjustPointVsd[iPoint] - g_pVsd->m_piParamT[TRACK_VsdLogOffset];
+	(iPoint ? g_pVsd->GPSEd : g_pVsd->GPSSt) =
+		g_pVsd->m_iAdjustPointGPS[iPoint] - g_pVsd->m_piParamT[TRACK_GPSLogOffset];
 	
 	// iPoint == 1 時は，後ろの調整点を FPS に応じて自動調整
-	if(g_Vsd->m_iAdjustPointNum == 1){
-		g_Vsd->VideoEd = g_Vsd->VideoSt + (int)(g_Vsd->GetFPS() * (OFFSET_ADJUST_WIDTH / 1000.0));
-		g_Vsd->VsdEd   = g_Vsd->VsdSt + (int)(SLIDER_TIME * OFFSET_ADJUST_WIDTH);
-		g_Vsd->GPSEd   = g_Vsd->GPSSt + (int)(SLIDER_TIME * OFFSET_ADJUST_WIDTH);
+	if(g_pVsd->m_iAdjustPointNum == 1){
+		g_pVsd->VideoEd = g_pVsd->VideoSt + (int)(g_pVsd->GetFPS() * (OFFSET_ADJUST_WIDTH / 1000.0));
+		g_pVsd->VsdEd   = g_pVsd->VsdSt + (int)(SLIDER_TIME * OFFSET_ADJUST_WIDTH);
+		g_pVsd->GPSEd   = g_pVsd->GPSSt + (int)(SLIDER_TIME * OFFSET_ADJUST_WIDTH);
 		
 		#ifndef PUBLIC_MODE
 			// スライダ設定値がスライダバーの設定範囲を超えている場合，
 			// スライダバー設定範囲を再設定する
-			if(g_Vsd->VideoEd > filter->track_e[PARAM_VSt]){
+			if(g_pVsd->VideoEd > filter->track_e[PARAM_VSt]){
 				filter->track_e[PARAM_VSt] =
-				filter->track_e[PARAM_VEd] = g_Vsd->VideoEd;
+				filter->track_e[PARAM_VEd] = g_pVsd->VideoEd;
 			}
-			if(g_Vsd->VsdEd > filter->track_e[PARAM_GSt]){
+			if(g_pVsd->VsdEd > filter->track_e[PARAM_GSt]){
 				filter->track_e[PARAM_GSt] =
-				filter->track_e[PARAM_GEd] = g_Vsd->VsdEd;
+				filter->track_e[PARAM_GEd] = g_pVsd->VsdEd;
 			}
-			if(g_Vsd->GPSEd > filter->track_e[PARAM_GSt]){
+			if(g_pVsd->GPSEd > filter->track_e[PARAM_GSt]){
 				filter->track_e[PARAM_GSt] =
-				filter->track_e[PARAM_GEd] = g_Vsd->GPSEd;
+				filter->track_e[PARAM_GEd] = g_pVsd->GPSEd;
 			}
 		#endif
 	}
@@ -1530,7 +1528,7 @@ void SetupLogOffset(FILTER *filter){
 BOOL func_update(FILTER *filter, int status){
 	static	BOOL	bReEnter = FALSE;
 	
-	if(!g_Vsd || bReEnter) return TRUE;
+	if(!g_pVsd || bReEnter) return TRUE;
 	
 	bReEnter = TRUE;
 	
@@ -1542,24 +1540,24 @@ BOOL func_update(FILTER *filter, int status){
 		status <= FILTER_UPDATE_STATUS_TRACK + PARAM_GEd ||
 	#endif
 		status == FILTER_UPDATE_STATUS_TRACK + TRACK_SLineWidth
-	) g_Vsd->m_bCalcLapTimeReq = TRUE;
+	) g_pVsd->m_bCalcLapTimeReq = TRUE;
 	
 	// ログ位置自動認識モードの設定変更
 	if(status == (FILTER_UPDATE_STATUS_CHECK + CHECK_LOGPOS)){
 		
 		#ifdef PUBLIC_MODE
 			if(filter->check[CHECK_LOGPOS]){
-				g_Vsd->AutoSync(g_Vsd->m_VsdLog, &g_Vsd->VsdSt);
-				g_Vsd->AutoSync(g_Vsd->m_GPSLog, &g_Vsd->GPSSt);
+				g_pVsd->AutoSync(g_pVsd->m_VsdLog, &g_pVsd->VsdSt);
+				g_pVsd->AutoSync(g_pVsd->m_GPSLog, &g_pVsd->GPSSt);
 			}
 		#else
-			if(filter->check[CHECK_LOGPOS] && g_Vsd->m_VsdLog){
-				if(g_Vsd->m_VsdLog->m_iCalibStart >= 0){
-					filter->track[PARAM_LSt] = (int)(g_Vsd->m_VsdLog->m_iCalibStart * SLIDER_TIME);
+			if(filter->check[CHECK_LOGPOS] && g_pVsd->m_VsdLog){
+				if(g_pVsd->m_VsdLog->m_iCalibStart >= 0){
+					filter->track[PARAM_LSt] = (int)(g_pVsd->m_VsdLog->m_iCalibStart * SLIDER_TIME);
 				}
 				
-				if(g_Vsd->m_VsdLog->m_iCalibStop >= 0){
-					filter->track[PARAM_LEd] = (int)(g_Vsd->m_VsdLog->m_iCalibStop  * SLIDER_TIME);
+				if(g_pVsd->m_VsdLog->m_iCalibStop >= 0){
+					filter->track[PARAM_LEd] = (int)(g_pVsd->m_VsdLog->m_iCalibStop  * SLIDER_TIME);
 				}
 				
 				// 設定再描画
@@ -1570,10 +1568,10 @@ BOOL func_update(FILTER *filter, int status){
 	
 	// マップ回転
 	else if(status == (FILTER_UPDATE_STATUS_TRACK + TRACK_MapAngle)){
-		if(g_Vsd->m_VsdLog)
-			g_Vsd->m_VsdLog->RotateMap(filter->track[TRACK_MapAngle] * (-ToRAD / 10));
-		if(g_Vsd->m_GPSLog)
-			g_Vsd->m_GPSLog->RotateMap(filter->track[TRACK_MapAngle] * (-ToRAD / 10));
+		if(g_pVsd->m_VsdLog)
+			g_pVsd->m_VsdLog->RotateMap(filter->track[TRACK_MapAngle] * (-ToRAD / 10));
+		if(g_pVsd->m_GPSLog)
+			g_pVsd->m_GPSLog->RotateMap(filter->track[TRACK_MapAngle] * (-ToRAD / 10));
 	}
 	
 	else if(

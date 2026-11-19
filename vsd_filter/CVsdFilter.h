@@ -428,7 +428,7 @@ class CVsdFilter
 	int DispLap(void){return m_piParamC[CHECK_LAP];}			// !js_var:Config_lap_time
 	int DispGraph(void){return m_piParamC[CHECK_GRAPH];}		// !js_var:Config_graph
 	
-	static CScriptRoot	m_ScriptRoot;
+	inline static CScriptRoot	m_ScriptRoot;
 	
 	char	*m_szLogFile;
 	char	*m_szLogFileReader;
@@ -705,3 +705,5 @@ class CPushDir {
   private:
 	char	*m_szCurDir;
 };
+
+inline CVsdFilter* g_pVsd;

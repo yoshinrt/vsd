@@ -1892,7 +1892,7 @@ BOOL CVsdFilter::DrawVSD(void){
 	// スクリプト実行
 	DebugMsgD(":DrawVSD():Running script... %X\n", GetCurrentThreadId());
 	if(!m_Script && m_szSkinFile){
-		m_Script = new CScript(this);
+		m_Script = new CScript;
 		
 		if(m_Script->Initialize(L"_system/InitSkin.js") == ERR_OK){
 			LPWSTR p = nullptr;

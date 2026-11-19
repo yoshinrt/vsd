@@ -20,17 +20,15 @@ LPCWSTR CScript::m_szErrorMsgID[] = {
 
 /*** コンストラクタ *********************************************************/
 
-CScript::CScript(CVsdFilter *pVsd){
+CScript::CScript(){
 	DebugMsgD(":CScript::CScript():%X\n", GetCurrentThreadId());
 	
-	m_pIsolate = pVsd->m_ScriptRoot.m_pIsolate;
+	m_pIsolate = g_pVsd->m_ScriptRoot.m_pIsolate;
 	Locker locker(m_pIsolate);
 	Isolate::Scope IsolateScope(m_pIsolate);
 	
 	DebugMsgD(":CScript::CScript():m_pIsolate = %X\n", m_pIsolate);
 	DebugMsgD(":CScript::CScript():m_pContext\n");
-	
-	if(pVsd) m_pVsd = pVsd;
 	
 	m_szErrorMsg	= nullptr;
 	m_uError		= ERR_OK;
@@ -292,13 +290,13 @@ UINT CScript::Initialize(LPCWSTR wszFileName){
 	// Image クラス登録
 	CVsdImageIF::InitializeClass(m_pIsolate, global);
 	CVsdFontIF::InitializeClass(m_pIsolate, global);
-	CVsdFilterIF::InitializeClass(m_pIsolate, global, m_pVsd);
-	CVsdFilterLogIF::InitializeClass(m_pIsolate, global, m_pVsd);
+	CVsdFilterIF::InitializeClass(m_pIsolate, global, g_pVsd);
+	CVsdFilterLogIF::InitializeClass(m_pIsolate, global, g_pVsd);
 	CVsdFileIF::InitializeClass(m_pIsolate, global);
 	CScriptIF::InitializeClass(m_pIsolate, global);
 	COleIF::InitializeClass(m_pIsolate, global);
 	
-	global->Set(String::NewFromOneByte(m_pIsolate, (uint8_t *)"__CVsdFilter"), External::New(m_pIsolate, m_pVsd));
+	global->Set(String::NewFromOneByte(m_pIsolate, (uint8_t *)"__CVsdFilter"), External::New(m_pIsolate, g_pVsd));
 	global->Set(String::NewFromOneByte(m_pIsolate, (uint8_t *)"__CScript"), External::New(m_pIsolate, this));
 	
 	// グローバルオブジェクトから環境を生成
@@ -339,7 +337,7 @@ UINT CScript::RunFileCore(LPCWSTR szFileName){
 	
 	FILE *fp;
 	// スクリプト ロード
-	CPushDir push_dir(m_pVsd->m_szPluginDirA);
+	CPushDir push_dir(g_pVsd->m_szPluginDirA);
 	fp = _wfopen(szFileName, L"r");
 	
 	if(fp == nullptr) return m_uError = ERR_CANT_OPEN_FILE;
@@ -458,7 +456,7 @@ BOOL LogReaderCallback(const char *szPath, const char *szFile, void *pParam){
 	
 	if(Script.m_uError){
 		// エラー
-		Script.m_pVsd->DispErrorMessage(Script.GetErrorMessage());
+		g_pVsd->DispErrorMessage(Script.GetErrorMessage());
 		return FALSE;
 	}
 	
@@ -469,13 +467,13 @@ UINT CScript::InitLogReader(void){
 	Initialize(L"_system/InitLogReader.js");
 	if(m_uError){
 		// エラー
-		m_pVsd->DispErrorMessage(GetErrorMessage());
+		g_pVsd->DispErrorMessage(GetErrorMessage());
 		return m_uError;
 	}
 	
 	// スクリプトロード
 	char szBuf[MAX_PATH + 1];
-	strcpy(szBuf, m_pVsd->m_szPluginDirA);
+	strcpy(szBuf, g_pVsd->m_szPluginDirA);
 	strcat(szBuf, LOG_READER_DIR "\\");
 	if(!ListTree(szBuf, "*", LogReaderCallback, this)){
 		return ERR_CANT_OPEN_FILE;
@@ -484,7 +482,7 @@ UINT CScript::InitLogReader(void){
 	Run(L"SortLogReaderInfo", TRUE);
 	if(m_uError){
 		// エラー
-		m_pVsd->DispErrorMessage(GetErrorMessage());
+		g_pVsd->DispErrorMessage(GetErrorMessage());
 		return m_uError;
 	}
 	

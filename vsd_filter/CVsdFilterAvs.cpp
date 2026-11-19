@@ -29,8 +29,6 @@ enum {
 	ARGID_NUM
 };
 
-extern CVsdFilter	*g_Vsd;
-
 /*** コンストラクタ・デストラクタ *******************************************/
 
 // param 指定
@@ -273,7 +271,7 @@ PVideoFrame __stdcall CVsdFilter::GetFrame(int n, IScriptEnvironment* env){
 }
 
 AVSValue __cdecl Create_VSDFilter(AVSValue args, void* user_data, IScriptEnvironment* env){
-	return g_Vsd = new CVsdFilter(
+	return g_pVsd = new CVsdFilter(
 		args[0].AsClip(),
 		args,
 		env
