@@ -32,6 +32,7 @@ class CScript_qjs : public CJsClass {
 	CScript_qjs();
 	~CScript_qjs(void);
 	
+	void RegisterClass();
 	UINT Initialize();
 	UINT RunFile(LPCSTR szFileName);
 	UINT RunScript(LPCSTR szScript, bool bModule = false);
@@ -77,14 +78,14 @@ class CScript_qjs : public CJsClass {
 	UINT InitLogReader(void);
 	
 	// Global オブジェクト
-	static void DebugPrint(LPCSTR szMsg);	// !js_func
+	static void DebugPrint(std::string msg);	// !js_func
 	static int MessageBox(	// !js_func
-		LPCSTR szMsg,
-		LPCSTR szCaption,	// !default:nullptr
+		std::string msg,
+		std::string caption,	// !default:nullptr
 		UINT	uType		// !default:MB_OK
 	);
 	
-	static void Print(LPCSTR szMsg);	// !js_func
+	static void Print(std::string msg);	// !js_func
 	
 	// 距離取得
 	static double GetDistanceByLngLat(	// !js_func

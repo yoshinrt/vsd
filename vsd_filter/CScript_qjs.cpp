@@ -41,24 +41,23 @@ std::string CScript_qjs::ReportException(const qjsb::JSException& e){
 
 /*** Print ******************************************************************/
 
-void CScript_qjs::Print(LPCSTR szMsg){
-	CVsdFilter::Print(Utf8ToWide(szMsg).c_str());
+void CScript_qjs::Print(std::string msg){
+	CVsdFilter::Print(Utf8ToWide(msg).c_str());
 }
 
 int CScript_qjs::MessageBox(
-	LPCSTR szMsg,
-	LPCSTR szCaption,
+	std::string msg,
+	std::string caption,
 	UINT	uType
 ){
-	return MessageBoxW(nullptr, Utf8ToWide(szMsg).c_str(),
-		szCaption ? Utf8ToWide(szCaption).c_str() : L"VSD filter JavaScript message",
+	return MessageBoxW(nullptr, Utf8ToWide(msg).c_str(),
+		caption.empty() ? L"VSD filter JavaScript message" : Utf8ToWide(caption).c_str(),
 		uType
 	);
 }
 
-void CScript_qjs::DebugPrint(LPCSTR szMsg){
-	OutputDebugStringW(Utf8ToWide(szMsg).c_str());
-	OutputDebugStringW(L"\n");
+void CScript_qjs::DebugPrint(std::string msg){
+	OutputDebugStringW(Utf8ToWide(msg).c_str());
 }
 
 /*** JavaScript interface のセットアップ ************************************/

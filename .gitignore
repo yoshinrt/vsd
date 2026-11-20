@@ -1,3 +1,4 @@
+*.vcxproj.user
 vsd2/Release/Exe/
 vsd2/Release/Obj/
 vsd2/bin/mk_symbol_lib.bat

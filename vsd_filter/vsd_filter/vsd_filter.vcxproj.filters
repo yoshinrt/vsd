@@ -96,6 +96,9 @@
     <ClInclude Include="..\CScript_qjs.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="..\CVsdFile_qjs.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\CVsdFilter.cpp">
@@ -126,6 +129,12 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="..\CScript_qjs.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CVsdFile_qjs.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ScriptIF_qjs.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
