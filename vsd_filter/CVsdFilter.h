@@ -11,6 +11,7 @@
 #include "CVsdLog.h"
 #include "CVsdFont.h"
 #include "CScript.h"
+#include "CScript_qjs.h"
 #include "CVsdImage.h"
 #include "CPixel.h"
 #include "CJsClass.h"
@@ -451,18 +452,18 @@ class CVsdFilter
 		char szBuf[MAX_PATH + 1];
 		
 		if(szSkinFile == nullptr){
-			StringNew(m_szSkinDirW, (LPCWSTR)nullptr);
-			return StringNew(m_szSkinDirA, nullptr);
+			StringNewW(m_szSkinDirW, (LPCWSTR)nullptr);
+			return StringNewA(m_szSkinDirA, nullptr);
 		}
 		
-		StringNew(m_szSkinFile, szSkinFile);
+		StringNewA(m_szSkinFile, szSkinFile);
 		
 		// スキンファイル名を CWD=m_szPluginDirA とみなしフルパスに変換
 		GetFullPathWithCDir(szBuf, szSkinFile, m_szPluginDirA);
 		
 		// ↑のディレクトリ名を得る
-		StringNew(m_szSkinDirA, StrTokFile(szBuf, szBuf, STF_FULL | STF_PATH2));
-		StringNew(m_szSkinDirW, m_szSkinDirA);
+		StringNewA(m_szSkinDirA, StrTokFile(szBuf, szBuf, STF_FULL | STF_PATH2));
+		StringNewA2W(m_szSkinDirW, m_szSkinDirA);
 		return m_szSkinDirA;
 	}
 	
@@ -472,8 +473,8 @@ class CVsdFilter
 		GetModuleFileName((HMODULE)m_hInst, szBuf, MAX_PATH);
 		char *p = StrTokFile(nullptr, szBuf, STF_NODE);
 		if(p) strcpy(p, PLUGIN_DIR "\\");
-		StringNew(m_szPluginDirA, szBuf);
-		StringNew(m_szPluginDirW, m_szPluginDirA);
+		StringNewA(m_szPluginDirA, szBuf);
+		StringNewA2W(m_szPluginDirW, m_szPluginDirA);
 		return m_szPluginDirA;
 	}
 	
@@ -537,6 +538,10 @@ class CVsdFilter
 			delete m_Script;
 			m_Script = nullptr;
 		}
+		if(m_Script_qjs){
+			delete m_Script_qjs;
+			m_Script_qjs = nullptr;
+		}
 	}
 	
 	static void OpenConsole(void);
@@ -546,6 +551,7 @@ class CVsdFilter
 	BOOL	m_bConsoleOn;
 	
 	CScript	*m_Script;
+	CScript_qjs* m_Script_qjs;
 	
   protected:
 	int m_iTextPosX, m_iTextPosY;

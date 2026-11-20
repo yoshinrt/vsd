@@ -73,7 +73,7 @@ using namespace v8;
 #define WIDEN_(x) L##x
 #define WIDEN(x)  WIDEN_(x)
 
-static char *StringNew(char *&szDst, const char *szSrc){
+static char *StringNewA(char *&szDst, const char *szSrc){
 	if(szDst == szSrc) return(szDst);
 	if(szDst) delete [] szDst;
 	
@@ -84,7 +84,7 @@ static char *StringNew(char *&szDst, const char *szSrc){
 	return strcpy(szDst, szSrc);
 }
 
-static LPWSTR StringNew(LPWSTR& szDst, LPCWSTR szSrc){
+static LPWSTR StringNewW(LPWSTR& szDst, LPCWSTR szSrc){
 	if(szDst == szSrc) return(szDst);
 	if(szDst) delete [] szDst;
 	
@@ -95,7 +95,7 @@ static LPWSTR StringNew(LPWSTR& szDst, LPCWSTR szSrc){
 	return wcscpy(szDst, szSrc);
 }
 
-static LPWSTR StringNew(LPWSTR& szDst, const char *szSrc){
+static LPWSTR StringNewA2W(LPWSTR& szDst, const char *szSrc){
 	if(szDst) delete [] szDst;
 	
 	if(szSrc == nullptr || *szSrc == '\0'){
@@ -124,7 +124,7 @@ static LPWSTR StringNew(LPWSTR& szDst, const char *szSrc){
 	return szDst;
 }
 
-static char *StringNew(char *&szDst, LPCWSTR &szSrc){
+static char *StringNewW2A(char *&szDst, LPCWSTR &szSrc){
 	if(szDst) delete [] szDst;
 	
 	if(szSrc == nullptr || *szSrc == '\0'){

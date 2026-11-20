@@ -1887,10 +1887,7 @@ BOOL CVsdFilter::DrawVSD(void){
 		m_Script = new CScript;
 		
 		if(m_Script->Initialize(L"_system/InitSkin.js") == ERR_OK){
-			LPWSTR p = nullptr;
-			StringNew(p, m_szSkinFile);
-			m_Script->RunFile(p);
-			delete [] p;
+			m_Script->RunFile(AnsiToWide(m_szSkinFile).c_str());
 			
 			if(m_Script->m_uError == ERR_OK){
 				m_Script->Run(L"Initialize");

@@ -50,7 +50,7 @@ void CVsdFilter::Constructor(void){
 	m_bConsoleOn		= FALSE;
 	
 	// str param に初期値設定
-	#define DEF_STR_PARAM(id, var, init, conf_name) StringNew(var, init);
+	#define DEF_STR_PARAM(id, var, init, conf_name) StringNewA(var, init);
 	#include "def_str_param.h"
 	
 	// plugin dll path 取得
@@ -570,7 +570,7 @@ void CVsdFilter::Print(LPCWSTR szMsg){
 	OpenConsole();
 	
 	char *p = nullptr;
-	StringNew(p, szMsg);
+	StringNewW2A(p, szMsg);
 	fputs(p, stdout);
 	delete [] p;
 }

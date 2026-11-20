@@ -391,8 +391,8 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *
 		LPWSTR pStr = nullptr;
 		LPWSTR pReader = nullptr;
 		Script.Run_ss(L"ReadLog",
-			StringNew(pStr, szFileName),
-			StringNew(pReader, szReaderFunc)
+			StringNewA2W(pStr, szFileName),
+			StringNewA2W(pReader, szReaderFunc)
 		);
 		delete [] pStr;
 		delete [] pReader;
@@ -736,7 +736,8 @@ int CLapLogAll::LapChartRead(const char *szFileName){
 			// スクリプト実行
 			LPWSTR pStr = nullptr;
 			LPWSTR pReader = nullptr;
-			Script.Run_s(L"ReadLapChart", StringNew(pStr, szFileName));
+			LPWSTR p = nullptr;
+			Script.Run_s(L"ReadLapChart", StringNewA2W(pStr, szFileName));
 			delete [] pStr;
 			delete [] pReader;
 		}

@@ -26,8 +26,8 @@ int CVsdFile::Open(LPCWSTR szFile, LPCWSTR szMode){
 		char *pFile = nullptr;
 		char *pMode = nullptr;
 		
-		StringNew(pFile, szFile);
-		StringNew(pMode, szMode);
+		StringNewW2A(pFile, szFile);
+		StringNewW2A(pMode, szMode);
 		
 		m_gzfp = gzopen(pFile, pMode);
 		delete [] pFile;
@@ -40,7 +40,7 @@ int CVsdFile::Open(LPCWSTR szFile, LPCWSTR szMode){
 	else if(*pMode == 'Z'){
 		char *pFile = nullptr;
 		
-		StringNew(pFile, szFile);
+		StringNewW2A(pFile, szFile);
 		m_unzfp = unzOpen(pFile);
 		delete [] pFile;
 		
@@ -247,7 +247,7 @@ void CVsdFile::ZipNextFile(ReturnValue<Value> Ret){
 		}
 		
 		// unicode 変換
-		StringNew(wszFileName, m_cBuf);
+		StringNewA2W(wszFileName, m_cBuf);
 		
 		// '/' で終わっていたら dir なのでスキップ
 		int iLen = wcslen(wszFileName) - 1;

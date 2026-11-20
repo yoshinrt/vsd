@@ -889,8 +889,8 @@ BOOL CVsdFilter::FileOpenDialog(char *&szOut, char *&szReaderFunc){
 		++p;
 	}
 	
-	StringNew(szOut, szBuf);
-	StringNew(
+	StringNewA(szOut, szBuf);
+	StringNewA(
 		szReaderFunc,
 		ofn.nFilterIndex >= 2 ? m_vecReaderFunc[ofn.nFilterIndex - 2].c_str() :
 								nullptr
@@ -935,7 +935,7 @@ char *CVsdFilter::IsConfigParamStr(const char *szParamName, char *szBuf, char *&
 			szBuf = p + 1;
 		}
 		
-		StringNew(szDst, szBuf);
+		StringNewA(szDst, szBuf);
 		
 		// 文字列終端
 		if((p = strchr(szDst, '"')) || (p = strchr(szDst, ','))){
@@ -1291,7 +1291,7 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 				filter->exfunc->dlg_get_load_name(szBuf, (LPSTR)FILE_LAPCHART_EXT, nullptr) &&
 				g_pVsd->LapChartRead(szBuf)
 			){
-				StringNew(g_pVsd->m_szLapChart, szBuf);
+				StringNewA(g_pVsd->m_szLapChart, szBuf);
 				filter->exfunc->filter_window_update(filter);
 				SetWindowText(GetDlgItem(hwnd, ID_EDIT_LOAD_LAPCHART), szBuf);
 				g_pVsd->m_bCalcLapTimeReq = TRUE;

@@ -450,7 +450,7 @@ BOOL LogReaderCallback(const char *szPath, const char *szFile, void *pParam){
 	strcat(strcpy(szBuf, szPath), szFile);
 	
 	LPWSTR pFile = nullptr;
-	Script.RunFile(StringNew(pFile, szBuf));
+	Script.RunFile(StringNewA2W(pFile, szBuf));
 	delete pFile;
 	
 	if(Script.m_uError){
