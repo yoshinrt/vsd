@@ -130,11 +130,11 @@ class CVsdFilter
 	int ix_st, int iy_st, int ix_ed, int iy_ed
 	);
 	
-	void DrawLine(int x1, int y1, int x2, int y2, CPixelArg yc, UINT uPattern = 0xFFFFFFFF);
+	void DrawLine1(int x1, int y1, int x2, int y2, CPixelArg yc, UINT uPattern = 0xFFFFFFFF);
 	void DrawLine(		// !js_func
 		int x1, int y1, int x2, int y2,
-		int width,		// !arg:5 !default:1
-		CPixelArg yc,	// !arg:4
+		CPixelArg yc,
+		int width,		// !default:1
 		UINT uPattern = 0xFFFFFFFF	// !default:0xFFFFFFFF
 	);
 	
