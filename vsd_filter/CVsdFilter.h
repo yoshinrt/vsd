@@ -337,7 +337,8 @@ class CVsdFilter
 	}
 	
 	void DispErrorMessage(LPCWSTR szMsg);
-	
+	void DispErrorMessage(LPCSTR szMsg){DispErrorMessage(Utf8ToWide(szMsg).c_str());}
+
 	enum {
 		IMG_FILL		= (1 << 0),
 		IMG_NOCLOSE		= (1 << 1),
@@ -674,6 +675,7 @@ class CVsdFilter
 };
 
 BOOL ListTree(LPTSTR szPath, LPCTSTR szFile, BOOL (*CallbackFunc)(LPCTSTR, LPCTSTR, void *), void *pParam);
+BOOL ListTree(const wchar_t *path, const wchar_t *file, BOOL(*CallbackFunc)(const wchar_t*, const wchar_t*, void*), void* pParam);
 
 class CPushDir {
   public:

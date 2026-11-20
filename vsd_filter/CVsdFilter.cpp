@@ -487,6 +487,57 @@ BOOL ListTree(LPTSTR szPath, LPCTSTR szFile, BOOL (*CallbackFunc)(LPCTSTR, LPCTS
 	return(bSuccess);
 }
 
+BOOL ListTree(
+	const wchar_t *path,
+	const wchar_t *file,
+	BOOL(*CallbackFunc)(const wchar_t*, const wchar_t*, void*),
+	void* pParam
+){
+	HANDLE hFindFile;
+	WIN32_FIND_DATAW FindData;
+
+	BOOL bSuccess = TRUE;
+
+	std::wstring dir = std::wstring(path);
+
+	// path が \ で終わってない時の対処
+	if (!dir.empty() && dir.back() != L'\\') {
+		dir += L'\\';
+	}
+
+	std::wstring searchPath = dir + file;
+
+	hFindFile = FindFirstFileW(searchPath.c_str(), &FindData);
+
+	if (hFindFile != INVALID_HANDLE_VALUE) {
+		do {
+			std::wstring_view name(FindData.cFileName);
+
+			if (!name.empty() &&
+				name.front() != L'_' &&
+				name != L"." &&
+				name != L".."
+			) {
+
+				if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+					std::wstring subdir = dir + FindData.cFileName;
+
+					ListTree(subdir.c_str(), file, CallbackFunc, pParam);
+				}else{
+					if (!CallbackFunc(dir.c_str(), FindData.cFileName, pParam)) {
+						bSuccess = FALSE;
+						break;
+					}
+				}
+			}
+		} while (FindNextFileW(hFindFile, &FindData));
+
+		FindClose(hFindFile);
+	}
+
+	return bSuccess;
+}
+
 /*** コンソールウィンドウに表示 *********************************************/
 
 BOOL WINAPI HandlerRoutine(DWORD dwCtrlType){

@@ -1,4 +1,6 @@
-﻿class CJsMap : public Handle<Value> {
+﻿#pragma once
+
+class CJsMap : public Handle<Value> {
   public:
 	
 	// [] オペレータ

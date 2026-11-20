@@ -83,6 +83,7 @@
     <ClInclude Include="..\CPixel.h" />
     <ClInclude Include="..\CPixelBase.h" />
     <ClInclude Include="..\CScript.h" />
+    <ClInclude Include="..\CScript_qjs.h" />
     <ClInclude Include="..\CSemaphore.h" />
     <ClInclude Include="..\CJsMap.h" />
     <ClInclude Include="..\CVsdFile.h" />
@@ -108,6 +109,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\CScript.cpp" />
+    <ClCompile Include="..\CScript_qjs.cpp" />
     <ClCompile Include="..\CVsdFile.cpp" />
     <ClCompile Include="..\CVsdFilter.cpp" />
     <ClCompile Include="..\CVsdFilterAvu.cpp" />
