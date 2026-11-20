@@ -9,7 +9,7 @@ $Speed	= 64;	# [km/h]
 $Stop	= 0;
 
 # BT COM の着信を有効，COMn の n - 1 をttySm に設定
-open( $fp, "> /dev/ttyS2" ) || die( "Can't open COM\n" );
+open( $fp, "> /dev/ttyS3" ) || die( "Can't open COM\n" );
 #open( $fp, "| cat" ) || die( "Can't open COM\n" );
 
 $a = 6378137.0;
@@ -49,9 +49,10 @@ while( s/.*?<LineString>//s ){
 	@_ = split( /\s+/, $1 );
 	
 	foreach $Data ( @_ ){
-		$Data =~ /^([^,]+),([^,]+)/;
-		push( @Lng, 0 + $1 );
-		push( @Lat, 0 + $2 );
+		if($Data =~ /^([^,]+),([^,]+)/){
+			push( @Lng, 0 + $1 );
+			push( @Lat, 0 + $2 );
+		}
 	}
 }
 
@@ -107,7 +108,10 @@ for( $idx = 1; $idx <= $#Lng; ){
 	
 	$_ =
 		AddChksum( "\$GPGGA,$Time,$LatStr,$LngStr,1,12,0.5,10.0,M,,,," ) .
-		AddChksum( "\$GPRMC,$Time,A,$LatStr,$LngStr,$Knot,$Bearing,$Date,,,A" );
+		AddChksum( "\$GPRMC,$Time,A,$LatStr,$LngStr,$Knot,$Bearing,$Date,,,A" ) .
+		"\$GPGSA,A,3,01,02,03,04,05,06,07,08,,,,,1.0,0.8,0.6*31\n" .
+		"\$GPGSV,2,1,08,01,40,045,42,02,35,120,40,03,25,210,38,04,15,300,35*76\n" .
+		"\$GPGSV,2,2,08,05,50,090,45,06,60,180,48,07,70,270,50,08,10,010,30*71\n";
 	
 	print( $fp $_ ) if( defined $fp );
 	print "$idx:$_" if( $bDump );
@@ -124,8 +128,8 @@ for( $idx = 1; $idx <= $#Lng; ){
 			$Speed = $CmdNum;
 			print( "Spd = $Speed\n" );
 			$CmdNum = 0;
-		}elsif( $Key eq 'p' ){	Goto( $idx - 100 );
-		}elsif( $Key eq 'n' ){	Goto( $idx + 100 );
+		}elsif( $Key eq 'p' ){	Goto( $idx - 10 );
+		}elsif( $Key eq 'n' ){	Goto( $idx + 10 );
 		}elsif( $Key eq 'P' ){	Goto( $idx - 500 );
 		}elsif( $Key eq 'N' ){	Goto( $idx + 500 );
 		}elsif( $Key eq 'g' ){	Goto( $CmdNum );
