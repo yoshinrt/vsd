@@ -336,7 +336,7 @@ UINT CScript::RunFileCore(LPCWSTR szFileName){
 	
 	FILE *fp;
 	// スクリプト ロード
-	CPushDir push_dir(g_pVsd->m_szPluginDirA);
+	CPushDir push_dir(g_pVsd->m_szPluginDirW);
 	fp = _wfopen(szFileName, L"r");
 	
 	if(fp == nullptr) return m_uError = ERR_CANT_OPEN_FILE;

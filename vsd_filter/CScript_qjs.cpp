@@ -63,23 +63,29 @@ void CScript_qjs::DebugPrint(std::string msg){
 /*** JavaScript interface のセットアップ ************************************/
 
 UINT CScript_qjs::Initialize(){
-	// グローバルオブジェクトの生成
+	if (m_bInitialized) return ERR_OK;
+	m_bInitialized = true;
 	
+	// グローバルオブジェクトの生成
 	js_std_init_handlers(g_JsRuntime.get());
 	js_init_module_std(m_JsContext.get(), "std");
 	js_init_module_os(m_JsContext.get(), "os");
+
+	RegisterClass();
 
 	return RunScript(R"(
 		import * as std from "std";
 		import * as os from "os";
 		globalThis.std = std;
 		globalThis.os = os;
-	)");
+	)", true);
 }
 
 /*** スクリプトファイルの実行 ***********************************************/
 
 UINT CScript_qjs::RunFile(LPCSTR szFileName){
+	CPushDir push_dir(g_pVsd->m_szPluginDirW);
+	
 	m_ErrorMsg.clear();
 
 	if ((m_uError = Initialize()) != ERR_OK) {
@@ -138,14 +144,23 @@ qjsb::Value CScript_qjs::CallRaw(
 	qjsb::Value func = m_JsContext.getGlobal(name);
 
 	if (!func.isFunction()) {
-		throw std::runtime_error(std::string(name) + " is not a function");
+		m_ErrorMsg = std::string(name) + " is not a function";
+		m_uError = ERR_SCRIPT;
+		return qjsb::Value(m_JsContext.get(), JS_UNDEFINED);
 	}
 
 	JSValue v = JS_Call(m_JsContext.get(), func.get(), JS_UNDEFINED, argc, argv);
 
 	if (JS_IsException(v)) {
 		JS_FreeValue(m_JsContext.get(), v);
-		qjsb::throwJSException(m_JsContext.get());
+		try{
+			qjsb::throwJSException(m_JsContext.get());
+		}
+		catch (const qjsb::JSException& e) {
+			m_ErrorMsg = ReportException(e);
+			m_uError = ERR_SCRIPT;
+			return qjsb::Value(m_JsContext.get(), JS_UNDEFINED);
+		}
 	}
 
 	return qjsb::Value(m_JsContext.get(), v);
@@ -166,6 +181,8 @@ BOOL LogReaderCallback_qjs(const wchar_t *szPath, const wchar_t *szFile, void *p
 }
 
 UINT CScript_qjs::InitLogReader(void){
+	m_uError = ERR_OK;
+	
 	do {
 		if (RunFile("_system/InitLogReader.js") != ERR_OK) break;
 
@@ -187,5 +204,5 @@ UINT CScript_qjs::InitLogReader(void){
 	if(m_uError != ERR_OK) {
 		g_pVsd->DispErrorMessage(GetErrorMessage());
 	}
-	return m_uError = ERR_OK;
+	return m_uError;
 }

@@ -55,6 +55,7 @@ class CScript_qjs : public CJsClass {
 			argv[i] = jsArgs[i].get();
 		}
 
+
 		qjsb::Value result = CallRaw(
 			name,
 			static_cast<int>(argv.size()),
@@ -105,11 +106,15 @@ class CScript_qjs : public CJsClass {
 	static const char *ErrMsgOrID(const char *szMsg){return szMsg;}
 	static const char *ErrMsgOrID(UINT uID){return m_szErrorMsgID[uID];}
 	
+	qjsb::Context& GetContext(void) { return m_JsContext; }
+	JSContext* GetContextRaw(void) { return m_JsContext.get(); }
+
 	UINT m_uError;
 	
   private:
 	static LPCSTR m_szErrorMsgID[];
 	std::string m_ErrorMsg;
+	bool m_bInitialized = false;
 
 	qjsb::Context m_JsContext = qjsb::Context(g_JsRuntime);
 

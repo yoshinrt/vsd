@@ -1,4 +1,4 @@
-// kml / kmz ƒŠ[ƒ_
+// kml / kmz ãƒªãƒ¼ãƒ€
 
 LogReaderInfo.push({
 	Caption:	"Google Keyhole ML (*.kml,*.kmz)",
@@ -20,24 +20,24 @@ function Read_kml( Files ){
 	var Buf = '';
 	var file = new File();
 	
-	// ˆê’U‘Sƒtƒ@ƒCƒ‹‚ğ Buf ‚É—­‚ß‚é
+	// ä¸€æ—¦å…¨ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ Buf ã«æºœã‚ã‚‹
 	for( var i = 0; i < Files.length; ++i ){
 		if( Files[ i ].match( /\.kmz$/ )){
 			
-			// kmz ‚ğ unzip
+			// kmz ã‚’ unzip
 			try{
 				file.Open( Files[ i ], "Zrb" );
 			}catch( e ){
-				MessageBox( "ƒtƒ@ƒCƒ‹‚ªŠJ‚¯‚Ü‚¹‚ñ: " + Files[ i ] );
+				MessageBox( "ãƒ•ã‚¡ã‚¤ãƒ«ãŒé–‹ã‘ã¾ã›ã‚“: " + Files[ i ] );
 				return 0;
 			}
 			while( !file.ZipNextFile().match( /\.kml$/i ));
 		}else{
-			// kml ‚ğ•’Ê‚É open
+			// kml ã‚’æ™®é€šã« open
 			try{
 				file.Open( Files[ i ], "rb" );
 			}catch( e ){
-				MessageBox( "ƒtƒ@ƒCƒ‹‚ªŠJ‚¯‚Ü‚¹‚ñ: " + Files[ i ] );
+				MessageBox( "ãƒ•ã‚¡ã‚¤ãƒ«ãŒé–‹ã‘ã¾ã›ã‚“: " + Files[ i ] );
 				return 0;
 			}
 		}
@@ -68,9 +68,9 @@ function Read_kml( Files ){
 		
 		Buf = undefined;
 		
-		// •t‚«‚Ì KML
+		// æ™‚åˆ»ä»˜ãã® KML
 		Points.forEach( function( Point ){
-			// ŠÔ
+			// æ™‚é–“
 			if( !Point.match( /<when>(\d+)-(\d+)-(\d+)T(\d+):(\d+):([\d\.]+)(Z|([-+]\d+):(\d+))/ )){
 				return;
 			}
@@ -93,9 +93,9 @@ function Read_kml( Files ){
 		});
 	}else if( Points = Buf.match( /<coordinates>[\S\s]*?<\/coordinates>/g )){
 		Buf = undefined;
-		var MaxStraightLen = 100;	// ’¼ü‚ğØ‚é’·‚³ [m]
+		var MaxStraightLen = 100;	// ç›´ç·šã‚’åˆ‡ã‚‹é•·ã• [m]
 		
-		// ‚ª‚È‚¢ KMLCMaps Engine ‚Ì KML ‚ğ‘z’è
+		// æ™‚åˆ»ãŒãªã„ KMLï¼ŒMaps Engine ã® KML ã‚’æƒ³å®š
 		// <coordinates>135.67543,35.05375,0.0 135.6749,35.05453,0.0</coordinates>
 		
 		Points.forEach( function( Line ){
@@ -124,7 +124,7 @@ function Read_kml( Files ){
 							Log.Latitude [ Cnt ]
 						);
 						
-						// ’¼ü‚ª’·‚¢‚Æ•ûˆÊ‚ª‚¨‚©‚µ‚­‚È‚Ì‚Åˆê’UØ‚é
+						// ç›´ç·šãŒé•·ã„ã¨æ–¹ä½ãŒãŠã‹ã—ããªã®ã§ä¸€æ—¦åˆ‡ã‚‹
 						if( Distance > MaxStraightLen + 5 ){
 							Log.Longitude[ Cnt + 1 ] = Log.Longitude[ Cnt ];
 							Log.Latitude [ Cnt + 1 ] = Log.Latitude [ Cnt ];
@@ -139,7 +139,7 @@ function Read_kml( Files ){
 							Distance -= MaxStraightLen;
 						}
 						
-						// 60km/h ‚É‚¨‚¯‚éŠ—vŠÔ‚ğ‹‚ß‚é
+						// 60km/h ã«ãŠã‘ã‚‹æ‰€è¦æ™‚é–“ã‚’æ±‚ã‚ã‚‹
 						Log.Time[ Cnt ] = Log.Time[ Cnt - 1 ] + Distance / ( 60 / 3600 );
 						++Cnt;
 					}

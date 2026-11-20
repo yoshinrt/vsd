@@ -428,6 +428,8 @@ class CVsdLog : public CJsClass {
 	double Y0(double dIndex){return m_pLogLatitude->GetDiff(dIndex) * m_dLati2Meter;}
 	
   private:
+	std::vector<std::string> GetLogKeys(JSContext* ctx);
+
 	double m_dLong2Meter;
 	double m_dLati2Meter;
 	

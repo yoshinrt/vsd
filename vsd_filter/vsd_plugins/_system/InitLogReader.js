@@ -1,7 +1,7 @@
 "use strict";
 
-Include( "_system/common.js" );
-Include( "_user_config.js" );
+std.loadFile( "_system/common.js" );
+std.loadFile( "_user_config.js" );
 
 var GlobalInstance = this;
 var INVALID_FORMAT	= -1;
@@ -25,7 +25,7 @@ function ReadLog( FileName, ReaderFunc ){
 		}
 	}
 	
-	if( typeof( ReaderFunc ) == 'undefined' ){
+	if( typeof( ReaderFunc ) == 'undefined' || ReaderFunc == ''){
 		// ReaderFunc 自動判別
 		for( var i = 0; i < LogReaderInfo.length; ++i ){
 			// *.hoge;*.fuga のようなリストを ; で split

@@ -4,10 +4,10 @@
     <LocalDebuggerCommand>D:\Program Files\AVIUTL\aviutl.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommandArguments>D:\Video\Car\Kart\20130331_maishima\FILE0004.mp4</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>D:\Data\Video\Car\Kart\20130331_maishima\FILE0004.mp4</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerWorkingDirectory>D:\Video\Car\Kart\20130331_maishima\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>D:\Data\Video\Car\Kart\20130331_maishima\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGPSOnly|Win32'">
@@ -24,10 +24,10 @@
     <LocalDebuggerCommand>D:\Program Files\AVIUTL\aviutl.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerCommandArguments>D:\Video\Car\Kart\20130331_maishima\FILE0004.mp4</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>D:\Data\Video\Car\Kart\20130331_maishima\FILE0004.mp4</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerWorkingDirectory>D:\Video\Car\Kart\20130331_maishima\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>D:\Data\Video\Car\Kart\20130331_maishima\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

@@ -1216,7 +1216,7 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 				g_pVsd->ConfigLoad(szBuf)
 			){
 				StrTokFile(szBuf2, szBuf, STF_PATH2);
-				CPushDir push_dir(szBuf2);
+				CPushDir push_dir(AnsiToWide(szBuf2).c_str());
 				
 				if(
 					g_pVsd->m_szLapChart &&

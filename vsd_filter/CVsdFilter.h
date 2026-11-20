@@ -26,7 +26,7 @@
 
 #define PROG_NAME		"VSDFilter"
 #define PROG_NAME_J		"VSDメーター合成"
-#define PROG_NAME_J_W	L"VSDメーター合成"
+#define PROG_NAME_J_W	WIDEN(PROG_NAME_J)
 #define PROG_NAME_LONG	"`VSDFilter' vehicle data logger overlay plugin"
 
 #define G_CX_CNT		30
@@ -550,7 +550,7 @@ class CVsdFilter
 	
 	BOOL	m_bConsoleOn;
 	
-	CScript	*m_Script;
+	CScript	*m_Script = nullptr;
 	CScript_qjs* m_Script_qjs;
 	
   protected:
@@ -684,21 +684,21 @@ BOOL ListTree(LPTSTR szPath, LPCTSTR szFile, BOOL (*CallbackFunc)(LPCTSTR, LPCTS
 BOOL ListTree(const wchar_t *path, const wchar_t *file, BOOL(*CallbackFunc)(const wchar_t*, const wchar_t*, void*), void* pParam);
 
 class CPushDir {
-  public:
-	CPushDir(char *szPath){
-		int iBufSize = GetCurrentDirectory(0, nullptr);
-		m_szCurDir = new char[iBufSize];
-		GetCurrentDirectory(iBufSize, m_szCurDir);
-		SetCurrentDirectory(szPath);
+public:
+	CPushDir(const wchar_t* szPath) {
+		int iBufSize = GetCurrentDirectoryW(0, nullptr);
+		m_szCurDir = new wchar_t[iBufSize];
+		GetCurrentDirectoryW(iBufSize, m_szCurDir);
+		SetCurrentDirectoryW(szPath);
 	}
-	
-	~CPushDir(){
-		SetCurrentDirectory(m_szCurDir);
-		delete [] m_szCurDir;
+
+	~CPushDir() {
+		SetCurrentDirectoryW(m_szCurDir);
+		delete[] m_szCurDir;
 	}
-	
-  private:
-	char	*m_szCurDir;
+
+private:
+	wchar_t* m_szCurDir;
 };
 
 inline CVsdFilter* g_pVsd;

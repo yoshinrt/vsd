@@ -377,50 +377,128 @@ double CVsdLog::GPSLogGetLength(
 	return	sqrt(dy * dy * M * M + pow(dx * N * cos(uy), 2));
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Log の全キー取得
+
+struct JsAtomGuard {
+	JSContext* ctx;
+	JSAtom atom;
+	JsAtomGuard(JSContext* c, JSAtom a) : ctx(c), atom(a) {}
+	~JsAtomGuard() {
+		if (atom != JS_ATOM_NULL) {
+			JS_FreeAtom(ctx, atom);
+		}
+	}
+	JsAtomGuard(const JsAtomGuard&) = delete;
+	JsAtomGuard& operator=(const JsAtomGuard&) = delete;
+};
+
+std::vector<std::string> CVsdLog::GetLogKeys(JSContext* ctx) {
+	std::vector<std::string> keys;
+
+	qjsb::Value global(ctx, JS_GetGlobalObject(ctx));
+	if (JS_IsException(global.get()) || !JS_IsObject(global.get())) {
+		return keys;
+	}
+
+	qjsb::Value logObj(ctx, JS_GetPropertyStr(ctx, global.get(), "Log"));
+	if (JS_IsException(logObj.get()) || !JS_IsObject(logObj.get())) {
+		return keys;
+	}
+
+	JSPropertyEnum* props = nullptr;
+	uint32_t propCount = 0;
+
+	// 列挙可能な文字列キー（およびシンボルキー）を取得
+	int flags = JS_GPN_STRING_MASK | JS_GPN_ENUM_ONLY;
+	if (JS_GetOwnPropertyNames(ctx, &props, &propCount, logObj.get(), flags) < 0) {
+		return keys;
+	}
+
+	// props 配列自体の解放を保証
+	struct PropArrayGuard {
+		JSContext* ctx;
+		JSPropertyEnum* ptr;
+		uint32_t count;
+		~PropArrayGuard() {
+			if (ptr) {
+				js_free(ctx, ptr);
+			}
+		}
+	} propGuard{ ctx, props, propCount };
+
+	keys.reserve(propCount);
+	for (uint32_t i = 0; i < propCount; ++i) {
+		JsAtomGuard atomGuard(ctx, props[i].atom);
+
+		// JSAtom -> C文字列（UTF-8）へ変換
+		const char* cstr = JS_AtomToCString(ctx, atomGuard.atom);
+		if (cstr) {
+			keys.emplace_back(cstr);
+			JS_FreeCString(ctx, cstr);
+		}
+	}
+
+	return keys;
+}
+
+static uint32_t JsArrayLength(JSContext* ctx, const qjsb::Value& arr) {
+	if (!JS_IsArray(ctx, arr.get())) return 0;
+	qjsb::Value lenVal(ctx, JS_GetPropertyStr(ctx, arr.get(), "length"));
+	uint32_t len = 0;
+	if (JS_ToUint32(ctx, &len, lenVal.get()) < 0) return 0;
+	return len;
+}
+
+static double JsArrayGetNumber(JSContext* ctx, const qjsb::Value& arr, uint32_t index) {
+	qjsb::Value elem(ctx, JS_GetPropertyUint32(ctx, arr.get(), index));
+	if (JS_IsException(elem.get())) return NaN;
+	double v = NaN;
+	if (JS_ToFloat64(ctx, &v, elem.get()) < 0) {
+		return NaN;
+	}
+	return v;
+}
+
 /*** ログリード *************************************************************/
 
 int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *&pLapLog){
 	{
 		// JavaScript オブジェクト初期化
-		CScript Script;
+		CScript_qjs Script;
 		if(Script.InitLogReader() != ERR_OK){
 			return 0;
 		}
 		
 		// スクリプト実行
-		LPWSTR pStr = nullptr;
-		LPWSTR pReader = nullptr;
-		Script.Run_ss(L"ReadLog",
-			StringNewA2W(pStr, szFileName),
-			StringNewA2W(pReader, szReaderFunc)
-		);
-		delete [] pStr;
-		delete [] pReader;
+		Script.Call<void>("ReadLog", AnsiToUtf8(szFileName), std::string(szReaderFunc ? szReaderFunc : ""));
 		
 		if(Script.m_uError != ERR_OK){
 			g_pVsd->DispErrorMessage(Script.GetErrorMessage());
 			return 0;
 		}
 		
+		JSContext* ctx = Script.GetContextRaw();
+
 		/*** JS の Log にアクセス *******************************************/
 		
 		{
-			Locker locker(Script.m_pIsolate);
-			Isolate::Scope IsolateScope(Script.m_pIsolate);
-			HandleScope handle_scope(Script.m_pIsolate);
-			Context::Scope context_scope(Script.GetContext());
-			
 			// "Log" 取得
-			Local<Array> hLog = Local<Array>::Cast(
-				Script.GetContext()->Global()->Get(String::NewFromTwoByte(Script.m_pIsolate , (uint16_t *)L"Log"))
-			);
-			if(!hLog->IsArray()) return 0;
+			qjsb::Value global(ctx, JS_GetGlobalObject(ctx));
+			if (JS_IsException(global.get()) || !JS_IsObject(global.get())) {
+				return 0;
+			}
+
+			qjsb::Value logObj(ctx, JS_GetPropertyStr(ctx, global.get(), "Log"));
+			if (JS_IsException(logObj.get()) || !JS_IsObject(logObj.get())) {
+				return 0;
+			}
 			
 			// Log の key 取得
-			Local<Array> Keys = hLog->GetPropertyNames();
+			auto Keys = GetLogKeys(ctx);
 			
 			// JavaScript Array の vector
-			std::vector<Local<Array> >	JSArrays;
+			std::vector<qjsb::Value>	JSArrays;
 			
 			// CLog * の vector
 			std::vector<CLog *>	CArrays;
@@ -435,39 +513,40 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *
 			UINT	uIdxLati		= ~0;
 			
 			UINT	uIdx = 0;
-			for(UINT u = 0; u < Keys->Length(); ++u){
-				String::Utf8Value strKey(Keys->Get(u));
-				char *pKey = *strKey;
+			for(UINT u = 0; u < Keys.size(); ++u){
+				const char *strKey = Keys[u].c_str();
 				
-				Local<Array> ArrayTmp = Local<Array>::Cast(hLog->Get(Keys->Get(u)));
-				if(ArrayTmp->IsArray()){
-					if     (!strcmp(*strKey, "Time")) uIdxTime		= uIdx;
-					else if(!strcmp(*strKey, "Distance")) uIdxDistance	= uIdx;
-					else if(!strcmp(*strKey, "Direction")) uIdxDirection	= uIdx;
-					else if(!strcmp(*strKey, "Speed")) uIdxSpeed		= uIdx;
-					else if(!strcmp(*strKey, "Tacho")) uIdxTacho		= uIdx;
-					else if(!strcmp(*strKey, "Longitude")) uIdxLong		= uIdx;
-					else if(!strcmp(*strKey, "Latitude")) uIdxLati		= uIdx;
-					else if(!strcmp(*strKey, "LapTime")){
-						uIdxLapTime	= uIdx;
-						CArrays.push_back(nullptr);
-						goto Skip;	// LapTime は CVsdLog には積まない
-					}
-					
-					// strKey で vector 作成
-					CArrays.push_back(GetElement(pKey, TRUE));
-					
-				  Skip:
-					// JS の property 名解決後の Array の vector を作る
-					JSArrays.push_back(ArrayTmp);
-					
-					++uIdx;
+				qjsb::Value JsArr(ctx, JS_GetPropertyStr(ctx, logObj.get(), strKey));
+				if (JS_IsException(JsArr.get()) || !JS_IsArray(ctx, JsArr.get())) {
+					continue;
 				}
+
+				if     (!strcmp(strKey, "Time"		)) uIdxTime			= uIdx;
+				else if(!strcmp(strKey, "Distance"	)) uIdxDistance		= uIdx;
+				else if(!strcmp(strKey, "Direction"	)) uIdxDirection	= uIdx;
+				else if(!strcmp(strKey, "Speed"		)) uIdxSpeed		= uIdx;
+				else if(!strcmp(strKey, "Tacho"		)) uIdxTacho		= uIdx;
+				else if(!strcmp(strKey, "Longitude"	)) uIdxLong			= uIdx;
+				else if(!strcmp(strKey, "Latitude"	)) uIdxLati			= uIdx;
+				else if(!strcmp(strKey, "LapTime")){
+					uIdxLapTime	= uIdx;
+					CArrays.push_back(nullptr);
+					goto Skip;	// LapTime は CVsdLog には積まない
+				}
+					
+				// strKey で vector 作成
+				CArrays.push_back(GetElement(strKey, TRUE));
+					
+				Skip:
+				// JS の property 名解決後の Array の vector を作る
+				JSArrays.push_back(std::move(JsArr));
+					
+				++uIdx;
 			}
 			
 			// Time 存在確認
 			if(uIdxTime == ~0) return 0;
-			m_iLogStartTime = (time_t)JSArrays[uIdxTime]->Get(0)->NumberValue();
+			m_iLogStartTime = (time_t)JsArrayGetNumber(ctx, JSArrays[uIdxTime], 0);
 			
 			BOOL bCreateDistance  = FALSE;
 			BOOL bCreateDirection = FALSE;
@@ -484,9 +563,9 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *
 				double	dLong0;
 				double	dLati0;
 				
-				dLong0 = JSArrays[uIdxLong]->Get(0)->NumberValue();
+				dLong0 = JsArrayGetNumber(ctx, JSArrays[uIdxLong], 0);
 				m_pLogLongitude->SetBaseVal(dLong0);
-				dLati0 = JSArrays[uIdxLati]->Get(0)->NumberValue();
+				dLati0 = JsArrayGetNumber(ctx, JSArrays[uIdxLati], 0);
 				m_pLogLatitude->SetBaseVal(dLati0);
 				
 				m_dLong2Meter =  GPSLogGetLength(dLong0, dLati0, dLong0 + 1.0 / 3600, dLati0) * 3600;
@@ -511,13 +590,13 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *
 			
 			UINT	uCalibrating = 0;
 			
-			for(UINT uIdx = 0; uIdx < JSArrays[uIdxTime]->Length(); ++uIdx){
+			for(UINT uIdx = 0; uIdx < JsArrayLength(ctx, JSArrays[uIdxTime]); ++uIdx){
 				int iCnt = GetCnt();
 				int	iLapTime = -1;
 				
-				for(UINT uKey = 0; uKey < Keys->Length(); ++uKey){
+				for(UINT uKey = 0; uKey < JSArrays.size(); ++uKey){
 					
-					double dVal = JSArrays[uKey]->Get(uIdx)->NumberValue();
+					double dVal = JsArrayGetNumber(ctx, JSArrays[uKey], uIdx);
 					
 					if(uKey == uIdxTime){
 						time_t t = (time_t)dVal;
@@ -678,14 +757,14 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *
 		
 		#define DUMP_LOG
 		#if defined DEBUG && defined DUMP_LOG
-			Dump("D:\\DDS\\develop\\vsd\\vsd_filter\\z_gpslog_raw.txt");
+			Dump("C:\\Users\\yoshi\\Documents\\develop\\vsd\\vsd_filter\\z_gpslog_raw.txt");
 		#endif
 		
 		// ログ再スキャン
 		GPSLogRescan();
 		
 		#if defined DEBUG && defined DUMP_LOG
-			Dump("D:\\DDS\\develop\\vsd\\vsd_filter\\z_gpslog_upcon.txt");
+			Dump("C:\\Users\\yoshi\\Documents\\develop\\vsd\\vsd_filter\\z_gpslog_upcon.txt");
 		#endif
 		
 		// Time の Max Min 設定

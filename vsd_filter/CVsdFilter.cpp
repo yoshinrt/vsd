@@ -60,6 +60,7 @@ void CVsdFilter::Constructor(void){
 	SetSkinFile(m_szSkinFile);
 	
 	m_Script	= nullptr;
+	m_Script_qjs = nullptr;
 	
 	m_iWidth	=
 	m_iHeight	= 0;
