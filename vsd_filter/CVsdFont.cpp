@@ -77,7 +77,7 @@ void CVsdFont::CreateFont(void){
 	// tmAscent 取得
 	TEXTMETRIC tm;
 	GetTextMetrics(hdc, &tm);
-    GLYPHMETRICS	gm;
+	GLYPHMETRICS	gm;
 	
 	int	iBitmapDepth = IsNoAntialias() ? GGO_BITMAP : GGO_GRAY8_BITMAP;
 	
@@ -105,7 +105,7 @@ CFontGlyph& CVsdFont::CreateFontGlyph(WCHAR c){
 	// tmAscent 取得
 	TEXTMETRIC tm;
 	GetTextMetrics(hdc, &tm);
-    GLYPHMETRICS	gm;
+	GLYPHMETRICS	gm;
 	
 	int	iBitmapDepth = IsNoAntialias() ? GGO_BITMAP : GGO_GRAY8_BITMAP;
 	
