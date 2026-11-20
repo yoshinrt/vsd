@@ -59,6 +59,7 @@ sub MakeJsIF {
 	if(!defined($param->{'JsClass'})){
 		$param->{'Class'}		=~ /^CVsd(.+)/;
 		$param->{'JsClass'}	= $1;
+		$param->{'JsClass'}	=~ s/_qjs$//;
 	}
 	
 	$Accessor	= '';
@@ -83,26 +84,13 @@ sub MakeJsIF {
 	open(fpIn,	"< $param->{Class}.h");
 	while(<fpIn>){
 		if(/!js_func\b/){
-			# 関数名
-			/(\S+)\s+\*?([\w_][\w_\d]*)\s*\(/;
-			($RetType, $FuncName) = ($1, $2);
-			
-			if($param->{JsClass} ne 'global'){
-				print(fpOut "\t\t.method(\"$FuncName\", \&$param->{Class}::$FuncName)\n");
-			}else{
-				print(fpOut "\tm_JsContext.bindFunction(\"$FuncName\", \&$param->{Class}::$FuncName);\n");
-			}
-			
-		}elsif(/!js_func_overload\b/){
 			
 			# 関数名
 			/(\S+)\s+\*?([\w_][\w_\d]*)\s*\(/;
 			($RetType, $FuncName) = ($1, $2);
 			
-			$NoArgNumCheck = '';
 			$ArgNum = 0;
 			$ArgMin = 0;
-			$HiddenArg = 0;	# ReturnValue 等，C にしかない引数の数
 			@Args = ();
 			@Defs = ();
 			
@@ -131,60 +119,50 @@ sub MakeJsIF {
 				$Type = $1;
 				
 				$Default = /!default:(\S+)/ ? $1 : undef;
-				$ArgPos  = /!arg:(\d+)/ ? $1 : $ArgNum;
 				
 				if($Type =~ /^CVsd(.+)/){
 					$_ = $1;
 					
-					$ArgPos_p1 = $ArgPos + 1;
-					push(@Defs, "Local<Object> $_$ArgNum = args[$ArgPos]->ToObject();");
+					$ArgPos_p1 = $ArgNum + 1;
+					push(@Defs, "Local<Object> $_$ArgNum = args[$ArgNum]->ToObject();");
 					push(@Defs, "if(CheckClass($_$ArgNum, \"$_\", \"arg[$ArgPos_p1] must be $_\")) return;");
 					push(@Defs, "$Type *obj$ArgNum = GetThis<$Type>($_$ArgNum);");
 					push(@Defs, "if(!obj$ArgNum) return;");
-					$Args[$ArgNum + $HiddenArg] = "*obj$ArgNum";
+					$Args[$ArgNum] = "*obj$ArgNum";
 				}
 				
 				elsif($Type eq 'char'){
 					# string 型
-					push(@Defs, "String::Utf8Value str$ArgNum(args[$ArgPos]);");
-					$Args[$ArgNum + $HiddenArg] = "*str$ArgNum";
+					$Args[$ArgNum] = "qjsb::from_js<std::string>(ctx, argv[$ArgNum]).c_str()";
 				}
 				
 				elsif($Type =~ /^LPC?WSTR$/){
 					# WCHAR string 型
-					push(@Defs, "String::Value str$ArgNum(args[$ArgPos]);");
-					$Args[$ArgNum + $HiddenArg] = "($Type)*str$ArgNum";
+					$Args[$ArgNum] = "Utf8ToWide(qjsb::from_js<std::string>(ctx, argv[$ArgNum])).c_str()";
+				}
+				
+				elsif($Type eq 'std::string'){
+					# std::string 型
+					$Args[$ArgNum] = "std::move(qjsb::from_js<std::string>(ctx, argv[$ArgNum]))";
 				}
 				
 				elsif($Type eq 'double'){
-					$Args[$ArgNum + $HiddenArg] = "args[$ArgPos]->NumberValue()";
+					$Args[$ArgNum] = "qjsb::from_js<double>(ctx, argv[$ArgNum])";
 				}
 				
 				elsif($Type eq 'int' || $Type eq 'UINT'){
 					# int/UINT 型
-					$Args[$ArgNum + $HiddenArg] = "args[$ArgPos]->Int32Value()";
+					$Args[$ArgNum] = "qjsb::from_js<int>(ctx, argv[$ArgNum])";
 				}
 				
 				elsif($Type eq 'CPixelArg'){
 					# (・∀・)ラヴィ!!
-					$Args[$ArgNum + $HiddenArg] = "CPixel(args[$ArgPos]->Int32Value())";
+					$Args[$ArgNum] = "CPixel(qjsb::from_js<int>(ctx, argv[$ArgNum]))";
 				}
 				
 				elsif($Type eq 'v8Array'){
 					# V8 array object 
-					$Args[$ArgNum + $HiddenArg] = "Local<Array>::Cast(args[$ArgPos])";
-				}
-				
-				elsif($Type eq 'FunctionCallbackInfo<Value>&'){
-					$Args[$ArgNum + $HiddenArg] = 'args';
-					$NoArgNumCheck = '//';
-				}
-				
-				elsif($Type eq 'ReturnValue<Value>'){
-					$Args[$ArgNum + $HiddenArg] = 'args.GetReturnValue()';
-					++$HiddenArg;
-					--$ArgMin;
-					--$ArgNum;
+					$Args[$ArgNum] = "Local<Array>::Cast(args[$ArgNum])";
 				}
 				
 				elsif($Type eq 'void'){
@@ -192,11 +170,11 @@ sub MakeJsIF {
 				}
 				
 				else{
-					$Args[$ArgNum + $HiddenArg] = "????";
+					$Args[$ArgNum] = "????";
 				}
 				
 				if(defined($Default)){
-					$Args[$ArgNum + $HiddenArg] = "iLen <= $ArgPos ? $Default : $Args[$ArgNum + $HiddenArg]";
+					$Args[$ArgNum] = "argc <= $ArgNum ? $Default : $Args[$ArgNum]";
 				}else{
 					++$ArgMin;
 				}
@@ -205,54 +183,57 @@ sub MakeJsIF {
 			}
 			
 			$Defs = join("\n\t\t", @Defs);
-			$Args = join(",\n\t\t\t", @Args);
-			$Args = "\n\t\t\t$Args\n\t\t" if($Args ne '');
+			$Args = join(",\n\t\t\t\t", @Args);
+			$Args = "\n\t\t\t\t$Args\n\t\t\t" if($Args ne '');
 			
 			$Len = $ArgMin == $ArgNum ?
-				"iLen == $ArgNum" : "$ArgMin <= iLen && iLen <= $ArgNum";
-			
- 			$PreRet		= 'args.GetReturnValue().Set(';
-			$PostRet	= '));';
+				"argc == $ArgNum" :
+				"$ArgMin <= argc && argc <= $ArgNum";
 			
 			# 返り値
 			if($RetType eq 'void'){
 				$PreRet		= '';
-				$PostRet	= ';';
+				$PostRet	= '; return JS_UNDEFINED;';
 			}
 			
 			elsif(
-				$RetType eq 'int' || $RetType eq 'UINT' ||
-				$RetType eq 'double' || $RetType	=~ /^(Handle|Local)\b/
+				$RetType eq 'int' || $RetType eq 'UINT' || $RetType eq 'double' ||
+				$RetType eq 'std::string'
 			){
-				$PreRet		.= "(";
+				$PreRet		= 'return qjsb::to_js(ctx, ';
+				$PostRet	= ');';
 			}
 			
 			elsif($RetType eq 'char'){
-				$PreRet		.= "String::NewFromOneByte(args.GetIsolate(), (uint8_t *)";
-			}
-			
-			elsif($RetType	=~ /^LPC?WSTR$/){
-				$PreRet		.= "String::NewFromTwoByte(args.GetIsolate(), (uint16_t *)";
+				$PreRet		= 'return qjsb::to_js(ctx, std::string(';
+				$PostRet	= '));';
 			}
 			
 			else{
 				$PreRet		= '???';
 				$PostRet	= " unknown type:$RetType	= ";
 			}
+			if($param->{JsClass} eq 'global'){
 #-----
-			$GetThis = $param->{bGlobal} ? 'CScript::GetCScript' : "GetThis<$param->{Class}>";
-			$param->{FunctionIF} .= << "-----";
-	static void Func_$FuncName(const FunctionCallbackInfo<Value>& args){
-		${NoArgNumCheck}int iLen = args.Length();
-		${NoArgNumCheck}if(CheckArgs($Len)) return;
-		$Defs
-		$param->{Class} *C_obj = $GetThis(args.This());
-		if(!C_obj) return;
-		${PreRet}C_obj->$FuncName($Args)$PostRet
-	}
+				print(fpOut << "-----");
+		m_JsContext.bindFunctionRaw("$FuncName", [](JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) -> JSValue {
+			if(!($Len)) JsErrorNumOfArg_qjs();
+			$Defs
+			${PreRet}CScript_qjs::$FuncName($Args)${PostRet}
+		});
 -----
+			}else{
+#-----
+				print(fpOut << "-----");
+		.method("$FuncName", [](JSContext* ctx, $param->{Class}* self, int argc, JSValueConst* argv) -> JSValue {
+			if(!($Len)) JsErrorNumOfArg_qjs();
+			$Defs
+			${PreRet}self->$FuncName($Args)${PostRet}
+		})
+-----
+			
+			}
 		}
-		
 		elsif(/!js_var:(\w+)/){
 			$JSvar = $1;
 			

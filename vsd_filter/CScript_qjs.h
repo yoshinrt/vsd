@@ -82,7 +82,7 @@ class CScript_qjs : public CJsClass {
 	static void DebugPrint(std::string msg);	// !js_func
 	static int MessageBox(	// !js_func
 		std::string msg,
-		std::string caption,	// !default:nullptr
+		std::string caption,	// !default:""
 		UINT	uType		// !default:MB_OK
 	);
 	
