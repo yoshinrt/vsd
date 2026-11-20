@@ -101,12 +101,9 @@
     <ClInclude Include="..\def_str_param.h" />
     <ClInclude Include="..\def_trackbar.h" />
     <ClInclude Include="..\error_code.h" />
-    <ClInclude Include="..\filter.h" />
     <ClInclude Include="..\rev_num.h" />
     <ClInclude Include="..\ScriptIF.h" />
     <ClInclude Include="..\StdAfx.h" />
-    <ClInclude Include="..\zlib\ioapi.h" />
-    <ClInclude Include="..\zlib\unzip.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\CScript.cpp" />

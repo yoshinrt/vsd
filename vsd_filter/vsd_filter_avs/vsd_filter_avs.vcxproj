@@ -86,7 +86,6 @@
     <ClInclude Include="..\CJsClass.h" />
     <ClInclude Include="..\CJsIf.h" />
     <ClInclude Include="..\CJsMap.h" />
-    <ClInclude Include="..\avisynth.h" />
     <ClInclude Include="..\CPixel.h" />
     <ClInclude Include="..\CPixelBase.h" />
     <ClInclude Include="..\CScript.h" />
@@ -107,7 +106,6 @@
     <ClInclude Include="..\error_code.h" />
     <ClInclude Include="..\ScriptIF.h" />
     <ClInclude Include="..\StdAfx.h" />
-    <ClInclude Include="..\zlib\ioapi.h" />
     <ClInclude Include="..\zlib\unzip.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

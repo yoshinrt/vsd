@@ -17,9 +17,9 @@
 #include "CJsClass.h"
 
 #ifdef AVS_PLUGIN
-	#include "avisynth.h"
+	#include "external/avisynth.h"
 #else
-	#include "filter.h"
+	#include "external/filter.h"
 #endif
 
 /****************************************************************************/
