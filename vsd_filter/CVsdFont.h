@@ -27,6 +27,14 @@ class CVsdFont : public CJsClass {
   public:
 	CVsdFont(const char *szFontName, int iSize, UINT uAttr = 0);
 	CVsdFont(LPCWSTR szFontName, int iSize, UINT uAttr = 0);
+	
+	CVsdFont(std::string FontName, int iSize, UINT uAttr = 0){
+		CVsdFont(Utf8ToAnsi(FontName).c_str(), iSize, uAttr);
+	}
+	/* !js_constructor
+		.constructor<std::string, int, UINT>()
+	*/
+	
 	~CVsdFont();
 	
 	static BOOL ExistFont(WCHAR c){

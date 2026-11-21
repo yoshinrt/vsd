@@ -60,26 +60,12 @@ MakeJsIF({
 	Class		=> 'CVsdImage_qjs',
 });
 
-#_#### CVsdFont #################################################################
-#_#
-#_#MakeJsIF({
-#_#	Class		=> 'CVsdFont',
-#_#	NewObject	=> << '-----'
-#_#		// 引数チェック
-#_#		if (args.Length() < 2){
-#_#			JsErrorNumOfArg();
-#_#			return;
-#_#		}
-#_#		
-#_#		String::Value FontName(args[0]);
-#_#		CVsdFont *pC_obj = new CVsdFont(
-#_#			(LPCWSTR)*FontName,
-#_#			args[1]->Int32Value(),
-#_#			args.Length() <= 2 ? 0 : args[2]->Int32Value()
-#_#		);
-#_#-----
-#_#});
-#_#
+### CVsdFont #################################################################
+
+MakeJsIF({
+	Class		=> 'CVsdFont',
+});
+
 ### CVsdFile #################################################################
 
 MakeJsIF({
@@ -309,7 +295,7 @@ sub MakeJsIF {
 				$func
 			){
 				# property get 関数を直接指定
-				print(fpOut "${ind1}.property(\"$JSvar\", \&$param->{Class}::$var;})\n");
+				print(fpOut "${ind1}.property(\"$JSvar\", \&$param->{Class}::$var)\n");
 			}else{
 				# ラムダでリード
 				print(fpOut "${ind1}.property(\"$JSvar\", [](const $param->{Class}* self){return self->$var$func;})\n");

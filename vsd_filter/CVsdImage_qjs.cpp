@@ -9,6 +9,7 @@
 #include "StdAfx.h"
 
 #include "CVsdImage_qjs.h"
+#include "CScript_qjs.h"
 #include "error_code.h"
 
 /*** マクロ *****************************************************************/
@@ -44,7 +45,9 @@ CVsdImage_qjs::CVsdImage_qjs(qjsb::Value file_img, qjsb::Value flag){
 	m_iStatus	= IMG_STATUS_LOAD_INCOMPLETE;
 	
 	if(file_img.isObject()){
-		Clone(qjsb::from_js<CVsdImage_qjs*>(file_img.ctx(), file_img.get()));
+		auto* pOrg = qjsb::from_js<CVsdImage_qjs*>(file_img.ctx(), file_img.get());
+		if (pOrg == nullptr) JsTypeError_qjs("argument 1 must be Image object");
+		Clone(pOrg);
 	}else{
 		Load(Utf8ToWide(qjsb::from_js<std::string>(file_img.ctx(), file_img.get())).c_str(), qjsb::from_js<UINT>(flag.ctx(), flag.get()));
 	}

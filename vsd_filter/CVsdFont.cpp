@@ -8,6 +8,7 @@
 
 #include "StdAfx.h"
 #include "CVsdFont.h"
+#include "CScript_qjs.h"
 
 /*** macros *****************************************************************/
 
@@ -36,6 +37,10 @@ CVsdFont::~CVsdFont(){
 /*** フォント作成 ***********************************************************/
 
 void CVsdFont::CreateFont(const char *szFontName, int iSize, UINT uAttr){
+	if(iSize <= 0){
+		JsRangeError_qjs("Font size must be > 0");
+	}
+	
 	m_uAttr = uAttr;
 	
 	m_LogFont.lfHeight			= iSize;						// 文字セルまたは文字の高さ
