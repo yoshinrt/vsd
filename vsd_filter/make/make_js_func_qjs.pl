@@ -33,26 +33,6 @@ void CScript_qjs::RegisterClass(){
 #_#	JsClass		=> '__VSD_System__',
 #_#});
 #_#
-### CVsdFilter_Log ###########################################################
-#_#
-#_#MakeJsIF({
-#_#	Class		=> 'CVsdFilterLog',
-#_#	JsClass		=> '__VSD_SystemLog__',
-#_#	NewObject	=> << '-----',
-#_#		int iLen = args.Length();
-#_#		if(CheckArgs(iLen == 1)) return;
-#_#		
-#_#		CVsdFilterLog *pC_obj = static_cast<CVsdFilterLog *>(Local<External>::Cast(args[0])->Value());
-#_#		if(!pC_obj){
-#_#			JsError(ERR_NOT_ENOUGH_MEMORY);
-#_#			return;
-#_#		}
-#_#-----
-#_#	ExtraNew	=> << '-----',
-#_#		pC_obj->AddLogAccessor(thisObject);
-#_#-----
-#_#});
-#_#
 ### CVsdImage ################################################################
 
 MakeJsIF({

@@ -7,6 +7,7 @@
 *****************************************************************************/
 
 #include "StdAfx.h"
+#include "CVsdLog.h"
 #include "CVsdFilter.h"
 
 /*** macros *****************************************************************/
@@ -810,9 +811,116 @@ void CVsdLog::RotateMap(double dAngle){
 	}
 }
 
+/*** JS 用 Log オブジェクト構築 *********************************************/
+
+void CVsdLog::BuildLogObject(JSContext* ctx){
+	if(!ctx) return;
+	
+	qjsb::Value global(ctx, JS_GetGlobalObject(ctx));
+	if(JS_IsException(global.get()) || !JS_IsObject(global.get())){
+		return;
+	}
+	
+	// 既存の Log が存在する場合は削除
+	JSAtom atomLog = JS_NewAtom(ctx, "Log");
+	if(atomLog != JS_ATOM_NULL){
+		int hasLog = JS_HasProperty(ctx, global.get(), atomLog);
+		if(hasLog > 0){
+			JS_DeleteProperty(ctx, global.get(), atomLog, 0);
+		}
+		JS_FreeAtom(ctx, atomLog);
+	}
+	
+	// getter 共通ロジック:
+	//   magic == 0: GetElement(prop)->Get(m_dLogNum)
+	//   magic == 1: GetMax(prop)
+	//   magic == 2: GetMin(prop)
+	auto logPropGetter = [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic, JSValue* func_data) -> JSValue {
+		(void)this_val;
+		(void)argc;
+		(void)argv;
+		
+		int64_t iSelf = 0;
+		if(JS_ToInt64(ctx, &iSelf, func_data[0]) < 0 || !iSelf){
+			return JS_NewFloat64(ctx, NaN);
+		}
+		CVsdLog* pSelf = reinterpret_cast<CVsdLog*>(static_cast<uintptr_t>(iSelf));
+		
+		const char* szProp = JS_ToCString(ctx, func_data[1]);
+		if(!szProp){
+			return JS_NewFloat64(ctx, NaN);
+		}
+		
+		double dVal = NaN;
+		if(magic == 0){
+			CLog* pElem = pSelf->GetElement(szProp);
+			dVal = pElem ? pElem->Get(pSelf->m_dLogNum) : NaN;
+		}else if(magic == 1){
+			dVal = pSelf->GetMax(szProp);
+		}else if(magic == 2){
+			dVal = pSelf->GetMin(szProp);
+		}
+		
+		JS_FreeCString(ctx, szProp);
+		return JS_NewFloat64(ctx, dVal);
+	};
+	
+	// Log.ValueOfIndex(prop, pos)
+	auto fnValueOfIndex = [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) -> JSValue {
+		(void)this_val;
+		(void)argc;
+		(void)argv;
+		return JS_NewInt32(ctx, 0);
+	};
+	
+	// Log / Log.Max / Log.Min オブジェクト生成
+	JSValue objLog = JS_NewObject(ctx);
+	JSValue objMax = JS_NewObject(ctx);
+	JSValue objMin = JS_NewObject(ctx);
+	
+	JSValue valSelf = JS_NewInt64(ctx, static_cast<int64_t>(reinterpret_cast<uintptr_t>(this)));
+	
+	// m_Logs の全キーに対して getter のみを持つ列挙可能プロパティを定義
+	for(auto it = m_Logs.begin(); it != m_Logs.end(); ++it){
+		const char* szKey = it->first.c_str();
+		JSAtom atomKey = JS_NewAtom(ctx, szKey);
+		if(atomKey == JS_ATOM_NULL) continue;
+		
+		JSValue funcData[2] = {
+			valSelf,
+			JS_NewString(ctx, szKey)
+		};
+		
+		JSValue getterVal = JS_NewCFunctionData(ctx, logPropGetter, 0, 0, 2, funcData);
+		JSValue getterMax = JS_NewCFunctionData(ctx, logPropGetter, 0, 1, 2, funcData);
+		JSValue getterMin = JS_NewCFunctionData(ctx, logPropGetter, 0, 2, 2, funcData);
+		
+		JS_FreeValue(ctx, funcData[1]);
+		
+		// setter は不要 (JS_UNDEFINED), Object.keys() 対象にするため JS_PROP_ENUMERABLE を付与
+		JS_DefinePropertyGetSet(ctx, objLog, atomKey, getterVal, JS_UNDEFINED, JS_PROP_ENUMERABLE | JS_PROP_CONFIGURABLE);
+		JS_DefinePropertyGetSet(ctx, objMax, atomKey, getterMax, JS_UNDEFINED, JS_PROP_ENUMERABLE | JS_PROP_CONFIGURABLE);
+		JS_DefinePropertyGetSet(ctx, objMin, atomKey, getterMin, JS_UNDEFINED, JS_PROP_ENUMERABLE | JS_PROP_CONFIGURABLE);
+		
+		JS_FreeAtom(ctx, atomKey);
+	}
+	
+	JS_FreeValue(ctx, valSelf);
+	
+	// Log.Max / Log.Min / Log.ValueOfIndex を設定
+	JS_DefinePropertyValueStr(ctx, objLog, "Max", objMax, JS_PROP_CONFIGURABLE);
+	JS_DefinePropertyValueStr(ctx, objLog, "Min", objMin, JS_PROP_CONFIGURABLE);
+	JS_DefinePropertyValueStr(ctx, objLog, "ValueOfIndex", JS_NewCFunction(ctx, fnValueOfIndex, "ValueOfIndex", 2), JS_PROP_CONFIGURABLE);
+	
+	// グローバルオブジェクトへ Log を設定 (JS_SetPropertyStr は val の所有権を消費する)
+	JS_SetPropertyStr(ctx, global.get(), "Log", objLog);
+}
+
 /*** チャートリード *********************************************************/
 
 int CLapLogAll::LapChartRead(const char *szFileName){
+	return 0;
+#if 0 // ★_qjs
 	m_iLapMode = LAPMODE_CHART;
 	m_iLapSrc  = LAPSRC_VIDEO;
 	
@@ -887,6 +995,7 @@ int CLapLogAll::LapChartRead(const char *szFileName){
 	m_iPositionInfo.resize(m_strName.size(), -1);
 	
 	return CamCarLap().size();
+#endif
 }
 
 /*** 自車ラップデータ構築 ***************************************************/

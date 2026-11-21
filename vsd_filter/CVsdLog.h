@@ -39,8 +39,6 @@ typedef struct {
 	int		iTime;
 } LAP_t;
 
-class CVsdLog;
-class CVsdFilter;
 class CLapLog {
   public:
 	CLapLog(){
@@ -304,8 +302,7 @@ class CLogDirection : public CLogUShort128 {
 
 /*** 1個のログセット ********************************************************/
 
-class CVsdFilter;
-class CVsdLog : public CJsClass {
+class CVsdLog {
 	
   public:
 	int GetCnt(void){return m_iCnt;}
@@ -439,6 +436,8 @@ class CVsdLog : public CJsClass {
 	double X0(double dIndex){return m_pLogLongitude->GetDiff(dIndex) * m_dLong2Meter;}
 	double Y0(int    iIndex){return m_pLogLatitude->GetDiff(iIndex) * m_dLati2Meter;}
 	double Y0(double dIndex){return m_pLogLatitude->GetDiff(dIndex) * m_dLati2Meter;}
+	
+	void BuildLogObject(JSContext* ctx);
 	
   private:
 	std::vector<std::string> GetLogKeys(JSContext* ctx);
