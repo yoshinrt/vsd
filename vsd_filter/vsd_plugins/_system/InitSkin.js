@@ -1,7 +1,7 @@
 "use strict";
 
-std.loadFile( "_system/common.js" );
-std.loadFile( "_user_config.js" );
+std.loadScript( "_system/common.js" );
+std.loadScript( "_user_config.js" );
 
 //****************************************************************************
 

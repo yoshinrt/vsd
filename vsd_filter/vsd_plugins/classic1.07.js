@@ -1,5 +1,5 @@
 TargetVSDRevision = 720;
-std.loadFile( "_system/OldApiSupport.js" );
+std.loadScript( "_system/OldApiSupport.js" );
 
 //*** 初期化処理 ************************************************************
 
