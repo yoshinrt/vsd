@@ -423,7 +423,7 @@ int CVsdFilter::DrawFont0(int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc){
 			#pragma omp parallel for
 		#endif
 		for(int j = 0; j < FontGlyph.iH; ++j) for(int i = 0; i < FontGlyph.iW; ++i){
-			int iDensity = FontGlyph.pBuf[iBmpW * j + i];	// 0～64
+			int iDensity = FontGlyph.buf[iBmpW * j + i];	// 0～64
 			
 			if(iDensity){
 				if(iDensity == 64){
@@ -449,7 +449,7 @@ int CVsdFilter::DrawFont0(int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc){
 				#pragma omp for
 			#endif
 			for(int j = 0; j < FontGlyph.iH; ++j) for(int i = 0; i < FontGlyph.iW; ++i){
-				if((i & 0x7) == 0) uBitmap = FontGlyph.pBuf[iBmpW * j + (i >> 3)];
+				if((i & 0x7) == 0) uBitmap = FontGlyph.buf[iBmpW * j + (i >> 3)];
 				
 				if(uBitmap & 0x80){
 					PutPixel(x + iOrgX + i, y + FontGlyph.iOrgY + j, yc, 0);

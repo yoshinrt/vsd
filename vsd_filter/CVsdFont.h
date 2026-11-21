@@ -13,21 +13,13 @@
 
 class CFontGlyph {
   public:
-	BYTE	*pBuf;
-	//BYTE	*pBufOutline;
+	std::vector<BYTE>	buf;
 	short	iW, iH;
 	short	iOrgY;
 	short	iCellIncX;
 	
 	CFontGlyph(){
-		pBuf		= nullptr;
 		iCellIncX	= -1;
-		//pBufOutline = nullptr;
-	}
-	
-	~CFontGlyph(){
-		if(pBuf) delete [] pBuf;
-		//if(pBufOutline) delete [] pBufOutline;
 	}
 };
 
@@ -35,14 +27,7 @@ class CVsdFont : public CJsClass {
   public:
 	CVsdFont(const char *szFontName, int iSize, UINT uAttr = 0);
 	CVsdFont(LPCWSTR szFontName, int iSize, UINT uAttr = 0);
-	/*
-	~CVsdFont(){
-		DebugMsgD("delete CFont %d:%X\n", m_iObjCnt--, this);
-	}
-	*/
-	
-	void CreateFont(const char *szFontName, int iSize, UINT uAttr);
-	void CreateFont(void);
+	~CVsdFont();
 	
 	static BOOL ExistFont(WCHAR c){
 		return FONT_CHAR_FIRST <= c;
@@ -52,15 +37,8 @@ class CVsdFont : public CJsClass {
 	BOOL IsNoAntialias(void){return m_uAttr & ATTR_NOANTIALIAS;}
 	
 	CFontGlyph& FontGlyph(WCHAR c){
-		// ASCII のグリフ
-		if(c <= FONT_CHAR_LAST){
-			CFontGlyph *p = &m_FontGlyph[c - FONT_CHAR_FIRST];
-			return p->iCellIncX >= 0 ? *p : CreateFontGlyph(c);
-		}
-		
-		// 漢字のグリフ
-		std::map<WCHAR, CFontGlyph *>::iterator itr;
-		if((itr = m_FontGlyphK.find(c)) != m_FontGlyphK.end()){
+		auto itr = m_FontGlyph.find(c);
+		if(itr != m_FontGlyph.end()){
 			return *(itr->second);
 		}
 		
@@ -80,6 +58,7 @@ class CVsdFont : public CJsClass {
 	int GetW_Space(void){return m_iFontW_Space;}
 	
 	int GetTextWidth(LPCWSTR szMsg){	// !js_func
+		if(!szMsg) return 0;
 		
 		if(m_uAttr & ATTR_FIXED){
 			return wcslen(szMsg) * GetWidth();
@@ -93,14 +72,22 @@ class CVsdFont : public CJsClass {
 	}
 	
   private:
+	void CreateFont(const char *szFontName, int iSize, UINT uAttr);
+	void CreateFont(void);
+	
 	CFontGlyph& CreateFontGlyph(WCHAR c);
 	
 	static const int FONT_CHAR_FIRST = '!';
-	static const int FONT_CHAR_LAST	 = '~';
 	
-	CFontGlyph m_FontGlyph[FONT_CHAR_LAST - FONT_CHAR_FIRST + 1];
-	std::map<WCHAR, CFontGlyph *> m_FontGlyphK;
+	void DestroyFont(void);
+	
+	std::map<WCHAR, std::unique_ptr<CFontGlyph>> m_FontGlyph;
 	LOGFONT	m_LogFont;
+	
+	HDC		m_hdc = nullptr;
+	HFONT	m_hFont = nullptr;
+	HFONT	m_hFontOld = nullptr;
+	LONG	m_tmAscent = 0;
 	
 	int	m_iFontW, m_iFontH, m_iFontW_Space;
 	
