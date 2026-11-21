@@ -1,12 +1,11 @@
 "use strict";
 
-Include( "_system/common.js" );
-Include( "_user_config.js" );
+std.loadFile( "_system/common.js" );
+std.loadFile( "_user_config.js" );
 
 //****************************************************************************
 
-var Vsd = new __VSD_System__( __CVsdFilter );
-var Log = new __VSD_SystemLog__( __CVsdFilter );
+var Vsd = new __VSD_System__();
 
 var DRAW_FILL			= 1 << 0;
 var DRAW_NOCLOSE		= 1 << 1;

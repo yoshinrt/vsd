@@ -9,6 +9,8 @@
 #include "StdAfx.h"
 
 #include "CVsdImage.h"
+#include "CScript.h"
+#include "util.h"
 #include "error_code.h"
 
 /*** マクロ *****************************************************************/
@@ -26,23 +28,30 @@
 
 CVsdImage::CVsdImage(){
 	DebugMsgD("new CVsdImage %X\n", this);
-	m_pBuf	= nullptr;
 	
 	m_iWidth  = 0;	// 画像の幅
 	m_iHeight = 0;	//  〃  高さ
 	m_iOffsX = m_iOffsY = 0;
 	
 	m_iStatus	= IMG_STATUS_LOAD_INCOMPLETE;
-	m_pFileName	= nullptr;
-	m_pSemaphore = nullptr;
 }
 
-CVsdImage::CVsdImage(CVsdImage &Org){
+CVsdImage::CVsdImage(qjsb::Value file_img, qjsb::Value flag){
 	DebugMsgD("new CVsdImage %X\n", this);
-	*this = Org;
-	m_pBuf = new CPixelImg[m_iRawWidth * m_iRawHeight];
-	memcpy(m_pBuf, Org.m_pBuf, sizeof(CPixelImg) * m_iRawWidth * m_iRawHeight);
-	m_pSemaphore = nullptr;
+	
+	m_iWidth  = 0;	// 画像の幅
+	m_iHeight = 0;	//  〃  高さ
+	m_iOffsX = m_iOffsY = 0;
+	
+	m_iStatus	= IMG_STATUS_LOAD_INCOMPLETE;
+	
+	if(file_img.isObject()){
+		auto* pOrg = qjsb::from_js<CVsdImage*>(file_img.ctx(), file_img.get());
+		if (pOrg == nullptr) JsTypeError("argument 1 must be Image object");
+		Clone(pOrg);
+	}else{
+		Load(Utf8ToWide(qjsb::from_js<std::string>(file_img.ctx(), file_img.get())).c_str(), qjsb::from_js<UINT>(flag.ctx(), flag.get()));
+	}
 }
 
 CVsdImage::~CVsdImage(){
@@ -50,14 +59,11 @@ CVsdImage::~CVsdImage(){
 	m_iStatus	= IMG_STATUS_DESTROYED;
 	
 	// ASync ロード完了まで待つ
-	if(m_pSemaphore){
-		m_pSemaphore->Lock();
-		m_pSemaphore->Release();
-		delete m_pSemaphore;
+	{
+		std::unique_lock<std::mutex> lock(m_Mutex);
+		m_CondVar.wait(lock, [this]{ return !m_bLoading; });
 	}
 	
-	if(m_pFileName) delete [] m_pFileName;
-	delete [] m_pBuf;
 }
 
 void CVsdImage::DeleteAsync(void){
@@ -77,6 +83,21 @@ void CVsdImage::DeleteAsync(void){
 	}
 	*/
 	delete this;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// コピー
+
+void CVsdImage::Clone(const CVsdImage *pOrg){
+	m_iWidth     = pOrg->m_iWidth;
+	m_iHeight    = pOrg->m_iHeight;
+	m_iStatus    = pOrg->m_iStatus;
+	m_iRawWidth  = pOrg->m_iRawWidth;
+	m_iRawHeight = pOrg->m_iRawHeight;
+	m_iOffsX     = pOrg->m_iOffsX;
+	m_iOffsY     = pOrg->m_iOffsY;
+	m_FileName   = pOrg->m_FileName;
+	m_ImgBuf     = pOrg->m_ImgBuf;
 }
 
 /*** イメージのロード *******************************************************/
@@ -109,18 +130,20 @@ UINT CVsdImage::Load(LPCWSTR szFileName, UINT uFlag){
 	){
 		if(uFlag & IMG_INET_ASYNC){
 			// 非同期読み込みなのでスレッド起動
-			UINT uSize = wcslen(szFileName) + 1;
-			m_pFileName = new WCHAR[uSize];
-			wcscpy_s(m_pFileName, uSize, szFileName);
+			{
+				std::lock_guard<std::mutex> lock(m_Mutex);
+				m_FileName = szFileName;
+				m_bLoading = true;
+			}
 			
-			m_pSemaphore = new CSemaphore();
-			m_pSemaphore->Lock();
-			
-			std::thread LoadThread([&]{
-				Load(m_pFileName);
-				delete [] m_pFileName;
-				m_pFileName = nullptr;
-				m_pSemaphore->Release();
+			std::thread LoadThread([this]{
+				Load(m_FileName.c_str());
+				{
+					std::lock_guard<std::mutex> lock(m_Mutex);
+					m_FileName.clear();
+					m_bLoading = false;
+				}
+				m_CondVar.notify_all();
 			});
 			
 			LoadThread.detach();
@@ -224,9 +247,9 @@ UINT CVsdImage::Load(LPCWSTR szFileName, UINT uFlag){
 		m_iHeight = pBitmap->GetHeight();
 		
 		// ■ロードする画像のメモリの解像度を変更/設定（この位置に任意に記述して下さい）
-		m_pBuf = new CPixelImg[m_iWidth * m_iHeight];
+		m_ImgBuf.resize(m_iWidth * m_iHeight);
 		
-		if(!m_pBuf){
+		if(m_ImgBuf.empty()){
 			result		= ERR_NOT_ENOUGH_MEMORY;
 			m_iStatus	= IMG_STATUS_LOAD_FAILED;
 		}else{
@@ -242,7 +265,7 @@ UINT CVsdImage::Load(LPCWSTR szFileName, UINT uFlag){
 						srcColor.GetG(),
 						srcColor.GetB()
 					);
-					m_pBuf[x + y * m_iWidth] = yc;
+					m_ImgBuf[x + y * m_iWidth] = yc;
 					
 					UpdateMinMax(yc.ycbcr);
 				}
@@ -431,7 +454,7 @@ UINT CVsdImage::Resampling(int x, double y0, double y1){
 
 UINT CVsdImage::Resize(int iWidth, int iHeight){
 	
-	CPixelImg *pNewBuf;
+	std::vector<CPixelImg> pNewBuf;
 	
 	int	iMinX = MAXINT;
 	int iMinY = MAXINT;
@@ -443,9 +466,9 @@ UINT CVsdImage::Resize(int iWidth, int iHeight){
 	// x, y 両方拡大の場合のみ，一気に拡大
 	if(iWidth > m_iWidth && iHeight > m_iHeight){
 		
-		pNewBuf = new CPixelImg[iWidth * iHeight];
+		pNewBuf.resize(iWidth * iHeight);
 		
-		if(!pNewBuf) return ERR_NOT_ENOUGH_MEMORY;
+		if(pNewBuf.empty()) return ERR_NOT_ENOUGH_MEMORY;
 		
 		#ifdef _OPENMP_AVS
 			#pragma omp parallel for
@@ -459,8 +482,7 @@ UINT CVsdImage::Resize(int iWidth, int iHeight){
 			UpdateMinMax(ycbcr);
 		}
 		
-		delete [] m_pBuf;
-		m_pBuf = pNewBuf;
+		m_ImgBuf = std::move(pNewBuf);
 		
 		m_iWidth  = iWidth;
 		m_iHeight = iHeight;
@@ -468,8 +490,8 @@ UINT CVsdImage::Resize(int iWidth, int iHeight){
 		/*** x 方向の処理 ***/
 		
 		if(iWidth != m_iWidth){
-			pNewBuf = new CPixelImg[iWidth * m_iHeight];
-			if(!pNewBuf) return ERR_NOT_ENOUGH_MEMORY;
+			pNewBuf.resize(iWidth * m_iHeight);
+			if(pNewBuf.empty()) return ERR_NOT_ENOUGH_MEMORY;
 			
 			if(iWidth > m_iWidth){
 				// x 拡大
@@ -497,8 +519,7 @@ UINT CVsdImage::Resize(int iWidth, int iHeight){
 				}
 			}
 			
-			delete [] m_pBuf;
-			m_pBuf = pNewBuf;
+			m_ImgBuf = std::move(pNewBuf);
 			m_iWidth = iWidth;
 			
 			m_iRawWidth  = m_iWidth;
@@ -514,8 +535,8 @@ UINT CVsdImage::Resize(int iWidth, int iHeight){
 			iMaxX = MININT;
 			iMaxY = MININT;
 			
-			pNewBuf = new CPixelImg[iWidth * iHeight];
-			if(!pNewBuf) return ERR_NOT_ENOUGH_MEMORY;
+			pNewBuf.resize(iWidth * iHeight);
+			if(pNewBuf.empty()) return ERR_NOT_ENOUGH_MEMORY;
 			
 			if(iHeight > m_iHeight){
 				// y 拡大
@@ -543,8 +564,7 @@ UINT CVsdImage::Resize(int iWidth, int iHeight){
 				}
 			}
 			
-			delete [] m_pBuf;
-			m_pBuf = pNewBuf;
+			m_ImgBuf = std::move(pNewBuf);
 			m_iHeight = iHeight;
 			
 			m_iRawWidth  = m_iWidth;
@@ -563,8 +583,8 @@ UINT CVsdImage::Resize(int iWidth, int iHeight){
 
 UINT CVsdImage::Rotate(int cx, int cy, double dAngle){
 	
-	CPixelImg *pNewBuf = new CPixelImg[m_iWidth * m_iHeight];
-	if(!pNewBuf) return ERR_NOT_ENOUGH_MEMORY;
+	std::vector<CPixelImg> pNewBuf(m_iWidth * m_iHeight);
+	if(pNewBuf.empty()) return ERR_NOT_ENOUGH_MEMORY;
 	
 	double dSin = sin(dAngle * ToRAD);
 	double dCos = cos(dAngle * ToRAD);
@@ -588,8 +608,7 @@ UINT CVsdImage::Rotate(int cx, int cy, double dAngle){
 		UpdateMinMax(ycbcr);
 	}
 	
-	delete [] m_pBuf;
-	m_pBuf = pNewBuf;
+	m_ImgBuf = std::move(pNewBuf);
 	
 	Clip(iMinX, iMinY, iMaxX, iMaxY);
 	
@@ -607,8 +626,8 @@ UINT CVsdImage::Clip(int x1, int y1, int x2, int y2){
 	m_iRawHeight = m_iHeight;
 	m_iOffsX = m_iOffsY = 0;
 	
-	CPixelImg *pNewBuf = new CPixelImg[iNewWidth * iNewHeight];
-	if(!pNewBuf) return ERR_NOT_ENOUGH_MEMORY;
+	std::vector<CPixelImg> pNewBuf(iNewWidth * iNewHeight);
+	if(pNewBuf.empty()) return ERR_NOT_ENOUGH_MEMORY;
 	
 	#ifdef _OPENMP_AVS
 		#pragma omp parallel for
@@ -617,8 +636,7 @@ UINT CVsdImage::Clip(int x1, int y1, int x2, int y2){
 		pNewBuf[x + y * iNewWidth].ycbcr = GetPixel(x + x1, y + y1);
 	}
 	
-	delete [] m_pBuf;
-	m_pBuf = pNewBuf;
+	m_ImgBuf = std::move(pNewBuf);
 	
 	m_iRawWidth		= iNewWidth;
 	m_iRawHeight	= iNewHeight;
@@ -631,11 +649,7 @@ UINT CVsdImage::Clip(int x1, int y1, int x2, int y2){
 /*** async ロード完了待ち ***************************************************/
 
 UINT CVsdImage::WaitAsyncLoadComplete(int iMsec){
-	if(m_pSemaphore){
-		m_pSemaphore->Lock();
-		m_pSemaphore->Release();
-		delete m_pSemaphore;
-		m_pSemaphore = nullptr;
-	}
+	std::unique_lock<std::mutex> lock(m_Mutex);
+	m_CondVar.wait(lock, [this]{ return !m_bLoading; });
 	return m_iStatus;
 }

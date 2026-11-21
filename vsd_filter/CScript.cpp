@@ -7,14 +7,13 @@
 *****************************************************************************/
 
 #include "StdAfx.h"
-
+#include "CVsdFilter.h"
 #include "CScript.h"
-#include "ScriptIF.h"
 
 /*** static メンバ（；´д⊂）***********************************************/
 
-LPCWSTR CScript::m_szErrorMsgID[] = {
-	#define DEF_ERROR(id, msg)	L##msg,
+LPCSTR CScript::m_szErrorMsgID[] = {
+	#define DEF_ERROR(id, msg)	msg,
 	#include "def_error.h"
 };
 
@@ -22,15 +21,6 @@ LPCWSTR CScript::m_szErrorMsgID[] = {
 
 CScript::CScript(){
 	DebugMsgD(":CScript::CScript():%X\n", GetCurrentThreadId());
-	
-	m_pIsolate = g_pVsd->m_ScriptRoot.m_pIsolate;
-	Locker locker(m_pIsolate);
-	Isolate::Scope IsolateScope(m_pIsolate);
-	
-	DebugMsgD(":CScript::CScript():m_pIsolate = %X\n", m_pIsolate);
-	DebugMsgD(":CScript::CScript():m_pContext\n");
-	
-	m_szErrorMsg	= nullptr;
 	m_uError		= ERR_OK;
 }
 
@@ -38,452 +28,180 @@ CScript::CScript(){
 
 CScript::~CScript(){
 	DebugMsgD(":CScript::~CScript():%X\n", GetCurrentThreadId());
-	DebugMsgD(":CScript::~CScript():m_pIsolate = %X\n", m_pIsolate);
-	
-	Dispose();
-	
-	{
-		Locker locker(m_pIsolate);
-		Isolate::Scope IsolateScope(m_pIsolate);
-		m_Context.Reset();
-		m_pIsolate->IdleNotificationDeadline(1.0);
-	}
-	// テスト用
-	m_pIsolate->RequestGarbageCollectionForTesting(Isolate::kFullGarbageCollection);
-	
-	delete [] m_szErrorMsg;
 }
 
-/*** Exception メッセージ表示 ***********************************************/
+/*** Exception メッセージ取得 ***********************************************/
 
-#define MSGBUF_SIZE	(4 * 1024)
-
-LPWSTR CScript::ReportException(LPWSTR pMsg, TryCatch& try_catch){
-	HandleScope handle_scope(Isolate::GetCurrent());
-	String::Value exception(try_catch.Exception());
-	Local<Message> message = try_catch.Message();
-	
-	if(!pMsg) pMsg = new WCHAR[MSGBUF_SIZE];
-	UINT	u = 0;
-	
-	if (message.IsEmpty()){
-		// V8 didn't provide any extra information about this error; just
-		// print the exception.
-		swprintf(pMsg, MSGBUF_SIZE, L"%s\n", (wchar_t *)*exception);
-		for(; u < MSGBUF_SIZE && pMsg[u]; ++u);
-	}else{
-		// Print (filename):(line number): (message).
-		String::Value filename(message->GetScriptResourceName());
-		int linenum = message->GetLineNumber();
-		swprintf(pMsg, MSGBUF_SIZE - u, L"%s:%i: %s\n", (wchar_t *)*filename, linenum, (wchar_t *)*exception);
-		
-		for(; u < MSGBUF_SIZE && pMsg[u]; ++u);
-		
-		// Print line of source code.
-		String::Value sourceline(message->GetSourceLine());
-		swprintf(pMsg + u, MSGBUF_SIZE - u, L"%s\n", (wchar_t *)*sourceline);
-		
-		// TAB->SP 変換と，p は '\0' を指すようにする
-		for(; u < MSGBUF_SIZE && pMsg[u]; ++u) if(pMsg[u] == '\t') pMsg[u] = ' ';
-		
-		// Print wavy underline (GetUnderline is deprecated).
-		int start = message->GetStartColumn();
-		for (int i = 0; i < start && u < MSGBUF_SIZE; i++){
-			pMsg[u++] = L' ';
-		}
-		int end = message->GetEndColumn();
-		for (int i = start; i < end; i++){
-			pMsg[u++] = L'^';
-		}
-	}
-	
-	if(u > MSGBUF_SIZE - 2) u = MSGBUF_SIZE - 2;
-	
-	pMsg[u++] = L'\n';
-	pMsg[u] = L'\0';
-	
-	return pMsg;
-}
-
-/*** JavaScript オブジェクトディスポーザ ************************************/
-
-void CScript::Dispose(void){
-	Locker locker(m_pIsolate);
-	Isolate::Scope IsolateScope(m_pIsolate);
-	HandleScope handle_scope(m_pIsolate);
-	Context::Scope context_scope(GetContext());
-	
-	// global obj 取得
-	Local<Object> hGlobal = GetContext()->Global();
-	
-	// Log の key 取得
-	Local<Array> Keys = hGlobal->GetPropertyNames();
-	
-	for(UINT u = 0; u < Keys->Length(); ++u){
-		#ifdef DEBUG
-			String::Utf8Value strKey(Keys->Get(u));
-			char *pKey = *strKey;
-			DebugMsgD("js var %s = undef\n", pKey);
-		#endif
-		hGlobal->Set(Keys->Get(u), Undefined(m_pIsolate));
-	}
-}
-
-/*** sprintf ****************************************************************/
-
-#define SPRINTF_BUF_SIZE	1024
-
-LPWSTR CScript::SprintfSub(const FunctionCallbackInfo<Value>& args){
-	
-	if(CScriptIFBase::CheckArgs(args.Length() >= 1)){
-		JsErrorNumOfArg();
-		return nullptr;
-	}
-	
-	// arg 用 buf
-	UINT *puArgBuf	= new UINT[args.Length() * 2];
-	UINT uArgBufPtr	= 0;
-	int iArgNum	= 1;
-	LPWSTR wszBuf	= nullptr;
-	std::vector<String::Value *> vecStrValue;
-	
-	// Fmt 文字列取得
-	String::Value str(args[0]);
-	LPCWSTR wszFmt = (LPCWSTR)*str;
-	LPCWSTR p = wszFmt;
-	
-	// % 引数解析
-	for(;; ++iArgNum, ++p){
-		// % サーチ
-		if((p = wcschr(p, L'%')) == nullptr) break;
-		
-		// 型フィールドサーチ
-		for(++p; *p && strchr("+-0123456789.# ", *p); ++p);
-		
-		// %% だったら次いってみよー
-		if(*p == L'%'){
-			--iArgNum;
-			continue;
-		}
-		
-		// arg 数チェック
-		if(args.Length() <= iArgNum){
-			//  引数が足りないエラー
-			JsErrorNumOfArg();
-			goto ErrorExit;
-		}
-		
-		if(*p == L's'){
-			// strint 型
-			String::Value *pvalue = new String::Value(args[iArgNum]);
-			
-			vecStrValue.push_back(pvalue);
-			*(LPCWSTR *)&puArgBuf[uArgBufPtr++] = (LPCWSTR)**pvalue;
-		}else if(strchr("cCdiouxX", *p)){
-			// int 型
-			puArgBuf[uArgBufPtr++] = args[iArgNum]->Int32Value();
-		}else if(strchr("eEfgGaA", *p)){
-			// double 型
-			*(double *)&puArgBuf[uArgBufPtr] = args[iArgNum]->NumberValue();
-			uArgBufPtr += 2;
-		}else{
-			// 非対応の型
-			JsSyntaxError("unknown printf type field");
-			goto ErrorExit;
-		}
-	}
-	
-	// 引数あまりチェック
-	if(args.Length() != iArgNum){
-		JsErrorNumOfArg();
-		goto ErrorExit;
-	}
-	
-	// vsprintf 起動
-	va_list vargs;
-	va_start(vargs, puArgBuf[-1]);
-	
-	wszBuf = new WCHAR[SPRINTF_BUF_SIZE];
-	vswprintf(wszBuf, SPRINTF_BUF_SIZE - 1, wszFmt, vargs);
-	
-	va_end(vargs);
-	
-	// 後処理
-  ErrorExit:
-	delete [] puArgBuf;
-	
-	for(UINT u = 0; u < vecStrValue.size(); ++u){
-		delete vecStrValue[u];
-	}
-	
-	return wszBuf;
-}
-
-void CScript::Sprintf(const FunctionCallbackInfo<Value>& args){
-	HandleScope handle_scope(args.GetIsolate());
-	
-	LPWSTR str = CScript::SprintfSub(args);
-	if(!str) return;
-	
-	args.GetReturnValue().Set(String::NewFromTwoByte(args.GetIsolate(), (uint16_t *)str));
-	delete [] str;
-	
-	//return handle_scope.Escape(v8str);
+std::string CScript::ReportException(const qjsb::JSException& e){
+	std::string msg = e.what();
+	msg += e.stack();
+	return msg;
 }
 
 /*** Print ******************************************************************/
 
-void CScript::Printf(const FunctionCallbackInfo<Value>& args){
-	LPCWSTR wsz = SprintfSub(args);
-	if(wsz){
-		CVsdFilter::Print(wsz);
-		delete [] wsz;
-	}
-}
-
-void CScript::Print(LPCWSTR szMsg){
-	CVsdFilter::Print(szMsg);
+void CScript::Print(std::string msg){
+	CVsdFilter::Print(Utf8ToWide(msg).c_str());
 }
 
 int CScript::MessageBox(
-	LPCWSTR szMsg,
-	LPCWSTR szCaption,
+	std::string msg,
+	std::string caption,
 	UINT	uType
 ){
-	return MessageBoxW(nullptr, szMsg,
-		szCaption ? szCaption : L"VSD filter JavaScript message",
+	return MessageBoxW(nullptr, Utf8ToWide(msg).c_str(),
+		caption.empty() ? L"VSD filter JavaScript message" : Utf8ToWide(caption).c_str(),
 		uType
 	);
 }
 
-void CScript::DebugPrint(const FunctionCallbackInfo<Value>& args){
-	LPCWSTR wsz = SprintfSub(args);
-	OutputDebugStringW(wsz);
-	OutputDebugStringW(L"\n");
-	delete [] wsz;
-}
-
-/*** include ****************************************************************/
-
-void CScript::Include(LPCWSTR wszFileName){
-	HandleScope handle_scope(m_pIsolate);
-	
-	UINT uRet = RunFileCore(wszFileName);
-	
-	if(uRet == ERR_CANT_OPEN_FILE){
-		JsError(ERR_CANT_OPEN_FILE);
-	}
+void CScript::DebugPrint(std::string msg){
+	OutputDebugStringW(Utf8ToWide(msg).c_str());
 }
 
 /*** JavaScript interface のセットアップ ************************************/
 
-UINT CScript::Initialize(LPCWSTR wszFileName){
-	Locker locker(m_pIsolate);
-	Isolate::Scope IsolateScope(m_pIsolate);
-	
-	// 準備
-	HandleScope handle_scope(m_pIsolate);
+UINT CScript::Initialize(){
+	if (m_bInitialized) return ERR_OK;
+	m_bInitialized = true;
 	
 	// グローバルオブジェクトの生成
-	Local<ObjectTemplate> global = ObjectTemplate::New(m_pIsolate);
-	
-	// Image クラス登録
-	CVsdImageIF::InitializeClass(m_pIsolate, global);
-	CVsdFontIF::InitializeClass(m_pIsolate, global);
-	CVsdFilterIF::InitializeClass(m_pIsolate, global, g_pVsd);
-	CVsdFilterLogIF::InitializeClass(m_pIsolate, global, g_pVsd);
-	CVsdFileIF::InitializeClass(m_pIsolate, global);
-	CScriptIF::InitializeClass(m_pIsolate, global);
-	
-	global->Set(String::NewFromOneByte(m_pIsolate, (uint8_t *)"__CVsdFilter"), External::New(m_pIsolate, g_pVsd));
-	global->Set(String::NewFromOneByte(m_pIsolate, (uint8_t *)"__CScript"), External::New(m_pIsolate, this));
-	
-	// グローバルオブジェクトから環境を生成
-	m_Context = *(new Persistent<Context>(m_pIsolate,
-		Context::New(m_pIsolate, nullptr, global)
-	));
-	
-	if(wszFileName) return RunFile(wszFileName);
-	
-	return ERR_OK;
+	js_std_init_handlers(g_JsRuntime.get());
+	js_init_module_std(m_JsContext.get(), "std");
+	js_init_module_os(m_JsContext.get(), "os");
+
+	RegisterClass();
+
+	return RunScript(R"(
+		import * as std from "std";
+		import * as os from "os";
+		globalThis.std = std;
+		globalThis.os = os;
+	)", true);
 }
 
 /*** スクリプトファイルの実行 ***********************************************/
 
-UINT CScript::RunFile(LPCWSTR szFileName){
-	Locker locker(m_pIsolate);
-	Isolate::Scope IsolateScope(m_pIsolate);
-	
-	HandleScope handle_scope(m_pIsolate);
-	
-	// 環境からスコープを生成
-	Context::Scope context_scope(GetContext());
-	
-	TryCatch try_catch;
-	
-	UINT uRet = RunFileCore(szFileName);
-	
-	if(uRet == ERR_SCRIPT || try_catch.HasCaught()){
-		// Print errors that happened during compilation.
-		m_szErrorMsg = ReportException(m_szErrorMsg, try_catch);
-		return m_uError = ERR_SCRIPT;
-	}
-	
-	return uRet;
-}
-
-UINT CScript::RunFileCore(LPCWSTR szFileName){
-	
-	FILE *fp;
-	// スクリプト ロード
+UINT CScript::RunFile(LPCSTR szFileName){
 	CPushDir push_dir(g_pVsd->m_szPluginDirW);
-	fp = _wfopen(szFileName, L"r");
 	
-	if(fp == nullptr) return m_uError = ERR_CANT_OPEN_FILE;
-	
-	// ファイルサイズ取得
-	fseek(fp, 0, SEEK_END);
-	fpos_t Size;
-	fgetpos(fp, &Size);
-	fseek(fp, 0, SEEK_SET);
-	
-	char *szBuf = new char[(UINT)Size + 1];
-	
-	int iReadSize = fread(szBuf, 1, (size_t)Size, fp);
-	fclose(fp);
-	szBuf[iReadSize] = '\0';
-	
-	Local<Script> script = Script::Compile(
-		String::NewFromUtf8(m_pIsolate, szBuf),
-		String::NewFromTwoByte(m_pIsolate, (uint16_t *)szFileName)
-	);
-	
-	delete [] szBuf;
-	
-	if(script.IsEmpty()){
-		// Print errors that happened during compilation.
+	m_ErrorMsg.clear();
+
+	if ((m_uError = Initialize()) != ERR_OK) {
+		return m_uError;
+	}
+
+	std::ifstream ifs(szFileName, std::ios::binary);
+	if (!ifs) {
+		m_ErrorMsg = std::format("Failed to open script file: {}", szFileName);
+		return m_uError = ERR_CANT_OPEN_FILE;
+	}
+
+	std::vector<char> source((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+	if (source.empty()) {
+		m_ErrorMsg = std::format("Script file is empty: {}", szFileName);
 		return m_uError = ERR_SCRIPT;
 	}
-	
-	// とりあえず初期化処理
-	Local<Value> result = script->Run();
-	
+
+	source.push_back('\0');
+
+	try {
+		m_JsContext.eval(source.data(), szFileName);
+	}
+	catch (const qjsb::JSException& e) {
+		m_ErrorMsg = ReportException(e);
+		return m_uError = ERR_SCRIPT;
+	}
+
 	return m_uError = ERR_OK;
 }
 
-/*** function 名指定実行，引数なし ******************************************/
+//////////////////////////////////////////////////////////////////////////////
+// Script ダイレクト実行
 
-UINT CScript::Run(LPCWSTR szFunc, BOOL bNoFunc){
-	
-	Locker locker(m_pIsolate);
-	Isolate::Scope IsolateScope(m_pIsolate);
-	HandleScope handle_scope(m_pIsolate);
-	Context::Scope context_scope(GetContext());
-	
-	return RunArg(szFunc, 0, nullptr, bNoFunc);
-}
-
-UINT CScript::Run_s(LPCWSTR szFunc, LPCWSTR str0, BOOL bNoFunc){
-	
-	Locker locker(m_pIsolate);
-	Isolate::Scope IsolateScope(m_pIsolate);
-	HandleScope handle_scope(m_pIsolate);
-	Context::Scope context_scope(GetContext());
-	
-	#define SetStringArg(arg, str) \
-		if(str) Args[arg] = String::NewFromTwoByte(m_pIsolate, (uint16_t *)str); \
-		else      Args[arg] = Undefined(m_pIsolate);
-	
-	Handle<Value> Args[1];
-	SetStringArg(0, str0);
-	
-	return RunArg(szFunc, 1, Args, bNoFunc);
-}
-
-UINT CScript::Run_ss(LPCWSTR szFunc, LPCWSTR str0, LPCWSTR str1, BOOL bNoFunc){
-	
-	Locker locker(m_pIsolate);
-	Isolate::Scope IsolateScope(m_pIsolate);
-	HandleScope handle_scope(m_pIsolate);
-	Context::Scope context_scope(GetContext());
-	
-	Handle<Value> Args[2];
-	SetStringArg(0, str0);
-	SetStringArg(1, str1);
-	
-	return RunArg(szFunc, 2, Args, bNoFunc);
-}
-
-UINT CScript::RunArg(LPCWSTR szFunc, int iArgNum, Handle<Value> Args[], BOOL bNoFunc){
-	TryCatch try_catch;
-	
-	Local<Function> hFunction = Local<Function>::Cast(GetContext()->Global()->Get(String::NewFromTwoByte(m_pIsolate, (uint16_t *)szFunc)));
-	if(hFunction->IsUndefined()){
-		if(bNoFunc) return ERR_OK;
-		if(!m_szErrorMsg) m_szErrorMsg = new WCHAR[MSGBUF_SIZE];
-		
-		swprintf(m_szErrorMsg, MSGBUF_SIZE, L"Undefined function \"%s()\"\n", szFunc);
+UINT CScript::RunScript(LPCSTR szScript, bool bModule){
+	try {
+		bModule ? m_JsContext.evalModule(szScript) : m_JsContext.eval(szScript);
+	}
+	catch (const qjsb::JSException& e) {
+		m_ErrorMsg = ReportException(e);
 		return m_uError = ERR_SCRIPT;
 	}
-	Local<Value> result = hFunction->Call(GetContext()->Global(), iArgNum, Args);
-	
-	if(try_catch.HasCaught()){
-		m_szErrorMsg = ReportException(m_szErrorMsg, try_catch);
-		return m_uError = ERR_SCRIPT;
-	}
-	
-	// ガーベッジコレクション?
-	//while(!V8::IdleNotification());
-	//V8::IdleNotification();
-	
+
 	return m_uError = ERR_OK;
+}
+
+/*** function 名指定実行 *********************************************************/
+
+qjsb::Value CScript::CallRaw(
+	const char* name,
+	int argc,
+	JSValueConst* argv
+) {
+	m_ErrorMsg.clear();
+
+	qjsb::Value func = m_JsContext.getGlobal(name);
+
+	if (!func.isFunction()) {
+		m_ErrorMsg = std::string(name) + " is not a function";
+		m_uError = ERR_SCRIPT;
+		return qjsb::Value(m_JsContext.get(), JS_UNDEFINED);
+	}
+
+	JSValue v = JS_Call(m_JsContext.get(), func.get(), JS_UNDEFINED, argc, argv);
+
+	if (JS_IsException(v)) {
+		JS_FreeValue(m_JsContext.get(), v);
+		try{
+			qjsb::throwJSException(m_JsContext.get());
+		}
+		catch (const qjsb::JSException& e) {
+			m_ErrorMsg = ReportException(e);
+			m_uError = ERR_SCRIPT;
+			return qjsb::Value(m_JsContext.get(), JS_UNDEFINED);
+		}
+	}
+
+	return qjsb::Value(m_JsContext.get(), v);
 }
 
 /*** ログリード by JavaScript **********************************************/
 
-BOOL LogReaderCallback(const char *szPath, const char *szFile, void *pParam){
-	if(!IsExt(szFile, "js")) return TRUE;
+BOOL LogReaderCallback_qjs(const wchar_t *szPath, const wchar_t *szFile, void *pParam){
+	const wchar_t* ext = wcsrchr(szFile, L'.');
+	if (!(ext != nullptr && _wcsicmp(ext, L".js") == 0)) return TRUE;
 	
 	CScript &Script = *(CScript *)pParam;
 	
-	char szBuf[MAX_PATH + 1];
-	strcat(strcpy(szBuf, szPath), szFile);
+	std::wstring path(szPath);
+	Script.RunFile(WideToUtf8(path + szFile).c_str());
 	
-	LPWSTR pFile = nullptr;
-	Script.RunFile(StringNewA2W(pFile, szBuf));
-	delete pFile;
-	
-	if(Script.m_uError){
-		// エラー
-		g_pVsd->DispErrorMessage(Script.GetErrorMessage());
-		return FALSE;
-	}
-	
-	return TRUE;
+	return Script.m_uError == ERR_OK;
 }
 
 UINT CScript::InitLogReader(void){
-	Initialize(L"_system/InitLogReader.js");
-	if(m_uError){
-		// エラー
+	m_uError = ERR_OK;
+	
+	do {
+		if (RunFile("_system/InitLogReader.js") != ERR_OK) break;
+
+		// スクリプトロード
+		std::wstring path(g_pVsd->m_szPluginDirW);
+		path += WIDEN(LOG_READER_DIR) L"\\";
+		if (!ListTree(path.c_str(), L"*", LogReaderCallback_qjs, this)) {
+			m_uError = ERR_CANT_OPEN_FILE;
+			break;
+		}
+
+		RunScript(R"(
+			if (typeof globalThis["SortLogReaderInfo"] === 'function') {
+				SortLogReaderInfo();
+			}
+		)");
+	} while (0);
+
+	if(m_uError != ERR_OK) {
 		g_pVsd->DispErrorMessage(GetErrorMessage());
-		return m_uError;
 	}
-	
-	// スクリプトロード
-	char szBuf[MAX_PATH + 1];
-	strcpy(szBuf, g_pVsd->m_szPluginDirA);
-	strcat(szBuf, LOG_READER_DIR "\\");
-	if(!ListTree(szBuf, "*", LogReaderCallback, this)){
-		return ERR_CANT_OPEN_FILE;
-	}
-	
-	Run(L"SortLogReaderInfo", TRUE);
-	if(m_uError){
-		// エラー
-		g_pVsd->DispErrorMessage(GetErrorMessage());
-		return m_uError;
-	}
-	
-	return ERR_OK;
+	return m_uError;
 }

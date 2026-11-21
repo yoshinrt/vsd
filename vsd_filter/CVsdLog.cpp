@@ -475,7 +475,7 @@ static double JsArrayGetNumber(JSContext* ctx, const qjsb::Value& arr, uint32_t 
 int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *&pLapLog){
 	{
 		// JavaScript オブジェクト初期化
-		CScript_qjs Script;
+		CScript Script;
 		if(Script.InitLogReader() != ERR_OK){
 			return 0;
 		}

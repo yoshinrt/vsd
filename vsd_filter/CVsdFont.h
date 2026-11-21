@@ -8,6 +8,7 @@
 
 #pragma once
 #include "CJsClass.h"
+#include "util.h"
 
 /*** new type ***************************************************************/
 

@@ -11,7 +11,6 @@
 #include "CVsdLog.h"
 #include "CVsdFont.h"
 #include "CScript.h"
-#include "CScript_qjs.h"
 #include "CVsdImage.h"
 #include "CPixel.h"
 #include "CJsClass.h"
@@ -177,7 +176,7 @@ class CVsdFilter
 		CPixelArg ycOutline = color_black	// !default:color_black
 	);
 	
-	void DrawGraphSingle(	// !js_func
+	void DrawGraphSingle(	// ★js_func
 		int x1, int y1, int x2, int y2,
 		char *szKey,
 		LPCWSTR szFormat,
@@ -213,7 +212,7 @@ class CVsdFilter
 	void InitPolygon(void);
 	void FillPolygon(CPixelArg yc);
 	void DrawPolygon(// !js_func
-		v8Array pixs,
+		std::vector<double>& pixs,
 		CPixelArg yc,
 		UINT uFlag	// !default:0
 	);
@@ -304,29 +303,26 @@ class CVsdFilter
 	);
 	
 	// ラップタイム情報
-	LPCWSTR FormatTime(int iTime); // !js_func
-	
-	static inline void UndefIfTimeNone(ReturnValue<Value> Ret, int i){
-		if(i != TIME_NONE) Ret.Set(i);
+	std::string FormatTime(int iTime); // !js_func
+	std::wstring FormatTimeW(int iTime);
+
+	// ★undef を返すように要修正
+	int CurTime(){	// !js_var:ElapsedTime
+		return m_LapLog->m_iCurTime;
 	}
-	
-	void CurTime(ReturnValue<Value> Ret){	// !js_var:ElapsedTime
-		if(m_LapLog) UndefIfTimeNone(Ret, m_LapLog->m_iCurTime);
+	int BestLapTime(){	// !js_var:BestLapTime
+		return m_LapLog->m_iBestTime;
 	}
-	void BestLapTime(ReturnValue<Value> Ret){	// !js_var:BestLapTime
-		if(m_LapLog) UndefIfTimeNone(Ret, m_LapLog->m_iBestTime);
+	int DiffTime(){	// !js_var:DiffTime
+		return m_LapLog->m_iDiffTime;
 	}
-	void DiffTime(ReturnValue<Value> Ret){	// !js_var:DiffTime
-		if(m_LapLog) UndefIfTimeNone(Ret, m_LapLog->m_iDiffTime);
-	}
-	void LapTime(ReturnValue<Value> Ret){	// !js_var:LapTime
+	int LapTime(){	// !js_var:LapTime
 		if(!m_LapLog || m_LapLog->m_iLapIdx < 0){
-			//Ret.SetUndefined();
+			return TIME_NONE;
 		}else if(m_LapLog->m_Lap[m_LapLog->m_iLapIdx + 1].iTime){
-			UndefIfTimeNone(Ret, m_LapLog->m_Lap[m_LapLog->m_iLapIdx + 1].iTime);
-		}else{
-			UndefIfTimeNone(Ret, m_LapLog->m_Lap[m_LapLog->m_iLapIdx].iTime);
+			return m_LapLog->m_Lap[m_LapLog->m_iLapIdx + 1].iTime;
 		}
+		return m_LapLog->m_Lap[m_LapLog->m_iLapIdx].iTime;
 	}
 	
 	int LapCnt(void){// !js_var:LapCnt
@@ -420,8 +416,6 @@ class CVsdFilter
 	int DispLap(void){return m_piParamC[CHECK_LAP];}			// !js_var:Config_lap_time
 	int DispGraph(void){return m_piParamC[CHECK_GRAPH];}		// !js_var:Config_graph
 	
-	inline static CScriptRoot	m_ScriptRoot;
-	
 	char	*m_szLogFile;
 	char	*m_szLogFileReader;
 	char	*m_szGPSLogFile;
@@ -429,9 +423,9 @@ class CVsdFilter
 	char	*m_szLapChart;
 	char	*m_szSkinFile;
 	char	*m_szSkinDirA;
-	LPWSTR	m_szSkinDirW;	// !js_const:SkinDir
+	std::string	m_SkinDirU;	// !js_const:SkinDir
 	char	*m_szPluginDirA;
-	LPWSTR	m_szPluginDirW;	// !js_const:VsdRootDir
+	LPWSTR	m_szPluginDirW;	// ★js_const:VsdRootDir
 	
 	// リビジョン番号
 	static const int	m_iRevision;	// !js_const:Revision
@@ -452,7 +446,7 @@ class CVsdFilter
 		char szBuf[MAX_PATH + 1];
 		
 		if(szSkinFile == nullptr){
-			StringNewW(m_szSkinDirW, (LPCWSTR)nullptr);
+			m_SkinDirU = "";
 			return StringNewA(m_szSkinDirA, nullptr);
 		}
 		
@@ -463,7 +457,7 @@ class CVsdFilter
 		
 		// ↑のディレクトリ名を得る
 		StringNewA(m_szSkinDirA, StrTokFile(szBuf, szBuf, STF_FULL | STF_PATH2));
-		StringNewA2W(m_szSkinDirW, m_szSkinDirA);
+		m_SkinDirU = AnsiToUtf8(m_szSkinDirA);
 		return m_szSkinDirA;
 	}
 	
@@ -479,12 +473,14 @@ class CVsdFilter
 	}
 	
 	// ログアクセス
+	/* ★
 	void AccessLog(
 		ReturnValue<Value> Ret,
 		const char *szKey,
 		double dFrameCnt
 	);
-	
+	*/
+
 	int		*m_piParamT;
 	int		*m_piParamC;
 	int		*m_piParamS;
@@ -509,27 +505,11 @@ class CVsdFilter
 	}
 	#include "def_log.h"
 	
-	void DateTime(ReturnValue<Value> Ret){	// !js_var:DateTime
-		if     (m_VsdLog) Ret.Set(m_VsdLog->DateTime());
-		else if(m_GPSLog) Ret.Set(m_GPSLog->DateTime());
+	double DateTime(){	// !js_var:DateTime
+		if     (m_VsdLog) return m_VsdLog->DateTime();
+		else if(m_GPSLog) return m_GPSLog->DateTime();
+		return NaN; // ★undefined を返すように要修正
 	}
-	
-	void GetValue(ReturnValue<Value> Ret, char *szKey){
-		double dRet;
-		if(m_VsdLog && !_isnan(dRet = m_VsdLog->Get(szKey, m_VsdLog->m_dLogNum))){
-			Ret.Set(dRet);
-		}else if(m_GPSLog && !_isnan(dRet = m_GPSLog->Get(szKey, m_GPSLog->m_dLogNum))){
-			Ret.Set(dRet);
-		}
-	}
-	
-	void AddLogAccessorSub(
-		CVsdLog *pLog,
-		Local<Object> objLog,
-		Local<Array> objMin,
-		Local<Array> objMax
-	);
-	void AddLogAccessor(Local<Object> thisObj);
 	
 	static HINSTANCE	m_hInst;	// dll handle
 	
@@ -537,10 +517,6 @@ class CVsdFilter
 		if(m_Script){
 			delete m_Script;
 			m_Script = nullptr;
-		}
-		if(m_Script_qjs){
-			delete m_Script_qjs;
-			m_Script_qjs = nullptr;
 		}
 	}
 	
@@ -550,8 +526,7 @@ class CVsdFilter
 	
 	BOOL	m_bConsoleOn;
 	
-	CScript	*m_Script = nullptr;
-	CScript_qjs* m_Script_qjs;
+	CScript* m_Script = nullptr;
 	
   protected:
 	int m_iTextPosX, m_iTextPosY;

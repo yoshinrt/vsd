@@ -24,14 +24,14 @@ class CVsdFile : public CJsClass {
 		Close();
 	}
 	
-	int Open(LPCWSTR szFile, LPCWSTR szMode);	// !js_func
+	int Open(std::string file, std::string mode);	// !js_func
 	void Close(void); // !js_func
-	void ReadLine(ReturnValue<Value> Ret); // !js_func
-	int WriteLine(char *str); // !js_func
+	std::string ReadLine(void); // !js_func
+	int WriteLine(std::string s); // !js_func
 	int Seek(int iOffs, int iOrg);	// !js_func
 	int IsEOF(void); // !js_func
 	
-	void ZipNextFile(ReturnValue<Value> Ret); // !js_func
+	std::string ZipNextFile(void); // !js_func
 	int ReadZip(void);
 	
 	// バイナリアクセス

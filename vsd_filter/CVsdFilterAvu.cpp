@@ -787,70 +787,94 @@ void ExtendDialog(HWND hwnd, HINSTANCE hInst){
 
 /*** OpenDialog 用フィルタ作成 **********************************************/
 
-BOOL CVsdFilter::CreateFilter(void){
+BOOL CVsdFilter::CreateFilter(void) {
 	char	szBuf[BUF_SIZE];
-	char	*pBuf;
-	
+	char* pBuf = szBuf;
+
 	{
 		// JavaScript オブジェクト初期化
 		CScript Script;
-		if(Script.InitLogReader() != ERR_OK){
+		if (Script.InitLogReader() != ERR_OK) {
 			return FALSE;
 		}
-		
-		/*** JS の Log にアクセス *******************************************/
-		
-		{
-			Locker locker(m_ScriptRoot.m_pIsolate);
-			Isolate::Scope IsolateScope(m_ScriptRoot.m_pIsolate);
-			HandleScope handle_scope(m_ScriptRoot.m_pIsolate);
-			Context::Scope context_scope(Script.GetContext());
-			
-			// "LogReaderInfo" 取得
-			Local<Array> hFilter = Local<Array>::Cast(
-				Script.GetContext()->Global()->Get(String::NewFromOneByte(m_ScriptRoot.m_pIsolate, (uint8_t *)"LogReaderInfo"))
-			);
-			if(!hFilter->IsArray()) return FALSE;
-			
-			m_vecReaderFunc.clear();
-			
-			pBuf = szBuf;
-			// 表示名と filter 文字列を \0 で cat
-			strcpy(pBuf, "自動判別 (*.*)");
-			pBuf = strchr(pBuf, '\0') + 1;
-			strcpy(pBuf, "*");
-			pBuf = strchr(pBuf, '\0') + 1;
-			
-			for(UINT u = 0; u < hFilter->Length(); ++u){
-				String::Value     strName(Local<Array>::Cast(hFilter->Get(u))->Get(String::NewFromOneByte(m_ScriptRoot.m_pIsolate, (uint8_t *)"Caption")));
-				String::Utf8Value strExt (Local<Array>::Cast(hFilter->Get(u))->Get(String::NewFromOneByte(m_ScriptRoot.m_pIsolate, (uint8_t *)"Filter")));
-				String::Utf8Value strFunc(Local<Array>::Cast(hFilter->Get(u))->Get(String::NewFromOneByte(m_ScriptRoot.m_pIsolate, (uint8_t *)"ReaderFunc")));
-				
-				WideCharToMultiByte(
-					CP_ACP,					// コードページ
-					0,						// 文字の種類を指定するフラグ
-					(LPCWSTR)*strName,	// マップ元文字列のアドレス
-					-1,						// マップ元文字列のバイト数
-					pBuf,					// マップ先ワイド文字列を入れるバッファのアドレス
-					BUF_SIZE - (pBuf - szBuf),	// バッファのサイズ
-					nullptr, nullptr
-				);
-				
-				pBuf = strchr(pBuf, '\0') + 1;
-				strncpy(pBuf, *strExt, BUF_SIZE - (pBuf - szBuf));
-				pBuf = strchr(pBuf, '\0') + 1;
-				m_vecReaderFunc.push_back(*strFunc);
+
+		JSContext* ctx = Script.GetContextRaw();
+		if (!ctx) {
+			return FALSE;
+		}
+
+		/*** JS の "LogReaderInfo" にアクセス *******************************/
+
+		qjsb::Value global(ctx, JS_GetGlobalObject(ctx));
+		if (JS_IsException(global.get()) || !JS_IsObject(global.get())) {
+			return FALSE;
+		}
+
+		qjsb::Value hFilter(ctx, JS_GetPropertyStr(ctx, global.get(), "LogReaderInfo"));
+		if (JS_IsException(hFilter.get()) || !JS_IsArray(ctx, hFilter.get())) {
+			return FALSE;
+		}
+
+		qjsb::Value lenVal(ctx, JS_GetPropertyStr(ctx, hFilter.get(), "length"));
+		uint32_t uLen = 0;
+		if (JS_IsException(lenVal.get()) || JS_ToUint32(ctx, &uLen, lenVal.get()) < 0) {
+			return FALSE;
+		}
+
+		m_vecReaderFunc.clear();
+
+		// 表示名と filter 文字列を \0 で cat
+		strcpy_s(pBuf, BUF_SIZE - (pBuf - szBuf), "自動判別 (*.*)");
+		pBuf += strlen(pBuf) + 1;
+		strcpy_s(pBuf, BUF_SIZE - (pBuf - szBuf), "*");
+		pBuf += strlen(pBuf) + 1;
+
+		for (uint32_t u = 0; u < uLen; ++u) {
+			qjsb::Value item(ctx, JS_GetPropertyUint32(ctx, hFilter.get(), u));
+			if (JS_IsException(item.get()) || !JS_IsObject(item.get())) {
+				continue;
 			}
-			
+
+			qjsb::Value capVal(ctx, JS_GetPropertyStr(ctx, item.get(), "Caption"));
+			qjsb::Value extVal(ctx, JS_GetPropertyStr(ctx, item.get(), "Filter"));
+			qjsb::Value funcVal(ctx, JS_GetPropertyStr(ctx, item.get(), "ReaderFunc"));
+
+			const char* cName = JS_ToCString(ctx, capVal.get());
+			const char* cExt = JS_ToCString(ctx, extVal.get());
+			const char* cFunc = JS_ToCString(ctx, funcVal.get());
+
+			if (cName && cExt && cFunc) {
+				std::string ansiName = Utf8ToAnsi(cName);
+				int iRem = (int)(BUF_SIZE - (pBuf - szBuf));
+				if (iRem > 1) {
+					strncpy_s(pBuf, iRem, ansiName.c_str(), _TRUNCATE);
+					pBuf += strlen(pBuf) + 1;
+				}
+
+				iRem = (int)(BUF_SIZE - (pBuf - szBuf));
+				if (iRem > 1) {
+					strncpy_s(pBuf, iRem, cExt, _TRUNCATE);
+					pBuf += strlen(pBuf) + 1;
+				}
+
+				m_vecReaderFunc.emplace_back(cFunc);
+			}
+
+			if (cName) JS_FreeCString(ctx, cName);
+			if (cExt)  JS_FreeCString(ctx, cExt);
+			if (cFunc) JS_FreeCString(ctx, cFunc);
+		}
+
+		if ((size_t)(pBuf - szBuf) < BUF_SIZE) {
 			*(pBuf++) = '\0';
 		}
 	}
-	
-	if(m_szLogFilter) delete [] m_szLogFilter;
-	int iSize = pBuf - szBuf;
+
+	if (m_szLogFilter) delete[] m_szLogFilter;
+	int iSize = (int)(pBuf - szBuf);
 	m_szLogFilter = new char[iSize];
 	memcpy_s(m_szLogFilter, iSize, szBuf, iSize);
-	
+
 	return TRUE;
 }
 

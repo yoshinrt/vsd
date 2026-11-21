@@ -8,7 +8,7 @@
 
 #include "StdAfx.h"
 #include "CVsdFont.h"
-#include "CScript_qjs.h"
+#include "CScript.h"
 
 /*** macros *****************************************************************/
 
@@ -38,7 +38,7 @@ CVsdFont::~CVsdFont(){
 
 void CVsdFont::CreateFont(const char *szFontName, int iSize, UINT uAttr){
 	if(iSize <= 0){
-		JsRangeError_qjs("Font size must be > 0");
+		JsRangeError("Font size must be > 0");
 	}
 	
 	m_uAttr = uAttr;

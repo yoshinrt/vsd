@@ -571,8 +571,8 @@ enum {
 	EDGE_H_DEL_END	= 3,	// 水平ライン & ライン終点を削除
 };
 
-#define GetCoordinateI(n) ToInt((pixs->Get(n)->NumberValue() + 0.5))
-#define GetCoordinateD(n) (pixs->Get(n)->NumberValue())
+#define GetCoordinateI(n) ToInt((pixs[n] + 0.5))
+#define GetCoordinateD(n) (pixs[n])
 
 /*
 	PolyFill : 多角形描画(アクティブ・非アクティブの判断をフラグで行う)
@@ -581,12 +581,10 @@ enum {
 	GPixelOp& pset : 点描画に使う関数オブジェクト
 	VecEdge& EdgeList : 生成した辺リスト
 */
-void CVsdFilter::DrawPolygon(v8Array pixs, CPixelArg yc, UINT uFlag){
-	
-	HandleScope handle_scope(Isolate::GetCurrent());
+void CVsdFilter::DrawPolygon(std::vector<double>& pixs, CPixelArg yc, UINT uFlag){
 	
 	if(!(uFlag & IMG_FILL)){
-		int uCnt = pixs->Length();
+		int uCnt = pixs.size();
 		
 		for(int i = 0; i < uCnt; i = i + 2){
 			DrawLine1(
@@ -606,7 +604,7 @@ void CVsdFilter::DrawPolygon(v8Array pixs, CPixelArg yc, UINT uFlag){
 		VecEdge& EdgeList : 生成する辺リスト
 	*/
 	
-	UINT uEdgeCnt = pixs->Length() / 2; // 頂点の個数
+	UINT uEdgeCnt = pixs.size() / 2; // 頂点の個数
 	if(uEdgeCnt < 3) return;
 	
 	Edge *EdgeList = new Edge[uEdgeCnt];
@@ -1306,18 +1304,14 @@ void CVsdFilter::DrawNeedle(
 
 /*** ラップタイム format ****************************************************/
 
-LPCWSTR CVsdFilter::FormatTime(int iTime){
-	static WCHAR szBuf[32];
-	
-	if(iTime == TIME_NONE) return L"-'--.---";
-	
-	WCHAR *p = szBuf;
-	if(iTime < 0){
-		*p++ = '-';
-		iTime = -iTime;
-	}
-	swprintf(p, sizeof(szBuf), L"%d'%02d.%03d", iTime / 60000, iTime / 1000 % 60, iTime % 1000);
-	return szBuf;
+std::string CVsdFilter::FormatTime(int iTime) {
+	if (iTime == TIME_NONE) return "-'--.---";
+	return std::format("%{:d}'{:02d}.{:03d}", iTime / 60000, iTime / 1000 % 60, iTime % 1000);
+}
+
+std::wstring CVsdFilter::FormatTimeW(int iTime) {
+	if (iTime == TIME_NONE) return L"-'--.---";
+	return std::format(L"%{:d}'{:02d}.{:03d}", iTime / 60000, iTime / 1000 % 60, iTime % 1000);
 }
 
 /*** ラップタイム情報計算 ***************************************************/
@@ -1643,7 +1637,7 @@ void CVsdFilter::DrawRaceLapTime(
 		// Time
 		DrawTextAlign(
 			x + RACELAP_TIME_R * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
-			FormatTime(pLap->GetLapTime(iCar, pLap->m_iAllLapIdx[iCar] + 1)),
+			FormatTimeW(pLap->GetLapTime(iCar, pLap->m_iAllLapIdx[iCar] + 1)).c_str(),
 			Font, yc, ycOutline
 		);
 		
@@ -1886,11 +1880,11 @@ BOOL CVsdFilter::DrawVSD(void){
 	if(!m_Script && m_szSkinFile){
 		m_Script = new CScript;
 		
-		if(m_Script->Initialize(L"_system/InitSkin.js") == ERR_OK){
-			m_Script->RunFile(AnsiToWide(m_szSkinFile).c_str());
+		if(m_Script->RunFile("_system/InitSkin.js") == ERR_OK){
+			m_Script->RunFile(m_szSkinFile);
 			
 			if(m_Script->m_uError == ERR_OK){
-				m_Script->Run(L"Initialize");
+				m_Script->Call<void>("Initialize");
 			}
 			
 			m_iClipX1 = m_iClipY1 = 0;
@@ -1904,7 +1898,7 @@ BOOL CVsdFilter::DrawVSD(void){
 	}
 	
 	if(m_Script && !m_Script->m_uError){
-		m_Script->Run(L"Draw");
+		m_Script->Call<void>("Draw");
 		if(m_Script->m_uError) DispErrorMessage(m_Script->GetErrorMessage());
 	}else{
 		DrawText(0, 0, L"Skin not loaded.", *m_pFont, color_white);

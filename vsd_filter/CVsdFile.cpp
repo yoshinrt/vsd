@@ -9,6 +9,7 @@
 #include "StdAfx.h"
 #include "CVsdFile.h"
 #include "CScript.h"
+#include "util.h"
 
 #define JsErrorClosedHandle()		JsError("operation not permitted on closed handle")
 #define JsErrorZipNotSupported()	JsError("operation not supported on zip-mode")
@@ -16,40 +17,24 @@
 
 /*** ファイルオープン *******************************************************/
 
-int CVsdFile::Open(LPCWSTR szFile, LPCWSTR szMode){
-	
-	LPCWSTR pMode = szMode;
+int CVsdFile::Open(std::string file, std::string mode){
 	
 	// gz open
-	if(*pMode == 'z'){
-		++pMode;
-		char *pFile = nullptr;
-		char *pMode = nullptr;
-		
-		StringNewW2A(pFile, szFile);
-		StringNewW2A(pMode, szMode);
-		
-		m_gzfp = gzopen(pFile, pMode);
-		delete [] pFile;
-		delete [] pMode;
+	if(mode.front() == 'z'){
+		m_gzfp = gzopen_w(Utf8ToWide(file).c_str(), mode.substr(1).c_str());
 		
 		if(m_gzfp) m_uMode = MODE_GZIP;
 	}
 	
 	// zip open
-	else if(*pMode == 'Z'){
-		char *pFile = nullptr;
-		
-		StringNewW2A(pFile, szFile);
-		m_unzfp = unzOpen(pFile);
-		delete [] pFile;
-		
+	else if(mode.front() == 'Z'){
+		m_unzfp = unzOpen(Utf8ToAnsi(file).c_str());
 		if(m_unzfp) m_uMode = MODE_ZIP;
 	}
 	
 	// 普通 fopen
 	else{
-		m_fp = _wfopen(szFile, szMode);
+		m_fp = _wfopen(Utf8ToWide(file).c_str(), Utf8ToWide(mode).c_str());
 	}
 	
 	if(m_fp == nullptr) JsError(ERR_CANT_OPEN_FILE);
@@ -71,59 +56,58 @@ void CVsdFile::Close(void){
 
 /*** ラインリード ***********************************************************/
 
-void CVsdFile::ReadLine(ReturnValue<Value> Ret){
+std::string CVsdFile::ReadLine(void){
 	*m_cBuf = '\0';
 	
 	if(!m_fp){
 		JsErrorClosedHandle();
-		return;
+		return {};
 	}
 	
 	switch(m_uMode){
-		case MODE_NORMAL:		fgets(m_cBuf, FILEBUF_LEN, m_fp);
-		Case MODE_GZIP:			gzgets(m_gzfp, m_cBuf, FILEBUF_LEN);
+		case MODE_NORMAL:
+			fgets(m_cBuf, FILEBUF_LEN, m_fp);
+			return m_cBuf;
+
+		case MODE_GZIP:
+			gzgets(m_gzfp, m_cBuf, FILEBUF_LEN);
+			return m_cBuf;
 		
-		Case MODE_ZIP: {
+		case MODE_ZIP: {
 			JsErrorZipNotOpened();
-			return;
+			return {};
 		}
 		
-		Case MODE_ZIP_OPENED: {
-			
+		case MODE_ZIP_OPENED : {
+
 			// \n サーチ
-			char *p = (char *)memchr(m_cBuf + m_uBufPtr, '\n', m_uBufSize - m_uBufPtr);
-			
+			char* p = (char*)memchr(m_cBuf + m_uBufPtr, '\n', m_uBufSize - m_uBufPtr);
+
 			// 見つからないので，buf read する
-			if(!p){
+			if (!p) {
 				ReadZip();
-				p = (char *)memchr(m_cBuf + m_uBufPtr, '\n', m_uBufSize - m_uBufPtr);
-				
+				p = (char*)memchr(m_cBuf + m_uBufPtr, '\n', m_uBufSize - m_uBufPtr);
+
 				// 再び見つからなかったので，p は buf 終端を指す
-				if(!p) p = m_cBuf + m_uBufSize - 1;
+				if (!p) p = m_cBuf + m_uBufSize - 1;
 			}
-			
+
 			// 文字列長付きで String 変換
-			int iStr = m_uBufPtr;
+			std::string ZipBuf(m_cBuf + m_uBufPtr, p - (m_cBuf + m_uBufPtr));
 			m_uBufPtr = (p - m_cBuf + 1);
-			Ret.Set(
-				String::NewFromOneByte(
-					Isolate::GetCurrent(), (uint8_t *)(m_cBuf + iStr),
-					NewStringType::kNormal, m_uBufPtr - iStr
-				).ToLocalChecked()
-			);
-			return;
+			return ZipBuf;
 		}
 	}
-	Ret.Set(String::NewFromOneByte(Isolate::GetCurrent(), (uint8_t *)m_cBuf));
+	return {};
 }
 
 /*** ラインライト ***********************************************************/
 
-int CVsdFile::WriteLine(char *str){
+int CVsdFile::WriteLine(std::string s){
 	
 	if(m_fp) switch(m_uMode){
-		case MODE_NORMAL:		return fputs(str, m_fp);
-		case MODE_GZIP:			return gzputs(m_gzfp, str);
+		case MODE_NORMAL:		return fputs(s.c_str(), m_fp);
+		case MODE_GZIP:			return gzputs(m_gzfp, s.c_str());
 		
 		case MODE_ZIP:
 		case MODE_ZIP_OPENED:	JsErrorZipNotSupported();
@@ -206,15 +190,13 @@ int CVsdFile::IsEOF(void){
 
 /*** zip 次のファイル *******************************************************/
 
-void CVsdFile::ZipNextFile(ReturnValue<Value> Ret){
+std::string CVsdFile::ZipNextFile(void){
 	unz_file_info fileInfo;
-	
-	LPWSTR	wszFileName = nullptr;
 	
 	// zip じゃなければ ret
 	if(!(MODE_ZIP <= m_uMode && m_uMode <= MODE_ZIP_OPENED)){
 		JsError("not opened by zip-mode");
-		return;
+		return {};
 	}
 	
 	m_uFlag &= ~FLAG_EOF;	// eof クリア
@@ -229,7 +211,7 @@ void CVsdFile::ZipNextFile(ReturnValue<Value> Ret){
 		if(m_uFlag & FLAG_2ND_FILE){
 			// ファイル全部処理した
 			if(unzGoToNextFile(m_unzfp) == UNZ_END_OF_LIST_OF_FILE){
-				return;
+				return {};
 			}
 		}
 		m_uFlag |= FLAG_2ND_FILE;
@@ -243,27 +225,22 @@ void CVsdFile::ZipNextFile(ReturnValue<Value> Ret){
 			) != UNZ_OK
 		){
 			JsError("zlib: unzGetCurrentFileInfo failed (maybe wrong zip format?)");
-			return;
+			return {};
 		}
 		
-		// unicode 変換
-		StringNewA2W(wszFileName, m_cBuf);
-		
 		// '/' で終わっていたら dir なのでスキップ
-		int iLen = wcslen(wszFileName) - 1;
-		if(iLen >= 0 && wszFileName[iLen] != '/') break;
+		int iLen = strlen(m_cBuf) - 1;
+		if(iLen >= 0 && m_cBuf[iLen] != '/') break;
 	}
 	
 	// 書庫内ファイルオープン
 	if(unzOpenCurrentFile(m_unzfp) == UNZ_OK){
 		m_uMode = MODE_ZIP_OPENED;
-		
-		Ret.Set(String::NewFromTwoByte(Isolate::GetCurrent(), (uint16_t *)wszFileName));
-		delete [] wszFileName;
-		return;
+		return m_cBuf;
 	}
 	
 	JsError("zlib: can't open file in zip (maybe wrong zip format?)");
+	return {};
 }
 
 /*** zip ファイルの body リード *********************************************/

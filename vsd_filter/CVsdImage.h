@@ -9,7 +9,8 @@
 #pragma once
 #include "CPixel.h"
 #include "CJsClass.h"
-#include "CSemaphore.h"
+#include <mutex>
+#include <condition_variable>
 
 #define RABY_TRANSPARENT	0x80FF8000
 #define IMG_INET_ASYNC		0x1
@@ -17,19 +18,25 @@
 class CVsdImage : public CJsClass {
   public:
 	CVsdImage();
-	CVsdImage(CVsdImage &Org);
+	
+	CVsdImage(qjsb::Value file, qjsb::Value flag);
+	/* !js_constructor
+		.constructor<qjsb::Value, qjsb::Value>()
+	*/
 	~CVsdImage();
 	
 	void DeleteAsync(void);
 	
 	UINT Load(LPCWSTR szFileName, UINT uFlag = 0);
 	
+	void Clone(const CVsdImage *pOrg);
+	
 	inline UINT GetPixel0(int x, int y){
-		return m_pBuf[(x - m_iOffsX) + (y - m_iOffsY) * m_iRawWidth].ycbcr;
+		return m_ImgBuf[(x - m_iOffsX) + (y - m_iOffsY) * m_iRawWidth].ycbcr;
 	}
 	
 	inline CPixelImg GetPixelRaw(int x, int y){
-		return m_pBuf[x + y * m_iRawWidth];
+		return m_ImgBuf[x + y * m_iRawWidth];
 	}
 	
 	inline UINT GetPixel(int x, int y){
@@ -68,9 +75,11 @@ class CVsdImage : public CJsClass {
 	int m_iOffsX;
 	int m_iOffsY;
 	
-	CSemaphore	* m_pSemaphore;
+	std::mutex				m_Mutex;
+	std::condition_variable	m_CondVar;
+	bool					m_bLoading = false;
 	
   private:
-	LPWSTR		m_pFileName;
-	CPixelImg		*m_pBuf;
+	std::wstring			m_FileName;
+	std::vector<CPixelImg>	m_ImgBuf;
 };

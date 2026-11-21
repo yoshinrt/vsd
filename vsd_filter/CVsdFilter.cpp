@@ -10,7 +10,6 @@
 
 #include "CVsdFilter.h"
 #include "CVsdFile.h"
-#include "ScriptIF.h"
 #include "rev_num.h"
 
 /*** macros *****************************************************************/
@@ -45,7 +44,6 @@ void CVsdFilter::Constructor(void){
 	m_szSkinFile		= nullptr;
 	m_szSkinDirA		= nullptr;
 	m_szPluginDirA		= nullptr;
-	m_szSkinDirW		= nullptr;
 	m_szPluginDirW		= nullptr;
 	m_bConsoleOn		= FALSE;
 	
@@ -60,7 +58,6 @@ void CVsdFilter::Constructor(void){
 	SetSkinFile(m_szSkinFile);
 	
 	m_Script	= nullptr;
-	m_Script_qjs = nullptr;
 	
 	m_iWidth	=
 	m_iHeight	= 0;
@@ -90,7 +87,6 @@ void CVsdFilter::Destructor(void){
 	delete [] m_szSkinFile;
 	delete [] m_szSkinDirA;
 	delete [] m_szPluginDirA;
-	delete [] m_szSkinDirW;
 	delete [] m_szPluginDirW;
 	delete [] m_Polygon;
 	delete m_pFont;
@@ -374,57 +370,8 @@ int CVsdFilter::LapChartRead(const char *szFileName){
 	return iRet;
 }
 
-/*** Log.Speed 等のアクセサ追加 *********************************************/
-
-void CVsdFilter::AddLogAccessorSub(
-	CVsdLog* pLog,
-	Local<Object> objLog,
-	Local<Array> objMin,
-	Local<Array> objMax
-) {
-	if (!pLog) return;
-
-	for (auto it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it) {
-		const char* szName = it->first.c_str();
-
-		if (m_VsdLog == nullptr || pLog == m_VsdLog || m_VsdLog->GetElement(szName) == nullptr) {
-			Local<String> v8strName = String::NewFromOneByte(Isolate::GetCurrent(), (uint8_t*)szName);
-
-			// Max 登録
-			objMax->Set(v8strName, Number::New(Isolate::GetCurrent(), pLog->GetMax(szName)));
-
-			// Min 登録
-			objMin->Set(v8strName, Number::New(Isolate::GetCurrent(), pLog->GetMin(szName)));
-
-			// 現在値登録
-			if (0);
-			#define DEF_LOG(name) \
-			else if(strcmp(szName, #name) == 0){\
-				objLog->SetAccessor(v8strName, CVsdFilterIF::Get_##name); \
-			}
-			#include "def_log.h"
-			else {
-				objLog->SetAccessor(v8strName, CVsdFilterIF::Get_Value);
-			}
-		}
-	}
-}
-void CVsdFilter::AddLogAccessor(Local<Object> thisObj){
-	
-	// Vsd.Log, Min, Max, Get を作る
-	#define AddLogObj(name) \
-		Local<Array> obj##name = Array::New(Isolate::GetCurrent(), 0); \
-		thisObj->Set(String::NewFromOneByte(Isolate::GetCurrent(), (uint8_t *)#name), obj##name);
-	
-	AddLogObj(Min);
-	AddLogObj(Max);
-	
-	AddLogAccessorSub(m_VsdLog, thisObj, objMin, objMax);
-	AddLogAccessorSub(m_GPSLog, thisObj, objMin, objMax);
-}
-
 /*** 位置指定ログアクセス ***************************************************/
-
+/* ★
 void CVsdFilter::AccessLog(ReturnValue<Value> Ret, const char *szKey, double dFrameCnt){
 	double dRet;
 	
@@ -440,7 +387,7 @@ void CVsdFilter::AccessLog(ReturnValue<Value> Ret, const char *szKey, double dFr
 		Ret.Set(dRet);
 	}
 }
-
+*/
 /*** ファイルリスト取得 *****************************************************/
 
 // szPath は [MAX_PATH + 1] の配列で，work に使用される

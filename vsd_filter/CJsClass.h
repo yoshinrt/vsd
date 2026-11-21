@@ -9,14 +9,4 @@
 #pragma once
 
 class CJsClass {
-  public:
-	Persistent<Object> *m_pHolder;
-	
-	CJsClass(){
-		m_pHolder = nullptr;
-	}
-	
-	~CJsClass(){
-		if(m_pHolder) m_pHolder->Reset();
-	}
 };
