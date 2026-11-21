@@ -1,45 +1,43 @@
 ﻿#pragma once
 
 #define _CRT_NO_VA_START_VALIDATION
+#define _USE_MATH_DEFINES
 
 #include <windows.h>
-#include <crtdbg.h>
-#include <assert.h>
-#include <ctype.h>
-#include <float.h>
-#include <gdiplus.h>
-#include <map>
+
 #include <algorithm>
-#define _USE_MATH_DEFINES
+#include <assert.h>
+#include <condition_variable>
+#include <crtdbg.h>
+#include <ctype.h>
+#include <direct.h>
+#include <float.h>
+#include <functional>
+#include <gdiplus.h>
+#include <limits.h>
+#include <limits>
+#include <map>
 #include <math.h>
-#include <objbase.h>
+#include <mutex>
+#include <numbers>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
-#include <direct.h>
-#include <tchar.h>
-#include <time.h>
-#include <ole2.h>
-#include <Wininet.h>
-#include <limits.h>
-#include <wincon.h>
-
 #include <string>
-#include <vector>
-#include <map>
-#include <functional>
-#include <limits>
+#include <tchar.h>
 #include <thread>
+#include <time.h>
+#include <vector>
+#include <wincon.h>
+#include <wininet.h>
 
 #include <zconf.h>
 #include <zlib.h>
 #include <contrib/minizip/unzip.h>
 
 #include "dds_lib/dds.h"
-#include <assert.h>
 #include "dds_lib/dds_lib.h"
 
 #include "quickjs.h"
@@ -59,12 +57,12 @@ inline bool JS_IsArray(JSContext*, JSValueConst val) {
 	#endif
 #endif
 
-#define LOG_FREQ	16.0
-#define BUF_SIZE	1024
-#define ToRAD		(M_PI / 180)
-#define SLIDER_TIME	(LOG_FREQ / 1000.0)
-#define NaN			std::numeric_limits<double>::quiet_NaN()
-#define INVALID_INT		INT_MIN
+inline constexpr double	LOG_FREQ	= 16.0;
+inline constexpr int	BUF_SIZE	= 1024;
+inline constexpr double	ToRAD		= std::numbers::pi / 180.0;
+inline constexpr double	SLIDER_TIME	= LOG_FREQ / 1000.0;
+inline constexpr double	NaN			= std::numeric_limits<double>::quiet_NaN();
+inline constexpr int	INVALID_INT	= INT_MIN;
 
 #define WIDEN_(x) L##x
 #define WIDEN(x)  WIDEN_(x)

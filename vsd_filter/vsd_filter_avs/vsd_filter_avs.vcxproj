@@ -69,33 +69,16 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\CScript.cpp" />
-    <ClCompile Include="..\CVsdFile.cpp" />
-    <ClCompile Include="..\CVsdFilter.cpp" />
-    <ClCompile Include="..\CVsdFilterAvs.cpp" />
-    <ClCompile Include="..\CVsdFilterDraw.cpp" />
-    <ClCompile Include="..\CVsdFont.cpp" />
-    <ClCompile Include="..\CVsdImage.cpp" />
-    <ClCompile Include="..\CVsdLog.cpp" />
-    <ClCompile Include="..\StdAfx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\CJsClass.h" />
-    <ClInclude Include="..\CJsIf.h" />
-    <ClInclude Include="..\CJsMap.h" />
     <ClInclude Include="..\CPixel.h" />
     <ClInclude Include="..\CPixelBase.h" />
     <ClInclude Include="..\CScript.h" />
     <ClInclude Include="..\CSemaphore.h" />
     <ClInclude Include="..\CVsdFile.h" />
     <ClInclude Include="..\CVsdFilter.h" />
-    <ClInclude Include="..\CVsdFilterLog.h" />
     <ClInclude Include="..\CVsdFont.h" />
     <ClInclude Include="..\CVsdImage.h" />
     <ClInclude Include="..\CVsdLog.h" />
+    <ClInclude Include="..\CVsdLogJs.h" />
     <ClInclude Include="..\dds_lib\dds.h" />
     <ClInclude Include="..\def_checkbox.h" />
     <ClInclude Include="..\def_error.h" />
@@ -104,9 +87,25 @@
     <ClInclude Include="..\def_str_param.h" />
     <ClInclude Include="..\def_trackbar.h" />
     <ClInclude Include="..\error_code.h" />
-    <ClInclude Include="..\ScriptIF.h" />
+    <ClInclude Include="..\rev_num.h" />
     <ClInclude Include="..\StdAfx.h" />
-    <ClInclude Include="..\zlib\unzip.h" />
+    <ClInclude Include="..\util.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\CScript.cpp" />
+    <ClCompile Include="..\CVsdFile.cpp" />
+    <ClCompile Include="..\CVsdFilter.cpp" />
+    <ClCompile Include="..\CVsdFilterAvs.cpp" />
+    <ClCompile Include="..\CVsdFilterDraw.cpp" />
+    <ClCompile Include="..\CVsdFont.cpp" />
+    <ClCompile Include="..\CVsdImage.cpp" />
+    <ClCompile Include="..\CVsdLog.cpp" />
+    <ClCompile Include="..\CVsdLogJs.cpp" />
+    <ClCompile Include="..\ScriptIF.cpp" />
+    <ClCompile Include="..\StdAfx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

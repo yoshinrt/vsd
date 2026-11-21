@@ -79,7 +79,6 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\CJsClass.h" />
     <ClInclude Include="..\CPixel.h" />
     <ClInclude Include="..\CPixelBase.h" />
     <ClInclude Include="..\CScript.h" />
@@ -89,6 +88,7 @@
     <ClInclude Include="..\CVsdFont.h" />
     <ClInclude Include="..\CVsdImage.h" />
     <ClInclude Include="..\CVsdLog.h" />
+    <ClInclude Include="..\CVsdLogJs.h" />
     <ClInclude Include="..\dds_lib\dds.h" />
     <ClInclude Include="..\def_checkbox.h" />
     <ClInclude Include="..\def_error.h" />
@@ -110,6 +110,7 @@
     <ClCompile Include="..\CVsdFont.cpp" />
     <ClCompile Include="..\CVsdImage.cpp" />
     <ClCompile Include="..\CVsdLog.cpp" />
+    <ClCompile Include="..\CVsdLogJs.cpp" />
     <ClCompile Include="..\ScriptIF.cpp" />
     <ClCompile Include="..\StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

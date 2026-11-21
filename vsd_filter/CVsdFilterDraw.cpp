@@ -581,7 +581,7 @@ enum {
 	GPixelOp& pset : 点描画に使う関数オブジェクト
 	VecEdge& EdgeList : 生成した辺リスト
 */
-void CVsdFilter::DrawPolygon(std::vector<double>& pixs, CPixelArg yc, UINT uFlag){
+void CVsdFilter::DrawPolygon(const std::vector<double>& pixs, CPixelArg yc, UINT uFlag){
 	
 	if(!(uFlag & IMG_FILL)){
 		int uCnt = pixs.size();
@@ -607,7 +607,7 @@ void CVsdFilter::DrawPolygon(std::vector<double>& pixs, CPixelArg yc, UINT uFlag
 	UINT uEdgeCnt = pixs.size() / 2; // 頂点の個数
 	if(uEdgeCnt < 3) return;
 	
-	Edge *EdgeList = new Edge[uEdgeCnt];
+	std::unique_ptr<Edge[]> EdgeList = std::make_unique<Edge[]>(uEdgeCnt);
 	int	iMinY = INT_MAX;
 	int	iMaxY = INT_MIN;
 	
@@ -622,9 +622,8 @@ void CVsdFilter::DrawPolygon(std::vector<double>& pixs, CPixelArg yc, UINT uFlag
 		if(iMinY > EdgeList[u].y) iMinY = EdgeList[u].y;
 	}
 	
-	DrawPolygon(uEdgeCnt, EdgeList, iMinY, iMaxY, yc);
+	DrawPolygon(uEdgeCnt, EdgeList.get(), iMinY, iMaxY, yc);
 	
-	delete [] EdgeList;
 }
 
 // 高速モード，凸図形のみ
@@ -849,7 +848,7 @@ void CVsdFilter::PutImage(
 
 void CVsdFilter::DrawGraphSingle(
 	int x1, int y1, int x2, int y2,
-	char *szKey,
+	const char *szKey,
 	LPCWSTR szFormat,
 	CVsdFont &Font,
 	CPixelArg yc
@@ -859,9 +858,9 @@ void CVsdFilter::DrawGraphSingle(
 	
 	// key から log を探す
 	if(m_VsdLog && (pData = m_VsdLog->GetLog(szKey))){
-		pLog = m_VsdLog;
+		pLog = m_VsdLog.get();
 	}else if(m_GPSLog && (pData = m_GPSLog->GetLog(szKey))){
-		pLog = m_GPSLog;
+		pLog = m_GPSLog.get();
 	}else{
 		// 有効な Log がないので帰る
 		return;
@@ -1306,12 +1305,12 @@ void CVsdFilter::DrawNeedle(
 
 std::string CVsdFilter::FormatTime(int iTime) {
 	if (iTime == TIME_NONE) return "-'--.---";
-	return std::format("%{:d}'{:02d}.{:03d}", iTime / 60000, iTime / 1000 % 60, iTime % 1000);
+	return std::format("{:d}'{:02d}.{:03d}", iTime / 60000, iTime / 1000 % 60, iTime % 1000);
 }
 
 std::wstring CVsdFilter::FormatTimeW(int iTime) {
 	if (iTime == TIME_NONE) return L"-'--.---";
-	return std::format(L"%{:d}'{:02d}.{:03d}", iTime / 60000, iTime / 1000 % 60, iTime % 1000);
+	return std::format(L"{:d}'{:02d}.{:03d}", iTime / 60000, iTime / 1000 % 60, iTime % 1000);
 }
 
 /*** ラップタイム情報計算 ***************************************************/
@@ -1814,16 +1813,14 @@ BOOL CVsdFilter::DrawVSD(void){
 		m_bSaving	= IsSaving();
 		
 		// ポリゴン用バッファリサイズ
-		if(m_Polygon) delete [] m_Polygon;
-		m_Polygon = new PolygonData_t[m_iHeight];
+		m_Polygon = std::make_unique<PolygonData_t[]>(m_iHeight);
 		InitPolygon();
 		
 		// JavaScript 再起動用に削除
 		if(m_Script) DeleteScript();
 		
 		// フォントサイズ初期化
-		if(m_pFont) delete m_pFont;
-		m_pFont = new CVsdFont(DEFAULT_FONT, 18, CVsdFont::ATTR_OUTLINE | CVsdFont::ATTR_NOANTIALIAS);
+		m_pFont = std::make_unique<CVsdFont>(DEFAULT_FONT, 18, CVsdFont::ATTR_OUTLINE | CVsdFont::ATTR_NOANTIALIAS);
 	}
 	
 	// ログ位置の計算
@@ -1878,8 +1875,9 @@ BOOL CVsdFilter::DrawVSD(void){
 	// スクリプト実行
 	DebugMsgD(":DrawVSD():Running script... %X\n", GetCurrentThreadId());
 	if(!m_Script && m_szSkinFile){
-		m_Script = new CScript;
-		
+		m_Script = std::make_unique<CScript>();
+		m_LogJs = std::make_unique<CVsdLogJs>();
+
 		if(m_Script->RunFile("_system/InitSkin.js") == ERR_OK){
 			m_Script->RunFile(m_szSkinFile);
 			

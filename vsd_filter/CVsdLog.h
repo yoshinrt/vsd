@@ -7,7 +7,6 @@
 *****************************************************************************/
 
 #pragma once
-#include "CJsClass.h"
 
 /*** macros *****************************************************************/
 
@@ -135,12 +134,17 @@ class CLapLogAll : public CLapLog {
 
 /*** ログ 1項目 *************************************************************/
 
+class CVsdLog;
 class CLog {
 	
-  public:
+public:
+	CLog(CVsdLog *pParent) : m_pParent(pParent) {}
+
 	// 値取得
 	virtual double GetRaw(int    iIndex) = 0;
 	virtual double Get(double dIndex) = 0;
+
+	double Get();
 	
 	virtual double GetMin() = 0;
 	virtual double GetMax() = 0;
@@ -152,13 +156,16 @@ class CLog {
 	virtual void InitMinMax(void) = 0;
 	virtual int GetCnt(void) = 0;
 	virtual void Resize(int iCnt, double dVal) = 0;
+
+private:
+	CVsdLog *m_pParent;
 };
 
 template <class T, int Scale>
 class CLogVariant : public CLog {
 	
   public:
-	CLogVariant(){
+	CLogVariant(CVsdLog* pParent) : CLog(pParent) {
 		SetMax(m_Min);
 		SetMin(m_Max);
 	}
@@ -237,6 +244,8 @@ typedef CLogVariant<UINT,	1024>	CLogUInt1024;
 
 class CLogInt : public CLogVariant<int, 1> {
   public:
+
+	CLogInt(CVsdLog* pParent) : CLogVariant<int, 1>(pParent) {}
 	int GetIntRaw(int iIndex){return m_Log[iIndex];}
 	int GetInt(double dIndex){
 		double alfa = dIndex - (UINT)dIndex;
@@ -248,7 +257,7 @@ class CLogInt : public CLogVariant<int, 1> {
 
 class CLogFloatOffset : public CLogFloat {
   public:
-	CLogFloatOffset(){
+	CLogFloatOffset(CVsdLog* pParent) : CLogFloat(pParent) {
 		m_dBaseVal	= 0;
 	}
 	
@@ -280,6 +289,8 @@ class CLogFloatOffset : public CLogFloat {
 
 class CLogDirection : public CLogUShort128 {
   public:
+	CLogDirection(CVsdLog* pParent) : CLogUShort128(pParent) {}
+	
 	double Get(double dIndex){
 		int nCnt = GetCnt();
 		if(nCnt <= 0) return 0.0;
@@ -339,7 +350,7 @@ class CVsdLog {
 		return 0 <= iLogNum && iLogNum < GetCnt();
 	}
 	
-	int ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *&pLapLog);
+	int ReadLog(const char *szFileName, const char *szReaderFunc, std::unique_ptr<CLapLog> &pLapLog);
 	
 	static double GPSLogGetLength(
 		double dLong0, double dLati0,
@@ -357,15 +368,14 @@ class CVsdLog {
 	
 	// key の存在確認
 	
-	CLog *GetElement(const char *szKey, BOOL bCreate = FALSE);
+	CLog *GetElement(const char *szKey);
 	
 	// レコードコピー
 	void CopyRecord(int iTo, int iFrom);
 	
 	// CLog 取得
 	CLog *GetLog(const char *szKey){
-		std::string strKey(szKey);
-		auto itr = m_Logs.find(strKey);
+		auto itr = m_Logs.find(szKey);
 		if(itr == m_Logs.end()){
 			return nullptr;
 		}
@@ -374,23 +384,20 @@ class CVsdLog {
 	
 	// set / get 関数
 	double Get(const char *szKey, double dIndex){
-		std::string strKey(szKey);
-		auto itr = m_Logs.find(strKey);
-		if(itr == m_Logs.end()){
-			return NaN;	// 要素なし
-		}
+		auto itr = m_Logs.find(szKey);
+		if(itr == m_Logs.end()) return NaN;	// 要素なし
 		return itr->second->Get(dIndex);
 	}
 	
 	void Set(const char *szKey, int iIndex, double dVal);
 	
 	double GetMin(const char *szKey){
-		CLog	*pLog = GetElement(szKey);
+		CLog	*pLog = GetLog(szKey);
 		return pLog ? pLog->GetMin() : NaN;
 	}
 	
 	double GetMax(const char *szKey){
-		CLog	*pLog = GetElement(szKey);
+		CLog	*pLog = GetLog(szKey);
 		return pLog ? pLog->GetMax() : NaN;
 	}
 	
@@ -436,8 +443,6 @@ class CVsdLog {
 	double X0(double dIndex){return m_pLogLongitude->GetDiff(dIndex) * m_dLong2Meter;}
 	double Y0(int    iIndex){return m_pLogLatitude->GetDiff(iIndex) * m_dLati2Meter;}
 	double Y0(double dIndex){return m_pLogLatitude->GetDiff(dIndex) * m_dLati2Meter;}
-	
-	void BuildLogObject(JSContext* ctx);
 	
   private:
 	std::vector<std::string> GetLogKeys(JSContext* ctx);

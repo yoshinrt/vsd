@@ -8,9 +8,7 @@
 
 #pragma once
 
-#include "CJsClass.h"
-
-class CVsdFile : public CJsClass {
+class CVsdFile {
   public:
 	CVsdFile(){
 		m_fp		= nullptr;

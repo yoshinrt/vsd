@@ -108,9 +108,6 @@ CVsdFilter::CVsdFilter(
 CVsdFilter::~CVsdFilter(){
 	Destructor();	// 基本クラスのデストラクタ
 	
-	delete [] m_piParamT;
-	delete [] m_piParamC;
-	delete [] m_piParamS;
 }
 
 /*** PutPixel ***************************************************************/

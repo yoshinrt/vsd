@@ -38,6 +38,13 @@ CVsdLog::~CVsdLog(){
 	m_Logs.clear();
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// CLog の Get() 引数なし
+
+double CLog::Get(){
+	return Get(m_pParent->m_dLogNum);
+}
+
 /*** frame# に対応するログ index を得る *************************************/
 
 double CVsdLog::GetIndex(double dFromVal, int *piFrom, int *piLog, int iPrevIdx){
@@ -124,37 +131,32 @@ void CVsdLog::Dump(const char *szFileName){
 
 /*** key の存在確認 *********************************************************/
 
-CLog *CVsdLog::GetElement(const char *szKey, BOOL bCreate){
+CLog *CVsdLog::GetElement(const char *szKey){
 	std::string strKey(szKey);
-	auto itr = m_Logs.find(strKey);
+	auto* pLog = GetLog(szKey);
+	if(pLog) return pLog;
 	
-	if(itr != m_Logs.end()){
-		return itr->second.get();
-	}
-	if(bCreate){
-		std::unique_ptr<CLog> upLog;
+	std::unique_ptr<CLog> upLog;
 		
-		// Speed とか基本データの参照用ポインタに代入
-		if(0);
-		#define DEF_LOG(name)	DEF_LOG_T(name, CLogFloat)
-		#define DEF_LOG_T(name, type)	\
-			else if(strKey == #name) { auto *pTyped = new type(); m_pLog##name = pTyped; upLog.reset(pTyped); }
-		#include "def_log.h"
-		else{
-			upLog.reset(new CLogFloat());
-		}
-		
-		CLog *pRaw = upLog.get();
-		m_Logs[strKey] = std::move(upLog);
-		return pRaw;
+	// Speed とか基本データの参照用ポインタに代入
+	if(0);
+	#define DEF_LOG(name)	DEF_LOG_T(name, CLogFloat)
+	#define DEF_LOG_T(name, type)	\
+		else if(strKey == #name) { auto *pTyped = new type(this); m_pLog##name = pTyped; upLog.reset(pTyped); }
+	#include "def_log.h"
+	else{
+		upLog = std::make_unique<CLogFloat>(this);
 	}
-	return nullptr;
+	
+	CLog *pRaw = upLog.get();
+	m_Logs[strKey] = std::move(upLog);
+	return pRaw;
 }
 
 /*** ログの Set *************************************************************/
 
 void CVsdLog::Set(const char *szKey, int iIndex, double dVal){
-	GetElement(szKey, TRUE)->Set(iIndex, dVal);
+	GetElement(szKey)->Set(iIndex, dVal);
 	if(m_iCnt <= iIndex) m_iCnt = iIndex + 1;
 }
 
@@ -190,15 +192,15 @@ UINT CVsdLog::GPSLogRescan(void){
 	if(m_pLogLongitude != nullptr && m_pLogLatitude != nullptr){
 		if(!m_pLogSpeed){
 			bCreateSpeed = TRUE;
-			GetElement("Speed", TRUE);
+			GetElement("Speed");
 			m_pLogSpeed->Resize(GetCnt(), 0);
 		}
 
 		if(!m_pLogGx){
 			bCreateG = TRUE;
-			GetElement("Gx", TRUE);
+			GetElement("Gx");
 			m_pLogGx->Resize(GetCnt(), 0);
-			GetElement("Gy", TRUE);
+			GetElement("Gy");
 			m_pLogGy->Resize(GetCnt(), 0);
 		}
 
@@ -472,7 +474,7 @@ static double JsArrayGetNumber(JSContext* ctx, const qjsb::Value& arr, uint32_t 
 
 /*** ログリード *************************************************************/
 
-int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *&pLapLog){
+int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, std::unique_ptr<CLapLog> &pLapLog){
 	{
 		// JavaScript オブジェクト初期化
 		CScript Script;
@@ -545,7 +547,7 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *
 				}
 					
 				// strKey で vector 作成
-				CArrays.push_back(GetElement(strKey, TRUE));
+				CArrays.push_back(GetElement(strKey));
 					
 				Skip:
 				// JS の property 名解決後の Array の vector を作る
@@ -565,7 +567,7 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *
 				// Distance が無いときは，作る
 				if(uIdxDistance == ~0){
 					uIdxDistance = uIdx++;
-					CArrays.push_back(GetElement("Distance", TRUE));
+					CArrays.push_back(GetElement("Distance"));
 					bCreateDistance = TRUE;
 				}
 				
@@ -584,7 +586,7 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *
 				// Direction が無いときは，作る
 				if(uIdxDirection == ~0){
 					uIdxDirection = uIdx++;
-					CArrays.push_back(GetElement("Direction", TRUE));
+					CArrays.push_back(GetElement("Direction"));
 					bCreateDirection = TRUE;
 				}
 			}
@@ -712,7 +714,7 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, CLapLog *
 				// ラップタイムを積む
 				if(iLapTime >= 0){
 					if(pLapLog == nullptr){
-						pLapLog = new CLapLog();
+						pLapLog = std::make_unique<CLapLog>();
 						pLapLog->m_iLapMode = LAPMODE_MAGNET;
 					}
 					LAP_t	LapTime;
@@ -799,8 +801,8 @@ void CVsdLog::RotateMap(double dAngle){
 	
 	if(!m_pLogLongitude) return;
 	
-	GetElement("X", TRUE);
-	GetElement("Y", TRUE);
+	GetElement("X");
+	GetElement("Y");
 	
 	m_pLogX->InitMinMax();
 	m_pLogY->InitMinMax();
@@ -811,191 +813,122 @@ void CVsdLog::RotateMap(double dAngle){
 	}
 }
 
-/*** JS 用 Log オブジェクト構築 *********************************************/
-
-void CVsdLog::BuildLogObject(JSContext* ctx){
-	if(!ctx) return;
-	
-	qjsb::Value global(ctx, JS_GetGlobalObject(ctx));
-	if(JS_IsException(global.get()) || !JS_IsObject(global.get())){
-		return;
-	}
-	
-	// 既存の Log が存在する場合は削除
-	JSAtom atomLog = JS_NewAtom(ctx, "Log");
-	if(atomLog != JS_ATOM_NULL){
-		int hasLog = JS_HasProperty(ctx, global.get(), atomLog);
-		if(hasLog > 0){
-			JS_DeleteProperty(ctx, global.get(), atomLog, 0);
-		}
-		JS_FreeAtom(ctx, atomLog);
-	}
-	
-	// getter 共通ロジック:
-	//   magic == 0: GetElement(prop)->Get(m_dLogNum)
-	//   magic == 1: GetMax(prop)
-	//   magic == 2: GetMin(prop)
-	auto logPropGetter = [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic, JSValue* func_data) -> JSValue {
-		(void)this_val;
-		(void)argc;
-		(void)argv;
-		
-		int64_t iSelf = 0;
-		if(JS_ToInt64(ctx, &iSelf, func_data[0]) < 0 || !iSelf){
-			return JS_NewFloat64(ctx, NaN);
-		}
-		CVsdLog* pSelf = reinterpret_cast<CVsdLog*>(static_cast<uintptr_t>(iSelf));
-		
-		const char* szProp = JS_ToCString(ctx, func_data[1]);
-		if(!szProp){
-			return JS_NewFloat64(ctx, NaN);
-		}
-		
-		double dVal = NaN;
-		if(magic == 0){
-			CLog* pElem = pSelf->GetElement(szProp);
-			dVal = pElem ? pElem->Get(pSelf->m_dLogNum) : NaN;
-		}else if(magic == 1){
-			dVal = pSelf->GetMax(szProp);
-		}else if(magic == 2){
-			dVal = pSelf->GetMin(szProp);
-		}
-		
-		JS_FreeCString(ctx, szProp);
-		return JS_NewFloat64(ctx, dVal);
-	};
-	
-	// Log.ValueOfIndex(prop, pos)
-	auto fnValueOfIndex = [](JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) -> JSValue {
-		(void)this_val;
-		(void)argc;
-		(void)argv;
-		return JS_NewInt32(ctx, 0);
-	};
-	
-	// Log / Log.Max / Log.Min オブジェクト生成
-	JSValue objLog = JS_NewObject(ctx);
-	JSValue objMax = JS_NewObject(ctx);
-	JSValue objMin = JS_NewObject(ctx);
-	
-	JSValue valSelf = JS_NewInt64(ctx, static_cast<int64_t>(reinterpret_cast<uintptr_t>(this)));
-	
-	// m_Logs の全キーに対して getter のみを持つ列挙可能プロパティを定義
-	for(auto it = m_Logs.begin(); it != m_Logs.end(); ++it){
-		const char* szKey = it->first.c_str();
-		JSAtom atomKey = JS_NewAtom(ctx, szKey);
-		if(atomKey == JS_ATOM_NULL) continue;
-		
-		JSValue funcData[2] = {
-			valSelf,
-			JS_NewString(ctx, szKey)
-		};
-		
-		JSValue getterVal = JS_NewCFunctionData(ctx, logPropGetter, 0, 0, 2, funcData);
-		JSValue getterMax = JS_NewCFunctionData(ctx, logPropGetter, 0, 1, 2, funcData);
-		JSValue getterMin = JS_NewCFunctionData(ctx, logPropGetter, 0, 2, 2, funcData);
-		
-		JS_FreeValue(ctx, funcData[1]);
-		
-		// setter は不要 (JS_UNDEFINED), Object.keys() 対象にするため JS_PROP_ENUMERABLE を付与
-		JS_DefinePropertyGetSet(ctx, objLog, atomKey, getterVal, JS_UNDEFINED, JS_PROP_ENUMERABLE | JS_PROP_CONFIGURABLE);
-		JS_DefinePropertyGetSet(ctx, objMax, atomKey, getterMax, JS_UNDEFINED, JS_PROP_ENUMERABLE | JS_PROP_CONFIGURABLE);
-		JS_DefinePropertyGetSet(ctx, objMin, atomKey, getterMin, JS_UNDEFINED, JS_PROP_ENUMERABLE | JS_PROP_CONFIGURABLE);
-		
-		JS_FreeAtom(ctx, atomKey);
-	}
-	
-	JS_FreeValue(ctx, valSelf);
-	
-	// Log.Max / Log.Min / Log.ValueOfIndex を設定
-	JS_DefinePropertyValueStr(ctx, objLog, "Max", objMax, JS_PROP_CONFIGURABLE);
-	JS_DefinePropertyValueStr(ctx, objLog, "Min", objMin, JS_PROP_CONFIGURABLE);
-	JS_DefinePropertyValueStr(ctx, objLog, "ValueOfIndex", JS_NewCFunction(ctx, fnValueOfIndex, "ValueOfIndex", 2), JS_PROP_CONFIGURABLE);
-	
-	// グローバルオブジェクトへ Log を設定 (JS_SetPropertyStr は val の所有権を消費する)
-	JS_SetPropertyStr(ctx, global.get(), "Log", objLog);
-}
-
 /*** チャートリード *********************************************************/
 
-int CLapLogAll::LapChartRead(const char *szFileName){
-	return 0;
-#if 0 // ★_qjs
+int CLapLogAll::LapChartRead(const char* szFileName) {
 	m_iLapMode = LAPMODE_CHART;
-	m_iLapSrc  = LAPSRC_VIDEO;
-	
+	m_iLapSrc = LAPSRC_VIDEO;
+
 	{
 		// JavaScript オブジェクト初期化
 		CScript Script;
-		
-		if(Script.Initialize(L"_system/InitLapChartReader.js") == ERR_OK){
+
+		if (Script.RunFile("_system/InitLapChartReader.js") == ERR_OK) {
 			// スクリプト実行
-			LPWSTR pStr = nullptr;
-			LPWSTR pReader = nullptr;
-			LPWSTR p = nullptr;
-			Script.Run_s(L"ReadLapChart", StringNewA2W(pStr, szFileName));
-			delete [] pStr;
-			delete [] pReader;
+			Script.Call<void>("ReadLapChart", AnsiToUtf8(szFileName));
 		}
-		
-		if(Script.m_uError != ERR_OK){
+
+		if (Script.m_uError != ERR_OK) {
 			g_pVsd->DispErrorMessage(Script.GetErrorMessage());
 			return 0;
 		}
-		
+
 		/*** JS の Log にアクセス *******************************************/
-		
+
 		{
-			Locker locker(Script.m_pIsolate);
-			Isolate::Scope IsolateScope(Script.m_pIsolate);
-			HandleScope handle_scope(Script.m_pIsolate);
-			Context::Scope context_scope(Script.GetContext());
-			
+			JSContext* ctx = Script.GetContextRaw();
+			if (!ctx) return 0;
+
+			qjsb::Value global(ctx, JS_GetGlobalObject(ctx));
+			if (JS_IsException(global.get()) || !JS_IsObject(global.get())) {
+				return 0;
+			}
+
 			// "LapTime" 取得
-			Local<Array> hLapTime = Local<Array>::Cast(
-				Script.GetContext()->Global()->Get(String::NewFromTwoByte(Script.m_pIsolate , (uint16_t *)L"LapTime"))
-			);
-			if(!hLapTime->IsArray()) return 0;
-			
+			qjsb::Value hLapTime(ctx, JS_GetPropertyStr(ctx, global.get(), "LapTime"));
+			if (JS_IsException(hLapTime.get()) || !JS_IsArray(ctx, hLapTime.get())) {
+				return 0;
+			}
+
 			// カメラカー No 取得
-			m_iCamCarIdx = Script.GetContext()->Global()->Get(String::NewFromTwoByte(Script.m_pIsolate , (uint16_t *)L"CameraCarID"))->Int32Value();
-			
+			qjsb::Value camCarIdVal(ctx, JS_GetPropertyStr(ctx, global.get(), "CameraCarID"));
+			int32_t iCamCarId = 0;
+			if (!JS_IsException(camCarIdVal.get()) && JS_ToInt32(ctx, &iCamCarId, camCarIdVal.get()) >= 0) {
+				m_iCamCarIdx = iCamCarId;
+			}
+
 			// LapTime の key 取得
-			Local<Array> Keys = hLapTime->GetPropertyNames();
-			
-			for(UINT u = 0; u < Keys->Length(); ++u){
-				String::Value strKey(Keys->Get(u));
-				m_strName.push_back(reinterpret_cast<LPWSTR>(*strKey));
-				
-				std::vector<int>	int_vec;	// ダミー
-				m_LapTable.push_back(int_vec);
-				
-				Local<Array> ArrayTmp = Local<Array>::Cast(hLapTime->Get(Keys->Get(u)));
-				for(UINT v = 0; v < ArrayTmp->Length(); ++ v){
-					m_LapTable[u].push_back(ArrayTmp->Get(v)->Int32Value());
+			JSPropertyEnum* props = nullptr;
+			uint32_t propCount = 0;
+			int flags = JS_GPN_STRING_MASK | JS_GPN_ENUM_ONLY;
+			if (JS_GetOwnPropertyNames(ctx, &props, &propCount, hLapTime.get(), flags) < 0) {
+				return 0;
+			}
+
+			struct PropArrayGuard {
+				JSContext* ctx;
+				JSPropertyEnum* ptr;
+				uint32_t count;
+				~PropArrayGuard() {
+					if (ptr) {
+						js_free(ctx, ptr);
+					}
+				}
+			} propGuard{ ctx, props, propCount };
+
+			for (uint32_t u = 0; u < propCount; ++u) {
+				JSAtom atomKey = props[u].atom;
+				const char* cstrKey = JS_AtomToCString(ctx, atomKey);
+				JS_FreeAtom(ctx, atomKey);
+				if (!cstrKey) continue;
+
+				std::string strKeyUtf8(cstrKey);
+				JS_FreeCString(ctx, cstrKey);
+
+				qjsb::Value arrTmp(ctx, JS_GetPropertyStr(ctx, hLapTime.get(), strKeyUtf8.c_str()));
+				if (JS_IsException(arrTmp.get()) || !JS_IsArray(ctx, arrTmp.get())) {
+					continue;
+				}
+
+				m_strName.push_back(Utf8ToWide(strKeyUtf8));
+
+				std::vector<int> int_vec;	// ダミー
+				m_LapTable.push_back(std::move(int_vec));
+
+				qjsb::Value lenVal(ctx, JS_GetPropertyStr(ctx, arrTmp.get(), "length"));
+				uint32_t uLen = 0;
+				if (JS_ToUint32(ctx, &uLen, lenVal.get()) < 0) {
+					continue;
+				}
+
+				for (uint32_t v = 0; v < uLen; ++v) {
+					qjsb::Value elem(ctx, JS_GetPropertyUint32(ctx, arrTmp.get(), v));
+					int32_t iVal = 0;
+					if (!JS_IsException(elem.get()) && JS_ToInt32(ctx, &iVal, elem.get()) >= 0) {
+						m_LapTable.back().push_back(static_cast<int>(iVal));
+					}
 				}
 			}
 		}
 	}
-	
-	if(m_LapTable.size() == 0 || CamCarLap().size() <= 1){
+
+	if (m_LapTable.size() == 0 || CamCarLap().size() <= 1) {
 		return 0;
 	}
-	
+
 	// ラップタイム表を時刻表に変換
-	for(int j = 0; j < (int)m_LapTable.size(); ++j){
-		for(int i = m_LapTable[j].size() - 2; i >= 0; --i){
+	for (int j = 0; j < (int)m_LapTable.size(); ++j) {
+		for (int i = m_LapTable[j].size() - 2; i >= 0; --i) {
 			m_LapTable[j][i] = m_LapTable[j][i + 1] - m_LapTable[j][i];
 		}
 	}
-	
+
 	// vector 配列を作る
 	m_iAllLapIdx.resize(m_strName.size(), -1);
 	m_iAllGapInfo.resize(m_strName.size(), 0);
 	m_iPositionInfo.resize(m_strName.size(), -1);
-	
+
 	return CamCarLap().size();
-#endif
 }
 
 /*** 自車ラップデータ構築 ***************************************************/

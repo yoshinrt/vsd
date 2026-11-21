@@ -8,14 +8,11 @@
 
 #pragma once
 #include "CPixel.h"
-#include "CJsClass.h"
-#include <mutex>
-#include <condition_variable>
 
 #define RABY_TRANSPARENT	0x80FF8000
 #define IMG_INET_ASYNC		0x1
 
-class CVsdImage : public CJsClass {
+class CVsdImage {
   public:
 	CVsdImage();
 	

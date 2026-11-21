@@ -6,7 +6,7 @@
 
 export PATH := /bin:$(PATH)
 
-all: ScriptIF.h ScriptIF.cpp rev_num.h
+all: ScriptIF.cpp rev_num.h
 
 ScriptIF.cpp : \
 	make/make_js_func.pl \

@@ -14,14 +14,9 @@
 
 /*** static member **********************************************************/
 
-#ifdef DEBUG
-int CVsdFont::m_iObjCnt = 0;
-#endif
-
 /*** コンストラクタ *********************************************************/
 
 CVsdFont::CVsdFont(const char *szFontName, int iSize, UINT uAttr){
-	//DebugMsgD("new CFont %d:%X\n", ++m_iObjCnt, this);
 	CreateFont(szFontName, iSize, uAttr);
 }
 
@@ -29,14 +24,20 @@ CVsdFont::CVsdFont(LPCWSTR szFontName, int iSize, UINT uAttr){
 	CreateFont(WideToAnsi(szFontName).c_str(), iSize, uAttr);
 }
 
+CVsdFont::CVsdFont(std::string FontName, int iSize, UINT uAttr){
+	CreateFont(Utf8ToAnsi(FontName).c_str(), iSize, uAttr);
+}
+
 CVsdFont::~CVsdFont(){
-	//DebugMsgD("delete CFont %d:%X\n", m_iObjCnt--, this);
+	DebugMsgD("delete CFont %d:%X\n", m_iObjCnt--, this);
 	DestroyFont();
 }
 
 /*** フォント作成 ***********************************************************/
 
 void CVsdFont::CreateFont(const char *szFontName, int iSize, UINT uAttr){
+	DebugMsgD("new CFont %d:%X\n", ++m_iObjCnt, this);
+	
 	if(iSize <= 0){
 		JsRangeError("Font size must be > 0");
 	}
@@ -112,7 +113,7 @@ CFontGlyph& CVsdFont::CreateFontGlyph(WCHAR c){
 	// 必要配列サイズ取得
 	int iSize = GetGlyphOutlineW(m_hdc, c, iBitmapDepth, &gm, 0, nullptr, &mat);
 	
-	std::unique_ptr<CFontGlyph> upGlyph(new CFontGlyph);
+	std::unique_ptr<CFontGlyph> upGlyph = std::make_unique<CFontGlyph>();
 	CFontGlyph *pGlyph = upGlyph.get();
 	
 	if(iSize > 0){

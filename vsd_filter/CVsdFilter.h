@@ -13,7 +13,7 @@
 #include "CScript.h"
 #include "CVsdImage.h"
 #include "CPixel.h"
-#include "CJsClass.h"
+#include "CVsdLogJs.h"
 
 #ifdef AVS_PLUGIN
 	#include "external/avisynth.h"
@@ -47,15 +47,15 @@
 	m_##to##Log->GetIndex(frame, &VideoSt, &to##St, prev)
 
 // VSD log を優先，ただしチェックボックスでオーバーライドできる
-#define SelectLogVsd (m_CurLog = (GPSPriority && m_GPSLog || !m_VsdLog) ? m_GPSLog : m_VsdLog)
+#define SelectLogVsd (m_CurLog = (GPSPriority && m_GPSLog || !m_VsdLog) ? m_GPSLog.get() : m_VsdLog.get())
 
 // GPS log を優先
-#define SelectLogGPS (m_CurLog = m_GPSLog ? m_GPSLog : m_VsdLog)
+#define SelectLogGPS (m_CurLog = m_GPSLog ? m_GPSLog.get() : m_VsdLog.get())
 
 // Laptime 計算用
 #define SelectLogForLapTime	(m_CurLog = \
 	m_LapLog && m_LapLog->m_iLapSrc == LAPSRC_VSD \
-	? m_VsdLog : m_GPSLog)
+	? m_VsdLog.get() : m_GPSLog.get())
 
 /*** track / check ID *******************************************************/
 
@@ -163,6 +163,39 @@ class CVsdFilter
 		CPixelArg yc
 	);
 	
+	/* !js_bind
+		.method("DrawArc", [](JSContext* ctx, __VSD_System__* self, int argc, JSValueConst* argv) -> JSValue {
+			if(argc == 9){
+				g_pVsd->DrawArc(
+					qjsb::from_js<int>(ctx, argv[0]),
+					qjsb::from_js<int>(ctx, argv[1]),
+					qjsb::from_js<int>(ctx, argv[2]),
+					qjsb::from_js<int>(ctx, argv[3]),
+					qjsb::from_js<int>(ctx, argv[4]),
+					qjsb::from_js<int>(ctx, argv[5]),
+					qjsb::from_js<double>(ctx, argv[6]),
+					qjsb::from_js<double>(ctx, argv[7]),
+					CPixel(qjsb::from_js<int>(ctx, argv[8]))
+				);
+			}else if(7 <= argc && argc <= 8){
+				g_pVsd->DrawArc(
+					qjsb::from_js<int>(ctx, argv[0]),
+					qjsb::from_js<int>(ctx, argv[1]),
+					qjsb::from_js<int>(ctx, argv[2]),
+					qjsb::from_js<int>(ctx, argv[3]),
+					qjsb::from_js<double>(ctx, argv[4]),
+					qjsb::from_js<double>(ctx, argv[5]),
+					qjsb::from_js<int>(ctx, argv[6]),
+					argc <= 7 ? 0 : qjsb::from_js<int>(ctx, argv[7])
+				);
+			}else{
+				JsErrorNumOfArg();
+			}
+			
+			return JS_UNDEFINED;
+		})
+	*/
+	
 	int DrawFont0(int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc);
 	int DrawFont(int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc, CPixelArg ycOutline = color_black);
 	void DrawText(// !js_func
@@ -176,9 +209,9 @@ class CVsdFilter
 		CPixelArg ycOutline = color_black	// !default:color_black
 	);
 	
-	void DrawGraphSingle(	// ★js_func
+	void DrawGraphSingle(	// !js_func
 		int x1, int y1, int x2, int y2,
-		char *szKey,
+		const char *szKey,
 		LPCWSTR szFormat,
 		CVsdFont &Font,
 		CPixelArg yc
@@ -211,11 +244,24 @@ class CVsdFilter
 	// ポリゴン描写
 	void InitPolygon(void);
 	void FillPolygon(CPixelArg yc);
-	void DrawPolygon(// !js_func
-		std::vector<double>& pixs,
+	void DrawPolygon(
+		const std::vector<double>& pixs,
 		CPixelArg yc,
-		UINT uFlag	// !default:0
+		UINT uFlag
 	);
+	/* !js_bind
+		.method("DrawPolygon", [](JSContext* ctx, __VSD_System__* self, int argc, JSValueConst* argv) -> JSValue {
+			if(!(2 <= argc && argc <= 3)) JsErrorNumOfArg();
+			
+			g_pVsd->DrawPolygon(
+				qjsb::from_js<std::vector<double> >(ctx, argv[0]),
+				CPixel(qjsb::from_js<int>(ctx, argv[1])),
+				argc <= 2 ? 0 : qjsb::from_js<UINT>(ctx, argv[2])
+			);
+			
+			return JS_UNDEFINED;
+		})
+	*/
 	
 	void DrawPolygon(UINT uEdgeCnt, Edge *EdgeList, CPixelArg yc);
 	void DrawPolygon(UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMaxY, CPixelArg yc);
@@ -262,13 +308,47 @@ class CVsdFilter
 		CPixelArg ycGMinus,
 		int	iLength = INVALID_INT
 	);
-	
 	void DrawMap(
 		int x1, int y1, int x2, int y2,
 		int iLineWidth,
 		int iZoomLv,
 		CPixelArg yc
 	);
+	
+	/* !js_bind
+		.method("DrawMap", [](JSContext* ctx, __VSD_System__* self, int argc, JSValueConst* argv) -> JSValue {
+			if(argc == 7){
+				g_pVsd->DrawMap(
+					qjsb::from_js<int>(ctx, argv[0]),
+					qjsb::from_js<int>(ctx, argv[1]),
+					qjsb::from_js<int>(ctx, argv[2]),
+					qjsb::from_js<int>(ctx, argv[3]),
+					qjsb::from_js<int>(ctx, argv[4]),
+					qjsb::from_js<int>(ctx, argv[5]),
+					CPixel(qjsb::from_js<int>(ctx, argv[6]))
+				);
+			}else if(11 <= argc && argc <= 12){
+				g_pVsd->DrawMap(
+					qjsb::from_js<int>(ctx, argv[0]),
+					qjsb::from_js<int>(ctx, argv[1]),
+					qjsb::from_js<int>(ctx, argv[2]),
+					qjsb::from_js<int>(ctx, argv[3]),
+					qjsb::from_js<int>(ctx, argv[4]),
+					qjsb::from_js<int>(ctx, argv[5]),
+					qjsb::from_js<int>(ctx, argv[6]),
+					CPixel(qjsb::from_js<int>(ctx, argv[7])),
+					CPixel(qjsb::from_js<int>(ctx, argv[8])),
+					CPixel(qjsb::from_js<int>(ctx, argv[9])),
+					CPixel(qjsb::from_js<int>(ctx, argv[10])),
+					argc <= 11 ? INVALID_INT : qjsb::from_js<int>(ctx, argv[11])
+				);
+			}else{
+				JsErrorNumOfArg();
+			}
+			
+			return JS_UNDEFINED;
+		})
+	*/
 	
 	void DrawMapPosition(	// !js_func
 		int x1, int y1, int x2, int y2,	UINT uFlag,
@@ -306,14 +386,16 @@ class CVsdFilter
 	std::string FormatTime(int iTime); // !js_func
 	std::wstring FormatTimeW(int iTime);
 
-	// ★undef を返すように要修正
 	int CurTime(){	// !js_var:ElapsedTime
+		if(!m_LapLog) return TIME_NONE;
 		return m_LapLog->m_iCurTime;
 	}
 	int BestLapTime(){	// !js_var:BestLapTime
+		if(!m_LapLog) return TIME_NONE;
 		return m_LapLog->m_iBestTime;
 	}
 	int DiffTime(){	// !js_var:DiffTime
+		if(!m_LapLog) return TIME_NONE;
 		return m_LapLog->m_iDiffTime;
 	}
 	int LapTime(){	// !js_var:LapTime
@@ -425,14 +507,14 @@ class CVsdFilter
 	char	*m_szSkinDirA;
 	std::string	m_SkinDirU;	// !js_const:SkinDir
 	char	*m_szPluginDirA;
-	LPWSTR	m_szPluginDirW;	// ★js_const:VsdRootDir
+	std::string m_PluginDirU;	// !js_const:VsdRootDir
 	
 	// リビジョン番号
 	static const int	m_iRevision;	// !js_const:Revision
 	static const int	m_iPrivateBuild;	// !js_const:PrivateBuild
 	
 	// ログリードヘルパ
-	int ReadLog(CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc);
+	int ReadLog(std::unique_ptr<CVsdLog> &pLog, const char *szFileName, const char *szReaderFunc);
 	double LapNum2LogNum(CVsdLog *Log, int iLapNum);
 	CLapLog *CreateLapTimeHand(int iLapSrc);
 	CLapLog *CreateLapTimeAuto(void);
@@ -468,28 +550,20 @@ class CVsdFilter
 		char *p = StrTokFile(nullptr, szBuf, STF_NODE);
 		if(p) strcpy(p, PLUGIN_DIR "\\");
 		StringNewA(m_szPluginDirA, szBuf);
-		StringNewA2W(m_szPluginDirW, m_szPluginDirA);
+		m_PluginDirU = AnsiToUtf8(m_szPluginDirA);
+		
 		return m_szPluginDirA;
 	}
 	
-	// ログアクセス
-	/* ★
-	void AccessLog(
-		ReturnValue<Value> Ret,
-		const char *szKey,
-		double dFrameCnt
-	);
-	*/
-
 	int		*m_piParamT;
 	int		*m_piParamC;
 	int		*m_piParamS;
 	
 	// フォント
-	CVsdFont	*m_pFont;
+	std::unique_ptr<CVsdFont> m_pFont;
 	
-	CVsdLog	*m_VsdLog;
-	CVsdLog	*m_GPSLog;
+	std::unique_ptr<CVsdLog> m_VsdLog;
+	std::unique_ptr<CVsdLog> m_GPSLog;
 	CVsdLog *m_CurLog;
 	CLapLog	*m_LapLog;
 	
@@ -508,16 +582,14 @@ class CVsdFilter
 	double DateTime(){	// !js_var:DateTime
 		if     (m_VsdLog) return m_VsdLog->DateTime();
 		else if(m_GPSLog) return m_GPSLog->DateTime();
-		return NaN; // ★undefined を返すように要修正
+		return NaN;
 	}
 	
 	static HINSTANCE	m_hInst;	// dll handle
 	
 	void DeleteScript(void){
-		if(m_Script){
-			delete m_Script;
-			m_Script = nullptr;
-		}
+		m_Script.reset();
+		m_LogJs.reset();
 	}
 	
 	static void OpenConsole(void);
@@ -526,7 +598,7 @@ class CVsdFilter
 	
 	BOOL	m_bConsoleOn;
 	
-	CScript* m_Script = nullptr;
+	std::unique_ptr<CScript> m_Script;
 	
   protected:
 	int m_iTextPosX, m_iTextPosY;
@@ -536,6 +608,8 @@ class CVsdFilter
 	Gdiplus::GdiplusStartupInput	m_gdiplusStartupInput;
 	ULONG_PTR						m_gdiplusToken;
 	
+	std::unique_ptr<CVsdLogJs> m_LogJs;
+
 	// スタートライン@GPS 計測モード
 	double	m_dStartLineX1;
 	double	m_dStartLineY1;
@@ -545,7 +619,7 @@ class CVsdFilter
 	void SetFrameMark(int iFrame);
 	int  GetFrameMark(int iFrame);
 	
-	PolygonData_t	*m_Polygon;
+	std::unique_ptr<PolygonData_t[]> m_Polygon;
 	int m_iPolygonMinY;
 	int m_iPolygonMaxY;
 	
@@ -595,7 +669,7 @@ class CVsdFilter
   public:
 	void				*editp;
 	FILTER				*filter;
-	FILE_INFO			*fileinfo;
+	std::unique_ptr<FILE_INFO> fileinfo;
 	FILTER_PROC_INFO	*fpip;
 	
 	CVsdFilter(FILTER *filter, void *editp);
@@ -614,7 +688,7 @@ class CVsdFilter
 	// ログリーダ用
 	BOOL CreateFilter(void);
 	BOOL FileOpenDialog(char *&szOut, char *&szReaderFunc);
-	char *m_szLogFilter;
+	std::unique_ptr<char[]> m_szLogFilter;
 	std::vector<std::string> m_vecReaderFunc;
 	
 	// 仮想関数
@@ -656,24 +730,22 @@ class CVsdFilter
 };
 
 BOOL ListTree(LPTSTR szPath, LPCTSTR szFile, BOOL (*CallbackFunc)(LPCTSTR, LPCTSTR, void *), void *pParam);
-BOOL ListTree(const wchar_t *path, const wchar_t *file, BOOL(*CallbackFunc)(const wchar_t*, const wchar_t*, void*), void* pParam);
 
 class CPushDir {
 public:
-	CPushDir(const wchar_t* szPath) {
-		int iBufSize = GetCurrentDirectoryW(0, nullptr);
-		m_szCurDir = new wchar_t[iBufSize];
-		GetCurrentDirectoryW(iBufSize, m_szCurDir);
-		SetCurrentDirectoryW(szPath);
+	CPushDir(const char* szPath) {
+		int iBufSize = GetCurrentDirectoryA(0, nullptr);
+		m_szCurDir.resize(iBufSize, '\0');
+		GetCurrentDirectoryA(iBufSize, &m_szCurDir[0]);
+		SetCurrentDirectoryA(szPath);
 	}
 
 	~CPushDir() {
-		SetCurrentDirectoryW(m_szCurDir);
-		delete[] m_szCurDir;
+		SetCurrentDirectoryA(m_szCurDir.c_str());
 	}
 
 private:
-	wchar_t* m_szCurDir;
+	std::string m_szCurDir;
 };
 
 inline CVsdFilter* g_pVsd;

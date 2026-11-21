@@ -7,7 +7,6 @@
 *****************************************************************************/
 
 #pragma once
-#include "CJsClass.h"
 #include "util.h"
 
 /*** new type ***************************************************************/
@@ -24,14 +23,11 @@ class CFontGlyph {
 	}
 };
 
-class CVsdFont : public CJsClass {
+class CVsdFont {
   public:
 	CVsdFont(const char *szFontName, int iSize, UINT uAttr = 0);
 	CVsdFont(LPCWSTR szFontName, int iSize, UINT uAttr = 0);
-	
-	CVsdFont(std::string FontName, int iSize, UINT uAttr = 0){
-		CVsdFont(Utf8ToAnsi(FontName).c_str(), iSize, uAttr);
-	}
+	CVsdFont(std::string FontName, int iSize, UINT uAttr = 0);
 	/* !js_constructor
 		.constructor<std::string, int, UINT>()
 	*/
@@ -105,6 +101,6 @@ class CVsdFont : public CJsClass {
 	static const MAT2	mat;
 	
 #ifdef DEBUG
-	static int m_iObjCnt;
+	static inline int m_iObjCnt = 0;
 #endif
 };

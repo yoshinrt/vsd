@@ -66,9 +66,6 @@
     <ClInclude Include="..\dds_lib\dds.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\CJsClass.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="..\CVsdFile.h">
       <Filter>ソース ファイル</Filter>
     </ClInclude>
@@ -76,6 +73,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="..\util.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CVsdLogJs.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
@@ -108,6 +108,9 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="..\CVsdImage.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CVsdLogJs.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>

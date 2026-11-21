@@ -70,7 +70,7 @@ UINT CScript::Initialize(){
 	js_init_module_std(m_JsContext.get(), "std");
 	js_init_module_os(m_JsContext.get(), "os");
 
-	RegisterClass();
+	RegisterJsClass();
 
 	return RunScript(R"(
 		import * as std from "std";
@@ -83,7 +83,7 @@ UINT CScript::Initialize(){
 /*** スクリプトファイルの実行 ***********************************************/
 
 UINT CScript::RunFile(LPCSTR szFileName){
-	CPushDir push_dir(g_pVsd->m_szPluginDirW);
+	CPushDir push_dir(g_pVsd->m_szPluginDirA);
 	
 	m_ErrorMsg.clear();
 
@@ -167,28 +167,30 @@ qjsb::Value CScript::CallRaw(
 
 /*** ログリード by JavaScript **********************************************/
 
-BOOL LogReaderCallback_qjs(const wchar_t *szPath, const wchar_t *szFile, void *pParam){
-	const wchar_t* ext = wcsrchr(szFile, L'.');
-	if (!(ext != nullptr && _wcsicmp(ext, L".js") == 0)) return TRUE;
+BOOL LogReaderCallback(const char *szPath, const char *szFile, void *pParam){
+	const char* ext = strrchr(szFile, '.');
+	if (!(ext != nullptr && strcmp(ext, ".js") == 0)) return TRUE;
 	
 	CScript &Script = *(CScript *)pParam;
 	
-	std::wstring path(szPath);
-	Script.RunFile(WideToUtf8(path + szFile).c_str());
+	std::string path(szPath);
+	path += szFile;
+	Script.RunFile(path.c_str());
 	
 	return Script.m_uError == ERR_OK;
 }
 
 UINT CScript::InitLogReader(void){
 	m_uError = ERR_OK;
-	
+	char szPath[MAX_PATH];
+
 	do {
 		if (RunFile("_system/InitLogReader.js") != ERR_OK) break;
 
 		// スクリプトロード
-		std::wstring path(g_pVsd->m_szPluginDirW);
-		path += WIDEN(LOG_READER_DIR) L"\\";
-		if (!ListTree(path.c_str(), L"*", LogReaderCallback_qjs, this)) {
+		strncpy(szPath, g_pVsd->m_szPluginDirA, MAX_PATH);
+		strcat(szPath, LOG_READER_DIR);
+		if (!ListTree(szPath, "*", LogReaderCallback, this)) {
 			m_uError = ERR_CANT_OPEN_FILE;
 			break;
 		}

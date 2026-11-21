@@ -24,7 +24,7 @@ print fpOut << "-----";
 
 class __VSD_System__ {};
 
-void CScript::RegisterClass(){
+void CScript::RegisterJsClass(){
 -----
 
 ### CVsdFilter ###############################################################
@@ -176,11 +176,6 @@ sub MakeJsIF {
 					$Args[$ArgNum] = "CPixel(qjsb::from_js<int>(ctx, argv[$ArgNum]))";
 				}
 				
-				elsif($Type eq 'v8Array'){
-					# V8 array object 
-					$Args[$ArgNum] = "Local<Array>::Cast(args[$ArgNum])";
-				}
-				
 				elsif($Type eq 'void'){
 					next;
 				}
@@ -277,25 +272,8 @@ sub MakeJsIF {
 			}
 		}
 		
-		elsif(/!js_const:(\w+)/){
-			# CVsdFilter 専用
-			$JSvar = $1;
-			
-			s/[\x0D\x0A]//g;
-			s/\s*[{=;].*//;
-			s/\(.*\)/()/;
-			/(\w+\W*)$/;
-			
-			$Type =
-				/\b(?:int|UINT)\b/	? "Int32::New(pIsolate, " :
-				/\bdouble\b/		? "Number::New(pIsolate, " :
-				/\bchar\b/			? "String::NewFromOneByte(pIsolate, (uint8_t *)" :
-				/\bLPC?WSTR\b/		? "String::NewFromTwoByte(pIsolate, (uint16_t *)" :
-									  "???";
-		}
-		
-		elsif(/!js_constructor\b/){
-			$hasConstructor = 1;
+		elsif(/!(js_constructor|js_bind)\b/){
+			$hasConstructor = $1 eq 'js_constructor';
 			
 			while(<fpIn>){
 				last if(m#\*/#);

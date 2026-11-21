@@ -9,7 +9,6 @@
 #pragma once
 
 #include "CVsdLog.h"
-#include "CJsClass.h"
 #include "error_code.h"
 
 /*** エラー *****************************************************************/
@@ -26,12 +25,12 @@
 
 inline qjsb::Runtime g_JsRuntime;
 
-class CScript : public CJsClass {
+class CScript {
   public:
 	CScript();
 	~CScript(void);
 	
-	void RegisterClass();
+	void RegisterJsClass();
 	UINT Initialize();
 	UINT RunFile(LPCSTR szFileName);
 	UINT RunScript(LPCSTR szScript, bool bModule = false);

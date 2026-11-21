@@ -27,8 +27,6 @@ const int CVsdFilter::m_iPrivateBuild = 1;
 
 void CVsdFilter::Constructor(void){
 	
-	m_VsdLog 			= nullptr;
-	m_GPSLog 			= nullptr;
 	m_LapLog			= nullptr;
 	
 	m_bCalcLapTimeReq	= TRUE;
@@ -44,7 +42,6 @@ void CVsdFilter::Constructor(void){
 	m_szSkinFile		= nullptr;
 	m_szSkinDirA		= nullptr;
 	m_szPluginDirA		= nullptr;
-	m_szPluginDirW		= nullptr;
 	m_bConsoleOn		= FALSE;
 	
 	// str param に初期値設定
@@ -75,9 +72,6 @@ void CVsdFilter::Constructor(void){
 /*** デストラクタ ***********************************************************/
 
 void CVsdFilter::Destructor(void){
-	delete m_Script;
-	delete m_VsdLog;
-	delete m_GPSLog;
 	delete m_LapLog;
 	delete [] m_szLogFile;
 	delete [] m_szLogFileReader;
@@ -87,9 +81,6 @@ void CVsdFilter::Destructor(void){
 	delete [] m_szSkinFile;
 	delete [] m_szSkinDirA;
 	delete [] m_szPluginDirA;
-	delete [] m_szPluginDirW;
-	delete [] m_Polygon;
-	delete m_pFont;
 	
 	//---- GDI+の解放
 	Gdiplus::GdiplusShutdown(m_gdiplusToken);
@@ -97,37 +88,33 @@ void CVsdFilter::Destructor(void){
 
 /*** ログリード ************************************************************/
 
-int CVsdFilter::ReadLog(CVsdLog *&pLog, const char *szFileName, const char *szReaderFunc){
-	if(pLog) delete pLog;
-	pLog = new CVsdLog;
+int CVsdFilter::ReadLog(std::unique_ptr<CVsdLog> &pLog, const char *szFileName, const char *szReaderFunc){
+	pLog = std::make_unique<CVsdLog>();
 	
-	CLapLog *pLapLog = nullptr;
+	std::unique_ptr<CLapLog> pLapLog;
 	
 	int iRet = pLog->ReadLog(szFileName, szReaderFunc, pLapLog);
 	if(iRet){
 		if(pLog->m_pLogLongitude)
 			pLog->RotateMap(m_piParamT[TRACK_MapAngle] * (-ToRAD / 10));
 	}else{
-		delete pLog;
-		pLog = nullptr;
+		pLog.reset();
 	}
 	
 	if(pLapLog){
-		pLapLog->m_iLapSrc = pLog == m_VsdLog ? LAPSRC_VSD : LAPSRC_GPS;
+		pLapLog->m_iLapSrc = pLog.get() == m_VsdLog.get() ? LAPSRC_VSD : LAPSRC_GPS;
 		
 		if(m_LapLog){
 			// 重複しているので，優先度の高いモードを残すか，VSD の方を優先
 			if(
 				m_LapLog->m_iLapMode <  LAPMODE_MAGNET ||
-				m_LapLog->m_iLapMode == LAPMODE_MAGNET && pLog == m_VsdLog
+				m_LapLog->m_iLapMode == LAPMODE_MAGNET && pLog.get() == m_VsdLog.get()
 			){
 				delete m_LapLog;
-				m_LapLog = pLapLog;
-			}else{
-				delete pLapLog;
+				m_LapLog = pLapLog.release();
 			}
 		}else{
-			m_LapLog = pLapLog;
+			m_LapLog = pLapLog.release();
 		}
 	}
 	
@@ -160,7 +147,7 @@ double CVsdFilter::LapNum2LogNum(CVsdLog* Log, int iLapNum){
 	
 	if(m_LapLog->m_iLapSrc == LAPSRC_VSD){
 		// fLogNum は VSD ログ番号
-		if(Log == m_VsdLog) return m_LapLog->m_Lap[iLapNum].fLogNum;
+		if(Log == m_VsdLog.get()) return m_LapLog->m_Lap[iLapNum].fLogNum;
 		
 		// ラップ番号(VSD)→GPS ログ番号に変換
 		return Log->GetIndex(
@@ -169,7 +156,7 @@ double CVsdFilter::LapNum2LogNum(CVsdLog* Log, int iLapNum){
 		);
 	}else if(m_LapLog->m_iLapSrc == LAPSRC_GPS){
 		// fLogNum は GPS ログ番号
-		if(Log == m_GPSLog) return m_LapLog->m_Lap[iLapNum].fLogNum;
+		if(Log == m_GPSLog.get()) return m_LapLog->m_Lap[iLapNum].fLogNum;
 		
 		// ラップ番号(GPS)→VSD ログ番号に変換
 		return Log->GetIndex(
@@ -181,7 +168,7 @@ double CVsdFilter::LapNum2LogNum(CVsdLog* Log, int iLapNum){
 	// fLogNum はビデオフレーム番号
 	return Log->GetIndex(
 		m_LapLog->m_Lap[iLapNum].fLogNum,
-		&VideoSt, Log == m_VsdLog ? &VsdSt : &GPSSt
+		&VideoSt, Log == m_VsdLog.get() ? &VsdSt : &GPSSt
 	);
 }
 
@@ -189,12 +176,12 @@ double CVsdFilter::LapNum2LogNum(CVsdLog* Log, int iLapNum){
 
 CLapLog *CVsdFilter::CreateLapTimeHand(int iLapSrc){
 	
-	int		iTime, iPrevTime;
+	int		iTime, iPrevTime = 0;
 	int		iFrame = 0;
 	double	dLogNum;
 	LAP_t	LapTime;
 	
-	CLapLog *pLapLog = new CLapLog();
+	auto pLapLog = std::make_unique<CLapLog>();
 	pLapLog->m_iLapMode = LAPMODE_HAND;
 	pLapLog->m_iLapSrc  = iLapSrc;
 	
@@ -226,14 +213,13 @@ CLapLog *CVsdFilter::CreateLapTimeHand(int iLapSrc){
 	}
 	
 	if(pLapLog->m_Lap.size() == 0){
-		delete pLapLog;
 		return nullptr;
 	}
 	LapTime.fLogNum	= FLT_MAX;	// 番犬
 	LapTime.iTime	= 0;		// 番犬
 	pLapLog->m_Lap.push_back(LapTime);
 	
-	return pLapLog;
+	return pLapLog.release();
 }
 
 /*** ラップタイム再生成 (GPS auto) ******************************************/
@@ -278,11 +264,11 @@ CLapLog *CVsdFilter::CreateLapTimeAuto(void){
 	
 	/*****/
 	
-	CLapLog *pLapLog = new CLapLog();
+	auto pLapLog = std::make_unique<CLapLog>();
 	pLapLog->m_iLapMode = LAPMODE_GPS;
 	pLapLog->m_iLapSrc  = LAPSRC_GPS;
 	
-	int iTime, iPrevTime;
+	int iTime, iPrevTime = 0;
 	int	iLapNum = 0;
 	
 	for(int i = 1; i < m_GPSLog->GetCnt() - 1; ++i){
@@ -335,7 +321,6 @@ CLapLog *CVsdFilter::CreateLapTimeAuto(void){
 	}
 	
 	if(pLapLog->m_Lap.size() == 0){
-		delete pLapLog;
 		return nullptr;
 	}
 	
@@ -343,12 +328,12 @@ CLapLog *CVsdFilter::CreateLapTimeAuto(void){
 	LapTime.iTime	= 0;		// 番犬
 	pLapLog->m_Lap.push_back(LapTime);
 	
-	return pLapLog;
+	return pLapLog.release();
 }
 
 /*** チャートリード *********************************************************/
 
-#define NAME_BUF_SIZE	64
+constexpr auto NAME_BUF_SIZE = 64;
 
 int CVsdFilter::LapChartRead(const char *szFileName){
 	
@@ -357,37 +342,18 @@ int CVsdFilter::LapChartRead(const char *szFileName){
 		return 0;
 	}
 	
-	CLapLogAll *pLapLog = new CLapLogAll();
+	auto pLapLog = std::make_unique<CLapLogAll>();
 	int iRet = pLapLog->LapChartRead(szFileName);
 	if(iRet == 0){
-		delete pLapLog;
 		return 0;
 	}
 	
 	// ここでやっと m_LapLog を上書き
 	if(m_LapLog) delete m_LapLog;
-	m_LapLog = pLapLog;
+	m_LapLog = pLapLog.release();
 	return iRet;
 }
 
-/*** 位置指定ログアクセス ***************************************************/
-/* ★
-void CVsdFilter::AccessLog(ReturnValue<Value> Ret, const char *szKey, double dFrameCnt){
-	double dRet;
-	
-	if(
-		m_VsdLog &&
-		!_isnan(dRet = m_VsdLog->Get(szKey, GetLogIndex(dFrameCnt, Vsd, m_VsdLog->m_iLogNum)))
-	){
-		Ret.Set(dRet);
-	}else if(
-		m_GPSLog &&
-		!_isnan(dRet = m_GPSLog->Get(szKey, GetLogIndex(dFrameCnt, GPS, m_GPSLog->m_iLogNum)))
-	){
-		Ret.Set(dRet);
-	}
-}
-*/
 /*** ファイルリスト取得 *****************************************************/
 
 // szPath は [MAX_PATH + 1] の配列で，work に使用される
@@ -432,57 +398,6 @@ BOOL ListTree(LPTSTR szPath, LPCTSTR szFile, BOOL (*CallbackFunc)(LPCTSTR, LPCTS
 	return(bSuccess);
 }
 
-BOOL ListTree(
-	const wchar_t *path,
-	const wchar_t *file,
-	BOOL(*CallbackFunc)(const wchar_t*, const wchar_t*, void*),
-	void* pParam
-){
-	HANDLE hFindFile;
-	WIN32_FIND_DATAW FindData;
-
-	BOOL bSuccess = TRUE;
-
-	std::wstring dir = std::wstring(path);
-
-	// path が \ で終わってない時の対処
-	if (!dir.empty() && dir.back() != L'\\') {
-		dir += L'\\';
-	}
-
-	std::wstring searchPath = dir + file;
-
-	hFindFile = FindFirstFileW(searchPath.c_str(), &FindData);
-
-	if (hFindFile != INVALID_HANDLE_VALUE) {
-		do {
-			std::wstring_view name(FindData.cFileName);
-
-			if (!name.empty() &&
-				name.front() != L'_' &&
-				name != L"." &&
-				name != L".."
-			) {
-
-				if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-					std::wstring subdir = dir + FindData.cFileName;
-
-					ListTree(subdir.c_str(), file, CallbackFunc, pParam);
-				}else{
-					if (!CallbackFunc(dir.c_str(), FindData.cFileName, pParam)) {
-						bSuccess = FALSE;
-						break;
-					}
-				}
-			}
-		} while (FindNextFileW(hFindFile, &FindData));
-
-		FindClose(hFindFile);
-	}
-
-	return bSuccess;
-}
-
 /*** コンソールウィンドウに表示 *********************************************/
 
 BOOL WINAPI HandlerRoutine(DWORD dwCtrlType){
@@ -513,11 +428,7 @@ void CVsdFilter::OpenConsole(void){
 
 void CVsdFilter::Print(LPCWSTR szMsg){
 	OpenConsole();
-	
-	char *p = nullptr;
-	StringNewW2A(p, szMsg);
-	fputs(p, stdout);
-	delete [] p;
+	fputws(szMsg, stdout);
 }
 
 void CVsdFilter::Print(const char *szFormat, ...){

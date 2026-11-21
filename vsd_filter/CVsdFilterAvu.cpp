@@ -202,8 +202,8 @@ CVsdFilter::CVsdFilter(FILTER *filter, void *editp) :
 {
 	Constructor();	// 基本クラスのコンストラクタ
 	
-	fileinfo = new FILE_INFO;
-	filter->exfunc->get_file_info(editp, fileinfo);
+	fileinfo = std::make_unique<FILE_INFO>();
+	filter->exfunc->get_file_info(editp, fileinfo.get());
 	
 	m_piParamT	= filter->track;
 	m_piParamC	= filter->check;
@@ -222,8 +222,6 @@ CVsdFilter::CVsdFilter(FILTER *filter, void *editp) :
 CVsdFilter::~CVsdFilter(){
 	Destructor();	// 基本クラスのデストラクタ
 	
-	delete fileinfo;
-	delete [] m_szLogFilter;
 }
 
 /*** PutPixel ***************************************************************/
@@ -870,10 +868,9 @@ BOOL CVsdFilter::CreateFilter(void) {
 		}
 	}
 
-	if (m_szLogFilter) delete[] m_szLogFilter;
 	int iSize = (int)(pBuf - szBuf);
-	m_szLogFilter = new char[iSize];
-	memcpy_s(m_szLogFilter, iSize, szBuf, iSize);
+	m_szLogFilter = std::make_unique<char[]>(iSize);
+	memcpy_s(m_szLogFilter.get(), iSize, szBuf, iSize);
 
 	return TRUE;
 }
@@ -895,7 +892,7 @@ BOOL CVsdFilter::FileOpenDialog(char *&szOut, char *&szReaderFunc){
 	memset(&ofn, 0, sizeof(ofn));
 	
 	ofn.lStructSize	= sizeof(ofn);
-	ofn.lpstrFilter	= m_szLogFilter;
+	ofn.lpstrFilter	= m_szLogFilter.get();
 	ofn.lpstrFile	= szBuf;
 	ofn.nMaxFile	= BUF_SIZE;
 	ofn.Flags		= OFN_EXPLORER | OFN_ALLOWMULTISELECT | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
@@ -1240,7 +1237,7 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 				g_pVsd->ConfigLoad(szBuf)
 			){
 				StrTokFile(szBuf2, szBuf, STF_PATH2);
-				CPushDir push_dir(AnsiToWide(szBuf2).c_str());
+				CPushDir push_dir(szBuf2);
 				
 				if(
 					g_pVsd->m_szLapChart &&
