@@ -16,12 +16,70 @@ print fpOut << "-----";
 *****************************************************************************/
 #include "StdAfx.h"
 
+#include "CVsdFilter.h"
 #include "CScript_qjs.h"
+#include "CVsdImage_qjs.h"
 #include "CVsdFile_qjs.h"
+#include "CVsdFont.h"
 
 void CScript_qjs::RegisterClass(){
 -----
 
+#_#### CVsdFilter ###############################################################
+#_#
+#_#MakeJsIF({
+#_#	Class		=> 'CVsdFilter',
+#_#	NoDestructor=> 1,
+#_#	JsClass		=> '__VSD_System__',
+#_#});
+#_#
+#_#### CVsdFilter_Log ###########################################################
+#_#
+#_#MakeJsIF({
+#_#	Class		=> 'CVsdFilterLog',
+#_#	NoDestructor=> 1,
+#_#	JsClass		=> '__VSD_SystemLog__',
+#_#	NewObject	=> << '-----',
+#_#		int iLen = args.Length();
+#_#		if(CheckArgs(iLen == 1)) return;
+#_#		
+#_#		CVsdFilterLog *pC_obj = static_cast<CVsdFilterLog *>(Local<External>::Cast(args[0])->Value());
+#_#		if(!pC_obj){
+#_#			JsError(ERR_NOT_ENOUGH_MEMORY);
+#_#			return;
+#_#		}
+#_#-----
+#_#	ExtraNew	=> << '-----',
+#_#		pC_obj->AddLogAccessor(thisObject);
+#_#-----
+#_#});
+#_#
+### CVsdImage ################################################################
+
+MakeJsIF({
+	Class		=> 'CVsdImage_qjs',
+});
+
+#_#### CVsdFont #################################################################
+#_#
+#_#MakeJsIF({
+#_#	Class		=> 'CVsdFont',
+#_#	NewObject	=> << '-----'
+#_#		// 引数チェック
+#_#		if (args.Length() < 2){
+#_#			JsErrorNumOfArg();
+#_#			return;
+#_#		}
+#_#		
+#_#		String::Value FontName(args[0]);
+#_#		CVsdFont *pC_obj = new CVsdFont(
+#_#			(LPCWSTR)*FontName,
+#_#			args[1]->Int32Value(),
+#_#			args.Length() <= 2 ? 0 : args[2]->Int32Value()
+#_#		);
+#_#-----
+#_#});
+#_#
 ### CVsdFile #################################################################
 
 MakeJsIF({
@@ -62,12 +120,19 @@ sub MakeJsIF {
 		$param->{'JsClass'}	=~ s/_qjs$//;
 	}
 	
+	$ind0 = $param->{JsClass} eq 'global' ? "" : "\t";
+	$ind1 = "\t$ind0";
+	$ind2 = "\t$ind1";
+	$ind3 = "\t$ind2";
+	
 	$Accessor	= '';
 	$AccessorIF	= '';
 	$Function	= '';
 	$Const	= '';
 	
 	$UseDestructor = $param->{NoDestructor} ? '0' : '1';
+	
+	$hasConstructor = 0;
 	
 	print(fpOut << "-----");
 	
@@ -78,7 +143,6 @@ sub MakeJsIF {
 	
 	print(fpOut << "-----") if($param->{JsClass} ne 'global');
 	qjsb::ClassDef<$param->{Class}>(m_JsContext, "$param->{JsClass}")
-		.constructor<>()
 -----
 
 	open(fpIn,	"< $param->{Class}.h");
@@ -120,15 +184,8 @@ sub MakeJsIF {
 				
 				$Default = /!default:(\S+)/ ? $1 : undef;
 				
-				if($Type =~ /^CVsd(.+)/){
-					$_ = $1;
-					
-					$ArgPos_p1 = $ArgNum + 1;
-					push(@Defs, "Local<Object> $_$ArgNum = args[$ArgNum]->ToObject();");
-					push(@Defs, "if(CheckClass($_$ArgNum, \"$_\", \"arg[$ArgPos_p1] must be $_\")) return;");
-					push(@Defs, "$Type *obj$ArgNum = GetThis<$Type>($_$ArgNum);");
-					push(@Defs, "if(!obj$ArgNum) return;");
-					$Args[$ArgNum] = "*obj$ArgNum";
+				if($Type =~ /^(CVsd.+)/){
+					$Args[$ArgNum] = "qjsb::from_js<$1*>(ctx, argv[$ArgNum])";
 				}
 				
 				elsif($Type eq 'char'){
@@ -182,9 +239,9 @@ sub MakeJsIF {
 				++$ArgNum;
 			}
 			
-			$Defs = join("\n\t\t", @Defs);
-			$Args = join(",\n\t\t\t\t", @Args);
-			$Args = "\n\t\t\t\t$Args\n\t\t\t" if($Args ne '');
+			$Defs = join("\n${ind1}", @Defs);
+			$Args = join(",\n${ind3}", @Args);
+			$Args = "\n${ind3}$Args\n${ind2}" if($Args ne '');
 			
 			$Len = $ArgMin == $ArgNum ?
 				"argc == $ArgNum" :
@@ -216,11 +273,11 @@ sub MakeJsIF {
 			if($param->{JsClass} eq 'global'){
 #-----
 				print(fpOut << "-----");
-		m_JsContext.bindFunctionRaw("$FuncName", [](JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) -> JSValue {
-			if(!($Len)) JsErrorNumOfArg_qjs();
-			$Defs
-			${PreRet}CScript_qjs::$FuncName($Args)${PostRet}
-		});
+	m_JsContext.bindFunctionRaw("$FuncName", [](JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) -> JSValue {
+		if(!($Len)) JsErrorNumOfArg_qjs();
+		$Defs
+		${PreRet}CScript_qjs::$FuncName($Args)${PostRet}
+	});
 -----
 			}else{
 #-----
@@ -240,31 +297,23 @@ sub MakeJsIF {
 			s/[\x0D\x0A]//g;
 			s/\s*[{=;].*//;
 			s/\(\s*void\s*\)/()/;
-			s/\(\s*ReturnValue<.*?\)/(info.GetReturnValue())/;
 			s/^\s+//g;
 			/(\S+)$/;
 			
-			$RealVar = $1;
+			/(.+)\s(\w+)\s*(\(\))?$/;
+			($type, $var, $func) = ($1, $2, $3);
+			$func = '' if(!defined $func);
 			
-			$Ret =
-				/\b(?:int|UINT|double|Handle|Local)\b/
-									? "pC_obj->$RealVar" :
-				/\bchar\b/			? "String::NewFromOneByte(info.GetIsolate(), (uint8_t *)pC_obj->$RealVar)" :
-				/\bLPC?WSTR\b/		? "String::NewFromTwoByte(info.GetIsolate(), (uint16_t *)pC_obj->$RealVar)" :
-									  "unknown ret type:$_ pC_obj->$RealVar";
-			
-			if(/\bvoid\b/){
-				$Ret = "pC_obj->$RealVar";
+			if(
+				$type =~ /int|UINT|double|std::string/ &&
+				$func
+			){
+				# property get 関数を直接指定
+				print(fpOut "${ind1}.property(\"$JSvar\", \&$param->{Class}::$var;})\n");
 			}else{
-				$Ret = "info.GetReturnValue().Set($Ret)";
+				# ラムダでリード
+				print(fpOut "${ind1}.property(\"$JSvar\", [](const $param->{Class}* self){return self->$var$func;})\n");
 			}
-#-----
-			$AccessorIF .= << "-----";
-	static void Get_$JSvar(Local<String> propertyName, const PropertyCallbackInfo<Value>& info){
-		$param->{Class} *pC_obj = GetThis<$param->{Class}>(info.Holder());
-		if(pC_obj) $Ret;
-	}
------
 		}
 		
 		elsif(/!js_const:(\w+)/){
@@ -289,13 +338,26 @@ sub MakeJsIF {
 		proto->Set(String::NewFromOneByte(pIsolate, (uint8_t *)"$JSvar"), ${Type}(($param->{Class} *)pClass)->$RealVar));
 -----
 		}
+		
+		elsif(/!js_constructor\b/){
+			$hasConstructor = 1;
+			
+			while(<fpIn>){
+				last if(m#\*/#);
+				s/\r//g;
+				print(fpOut);
+			}
+		}
 	}
 	close(fpIn);
 	
 	$AccessorIF =~ s/Get_(\w+)/AddAccessor($1, $param->{Class})/ge;
 	$param->{FunctionIF} =~ s/Func_(\w+)/AddFunction($1, $param->{Class})/ge;
 	
-	print(fpOut "\t\t.endClass();\n") if($param->{JsClass} ne 'global');
+	if($param->{JsClass} ne 'global'){
+		print(fpOut "${ind1}.constructor<>()\n") if(!$hasConstructor);
+		print(fpOut "${ind1}.endClass();\n")
+	}
 }
 
 print(fpOut "}\n");

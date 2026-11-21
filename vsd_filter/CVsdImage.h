@@ -68,9 +68,9 @@ class CVsdImage : public CJsClass {
 	int m_iOffsX;
 	int m_iOffsY;
 	
-	LPWSTR		m_pFileName;
 	CSemaphore	* m_pSemaphore;
 	
   private:
+	LPWSTR		m_pFileName;
 	CPixelImg		*m_pBuf;
 };

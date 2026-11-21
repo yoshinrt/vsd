@@ -92,6 +92,7 @@
     <ClInclude Include="..\CVsdFilterLog.h" />
     <ClInclude Include="..\CVsdFont.h" />
     <ClInclude Include="..\CVsdImage.h" />
+    <ClInclude Include="..\CVsdImage_qjs.h" />
     <ClInclude Include="..\CVsdLog.h" />
     <ClInclude Include="..\dds_lib\dds.h" />
     <ClInclude Include="..\def_checkbox.h" />
@@ -115,8 +116,9 @@
     <ClCompile Include="..\CVsdFilterDraw.cpp" />
     <ClCompile Include="..\CVsdFont.cpp" />
     <ClCompile Include="..\CVsdImage.cpp" />
+    <ClCompile Include="..\CVsdImage_qjs.cpp" />
     <ClCompile Include="..\CVsdLog.cpp" />
-    <ClCompile Include="..\ScriptIF_qjs.cpp" />
+    <ClCompile Include="..\ScriptIF.cpp" />
     <ClCompile Include="..\StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
