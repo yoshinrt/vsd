@@ -33,6 +33,10 @@ CVsdLog::CVsdLog(){
 	#include "def_log.h"
 }
 
+CVsdLog::~CVsdLog(){
+	m_Logs.clear();
+}
+
 /*** frame# に対応するログ index を得る *************************************/
 
 double CVsdLog::GetIndex(double dFromVal, int *piFrom, int *piLog, int iPrevIdx){
@@ -48,21 +52,25 @@ double CVsdLog::GetIndex(double dFromVal, int *piFrom, int *piLog, int iPrevIdx)
 }
 
 double CVsdLog::GetIndex(int iTime, int iPrevIdx){
-	int idx;
+	int nCnt = GetCnt();
+	if(nCnt <= 0) return 0.0;
+	if(nCnt == 1) return 0.0;
+	if(iTime <= GetTime(0)) return 0.0;
+	if(iTime >= GetTime(nCnt - 1)) return (double)(nCnt - 1);
+	
+	int idx = 0;
 	
 	// Time(idx) <= iTime < Time(idx + 1)
 	// となる idx を見つける
 	if(
-		iPrevIdx < 0 || iPrevIdx >= GetCnt() ||
+		iPrevIdx < 0 || iPrevIdx >= nCnt - 1 ||
 		GetTime(iPrevIdx) > iTime
 	){
 		// iPrevIdx がおかしいので，binary serch する
 		int iSt = 0;
-		int iEd = GetCnt() - 1;
-		while(1){
-			idx = (iSt + iEd) / 2;
-			if(iSt == iEd) break;
-			
+		int iEd = nCnt - 2;
+		while(iSt <= iEd){
+			idx = iSt + (iEd - iSt) / 2;
 			if(GetTime(idx) > iTime){
 				iEd = idx - 1;
 			}else if(GetTime(idx + 1) <= iTime){
@@ -72,16 +80,18 @@ double CVsdLog::GetIndex(int iTime, int iPrevIdx){
 				break;
 			}
 		}
+		if(idx < 0) idx = 0;
+		if(idx > nCnt - 2) idx = nCnt - 2;
 	}else{
 		// iPrevIdx は正常なので，これを起点に単純サーチする
 		idx = iPrevIdx;
-		while(GetTime(idx + 1) <= iTime) ++idx;
+		while(idx < nCnt - 2 && GetTime(idx + 1) <= iTime) ++idx;
 	}
 	
 	// index の端数を求める
-	return idx +
-		(double)(iTime    - GetTime(idx)) /
-		(GetTime(idx + 1) - GetTime(idx));
+	int iDt = GetTime(idx + 1) - GetTime(idx);
+	if(iDt == 0) return (double)idx;
+	return idx + (double)(iTime - GetTime(idx)) / iDt;
 }
 
 /*** GPS ログのダンプ *******************************************************/
@@ -91,10 +101,9 @@ void CVsdLog::Dump(const char *szFileName){
 	FILE *fp = fopen(szFileName, "w");
 	
 	BOOL bFirst = TRUE;
-	std::map<std::string, CLog *>::iterator it;
 	
 	// ヘッダ出力
-	for(it = m_Logs.begin(); it != m_Logs.end(); ++it){
+	for(auto it = m_Logs.begin(); it != m_Logs.end(); ++it){
 		if(!bFirst) fputs("\t", fp); bFirst = FALSE;
 		fputs(it->first.c_str(), fp);
 	}
@@ -102,7 +111,7 @@ void CVsdLog::Dump(const char *szFileName){
 	
 	for(int i = 0; i < GetCnt(); ++i){
 		BOOL bFirst = TRUE;
-		for(it = m_Logs.begin(); it != m_Logs.end(); ++it){
+		for(auto it = m_Logs.begin(); it != m_Logs.end(); ++it){
 			if(!bFirst) fputs("\t", fp); bFirst = FALSE;
 			fprintf(fp, "%f", it->second->GetRaw(i));
 		}
@@ -116,26 +125,27 @@ void CVsdLog::Dump(const char *szFileName){
 
 CLog *CVsdLog::GetElement(const char *szKey, BOOL bCreate){
 	std::string strKey(szKey);
-	std::map<std::string, CLog *>::iterator itr;
+	auto itr = m_Logs.find(strKey);
 	
-	if((itr = m_Logs.find(strKey)) != m_Logs.end()){
-		return itr->second;
+	if(itr != m_Logs.end()){
+		return itr->second.get();
 	}
 	if(bCreate){
-		CLog *p;
+		std::unique_ptr<CLog> upLog;
 		
 		// Speed とか基本データの参照用ポインタに代入
 		if(0);
 		#define DEF_LOG(name)	DEF_LOG_T(name, CLogFloat)
 		#define DEF_LOG_T(name, type)	\
-			else if(strKey == #name) p = m_pLog##name = new type();
+			else if(strKey == #name) { auto *pTyped = new type(); m_pLog##name = pTyped; upLog.reset(pTyped); }
 		#include "def_log.h"
 		else{
-			p = new CLogFloat();
+			upLog.reset(new CLogFloat());
 		}
 		
-		m_Logs[strKey] = p;
-		return p;
+		CLog *pRaw = upLog.get();
+		m_Logs[strKey] = std::move(upLog);
+		return pRaw;
 	}
 	return nullptr;
 }
@@ -150,10 +160,8 @@ void CVsdLog::Set(const char *szKey, int iIndex, double dVal){
 /*** 1レコードコピー ********************************************************/
 
 void CVsdLog::CopyRecord(int iTo, int iFrom){
-	std::map<std::string, CLog *>::iterator it;
-	
-	for(it = m_Logs.begin(); it != m_Logs.end(); ++it){
-		CLog *pLog = it->second;
+	for(auto it = m_Logs.begin(); it != m_Logs.end(); ++it){
+		CLog *pLog = it->second.get();
 		pLog->Set(iTo, pLog->GetRaw(iFrom));
 	}
 	if(m_iCnt <= iTo) m_iCnt = iTo + 1;
@@ -267,9 +275,10 @@ UINT CVsdLog::GPSLogRescan(void){
 			}
 			
 			// スムージング
-			#define G_SMOOTH_NUM	3	// 平均化する要素数
-			#define G_SMOOTH_CNT	(m_dFreq > 5 ? 2 : 1)	// スムージング回数
-			#define G_SMOOTH_RATIO	0.3	// min/max 計算用係数
+			constexpr int G_SMOOTH_NUM = 3;	// 平均化する要素数
+			const UINT G_SMOOTH_CNT = (m_dFreq > 5 ? 2 : 1);	// スムージング回数
+			constexpr double G_SMOOTH_RATIO = 0.3;	// min/max 計算用係数
+			(void)G_SMOOTH_RATIO;
 			
 			#pragma omp single
 			{

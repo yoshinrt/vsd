@@ -33,11 +33,10 @@ void CScript_qjs::RegisterClass(){
 #_#	JsClass		=> '__VSD_System__',
 #_#});
 #_#
-#_#### CVsdFilter_Log ###########################################################
+### CVsdFilter_Log ###########################################################
 #_#
 #_#MakeJsIF({
 #_#	Class		=> 'CVsdFilterLog',
-#_#	NoDestructor=> 1,
 #_#	JsClass		=> '__VSD_SystemLog__',
 #_#	NewObject	=> << '-----',
 #_#		int iLen = args.Length();

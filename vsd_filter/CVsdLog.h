@@ -168,10 +168,15 @@ class CLogVariant : public CLog {
 	// 値取得
 	double GetRaw(int    iIndex){return UnScaled(m_Log[iIndex]);}
 	double Get(double dIndex){
-		double alfa = dIndex - (UINT)dIndex;
+		int nCnt = GetCnt();
+		if(nCnt <= 0) return 0.0;
+		if(dIndex <= 0.0) return GetRaw(0);
+		if(dIndex >= nCnt - 1) return GetRaw(nCnt - 1);
+		int idx = (int)dIndex;
+		double alfa = dIndex - (double)idx;
 		return
-			GetRaw((int)dIndex) +
-			(GetRaw((int)dIndex + 1) - GetRaw((int)dIndex)) * alfa;
+			GetRaw(idx) +
+			(GetRaw(idx + 1) - GetRaw(idx)) * alfa;
 	}
 	
 	double GetMin(){return UnScaled(m_Min);}
@@ -278,9 +283,14 @@ class CLogFloatOffset : public CLogFloat {
 class CLogDirection : public CLogUShort128 {
   public:
 	double Get(double dIndex){
-		double alfa = dIndex - (int)dIndex;
-		double a = GetRaw((int)dIndex);
-		double b = GetRaw((int)dIndex + 1);
+		int nCnt = GetCnt();
+		if(nCnt <= 0) return 0.0;
+		if(dIndex <= 0.0) return GetRaw(0);
+		if(dIndex >= nCnt - 1) return GetRaw(nCnt - 1);
+		int idx = (int)dIndex;
+		double alfa = dIndex - (double)idx;
+		double a = GetRaw(idx);
+		double b = GetRaw(idx + 1);
 		
 		if     (a - b >= 180) a -= 360;
 		else if(a - b < -180) b -= 360;
@@ -313,10 +323,11 @@ class CVsdLog : public CJsClass {
 	int		m_iCalibStop;
 	
 	// ログの map
-	std::map<std::string, CLog *> m_Logs;
+	std::map<std::string, std::unique_ptr<CLog>> m_Logs;
 	
 	// コンストラクタ・デストラクタ
 	CVsdLog();
+	~CVsdLog();
 	
 	UINT GPSLogRescan();
 	void RotateMap(double dAngle);
@@ -357,19 +368,21 @@ class CVsdLog : public CJsClass {
 	// CLog 取得
 	CLog *GetLog(const char *szKey){
 		std::string strKey(szKey);
-		if(m_Logs.find(strKey) == m_Logs.end()){
+		auto itr = m_Logs.find(strKey);
+		if(itr == m_Logs.end()){
 			return nullptr;
 		}
-		return m_Logs[strKey];
+		return itr->second.get();
 	}
 	
 	// set / get 関数
 	double Get(const char *szKey, double dIndex){
 		std::string strKey(szKey);
-		if(m_Logs.find(strKey) == m_Logs.end()){
+		auto itr = m_Logs.find(strKey);
+		if(itr == m_Logs.end()){
 			return NaN;	// 要素なし
 		}
-		return m_Logs[strKey]->Get(dIndex);
+		return itr->second->Get(dIndex);
 	}
 	
 	void Set(const char *szKey, int iIndex, double dVal);

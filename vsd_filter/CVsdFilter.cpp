@@ -377,41 +377,38 @@ int CVsdFilter::LapChartRead(const char *szFileName){
 /*** Log.Speed 等のアクセサ追加 *********************************************/
 
 void CVsdFilter::AddLogAccessorSub(
-	CVsdLog *pLog,
+	CVsdLog* pLog,
 	Local<Object> objLog,
 	Local<Array> objMin,
 	Local<Array> objMax
-){
-	if(!pLog) return;
-	
-	std::map<std::string, CLog *>::iterator it;
-	
-	for(it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it){
-		const char *szName = it->first.c_str();
-		
-		if(m_VsdLog == nullptr || pLog == m_VsdLog || m_VsdLog->GetElement(szName) == nullptr){
-			Local<String> v8strName = String::NewFromOneByte(Isolate::GetCurrent(), (uint8_t *)szName);
-			
+) {
+	if (!pLog) return;
+
+	for (auto it = pLog->m_Logs.begin(); it != pLog->m_Logs.end(); ++it) {
+		const char* szName = it->first.c_str();
+
+		if (m_VsdLog == nullptr || pLog == m_VsdLog || m_VsdLog->GetElement(szName) == nullptr) {
+			Local<String> v8strName = String::NewFromOneByte(Isolate::GetCurrent(), (uint8_t*)szName);
+
 			// Max 登録
 			objMax->Set(v8strName, Number::New(Isolate::GetCurrent(), pLog->GetMax(szName)));
-			
+
 			// Min 登録
 			objMin->Set(v8strName, Number::New(Isolate::GetCurrent(), pLog->GetMin(szName)));
-			
+
 			// 現在値登録
-			if(0);
+			if (0);
 			#define DEF_LOG(name) \
 			else if(strcmp(szName, #name) == 0){\
 				objLog->SetAccessor(v8strName, CVsdFilterIF::Get_##name); \
 			}
 			#include "def_log.h"
-			else{
+			else {
 				objLog->SetAccessor(v8strName, CVsdFilterIF::Get_Value);
 			}
 		}
 	}
 }
-
 void CVsdFilter::AddLogAccessor(Local<Object> thisObj){
 	
 	// Vsd.Log, Min, Max, Get を作る
