@@ -726,8 +726,6 @@ class CVsdFilter
 #endif
 };
 
-BOOL ListTree(LPTSTR szPath, LPCTSTR szFile, BOOL (*CallbackFunc)(LPCTSTR, LPCTSTR, void *), void *pParam);
-
 class CPushDir {
 public:
 	CPushDir(const char* szPath) {

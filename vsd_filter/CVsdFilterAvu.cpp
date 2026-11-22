@@ -560,13 +560,11 @@ BOOL func_proc(FILTER *fp, FILTER_PROC_INFO *fpip){
 
 /*** *.js ファイルリスト取得 ************************************************/
 
-BOOL ListTreeCallback(const char *szPath, const char *szFile, void *pParam){
-	if(StrTokFile(szFile, STF_EXT) != ".js") return TRUE;
+BOOL ListTreeCallback(const std::string& strPath, const std::string& strFile, void *pParam){
+	if(StrTokFile(strFile, STF_EXT) != ".js") return TRUE;
 	
-	char szBuf[MAX_PATH + 1];
-	
-	strcat(strcpy(szBuf, szPath), szFile);
-	char *p = szBuf + strlen(g_pVsd->m_szPluginDirA);
+	auto path = strPath + strFile;
+	const char *p = path.c_str() + strlen(g_pVsd->m_szPluginDirA);
 	
 	SendMessage((HWND)pParam, CB_ADDSTRING, 0, (LPARAM)p);
 	
@@ -574,12 +572,9 @@ BOOL ListTreeCallback(const char *szPath, const char *szFile, void *pParam){
 }
 
 void SetSkinFileList(HWND hwnd){
-	char szBuf[MAX_PATH + 1];
-	
 	if(SendMessage(hwnd, CB_GETCOUNT, 0, 0) > 0) return;
 	
-	strcpy(szBuf, g_pVsd->m_szPluginDirA);
-	ListTree(szBuf, "*", ListTreeCallback, hwnd);
+	ListTree(g_pVsd->m_szPluginDirA, "*", ListTreeCallback, hwnd);
 	SendMessage(hwnd, CB_ADDSTRING, 0, (LPARAM)"ファイル名を指定して開く...");
 	SetWindowText(hwnd, g_pVsd->m_szSkinFile);
 }

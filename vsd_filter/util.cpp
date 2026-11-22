@@ -1,6 +1,9 @@
 ﻿#include "StdAfx.h"
 #include "util.h"
 
+//////////////////////////////////////////////////////////////////////////////
+// 文字コード変換
+
 char *StringNewA(char *&szDst, const char *szSrc){
 	if(szDst == szSrc) return(szDst);
 	if(szDst) delete [] szDst;
@@ -68,6 +71,9 @@ std::string WideToMultiByte(const wchar_t* text, UINT codePage) {
 	return result;
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// ファイル名操作
+
 std::string GetModuleFileNameDirectString(HMODULE hModule) {
 	std::string path(MAX_PATH, '\0');
 
@@ -97,15 +103,6 @@ std::string GetModuleFileNameDirectString(HMODULE hModule) {
 		throw std::runtime_error("Unexpected error in GetModuleFileNameA. Error: " + std::to_string(::GetLastError()));
 	}
 }
-
-// 元のコードで使われているフラグ定数の想定
-// enum : UINT {
-//	 STF_FULL = 0x0001,
-//	 STF_DRV  = 0x0002,
-//	 STF_PATH = 0x0004,
-//	 STF_NODE = 0x0008,
-//	 STF_EXT  = 0x0010,
-// };
 
 namespace {
 
@@ -230,3 +227,60 @@ std::wstring StrTokFile(const std::wstring& filename, UINT mode, const std::wstr
 
 	return result;
 }
+
+//////////////////////////////////////////////////////////////////////////////
+// ファイルリスト取得
+
+// szBasePath: 探索開始ディレクトリ（関数内で末尾に '\' を付与して正規化します）
+// szPattern : 検索パターン（例: "*", "*.txt"）
+// CallbackFunc(現在のディレクトリパス(末尾 '\' 付き), ファイル名, pParam)
+//   戻り値が false の場合は探索を中断します
+
+BOOL ListTree(
+	std::string szBasePath,
+	const std::string& szPattern,
+	BOOL (*CallbackFunc)(const std::string&, const std::string&, void*),
+	void* pParam)
+{
+	// szBasePath が '\' で終わっていない場合の対処
+	if (!szBasePath.empty() && szBasePath.back() != '\\') {
+		szBasePath.push_back('\\');
+	}
+
+	const std::string searchPath = szBasePath + szPattern;
+
+	WIN32_FIND_DATAA FindData{};
+	const HANDLE hFindFile = FindFirstFileA(searchPath.c_str(), &FindData);
+
+	BOOL bSuccess = TRUE;
+
+	if (hFindFile != INVALID_HANDLE_VALUE) {
+		do {
+			const char* fileName = FindData.cFileName;
+
+			// '_' で始まる名前、"."、".." を除外
+			if (fileName[0] != '_' &&
+				strcmp(fileName, ".") != 0 &&
+				strcmp(fileName, "..") != 0) {
+
+				if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+					std::string subDir = szBasePath + fileName;
+					if (!ListTree(std::move(subDir), szPattern, CallbackFunc, pParam)) {
+						bSuccess = FALSE;
+						break;
+					}
+				} else {
+					if (CallbackFunc && !CallbackFunc(szBasePath, fileName, pParam)) {
+						bSuccess = FALSE;
+						break;
+					}
+				}
+			}
+		} while (FindNextFileA(hFindFile, &FindData));
+
+		FindClose(hFindFile);
+	}
+
+	return bSuccess;
+}
+

@@ -54,3 +54,10 @@ inline std::string StrTokFile(const std::string& filename, UINT mode, const std:
 		)
 	);
 }
+
+BOOL ListTree(
+	std::string szBasePath,
+	const std::string& szPattern,
+	BOOL (*CallbackFunc)(const std::string&, const std::string&, void*),
+	void* pParam
+);

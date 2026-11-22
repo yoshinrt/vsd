@@ -167,14 +167,13 @@ qjsb::Value CScript::CallRaw(
 
 /*** ログリード by JavaScript **********************************************/
 
-BOOL LogReaderCallback(const char *szPath, const char *szFile, void *pParam){
-	const char* ext = strrchr(szFile, '.');
-	if (!(ext != nullptr && strcmp(ext, ".js") == 0)) return TRUE;
+BOOL LogReaderCallback(const std::string& strPath, const std::string& strFile, void *pParam){
+	if(StrTokFile(strFile, STF_EXT) != ".js") return true;
 	
 	CScript &Script = *(CScript *)pParam;
 	
-	std::string path(szPath);
-	path += szFile;
+	std::string path(strPath);
+	path += strFile;
 	Script.RunFile(path.c_str());
 	
 	return Script.m_uError == ERR_OK;
@@ -182,15 +181,15 @@ BOOL LogReaderCallback(const char *szPath, const char *szFile, void *pParam){
 
 UINT CScript::InitLogReader(void){
 	m_uError = ERR_OK;
-	char szPath[MAX_PATH];
 
 	do {
 		if (RunFile("_system/InitLogReader.js") != ERR_OK) break;
 
 		// スクリプトロード
-		strncpy(szPath, g_pVsd->m_szPluginDirA, MAX_PATH);
-		strcat(szPath, LOG_READER_DIR);
-		if (!ListTree(szPath, "*", LogReaderCallback, this)) {
+		std::string path(g_pVsd->m_szPluginDirA);
+		path += LOG_READER_DIR;
+		
+		if (!ListTree(path, "*", LogReaderCallback, this)) {
 			m_uError = ERR_CANT_OPEN_FILE;
 			break;
 		}
