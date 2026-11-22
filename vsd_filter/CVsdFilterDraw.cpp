@@ -1214,7 +1214,7 @@ void CVsdFilter::DrawMapPosition(
 ){
 	int	x, y;
 	int i;
-	CLapLogAll *pLap = reinterpret_cast<CLapLogAll *>(m_LapLog);
+	CLapLogAll *pLap = reinterpret_cast<CLapLogAll *>(m_LapLog.get());
 	
 	// ラップチャートを未リードならリターン
 	if(!m_LapLog || m_LapLog->m_iLapMode != LAPMODE_CHART) return;
@@ -1561,7 +1561,7 @@ void CVsdFilter::DrawRaceLapTime(
 	// ラップチャートを未リードならリターン
 	if(!m_LapLog || m_LapLog->m_iLapMode != LAPMODE_CHART) return;
 	
-	CLapLogAll *pLap = reinterpret_cast<CLapLogAll *>(m_LapLog);
+	CLapLogAll *pLap = reinterpret_cast<CLapLogAll *>(m_LapLog.get());
 	
 	if(iNum == 0){
 		iNum = pLap->m_strName.size();
@@ -1839,15 +1839,12 @@ BOOL CVsdFilter::DrawVSD(void){
 		
 		if(m_LapLog && m_LapLog->m_iLapMode == LAPMODE_CHART){
 			// ラップチャートからラップ情報構築
-			reinterpret_cast<CLapLogAll *>(m_LapLog)->MakeCamLapData(
+			reinterpret_cast<CLapLogAll *>(m_LapLog.get())->MakeCamLapData(
 				m_piParamS[SHADOW_LAP_CHART_St],
 				m_piParamS[SHADOW_LAP_CHART_Ed]
 			);
 		}else if(m_LapLog == nullptr || m_LapLog->m_iLapMode != LAPMODE_MAGNET){
-			if(m_LapLog){
-				delete m_LapLog;
-				m_LapLog = nullptr;
-			}
+			m_LapLog.reset();
 			
 			// GPS からラップタイム計算してみる
 			if(m_GPSLog && m_piParamT[TRACK_SLineWidth] > 0){
@@ -1868,7 +1865,7 @@ BOOL CVsdFilter::DrawVSD(void){
 	if(m_LapLog){
 		CalcLapTime();
 		if(m_LapLog->m_iLapMode == LAPMODE_CHART){
-			reinterpret_cast<CLapLogAll *>(m_LapLog)->CalcLapInfo(GetFrameCnt(), GetFPS());
+			reinterpret_cast<CLapLogAll *>(m_LapLog.get())->CalcLapInfo(GetFrameCnt(), GetFPS());
 		}
 	}
 	

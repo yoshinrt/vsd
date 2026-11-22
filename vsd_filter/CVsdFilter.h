@@ -516,8 +516,8 @@ class CVsdFilter
 	// ログリードヘルパ
 	int ReadLog(std::unique_ptr<CVsdLog> &pLog, const char *szFileName, const char *szReaderFunc);
 	double LapNum2LogNum(CVsdLog *Log, int iLapNum);
-	CLapLog *CreateLapTimeHand(int iLapSrc);
-	CLapLog *CreateLapTimeAuto(void);
+	std::unique_ptr<CLapLog> CreateLapTimeHand(int iLapSrc);
+	std::unique_ptr<CLapLog> CreateLapTimeAuto(void);
 	void CalcLapTime(void);
 	
 	// ラップチャートリーダ
@@ -565,7 +565,7 @@ class CVsdFilter
 	std::unique_ptr<CVsdLog> m_VsdLog;
 	std::unique_ptr<CVsdLog> m_GPSLog;
 	CVsdLog *m_CurLog;
-	CLapLog	*m_LapLog;
+	std::unique_ptr<CLapLog> m_LapLog;
 	
 	BOOL ParseMarkStr(const char *szMark);
 	

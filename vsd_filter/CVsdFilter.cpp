@@ -27,12 +27,7 @@ const int CVsdFilter::m_iPrivateBuild = 1;
 
 void CVsdFilter::Constructor(void){
 	
-	m_LapLog			= nullptr;
-	
 	m_bCalcLapTimeReq	= TRUE;
-	
-	m_Polygon			= nullptr;	// DrawPolygon 用バッファ
-	m_pFont				= nullptr;
 	
 	m_szLogFile			= nullptr;
 	m_szLogFileReader	= nullptr;
@@ -72,7 +67,6 @@ void CVsdFilter::Constructor(void){
 /*** デストラクタ ***********************************************************/
 
 void CVsdFilter::Destructor(void){
-	delete m_LapLog;
 	delete [] m_szLogFile;
 	delete [] m_szLogFileReader;
 	delete [] m_szGPSLogFile;
@@ -110,11 +104,10 @@ int CVsdFilter::ReadLog(std::unique_ptr<CVsdLog> &pLog, const char *szFileName, 
 				m_LapLog->m_iLapMode <  LAPMODE_MAGNET ||
 				m_LapLog->m_iLapMode == LAPMODE_MAGNET && pLog.get() == m_VsdLog.get()
 			){
-				delete m_LapLog;
-				m_LapLog = pLapLog.release();
+				m_LapLog = std::move(pLapLog);
 			}
 		}else{
-			m_LapLog = pLapLog.release();
+			m_LapLog = std::move(pLapLog);
 		}
 	}
 	
@@ -174,7 +167,7 @@ double CVsdFilter::LapNum2LogNum(CVsdLog* Log, int iLapNum){
 
 /*** ラップタイム再生成 (手動) **********************************************/
 
-CLapLog *CVsdFilter::CreateLapTimeHand(int iLapSrc){
+std::unique_ptr<CLapLog> CVsdFilter::CreateLapTimeHand(int iLapSrc){
 	
 	int		iTime, iPrevTime = 0;
 	int		iFrame = 0;
@@ -219,12 +212,12 @@ CLapLog *CVsdFilter::CreateLapTimeHand(int iLapSrc){
 	LapTime.iTime	= 0;		// 番犬
 	pLapLog->m_Lap.push_back(LapTime);
 	
-	return pLapLog.release();
+	return pLapLog;
 }
 
 /*** ラップタイム再生成 (GPS auto) ******************************************/
 
-CLapLog *CVsdFilter::CreateLapTimeAuto(void){
+std::unique_ptr<CLapLog> CVsdFilter::CreateLapTimeAuto(void){
 	
 	int iFrame;
 	LAP_t	LapTime;
@@ -328,7 +321,7 @@ CLapLog *CVsdFilter::CreateLapTimeAuto(void){
 	LapTime.iTime	= 0;		// 番犬
 	pLapLog->m_Lap.push_back(LapTime);
 	
-	return pLapLog.release();
+	return pLapLog;
 }
 
 /*** チャートリード *********************************************************/
@@ -349,8 +342,7 @@ int CVsdFilter::LapChartRead(const char *szFileName){
 	}
 	
 	// ここでやっと m_LapLog を上書き
-	if(m_LapLog) delete m_LapLog;
-	m_LapLog = pLapLog.release();
+	m_LapLog = std::move(pLapLog);
 	return iRet;
 }
 

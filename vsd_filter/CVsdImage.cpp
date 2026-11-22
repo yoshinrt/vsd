@@ -68,20 +68,6 @@ CVsdImage::~CVsdImage(){
 
 void CVsdImage::DeleteAsync(void){
 	m_iStatus	= IMG_STATUS_DESTROYED;
-	/*
-	if(m_pSemaphore == nullptr){
-		// セマフォがない
-		delete this;
-	}else if(m_pSemaphore->LockTest() == WAIT_OBJECT_0){
-		m_pSemaphore->Release();
-		delete m_pSemaphore;
-		m_pSemaphore = nullptr;
-		delete this;
-	}else{
-		std::thread AsyncDelete([=]{delete this;});
-		AsyncDelete.detach();
-	}
-	*/
 	delete this;
 }
 
