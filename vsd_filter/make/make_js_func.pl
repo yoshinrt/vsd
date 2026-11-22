@@ -127,6 +127,7 @@ sub MakeJsIF {
 			s/[\n\s]*\).*$//s;
 			s/,\s*/\n/g;
 			s#\n\s*//# //#g;
+			s/(\w) &/$1& /g;
 			
 			@Line = split(/\n/, $_);
 			
@@ -136,9 +137,10 @@ sub MakeJsIF {
 				
 				$Default = /!default:(\S+)/ ? $1 : undef;
 				
-				if($Type =~ /^(CVsd(.+))/){
+				if($Type =~ /^(CVsd(\w+))&/){
 					($class, $jsClass) = ($1, $2);
 					
+#-----
 					$Defs .= << "-----";
 			auto* arg$ArgNum = qjsb::from_js<$class*>(ctx, argv[$ArgNum]);
 			if (arg$ArgNum == nullptr) JsTypeError("argument $ArgNum must be $jsClass object");
@@ -157,9 +159,15 @@ sub MakeJsIF {
 					$Args[$ArgNum] = "Utf8ToWide(qjsb::from_js<std::string>(ctx, argv[$ArgNum])).c_str()";
 				}
 				
-				elsif($Type eq 'std::string'){
+				elsif($Type =~ /std::string&/){
 					# std::string 型
-					$Args[$ArgNum] = "std::move(qjsb::from_js<std::string>(ctx, argv[$ArgNum]))";
+					$Args[$ArgNum] = "qjsb::from_js<std::string>(ctx, argv[$ArgNum])";
+				}
+				
+				elsif($Type =~ /std::string/){
+					# std::string 型
+					$Args[$ArgNum] = "★const std::string& に変えるべき";
+					#$Args[$ArgNum] = "std::move(qjsb::from_js<std::string>(ctx, argv[$ArgNum]))";
 				}
 				
 				elsif($Type eq 'double'){

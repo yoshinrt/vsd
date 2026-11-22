@@ -116,7 +116,7 @@ class CVsdFilter
 	void FillLineC(int x1, int y1, int x2, CPixelArg yc);
 	
 	void PutImage(	// !js_func
-		int x, int y, CVsdImage &img,
+		int x, int y, CVsdImage& img,
 		UINT uAlign = 0,		// !default:0
 		int iImgX = 0,			// !default:0
 		int iImgY = 0,			// !default:0
@@ -125,7 +125,7 @@ class CVsdFilter
 	);
 	// 座標，width 等補正後
 	void PutImage0C(
-		int x, int y, CVsdImage &img,
+		int x, int y, CVsdImage& img,
 	int ix_st, int iy_st, int ix_ed, int iy_ed
 	);
 	
@@ -196,31 +196,31 @@ class CVsdFilter
 		})
 	*/
 	
-	int DrawFont0(int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc);
-	int DrawFont(int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc, CPixelArg ycOutline = color_black);
+	int DrawFont0(int x, int y, WCHAR c, CVsdFont& Font, CPixelArg yc);
+	int DrawFont(int x, int y, WCHAR c, CVsdFont& Font, CPixelArg yc, CPixelArg ycOutline = color_black);
 	void DrawText(// !js_func
-		int x, int y, LPCWSTR szMsg, CVsdFont &Font,
+		int x, int y, LPCWSTR szMsg, CVsdFont& Font,
 		CPixelArg yc,						// !default:color_white
 		CPixelArg ycOutline = color_black	// !default:color_black
 	);
 	void DrawTextAlign(// !js_func
-		int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFont &Font,
+		int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFont& Font,
 		CPixelArg yc,						// !default:color_white
 		CPixelArg ycOutline = color_black	// !default:color_black
 	);
 	
 	void DrawGraphSingle(	// !js_func
 		int x1, int y1, int x2, int y2,
-		const char *szKey,
+		const std::string& strKey,
 		LPCWSTR szFormat,
-		CVsdFont &Font,
+		CVsdFont& Font,
 		CPixelArg yc
 	);
 	
 	void DrawGraphSub(
 		int x1, int y1, int x2, int y2,
 		LPCWSTR szFormat,
-		CVsdFont &Font,
+		CVsdFont& Font,
 		CPixelArg yc,
 		CVsdLog& Log,
 		CLog	&Data
@@ -233,11 +233,11 @@ class CVsdFilter
 	
 	void DrawSyncGraph(	// !js_func
 		int x1, int y1, int x2, int y2,
-		CVsdFont &Font
+		CVsdFont& Font
 	);
 	
 	void DrawSyncInfo(// !js_func
-		int x, int y, CVsdFont &Font,
+		int x, int y, CVsdFont& Font,
 		UINT uAlign = 0	// !default:0
 	);
 	
@@ -285,7 +285,7 @@ class CVsdFilter
 		int iLineLen2, int iLineWidth2, CPixelArg ycLine2, int iLine2Cnt,
 		int iMinDeg, int iMaxDeg,
 		int iMinVal, int iMaxVal,
-		int iRNum, CPixelArg ycNum, CVsdFont &Font
+		int iRNum, CPixelArg ycNum, CVsdFont& Font
 	);
 	
 	void DrawLinearMeterScaleSub(	// !js_func
@@ -294,7 +294,7 @@ class CVsdFilter
 		int iLineLen1, int iLineWidth1, CPixelArg ycLine1, int iLine1Cnt,
 		int iLineLen2, int iLineWidth2, CPixelArg ycLine2, int iLine2Cnt,
 		int iMinVal, int iMaxVal,
-		int iNumPos, CPixelArg ycNum, CVsdFont &Font
+		int iNumPos, CPixelArg ycNum, CVsdFont& Font
 	);
 	
 	void DrawMap(
@@ -353,25 +353,25 @@ class CVsdFilter
 	void DrawMapPosition(	// !js_func
 		int x1, int y1, int x2, int y2,	UINT uFlag,
 		int iLineWidth, CPixelArg yc,
-		CVsdFont &Font,
+		CVsdFont& Font,
 		CPixelArg ycFont,					// !default:color_white
 		CPixelArg ycOutline = color_black	// !default:color_black
 	);
 	void DrawLapTime(	// !js_func
-		int x, int y, UINT uAlign, CVsdFont &Font,
+		int x, int y, UINT uAlign, CVsdFont& Font,
 		CPixelArg yc,			// !default:color_white
 		CPixelArg ycBest,		// !default:color_cyan
 		CPixelArg ycPlus,		// !default:color_red
 		CPixelArg ycOutline		// !default:color_black
 	);
 	void DrawLapTimeLog(	// !js_func
-		int x, int y, UINT uAlign, int iNum, CVsdFont &Font,
+		int x, int y, UINT uAlign, int iNum, CVsdFont& Font,
 		CPixelArg yc,			// !default:color_white
 		CPixelArg ycBest,		// !default:color_cyan
 		CPixelArg ycOutline		// !default:color_black
 	);
 	void DrawRaceLapTime(	// !js_func
-		int x, int y, UINT uAlign, int iNum, CVsdFont &Font,
+		int x, int y, UINT uAlign, int iNum, CVsdFont& Font,
 		CPixelArg yc,			// !default:color_white
 		CPixelArg ycOutline		// !default:color_black
 	);
@@ -700,7 +700,7 @@ class CVsdFilter
 		WCHAR	*pBuf, UINT uBufSize, INT64 &iBaseTime, int iTime
 	);
 	void DrawSyncInfoSub(
-		int x, int y, CVsdFont &Font,
+		int x, int y, CVsdFont& Font,
 		LPCWSTR	szCaption,
 		INT64	&iBaseTime,
 		int		iCurTime,

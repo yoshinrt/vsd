@@ -77,14 +77,14 @@ class CScript {
 	UINT InitLogReader(void);
 	
 	// Global オブジェクト
-	static void DebugPrint(std::string msg);	// !js_func
+	static void DebugPrint(const std::string& msg);	// !js_func
 	static int MessageBox(	// !js_func
-		std::string msg,
-		std::string caption,	// !default:""
+		const std::string& msg,
+		const std::string& caption,	// !default:""
 		UINT	uType		// !default:MB_OK
 	);
 	
-	static void Print(std::string msg);	// !js_func
+	static void Print(const std::string& msg);	// !js_func
 	
 	// 距離取得
 	static double GetDistanceByLngLat(	// !js_func

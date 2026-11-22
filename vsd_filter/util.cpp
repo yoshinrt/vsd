@@ -217,6 +217,22 @@ std::wstring StrTokFile(const std::wstring& filename, UINT mode, const std::wstr
 	return result;
 }
 
+namespace {
+constexpr char ascii_to_lower(char c) noexcept {
+    return (c >= 'A' && c <= 'Z') ? static_cast<char>(c + ('a' - 'A')) : c;
+}
+
+void to_lower_ascii_inplace(std::string& s) noexcept {
+    std::ranges::transform(s, s.begin(), ascii_to_lower);
+}
+}
+
+bool IsExt(const std::string& file, const std::string& ext){
+	auto file_ext = StrTokFile(file, STF_EXT);
+	to_lower_ascii_inplace(file_ext);
+	return file_ext == ext;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // ファイルリスト取得
 

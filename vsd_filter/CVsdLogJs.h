@@ -27,8 +27,8 @@ private:
 	double AccessLog(const std::string& strKey, double dFrameCnt);
 
 	// CLog 取得
-	CLog* GetLog(const char *szKey) {
-		auto itr = m_Logs.find(szKey);
+	CLog* GetLog(const std::string& strKey) {
+		auto itr = m_Logs.find(strKey);
 		if (itr == m_Logs.end()) {
 			return nullptr;
 		}

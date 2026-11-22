@@ -561,7 +561,7 @@ BOOL func_proc(FILTER *fp, FILTER_PROC_INFO *fpip){
 /*** *.js ファイルリスト取得 ************************************************/
 
 BOOL ListTreeCallback(const std::string& strPath, const std::string& strFile, void *pParam){
-	if(StrTokFile(strFile, STF_EXT) != ".js") return TRUE;
+	if(!IsExt(strFile, ".js")) return TRUE;
 	
 	auto path = strPath + strFile;
 	const char *p = path.c_str() + strlen(g_pVsd->m_szPluginDirA.c_str());

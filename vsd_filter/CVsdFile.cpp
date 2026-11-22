@@ -17,7 +17,7 @@
 
 /*** ファイルオープン *******************************************************/
 
-int CVsdFile::Open(std::string file, std::string mode){
+int CVsdFile::Open(const std::string& file, const std::string& mode){
 	
 	// gz open
 	if(mode.front() == 'z'){
@@ -103,7 +103,7 @@ std::string CVsdFile::ReadLine(void){
 
 /*** ラインライト ***********************************************************/
 
-int CVsdFile::WriteLine(std::string s){
+int CVsdFile::WriteLine(const std::string& s){
 	
 	if(m_fp) switch(m_uMode){
 		case MODE_NORMAL:		return fputs(s.c_str(), m_fp);

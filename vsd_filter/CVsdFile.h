@@ -22,10 +22,10 @@ class CVsdFile {
 		Close();
 	}
 	
-	int Open(std::string file, std::string mode);	// !js_func
+	int Open(const std::string& file, const std::string& mode);	// !js_func
 	void Close(void); // !js_func
 	std::string ReadLine(void); // !js_func
-	int WriteLine(std::string s); // !js_func
+	int WriteLine(const std::string& s); // !js_func
 	int Seek(int iOffs, int iOrg);	// !js_func
 	int IsEOF(void); // !js_func
 	

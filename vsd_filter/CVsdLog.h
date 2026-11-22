@@ -139,6 +139,7 @@ class CLog {
 	
 public:
 	CLog(CVsdLog *pParent) : m_pParent(pParent) {}
+	virtual ~CLog() = default;
 
 	// 値取得
 	virtual double GetRaw(int    iIndex) = 0;
@@ -368,14 +369,14 @@ class CVsdLog {
 	
 	// key の存在確認
 	
-	CLog *GetElement(const char *szKey);
+	CLog *GetElement(const std::string& strKey);
 	
 	// レコードコピー
 	void CopyRecord(int iTo, int iFrom);
 	
 	// CLog 取得
-	CLog *GetLog(const char *szKey){
-		auto itr = m_Logs.find(szKey);
+	CLog *GetLog(const std::string& strKey){
+		auto itr = m_Logs.find(strKey);
 		if(itr == m_Logs.end()){
 			return nullptr;
 		}
@@ -383,21 +384,21 @@ class CVsdLog {
 	}
 	
 	// set / get 関数
-	double Get(const char *szKey, double dIndex){
-		auto itr = m_Logs.find(szKey);
+	double Get(const std::string& strKey, double dIndex){
+		auto itr = m_Logs.find(strKey);
 		if(itr == m_Logs.end()) return NaN;	// 要素なし
 		return itr->second->Get(dIndex);
 	}
 	
-	void Set(const char *szKey, int iIndex, double dVal);
+	void Set(const std::string& strKey, int iIndex, double dVal);
 	
-	double GetMin(const char *szKey){
-		CLog	*pLog = GetLog(szKey);
+	double GetMin(const std::string& strKey){
+		CLog	*pLog = GetLog(strKey);
 		return pLog ? pLog->GetMin() : NaN;
 	}
 	
-	double GetMax(const char *szKey){
-		CLog	*pLog = GetLog(szKey);
+	double GetMax(const std::string& strKey){
+		CLog	*pLog = GetLog(strKey);
 		return pLog ? pLog->GetMax() : NaN;
 	}
 	

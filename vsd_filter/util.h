@@ -54,6 +54,8 @@ inline std::string StrTokFile(const std::string& filename, UINT mode, const std:
 	);
 }
 
+bool IsExt(const std::string& file, const std::string& ext);
+
 BOOL ListTree(
 	std::string szBasePath,
 	const std::string& szPattern,

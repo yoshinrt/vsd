@@ -40,13 +40,13 @@ std::string CScript::ReportException(const qjsb::JSException& e){
 
 /*** Print ******************************************************************/
 
-void CScript::Print(std::string msg){
+void CScript::Print(const std::string& msg){
 	CVsdFilter::Print(Utf8ToWide(msg).c_str());
 }
 
 int CScript::MessageBox(
-	std::string msg,
-	std::string caption,
+	const std::string& msg,
+	const std::string& caption,
 	UINT	uType
 ){
 	return MessageBoxW(nullptr, Utf8ToWide(msg).c_str(),
@@ -55,7 +55,7 @@ int CScript::MessageBox(
 	);
 }
 
-void CScript::DebugPrint(std::string msg){
+void CScript::DebugPrint(const std::string& msg){
 	OutputDebugStringW(Utf8ToWide(msg).c_str());
 }
 
@@ -168,7 +168,7 @@ qjsb::Value CScript::CallRaw(
 /*** ログリード by JavaScript **********************************************/
 
 BOOL LogReaderCallback(const std::string& strPath, const std::string& strFile, void *pParam){
-	if(StrTokFile(strFile, STF_EXT) != ".js") return true;
+	if(!IsExt(strFile, ".js")) return true;
 	
 	CScript &Script = *(CScript *)pParam;
 	

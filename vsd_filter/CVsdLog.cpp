@@ -131,9 +131,8 @@ void CVsdLog::Dump(const char *szFileName){
 
 /*** key の存在確認 *********************************************************/
 
-CLog *CVsdLog::GetElement(const char *szKey){
-	std::string strKey(szKey);
-	auto* pLog = GetLog(szKey);
+CLog *CVsdLog::GetElement(const std::string& strKey){
+	auto* pLog = GetLog(strKey);
 	if(pLog) return pLog;
 	
 	std::unique_ptr<CLog> upLog;
@@ -142,7 +141,7 @@ CLog *CVsdLog::GetElement(const char *szKey){
 	if(0);
 	#define DEF_LOG(name)	DEF_LOG_T(name, CLogFloat)
 	#define DEF_LOG_T(name, type)	\
-		else if(strKey == #name) { auto *pTyped = new type(this); m_pLog##name = pTyped; upLog.reset(pTyped); }
+		else if(strKey == #name) { upLog = std::make_unique<type>(this); m_pLog##name = static_cast<type *>(upLog.get()); }
 	#include "def_log.h"
 	else{
 		upLog = std::make_unique<CLogFloat>(this);
@@ -155,8 +154,8 @@ CLog *CVsdLog::GetElement(const char *szKey){
 
 /*** ログの Set *************************************************************/
 
-void CVsdLog::Set(const char *szKey, int iIndex, double dVal){
-	GetElement(szKey)->Set(iIndex, dVal);
+void CVsdLog::Set(const std::string& strKey, int iIndex, double dVal){
+	GetElement(strKey)->Set(iIndex, dVal);
 	if(m_iCnt <= iIndex) m_iCnt = iIndex + 1;
 }
 

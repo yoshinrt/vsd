@@ -406,7 +406,7 @@ void CVsdFilter::DrawArc(
 // DrawFont* の Y Clip, x1 > ClipX2 は DrawText* でやっているので省く
 // x2 < ClipX1 だけチェックすれば良い
 
-int CVsdFilter::DrawFont0(int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc){
+int CVsdFilter::DrawFont0(int x, int y, WCHAR c, CVsdFont& Font, CPixelArg yc){
 	
 	// 文字幅を得る
 	CFontGlyph &FontGlyph = Font.FontGlyph(c);
@@ -462,7 +462,7 @@ int CVsdFilter::DrawFont0(int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc){
 	return iCellIncX;
 }
 
-int CVsdFilter::DrawFont(int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc, CPixelArg ycOutline){
+int CVsdFilter::DrawFont(int x, int y, WCHAR c, CVsdFont& Font, CPixelArg yc, CPixelArg ycOutline){
 	
 	// フォントが存在しない文字なら，space の文字幅を返す
 	if(!CVsdFont::ExistFont(c))
@@ -479,7 +479,7 @@ int CVsdFilter::DrawFont(int x, int y, WCHAR c, CVsdFont &Font, CPixelArg yc, CP
 
 /*** DrawText *************************************************************/
 
-void CVsdFilter::DrawText(int x, int y, LPCWSTR szMsg, CVsdFont &Font, CPixelArg yc, CPixelArg ycOutline){
+void CVsdFilter::DrawText(int x, int y, LPCWSTR szMsg, CVsdFont& Font, CPixelArg yc, CPixelArg ycOutline){
 	
 	if(x != POS_DEFAULT) m_iTextPosX = x;
 	if(y != POS_DEFAULT) m_iTextPosY = y;
@@ -496,7 +496,7 @@ void CVsdFilter::DrawText(int x, int y, LPCWSTR szMsg, CVsdFont &Font, CPixelArg
 	m_iTextPosY += Font.GetHeight();
 }
 
-void CVsdFilter::DrawTextAlign(int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFont &Font, CPixelArg yc, CPixelArg ycOutline){
+void CVsdFilter::DrawTextAlign(int x, int y, UINT uAlign, LPCWSTR szMsg, CVsdFont& Font, CPixelArg yc, CPixelArg ycOutline){
 	
 	if(x != POS_DEFAULT) m_iTextPosX = x;
 	if(y != POS_DEFAULT) m_iTextPosY = y;
@@ -763,7 +763,7 @@ void CVsdFilter::DrawPolygon(UINT uEdgeCnt, Edge *EdgeList, int iMinY, int iMaxY
 /*** PutImage の座標，width 等補正関数 **************************************/
 
 void CVsdFilter::PutImage(
-	int x, int y, CVsdImage &img, UINT uAlign,
+	int x, int y, CVsdImage& img, UINT uAlign,
 	int iImgX, int iImgY, int iImgW, int iImgH
 ){
 	if(iImgW < 0) iImgW = img.m_iWidth;
@@ -848,18 +848,18 @@ void CVsdFilter::PutImage(
 
 void CVsdFilter::DrawGraphSingle(
 	int x1, int y1, int x2, int y2,
-	const char *szKey,
+	const std::string& strKey,
 	LPCWSTR szFormat,
-	CVsdFont &Font,
+	CVsdFont& Font,
 	CPixelArg yc
 ){
 	CVsdLog 	*pLog;
 	CLog	*pData;
 	
 	// key から log を探す
-	if(m_VsdLog && (pData = m_VsdLog->GetLog(szKey))){
+	if(m_VsdLog && (pData = m_VsdLog->GetLog(strKey))){
 		pLog = m_VsdLog.get();
-	}else if(m_GPSLog && (pData = m_GPSLog->GetLog(szKey))){
+	}else if(m_GPSLog && (pData = m_GPSLog->GetLog(strKey))){
 		pLog = m_GPSLog.get();
 	}else{
 		// 有効な Log がないので帰る
@@ -875,7 +875,7 @@ void CVsdFilter::DrawGraphSingle(
 void CVsdFilter::DrawGraphSub(
 	int x1, int y1, int x2, int y2,
 	LPCWSTR szFormat,
-	CVsdFont &Font,
+	CVsdFont& Font,
 	CPixelArg yc,
 	CVsdLog& Log,
 	CLog	&Data
@@ -931,7 +931,7 @@ void CVsdFilter::DrawGraphSub(
 }
 
 // スピード・タコグラフ
-void CVsdFilter::DrawSyncGraph(int x1, int y1, int x2, int y2, CVsdFont &Font){
+void CVsdFilter::DrawSyncGraph(int x1, int y1, int x2, int y2, CVsdFont& Font){
 	CLog	*pLog;
 	
 	if(m_VsdLog && (pLog = m_VsdLog->m_pLogSpeed)){
@@ -1210,7 +1210,7 @@ void CVsdFilter::DrawMap(
 void CVsdFilter::DrawMapPosition(
 	int x1, int y1, int x2, int y2,	UINT uFlag,
 	int iLineWidth, CPixelArg yc,
-	CVsdFont &Font, CPixelArg ycFont, CPixelArg ycOutline
+	CVsdFont& Font, CPixelArg ycFont, CPixelArg ycOutline
 ){
 	int	x, y;
 	int i;
@@ -1404,7 +1404,7 @@ void CVsdFilter::CalcLapTime(void){
 /*** ラップタイム表示 *******************************************************/
 
 void CVsdFilter::DrawLapTime(
-	int x, int y, UINT uAlign, CVsdFont &Font,
+	int x, int y, UINT uAlign, CVsdFont& Font,
 	CPixelArg yc, CPixelArg ycBest, CPixelArg ycPlus, CPixelArg ycOutline
 ){
 	WCHAR	szBuf[SPRINTF_BUF];
@@ -1483,7 +1483,7 @@ void CVsdFilter::DrawLapTime(
 /*** ラップタイム履歴表示 ***************************************************/
 
 void CVsdFilter::DrawLapTimeLog(
-	int x, int y, UINT uAlign, int iNum, CVsdFont &Font,
+	int x, int y, UINT uAlign, int iNum, CVsdFont& Font,
 	CPixelArg yc, CPixelArg ycBest, CPixelArg ycOutline
 ){
 	int	i;
@@ -1553,7 +1553,7 @@ void CVsdFilter::DrawLapTimeLog(
 #define RACELAP_GAP_R	(RACELAP_GAP_L + RACELAP_GAP_W)
 
 void CVsdFilter::DrawRaceLapTime(
-	int x, int y, UINT uAlign, int iNum, CVsdFont &Font,
+	int x, int y, UINT uAlign, int iNum, CVsdFont& Font,
 	CPixelArg yc, CPixelArg ycOutline
 ){
 	WCHAR	szBuf[SPRINTF_BUF];
@@ -1666,7 +1666,7 @@ void CVsdFilter::DrawRoundMeterScaleSub(
 	int iLineLen2, int iLineWidth2, CPixelArg ycLine2, int iLine2Cnt,
 	int iMinDeg, int iMaxDeg,
 	int iMinVal, int iMaxVal,
-	int iRNum, CPixelArg ycNum, CVsdFont &Font
+	int iRNum, CPixelArg ycNum, CVsdFont& Font
 ){
 	int	i;
 	int	iValRange = iMaxVal - iMinVal;
@@ -1743,7 +1743,7 @@ void CVsdFilter::DrawLinearMeterScaleSub(
 	int iLineLen1, int iLineWidth1, CPixelArg ycLine1, int iLine1Cnt,
 	int iLineLen2, int iLineWidth2, CPixelArg ycLine2, int iLine2Cnt,
 	int iMinVal, int iMaxVal,
-	int iNumPos, CPixelArg ycNum, CVsdFont &Font
+	int iNumPos, CPixelArg ycNum, CVsdFont& Font
 ){
 	int	i;
 	WCHAR	szBuf[SPRINTF_BUF];
