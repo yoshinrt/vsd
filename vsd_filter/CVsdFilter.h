@@ -525,8 +525,6 @@ class CVsdFilter
 	
 	// スキン dir 取得
 	char *SetSkinFile(const char *szSkinFile){
-		char szBuf[MAX_PATH + 1];
-		
 		if(szSkinFile == nullptr){
 			m_SkinDirU = "";
 			return StringNewA(m_szSkinDirA, nullptr);
@@ -535,21 +533,20 @@ class CVsdFilter
 		StringNewA(m_szSkinFile, szSkinFile);
 		
 		// スキンファイル名を CWD=m_szPluginDirA とみなしフルパスに変換
-		GetFullPathWithCDir(szBuf, szSkinFile, m_szPluginDirA);
+		auto skinPath = StrTokFile(szSkinFile, STF_FULL | STF_PATH2, m_szPluginDirA);
 		
 		// ↑のディレクトリ名を得る
-		StringNewA(m_szSkinDirA, StrTokFile(szBuf, szBuf, STF_FULL | STF_PATH2));
+		StringNewA(m_szSkinDirA, skinPath.c_str());
 		m_SkinDirU = AnsiToUtf8(m_szSkinDirA);
 		return m_szSkinDirA;
 	}
 	
 	// プラグイン dll dir 取得
 	char *SetPluginDir(void){
-		char szBuf[MAX_PATH + 1];
-		GetModuleFileName((HMODULE)m_hInst, szBuf, MAX_PATH);
-		char *p = StrTokFile(nullptr, szBuf, STF_NODE);
-		if(p) strcpy(p, PLUGIN_DIR "\\");
-		StringNewA(m_szPluginDirA, szBuf);
+		auto s = StrTokFile(GetModuleFileNameDirectString(m_hInst), STF_PATH2);
+		s += PLUGIN_DIR "\\";
+		
+		StringNewA(m_szPluginDirA, s.c_str());
 		m_PluginDirU = AnsiToUtf8(m_szPluginDirA);
 		
 		return m_szPluginDirA;

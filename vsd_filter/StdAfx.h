@@ -37,8 +37,7 @@
 #include <zlib.h>
 #include <contrib/minizip/unzip.h>
 
-#include "dds_lib/dds.h"
-#include "dds_lib/dds_lib.h"
+#include "dds.h"
 
 #include "quickjs.h"
 #include "quickjs-libc.h"

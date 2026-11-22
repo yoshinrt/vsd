@@ -561,7 +561,7 @@ BOOL func_proc(FILTER *fp, FILTER_PROC_INFO *fpip){
 /*** *.js ファイルリスト取得 ************************************************/
 
 BOOL ListTreeCallback(const char *szPath, const char *szFile, void *pParam){
-	if(!IsExt(szFile, "js")) return TRUE;
+	if(StrTokFile(szFile, STF_EXT) != ".js") return TRUE;
 	
 	char szBuf[MAX_PATH + 1];
 	
@@ -1135,7 +1135,6 @@ BOOL CVsdFilter::ConfigSave(const char *szFileName){
 BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp,FILTER *filter){
 	
 	TCHAR	szBuf[MAX_PATH + 1];
-	TCHAR	szBuf2[MAX_PATH + 1];
 	int		iFrame;
 	
 	//	TRUEを返すと全体が再描画される
@@ -1236,8 +1235,7 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 				filter->exfunc->dlg_get_load_name(szBuf, (LPSTR)FILE_CFG_EXT, nullptr) &&
 				g_pVsd->ConfigLoad(szBuf)
 			){
-				StrTokFile(szBuf2, szBuf, STF_PATH2);
-				CPushDir push_dir(szBuf2);
+				CPushDir push_dir(StrTokFile(szBuf, STF_PATH2).c_str());
 				
 				if(
 					g_pVsd->m_szLapChart &&
