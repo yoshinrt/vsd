@@ -83,7 +83,7 @@ UINT CScript::Initialize(){
 /*** スクリプトファイルの実行 ***********************************************/
 
 UINT CScript::RunFile(LPCSTR szFileName){
-	CPushDir push_dir(g_pVsd->m_szPluginDirA);
+	CPushDir push_dir(g_pVsd->m_szPluginDirA.c_str());
 	
 	m_ErrorMsg.clear();
 

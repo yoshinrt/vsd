@@ -4,17 +4,6 @@
 //////////////////////////////////////////////////////////////////////////////
 // 文字コード変換
 
-char *StringNewA(char *&szDst, const char *szSrc){
-	if(szDst == szSrc) return(szDst);
-	if(szDst) delete [] szDst;
-	
-	if(szSrc == nullptr || *szSrc == '\0'){
-		return szDst = nullptr;
-	}
-	szDst = new char[strlen(szSrc) + 1];
-	return strcpy(szDst, szSrc);
-}
-
 std::wstring MultiByteToWide(const char* text, UINT codePage) {
 	if (text == nullptr || *text == '\0') {
 		return {};

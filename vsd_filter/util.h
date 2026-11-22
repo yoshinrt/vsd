@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-char *StringNewA(char *&szDst, const char *szSrc);
 std::wstring MultiByteToWide(const char* text, UINT codePage) ;
 std::string WideToMultiByte(const wchar_t* text, UINT codePage) ;
 

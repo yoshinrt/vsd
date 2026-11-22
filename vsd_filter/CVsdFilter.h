@@ -498,15 +498,15 @@ class CVsdFilter
 	int DispLap(void){return m_piParamC[CHECK_LAP];}			// !js_var:Config_lap_time
 	int DispGraph(void){return m_piParamC[CHECK_GRAPH];}		// !js_var:Config_graph
 	
-	char	*m_szLogFile;
-	char	*m_szLogFileReader;
-	char	*m_szGPSLogFile;
-	char	*m_szGPSLogFileReader;
-	char	*m_szLapChart;
-	char	*m_szSkinFile;
-	char	*m_szSkinDirA;
+	std::string	m_szLogFile;
+	std::string	m_szLogFileReader;
+	std::string	m_szGPSLogFile;
+	std::string	m_szGPSLogFileReader;
+	std::string	m_szLapChart;
+	std::string	m_szSkinFile;
+	std::string	m_szSkinDirA;
 	std::string	m_SkinDirU;	// !js_const:SkinDir
-	char	*m_szPluginDirA;
+	std::string	m_szPluginDirA;
 	std::string m_PluginDirU;	// !js_const:VsdRootDir
 	
 	// リビジョン番号
@@ -524,29 +524,30 @@ class CVsdFilter
 	int LapChartRead(const char *szFileName);
 	
 	// スキン dir 取得
-	char *SetSkinFile(const char *szSkinFile){
-		if(szSkinFile == nullptr){
+	std::string &SetSkinFile(const std::string& szSkinFile){
+		if(szSkinFile.empty()){
 			m_SkinDirU = "";
-			return StringNewA(m_szSkinDirA, nullptr);
+			m_szSkinDirA.clear();
+			return m_szSkinDirA;
 		}
 		
-		StringNewA(m_szSkinFile, szSkinFile);
+		m_szSkinFile = szSkinFile;
 		
 		// スキンファイル名を CWD=m_szPluginDirA とみなしフルパスに変換
 		auto skinPath = StrTokFile(szSkinFile, STF_FULL | STF_PATH2, m_szPluginDirA);
 		
 		// ↑のディレクトリ名を得る
-		StringNewA(m_szSkinDirA, skinPath.c_str());
+		m_szSkinDirA = skinPath;
 		m_SkinDirU = AnsiToUtf8(m_szSkinDirA);
 		return m_szSkinDirA;
 	}
 	
 	// プラグイン dll dir 取得
-	char *SetPluginDir(void){
+	std::string &SetPluginDir(void){
 		auto s = StrTokFile(GetModuleFileNameDirectString(m_hInst), STF_PATH2);
 		s += PLUGIN_DIR "\\";
 		
-		StringNewA(m_szPluginDirA, s.c_str());
+		m_szPluginDirA = s;
 		m_PluginDirU = AnsiToUtf8(m_szPluginDirA);
 		
 		return m_szPluginDirA;
@@ -673,18 +674,16 @@ class CVsdFilter
 	
 	int GetIndex(int x, int y){return fpip->max_w * y + x;}
 	BOOL ConfigSave(const char *szFileName);
-	
 	BOOL ReadVsdLog(HWND hwnd);
 	BOOL ReadGPSLog(HWND hwnd);
-	
-	char *IsConfigParamStr(const char *szParamName, char *szBuf, char *&szDst);
+	char *IsConfigParamStr(const char *szParamName, char *szBuf, std::string &szDst);
 	char *IsConfigParam(const char *szParamName, char *szBuf, int &iVal);
 	BOOL ConfigLoad(const char *szFileName);
-	void SetSkinName(char *szSkinFile, HWND hwnd);
-	
+	void SetSkinName(const char *szSkinFile, HWND hwnd);
+
 	// ログリーダ用
 	BOOL CreateFilter(void);
-	BOOL FileOpenDialog(char *&szOut, char *&szReaderFunc);
+	BOOL FileOpenDialog(std::string &szOut, std::string &szReaderFunc);
 	std::unique_ptr<char[]> m_szLogFilter;
 	std::vector<std::string> m_vecReaderFunc;
 	

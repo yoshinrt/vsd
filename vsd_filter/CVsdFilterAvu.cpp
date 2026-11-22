@@ -508,11 +508,11 @@ BOOL CVsdFilter::ReadVsdLog(HWND hwnd){
 	//char szMsg[BUF_SIZE];
 	int iCnt;
 	
-	if(!(iCnt = CVsdFilter::ReadLog(m_VsdLog, m_szLogFile, m_szLogFileReader))){
+	if(!(iCnt = CVsdFilter::ReadLog(m_VsdLog, m_szLogFile.c_str(), m_szLogFileReader.c_str()))){
 		return FALSE;
 	}
 	
-	SetWindowText(GetDlgItem(hwnd, ID_EDIT_LOAD_LOG), m_szLogFile);
+	SetWindowText(GetDlgItem(hwnd, ID_EDIT_LOAD_LOG), m_szLogFile.c_str());
 	
 	// trackbar 設定
 	track_e[PARAM_LSt] =
@@ -529,11 +529,11 @@ BOOL CVsdFilter::ReadGPSLog(HWND hwnd){
 	//char szMsg[BUF_SIZE];
 	
 	int iCnt;
-	if(!(iCnt = CVsdFilter::ReadLog(m_GPSLog, m_szGPSLogFile, m_szGPSLogFileReader))){
+	if(!(iCnt = CVsdFilter::ReadLog(m_GPSLog, m_szGPSLogFile.c_str(), m_szGPSLogFileReader.c_str()))){
 		return FALSE;
 	}
 	
-	SetWindowText(GetDlgItem(hwnd, ID_EDIT_LOAD_GPS), m_szGPSLogFile);
+	SetWindowText(GetDlgItem(hwnd, ID_EDIT_LOAD_GPS), m_szGPSLogFile.c_str());
 	
 	// trackbar 設定
 	track_e[PARAM_GSt] =
@@ -564,7 +564,7 @@ BOOL ListTreeCallback(const std::string& strPath, const std::string& strFile, vo
 	if(StrTokFile(strFile, STF_EXT) != ".js") return TRUE;
 	
 	auto path = strPath + strFile;
-	const char *p = path.c_str() + strlen(g_pVsd->m_szPluginDirA);
+	const char *p = path.c_str() + strlen(g_pVsd->m_szPluginDirA.c_str());
 	
 	SendMessage((HWND)pParam, CB_ADDSTRING, 0, (LPARAM)p);
 	
@@ -576,7 +576,7 @@ void SetSkinFileList(HWND hwnd){
 	
 	ListTree(g_pVsd->m_szPluginDirA, "*", ListTreeCallback, hwnd);
 	SendMessage(hwnd, CB_ADDSTRING, 0, (LPARAM)"ファイル名を指定して開く...");
-	SetWindowText(hwnd, g_pVsd->m_szSkinFile);
+	SetWindowText(hwnd, g_pVsd->m_szSkinFile.c_str());
 }
 
 /*** ダイアログサイズ拡張とパーツ追加 ***************************************/
@@ -874,7 +874,7 @@ BOOL CVsdFilter::CreateFilter(void) {
 
 #define FILTERBUF_SIZE	128
 
-BOOL CVsdFilter::FileOpenDialog(char *&szOut, char *&szReaderFunc){
+BOOL CVsdFilter::FileOpenDialog(std::string &szOut, std::string &szReaderFunc){
 	
 	char szBuf[BUF_SIZE];
 	
@@ -905,12 +905,8 @@ BOOL CVsdFilter::FileOpenDialog(char *&szOut, char *&szReaderFunc){
 		++p;
 	}
 	
-	StringNewA(szOut, szBuf);
-	StringNewA(
-		szReaderFunc,
-		ofn.nFilterIndex >= 2 ? m_vecReaderFunc[ofn.nFilterIndex - 2].c_str() :
-								nullptr
-	);
+	szOut = szBuf;
+	szReaderFunc = ofn.nFilterIndex >= 2 ? m_vecReaderFunc[ofn.nFilterIndex - 2] : "";
 	return TRUE;
 }
 
@@ -933,7 +929,7 @@ char *CVsdFilter::IsConfigParam(const char *szParamName, char *szBuf, int &iVal)
 	return nullptr;
 }
 
-char *CVsdFilter::IsConfigParamStr(const char *szParamName, char *szBuf, char *&szDst){
+char *CVsdFilter::IsConfigParamStr(const char *szParamName, char *szBuf, std::string &szDst){
 	
 	int		iLen;
 	char	*p;
@@ -951,14 +947,14 @@ char *CVsdFilter::IsConfigParamStr(const char *szParamName, char *szBuf, char *&
 			szBuf = p + 1;
 		}
 		
-		StringNewA(szDst, szBuf);
+		szDst = szBuf;
 		
 		// 文字列終端
-		if((p = strchr(szDst, '"')) || (p = strchr(szDst, ','))){
+		if((p = strchr(&szDst[0], '"')) || (p = strchr(&szDst[0], ','))){
 			*p = '\0';
 		}
 		
-		return szDst;
+		return &szDst[0];
 	}
 	
 	return nullptr;
@@ -1019,12 +1015,12 @@ BOOL CVsdFilter::ConfigLoad(const char *szFileName){
 	return TRUE;
 }
 
-void CVsdFilter::SetSkinName(char *szSkinFile, HWND hwnd){
+void CVsdFilter::SetSkinName(const char *szSkinFile, HWND hwnd){
 	DeleteScript();
 	SetSkinFile(szSkinFile);
 	
 	// skin 名をダイアログに設定
-	SetWindowText(GetDlgItem(hwnd, ID_COMBO_SEL_SKIN), m_szSkinFile);
+	SetWindowText(GetDlgItem(hwnd, ID_COMBO_SEL_SKIN), m_szSkinFile.c_str());
 }
 
 /*** config セーブ **********************************************************/
@@ -1052,8 +1048,8 @@ BOOL CVsdFilter::ConfigSave(const char *szFileName){
 	
 	// str param に初期値設定
 	#define DEF_STR_PARAM(id, var, init, conf_name) \
-		if(var && (init == nullptr || strcmp(var, init) != 0)){\
-			fprintf(fp, "%c \\\n\t" conf_name "=\"%s\"", cSep, var); \
+		if(!var.empty() && var != (init == nullptr ? "" : init)){\
+			fprintf(fp, "%c \\\n\t" conf_name "=\"%s\"", cSep, var.c_str()); \
 			cSep = ','; \
 			uStrParamFlag |= 1 << id; \
 		}
@@ -1233,16 +1229,16 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 				CPushDir push_dir(StrTokFile(szBuf, STF_PATH2).c_str());
 				
 				if(
-					g_pVsd->m_szLapChart &&
-					g_pVsd->LapChartRead(g_pVsd->m_szLapChart)
+					!g_pVsd->m_szLapChart.empty() &&
+					g_pVsd->LapChartRead(g_pVsd->m_szLapChart.c_str())
 				){
 					filter->exfunc->filter_window_update(filter);
-					SetWindowText(GetDlgItem(hwnd, ID_EDIT_LOAD_LAPCHART), g_pVsd->m_szLapChart);
+					SetWindowText(GetDlgItem(hwnd, ID_EDIT_LOAD_LAPCHART), g_pVsd->m_szLapChart.c_str());
 					g_pVsd->DeleteScript();
 				}
 				
 				// ログリード
-				if(g_pVsd->m_szLogFile){
+				if(!g_pVsd->m_szLogFile.empty()){
 					DebugCmd(
 						UINT	uTimer = GetTickCount();
 						DebugMsgD("VSD Log read start\n");
@@ -1253,7 +1249,7 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 					DebugCmd(DebugMsgD("VSD Log read time = %d\n", GetTickCount() - uTimer);)
 				}
 				
-				if(g_pVsd->m_szGPSLogFile){
+				if(!g_pVsd->m_szGPSLogFile.empty()){
 					DebugCmd(
 						UINT	uTimer = GetTickCount();
 						DebugMsgD("GPS Log read start\n");
@@ -1264,8 +1260,8 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 					DebugCmd(DebugMsgD("GPS Log read time = %d\n", GetTickCount() - uTimer);)
 				}
 				
-				if(g_pVsd->m_szSkinFile){
-					g_pVsd->SetSkinName(g_pVsd->m_szSkinFile, hwnd);
+				if(!g_pVsd->m_szSkinFile.empty()){
+					g_pVsd->SetSkinName(g_pVsd->m_szSkinFile.c_str(), hwnd);
 				}
 				
 				// 設定再描画
@@ -1305,7 +1301,7 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 				filter->exfunc->dlg_get_load_name(szBuf, (LPSTR)FILE_LAPCHART_EXT, nullptr) &&
 				g_pVsd->LapChartRead(szBuf)
 			){
-				StringNewA(g_pVsd->m_szLapChart, szBuf);
+				g_pVsd->m_szLapChart = szBuf;
 				filter->exfunc->filter_window_update(filter);
 				SetWindowText(GetDlgItem(hwnd, ID_EDIT_LOAD_LAPCHART), szBuf);
 				g_pVsd->m_bCalcLapTimeReq = TRUE;

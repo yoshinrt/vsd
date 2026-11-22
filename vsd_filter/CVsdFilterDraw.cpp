@@ -1871,12 +1871,12 @@ BOOL CVsdFilter::DrawVSD(void){
 	
 	// スクリプト実行
 	DebugMsgD(":DrawVSD():Running script... %X\n", GetCurrentThreadId());
-	if(!m_Script && m_szSkinFile){
+	if(!m_Script && !m_szSkinFile.empty()){
 		m_Script = std::make_unique<CScript>();
 		m_LogJs = std::make_unique<CVsdLogJs>();
 
 		if(m_Script->RunFile("_system/InitSkin.js") == ERR_OK){
-			m_Script->RunFile(m_szSkinFile);
+			m_Script->RunFile(m_szSkinFile.c_str());
 			
 			if(m_Script->m_uError == ERR_OK){
 				m_Script->Call<void>("Initialize");

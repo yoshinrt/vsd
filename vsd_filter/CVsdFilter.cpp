@@ -29,18 +29,10 @@ void CVsdFilter::Constructor(void){
 	
 	m_bCalcLapTimeReq	= TRUE;
 	
-	m_szLogFile			= nullptr;
-	m_szLogFileReader	= nullptr;
-	m_szGPSLogFile		= nullptr;
-	m_szGPSLogFileReader= nullptr;
-	m_szLapChart		= nullptr;
-	m_szSkinFile		= nullptr;
-	m_szSkinDirA		= nullptr;
-	m_szPluginDirA		= nullptr;
 	m_bConsoleOn		= FALSE;
 	
 	// str param に初期値設定
-	#define DEF_STR_PARAM(id, var, init, conf_name) StringNewA(var, init);
+	#define DEF_STR_PARAM(id, var, init, conf_name) var = (init == nullptr ? "" : init);
 	#include "def_str_param.h"
 	
 	// plugin dll path 取得
@@ -67,15 +59,6 @@ void CVsdFilter::Constructor(void){
 /*** デストラクタ ***********************************************************/
 
 void CVsdFilter::Destructor(void){
-	delete [] m_szLogFile;
-	delete [] m_szLogFileReader;
-	delete [] m_szGPSLogFile;
-	delete [] m_szGPSLogFileReader;
-	delete [] m_szLapChart;
-	delete [] m_szSkinFile;
-	delete [] m_szSkinDirA;
-	delete [] m_szPluginDirA;
-	
 	//---- GDI+の解放
 	Gdiplus::GdiplusShutdown(m_gdiplusToken);
 }
