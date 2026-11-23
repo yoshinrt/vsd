@@ -29,14 +29,18 @@ CVsdFont::CVsdFont(std::string FontName, int iSize, UINT uAttr){
 }
 
 CVsdFont::~CVsdFont(){
-	DebugMsgD("delete CFont %d:%X\n", m_iObjCnt--, this);
+	#ifdef _DEBUG
+		DebugMsgD("delete CFont %d:%X\n", m_iObjCnt--, this);
+	#endif
 	DestroyFont();
 }
 
 /*** フォント作成 ***********************************************************/
 
 void CVsdFont::CreateFont(const char *szFontName, int iSize, UINT uAttr){
-	DebugMsgD("new CFont %d:%X\n", ++m_iObjCnt, this);
+	#ifdef _DEBUG
+		DebugMsgD("new CFont %d:%X\n", ++m_iObjCnt, this);
+	#endif
 	
 	if(iSize <= 0){
 		JsRangeError("Font size must be > 0");
