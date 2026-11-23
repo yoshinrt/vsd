@@ -1,29 +1,33 @@
 :@echo off
 
-pushd ..
+set make_dir=%~dp0
+
+pushd ..\src
 
 : ****************************************************************************
 : *** build vsd_filter file
 
-set path=c:\cygwin\bin;C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin;%PATH%
+set path=c:\cygwin64\bin;c:\cygwin\bin;C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin;%PATH%
 
-if exist c:\cygwin\bin\ (
+if exist c:\cygwin64\bin\ (
+	echo cygwin64 detected
+	c:\cygwin64\bin\make.exe
+) else if exist c:\cygwin\bin\ (
 	echo cygwin detected
-	
 	c:\cygwin\bin\make.exe
 ) else (
 	echo cygwin not detected
 	
-	perl make/make_js_func.pl ScriptIF.h
-	perl make/set_git_version.pl rev_num.h
+	perl %make_dir%\make_js_func.pl ScriptIF.h
+	perl %make_dir%\set_git_version.pl rev_num.h
 )
 
 : ****************************************************************************
 : *** build quickjs-ng
 
-if exist quickjs\build_Win32\Release\qjs-libc.lib exit /b 0
+cd ..\quickjs
+if exist build_Win32\Release\qjs-libc.lib exit /b 0
 
-cd quickjs
 setlocal EnableDelayedExpansion
 
 set "GENERATOR=Visual Studio 17 2022"

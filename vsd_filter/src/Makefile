@@ -9,7 +9,7 @@ export PATH := /bin:$(PATH)
 all: ScriptIF.cpp rev_num.h
 
 ScriptIF.cpp : \
-	make/make_js_func.pl \
+	../make/make_js_func.pl \
 	CVsdFilter.h \
 	CVsdImage.h \
 	CVsdFont.h \
@@ -18,4 +18,4 @@ ScriptIF.cpp : \
 	./$< $@
 
 rev_num.h:
-	make/set_git_version.pl $@
+	../make/set_git_version.pl $@

@@ -15,105 +15,105 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\CVsdLog.h">
+    <ClInclude Include="..\src\CPixel.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\def_checkbox.h">
+    <ClInclude Include="..\src\CPixelBase.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\def_shadow.h">
+    <ClInclude Include="..\src\CScript.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\def_str_param.h">
+    <ClInclude Include="..\src\CSemaphore.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\def_trackbar.h">
+    <ClInclude Include="..\src\CVsdFile.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\CVsdFilter.h">
+    <ClInclude Include="..\src\CVsdFilter.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\CVsdFont.h">
+    <ClInclude Include="..\src\CVsdFont.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\CScript.h">
+    <ClInclude Include="..\src\CVsdImage.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\StdAfx.h">
+    <ClInclude Include="..\src\CVsdLog.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\error_code.h">
+    <ClInclude Include="..\src\CVsdLogJs.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\def_error.h">
+    <ClInclude Include="..\src\dds_lib\dds.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\def_log.h">
+    <ClInclude Include="..\src\def_checkbox.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\rev_num.h">
+    <ClInclude Include="..\src\def_error.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\CPixel.h">
+    <ClInclude Include="..\src\def_log.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\CPixelBase.h">
+    <ClInclude Include="..\src\def_shadow.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\CSemaphore.h">
+    <ClInclude Include="..\src\def_str_param.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\dds_lib\dds.h">
+    <ClInclude Include="..\src\def_trackbar.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\CVsdFile.h">
-      <Filter>ソース ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\CVsdImage.h">
+    <ClInclude Include="..\src\error_code.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\util.h">
+    <ClInclude Include="..\src\rev_num.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\CVsdLogJs.h">
+    <ClInclude Include="..\src\StdAfx.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\util.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\CVsdFilter.cpp">
+    <ClCompile Include="..\src\CScript.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\CVsdFont.cpp">
+    <ClCompile Include="..\src\CVsdFile.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\CVsdLog.cpp">
+    <ClCompile Include="..\src\CVsdFilter.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\CVsdFilterDraw.cpp">
+    <ClCompile Include="..\src\CVsdFilterAvu.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\StdAfx.cpp">
+    <ClCompile Include="..\src\CVsdFilterDraw.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\CVsdFilterAvu.cpp">
+    <ClCompile Include="..\src\CVsdFont.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\ScriptIF.cpp">
+    <ClCompile Include="..\src\CVsdImage.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\CScript.cpp">
+    <ClCompile Include="..\src\CVsdLog.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\CVsdFile.cpp">
+    <ClCompile Include="..\src\CVsdLogJs.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\CVsdImage.cpp">
+    <ClCompile Include="..\src\ScriptIF.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\CVsdLogJs.cpp">
+    <ClCompile Include="..\src\StdAfx.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\util.cpp">
+    <ClCompile Include="..\src\util.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>

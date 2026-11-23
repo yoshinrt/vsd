@@ -69,44 +69,44 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\CPixel.h" />
-    <ClInclude Include="..\CPixelBase.h" />
-    <ClInclude Include="..\CScript.h" />
-    <ClInclude Include="..\CSemaphore.h" />
-    <ClInclude Include="..\CVsdFile.h" />
-    <ClInclude Include="..\CVsdFilter.h" />
-    <ClInclude Include="..\CVsdFont.h" />
-    <ClInclude Include="..\CVsdImage.h" />
-    <ClInclude Include="..\CVsdLog.h" />
-    <ClInclude Include="..\CVsdLogJs.h" />
-    <ClInclude Include="..\dds_lib\dds.h" />
-    <ClInclude Include="..\def_checkbox.h" />
-    <ClInclude Include="..\def_error.h" />
-    <ClInclude Include="..\def_log.h" />
-    <ClInclude Include="..\def_shadow.h" />
-    <ClInclude Include="..\def_str_param.h" />
-    <ClInclude Include="..\def_trackbar.h" />
-    <ClInclude Include="..\error_code.h" />
-    <ClInclude Include="..\rev_num.h" />
-    <ClInclude Include="..\StdAfx.h" />
-    <ClInclude Include="..\util.h" />
+    <ClInclude Include="..\src\CPixel.h" />
+    <ClInclude Include="..\src\CPixelBase.h" />
+    <ClInclude Include="..\src\CScript.h" />
+    <ClInclude Include="..\src\CSemaphore.h" />
+    <ClInclude Include="..\src\CVsdFile.h" />
+    <ClInclude Include="..\src\CVsdFilter.h" />
+    <ClInclude Include="..\src\CVsdFont.h" />
+    <ClInclude Include="..\src\CVsdImage.h" />
+    <ClInclude Include="..\src\CVsdLog.h" />
+    <ClInclude Include="..\src\CVsdLogJs.h" />
+    <ClInclude Include="..\src\dds_lib\dds.h" />
+    <ClInclude Include="..\src\def_checkbox.h" />
+    <ClInclude Include="..\src\def_error.h" />
+    <ClInclude Include="..\src\def_log.h" />
+    <ClInclude Include="..\src\def_shadow.h" />
+    <ClInclude Include="..\src\def_str_param.h" />
+    <ClInclude Include="..\src\def_trackbar.h" />
+    <ClInclude Include="..\src\error_code.h" />
+    <ClInclude Include="..\src\rev_num.h" />
+    <ClInclude Include="..\src\StdAfx.h" />
+    <ClInclude Include="..\src\util.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\CScript.cpp" />
-    <ClCompile Include="..\CVsdFile.cpp" />
-    <ClCompile Include="..\CVsdFilter.cpp" />
-    <ClCompile Include="..\CVsdFilterAvs.cpp" />
-    <ClCompile Include="..\CVsdFilterDraw.cpp" />
-    <ClCompile Include="..\CVsdFont.cpp" />
-    <ClCompile Include="..\CVsdImage.cpp" />
-    <ClCompile Include="..\CVsdLog.cpp" />
-    <ClCompile Include="..\CVsdLogJs.cpp" />
-    <ClCompile Include="..\ScriptIF.cpp" />
-    <ClCompile Include="..\StdAfx.cpp">
+    <ClCompile Include="..\src\CScript.cpp" />
+    <ClCompile Include="..\src\CVsdFile.cpp" />
+    <ClCompile Include="..\src\CVsdFilter.cpp" />
+    <ClCompile Include="..\src\CVsdFilterAvs.cpp" />
+    <ClCompile Include="..\src\CVsdFilterDraw.cpp" />
+    <ClCompile Include="..\src\CVsdFont.cpp" />
+    <ClCompile Include="..\src\CVsdImage.cpp" />
+    <ClCompile Include="..\src\CVsdLog.cpp" />
+    <ClCompile Include="..\src\CVsdLogJs.cpp" />
+    <ClCompile Include="..\src\ScriptIF.cpp" />
+    <ClCompile Include="..\src\util.cpp" />
+    <ClCompile Include="..\src\StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\util.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
