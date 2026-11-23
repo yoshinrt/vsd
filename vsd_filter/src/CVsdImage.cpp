@@ -55,6 +55,10 @@ CVsdImage::CVsdImage(qjsb::Value file_img, qjsb::Value flag){
 }
 
 CVsdImage::~CVsdImage(){
+	Dispose();
+}
+
+void CVsdImage::Dispose(){
 	DebugMsgD("delete CVsdImage %X\n", this);
 	m_iStatus	= IMG_STATUS_DESTROYED;
 	
@@ -63,12 +67,9 @@ CVsdImage::~CVsdImage(){
 		std::unique_lock<std::mutex> lock(m_Mutex);
 		m_CondVar.wait(lock, [this]{ return !m_bLoading; });
 	}
-	
-}
 
-void CVsdImage::DeleteAsync(void){
-	m_iStatus	= IMG_STATUS_DESTROYED;
-	delete this;
+	m_FileName.clear();
+	m_ImgBuf.clear();
 }
 
 //////////////////////////////////////////////////////////////////////////////

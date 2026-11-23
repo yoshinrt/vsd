@@ -32,7 +32,7 @@ CVsdFont::~CVsdFont(){
 	#ifdef _DEBUG
 		DebugMsgD("delete CFont %d:%X\n", m_iObjCnt--, this);
 	#endif
-	DestroyFont();
+	Dispose();
 }
 
 /*** フォント作成 ***********************************************************/
@@ -68,7 +68,9 @@ void CVsdFont::CreateFont(const char *szFontName, int iSize, UINT uAttr){
 
 const MAT2 CVsdFont::mat = {{0, 1}, {0, 0}, {0, 0}, {0, 1}};
 
-void CVsdFont::DestroyFont(void){
+void CVsdFont::Dispose(void){
+	m_FontGlyph.clear();
+
 	if(m_hdc){
 		if(m_hFontOld){
 			SelectObject(m_hdc, m_hFontOld);
@@ -84,7 +86,7 @@ void CVsdFont::DestroyFont(void){
 }
 
 void CVsdFont::CreateFont(void){
-	DestroyFont();
+	Dispose();
 	
 	// DC, FONT ハンドル取得
 	m_hdc		= GetDC(nullptr);

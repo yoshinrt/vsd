@@ -34,6 +34,8 @@ class CVsdFont {
 	
 	~CVsdFont();
 	
+	void Dispose(void);	// !js_func
+	
 	static BOOL ExistFont(WCHAR c){
 		return FONT_CHAR_FIRST <= c;
 	}
@@ -83,8 +85,6 @@ class CVsdFont {
 	CFontGlyph& CreateFontGlyph(WCHAR c);
 	
 	static const int FONT_CHAR_FIRST = '!';
-	
-	void DestroyFont(void);
 	
 	std::map<WCHAR, std::unique_ptr<CFontGlyph>> m_FontGlyph;
 	LOGFONT	m_LogFont;

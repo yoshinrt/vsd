@@ -21,8 +21,7 @@ class CVsdImage {
 		.constructor<qjsb::Value, qjsb::Value>()
 	*/
 	~CVsdImage();
-	
-	void DeleteAsync(void);
+	void Dispose();	// !js_func
 	
 	UINT Load(LPCWSTR szFileName, UINT uFlag = 0);
 	
