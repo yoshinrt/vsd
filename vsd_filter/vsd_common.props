@@ -15,7 +15,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>$(SolutionDir)zlib/$(Platform)/$(Configuration)/zlib.lib;$(SolutionDir)quickjs/build_$(Platform)/$(Configuration)/qjs.lib;$(SolutionDir)quickjs/build_$(Platform)/$(Configuration)/qjs-libc.lib;gdiplus.lib;ws2_32.lib;winmm.lib;Wininet.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)zlib/$(Platform)/$(Configuration)/zlib.lib;$(SolutionDir)quickjs/build_$(Platform)/$(Configuration)/qjs.lib;$(SolutionDir)quickjs/build_$(Platform)/$(Configuration)/qjs-libc.lib;gdiplus.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
