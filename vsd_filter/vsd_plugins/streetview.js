@@ -49,16 +49,12 @@ function Initialize(){
 	};
 	
 	if( GoogleAPIKey[ 0 ] == '' ){
-		if( MessageBox(
+		MessageBox(
 			"本スキンを使用するためには初期設定が必要です．詳しくは\n" +
-			"VSD for GPS インストール手順の web ページを参照してください．\n" +
-			"(OK を押すと web ブラウザを開きます)",
+			"VSD for GPS インストール手順の web ページを参照してください．\n",
 			undefined,
 			MB_OKCANCEL | MB_ICONINFORMATION
-		) == IDOK ){
-			var WshShell = new ActiveXObject( "WScript.Shell" );
-			WshShell.Run( "cmd /c start https://yoshinrt.github.io/vsd/install#GoogleAPIKey" );
-		}
+		);
 	}
 	
 	MeterRight = 1;

@@ -31,6 +31,17 @@ const IMG_STATUS_LOAD_COMPLETE		= 0;
 const IMG_STATUS_LOAD_INCOMPLETE	= 1;
 const IMG_STATUS_LOAD_FAILED		= 2;
 
+//////////////////////////////////////////////////////////////////////////////
+// print 系
+
+function Printf(...args){
+	Print(std.sprintf(...args));
+}
+
+function Sprintf(...args){
+	return std.sprintf(...args);
+}
+
 //****************************************************************************
 
 function GetGear( GearRatio ){
@@ -197,6 +208,8 @@ Vsd.DrawCarIndicator = function( cx, cy, angle, size, color ){
 //*** Geocoding 処理 *********************************************************
 
 Vsd.Geocoding = function( param ){
+	return '';
+	
 	// XMLHttpRequest 作成
 	if( param.HttpRequest === undefined ){
 		param.HttpRequest = CreateXMLHttpRequest();
