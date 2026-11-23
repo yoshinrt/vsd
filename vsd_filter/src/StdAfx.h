@@ -8,13 +8,10 @@
 #include <algorithm>
 #include <assert.h>
 #include <condition_variable>
-#include <crtdbg.h>
 #include <ctype.h>
-#include <direct.h>
 #include <float.h>
 #include <functional>
 #include <gdiplus.h>
-#include <limits.h>
 #include <limits>
 #include <map>
 #include <math.h>
@@ -33,7 +30,6 @@
 #include <wincon.h>
 #include <wininet.h>
 
-#include <zconf.h>
 #include <zlib.h>
 #include <contrib/minizip/unzip.h>
 
