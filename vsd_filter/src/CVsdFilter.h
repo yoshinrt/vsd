@@ -316,16 +316,17 @@ class CVsdFilter
 	);
 	
 	/* !js_bind
+		// 引数 8個の方は argv[4] は無視してそれ以外を渡す
 		.method("DrawMap", [](JSContext* ctx, __VSD_System__* self, int argc, JSValueConst* argv) -> JSValue {
-			if(argc == 7){
+			if(argc == 8){
 				g_pVsd->DrawMap(
 					qjsb::from_js<int>(ctx, argv[0]),
 					qjsb::from_js<int>(ctx, argv[1]),
 					qjsb::from_js<int>(ctx, argv[2]),
 					qjsb::from_js<int>(ctx, argv[3]),
-					qjsb::from_js<int>(ctx, argv[4]),
 					qjsb::from_js<int>(ctx, argv[5]),
-					CPixel(qjsb::from_js<int>(ctx, argv[6]))
+					qjsb::from_js<int>(ctx, argv[6]),
+					CPixel(qjsb::from_js<int>(ctx, argv[7]))
 				);
 			}else if(11 <= argc && argc <= 12){
 				g_pVsd->DrawMap(
