@@ -75,18 +75,19 @@ function ReadVsdLog( Files ){
 	
 	function StrToUTC( str ){
 		// 2012-01-23T11:02:36.789Z (GMT)
-		str.match( /(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)(\.\d+)/ );
+		const m = str.match( /(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)(\.\d+)/ );
 		return Date.UTC(
-			RegExp.$1, RegExp.$2 - 1, RegExp.$3,
-			RegExp.$4, RegExp.$5, RegExp.$6, RegExp.$7 * 1000
+			m[1], m[2] - 1, m[3],
+			m[4], m[5], m[6], m[7] * 1000
 		);
 	}
 	
 	function StrToLapTime( str ){
 		// 1:23.456
-		if( typeof( str ) == "string" && str.match( /(?:(\d+):)?([\d\.]+)/ )){
+		var m;
+		if( typeof( str ) == "string" && (m = str.match( /(?:(\d+):)?([\d\.]+)/))){
 			LapTimeExist = 1;
-			return RegExp.$1 * 60000 + RegExp.$2 * 1000;
+			return m[1] * 60000 + m[2] * 1000;
 		}
 		return -1;
 	}

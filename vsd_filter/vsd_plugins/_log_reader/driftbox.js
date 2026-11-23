@@ -32,6 +32,7 @@ function Read_dbn( Files ){
 	
 	var	Cnt = 0;
 	var Line;
+	var m;
 	
 	for( var i = 0; i < Files.length; ++i ){
 		var file = new File();
@@ -53,9 +54,9 @@ function Read_dbn( Files ){
 		// ヘッダ解析
 		while( !file.IsEOF()){
 			Line = file.ReadLine();
-			if( Line.match( /^(.+)\((\d+)\)/ )){
-				ParamName.push( RegExp.$1 );
-				ParamSize.push( ~~RegExp.$2 );
+			if( m = Line.match( /^(.+)\((\d+)\)/ )){
+				ParamName.push( m[1] );
+				ParamSize.push( ~~m[2] );
 			}else{
 				break;
 			}
@@ -63,7 +64,7 @@ function Read_dbn( Files ){
 		if( file.IsEOF()) return INVALID_FORMAT;
 		
 		// [DATA] までスキップ
-		if( !Line.match( /^\[DATA\]/ )){
+		if( !(m =Line.match( /^\[DATA\]/ ))){
 			while( !file.IsEOF()){
 				if( file.ReadLine().match( /^\[DATA\]/ )) break;
 			}

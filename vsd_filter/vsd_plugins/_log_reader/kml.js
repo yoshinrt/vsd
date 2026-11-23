@@ -19,6 +19,7 @@ function Read_kml( Files ){
 	
 	var Buf = '';
 	var file = new File();
+	var m;
 	
 	// 一旦全ファイルを Buf に溜める
 	for( var i = 0; i < Files.length; ++i ){
@@ -63,7 +64,7 @@ function Read_kml( Files ){
 			.join( "\n" )
 			.match( /<gx:value>[^<]*/g )
 			.map( function( speed ){
-				return speed.match( /([\d\.]+)/ ) ? RegExp.$1 * 3.6 : undefined;
+				return speed.match( m = /([\d\.]+)/ ) ? m[1] * 3.6 : undefined;
 			});
 		
 		Buf = undefined;
@@ -71,23 +72,23 @@ function Read_kml( Files ){
 		// 時刻付きの KML
 		Points.forEach( function( Point ){
 			// 時間
-			if( !Point.match( /<when>(\d+)-(\d+)-(\d+)T(\d+):(\d+):([\d\.]+)(Z|([-+]\d+):(\d+))/ )){
+			if( !( m = Point.match( /<when>(\d+)-(\d+)-(\d+)T(\d+):(\d+):([\d\.]+)(Z|([-+]\d+):(\d+))/ ))){
 				return;
 			}
 			Log.Time[ Cnt ] = Date.UTC(
-				RegExp.$1, RegExp.$2 - 1, RegExp.$3,
-				RegExp.$4 - ( RegExp.$7 == 'Z' ? 0 : RegExp.$8 ),
-				RegExp.$5 - ( RegExp.$7 == 'Z' ? 0 : RegExp.$8 >= 0 ? RegExp.$9 : -RegExp.$9 ),
-				~~RegExp.$6, ~~( RegExp.$6 * 1000 ) % 1000
+				m[1], m[2] - 1, m[3],
+				m[4] - ( m[7] == 'Z' ? 0 : m[8] ),
+				m[5] - ( m[7] == 'Z' ? 0 : m[8] >= 0 ? m[9] : -m[9] ),
+				~~m[6], ~~( m[6] * 1000 ) % 1000
 			);
 			
 			// long, lat, alt
-			if( !Point.match( /<gx:coord>(\S+)\s+(\S+)\s+([\d\.]+)/ )){
+			if( !(m = Point.match( /<gx:coord>(\S+)\s+(\S+)\s+([\d\.]+)/ ))){
 				return;
 			}
-			Log.Longitude[ Cnt ] = +RegExp.$1;
-			Log.Latitude [ Cnt ] = +RegExp.$2;
-			Log.Altitude [ Cnt ] = +RegExp.$3;
+			Log.Longitude[ Cnt ] = +m[1];
+			Log.Latitude [ Cnt ] = +m[2];
+			Log.Altitude [ Cnt ] = +m[3];
 			
 			++Cnt;
 		});
@@ -104,10 +105,10 @@ function Read_kml( Files ){
 			if( Coordinates && Coordinates.length > 1 ){
 				Coordinates.forEach( function( Point ){
 					
-					Point.match( /^(.*),(.*),(.*)/ ) || Point.match( /^(.*),(.*)/ );
-					Log.Longitude[ Cnt ] = +RegExp.$1;
-					Log.Latitude [ Cnt ] = +RegExp.$2;
-					if( RegExp.$3 !== undefined ) Log.Altitude [ Cnt ] = +RegExp.$3;
+					m = Point.match( /^(.*),(.*),(.*)/ ) || Point.match( /^(.*),(.*)/ );
+					Log.Longitude[ Cnt ] = +m[1];
+					Log.Latitude [ Cnt ] = +m[2];
+					if( m[3] !== undefined ) Log.Altitude [ Cnt ] = +m[3];
 					
 					if( Cnt == 0 ){
 						var date = new Date;

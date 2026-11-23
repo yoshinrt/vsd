@@ -16,14 +16,15 @@ function ReadLapChart( filename ){
 	var CameraCarName = '';
 	var Line;
 	var Drivers = [];
+	var m;
 	
 	while( 1 ){
 		Line = file.ReadLine();
 		if( file.IsEOF()) break;
 		
-		if( Line.match( /^Name:\s*(.*)/ )){
+		if( m = Line.match( /^Name:\s*(.*)/ )){
 			// カメラ車の指定
-			CameraCarName = RegExp.$1;
+			CameraCarName = m[1];
 			
 		}else{
 			if( Line.match( /^LapTable:/ )){
@@ -63,7 +64,7 @@ function ReadLapChart( filename ){
 	
 	function GetMS( str ){
 		if( str.match( /^(\d+)[^\d\.]([\d\.]+)/ )){
-			return ~~( RegExp.$1 * 60000 + RegExp.$2 * 1000 );
+			return ~~( m[1] * 60000 + m[2] * 1000 );
 		}
 		return ~~( str * 1000 );
 	}

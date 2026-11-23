@@ -42,10 +42,10 @@ function ReadTorqueLiteLog( Files ){
 	
 	function StrToUTC( str ){
 		// 08-9-2012 11:02:36 (JST)
-		str.match( /(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)(\.\d+)/ );
+		const m = str.match( /(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)(\.\d+)/ );
 		return Date.UTC(
-			RegExp.$3, RegExp.$2 - 1, RegExp.$1,
-			RegExp.$4, RegExp.$5, RegExp.$6, RegExp.$7 * 1000
+			m[3], m[2] - 1, m[1],
+			m[4], m[5], m[6], m[7] * 1000
 		) + ( new Date ).getTimezoneOffset() * 60000;
 	}
 }
