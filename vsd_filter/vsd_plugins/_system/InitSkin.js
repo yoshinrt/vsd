@@ -5,31 +5,31 @@ std.loadScript( "_user_config.js" );
 
 //****************************************************************************
 
-var Vsd = new __VSD_System__();
+const Vsd = new __VSD_System__();
 
-var DRAW_FILL			= 1 << 0;
-var DRAW_NOCLOSE		= 1 << 1;
-var FONT_BOLD			= 1 << 0;
-var FONT_ITALIC			= 1 << 1;
-var FONT_OUTLINE		= 1 << 2;
-var FONT_FIXED			= 1 << 3;
-var FONT_NOANTIALIAS	= 1 << 4;
-var ALIGN_LEFT			= 0;
-var ALIGN_TOP			= 0;
-var ALIGN_HCENTER		= 1 << 0;
-var ALIGN_RIGHT			= 1 << 1;
-var ALIGN_VCENTER		= 1 << 2;
-var ALIGN_BOTTOM		= 1 << 3;
-var DRAW_MAP_START		= 1 << 4;
-var DRAW_LOADMAP		= 1 << 5;
-var LMS_HORIZONTAL		= 0;
-var LMS_VERTICAL		= 1 << 4
-var GRAPH_HTILE			= 1 << 30;
-var GRAPH_VTILE			= 1 << 31;
-var IMG_INET_ASYNC				= 1 << 0;
-var IMG_STATUS_LOAD_COMPLETE	= 0;
-var IMG_STATUS_LOAD_INCOMPLETE	= 1;
-var IMG_STATUS_LOAD_FAILED		= 2;
+const DRAW_FILL			= 1 << 0;
+const DRAW_NOCLOSE		= 1 << 1;
+const FONT_BOLD			= 1 << 0;
+const FONT_ITALIC		= 1 << 1;
+const FONT_OUTLINE		= 1 << 2;
+const FONT_FIXED		= 1 << 3;
+const FONT_NOANTIALIAS	= 1 << 4;
+const ALIGN_LEFT		= 0;
+const ALIGN_TOP			= 0;
+const ALIGN_HCENTER		= 1 << 0;
+const ALIGN_RIGHT		= 1 << 1;
+const ALIGN_VCENTER		= 1 << 2;
+const ALIGN_BOTTOM		= 1 << 3;
+const DRAW_MAP_START	= 1 << 4;
+const DRAW_LOADMAP		= 1 << 5;
+const LMS_HORIZONTAL	= 0;
+const LMS_VERTICAL		= 1 << 4
+const GRAPH_HTILE		= 1 << 30;
+const GRAPH_VTILE		= 1 << 31;
+const IMG_INET_ASYNC				= 1 << 0;
+const IMG_STATUS_LOAD_COMPLETE		= 0;
+const IMG_STATUS_LOAD_INCOMPLETE	= 1;
+const IMG_STATUS_LOAD_FAILED		= 2;
 
 //****************************************************************************
 

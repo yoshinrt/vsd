@@ -3,8 +3,8 @@
 std.loadScript( "_system/common.js" );
 std.loadScript( "_user_config.js" );
 
-var GlobalInstance = this;
-var INVALID_FORMAT	= -1;
+const GlobalInstance	= this;
+const INVALID_FORMAT	= -1;
 
 var Log = [];
 var LogReaderInfo = [];
