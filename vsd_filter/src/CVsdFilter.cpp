@@ -26,7 +26,9 @@ const int CVsdFilter::m_iPrivateBuild = 1;
 /*** コンストラクタ *********************************************************/
 
 void CVsdFilter::Constructor(void){
-	
+	DebugMsgD("this = %08X\n", this);
+	g_pVsd = this;
+
 	m_bCalcLapTimeReq	= TRUE;
 	
 	m_bConsoleOn		= FALSE;
