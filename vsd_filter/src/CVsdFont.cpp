@@ -24,7 +24,7 @@ CVsdFont::CVsdFont(LPCWSTR szFontName, int iSize, UINT uAttr){
 	CreateFont(WideToAnsi(szFontName).c_str(), iSize, uAttr);
 }
 
-CVsdFont::CVsdFont(std::string FontName, int iSize, UINT uAttr){
+CVsdFont::CVsdFont(const std::string& FontName, int iSize, UINT uAttr){
 	CreateFont(Utf8ToAnsi(FontName).c_str(), iSize, uAttr);
 }
 

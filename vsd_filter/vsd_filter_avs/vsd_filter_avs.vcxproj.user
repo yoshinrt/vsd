@@ -4,13 +4,13 @@
     <LocalDebuggerWorkingDirectory>D:\Data\Video\Car\ELISE\20241231_SuzukaMinami\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>"C:\Program Files (x86)\MediaPlayerClassic\mpc-be.exe"</LocalDebuggerCommand>
-    <LocalDebuggerCommandArguments>/fixedsize 860,533 "C:\Users\yoshi\OneDrive\20040812_琵琶湖一周.nme.avs"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>/fixedsize 860,533 "D:\Data\Video\Car\ELISE\20241231_SuzukaMinami\FILE0003.avs"</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerCommand>"C:\Program Files (x86)\MediaPlayerClassic\mpc-be.exe"</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerCommandArguments>/fixedsize 860,533 "C:\Users\yoshi\OneDrive\20040812_琵琶湖一周.nme.avs"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>/fixedsize 860,533 "D:\Data\Video\Car\ELISE\20241231_SuzukaMinami\FILE0003.avs"</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerWorkingDirectory>D:\Data\Video\Car\ELISE\20241231_SuzukaMinami\</LocalDebuggerWorkingDirectory>

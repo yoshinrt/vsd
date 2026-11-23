@@ -726,21 +726,4 @@ class CVsdFilter
 #endif
 };
 
-class CPushDir {
-public:
-	CPushDir(const char* szPath) {
-		int iBufSize = GetCurrentDirectoryA(0, nullptr);
-		m_szCurDir.resize(iBufSize, '\0');
-		GetCurrentDirectoryA(iBufSize, &m_szCurDir[0]);
-		SetCurrentDirectoryA(szPath);
-	}
-
-	~CPushDir() {
-		SetCurrentDirectoryA(m_szCurDir.c_str());
-	}
-
-private:
-	std::string m_szCurDir;
-};
-
 inline CVsdFilter* g_pVsd;
