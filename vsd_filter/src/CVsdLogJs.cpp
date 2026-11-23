@@ -151,10 +151,6 @@ JSValue CVsdLogJs::fnValueOfIndex(JSContext* ctx, JSValueConst this_val, int arg
 
 /*** 位置指定ログアクセス ***************************************************/
 
-// パラメータを変換
-#define GetLogIndex(frame, to, prev) \
-	m_##to##Log->GetIndex(frame, &VideoSt, &to##St, prev)
-
 double CVsdLogJs::AccessLog(const std::string& strKey, double dFrameCnt) {
 	double dRet;
 
@@ -162,8 +158,8 @@ double CVsdLogJs::AccessLog(const std::string& strKey, double dFrameCnt) {
 		m_pVsd->m_VsdLog &&
 		!_isnan(dRet = m_pVsd->m_VsdLog->Get(strKey.c_str(),
 			m_pVsd->m_VsdLog->GetIndex(dFrameCnt,
-				&m_pVsd->m_piParamT[PARAM_LSt],
 				&m_pVsd->m_piParamT[PARAM_VSt],
+				&m_pVsd->m_piParamT[PARAM_LSt],
 				m_pVsd->m_VsdLog->m_iLogNum)))
 	) {
 		return dRet;
@@ -173,8 +169,8 @@ double CVsdLogJs::AccessLog(const std::string& strKey, double dFrameCnt) {
 		m_pVsd->m_GPSLog &&
 		!_isnan(dRet = m_pVsd->m_GPSLog->Get(strKey.c_str(),
 			m_pVsd->m_GPSLog->GetIndex(dFrameCnt,
-				&m_pVsd->m_piParamT[PARAM_GSt],
 				&m_pVsd->m_piParamT[PARAM_VSt],
+				&m_pVsd->m_piParamT[PARAM_GSt],
 				m_pVsd->m_GPSLog->m_iLogNum)))
 		) {
 		return dRet;
