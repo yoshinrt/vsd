@@ -16,7 +16,7 @@
 #include "CVsdLogJs.h"
 
 #ifdef AVS_PLUGIN
-	#include "external/avisynth.h"
+	#include "avisynth.h"
 #else
 	#include "external/filter.h"
 #endif
@@ -637,7 +637,8 @@ class CVsdFilter
 	);
 	
 	PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env);
-	
+	int __stdcall SetCacheHints(int cachehints, int frame_range);
+
 	/////////////
 	
 	int GetIndex(int x, int y){return m_iBytesPerLine * y + x * 2;}

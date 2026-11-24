@@ -11,6 +11,8 @@
 #include "CVsdFilter.h"
 #include "rev_num.h"
 
+const AVS_Linkage* AVS_linkage = nullptr;
+
 /****************************************************************************/
 
 enum {
@@ -42,7 +44,7 @@ CVsdFilter::CVsdFilter(
 	
 	const char *p;
 	
-	if(!vi.IsYUY2()) env->ThrowError(PROG_NAME ": requires YUY2 input.");
+   if(!GenericVideoFilter::vi.IsYUY2()) env->ThrowError(PROG_NAME ": requires YUY2 input.");
 	
 	// パラメータ初期化
 	m_piParamT	= new int[TRACK_N];
@@ -267,6 +269,10 @@ PVideoFrame __stdcall CVsdFilter::GetFrame(int n, IScriptEnvironment* env){
 	return m_SrcFrame;
 }
 
+int __stdcall CVsdFilter::SetCacheHints(int cachehints, int frame_range){
+	if(cachehints == CACHE_GET_MTMODE) return MT_SERIALIZED;
+	return 0;
+}
 AVSValue __cdecl Create_VSDFilter(AVSValue args, void* user_data, IScriptEnvironment* env){
 	return g_pVsd = new CVsdFilter(
 		args[0].AsClip(),
@@ -275,7 +281,11 @@ AVSValue __cdecl Create_VSDFilter(AVSValue args, void* user_data, IScriptEnviron
 	);
 }
 
-extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit2(IScriptEnvironment* env){
+extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit3(
+	IScriptEnvironment* env,
+	const AVS_Linkage* const vectors
+){
+	AVS_linkage = vectors;
 	
 	env->AddFunction("VSDFilter",
 		"c"

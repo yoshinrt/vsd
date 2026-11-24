@@ -7,3 +7,6 @@
 [submodule "vsd_filter/quickjs"]
 	path = vsd_filter/quickjs
 	url = https://github.com/quickjs-ng/quickjs.git
+[submodule "vsd_filter/AviSynthPlus"]
+	path = vsd_filter/AviSynthPlus
+	url = https://github.com/AviSynth/AviSynthPlus.git
