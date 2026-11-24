@@ -442,12 +442,6 @@ void CVsdFilter::DrawSyncInfo(int x, int y, CVsdFont &Font, UINT uAlign){
 	}
 }
 
-/*** エラーメッセージ *******************************************************/
-
-void CVsdFilter::DispErrorMessage(LPCWSTR szMsg){
-	Print(szMsg);
-}
-
 /*** フレームをマーク *******************************************************/
 
 void CVsdFilter::SetFrameMark(int iFrame){

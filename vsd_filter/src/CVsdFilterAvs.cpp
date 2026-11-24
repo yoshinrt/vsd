@@ -228,12 +228,6 @@ void CVsdFilter::PutImage0C(
 	}
 }
 
-/*** エラーメッセージ *******************************************************/
-
-void CVsdFilter::DispErrorMessage(LPCWSTR szMsg){
-	Print(szMsg);
-}
-
 /*** フレームをマーク *******************************************************/
 
 void CVsdFilter::SetFrameMark(int iFrame){

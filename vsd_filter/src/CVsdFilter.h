@@ -28,8 +28,9 @@
 #define PROG_NAME_J_W	WIDEN(PROG_NAME_J)
 #define PROG_NAME_LONG	"`VSDFilter' vehicle data logger overlay plugin"
 
-#define G_CX_CNT		30
-#define POS_DEFAULT		0x80000000
+#define DEFAULT_SKIN	"standard_r.js"
+#define PLUGIN_DIR		"vsd_plugins"
+#define LOG_READER_DIR	"_log_reader"
 
 #define VideoSt			m_piParamT[PARAM_VSt]
 #define VideoEd			m_piParamT[PARAM_VEd]
@@ -37,10 +38,6 @@
 #define VsdEd			m_piParamT[PARAM_LEd]
 #define GPSSt			m_piParamT[PARAM_GSt]
 #define GPSEd			m_piParamT[PARAM_GEd]
-#define DEFAULT_SKIN	"standard_r.js"
-
-#define PLUGIN_DIR		"vsd_plugins"
-#define LOG_READER_DIR	"_log_reader"
 
 // パラメータを変換
 #define GetLogIndex(frame, to, prev) \
@@ -416,7 +413,7 @@ class CVsdFilter
 		return m_LapLog ? m_LapLog->m_Lap[m_LapLog->m_iLapNum - 1].uLap : 0;
 	}
 	
-	void DispErrorMessage(LPCWSTR szMsg);
+	void DispErrorMessage(LPCWSTR szMsg){Print(szMsg);}
 	void DispErrorMessage(LPCSTR szMsg){DispErrorMessage(Utf8ToWide(szMsg).c_str());}
 
 	enum {
@@ -435,6 +432,8 @@ class CVsdFilter
 		IMG_LOADMAP		= 1 << 5,	// 地図用軌跡描画
 		LMS_VERTICAL	= 1 << 4,	// DrawLinearMeterScale 専用フラグ
 	};
+	
+	static constexpr int POS_DEFAULT = 0x80000000;
 	
 	// clip
 	int m_iClipX1, m_iClipY1, m_iClipX2, m_iClipY2;
