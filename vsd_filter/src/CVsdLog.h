@@ -156,19 +156,20 @@ public:
 	virtual void SetRaw(int iIndex, double dVal) = 0;
 	virtual void InitMinMax(void) = 0;
 	virtual int GetCnt(void) = 0;
-	virtual void Resize(int iCnt, double dVal) = 0;
+	virtual void Resize(size_t size, double dVal) = 0;
+	virtual void Reserve(size_t size) = 0;
 
 private:
 	CVsdLog *m_pParent;
 };
 
-template <class T, int Scale>
+template <class T, int Scale = 1>
 class CLogVariant : public CLog {
 	
   public:
-	CLogVariant(CVsdLog* pParent) : CLog(pParent) {
-		SetMax(m_Min);
-		SetMin(m_Max);
+	CLogVariant(CVsdLog* pParent, size_t size = 0) : CLog(pParent) {
+		InitMinMax();
+		if(size > 0) m_Log.reserve(size);
 	}
 	
 	// 値取得
@@ -214,9 +215,11 @@ class CLogVariant : public CLog {
 		SetMin(m_Max);
 	}
 	
-	void Resize(int iCnt, double dVal){
-		m_Log.resize(iCnt, Scaled(dVal));
+	void Resize(size_t size, double dVal){
+		m_Log.resize(size, Scaled(dVal));
 	}
+	
+	void Reserve(size_t size){m_Log.reserve(size);}
 	
   protected:
 	std::vector<T>	m_Log;
@@ -228,7 +231,7 @@ class CLogVariant : public CLog {
 	void SetMax(USHORT	&v){v = USHRT_MAX;}	void SetMin(USHORT	&v){v = 0;}
 	void SetMax(short	&v){v = SHRT_MAX;}	void SetMin(short	&v){v = SHRT_MIN;}
 	void SetMax(UINT	&v){v = UINT_MAX;}	void SetMin(UINT	&v){v = 0;}
-	void SetMax(int	&v){v = INT_MAX;}	void SetMin(int	&v){v = INT_MIN;}
+	void SetMax(int		&v){v = INT_MAX;}	void SetMin(int		&v){v = INT_MIN;}
 	void SetMax(float	&v){v = FLT_MAX;}	void SetMin(float	&v){v = -FLT_MAX;}
 	
 	// 内部形式変換
@@ -236,17 +239,17 @@ class CLogVariant : public CLog {
 	double UnScaled(T v){return (double)v / Scale;}
 };
 
-typedef CLogVariant<float,	1>		CLogFloat;
+typedef CLogVariant<float>			CLogFloat;
 typedef CLogVariant<short,	4096>	CLogShort4096;
 typedef CLogVariant<USHORT,	64>		CLogUShort64;
 typedef CLogVariant<USHORT,	128>	CLogUShort128;
-typedef CLogVariant<USHORT,	1>		CLogUShort;
+typedef CLogVariant<USHORT>			CLogUShort;
 typedef CLogVariant<UINT,	1024>	CLogUInt1024;
 
-class CLogInt : public CLogVariant<int, 1> {
+class CLogInt : public CLogVariant<int> {
   public:
 
-	CLogInt(CVsdLog* pParent) : CLogVariant<int, 1>(pParent) {}
+	CLogInt(CVsdLog* pParent, size_t size = 0) : CLogVariant<int>(pParent, size) {}
 	int GetIntRaw(int iIndex){return m_Log[iIndex];}
 	int GetInt(double dIndex){
 		double alfa = dIndex - (UINT)dIndex;
@@ -258,7 +261,7 @@ class CLogInt : public CLogVariant<int, 1> {
 
 class CLogFloatOffset : public CLogFloat {
   public:
-	CLogFloatOffset(CVsdLog* pParent) : CLogFloat(pParent) {
+	CLogFloatOffset(CVsdLog* pParent, size_t size = 0) : CLogFloat(pParent, size) {
 		m_dBaseVal	= 0;
 	}
 	
@@ -290,7 +293,7 @@ class CLogFloatOffset : public CLogFloat {
 
 class CLogDirection : public CLogUShort128 {
   public:
-	CLogDirection(CVsdLog* pParent) : CLogUShort128(pParent) {}
+	CLogDirection(CVsdLog* pParent, size_t size = 0) : CLogUShort128(pParent, size) {}
 	
 	double Get(double dIndex){
 		int nCnt = GetCnt();
@@ -317,7 +320,7 @@ class CLogDirection : public CLogUShort128 {
 class CVsdLog {
 	
   public:
-	int GetCnt(void){return m_iCnt;}
+	int GetCnt(void){return m_pLogTime->GetCnt();}
 	
 	/////////////////////////
 	
@@ -367,9 +370,9 @@ class CVsdLog {
 		SetTime(iIndex, iTime);
 	}
 	
-	// key の存在確認
+	// element 生成
 	
-	CLog *GetElement(const std::string& strKey);
+	CLog *GenerateElement(const std::string& strKey, size_t size = 0);
 	
 	// レコードコピー
 	void CopyRecord(int iTo, int iFrom);
@@ -389,8 +392,6 @@ class CVsdLog {
 		if(itr == m_Logs.end()) return NaN;	// 要素なし
 		return itr->second->Get(dIndex);
 	}
-	
-	void Set(const std::string& strKey, int iIndex, double dVal);
 	
 	double GetMin(const std::string& strKey){
 		CLog	*pLog = GetLog(strKey);
@@ -413,43 +414,28 @@ class CVsdLog {
 	#define DEF_LOG(name) double name(double dIndex){return m_pLog##name->Get(dIndex);}
 	#include "def_log.h"
 	
-	#define DEF_LOG(name)	void Set##name(int iIndex, double dVal){\
-		m_pLog##name->Set(iIndex, dVal); \
-		if(m_iCnt <= iIndex) m_iCnt = iIndex + 1; \
-	}
+	#define DEF_LOG(name)	void Set##name(int iIndex, double dVal){m_pLog##name->Set(iIndex, dVal);}
 	#include "def_log.h"
 	
-	#define DEF_LOG(name)	void SetRaw##name(int iIndex, double dVal){\
-		m_pLog##name->SetRaw(iIndex, dVal); \
-		if(m_iCnt <= iIndex) m_iCnt = iIndex + 1; \
-	}
-	#include "def_log.h"
-	
-	#define DEF_LOG(name) double Max##name(void){return m_pLog##name->GetMax();}
-	#include "def_log.h"
-	#define DEF_LOG(name) double Min##name(void){return m_pLog##name->GetMin();}
-	#include "def_log.h"
-	#define DEF_LOG(name) void SetMaxMin##name(double dMax, double dMin){m_pLog##name->SetMaxMin(dMax, dMin);}
+	#define DEF_LOG(name)	void SetRaw##name(int iIndex, double dVal){m_pLog##name->SetRaw(iIndex, dVal);}
 	#include "def_log.h"
 	
 	double DateTime(void){
 		return (m_pLogTime->Get(m_dLogNum) + m_iLogStartTime);
 	}
 	
-	int GetTime(int    iIndex){return m_pLogTime->GetIntRaw(iIndex);}
-	int GetTime(double dIndex){return m_pLogTime->GetInt(dIndex);}
-	int GetTime(void){return m_pLogTime->GetInt(m_dLogNum);}
+	int GetTime(int    iIndex)	{return m_pLogTime->GetIntRaw(iIndex);}
+	int GetTime(double dIndex)	{return m_pLogTime->GetInt(dIndex);}
+	int GetTime(void)			{return m_pLogTime->GetInt(m_dLogNum);}
 	
 	double X0(int    iIndex){return m_pLogLongitude->GetDiff(iIndex) * m_dLong2Meter;}
 	double X0(double dIndex){return m_pLogLongitude->GetDiff(dIndex) * m_dLong2Meter;}
-	double Y0(int    iIndex){return m_pLogLatitude->GetDiff(iIndex) * m_dLati2Meter;}
-	double Y0(double dIndex){return m_pLogLatitude->GetDiff(dIndex) * m_dLati2Meter;}
+	double Y0(int    iIndex){return m_pLogLatitude ->GetDiff(iIndex) * m_dLati2Meter;}
+	double Y0(double dIndex){return m_pLogLatitude ->GetDiff(dIndex) * m_dLati2Meter;}
 	
   private:
 	std::vector<std::string> GetLogKeys(JSContext* ctx);
 
 	double m_dLong2Meter;
 	double m_dLati2Meter;
-	
-	int	m_iCnt;
 };

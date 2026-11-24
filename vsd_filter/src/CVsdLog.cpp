@@ -25,7 +25,6 @@ CVsdLog::CVsdLog(){
 	
 	m_dLong2Meter = 0;
 	m_dLati2Meter = 0;
-	m_iCnt		= 0;
 	
 	m_iCalibStart	=
 	m_iCalibStop	= -1;
@@ -129,9 +128,9 @@ void CVsdLog::Dump(const char *szFileName){
 }
 #endif
 
-/*** key の存在確認 *********************************************************/
+/*** key 生成 ***************************************************************/
 
-CLog *CVsdLog::GetElement(const std::string& strKey){
+CLog *CVsdLog::GenerateElement(const std::string& strKey, size_t size){
 	auto* pLog = GetLog(strKey);
 	if(pLog) return pLog;
 	
@@ -141,22 +140,15 @@ CLog *CVsdLog::GetElement(const std::string& strKey){
 	if(0);
 	#define DEF_LOG(name)	DEF_LOG_T(name, CLogFloat)
 	#define DEF_LOG_T(name, type)	\
-		else if(strKey == #name) { upLog = std::make_unique<type>(this); m_pLog##name = static_cast<type *>(upLog.get()); }
+		else if(strKey == #name) { upLog = std::make_unique<type>(this, size); m_pLog##name = static_cast<type *>(upLog.get()); }
 	#include "def_log.h"
 	else{
-		upLog = std::make_unique<CLogFloat>(this);
+		upLog = std::make_unique<CLogFloat>(this, size);
 	}
 	
 	CLog *pRaw = upLog.get();
 	m_Logs[strKey] = std::move(upLog);
 	return pRaw;
-}
-
-/*** ログの Set *************************************************************/
-
-void CVsdLog::Set(const std::string& strKey, int iIndex, double dVal){
-	GetElement(strKey)->Set(iIndex, dVal);
-	if(m_iCnt <= iIndex) m_iCnt = iIndex + 1;
 }
 
 /*** 1レコードコピー ********************************************************/
@@ -166,7 +158,6 @@ void CVsdLog::CopyRecord(int iTo, int iFrom){
 		CLog *pLog = it->second.get();
 		pLog->Set(iTo, pLog->GetRaw(iFrom));
 	}
-	if(m_iCnt <= iTo) m_iCnt = iTo + 1;
 }
 
 /*** 番犬追加 ***************************************************************/
@@ -191,15 +182,15 @@ UINT CVsdLog::GPSLogRescan(void){
 	if(m_pLogLongitude != nullptr && m_pLogLatitude != nullptr){
 		if(!m_pLogSpeed){
 			bCreateSpeed = TRUE;
-			GetElement("Speed");
+			GenerateElement("Speed");
 			m_pLogSpeed->Resize(GetCnt(), 0);
 		}
 
 		if(!m_pLogGx){
 			bCreateG = TRUE;
-			GetElement("Gx");
+			GenerateElement("Gx");
 			m_pLogGx->Resize(GetCnt(), 0);
-			GetElement("Gy");
+			GenerateElement("Gy");
 			m_pLogGy->Resize(GetCnt(), 0);
 		}
 
@@ -243,7 +234,7 @@ UINT CVsdLog::GPSLogRescan(void){
 			#pragma omp critical
 			{
 				//DebugMsgD("val=%f max=%f\n", dMaxSpeed, m_pLogSpeed->GetMax());
-				SetMaxMinSpeed(dMaxSpeed, 0);
+				m_pLogSpeed->SetMaxMin(dMaxSpeed, 0);
 			}
 		}
 		
@@ -349,8 +340,8 @@ UINT CVsdLog::GPSLogRescan(void){
 			
 			#pragma omp critical
 			{
-				SetMaxMinGx(dMaxGx, dMinGx);
-				SetMaxMinGy(dMaxGy, dMinGy);
+				m_pLogGx->SetMaxMin(dMaxGx, dMinGx);
+				m_pLogGy->SetMaxMin(dMaxGy, dMinGy);
 			}
 
 		}
@@ -544,14 +535,14 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, std::uniq
 					CArrays.push_back(nullptr);
 					goto Skip;	// LapTime は CVsdLog には積まない
 				}
-					
+				
 				// strKey で vector 作成
-				CArrays.push_back(GetElement(strKey));
-					
+				CArrays.push_back(GenerateElement(strKey));
+				
 				Skip:
 				// JS の property 名解決後の Array の vector を作る
 				JSArrays.push_back(std::move(JsArr));
-					
+				
 				++uIdx;
 			}
 			
@@ -566,7 +557,7 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, std::uniq
 				// Distance が無いときは，作る
 				if(uIdxDistance == ~0){
 					uIdxDistance = uIdx++;
-					CArrays.push_back(GetElement("Distance"));
+					CArrays.push_back(GenerateElement("Distance"));
 					bCreateDistance = TRUE;
 				}
 				
@@ -585,11 +576,17 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, std::uniq
 				// Direction が無いときは，作る
 				if(uIdxDirection == ~0){
 					uIdxDirection = uIdx++;
-					CArrays.push_back(GetElement("Direction"));
+					CArrays.push_back(GenerateElement("Direction"));
 					bCreateDirection = TRUE;
 				}
 			}
 			
+			// CArrays を reserve する
+			//   timeLen + 定数とはならない (停車時にレコードが挿入される)
+			//   ので +10% を確保しておく
+			UINT	timeLen = JsArrayLength(ctx, JSArrays[uIdxTime]);
+			for(auto pLog : CArrays) if(pLog) pLog->Reserve(timeLen + timeLen / 10);
+
 			// vector に積む
 			double	dDistance = 0;
 			int		iSameCnt = 0;
@@ -598,10 +595,9 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, std::uniq
 			int		iLogHzCnt	= 0;
 			
 			UINT	uLapCnt	= 1;
-			
 			UINT	uCalibrating = 0;
 			
-			for(UINT uIdx = 0; uIdx < JsArrayLength(ctx, JSArrays[uIdxTime]); ++uIdx){
+			for(UINT uIdx = 0; uIdx < timeLen; ++uIdx){
 				int iCnt = GetCnt();
 				int	iLapTime = -1;
 				
@@ -800,8 +796,8 @@ void CVsdLog::RotateMap(double dAngle){
 	
 	if(!m_pLogLongitude) return;
 	
-	GetElement("X");
-	GetElement("Y");
+	GenerateElement("X");
+	GenerateElement("Y");
 	
 	m_pLogX->InitMinMax();
 	m_pLogY->InitMinMax();

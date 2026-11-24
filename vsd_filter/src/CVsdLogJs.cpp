@@ -94,7 +94,7 @@ CVsdLogJs* CVsdLogJs::GetSelf(JSContext* ctx, JSValueConst valSelf) {
 }
 
 // getter 共通ロジック:
-//   magic == PROP_VAL: GetElement(prop)->Get(m_dLogNum)
+//   magic == PROP_VAL: GetLog(prop)->Get(m_dLogNum)
 //   magic == PROP_MAX: GetMax(prop)
 //   magic == PROP_MIN: GetMin(prop)
 JSValue CVsdLogJs::logPropGetter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic, JSValue* func_data) {

@@ -1097,7 +1097,7 @@ void CVsdFilter::DrawMap(
 				// Line の色用に G を求める
 				
 				double dG = m_CurLog->Gy(i);
-				int iAlfa = (int)(dG / (dG >= 0 ? m_CurLog->MaxGy() : m_CurLog->MinGy()) * 256);
+				int iAlfa = (int)(dG / (dG >= 0 ? m_CurLog->m_pLogGy->GetMax() : m_CurLog->m_pLogGy->GetMin()) * 256);
 				if(iAlfa < 0) iAlfa = 0;
 				else if(iAlfa > 256) iAlfa = 256;
 				
