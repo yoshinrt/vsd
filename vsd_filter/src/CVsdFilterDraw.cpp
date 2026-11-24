@@ -920,7 +920,7 @@ void CVsdFilter::DrawGraphSub(
 				yc
 			);
 			
-			swprintf(szBuf, sizeof(szBuf), szFormat, dVal);
+			swprintf(szBuf, sizeof(szBuf) / sizeof(*szBuf), szFormat, dVal);
 			DrawText(
 				x + 10,
 				iPosY - 10 - Font.GetHeight(),
@@ -1428,7 +1428,7 @@ void CVsdFilter::DrawLapTime(
 	
 	if(m_LapLog->m_iCurTime != TIME_NONE){
 		swprintf(
-			szBuf, sizeof(szBuf), L"Time%2d'%02d.%03d",
+			szBuf, sizeof(szBuf) / sizeof(*szBuf), L"Time%2d'%02d.%03d",
 			m_LapLog->m_iCurTime / 60000,
 			m_LapLog->m_iCurTime / 1000 % 60,
 			m_LapLog->m_iCurTime % 1000
@@ -1441,7 +1441,7 @@ void CVsdFilter::DrawLapTime(
 			if(m_LapLog->m_iDiffTime < 0) m_LapLog->m_iDiffTime = -m_LapLog->m_iDiffTime;
 			
 			swprintf(
-				szBuf, sizeof(szBuf), L"    %c%d'%02d.%03d",
+				szBuf, sizeof(szBuf) / sizeof(*szBuf), L"    %c%d'%02d.%03d",
 				bSign ? '-' : '+',
 				m_LapLog->m_iDiffTime / 60000,
 				m_LapLog->m_iDiffTime / 1000 % 60,
@@ -1464,7 +1464,7 @@ void CVsdFilter::DrawLapTime(
 		
 		// Best 表示
 		swprintf(
-			szBuf, sizeof(szBuf), L"Best%2d'%02d.%03d",
+			szBuf, sizeof(szBuf) / sizeof(*szBuf), L"Best%2d'%02d.%03d",
 			m_LapLog->m_iBestTime / 60000,
 			m_LapLog->m_iBestTime / 1000 % 60,
 			m_LapLog->m_iBestTime % 1000
@@ -1523,7 +1523,7 @@ void CVsdFilter::DrawLapTimeLog(
 	if(iLapIdxStart >= 0) for(; iLapIdxStart <= iLapIdxEnd; ++iLapIdxStart){
 		if(m_LapLog->m_Lap[iLapIdxStart].iTime != 0){
 			swprintf(
-				szBuf, sizeof(szBuf), L"%3d%3d'%02d.%03d",
+				szBuf, sizeof(szBuf) / sizeof(*szBuf), L"%3d%3d'%02d.%03d",
 				m_LapLog->m_Lap[iLapIdxStart].uLap,
 				m_LapLog->m_Lap[iLapIdxStart].iTime / 60000,
 				m_LapLog->m_Lap[iLapIdxStart].iTime / 1000 % 60,
@@ -1610,7 +1610,7 @@ void CVsdFilter::DrawRaceLapTime(
 		if(iCar < 0) break;
 		
 		// pos
-		swprintf(szBuf, sizeof(szBuf), L"%d", i + 1);
+		swprintf(szBuf, sizeof(szBuf) / sizeof(*szBuf), L"%d", i + 1);
 		DrawTextAlign(
 			x + RACELAP_POS_W * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
 			szBuf, Font, yc, ycOutline
@@ -1624,9 +1624,9 @@ void CVsdFilter::DrawRaceLapTime(
 		
 		// Lap#
 		if(pLap->m_iAllLapIdx[iCar] < (int)pLap->m_LapTable[iCar].size() - 1){
-			swprintf(szBuf, sizeof(szBuf), L"%d", pLap->m_iAllLapIdx[iCar] + 1);
+			swprintf(szBuf, sizeof(szBuf) / sizeof(*szBuf), L"%d", pLap->m_iAllLapIdx[iCar] + 1);
 		}else{
-			swprintf(szBuf, sizeof(szBuf), L"F%d", pLap->m_iAllLapIdx[iCar]);
+			swprintf(szBuf, sizeof(szBuf) / sizeof(*szBuf), L"F%d", pLap->m_iAllLapIdx[iCar]);
 		}
 		DrawTextAlign(
 			x + RACELAP_LAP_R * Font.GetWidth() - 1, y, ALIGN_TOP | ALIGN_RIGHT,
@@ -1645,7 +1645,7 @@ void CVsdFilter::DrawRaceLapTime(
 		if(i){
 			if(iLap >= 0){
 				int iGap = pLap->GetGap(iCar);
-				swprintf(szBuf, sizeof(szBuf), L"%d.%03d",
+				swprintf(szBuf, sizeof(szBuf) / sizeof(*szBuf), L"%d.%03d",
 					iGap / 1000, iGap % 1000
 				);
 			}
@@ -1713,7 +1713,7 @@ void CVsdFilter::DrawRoundMeterScaleSub(
 			
 			// メーターパネル目盛り数値
 			if(iDegRange != 360 || i != iMaxVal * iLine2Cnt / iStep){
-				swprintf(szBuf, sizeof(szBuf), L"%d", iStep * i / iLine2Cnt);
+				swprintf(szBuf, sizeof(szBuf) / sizeof(*szBuf), L"%d", iStep * i / iLine2Cnt);
 				DrawTextAlign(
 					(int)(cos(dAngle) * iRNum) + iCx,
 					(int)(sin(dAngle) * iRNum) + iCy,
@@ -1784,7 +1784,7 @@ void CVsdFilter::DrawLinearMeterScaleSub(
 				DrawLine(iX + iPos, iY, iX + iPos, iY + iLineLen1, ycLine1, iLineWidth1);
 			}
 			// メーターパネル目盛り数値
-			swprintf(szBuf, sizeof(szBuf), L"%d", iStep * i / iLine2Cnt);
+			swprintf(szBuf, sizeof(szBuf) / sizeof(*szBuf), L"%d", iStep * i / iLine2Cnt);
 			
 			if(uFlag & LMS_VERTICAL){
 				DrawTextAlign(iX + iNumPos, iY + iPos, uFlag, szBuf, Font, ycNum);
