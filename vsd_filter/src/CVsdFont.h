@@ -68,7 +68,7 @@ class CVsdFont {
 		if(!szMsg) return 0;
 		
 		if(m_uAttr & ATTR_FIXED){
-			return wcslen(szMsg) * GetWidth();
+			return (int)wcslen(szMsg) * GetWidth();
 		}
 		
 		int iWidth = 0;

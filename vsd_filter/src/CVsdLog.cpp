@@ -911,7 +911,7 @@ int CLapLogAll::LapChartRead(const char* szFileName) {
 
 	// ラップタイム表を時刻表に変換
 	for (int j = 0; j < (int)m_LapTable.size(); ++j) {
-		for (int i = m_LapTable[j].size() - 2; i >= 0; --i) {
+		for (int i = (int)m_LapTable[j].size() - 2; i >= 0; --i) {
 			m_LapTable[j][i] = m_LapTable[j][i + 1] - m_LapTable[j][i];
 		}
 	}
@@ -921,7 +921,7 @@ int CLapLogAll::LapChartRead(const char* szFileName) {
 	m_iAllGapInfo.resize(m_strName.size(), 0);
 	m_iPositionInfo.resize(m_strName.size(), -1);
 
-	return CamCarLap().size();
+	return (int)CamCarLap().size();
 }
 
 /*** 自車ラップデータ構築 ***************************************************/
@@ -977,7 +977,7 @@ void CLapLogAll::CalcLapInfo(int iFrameCnt, double dFPS){
 	if(m_iLapIdx < 0){
 		iFrameCnt = GetLapFrame(0);
 	}else if(m_iLapIdx >= (int)CamCarLap().size() - 1){
-		iFrameCnt = GetLapFrame(CamCarLap().size() - 1);
+		iFrameCnt = (int)GetLapFrame((int)CamCarLap().size() - 1);
 	}else{
 		//iFrameCnt = GetFrameCnt();
 	}

@@ -208,7 +208,7 @@ class CLogVariant : public CLog {
 		else while(GetCnt() <= iIndex) m_Log.push_back(Scaled(dVal));
 	}
 	
-	int GetCnt(void){return m_Log.size();}
+	int GetCnt(void){return (int)m_Log.size();}
 	
 	void InitMinMax(void){
 		SetMax(m_Min);

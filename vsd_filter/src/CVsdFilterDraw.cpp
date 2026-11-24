@@ -584,7 +584,7 @@ enum {
 void CVsdFilter::DrawPolygon(const std::vector<double>& pixs, CPixelArg yc, UINT uFlag){
 	
 	if(!(uFlag & IMG_FILL)){
-		int uCnt = pixs.size();
+		int uCnt = (int)pixs.size();
 		
 		for(int i = 0; i < uCnt; i = i + 2){
 			DrawLine1(
@@ -604,7 +604,7 @@ void CVsdFilter::DrawPolygon(const std::vector<double>& pixs, CPixelArg yc, UINT
 		VecEdge& EdgeList : 生成する辺リスト
 	*/
 	
-	UINT uEdgeCnt = pixs.size() / 2; // 頂点の個数
+	UINT uEdgeCnt = (UINT)pixs.size() / 2; // 頂点の個数
 	if(uEdgeCnt < 3) return;
 	
 	std::unique_ptr<Edge[]> EdgeList = std::make_unique<Edge[]>(uEdgeCnt);
@@ -1262,7 +1262,7 @@ void CVsdFilter::DrawMapPosition(
 	// 遅い順に表示
 	int iSearchStartIdx = pLap->m_iSearchStartIdx;
 	
-	for(i = pLap->m_iAllGapInfo.size() - 1; i >= 0; --i){
+	for(i = (int)pLap->m_iAllGapInfo.size() - 1; i >= 0; --i){
 		double dIndex = m_CurLog->GetIndex(iMyTime - (pLap->m_iAllGapInfo[i] >> 8), iSearchStartIdx);
 		iSearchStartIdx = (int)dIndex;
 		if(i == 0) pLap->m_iSearchStartIdx = iSearchStartIdx;
@@ -1564,9 +1564,9 @@ void CVsdFilter::DrawRaceLapTime(
 	CLapLogAll *pLap = reinterpret_cast<CLapLogAll *>(m_LapLog.get());
 	
 	if(iNum == 0){
-		iNum = pLap->m_strName.size();
+		iNum = (int)pLap->m_strName.size();
 	}else if(iNum < 0){
-		iNum = (int)pLap->m_strName.size() < -iNum ? pLap->m_strName.size() : -iNum;
+		iNum = (int)pLap->m_strName.size() < -iNum ? (int)pLap->m_strName.size() : -iNum;
 	}
 	
 	// x, y 補正

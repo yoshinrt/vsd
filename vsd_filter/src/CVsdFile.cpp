@@ -94,7 +94,7 @@ std::string CVsdFile::ReadLine(void){
 
 			// 文字列長付きで String 変換
 			std::string ZipBuf(m_cBuf + m_uBufPtr, p - (m_cBuf + m_uBufPtr));
-			m_uBufPtr = (p - m_cBuf + 1);
+			m_uBufPtr = (UINT)(p - m_cBuf + 1);
 			return ZipBuf;
 		}
 	}
@@ -161,7 +161,7 @@ UCHAR *CVsdFile::ReadBin(int iSize){
 
 int CVsdFile::WriteBin(void *pBuf, int iSize){
 	if(m_fp) switch(m_uMode){
-		case MODE_NORMAL:		return fwrite(pBuf, 1, iSize, m_fp);
+		case MODE_NORMAL:		return (int)fwrite(pBuf, 1, iSize, m_fp);
 		case MODE_GZIP:			return gzread(m_gzfp, pBuf, iSize);
 		
 		case MODE_ZIP:
@@ -229,7 +229,7 @@ std::string CVsdFile::ZipNextFile(void){
 		}
 		
 		// '/' で終わっていたら dir なのでスキップ
-		int iLen = strlen(m_cBuf) - 1;
+		int iLen = (int)strlen(m_cBuf) - 1;
 		if(iLen >= 0 && m_cBuf[iLen] != '/') break;
 	}
 	

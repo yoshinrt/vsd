@@ -610,7 +610,7 @@ void CreateControlFileName(
 		"EDIT", szEdit, WS_CHILD | WS_VISIBLE | ES_READONLY,
 		iX + POS_FILE_CAPTION_SIZE, iY,
 		POS_FILE_NAME_SIZE, POS_FILE_HEIGHT,
-		hwnd, (HMENU)iID, hInst, nullptr
+		hwnd, (HMENU)(INT_PTR)iID, hInst, nullptr
 	);
 	SendMessage(hwndChild, WM_SETFONT, (WPARAM)hfont, 0);
 	
@@ -618,7 +618,7 @@ void CreateControlFileName(
 		"BUTTON", szButt, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		iX + POS_FILE_CAPTION_SIZE + POS_FILE_NAME_SIZE, iY,
 		POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT,
-		hwnd, (HMENU)(iID + 1), hInst, nullptr
+		hwnd, (HMENU)(INT_PTR)(iID + 1), hInst, nullptr
 	);
 	SendMessage(hwndChild, WM_SETFONT, (WPARAM)hfont, 0);
 	
@@ -646,7 +646,7 @@ void CreateControlSkinName(
 		"COMBOBOX", nullptr, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWN,
 		iX + POS_FILE_CAPTION_SIZE, iY,
 		POS_FILE_NAME_SIZE + POS_FILE_BUTT_SIZE, POS_FILE_HEIGHT * 10,
-		hwnd, (HMENU)iID, hInst, nullptr
+		hwnd, (HMENU)(INT_PTR)iID, hInst, nullptr
 	);
 	SendMessage(hwndChild, WM_SETFONT, (WPARAM)hfont, 0);
 	SendMessage(hwndChild, CB_SETCURSEL, 0, 0);
@@ -735,7 +735,7 @@ void ExtendDialog(HWND hwnd, HINSTANCE hInst){
 			"BUTTON", "set", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 			rectClient.right - POS_SET_BUTT_SIZE, 14 + (i + 2) * 24,
 			POS_SET_BUTT_SIZE, 16,
-			hwnd, (HMENU)(ID_BUTT_SET_VSt + i), hInst, nullptr
+			hwnd, (HMENU)(INT_PTR)(ID_BUTT_SET_VSt + i), hInst, nullptr
 		);
 		SendMessage(hwndChild, WM_SETFONT, (WPARAM)hfont, 0);
 	}
@@ -747,8 +747,8 @@ void ExtendDialog(HWND hwnd, HINSTANCE hInst){
 	CreateControlFileName(hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "車両ログ",	"",		"開く");
 	CreateControlFileName(hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "GPSログ",	"",		"開く");
 	
-	CreateButton("始", rectClient.right - (POS_FILE_BUTT_SIZE * 2), y, (HMENU)(i++));
-	CreateButton("終", rectClient.right - POS_FILE_BUTT_SIZE,         y, (HMENU)(i++));
+	CreateButton("始", rectClient.right - (POS_FILE_BUTT_SIZE * 2), y, (HMENU)(INT_PTR)(i++));
+	CreateButton("終", rectClient.right - POS_FILE_BUTT_SIZE,         y, (HMENU)(INT_PTR)(i++));
 	
 	rectClient.right -= POS_FILE_BUTT_SIZE * 2;
 	CreateControlFileName(hwnd, hInst, i, hfont, POS_FILE_CAPTION_POS, y, rectClient, "LAP表",	"",		"開く");
@@ -774,8 +774,8 @@ void ExtendDialog(HWND hwnd, HINSTANCE hInst){
 	);
 	SendMessage(hwndChild, WM_SETFONT, (WPARAM)hfont, 0);
 	
-	CreateButton("開く", rectClient.right - (POS_FILE_BUTT_SIZE * 2), y, (HMENU)(i++));
-	CreateButton("保存", rectClient.right - POS_FILE_BUTT_SIZE,         y, (HMENU)(i++));
+	CreateButton("開く", rectClient.right - (POS_FILE_BUTT_SIZE * 2), y, (HMENU)(INT_PTR)(i++));
+	CreateButton("保存", rectClient.right - POS_FILE_BUTT_SIZE,         y, (HMENU)(INT_PTR)(i++));
 }
 
 /*** OpenDialog 用フィルタ作成 **********************************************/
@@ -919,7 +919,7 @@ char *CVsdFilter::IsConfigParam(const char *szParamName, char *szBuf, int &iVal)
 	while(isspace(*szBuf)) ++szBuf;
 	
 	if(
-		strncmp(szBuf, szParamName, iLen = strlen(szParamName)) == 0 &&
+		strncmp(szBuf, szParamName, iLen = (int)strlen(szParamName)) == 0 &&
 		szBuf[iLen] == '='
 	){
 		iVal = atoi(szBuf + iLen + 1);
@@ -937,7 +937,7 @@ char *CVsdFilter::IsConfigParamStr(const char *szParamName, char *szBuf, std::st
 	while(isspace(*szBuf)) ++szBuf;
 	
 	if(
-		strncmp(szBuf, szParamName, iLen = strlen(szParamName)) == 0 &&
+		strncmp(szBuf, szParamName, iLen = (int)strlen(szParamName)) == 0 &&
 		szBuf[iLen] == '='
 	){
 		szBuf += iLen + 1;	// " を指しているはず
@@ -1321,7 +1321,7 @@ BOOL func_WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lparam,void *editp
 		  Case (CBN_SELCHANGE << 16) | ID_COMBO_SEL_SKIN:	// スキン選択
 			{
 				HWND hWndCombo = GetDlgItem(hwnd, ID_COMBO_SEL_SKIN);
-				int i = SendMessage(hWndCombo, CB_GETCURSEL, 0, 0);
+				int i = (int)SendMessage(hWndCombo, CB_GETCURSEL, 0, 0);
 				
 				// ファイルを開くが選択された?
 				if(SendMessage(hWndCombo, CB_GETCOUNT, 0, 0) - 1 == i){
