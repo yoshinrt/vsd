@@ -239,12 +239,13 @@ class CLogVariant : public CLog {
 	double UnScaled(T v){return (double)v / Scale;}
 };
 
-typedef CLogVariant<float>			CLogFloat;
-typedef CLogVariant<short,	4096>	CLogShort4096;
-typedef CLogVariant<USHORT,	64>		CLogUShort64;
-typedef CLogVariant<USHORT,	128>	CLogUShort128;
-typedef CLogVariant<USHORT>			CLogUShort;
-typedef CLogVariant<UINT,	1024>	CLogUInt1024;
+typedef CLogVariant<float>				CLogFloat;
+typedef CLogVariant<short,	4096>		CLogShort4096;
+typedef CLogVariant<USHORT,	64>			CLogUShort64;
+typedef CLogVariant<USHORT,	128>		CLogUShort128;
+typedef CLogVariant<USHORT>				CLogUShort;
+typedef CLogVariant<UINT,	1024>		CLogUInt1024;
+typedef CLogVariant<int,	1 << 23>	CLogIntQ23;
 
 class CLogInt : public CLogVariant<int> {
   public:
@@ -428,10 +429,10 @@ class CVsdLog {
 	int GetTime(double dIndex)	{return m_pLogTime->GetInt(dIndex);}
 	int GetTime(void)			{return m_pLogTime->GetInt(m_dLogNum);}
 	
-	double X0(int    iIndex){return m_pLogLongitude->GetDiff(iIndex) * m_dLong2Meter;}
-	double X0(double dIndex){return m_pLogLongitude->GetDiff(dIndex) * m_dLong2Meter;}
-	double Y0(int    iIndex){return m_pLogLatitude ->GetDiff(iIndex) * m_dLati2Meter;}
-	double Y0(double dIndex){return m_pLogLatitude ->GetDiff(dIndex) * m_dLati2Meter;}
+	double X0(int    iIndex){return (Longitude(iIndex) - Longitude(0)) * m_dLong2Meter;}
+	double X0(double dIndex){return (Longitude(dIndex) - Longitude(0)) * m_dLong2Meter;}
+	double Y0(int    iIndex){return (Latitude (iIndex) - Latitude (0)) * m_dLati2Meter;}
+	double Y0(double dIndex){return (Latitude (dIndex) - Latitude (0)) * m_dLati2Meter;}
 	
   private:
 	std::vector<std::string> GetLogKeys(JSContext* ctx);

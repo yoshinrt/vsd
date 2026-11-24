@@ -566,9 +566,7 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, std::uniq
 				double	dLati0;
 				
 				dLong0 = JsArrayGetNumber(ctx, JSArrays[uIdxLong], 0);
-				m_pLogLongitude->SetBaseVal(dLong0);
 				dLati0 = JsArrayGetNumber(ctx, JSArrays[uIdxLati], 0);
-				m_pLogLatitude->SetBaseVal(dLati0);
 				
 				m_dLong2Meter =  GPSLogGetLength(dLong0, dLati0, dLong0 + 1.0 / 3600, dLati0) * 3600;
 				m_dLati2Meter = -GPSLogGetLength(dLong0, dLati0, dLong0, dLati0 + 1.0 / 3600) * 3600;
