@@ -207,7 +207,7 @@ UINT CVsdImage::Load(LPCWSTR szFileName, UINT uFlag){
 				m_iStatus != IMG_STATUS_DESTROYED
 			);
 			
-	        IStream* pIStream;
+			IStream* pIStream;
 			if(
 				m_iStatus != IMG_STATUS_DESTROYED &&
 				CreateStreamOnHGlobal(hBuffer, FALSE, &pIStream) == S_OK

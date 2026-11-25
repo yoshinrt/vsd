@@ -353,7 +353,7 @@ UINT CVsdLog::GPSLogRescan(void){
 				if(Speed(i) < KPH_STOP) SetDirection(i, Direction(i - 1));
 			}
 		}
-  	}
+	}
 	
 	return GetCnt();
 }
