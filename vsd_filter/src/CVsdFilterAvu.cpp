@@ -197,6 +197,8 @@ const char *CVsdFilter::m_szShadowParamName[] = {
 
 /*** コンストラクタ／デストラクタ *******************************************/
 
+CVsdFilter* g_pVsd;
+
 CVsdFilter::CVsdFilter(FILTER *filter, void *editp) :
 	filter(filter), editp(editp)
 {
@@ -780,7 +782,7 @@ BOOL CVsdFilter::CreateFilter(void) {
 
 	{
 		// JavaScript オブジェクト初期化
-		CScript Script;
+		CScript Script(this);
 		if (Script.InitLogReader() != ERR_OK) {
 			return FALSE;
 		}

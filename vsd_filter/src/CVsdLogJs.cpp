@@ -10,8 +10,7 @@
 #include "CVsdFilter.h"
 #include "CVsdLogJs.h"
 
-CVsdLogJs::CVsdLogJs(){
-	m_pVsd = g_pVsd;
+CVsdLogJs::CVsdLogJs(CVsdFilter* pVsd) : m_pVsd(pVsd){
 	
 	// VSD / GPS log を VSD 優先で登録
 	if(m_pVsd->m_VsdLog) for (const auto& [key, log] : m_pVsd->m_VsdLog->m_Logs) {

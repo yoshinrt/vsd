@@ -12,7 +12,7 @@
 class CVsdFilter;
 class CVsdLogJs {
 public:
-	CVsdLogJs();
+	CVsdLogJs(CVsdFilter *pVsd);
 
 private:
 	enum {

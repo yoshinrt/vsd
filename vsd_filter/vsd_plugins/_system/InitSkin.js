@@ -5,8 +5,6 @@ std.loadScript( "_user_config.js" );
 
 //****************************************************************************
 
-const Vsd = new __VSD_System__();
-
 const DRAW_FILL			= 1 << 0;
 const DRAW_NOCLOSE		= 1 << 1;
 const FONT_BOLD			= 1 << 0;

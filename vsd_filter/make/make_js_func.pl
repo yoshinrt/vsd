@@ -22,17 +22,15 @@ print fpOut << "-----";
 #include "CVsdFile.h"
 #include "CVsdFont.h"
 
-class __VSD_System__ {};
-
 void CScript::RegisterJsClass(){
 -----
 
 ### CVsdFilter ###############################################################
 
 MakeJsIF({
-	Class		=> '__VSD_System__',
-	self		=> 'g_pVsd',
-	file		=> 'CVsdFilter',
+	Class		=> 'CVsdFilter',
+	JsClass		=> '__VSD_System__',
+	noDefaultConstructor	=> 1,
 });
 
 ### CVsdImage ################################################################
@@ -70,7 +68,7 @@ sub MakeJsIF {
 -----
 	
 	$param->{bGlobal}		= $param->{Class} eq 'CScript' ? 1 : 0;
-	$param->{self}			= 'self' if(!defined($param->{self}));
+	$param->{noDefaultConstructor}	= 0 if(!defined($param->{noDefaultConstructor}));
 	
 	if(!defined($param->{JsClass})){
 		$param->{JsClass}	= $param->{Class};
@@ -83,8 +81,6 @@ sub MakeJsIF {
 	$ind1 = "\t$ind0";
 	$ind2 = "\t$ind1";
 	$ind3 = "\t$ind2";
-	
-	$hasConstructor = 0;
 	
 	print(fpOut << "-----");
 	
@@ -248,7 +244,7 @@ sub MakeJsIF {
 		.method("$FuncName", [](JSContext* ctx, $param->{Class}* self, int argc, JSValueConst* argv) -> JSValue {
 			if(!($Len)) JsErrorNumOfArg();
 			$Defs
-			${PreRet}$param->{self}->$FuncName($Args)${PostRet}
+			${PreRet}self->$FuncName($Args)${PostRet}
 		})
 -----
 			
@@ -268,7 +264,6 @@ sub MakeJsIF {
 			$func = '' if(!defined $func);
 			
 			if(
-				$param->{self} eq 'self' &&
 				$type =~ /int|UINT|double|std::string/ &&
 				$func
 			){
@@ -276,12 +271,12 @@ sub MakeJsIF {
 				print(fpOut "${ind1}.property(\"$JSvar\", \&$param->{Class}::$var)\n");
 			}else{
 				# ラムダでリード
-				print(fpOut "${ind1}.property(\"$JSvar\", [](const $param->{Class}* self){return $param->{self}->$var$func;})\n");
+				print(fpOut "${ind1}.property(\"$JSvar\", [](const $param->{Class}* self){return self->$var$func;})\n");
 			}
 		}
 		
 		elsif(/!(js_constructor|js_bind)\b/){
-			$hasConstructor = $1 eq 'js_constructor';
+			$param->{noDefaultConstructor} = 1 if($1 eq 'js_constructor');
 			
 			while(<fpIn>){
 				last if(m#\*/#);
@@ -293,7 +288,7 @@ sub MakeJsIF {
 	close(fpIn);
 	
 	if($param->{JsClass} ne 'global'){
-		print(fpOut "${ind1}.constructor<>()\n") if(!$hasConstructor);
+		print(fpOut "${ind1}.constructor<>()\n") if(!$param->{noDefaultConstructor});
 		print(fpOut "${ind1}.endClass();\n")
 	}
 }

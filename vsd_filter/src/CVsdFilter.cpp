@@ -27,7 +27,6 @@ const int CVsdFilter::m_iPrivateBuild = 1;
 
 void CVsdFilter::Constructor(void){
 	DebugMsgD("this = %08X\n", this);
-	g_pVsd = this;
 
 	m_bCalcLapTimeReq	= TRUE;
 	
@@ -68,7 +67,7 @@ void CVsdFilter::Destructor(void){
 /*** ログリード ************************************************************/
 
 int CVsdFilter::ReadLog(std::unique_ptr<CVsdLog> &pLog, const char *szFileName, const char *szReaderFunc){
-	pLog = std::make_unique<CVsdLog>();
+	pLog = std::make_unique<CVsdLog>(this);
 	
 	std::unique_ptr<CLapLog> pLapLog;
 	
@@ -320,7 +319,7 @@ int CVsdFilter::LapChartRead(const char *szFileName){
 		return 0;
 	}
 	
-	auto pLapLog = std::make_unique<CLapLogAll>();
+	auto pLapLog = std::make_unique<CLapLogAll>(this);
 	int iRet = pLapLog->LapChartRead(szFileName);
 	if(iRet == 0){
 		return 0;

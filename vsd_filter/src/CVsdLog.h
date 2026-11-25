@@ -18,6 +18,8 @@
 #define TIME_STOP_MARGIN	300		// 停車とみなす Log に付加する Log の時間差分
 #define KPH_STOP			4		// TIME_STOP を満たした時，停車とみなす速度
 
+class CVsdFilter;
+
 /*** Lap Time ***************************************************************/
 
 enum {
@@ -80,7 +82,7 @@ class CLapLog {
 
 class CLapLogAll : public CLapLog {
   public:
-	CLapLogAll(){
+	CLapLogAll(CVsdFilter* pVsd) : m_pVsd(pVsd){
 		m_iStartFrame	= 0;
 		m_iEndFrame		= INT_MAX;
 		m_iCamCarIdx	= 0;
@@ -130,6 +132,9 @@ class CLapLogAll : public CLapLog {
 	int	m_iCamCarIdx;
 	int	m_iPrevFrame;
 	int m_iSearchStartIdx;
+
+private:
+	CVsdFilter* m_pVsd;
 };
 
 /*** ログ 1項目 *************************************************************/
@@ -339,7 +344,7 @@ class CVsdLog {
 	std::map<std::string, std::unique_ptr<CLog>> m_Logs;
 	
 	// コンストラクタ・デストラクタ
-	CVsdLog();
+	CVsdLog(CVsdFilter *pVsd);
 	~CVsdLog();
 	
 	UINT GPSLogRescan();
@@ -436,7 +441,8 @@ class CVsdLog {
 	
   private:
 	std::vector<std::string> GetLogKeys(JSContext* ctx);
-
+	CVsdFilter *m_pVsd;
+	
 	double m_dLong2Meter;
 	double m_dLati2Meter;
 };

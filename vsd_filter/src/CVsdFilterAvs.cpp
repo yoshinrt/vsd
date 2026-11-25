@@ -268,7 +268,7 @@ int __stdcall CVsdFilter::SetCacheHints(int cachehints, int frame_range){
 	return 0;
 }
 AVSValue __cdecl Create_VSDFilter(AVSValue args, void* user_data, IScriptEnvironment* env){
-	return g_pVsd = new CVsdFilter(
+	return new CVsdFilter(
 		args[0].AsClip(),
 		args,
 		env

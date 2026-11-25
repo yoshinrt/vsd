@@ -161,9 +161,9 @@ class CVsdFilter
 	);
 	
 	/* !js_bind
-		.method("DrawArc", [](JSContext* ctx, __VSD_System__* self, int argc, JSValueConst* argv) -> JSValue {
+		.method("DrawArc", [](JSContext* ctx, CVsdFilter* self, int argc, JSValueConst* argv) -> JSValue {
 			if(argc == 9){
-				g_pVsd->DrawArc(
+				self->DrawArc(
 					qjsb::from_js<int>(ctx, argv[0]),
 					qjsb::from_js<int>(ctx, argv[1]),
 					qjsb::from_js<int>(ctx, argv[2]),
@@ -175,7 +175,7 @@ class CVsdFilter
 					CPixel(qjsb::from_js<int>(ctx, argv[8]))
 				);
 			}else if(7 <= argc && argc <= 8){
-				g_pVsd->DrawArc(
+				self->DrawArc(
 					qjsb::from_js<int>(ctx, argv[0]),
 					qjsb::from_js<int>(ctx, argv[1]),
 					qjsb::from_js<int>(ctx, argv[2]),
@@ -247,10 +247,10 @@ class CVsdFilter
 		UINT uFlag
 	);
 	/* !js_bind
-		.method("DrawPolygon", [](JSContext* ctx, __VSD_System__* self, int argc, JSValueConst* argv) -> JSValue {
+		.method("DrawPolygon", [](JSContext* ctx, CVsdFilter* self, int argc, JSValueConst* argv) -> JSValue {
 			if(!(2 <= argc && argc <= 3)) JsErrorNumOfArg();
 			
-			g_pVsd->DrawPolygon(
+			self->DrawPolygon(
 				qjsb::from_js<std::vector<double> >(ctx, argv[0]),
 				CPixel(qjsb::from_js<int>(ctx, argv[1])),
 				argc <= 2 ? 0 : qjsb::from_js<UINT>(ctx, argv[2])
@@ -314,9 +314,9 @@ class CVsdFilter
 	
 	/* !js_bind
 		// 引数 8個の方は argv[4] は無視してそれ以外を渡す
-		.method("DrawMap", [](JSContext* ctx, __VSD_System__* self, int argc, JSValueConst* argv) -> JSValue {
+		.method("DrawMap", [](JSContext* ctx, CVsdFilter* self, int argc, JSValueConst* argv) -> JSValue {
 			if(argc == 8){
-				g_pVsd->DrawMap(
+				self->DrawMap(
 					qjsb::from_js<int>(ctx, argv[0]),
 					qjsb::from_js<int>(ctx, argv[1]),
 					qjsb::from_js<int>(ctx, argv[2]),
@@ -326,7 +326,7 @@ class CVsdFilter
 					CPixel(qjsb::from_js<int>(ctx, argv[7]))
 				);
 			}else if(11 <= argc && argc <= 12){
-				g_pVsd->DrawMap(
+				self->DrawMap(
 					qjsb::from_js<int>(ctx, argv[0]),
 					qjsb::from_js<int>(ctx, argv[1]),
 					qjsb::from_js<int>(ctx, argv[2]),
@@ -725,5 +725,3 @@ class CVsdFilter
 	INT64	m_iVideoStartTime;
 #endif
 };
-
-inline CVsdFilter* g_pVsd;

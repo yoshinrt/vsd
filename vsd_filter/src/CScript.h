@@ -25,9 +25,11 @@
 
 inline qjsb::Runtime g_JsRuntime;
 
+class CVsdFilter;
+
 class CScript {
   public:
-	CScript();
+	CScript(CVsdFilter* pVsd = nullptr);
 	~CScript(void);
 	
 	void RegisterJsClass();
@@ -107,7 +109,8 @@ class CScript {
 	static LPCSTR m_szErrorMsgID[];
 	std::string m_ErrorMsg;
 	bool m_bInitialized = false;
-
+	
+	CVsdFilter *m_pVsd;
 	qjsb::Context m_JsContext = qjsb::Context(g_JsRuntime);
 
 	qjsb::Value CallRaw(

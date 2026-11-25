@@ -19,7 +19,7 @@ LPCSTR CScript::m_szErrorMsgID[] = {
 
 /*** コンストラクタ *********************************************************/
 
-CScript::CScript(){
+CScript::CScript(CVsdFilter *pVsd) : m_pVsd(pVsd) {
 	DebugMsgD(":CScript::CScript():%X\n", GetCurrentThreadId());
 	m_uError		= ERR_OK;
 }
@@ -71,7 +71,12 @@ UINT CScript::Initialize(){
 	js_init_module_os(m_JsContext.get(), "os");
 
 	RegisterJsClass();
-
+	
+	// Vsd 公開
+	if (m_pVsd != nullptr) {
+		m_JsContext.setGlobal("Vsd", qjsb::pushBorrowed(m_JsContext, static_cast<const CVsdFilter*>(m_pVsd)));
+	}
+	
 	return RunScript(R"(
 		import * as std from "std";
 		import * as os from "os";
@@ -83,7 +88,7 @@ UINT CScript::Initialize(){
 /*** スクリプトファイルの実行 ***********************************************/
 
 UINT CScript::RunFile(LPCSTR szFileName){
-	CPushDir push_dir(g_pVsd->m_szPluginDirA.c_str());
+	CPushDir push_dir(m_pVsd->m_szPluginDirA.c_str());
 	
 	m_ErrorMsg.clear();
 
@@ -186,7 +191,7 @@ UINT CScript::InitLogReader(void){
 		if (RunFile("_system/InitLogReader.js") != ERR_OK) break;
 
 		// スクリプトロード
-		std::string path(g_pVsd->m_szPluginDirA);
+		std::string path(m_pVsd->m_szPluginDirA);
 		path += LOG_READER_DIR;
 		
 		if (!ListTree(path, "*", LogReaderCallback, this)) {
@@ -202,7 +207,7 @@ UINT CScript::InitLogReader(void){
 	} while (0);
 
 	if(m_uError != ERR_OK) {
-		g_pVsd->DispErrorMessage(GetErrorMessage());
+		m_pVsd->DispErrorMessage(GetErrorMessage());
 	}
 	return m_uError;
 }

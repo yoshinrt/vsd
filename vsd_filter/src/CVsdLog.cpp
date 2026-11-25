@@ -18,7 +18,7 @@
 
 /*** コンストラクタ *********************************************************/
 
-CVsdLog::CVsdLog(){
+CVsdLog::CVsdLog(CVsdFilter *pVsd) : m_pVsd(pVsd){
 	m_dFreq	= LOG_FREQ;
 	
 	m_iLogStartTime	= -1;
@@ -476,7 +476,7 @@ int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, std::uniq
 		Script.Call<void>("ReadLog", AnsiToUtf8(szFileName), std::string(szReaderFunc ? szReaderFunc : ""));
 		
 		if(Script.m_uError != ERR_OK){
-			g_pVsd->DispErrorMessage(Script.GetErrorMessage());
+			m_pVsd->DispErrorMessage(Script.GetErrorMessage());
 			return 0;
 		}
 		
@@ -822,7 +822,7 @@ int CLapLogAll::LapChartRead(const char* szFileName) {
 		}
 
 		if (Script.m_uError != ERR_OK) {
-			g_pVsd->DispErrorMessage(Script.GetErrorMessage());
+			m_pVsd->DispErrorMessage(Script.GetErrorMessage());
 			return 0;
 		}
 
