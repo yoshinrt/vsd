@@ -467,7 +467,7 @@ static double JsArrayGetNumber(JSContext* ctx, const qjsb::Value& arr, uint32_t 
 int CVsdLog::ReadLog(const char *szFileName, const char *szReaderFunc, std::unique_ptr<CLapLog> &pLapLog){
 	{
 		// JavaScript オブジェクト初期化
-		CScript Script;
+		CScript Script(m_pVsd, true);
 		if(Script.InitLogReader() != ERR_OK){
 			return 0;
 		}
@@ -814,7 +814,7 @@ int CLapLogAll::LapChartRead(const char* szFileName) {
 
 	{
 		// JavaScript オブジェクト初期化
-		CScript Script;
+		CScript Script(m_pVsd, true);
 
 		if (Script.RunFile("_system/InitLapChartReader.js") == ERR_OK) {
 			// スクリプト実行

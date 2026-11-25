@@ -596,6 +596,7 @@ class CVsdFilter
 	
 	BOOL	m_bConsoleOn;
 	
+	qjsb::Runtime m_JsRuntime;
 	std::unique_ptr<CScript> m_Script;
 	
   protected:

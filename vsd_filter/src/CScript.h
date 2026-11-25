@@ -23,13 +23,11 @@
 
 /****************************************************************************/
 
-inline qjsb::Runtime g_JsRuntime;
-
 class CVsdFilter;
 
 class CScript {
   public:
-	CScript(CVsdFilter* pVsd = nullptr);
+	CScript(CVsdFilter* pVsd, bool bNoVsdObject = false);
 	~CScript(void);
 	
 	void RegisterJsClass();
@@ -111,7 +109,10 @@ class CScript {
 	bool m_bInitialized = false;
 	
 	CVsdFilter *m_pVsd;
-	qjsb::Context m_JsContext = qjsb::Context(g_JsRuntime);
+	JSRuntime* m_pRuntime;
+	qjsb::Context m_JsContext;
+
+	bool m_bNoVsdObject = false;
 
 	qjsb::Value CallRaw(
 		const char* name,

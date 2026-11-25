@@ -19,7 +19,11 @@ LPCSTR CScript::m_szErrorMsgID[] = {
 
 /*** コンストラクタ *********************************************************/
 
-CScript::CScript(CVsdFilter *pVsd) : m_pVsd(pVsd) {
+CScript::CScript(CVsdFilter *pVsd, bool bNoVsdObject) :
+	m_pVsd(pVsd),
+	m_pRuntime(pVsd->m_JsRuntime.get()),
+	m_JsContext(pVsd->m_JsRuntime.get()),
+	m_bNoVsdObject(bNoVsdObject) {
 	DebugMsgD(":CScript::CScript():%X\n", GetCurrentThreadId());
 	m_uError		= ERR_OK;
 }
@@ -66,15 +70,15 @@ UINT CScript::Initialize(){
 	m_bInitialized = true;
 	
 	// グローバルオブジェクトの生成
-	js_std_init_handlers(g_JsRuntime.get());
+	js_std_init_handlers(m_pRuntime);
 	js_init_module_std(m_JsContext.get(), "std");
 	js_init_module_os(m_JsContext.get(), "os");
 
 	RegisterJsClass();
 	
 	// Vsd 公開
-	if (m_pVsd != nullptr) {
-		m_JsContext.setGlobal("Vsd", qjsb::pushBorrowed(m_JsContext, static_cast<const CVsdFilter*>(m_pVsd)));
+	if (!m_bNoVsdObject) {
+		m_JsContext.setGlobal("Vsd", qjsb::pushBorrowed(m_JsContext, m_pVsd));
 	}
 	
 	return RunScript(R"(
