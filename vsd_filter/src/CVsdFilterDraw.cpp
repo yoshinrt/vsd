@@ -13,7 +13,6 @@
 
 #define SPRINTF_BUF		128
 
-#define GScale			(m_piParamS[SHADOW_G_SCALE] * (1 / 1000.0))
 #define GPSPriority		m_piParamC[CHECK_GPS_PRIO]
 #define ToInt(d)		((int)((d) + 0.5))
 
