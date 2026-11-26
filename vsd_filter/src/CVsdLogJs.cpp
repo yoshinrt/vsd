@@ -17,7 +17,7 @@ CVsdLogJs::CVsdLogJs(CVsdFilter* pVsd) : m_pVsd(pVsd){
 		m_Logs[key] = log.get();
 	}
 
-	if(m_pVsd->m_GPSLog) for (const auto& [key, log] : m_pVsd->m_GPSLog->m_Logs) {
+	if(m_pVsd->m_GpsLog) for (const auto& [key, log] : m_pVsd->m_GpsLog->m_Logs) {
 		if(!m_Logs.contains(key)) m_Logs[key] = log.get();
 	}
 
@@ -157,20 +157,20 @@ double CVsdLogJs::AccessLog(const std::string& strKey, double dFrameCnt) {
 		m_pVsd->m_VsdLog &&
 		!_isnan(dRet = m_pVsd->m_VsdLog->Get(strKey.c_str(),
 			m_pVsd->m_VsdLog->GetIndex(dFrameCnt,
-				&m_pVsd->m_piParamT[PARAM_VSt],
-				&m_pVsd->m_piParamT[PARAM_LSt],
+				&m_pVsd->m_Param.m_iVideoStart,
+				&m_pVsd->m_Param.m_iVsdStart,
 				m_pVsd->m_VsdLog->m_iLogNum)))
 	) {
 		return dRet;
 	}
 
 	if (
-		m_pVsd->m_GPSLog &&
-		!_isnan(dRet = m_pVsd->m_GPSLog->Get(strKey.c_str(),
-			m_pVsd->m_GPSLog->GetIndex(dFrameCnt,
-				&m_pVsd->m_piParamT[PARAM_VSt],
-				&m_pVsd->m_piParamT[PARAM_GSt],
-				m_pVsd->m_GPSLog->m_iLogNum)))
+		m_pVsd->m_GpsLog &&
+		!_isnan(dRet = m_pVsd->m_GpsLog->Get(strKey.c_str(),
+			m_pVsd->m_GpsLog->GetIndex(dFrameCnt,
+				&m_pVsd->m_Param.m_iVideoStart,
+				&m_pVsd->m_Param.m_iGpsStart,
+				m_pVsd->m_GpsLog->m_iLogNum)))
 		) {
 		return dRet;
 	}

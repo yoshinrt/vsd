@@ -13,7 +13,6 @@
 
 #define SPRINTF_BUF		128
 
-#define GPSPriority		m_piParamC[CHECK_GPS_PRIO]
 #define ToInt(d)		((int)((d) + 0.5))
 
 #define DEFAULT_FONT	"ＭＳ ゴシック"
@@ -858,8 +857,8 @@ void CVsdFilter::DrawGraphSingle(
 	// key から log を探す
 	if(m_VsdLog && (pData = m_VsdLog->GetLog(strKey))){
 		pLog = m_VsdLog.get();
-	}else if(m_GPSLog && (pData = m_GPSLog->GetLog(strKey))){
-		pLog = m_GPSLog.get();
+	}else if(m_GpsLog && (pData = m_GpsLog->GetLog(strKey))){
+		pLog = m_GpsLog.get();
 	}else{
 		// 有効な Log がないので帰る
 		return;
@@ -942,11 +941,11 @@ void CVsdFilter::DrawSyncGraph(int x1, int y1, int x2, int y2, CVsdFont& Font){
 		);
 	}
 	
-	if(m_GPSLog && (pLog = m_GPSLog->m_pLogSpeed)){
+	if(m_GpsLog && (pLog = m_GpsLog->m_pLogSpeed)){
 		DrawGraphSub(
 			x1, y1, x2, y2,
 			L"%.0f km/h", Font, color_cyan,
-			*m_GPSLog,
+			*m_GpsLog,
 			*pLog
 		);
 	}
@@ -1127,7 +1126,7 @@ void CVsdFilter::DrawMap(
 	
 	// スタートライン表示
 	if((uFlag & DRAW_MAP_START) && m_LapLog && m_LapLog->m_iLapMode == LAPMODE_GPS){
-		double dAngle = m_piParamT[TRACK_MapAngle] * (-ToRAD / 10);
+		double dAngle = m_Param.m_iMapAngle * (-ToRAD / 10);
 		
 		int xs1 = x1 + (int)((cos(dAngle) * m_dStartLineX1 + sin(dAngle) * m_dStartLineY1 - dMapOffsX) * dScale);
 		int ys1 = y1 + (int)((-sin(dAngle) * m_dStartLineX1 + cos(dAngle) * m_dStartLineY1 - dMapOffsY) * dScale);
@@ -1827,9 +1826,9 @@ BOOL CVsdFilter::DrawVSD(void){
 		m_VsdLog->m_dLogNum = GetLogIndex(GetFrameCnt(), Vsd, m_VsdLog->m_iLogNum);
 		m_VsdLog->m_iLogNum = (int)m_VsdLog->m_dLogNum;
 	}
-	if(m_GPSLog){
-		m_GPSLog->m_dLogNum = GetLogIndex(GetFrameCnt(), GPS, m_GPSLog->m_iLogNum);
-		m_GPSLog->m_iLogNum = (int)m_GPSLog->m_dLogNum;
+	if(m_GpsLog){
+		m_GpsLog->m_dLogNum = GetLogIndex(GetFrameCnt(), Gps, m_GpsLog->m_iLogNum);
+		m_GpsLog->m_iLogNum = (int)m_GpsLog->m_dLogNum;
 	}
 	
 	// ラップタイムの再生成
@@ -1839,21 +1838,21 @@ BOOL CVsdFilter::DrawVSD(void){
 		if(m_LapLog && m_LapLog->m_iLapMode == LAPMODE_CHART){
 			// ラップチャートからラップ情報構築
 			reinterpret_cast<CLapLogAll *>(m_LapLog.get())->MakeCamLapData(
-				m_piParamS[SHADOW_LAP_CHART_St],
-				m_piParamS[SHADOW_LAP_CHART_Ed]
+				m_Param.m_iLapChartStart,
+				m_Param.m_iLapChartEnd
 			);
 		}else if(m_LapLog == nullptr || m_LapLog->m_iLapMode != LAPMODE_MAGNET){
 			m_LapLog.reset();
 			
 			// GPS からラップタイム計算してみる
-			if(m_GPSLog && m_piParamT[TRACK_SLineWidth] > 0){
+			if(m_GpsLog && m_Param.m_iStartWidth > 0){
 				m_LapLog = CreateLapTimeAuto();
 			}
 			
 			// できなかったので手動で
 			if(!m_LapLog){
 				m_LapLog = CreateLapTimeHand(
-					m_GPSLog ? LAPSRC_GPS :
+					m_GpsLog ? LAPSRC_GPS :
 							   LAPSRC_VIDEO
 				);
 			}
@@ -1870,12 +1869,12 @@ BOOL CVsdFilter::DrawVSD(void){
 	
 	// スクリプト実行
 	DebugMsgD(":DrawVSD():Running script... %X\n", GetCurrentThreadId());
-	if(!m_Script && !m_szSkinFile.empty()){
+	if(!m_Script && !m_Param.m_strSkinFile.empty()){
 		m_Script = std::make_unique<CScript>(this);
 		m_LogJs = std::make_unique<CVsdLogJs>(this);
 
 		if(m_Script->RunFile("_system/InitSkin.js") == ERR_OK){
-			m_Script->RunFile(m_szSkinFile.c_str());
+			m_Script->RunFile(m_Param.m_strSkinFile.c_str());
 			
 			if(m_Script->m_uError == ERR_OK){
 				m_Script->Call<void>("Initialize");

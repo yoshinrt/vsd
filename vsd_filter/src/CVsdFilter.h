@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "CVsdParam.h"
 #include "CVsdLog.h"
 #include "CVsdFont.h"
 #include "CScript.h"
@@ -32,47 +33,20 @@
 #define PLUGIN_DIR		"vsd_plugins"
 #define LOG_READER_DIR	"_log_reader"
 
-#define VideoSt			m_piParamT[PARAM_VSt]
-#define VideoEd			m_piParamT[PARAM_VEd]
-#define VsdSt			m_piParamT[PARAM_LSt]
-#define VsdEd			m_piParamT[PARAM_LEd]
-#define GPSSt			m_piParamT[PARAM_GSt]
-#define GPSEd			m_piParamT[PARAM_GEd]
-
 // パラメータを変換
 #define GetLogIndex(frame, to, prev) \
-	m_##to##Log->GetIndex(frame, &VideoSt, &to##St, prev)
+	m_##to##Log->GetIndex(frame, &m_Param.m_iVideoStart, &m_Param.m_i##to##Start, prev)
 
 // VSD log を優先，ただしチェックボックスでオーバーライドできる
-#define SelectLogVsd (m_CurLog = (GPSPriority && m_GPSLog || !m_VsdLog) ? m_GPSLog.get() : m_VsdLog.get())
+#define SelectLogVsd (m_CurLog = (m_Param.m_bPreferGps && m_GpsLog || !m_VsdLog) ? m_GpsLog.get() : m_VsdLog.get())
 
 // GPS log を優先
-#define SelectLogGPS (m_CurLog = m_GPSLog ? m_GPSLog.get() : m_VsdLog.get())
+#define SelectLogGPS (m_CurLog = m_GpsLog ? m_GpsLog.get() : m_VsdLog.get())
 
 // Laptime 計算用
 #define SelectLogForLapTime	(m_CurLog = \
 	m_LapLog && m_LapLog->m_iLapSrc == LAPSRC_VSD \
-	? m_VsdLog.get() : m_GPSLog.get())
-
-/*** track / check ID *******************************************************/
-
-enum {
-	#define DEF_TRACKBAR(id, init, min, max, name, conf_name)	id,
-	#include "def_trackbar.h"
-	TRACK_N
-};
-
-enum {
-	#define DEF_CHECKBOX(id, init, name, conf_name)	id,
-	#include "def_checkbox.h"
-	CHECK_N
-};
-
-enum {
-	#define DEF_SHADOW(id, init, conf_name)	id,
-	#include "def_shadow.h"
-	SHADOW_N
-};
+	? m_VsdLog.get() : m_GpsLog.get())
 
 /*** new type ***************************************************************/
 
@@ -494,16 +468,10 @@ class CVsdFilter
 	
 	// ダイアログ設定リード
 	
-	int LineTrace(void){return m_piParamT[TRACK_LineTrace];}	// !js_var:Config_map_length
-	int DispLap(void){return m_piParamC[CHECK_LAP];}			// !js_var:Config_lap_time
-	int DispGraph(void){return m_piParamC[CHECK_GRAPH];}		// !js_var:Config_graph
+	int LineTrace(void){return m_Param.m_iMapLength;}	// !js_var:Config_map_length
+	int DispLap(void){return m_Param.m_bShowLapTime;}	// !js_var:Config_lap_time
+	int DispGraph(void){return m_Param.m_bShowGraph;}	// !js_var:Config_graph
 	
-	std::string	m_szLogFile;
-	std::string	m_szLogFileReader;
-	std::string	m_szGPSLogFile;
-	std::string	m_szGPSLogFileReader;
-	std::string	m_szLapChart;
-	std::string	m_szSkinFile;
 	std::string	m_szSkinDirA;
 	std::string	m_SkinDirU;	// !js_const:SkinDir
 	std::string	m_szPluginDirA;
@@ -524,14 +492,14 @@ class CVsdFilter
 	int LapChartRead(const char *szFileName);
 	
 	// スキン dir 取得
-	std::string &SetSkinFile(const std::string& szSkinFile){
+	std::string &SetSkinFileDir(const std::string& szSkinFile){
 		if(szSkinFile.empty()){
 			m_SkinDirU = "";
 			m_szSkinDirA.clear();
 			return m_szSkinDirA;
 		}
 		
-		m_szSkinFile = szSkinFile;
+		m_Param.m_strSkinFile = szSkinFile;
 		
 		// スキンファイル名を CWD=m_szPluginDirA とみなしフルパスに変換
 		auto skinPath = StrTokFile(szSkinFile, STF_FULL | STF_PATH2, m_szPluginDirA);
@@ -553,15 +521,13 @@ class CVsdFilter
 		return m_szPluginDirA;
 	}
 	
-	int		*m_piParamT;
-	int		*m_piParamC;
-	int		*m_piParamS;
+	CVsdParam m_Param;
 	
 	// フォント
 	std::unique_ptr<CVsdFont> m_pFont;
 	
 	std::unique_ptr<CVsdLog> m_VsdLog;
-	std::unique_ptr<CVsdLog> m_GPSLog;
+	std::unique_ptr<CVsdLog> m_GpsLog;
 	CVsdLog *m_CurLog;
 	std::unique_ptr<CLapLog> m_LapLog;
 	
@@ -573,13 +539,13 @@ class CVsdFilter
 	
 	#define DEF_LOG(name) double Get##name(void){\
 		if(m_VsdLog && m_VsdLog->m_pLog##name) return m_VsdLog->name(); \
-		return m_GPSLog->name(); \
+		return m_GpsLog->name(); \
 	}
 	#include "def_log.h"
 	
 	double DateTime(){	// !js_var:DateTime
 		if     (m_VsdLog) return m_VsdLog->DateTime();
-		else if(m_GPSLog) return m_GPSLog->DateTime();
+		else if(m_GpsLog) return m_GpsLog->DateTime();
 		return NaN;
 	}
 	
@@ -651,7 +617,7 @@ class CVsdFilter
 	int	GetFrameMax(void)	{return vi.num_frames;}	// !js_var:MaxFrameCnt
 	int	GetFrameCnt(void)	{return m_iFrameCnt;}	// !js_var:FrameCnt
 	double GetFPS(void)	{return (double)vi.fps_numerator / vi.fps_denominator;} // !js_var:FramePerSecond
-	int IsSaving(void)	{return m_piParamS[SHADOW_SAVING];}	// !js_var:IsSaving
+	int IsSaving(void)	{return m_Param.m_bSaving;}	// !js_var:IsSaving
 	
 	// パラメータ
 	int	m_iFrameCnt, m_iFrameMax;
@@ -675,12 +641,14 @@ class CVsdFilter
 	CVsdFilter(FILTER *filter, void *editp);
 	
 	int GetIndex(int x, int y){return fpip->max_w * y + x;}
-	BOOL ConfigSave(const char *szFileName);
+	
+	bool ConfigSave(const char *szFileName);
+	bool ConfigLoad(const char *szFileName);
+	
 	BOOL ReadVsdLog(HWND hwnd);
 	BOOL ReadGPSLog(HWND hwnd);
 	char *IsConfigParamStr(const char *szParamName, char *szBuf, std::string &szDst);
 	char *IsConfigParam(const char *szParamName, char *szBuf, int &iVal);
-	BOOL ConfigLoad(const char *szFileName);
 	void SetSkinName(const char *szSkinFile, HWND hwnd);
 
 	// ログリーダ用

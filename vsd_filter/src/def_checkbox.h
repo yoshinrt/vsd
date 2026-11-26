@@ -1,16 +1,11 @@
-﻿#ifndef DEF_CHECKBOX_N
-	#define DEF_CHECKBOX_N DEF_CHECKBOX
-#endif
+﻿#define DEF_PARAM_CHK(name, type, var, init, caption)	DEF_CHECKBOX(name, init, caption)
+#include "def_param.h"
 
 //			enum name
 //				|				チェックボックスの初期値 (値は0か1)
 //				|				|	チェックボックスの名前
 //				|				|	|						config 名
-//				|				|	|						|
-DEF_CHECKBOX(	CHECK_LAP,		1,	"ラップタイム表示",		"lap_time"	)
-DEF_CHECKBOX(	CHECK_GRAPH,	0,	"グラフ表示",			"graph"		)
-DEF_CHECKBOX_N(	CHECK_GPS_PRIO,	0,	"GPSログ優先",			nullptr		)
-DEF_CHECKBOX_N(	CHECK_LOGPOS,	1,	"半自動同期",			nullptr		)
+//				|				|	|
+DEF_CHECKBOX(	auto_sync,		1,	"半自動同期"	)
 
 #undef DEF_CHECKBOX
-#undef DEF_CHECKBOX_N

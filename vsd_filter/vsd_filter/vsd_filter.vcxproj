@@ -151,12 +151,12 @@
     <ClInclude Include="..\src\CVsdImage.h" />
     <ClInclude Include="..\src\CVsdLog.h" />
     <ClInclude Include="..\src\CVsdLogJs.h" />
+    <ClInclude Include="..\src\CVsdParam.h" />
     <ClInclude Include="..\src\dds_lib\dds.h" />
     <ClInclude Include="..\src\def_checkbox.h" />
     <ClInclude Include="..\src\def_error.h" />
     <ClInclude Include="..\src\def_log.h" />
-    <ClInclude Include="..\src\def_shadow.h" />
-    <ClInclude Include="..\src\def_str_param.h" />
+    <ClInclude Include="..\src\def_param.h" />
     <ClInclude Include="..\src\def_trackbar.h" />
     <ClInclude Include="..\src\error_code.h" />
     <ClInclude Include="..\src\rev_num.h" />
@@ -173,6 +173,7 @@
     <ClCompile Include="..\src\CVsdImage.cpp" />
     <ClCompile Include="..\src\CVsdLog.cpp" />
     <ClCompile Include="..\src\CVsdLogJs.cpp" />
+    <ClCompile Include="..\src\CVsdParam.cpp" />
     <ClCompile Include="..\src\ScriptIF.cpp" />
     <ClCompile Include="..\src\util.cpp" />
     <ClCompile Include="..\src\StdAfx.cpp">

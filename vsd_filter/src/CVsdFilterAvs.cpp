@@ -17,16 +17,13 @@ const AVS_Linkage* AVS_linkage = nullptr;
 
 enum {
 	ARGID_CLIP,
-	#define DEF_STR_PARAM(id, var, init, conf_name)			ARGID_ ## id,
-	#include "def_str_param.h"
-	#define DEF_TRACKBAR(id, init, min, max, name, conf_name)	ARGID_ ## id,
-	#define DEF_TRACKBAR_N(id, init, min, max, name, conf_name)
-	#include "def_trackbar.h"
-	#define DEF_CHECKBOX(id, init, name, conf_name)			ARGID_ ## id,
-	#define DEF_CHECKBOX_N(id, init, name, conf_name)
-	#include "def_checkbox.h"
-	#define DEF_SHADOW(id, init, conf_name)					ARGID_ ## id,
-	#include "def_shadow.h"
+	
+	#define DEF_PARAM_STR(name, type, var, init, ...)	ARGID_##name,
+	#define DEF_PARAM_TRK	DEF_PARAM_STR
+	#define DEF_PARAM_CHK	DEF_PARAM_STR
+	#define DEF_PARAM_SDW	DEF_PARAM_STR
+	#include "def_param.h"
+	
 	ARGID_MARK,
 	ARGID_NUM
 };
@@ -44,66 +41,48 @@ CVsdFilter::CVsdFilter(
 	
 	const char *p;
 	
-   if(!GenericVideoFilter::vi.IsYUY2()) env->ThrowError(PROG_NAME ": requires YUY2 input.");
+	if(!GenericVideoFilter::vi.IsYUY2()) env->ThrowError(PROG_NAME ": requires YUY2 input.");
 	
 	// パラメータ初期化
-	m_piParamT	= new int[TRACK_N];
-	m_piParamC	= new int[CHECK_N];
-	m_piParamS	= new int[SHADOW_N];
 	m_iMarkCnt	= 0;
-	
 	m_env = nullptr;
 	
-	// パラメータ初期値
-	#define DEF_TRACKBAR(id, init, min, max, name, conf_name)	m_piParamT[id] = init;
-	#include "def_trackbar.h"
-	
-	#define DEF_CHECKBOX(id, init, name, conf_name)	m_piParamC[id] = init;
-	#include "def_checkbox.h"
-	
-	#define DEF_SHADOW(id, init, conf_name)	m_piParamS[id] = init;
-	#include "def_shadow.h"
-	
 	// 引数指定により初期化
-	#define DEF_TRACKBAR(id, init, min, max, name, conf_name) \
-		if(args[ARGID_ ## id].Defined()) m_piParamT[id] = args[ARGID_ ## id].AsInt();
-	#define DEF_TRACKBAR_N(id, init, min, max, name, conf_name)
-	#include "def_trackbar.h"
-	
-	#define DEF_CHECKBOX(id, init, name, conf_name) \
-		if(args[ARGID_ ## id].Defined()) m_piParamC[id] = args[ARGID_ ## id].AsInt();
-	#define DEF_CHECKBOX_N(id, init, name, conf_name)
-	#include "def_checkbox.h"
-	
-	#define DEF_SHADOW(id, init, conf_name) \
-		if(args[ARGID_ ## id].Defined()) m_piParamS[id] = args[ARGID_ ## id].AsInt();
-	#include "def_shadow.h"
+	#define DEF_PARAM_STR(name, type, var, init, ...)	if(args[ARGID_ ## name].Defined()) m_Param.var = args[ARGID_ ## name].AsString("");
+	#define DEF_PARAM_TRK(name, type, var, init, ...)	if(args[ARGID_ ## name].Defined()) m_Param.var = args[ARGID_ ## name].AsInt();
+	#define DEF_PARAM_CHK	DEF_PARAM_TRK
+	#define DEF_PARAM_SDW	DEF_PARAM_TRK
+	#include "def_param.h"
 	
 	// mark= 引数処理
-	if(p = args[ARGID_MARK].AsString(nullptr)) ParseMarkStr(p);
+	if (p = args[ARGID_MARK].AsString("")) ParseMarkStr(p);
 	
 	// ラップチャート
-	if(p = args[ARGID_STRPARAM_LAPCHART].AsString(nullptr)){
-		if(!LapChartRead(p)) env->ThrowError(PROG_NAME ": read lap chart \"%s\" failed.", p);
+	if(!m_Param.m_strLapChart.empty()){
+		if(!LapChartRead(m_Param.m_strLapChart.c_str())){
+			env->ThrowError(PROG_NAME ": read lap chart \"%s\" failed.", m_Param.m_strLapChart.c_str());
+		}
 	}
 	
 	// ログリード
-	if(p = args[ARGID_STRPARAM_LOGFILE].AsString(nullptr)){
-		const char *szReader = args[ARGID_STRPARAM_LOGFILE_READER].AsString(nullptr);
-		if(!ReadLog(m_VsdLog, p, szReader)) env->ThrowError(PROG_NAME ": read log \"%s\" failed.", p);
+	if(!m_Param.m_strLogFile.empty()){
+		if(!ReadLog(m_VsdLog, m_Param.m_strLogFile.c_str(), m_Param.m_strLogFileReader.c_str())){
+			env->ThrowError(PROG_NAME ": read log \"%s\" failed.", m_Param.m_strLogFile.c_str());
+		}
 	}
 	
 	// GPS ログリード
-	if(p = args[ARGID_STRPARAM_GPSFILE].AsString(nullptr)){
-			const char *szReader = args[ARGID_STRPARAM_GPSFILE_READER].AsString(nullptr);
-		if(!ReadLog(m_GPSLog, p, szReader)) env->ThrowError(PROG_NAME ": read GPS log \"%s\" failed.", p);
+	if (!m_Param.m_strGPSLogFile.empty()) {
+		if (!ReadLog(m_GpsLog, m_Param.m_strGPSLogFile.c_str(), m_Param.m_strGPSLogFileReader.c_str())) {
+			env->ThrowError(PROG_NAME ": read GPS log \"%s\" failed.", m_Param.m_strGPSLogFile.c_str());
+		}
 	}
-	
+
 	// スキンロード
-	if(p = args[ARGID_STRPARAM_SKINFILE].AsString(nullptr)){
-		SetSkinFile(p);
+	if(!m_Param.m_strSkinFile.empty()){
+		SetSkinFileDir(m_Param.m_strSkinFile.c_str());
 	}else{
-		SetSkinFile(DEFAULT_SKIN);
+		SetSkinFileDir(DEFAULT_SKIN);
 	}
 }
 
@@ -283,16 +262,11 @@ extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit3(
 	
 	env->AddFunction("VSDFilter",
 		"c"
-		#define DEF_STR_PARAM(id, var, init, conf_name)			"[" conf_name "]s"
-		#include "def_str_param.h"
-		#define DEF_TRACKBAR(id, init, min, max, name, conf_name)	"[" conf_name "]i"
-		#define DEF_TRACKBAR_N(id, init, min, max, name, conf_name)
-		#include "def_trackbar.h"
-		#define DEF_CHECKBOX(id, init, name, conf_name)			"[" conf_name "]i"
-		#define DEF_CHECKBOX_N(id, init, name, conf_name)
-		#include "def_checkbox.h"
-		#define DEF_SHADOW(id, init, conf_name)					"[" conf_name "]i"
-		#include "def_shadow.h"
+		#define DEF_PARAM_STR(name, type, var, init, ...)	"[" #name "]s"
+		#define DEF_PARAM_TRK(name, type, var, init, ...)	"[" #name "]i"
+		#define DEF_PARAM_CHK	DEF_PARAM_TRK
+		#define DEF_PARAM_SDW	DEF_PARAM_TRK
+		#include "def_param.h"
 		"[mark]s",
 		Create_VSDFilter, 0
 	);

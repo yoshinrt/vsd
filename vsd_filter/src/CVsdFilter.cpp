@@ -14,7 +14,7 @@
 
 /*** macros *****************************************************************/
 
-#define SLineWidth		(m_piParamT[TRACK_SLineWidth] / 10.0)
+#define SLineWidth		(m_Param.m_iStartWidth / 10.0)
 
 /*** static member **********************************************************/
 
@@ -32,15 +32,12 @@ void CVsdFilter::Constructor(void){
 	
 	m_bConsoleOn		= FALSE;
 	
-	// str param に初期値設定
-	#define DEF_STR_PARAM(id, var, init, conf_name) var = (init == nullptr ? "" : init);
-	#include "def_str_param.h"
-	
 	// plugin dll path 取得
 	SetPluginDir();
 	
 	// SkinDir セット
-	SetSkinFile(m_szSkinFile);
+	SetSkinFileDir(m_Param.m_strSkinFile);
+	m_Param.m_strSkinFile = DEFAULT_SKIN;
 	
 	m_Script	= nullptr;
 	
@@ -74,7 +71,7 @@ int CVsdFilter::ReadLog(std::unique_ptr<CVsdLog> &pLog, const char *szFileName, 
 	int iRet = pLog->ReadLog(szFileName, szReaderFunc, pLapLog);
 	if(iRet){
 		if(pLog->m_pLogLongitude)
-			pLog->RotateMap(m_piParamT[TRACK_MapAngle] * (-ToRAD / 10));
+			pLog->RotateMap(m_Param.m_iMapAngle * (-ToRAD / 10));
 	}else{
 		pLog.reset();
 	}
@@ -129,23 +126,23 @@ double CVsdFilter::LapNum2LogNum(CVsdLog* Log, int iLapNum){
 		// ラップ番号(VSD)→GPS ログ番号に変換
 		return Log->GetIndex(
 			m_VsdLog->GetTime(m_LapLog->m_Lap[iLapNum].fLogNum) * SLIDER_TIME,
-			&VsdSt, &GPSSt
+			&m_Param.m_iVsdStart, &m_Param.m_iGpsStart
 		);
 	}else if(m_LapLog->m_iLapSrc == LAPSRC_GPS){
 		// fLogNum は GPS ログ番号
-		if(Log == m_GPSLog.get()) return m_LapLog->m_Lap[iLapNum].fLogNum;
+		if(Log == m_GpsLog.get()) return m_LapLog->m_Lap[iLapNum].fLogNum;
 		
 		// ラップ番号(GPS)→VSD ログ番号に変換
 		return Log->GetIndex(
 			Log->GetTime(m_LapLog->m_Lap[iLapNum].fLogNum) * SLIDER_TIME,
-			&GPSSt, &VsdSt
+			&m_Param.m_iGpsStart, &m_Param.m_iVsdStart
 		);
 	}
 	
 	// fLogNum はビデオフレーム番号
 	return Log->GetIndex(
 		m_LapLog->m_Lap[iLapNum].fLogNum,
-		&VideoSt, Log == m_VsdLog.get() ? &VsdSt : &GPSSt
+		&m_Param.m_iVideoStart, Log == m_VsdLog.get() ? &m_Param.m_iVsdStart : &m_Param.m_iGpsStart
 	);
 }
 
@@ -165,8 +162,8 @@ std::unique_ptr<CLapLog> CVsdFilter::CreateLapTimeHand(int iLapSrc){
 	while((iFrame = GetFrameMark(iFrame)) >= 0){
 		
 		if(pLapLog->m_iLapSrc == LAPSRC_GPS){
-			dLogNum	= GetLogIndex(iFrame, GPS, -1);
-			iTime	= m_GPSLog->GetTime(dLogNum);
+			dLogNum	= GetLogIndex(iFrame, Gps, -1);
+			iTime	= m_GpsLog->GetTime(dLogNum);
 			LapTime.fLogNum	= (float)dLogNum;
 		}else{
 			// LAPSRC_VIDEO
@@ -174,7 +171,7 @@ std::unique_ptr<CLapLog> CVsdFilter::CreateLapTimeHand(int iLapSrc){
 			LapTime.fLogNum	= (float)iFrame;
 		}
 		
-		if(m_piParamT[TRACK_SLineWidth] < 0){
+		if(m_Param.m_iStartWidth < 0){
 			// ジムカーナモード
 			LapTime.uLap	= (pLapLog->m_iLapNum / 2) + 1;
 			LapTime.iTime	= (pLapLog->m_iLapNum & 1) ? iTime - iPrevTime : 0;
@@ -210,29 +207,29 @@ std::unique_ptr<CLapLog> CVsdFilter::CreateLapTimeAuto(void){
 	
 	/*** スタートラインの位置を取得 ***/
 	// iFrame に対応する GPS ログ番号取得
-	double dLogNum = GetLogIndex(iFrame, GPS, -1);
+	double dLogNum = GetLogIndex(iFrame, Gps, -1);
 	
 	int iLogNum = (int)dLogNum;
 	
 	// iLogNum ～ iLogNum + 1 の方位を算出
 	
 	double dAngle = atan2(
-		(m_GPSLog->Y0(iLogNum + 1) - m_GPSLog->Y0(iLogNum)),
-		(m_GPSLog->X0(iLogNum + 1) - m_GPSLog->X0(iLogNum))
+		(m_GpsLog->Y0(iLogNum + 1) - m_GpsLog->Y0(iLogNum)),
+		(m_GpsLog->X0(iLogNum + 1) - m_GpsLog->X0(iLogNum))
 	);
 	
 	#define x1 m_dStartLineX1
 	#define y1 m_dStartLineY1
 	#define x2 m_dStartLineX2
 	#define y2 m_dStartLineY2
-	#define x3 m_GPSLog->X0(i)
-	#define y3 m_GPSLog->Y0(i)
-	#define x4 m_GPSLog->X0(i + 1)
-	#define y4 m_GPSLog->Y0(i + 1)
+	#define x3 m_GpsLog->X0(i)
+	#define y3 m_GpsLog->Y0(i)
+	#define x4 m_GpsLog->X0(i + 1)
+	#define y4 m_GpsLog->Y0(i + 1)
 	
 	// 仮想光電管の位置を求める
-	x2 = m_GPSLog->X0(dLogNum);	// スタート地点
-	y2 = m_GPSLog->Y0(dLogNum);
+	x2 = m_GpsLog->X0(dLogNum);	// スタート地点
+	y2 = m_GpsLog->Y0(dLogNum);
 	
 	x1 = x2 + cos(dAngle + 90 * ToRAD) * SLineWidth / 2;
 	y1 = y2 + sin(dAngle + 90 * ToRAD) * SLineWidth / 2;
@@ -248,7 +245,7 @@ std::unique_ptr<CLapLog> CVsdFilter::CreateLapTimeAuto(void){
 	int iTime, iPrevTime = 0;
 	int	iLapNum = 0;
 	
-	for(int i = 1; i < m_GPSLog->GetCnt() - 1; ++i){
+	for(int i = 1; i < m_GpsLog->GetCnt() - 1; ++i){
 		
 		/*** 交差判定，交点判定 ***/
 		double s1, s2, s3, s4;
@@ -265,8 +262,8 @@ std::unique_ptr<CLapLog> CVsdFilter::CreateLapTimeAuto(void){
 		
 		// 進行方向の判定，dAngle ±45度
 		double dAngle2 = dAngle - atan2(
-			(m_GPSLog->Y0(i + 1) - m_GPSLog->Y0(i)),
-			(m_GPSLog->X0(i + 1) - m_GPSLog->X0(i))
+			(m_GpsLog->Y0(i + 1) - m_GpsLog->Y0(i)),
+			(m_GpsLog->X0(i + 1) - m_GpsLog->X0(i))
 		);
 		if	 (dAngle2 < -180 * ToRAD) dAngle2 += 360 * ToRAD;
 		else if(dAngle2 >  180 * ToRAD) dAngle2 -= 360 * ToRAD;
@@ -283,9 +280,9 @@ std::unique_ptr<CLapLog> CVsdFilter::CreateLapTimeAuto(void){
 		
 		// 半端な LogNum
 		dLogNum = i + s1 / (s1 - s2);
-		iTime = m_GPSLog->GetTime(dLogNum);
+		iTime = m_GpsLog->GetTime(dLogNum);
 		
-		if(m_piParamS[SHADOW_LAP_START] - 1 <= iLapNum && iLapNum <= m_piParamS[SHADOW_LAP_END]){
+		if(m_Param.m_iLapStart - 1 <= iLapNum && iLapNum <= m_Param.m_iLapEnd){
 			LapTime.uLap	= pLapLog->m_iLapNum;
 			LapTime.fLogNum	= (float)dLogNum;
 			LapTime.iTime	= pLapLog->m_iLapNum ? iTime - iPrevTime : 0;
